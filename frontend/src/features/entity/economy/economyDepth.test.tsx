@@ -26,6 +26,7 @@ function material(kind: string, label: string, family: string) {
     label,
     family,
     origin: 'catalog',
+    source: 'world',
     edited: false,
     hardness: 50,
     toughness: 50,

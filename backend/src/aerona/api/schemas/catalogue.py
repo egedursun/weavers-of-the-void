@@ -1,6 +1,5 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.bond import BondCategory, LinkGroup
-from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intervention import Disaster, Miracle
 from aerona.domain.enums.job import JobStatus
@@ -41,7 +40,6 @@ class LinkGroupInfo(Labelled):
 
 class WorldTypeInfo(Labelled):
     description: str
-    domains: list[Domain]
     living: bool
     realm_of_dead: bool
 

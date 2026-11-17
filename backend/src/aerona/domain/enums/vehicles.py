@@ -167,7 +167,7 @@ class VehicleFrame(StrEnum):
     SPACEPLANE = "spaceplane"
     ESCAPE_POD = "escape_pod"
     SPACE_TUG = "space_tug"
-    MOTHERSHIP = "mothership"
+    CARRIER_VESSEL = "carrier_vessel"
     BATTLE_MECH = "battle_mech"
     BIOSHIP = "bioship"
 

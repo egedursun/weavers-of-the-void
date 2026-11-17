@@ -111,6 +111,11 @@ async def attributes_of(session: AsyncSession, node_id: int) -> Attributes:
     return {row.attribute: row.value for row in rows}
 
 
+async def stored_attribute(session: AsyncSession, node: Bodied, which: Attribute) -> int:
+    stored = await attributes_of(session, node.id)
+    return stored[which] if which in stored else estimate(node).get(which, MIDPOINT)
+
+
 async def facets_of(session: AsyncSession, node_id: int) -> Facets:
     stored = {row.facet: row.value for row in await rows_by_prefix(session, FacetRow, node_id)}
     return {facet: stored.get(facet, NEUTRAL_FACET) for facet in Facet} if stored else {}

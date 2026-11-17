@@ -222,20 +222,20 @@ class RouteScope(StrEnum):
 
 class BeingKind(StrEnum):
     PLANAR_NATIVE = "planar_native"
-    DIMENSION_WALKER = "dimension_walker"
-    RIFT_SPAWN = "rift_spawn"
+    DIMENSION_TRAVELLER = "dimension_traveller"
+    RIFT_BORN = "rift_born"
     HIGHER_DIMENSIONAL = "higher_dimensional"
-    STAR_EATER = "star_eater"
-    NEBULA_MIND = "nebula_mind"
-    GALACTIC_LEVIATHAN = "galactic_leviathan"
-    VOID_SHEPHERD = "void_shepherd"
-    ECHO = "echo"
-    TIME_WANDERER = "time_wanderer"
-    COSMIC_TITAN = "cosmic_titan"
-    VEIL_WARDEN = "veil_warden"
-    PLANE_SOVEREIGN = "plane_sovereign"
+    STAR_FEEDER = "star_feeder"
+    CLOUD_MIND = "cloud_mind"
+    GALAXY_SCALE_BEING = "galaxy_scale_being"
+    VOID_KEEPER = "void_keeper"
+    MIRRORED_DOUBLE = "mirrored_double"
+    TIME_TRAVELLER = "time_traveller"
+    SYSTEM_SCALE_BEING = "system_scale_being"
+    BOUNDARY_KEEPER = "boundary_keeper"
+    DIMENSION_RULER = "dimension_ruler"
     SWARM_INTELLIGENCE = "swarm_intelligence"
-    LIVING_CONSTELLATION = "living_constellation"
+    STAR_PATTERN_MIND = "star_pattern_mind"
 
 
 class BeingScale(StrEnum):
@@ -268,19 +268,19 @@ class BeingAgenda(StrEnum):
 
 
 class PhenomenonKind(StrEnum):
-    ETERNAL_STORM = "eternal_storm"
-    TIME_SLIP = "time_slip"
-    LEAK_WOUND = "leak_wound"
-    LEY_NEXUS_FLARE = "ley_nexus_flare"
-    GOD_CORPSE_AURA = "god_corpse_aura"
-    LIVING_FOG = "living_fog"
-    CRYSTAL_BLOOM = "crystal_bloom"
-    DEAD_ZONE = "dead_zone"
-    MIRROR_LAKE = "mirror_lake"
-    GRAVITY_WELL = "gravity_well"
-    SINGING_STONES = "singing_stones"
-    AURORA_PERMANENT = "aurora_permanent"
-    GHOST_ROAD = "ghost_road"
+    LASTING_STORM = "lasting_storm"
+    TIME_DISTORTION = "time_distortion"
+    OUTSIDE_OPENING = "outside_opening"
+    POWER_SURGE = "power_surge"
+    DIVINE_RESIDUE = "divine_residue"
+    MOVING_FOG = "moving_fog"
+    MINERAL_GROWTH = "mineral_growth"
+    BARREN_GROUND = "barren_ground"
+    DISTANT_VIEW = "distant_view"
+    GRAVITY_ANOMALY = "gravity_anomaly"
+    SOUNDING_GROUND = "sounding_ground"
+    LASTING_LIGHTS = "lasting_lights"
+    PATH_OF_THE_DEAD = "path_of_the_dead"
     BLIGHT = "blight"
 
 
@@ -321,7 +321,7 @@ class ApocalypseVariant(StrEnum):
     RUIN = "ruin"
     WORLD_WAR = "world_war"
     OUTER_DESCENT = "outer_descent"
-    TWILIGHT_OF_GODS = "twilight_of_gods"
+    END_OF_THE_GODS = "end_of_the_gods"
     DIMENSIONAL_COLLAPSE = "dimensional_collapse"
     GALACTIC_DEATH = "galactic_death"
 
@@ -336,3 +336,52 @@ class SkyObject(StrEnum):
     STAR = "star"
     GALAXY = "galaxy"
     DIMENSION = "dimension"
+
+
+class PhenomenonTarget(StrEnum):
+    WEATHER = "weather"
+    TIME = "time"
+    BOUNDARY = "boundary"
+    MAGIC = "magic"
+    DIVINITY = "divinity"
+    PERCEPTION = "perception"
+    MATTER = "matter"
+    LIFE = "life"
+    GRAVITY = "gravity"
+    SOUND = "sound"
+    LIGHT = "light"
+    THE_DEAD = "the_dead"
+
+
+class PhenomenonEffect(StrEnum):
+    INTENSIFY = "intensify"
+    DISTORT = "distort"
+    OPEN = "open"
+    SURGE = "surge"
+    LINGER = "linger"
+    MOVE = "move"
+    GROW = "grow"
+    SUPPRESS = "suppress"
+    REVEAL = "reveal"
+    EMIT = "emit"
+    SPREAD = "spread"
+
+
+class PhenomenonScope(StrEnum):
+    PLACE = "place"
+    REGION = "region"
+    WORLD = "world"
+
+
+class PhenomenonPersistence(StrEnum):
+    PASSING = "passing"
+    LASTING = "lasting"
+    PERMANENT = "permanent"
+
+
+class BeingSense(StrEnum):
+    SIGHT = "sight"
+    HEARING = "hearing"
+    TOUCH = "touch"
+    MIND = "mind"
+    DREAM = "dream"

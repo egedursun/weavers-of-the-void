@@ -7,8 +7,8 @@ from aerona.db.tables.cycles import MortalCasteRow, PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ReproductiveSystem
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.breeding import caste_for
@@ -18,7 +18,7 @@ from aerona.engine.phases.births import bear_child
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.stats import stat_or
 
-FLIPPED = {MortalSex.FEMALE.value: MortalSex.MALE.value, MortalSex.MALE.value: MortalSex.FEMALE.value}
+FLIPPED = {Sex.FEMALE.value: Sex.MALE.value, Sex.MALE.value: Sex.FEMALE.value}
 
 
 @dataclass

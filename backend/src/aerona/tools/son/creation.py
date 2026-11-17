@@ -25,10 +25,10 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.ecology import AttackRange
 from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.entity_stats import MortalStats
@@ -463,7 +463,7 @@ def _foreign_sounds(name: str, phonology: Phonology | None) -> str | None:
 async def _mortal_nature(call: SonCall, args: CreationInput, created: EntityRow) -> None:
     sex = args.option("sex")
     if sex is not None and isinstance(created.stats, MortalStats):
-        created.stats = created.stats.model_copy(update={"sex": MortalSex(sex).value})
+        created.stats = created.stats.model_copy(update={"sex": Sex(sex).value})
     for trait in args.option("traits") or []:
         await add_trait(call.session, created.id, TraitKind(trait), TraitSource.BIRTH, call.epoch)
 

@@ -4,12 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProductRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.mind import GriefRow, SkillRow, ThoughtRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
@@ -31,7 +31,7 @@ async def town(session: AsyncSession, cosmos: Cosmos, region_id: int, name: str 
     return hold.id
 
 
-async def kind(ctx: TickContext, cosmos: Cosmos, region_id: int, name: str, spec: SpeciesSpec, *uses: SpeciesUse) -> int:
+async def kind(ctx: TickContext, cosmos: Cosmos, region_id: int, name: str, spec: SpeciesSpec, *uses: AnimalRole) -> int:
     species = await make_entity(ctx.session, name, EntityType.SPECIES, SpeciesStats(hp=20), world_id=cosmos.home.id, location_id=region_id)
     await profile_of(ctx, species, spec)
     for use in uses:
@@ -75,9 +75,9 @@ async def test_milk_wool_and_eggs_follow_the_keepers_method(ctx: TickContext, co
     hand = await town(ctx.session, cosmos, region.id, "Hand Hold")
     penned = await town(ctx.session, cosmos, region.id, "Pen Hold")
     goat = await kind(ctx, cosmos, region.id, "Vale Goat", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.HERBIVORE))
-    products = set(await ctx.session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == goat)))
+    products = set(await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == goat)))
     assert {"milk", "wool"} <= products
-    milk = await ctx.session.get(SpeciesYieldRow, (goat, "milk"))
+    milk = await ctx.session.get(SpeciesProductRow, (goat, "milk"))
     assert milk is not None and milk.commodity is CommodityKind.MILK
     ctx.session.add_all([herd(hand, goat), herd(penned, goat)])
     ctx.session.add(CommunityMethodRow(community_node_id=penned, process=ProcessKind.MILKING, method=MethodKind.PENNED_MILKING, adopted_epoch=1))
@@ -93,7 +93,7 @@ async def test_milk_wool_and_eggs_follow_the_keepers_method(ctx: TickContext, co
 async def test_master_handlers_train_herds_for_war_hunting_and_guarding(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(ctx.session, "Kennel Moor", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    hound = await kind(ctx, cosmos, region.id, "Moor Hound", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE), SpeciesUse.GUARD)
+    hound = await kind(ctx, cosmos, region.id, "Moor Hound", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE), AnimalRole.GUARD)
     row = herd(hold, hound, training=HerdTraining.GUARD)
     ctx.session.add(row)
     handler = await make_entity(ctx.session, "Bran", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70), world_id=cosmos.home.id, location_id=hold)
@@ -112,7 +112,7 @@ async def test_master_handlers_train_herds_for_war_hunting_and_guarding(ctx: Tic
 async def test_mortals_take_pets_are_comforted_and_mourn_them(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(ctx.session, "Hearth Vale", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    hound = await kind(ctx, cosmos, region.id, "Hearth Hound", SpeciesSpec(size_class=SizeClass.SMALL, diet=Diet.CARNIVORE), SpeciesUse.GUARD)
+    hound = await kind(ctx, cosmos, region.id, "Hearth Hound", SpeciesSpec(size_class=SizeClass.SMALL, diet=Diet.CARNIVORE), AnimalRole.GUARD)
     ctx.session.add(herd(hold, hound, head=20))
     owner = await make_entity(ctx.session, "Mira", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70), world_id=cosmos.home.id, location_id=hold)
     await ctx.session.flush()
@@ -159,9 +159,9 @@ async def test_the_god_gives_and_frees_pets(ctx: TickContext, cosmos: Cosmos) ->
 async def test_master_handlers_choose_what_a_herd_is_trained_for(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Drill Moor", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    warhorse = await kind(ctx, cosmos, region.id, "Moor Charger", SpeciesSpec(size_class=SizeClass.LARGE, diet=Diet.HERBIVORE), SpeciesUse.WAR)
+    warhorse = await kind(ctx, cosmos, region.id, "Moor Charger", SpeciesSpec(size_class=SizeClass.LARGE, diet=Diet.HERBIVORE), AnimalRole.WAR)
     wolf = await kind(ctx, cosmos, region.id, "Moor Wolf", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE))
-    sheep = await kind(ctx, cosmos, region.id, "Moor Sheep", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.HERBIVORE), SpeciesUse.FOOD)
+    sheep = await kind(ctx, cosmos, region.id, "Moor Sheep", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.HERBIVORE), AnimalRole.MEAT)
     held_wolf = await kind(ctx, cosmos, region.id, "Held Wolf", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE))
     for row in list(await ctx.session.scalars(select(SpeciesUseRow).where(SpeciesUseRow.species_entity_id.in_([wolf, sheep, held_wolf])))):
         await ctx.session.delete(row)
@@ -196,7 +196,7 @@ async def test_the_god_gives_any_animal_kind_as_a_pet_but_never_a_plant(ctx: Tic
 async def test_a_hound_at_its_owners_side_counts_in_a_hunt_for_a_beast(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(ctx.session, "Chase Vale", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    hound = await kind(ctx, cosmos, region.id, "Chase Hound", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE), SpeciesUse.GUARD)
+    hound = await kind(ctx, cosmos, region.id, "Chase Hound", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE), AnimalRole.GUARD)
     hero = await make_entity(
         ctx.session, "Asa", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70, strength=50), world_id=cosmos.home.id, location_id=hold
     )

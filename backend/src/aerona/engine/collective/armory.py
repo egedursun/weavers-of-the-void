@@ -235,6 +235,8 @@ class Track:
 
 
 def along(points: list[Point], line: PartitionLine, scale: float = 1.0) -> list[Point]:
+    if line is L.STRAIGHT:
+        return list(points)
     period, amplitude, profile = PROFILES[line]
     track = Track(points)
     count = max(1, round(track.length / (period * scale)))

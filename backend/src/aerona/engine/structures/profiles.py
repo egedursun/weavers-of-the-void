@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
@@ -13,7 +14,7 @@ from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow, StructureStaffRow
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition
+from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -21,6 +22,7 @@ from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.structure import STANDING_STATES, BuilderKind, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.economy.materials import MaterialProps, from_row, from_spec, set_node_material
+from aerona.engine.lore.style import axis_of, style_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.structures.integrity import integrity_share
@@ -135,12 +137,26 @@ async def host_for(session: AsyncSession, structure: EntityRow) -> EntityRow | N
     return None
 
 
-async def aesthetic_for(session: AsyncSession, community: EntityRow | None) -> Aesthetic | None:
+async def style_for(session: AsyncSession, community: EntityRow | None) -> Style | None:
     if community is None:
         return None
     people = community if community.entity_type is EntityType.PEOPLE else await people_of(session, community)
-    culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.aesthetic if culture is not None else None
+    return style_of(await session.get(PeopleCultureRow, people.id) if people is not None else None)
+
+
+def style_column(axis: str) -> str:
+    return f"style_{axis}"
+
+
+def style_snapshot(style: Style | None) -> dict[str, int | None]:
+    return {style_column(axis): (axis_of(style, axis) if style is not None else None) for axis in STYLE_AXES}
+
+
+def kept_style(profile: StructureProfileRow) -> Style | None:
+    values = [getattr(profile, style_column(axis)) for axis in STYLE_AXES]
+    if any(value is None for value in values):
+        return None
+    return Style(*(int(value) for value in values))
 
 
 async def adults_of(session: AsyncSession, community_id: int, social_class: str) -> int:
@@ -281,7 +297,7 @@ async def ensure_profile(
         builder_kind=built_by,
         architect_entity_id=architect_id,
         dedicated_son_id=son_id,
-        aesthetic=await aesthetic_for(session, community),
+        **style_snapshot(await style_for(session, community)),
         on_ley_line=False,
         anchor=False,
         effect_pct=0,

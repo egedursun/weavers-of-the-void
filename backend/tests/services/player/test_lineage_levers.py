@@ -5,10 +5,11 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.households import DwellingFurnishingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdRole, Locus
-from aerona.domain.enums.mortal import Ability
+from aerona.domain.enums.genetics import GiftStance, HouseholdRole, Locus
+from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats, ItemStats
+from aerona.engine.households.dwelling_kinds import built_in_dwelling
 from aerona.services.player import genetics, households
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, make_entity
@@ -26,10 +27,10 @@ async def test_the_god_writes_shapes_and_strikes_a_mortal_s_blood(scope: PlayerS
         await genetics.set_gene(scope, genetics.SetGene(mortal_id=hero.id, locus=Locus.HAIR_COLOUR, first="violet", second="copper"))
     await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, beauty=90, inbreeding=10))
     assert row.beauty == 90 and row.inbreeding == 10 and {"beauty", "inbreeding"} <= set(row.locked)
-    await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Ability.WISDOM: 77}))
-    assert row.potential[Ability.WISDOM.value] == 77 and "potential" in row.locked
+    await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Attribute.PATIENCE: 77}))
+    assert row.potential[Attribute.PATIENCE.value] == 77 and "potential" in row.locked
     with pytest.raises(ValidationFailedError):
-        await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Ability.WISDOM: 101}))
+        await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Attribute.PATIENCE: 101}))
     await genetics.redraw(scope, genetics.GenomeTarget(mortal_id=hero.id))
     await genetics.remove(scope, genetics.GenomeTarget(mortal_id=hero.id))
     assert await session.get(GenomeRow, hero.id) is None
@@ -85,7 +86,9 @@ async def test_the_god_founds_shapes_furnishes_and_dissolves_a_household(scope: 
     assert home.debts == {str(other.id): 50}
     await households.hold(scope, households.HoldHousehold(household_id=home.id, fields=["decisions"]))
     assert "decisions" in home.locked
-    await households.set_dwelling(scope, households.SetDwelling(household_id=home.id, kind=DwellingKind.MANOR, quality=80, rooms=9))
+    await households.set_dwelling(
+        scope, households.SetDwelling(household_id=home.id, dwelling_kind_id=(await built_in_dwelling(session, "manor")).id, quality=80, rooms=9)
+    )
     await households.furnish(scope, households.Furnish(household_id=home.id, item_id=lamp.id))
     assert await session.get(DwellingFurnishingRow, lamp.id) is not None
     await households.unfurnish(scope, households.FurnishingTarget(item_id=lamp.id))

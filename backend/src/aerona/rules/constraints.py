@@ -41,7 +41,7 @@ ASCENDING_CHAINS: list[AscendingChain] = [
     AscendingChain(("world_birth.regions_min", "world_birth.regions_max")),
     AscendingChain(("world_birth.words_min", "world_birth.words_max")),
     AscendingChain(("world_physics.time_factor_min", "world_physics.time_factor_max")),
-    AscendingChain(("civilization.city_state_population", "civilization.kingdom_population")),
+    AscendingChain(("civilization.city_state_population", "civilization.realm_population")),
     AscendingChain(("civilization.interstellar_worlds", "civilization.cosmic_worlds")),
     AscendingChain(("sky.alignment_danger_floor", "sky.alignment_danger_cap")),
     AscendingChain(

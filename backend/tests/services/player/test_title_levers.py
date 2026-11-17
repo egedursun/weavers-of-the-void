@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.services.player import titles
 from aerona.services.player.scope import PlayerScope
@@ -14,13 +14,13 @@ from tests.services.player.factories import PlayerWorld, make_entity
 async def test_the_god_creates_grants_redraws_and_destroys_titles(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     lord = await make_entity(session, "Ewen", EntityType.MORTAL, world_id=world.world.id, location_id=world.region.id)
     rival = await make_entity(session, "Fia", EntityType.MORTAL, world_id=world.world.id, location_id=world.region.id)
-    created = await titles.create(scope, titles.CreateTitle(rank=TitleRank.DUCHY, name="Duchy of the Fens", holder_id=lord.id, lands=[world.region.id]))
+    created = await titles.create(scope, titles.CreateTitle(rank=TitleTier.REGIONAL, name="Duchy of the Fens", holder_id=lord.id, lands=[world.region.id]))
     title_id = created.values["title_id"]
     row = await session.get(TitleProfileRow, title_id)
-    assert row is not None and row.holder_node_id == lord.id and row.rank is TitleRank.DUCHY
+    assert row is not None and row.holder_node_id == lord.id and row.rank is TitleTier.REGIONAL
     assert await session.get(DeJureLinkRow, (title_id, world.region.id)) is not None
-    await titles.edit(scope, titles.EditTitle(title_id=title_id, rank=TitleRank.KINGDOM, prestige=70, emblem="Or a crescent on Azure"))
-    assert row.rank is TitleRank.KINGDOM and row.prestige == 70 and {"rank", "prestige", "emblem"} <= set(row.locked)
+    await titles.edit(scope, titles.EditTitle(title_id=title_id, rank=TitleTier.REALM, prestige=70, emblem="Or a crescent on Azure"))
+    assert row.rank is TitleTier.REALM and row.prestige == 70 and {"rank", "prestige", "emblem"} <= set(row.locked)
     with pytest.raises(ValidationFailedError):
         await titles.edit(scope, titles.EditTitle(title_id=title_id, liege_id=title_id))
     crown = await make_entity(

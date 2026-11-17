@@ -15,15 +15,17 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import NormBehaviour, NormSituation
 from aerona.domain.enums.culture import ItemDeed
-from aerona.domain.enums.cycles import GiftOccasion, GiftState, MarriagePayment
+from aerona.domain.enums.cycles import GiftOccasion, GiftState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind
+from aerona.domain.enums.unions import UnionExchange
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.norms import norm_pull, norms_of, stance_in
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.kinship import giver_and_taker
+from aerona.engine.cycles.lineage import union_of
 from aerona.engine.cycles.standing import name_of, raise_standing, regard
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.divine.standing import standing_row, tally_epoch
@@ -36,7 +38,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.services.community_relations import relation
-from aerona.engine.unions.customs import payer, union_of
+from aerona.engine.unions.customs import payer
 
 COMPETITIVE = frozenset({GiftOccasion.FEAST})
 POTLATCH_FEASTS = frozenset({GatheringKind.FEAST, GatheringKind.FESTIVAL, GatheringKind.WEDDING, GatheringKind.FUNERAL})
@@ -397,25 +399,21 @@ async def marriage_payments(ctx: TickContext, tally: GiftTally) -> None:
             continue
         people = await people_of(ctx.session, first)
         custom = await union_of(ctx.session, first)
-        system = await ctx.session.get(KinshipSystemRow, people.id) if people is not None else None
-        if custom is not None:
+        if custom is None or custom.exchange is UnionExchange.NONE:
+            continue
+        if custom.exchange is not UnionExchange.SERVICE:
             pair = payer(custom, first, second)
-            if pair is not None and await pay_union(ctx, pair, system.payment_value if system is not None else ctx.rules.kinship.union_payment):
+            if pair is not None and await pay_union(ctx, pair, custom.exchange_value):
                 tally.payments += 1
             continue
-        if system is None or system.payment is MarriagePayment.NONE:
+        system = await ctx.session.get(KinshipSystemRow, people.id) if people is not None else None
+        if system is None:
             continue
         leaving, staying = await giver_and_taker(ctx, first, second, system)
-        giver_line, taker_line = await kin_line(ctx, leaving.id), await kin_line(ctx, staying.id)
-        if giver_line == taker_line:
+        giver_line = await kin_line(ctx, leaving.id)
+        if giver_line == await kin_line(ctx, staying.id):
             continue
-        if system.payment is MarriagePayment.DOWRY:
-            gift = await give(ctx, giver_line, taker_line, system.payment_value, GiftOccasion.MARRIAGE, obliging=False)
-        elif system.payment is MarriagePayment.BRIDE_PRICE:
-            gift = await give(ctx, taker_line, giver_line, system.payment_value, GiftOccasion.MARRIAGE, obliging=False)
-        else:
-            gift = await give(ctx, staying.id, giver_line, system.payment_value, GiftOccasion.MARRIAGE, obliging=False, pay=False)
-        if gift is not None:
+        if await give(ctx, staying.id, giver_line, custom.exchange_value, GiftOccasion.MARRIAGE, obliging=False, pay=False) is not None:
             tally.payments += 1
 
 

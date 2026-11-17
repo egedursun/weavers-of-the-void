@@ -22,6 +22,8 @@ from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.climes import DIRECTIONS
 from aerona.domain.enums.meta import LedgerOperation
+from aerona.services.books.genome_text import genome_text
+from aerona.services.books.kind_tables import KIND_TABLES
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
 OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
@@ -105,10 +107,6 @@ PERCENT_SIGN = "%"
 NOTHING = "none"
 
 
-def _pairs(value: dict[str, Any]) -> str:
-    return "; ".join(f"{words(str(locus))}: {' / '.join(words(str(item)) for item in items)}" for locus, items in value.items() if isinstance(items, list))
-
-
 def _shares(value: dict[str, Any]) -> str:
     return "; ".join(
         f"{words(str(locus))}: " + ", ".join(f"{words(str(key))} {share}{PERCENT_SIGN}" for key, share in found.items() if share)
@@ -126,7 +124,7 @@ def _mix(value: dict[str, Any]) -> str:
     return ", ".join(f"{words(str(key))} {share} ({round(int(share) * 100 / whole)}{PERCENT_SIGN})" for key, share in value.items() if isinstance(share, int))
 
 
-COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": _pairs, "frequencies": _shares, "debts": _debts, "composition": _mix}
+COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": genome_text, "frequencies": _shares, "debts": _debts, "composition": _mix}
 NAMED_NUMBERS: dict[str, tuple[str, ...]] = {"wind_from": DIRECTIONS, "heading": DIRECTIONS}
 ORDER_COLUMNS = ("epoch", "since_epoch", "started_epoch", "slot", "position", "rank", "id")
 
@@ -327,7 +325,7 @@ class TypedIndex:
         await index.load_references(session)
         for mapper in sorted(Base.registry.mappers, key=table_name):
             table = table_name(mapper)
-            if table in SKIPPED_TABLES:
+            if table in SKIPPED_TABLES or table in KIND_TABLES:
                 continue
             owner = _owner(mapper)
             if owner is None:

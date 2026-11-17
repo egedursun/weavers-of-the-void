@@ -199,7 +199,7 @@ async def test_magic_lands_weave_ley_lines_that_scars_can_cut(realm: Realm) -> N
     assert line is not None and not line.severed and line.strength == 80
     ground = await realm.session.get(RegionEnvironmentRow, realm.region.id)
     assert ground is not None
-    ground.scars = {ScarKind.SALTED_EARTH.value: 80}
+    ground.scars = {ScarKind.MADE_BARREN.value: 80}
     await ley_lines(context(realm.session, epoch=4))
     assert line.severed
 

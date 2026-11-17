@@ -84,6 +84,7 @@ MADE_KIND_MECHANICS = (
     ),
     Mechanic(
         key="structure_integrity",
+        tools=("shore_up",),
         spec_item="S7.9",
         title=(
             "Structures stand in sections: gates, walls, keeps, sanctums and foundations fail by "

@@ -229,11 +229,11 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.reverences",
     "table.sense_profiles",
     "table.species_hosts",
+    "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_relations",
     "table.species_traits",
-    "table.species_yields",
     "table.world_biochemistries",
     "table.world_maps",
     "table.world_seasons",
@@ -251,10 +251,10 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.incident_participants",
     "table.incidents",
     "table.species_hosts",
+    "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_uses",
-    "table.species_yields",
 )
 async def ecology(ctx: TickContext) -> None:
     settings = ctx.rules.ecology

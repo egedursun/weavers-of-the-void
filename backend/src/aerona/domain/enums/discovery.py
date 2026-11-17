@@ -66,18 +66,6 @@ class AnomalyKind(StrEnum):
     DIVINE_SIGN = "divine_sign"
 
 
-class ArtDiscipline(StrEnum):
-    MUSIC = "music"
-    POETRY = "poetry"
-    DANCE = "dance"
-    THEATRE = "theatre"
-    PAINTING = "painting"
-    SCULPTURE = "sculpture"
-    ARCHITECTURE_STYLE = "architecture_style"
-    TEXTILE = "textile"
-    CALLIGRAPHY = "calligraphy"
-
-
 class BlueprintKind(StrEnum):
     VESSEL = "vessel"
     SIEGE_ENGINE = "siege_engine"

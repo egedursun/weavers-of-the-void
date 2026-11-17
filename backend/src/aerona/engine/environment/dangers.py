@@ -15,7 +15,7 @@ from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.ecology import BeastTemper, DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind
@@ -33,7 +33,7 @@ from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.rules.registry import Rules
 
 SNOW_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS, TerrainKind.ICE_SHEET})
-VOLCANIC_SOILS = frozenset({SoilKind.VOLCANIC, SoilKind.ASH})
+VOLCANIC_SOILS = frozenset({SoilKind.VOLCANIC, SoilKind.TEPHRA})
 HELD_BEASTS = frozenset({BeastTemper.BOUND, BeastTemper.TAMED})
 DANGER_KEY = "danger"
 
@@ -223,7 +223,7 @@ async def _bandits(session: AsyncSession, rules: Rules, scene: DangerScene, epoc
     welcoming = await session.scalars(
         select(TraditionParticipationRow.community_entity_id)
         .join(TraditionProfileRow, TraditionProfileRow.tradition_entity_id == TraditionParticipationRow.tradition_entity_id)
-        .where(TraditionProfileRow.kind == TraditionKind.HOSPITALITY_LAW, TraditionParticipationRow.last_celebrated_epoch >= epoch - 1)
+        .where(TraditionProfileRow.kind == TraditionFunction.HOSPITALITY, TraditionParticipationRow.last_celebrated_epoch >= epoch - 1)
     )
     welcomed: dict[int, int] = defaultdict(int)
     for community_id in welcoming:

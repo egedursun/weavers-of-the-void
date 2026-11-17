@@ -22,10 +22,10 @@ from aerona.db.tables.polity import LawProfileRow, PolityTreasuryRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -35,6 +35,7 @@ from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, Value
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.unions import PluralSide, UnionForm
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.communication.opinion import mean_approval
@@ -66,6 +67,7 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
+from aerona.engine.unions.axes import spousing_of
 
 CREED_SCALE = 10
 LEAN = 25
@@ -101,8 +103,8 @@ CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
 CULT_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     T.ANCESTOR_VENERATION: (LawKind.BURIAL_LAW, {"rite": "burial"}),
     T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 60}),
-    T.CELIBATE_CLERGY: (LawKind.MARRIAGE_LAW, {"custom": "monogamy", "endogamy": False}),
-    T.EXCLUSIVITY: (LawKind.MARRIAGE_LAW, {"custom": "monogamy", "endogamy": True}),
+    T.CELIBATE_CLERGY: (LawKind.MARRIAGE_LAW, {"form": "pair", "plural_side": "either", "endogamy": False}),
+    T.EXCLUSIVITY: (LawKind.MARRIAGE_LAW, {"form": "pair", "plural_side": "either", "endogamy": True}),
     T.SANCTIFIED_MAGIC: (LawKind.RITE_RESTRICTIONS, {"level": 20}),
     T.ASCETICISM: (LawKind.SUMPTUARY, {"noble_luxury": 30, "merchant_luxury": 10}),
     T.PROSELYTISM: (LawKind.TITHE, {"rate": 5, "enforced": False}),
@@ -215,8 +217,9 @@ async def wanted_laws(
     if laws.in_force(polity.id, LawKind.SUCCESSION_RULE) is None and realm.profile.tier >= 1:
         core = await ctx.session.get(PeopleCultureRow, realm.profile.core_entity_id or -1)
         rule = INHERITANCE_RULES[core.inheritance].value if core is not None else SuccessionRule.PRIMOGENITURE.value
-        if values.get(ValueAxis.KINSHIP, 0) <= -LEAN and core is not None and core.marriage is MarriageCustom.POLYANDRY:
-            rule = SuccessionRule.MATRILINEAL.value
+        union = await ctx.session.get(UnionCustomRow, realm.profile.core_entity_id or -1)
+        if values.get(ValueAxis.KINSHIP, 0) <= -LEAN and core is not None and spousing_of(union).plural_on(PluralSide.SECOND):
+            rule = SuccessionRule.THROUGH_SECOND_LINE.value
         wants.append((LawKind.SUCCESSION_RULE, {"rule": rule}))
     if await plagued(ctx, realm) and laws.in_force(polity.id, LawKind.QUARANTINE) is None and rng.chance(table.plague_quarantine_chance):
         wants.append((LawKind.QUARANTINE, {}))
@@ -687,7 +690,8 @@ async def member_effects(ctx: TickContext, member_id: int, laws: LawBook, polity
     table = ctx.rules.legislation
     rate = laws.param(polity, LawKind.TAX_RATE, "rate")
     status = laws.param(polity, LawKind.SLAVERY, "status")
-    marriage = laws.param(polity, LawKind.MARRIAGE_LAW, "custom")
+    form = laws.param(polity, LawKind.MARRIAGE_LAW, "form")
+    side = laws.param(polity, LawKind.MARRIAGE_LAW, "plural_side")
     sanitation = laws.param(polity, LawKind.SANITATION, "works")
     pension = laws.in_force(polity, LawKind.VETERAN_PENSION)
     sumptuary = laws.in_force(polity, LawKind.SUMPTUARY)
@@ -698,11 +702,14 @@ async def member_effects(ctx: TickContext, member_id: int, laws: LawBook, polity
         if sanitation is not None and "sanitation" not in town.locked:
             town.sanitation = clamp_int(town.sanitation + int(sanitation) * table.sanitation_gain // PERCENT * 10, 0, PERCENT)
     culture = await ctx.session.get(PeopleCultureRow, member_id)
-    if culture is not None:
-        if status is not None and "slavery_lawful" not in culture.locked:
-            culture.slavery_lawful = status in {"allowed", "debt_only"}
-        if marriage is not None and "marriage" not in culture.locked:
-            culture.marriage = MarriageCustom(str(marriage))
+    if culture is not None and status is not None and "slavery_lawful" not in culture.locked:
+        culture.slavery_lawful = status in {"allowed", "debt_only"}
+    union = await ctx.session.get(UnionCustomRow, member_id)
+    if union is not None:
+        if form is not None and "form" not in union.locked:
+            union.form = UnionForm(str(form))
+        if side is not None and "plural_side" not in union.locked:
+            union.plural_side = PluralSide(str(side))
     society = await ctx.session.get(CommunitySocietyRow, member_id)
     if society is not None and pension is not None:
         society.satisfaction_warrior = clamp_int(society.satisfaction_warrior + table.pension_opinion * pension.enforcement // PERCENT, 0, PERCENT)

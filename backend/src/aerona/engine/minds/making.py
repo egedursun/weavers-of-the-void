@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.making_outcomes import MAKING_WEIGHTS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.entities import EntityRow
@@ -58,11 +59,7 @@ def outcome_of(ctx: TickContext, node_id: int, quality: int) -> MakingOutcome:
     rng = ctx.rng(f"mind.making.{node_id}.{ctx.epoch}")
     if not rng.chance((table.failure_below - quality) * PERCENT / max(1, table.failure_below)):
         return MakingOutcome.AS_MEANT
-    weights = {
-        MakingOutcome.UNSTABLE: table.unstable_weight,
-        MakingOutcome.EMPTY_SEAT: table.empty_weight,
-        MakingOutcome.UNINTENDED_WILL: table.unintended_weight,
-    }
+    weights = {outcome: int(getattr(table, rule_name)) for outcome, rule_name in MAKING_WEIGHTS.items() if rule_name is not None}
     return rng.weighted_by(list(weights), lambda item: weights[item])
 
 

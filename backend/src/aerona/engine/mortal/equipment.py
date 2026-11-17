@@ -44,7 +44,7 @@ def rigid(material: str | None) -> bool:
 
 
 def fits_slot(slot: EquipmentSlot, profile: ItemProfileRow) -> bool:
-    return profile.item_class in SLOT_CLASSES[slot] and not (slot in SOFT_SLOTS and rigid(profile.material))
+    return profile.item_class in SLOT_CLASSES.get(slot, frozenset()) and not (slot in SOFT_SLOTS and rigid(profile.material))
 
 
 def best_of(rows: list[ItemProfileRow], classes: frozenset[ItemClass], taken: set[int], slot: EquipmentSlot | None = None) -> ItemProfileRow | None:

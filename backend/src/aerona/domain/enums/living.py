@@ -9,7 +9,7 @@ class CultivationMethod(StrEnum):
     SYNTHESIS = "synthesis"
     BINDING = "binding"
     CLONING = "cloning"
-    CHIMERA = "chimera"
+    MERGING = "merging"
     INDUCTION = "induction"
 
 

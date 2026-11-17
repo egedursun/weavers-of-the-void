@@ -33,8 +33,8 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.records import retire_in
 
 E = WorldEnd
-LIFELESS = frozenset({E.SHATTERED, E.SWALLOWED, E.FROZEN_DEAD, E.SUNK_INTO_VOID})
-GONE_FROM_SKY = frozenset({E.SWALLOWED, E.SUNK_INTO_VOID, E.FORGOTTEN})
+LIFELESS = frozenset({E.SHATTERED, E.CONSUMED, E.FROZEN_DEAD, E.SUNK_INTO_VOID})
+GONE_FROM_SKY = frozenset({E.CONSUMED, E.SUNK_INTO_VOID, E.FORGOTTEN})
 LIVES = frozenset(
     {
         EntityType.PEOPLE,
@@ -227,7 +227,7 @@ CAUSE_END: Mapping[WorldEndCause, WorldEnd] = total(
     {
         WorldEndCause.IMPACT: E.SHATTERED,
         WorldEndCause.DIVINE_WRATH: E.SHATTERED,
-        WorldEndCause.STAR_GIANT: E.SWALLOWED,
+        WorldEndCause.STAR_GIANT: E.CONSUMED,
         WorldEndCause.STAR_DEATH: E.FROZEN_DEAD,
         WorldEndCause.VOID: E.SUNK_INTO_VOID,
         WorldEndCause.OBLIVION: E.FORGOTTEN,

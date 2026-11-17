@@ -6,12 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.faith import (
     AfterlifeState,
     BindingKind,
-    ClergyOffice,
+    ClergyFunction,
     FanaticismKind,
-    FuneralRite,
     HoldingKind,
     JudgementDoctrine,
     RebirthPath,
@@ -102,7 +102,7 @@ class CultOfficeRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cult_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    kind: Mapped[ClergyOffice] = mapped_column(enum_type(ClergyOffice, "kind"))
+    kind: Mapped[ClergyFunction] = mapped_column(enum_type(ClergyFunction, "kind"))
     holder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[bool] = mapped_column(default=False)
@@ -155,7 +155,7 @@ class SpiritProfileRow(Base):
     alignment: Mapped[SpiritAlignment] = mapped_column(enum_type(SpiritAlignment, "alignment"), default=SpiritAlignment.NEUTRAL)
     state: Mapped[AfterlifeState] = mapped_column(enum_type(AfterlifeState, "state"), default=AfterlifeState.WANDERING)
     stratum_id: Mapped[int | None] = mapped_column(ForeignKey("afterlife_strata.id", ondelete="SET NULL"), index=True)
-    rite: Mapped[FuneralRite] = mapped_column(enum_type(FuneralRite, "rite"), default=FuneralRite.NONE)
+    rite: Mapped[FuneralCustom] = mapped_column(enum_type(FuneralCustom, "rite"), default=FuneralCustom.NONE)
     patron_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
     sealed: Mapped[bool] = mapped_column(default=False)
     seal_strength: Mapped[int] = mapped_column(default=0)
@@ -197,7 +197,7 @@ class SoulJudgementRow(Base):
     doctrine: Mapped[JudgementDoctrine] = mapped_column(enum_type(JudgementDoctrine, "doctrine"))
     stratum_id: Mapped[int | None] = mapped_column(ForeignKey("afterlife_strata.id", ondelete="SET NULL"))
     score: Mapped[int] = mapped_column(default=0)
-    rite: Mapped[FuneralRite] = mapped_column(enum_type(FuneralRite, "rite"), default=FuneralRite.NONE)
+    rite: Mapped[FuneralCustom] = mapped_column(enum_type(FuneralCustom, "rite"), default=FuneralCustom.NONE)
     reason: Mapped[str] = mapped_column(Text, default="")
     epoch: Mapped[int]
 

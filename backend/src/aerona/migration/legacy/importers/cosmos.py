@@ -44,7 +44,7 @@ LEGACY_TEMPLATES: dict[str, GenesisTemplate] = {
     "kozmik_korku": GenesisTemplate.COSMIC_HORROR,
     "masal": GenesisTemplate.FAIRY_TALE,
     "yildiz_mitosu": GenesisTemplate.STAR_MYTH,
-    "kum_ve_kul": GenesisTemplate.SAND_AND_ASH,
+    "kum_ve_kul": GenesisTemplate.DESERT_WORLD,
 }
 LEGACY_TECHNOLOGY: dict[str, TechnologyEra] = {
     "tas": TechnologyEra.STONE,

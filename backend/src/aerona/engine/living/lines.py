@@ -1,13 +1,16 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.line_outcomes import LINE_OUTCOMES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.total import total
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.living import LivingLineRow, LivingLineSourceRow, LivingLineTraitRow
 from aerona.db.tables.powers import SourceDensityRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -20,6 +23,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
+from aerona.engine.genetics.genome import line_traits
 from aerona.engine.living.society import faith_on_maker
 from aerona.engine.living.traits import traits_of
 from aerona.engine.lore.research import has_technique
@@ -42,14 +46,14 @@ CRAFTS = total(
         M.SYNTHESIS: ((SkillKind.SCIENCE,), Technique.GENETIC_ENGINEERING),
         M.BINDING: ((SkillKind.SPELLCRAFT, SkillKind.MEDICINE), None),
         M.CLONING: ((SkillKind.SCIENCE, SkillKind.MEDICINE, SkillKind.SPELLCRAFT), Technique.GENETIC_ENGINEERING),
-        M.CHIMERA: ((SkillKind.SCIENCE, SkillKind.SPELLCRAFT, SkillKind.MEDICINE), Technique.GENETIC_ENGINEERING),
+        M.MERGING: ((SkillKind.SCIENCE, SkillKind.SPELLCRAFT, SkillKind.MEDICINE), Technique.GENETIC_ENGINEERING),
         M.INDUCTION: ((SkillKind.SPELLCRAFT, SkillKind.SCIENCE, SkillKind.FORAGING), None),
     },
 )
 CRAFT_STEP = 20
 PERSONS = frozenset({EntityType.MORTAL, EntityType.PEOPLE})
 SPREADING = frozenset({LineTrait.FLIGHT, LineTrait.AQUATIC, LineTrait.VOID_HARDY})
-RITE_PATHS = frozenset({M.SHAPING, M.BINDING, M.CLONING, M.CHIMERA})
+RITE_PATHS = frozenset({M.SHAPING, M.BINDING, M.CLONING, M.MERGING})
 
 
 @dataclass(frozen=True)
@@ -132,19 +136,32 @@ async def precision(ctx: TickContext, maker: EntityRow, method: CultivationMetho
     return clamp_percent(table.base_precision + await best_skill(ctx.session, maker.id, skills) // 2 + (table.works_bonus if works is not None else 0))
 
 
+def lost_stability(ctx: TickContext, outcome: LineOutcome) -> int:
+    stability_rule = LINE_OUTCOMES[outcome].stability_rule
+    return int(getattr(ctx.rules.living_methods, stability_rule)) if stability_rule is not None else 0
+
+
 def outcome_of(ctx: TickContext, line_key: str, aim: int) -> LineOutcome:
     table = ctx.rules.living_methods
     rng = ctx.rng(f"living.make.{line_key}")
     if aim >= table.failure_below or not rng.chance(table.failure_below - aim + 10):
         return LineOutcome.AS_MEANT
-    weights = {LineOutcome.UNSTABLE: table.unstable_weight, LineOutcome.STERILE: table.sterile_weight, LineOutcome.SIDE_EFFECTS: table.side_weight}
-    weights[LineOutcome.NON_VIABLE] = table.dead_weight
+    weights = {outcome: int(getattr(table, result.weight_rule)) for outcome, result in LINE_OUTCOMES.items() if result.weight_rule is not None}
     roll = rng.random() * sum(weights.values())
     for outcome, weight in weights.items():
         roll -= weight
         if roll <= 0:
             return outcome
     return LineOutcome.UNSTABLE
+
+
+async def germline_traits(ctx: TickContext, source_ids: Sequence[int]) -> dict[LineTrait, int]:
+    found: dict[LineTrait, int] = {}
+    for source in dict.fromkeys(source_ids):
+        genome = await ctx.session.get(GenomeRow, source)
+        for trait, strength in line_traits(ctx.rules, genome.genes).items() if genome is not None else []:
+            found[trait] = clamp_int(found.get(trait, 0) + strength, -PERCENT, PERCENT)
+    return found
 
 
 async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False) -> LivingLineRow:
@@ -176,10 +193,10 @@ async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False)
         name=draft.name.strip() or f"the line of {maker.name}",
         method=draft.method,
         outcome=outcome,
-        stability=clamp_percent(aim - len(draft.traits) * design.instability_per_trait - (30 if outcome is LineOutcome.UNSTABLE else 0)),
+        stability=clamp_percent(aim - len(draft.traits) * design.instability_per_trait - lost_stability(ctx, outcome)),
         generation=0,
         drift_pct=0,
-        fertility=Fertility.STERILE if outcome is LineOutcome.STERILE else draft.fertility,
+        fertility=Fertility.STERILE if LINE_OUTCOMES[outcome].sterile else draft.fertility,
         owner_node_id=draft.owner_id if draft.owner_id is not None else maker.id,
         maker_node_id=maker.id,
         species_entity_id=None,
@@ -198,14 +215,20 @@ async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False)
     wanted: dict[LineTrait, int] = {}
     for trait, strength in draft.traits:
         wanted[trait] = clamp_int(wanted.get(trait, 0) + strength, -PERCENT, PERCENT)
+    inherited = await germline_traits(ctx, draft.source_ids)
     carried = set(wanted)
     for trait, strength in wanted.items():
-        ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=False, locked=[]))
+        blended = clamp_int(strength + inherited.pop(trait, 0), -PERCENT, PERCENT)
+        ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=blended, side_effect=False, locked=[]))
         free = [item for item in LineTrait if item not in carried]
-        if free and (outcome is LineOutcome.SIDE_EFFECTS or rng.chance(design.side_effect_chance)):
+        if free and (LINE_OUTCOMES[outcome].side_effects or rng.chance(design.side_effect_chance)):
             side = rng.pick(free)
             carried.add(side)
             ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=side, strength=-abs(strength) // 2, side_effect=True, locked=[]))
+    for trait, strength in inherited.items():
+        if trait not in carried:
+            carried.add(trait)
+            ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=False, locked=[]))
     await ctx.session.flush()
     await note(ctx, f"{maker.name} made a living line: {line.name}.", key="living.line_made", ids=[maker.id])
     return line
@@ -254,7 +277,8 @@ async def run_wild(ctx: TickContext, line: LivingLineRow) -> bool:
 async def drift(ctx: TickContext, line: LivingLineRow) -> LivingLineRow | None:
     table = ctx.rules.living_methods
     if "drift_pct" not in line.locked and line.generation:
-        extra = table.unstable_drift if line.outcome is LineOutcome.UNSTABLE else 0
+        drift_rule = LINE_OUTCOMES[line.outcome].drift_rule
+        extra = int(getattr(table, drift_rule)) if drift_rule is not None else 0
         line.drift_pct = clamp_percent(line.drift_pct + table.drift_per_generation + extra)
     if line.drift_pct < table.new_line_drift or "drift_pct" in line.locked:
         return None

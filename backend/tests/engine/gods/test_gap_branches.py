@@ -81,7 +81,7 @@ def test_world_state_gates_son_tools(rules: Rules) -> None:
     gated = {
         SonToolId.MOVE_TO_WORLD: "automatic_distribution",
         SonToolId.RESURRECT_SIBLING: "dead_sibling",
-        SonToolId.SCATTER_BONES: "dead_sibling",
+        SonToolId.HINDER_RETURN: "dead_sibling",
         SonToolId.REKINDLE_STAR: "dead_star",
         SonToolId.BIND_SPIRIT: "free_spirit",
         SonToolId.TALK_TO_FOREIGN_GOD: "contacted_foreign_god",

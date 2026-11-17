@@ -9,7 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.gardens import GardenRow
@@ -558,7 +558,7 @@ async def migrate(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> i
 async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: int, hunted: float) -> int:
     if hunted <= 0 or not wilds.hunters[region]:
         return 0
-    products = list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == species_id)))
+    products = list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == species_id)))
     ledger = GoodsLedger(ctx.session, ctx.epoch)
     taken = 0
     share = hunted / len(wilds.hunters[region])

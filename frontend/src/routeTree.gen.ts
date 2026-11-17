@@ -24,6 +24,7 @@ import { Route as AppGalleryRouteImport } from './routes/_app/gallery'
 import { Route as AppGoalsRouteImport } from './routes/_app/goals'
 import { Route as AppHeavensRouteImport } from './routes/_app/heavens'
 import { Route as AppInterconnectionsRouteImport } from './routes/_app/interconnections'
+import { Route as AppKindsRouteImport } from './routes/_app/kinds'
 import { Route as AppLanguagesRouteImport } from './routes/_app/languages'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
 import { Route as AppMapRouteImport } from './routes/_app/map'
@@ -117,6 +118,11 @@ const AppHeavensRoute = AppHeavensRouteImport.update({
 const AppInterconnectionsRoute = AppInterconnectionsRouteImport.update({
   id: '/interconnections',
   path: '/interconnections',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppKindsRoute = AppKindsRouteImport.update({
+  id: '/kinds',
+  path: '/kinds',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppLanguagesRoute = AppLanguagesRouteImport.update({
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof AppGoalsRoute
   '/heavens': typeof AppHeavensRoute
   '/interconnections': typeof AppInterconnectionsRoute
+  '/kinds': typeof AppKindsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
   '/map': typeof AppMapRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/goals': typeof AppGoalsRoute
   '/heavens': typeof AppHeavensRoute
   '/interconnections': typeof AppInterconnectionsRoute
+  '/kinds': typeof AppKindsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
   '/map': typeof AppMapRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/_app/goals': typeof AppGoalsRoute
   '/_app/heavens': typeof AppHeavensRoute
   '/_app/interconnections': typeof AppInterconnectionsRoute
+  '/_app/kinds': typeof AppKindsRoute
   '/_app/languages': typeof AppLanguagesRoute
   '/_app/ledger': typeof AppLedgerRoute
   '/_app/map': typeof AppMapRoute
@@ -347,6 +356,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/heavens'
     | '/interconnections'
+    | '/kinds'
     | '/languages'
     | '/ledger'
     | '/map'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/heavens'
     | '/interconnections'
+    | '/kinds'
     | '/languages'
     | '/ledger'
     | '/map'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/_app/goals'
     | '/_app/heavens'
     | '/_app/interconnections'
+    | '/_app/kinds'
     | '/_app/languages'
     | '/_app/ledger'
     | '/_app/map'
@@ -550,6 +562,13 @@ declare module '@tanstack/react-router' {
       path: '/interconnections'
       fullPath: '/interconnections'
       preLoaderRoute: typeof AppInterconnectionsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/kinds': {
+      id: '/_app/kinds'
+      path: '/kinds'
+      fullPath: '/kinds'
+      preLoaderRoute: typeof AppKindsRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/languages': {
@@ -740,6 +759,7 @@ interface AppRouteRouteChildren {
   AppGoalsRoute: typeof AppGoalsRoute
   AppHeavensRoute: typeof AppHeavensRoute
   AppInterconnectionsRoute: typeof AppInterconnectionsRoute
+  AppKindsRoute: typeof AppKindsRoute
   AppLanguagesRoute: typeof AppLanguagesRoute
   AppLedgerRoute: typeof AppLedgerRoute
   AppMapRoute: typeof AppMapRoute
@@ -765,6 +785,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppGoalsRoute: AppGoalsRoute,
   AppHeavensRoute: AppHeavensRoute,
   AppInterconnectionsRoute: AppInterconnectionsRoute,
+  AppKindsRoute: AppKindsRoute,
   AppLanguagesRoute: AppLanguagesRoute,
   AppLedgerRoute: AppLedgerRoute,
   AppMapRoute: AppMapRoute,

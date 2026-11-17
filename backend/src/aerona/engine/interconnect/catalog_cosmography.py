@@ -262,6 +262,7 @@ COSMOGRAPHY_MECHANICS = (
     ),
     Mechanic(
         key="celestial_omens",
+        tools=("read_the_sky",),
         spec_item="S10.3",
         title="Peoples read celestial bodies as omens, returns move piety and doom, and the epoch star lifts cults, prophecies and rites",
         subsystem=S.FAITH,

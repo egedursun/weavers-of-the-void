@@ -4,13 +4,13 @@ from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import MartialStyle
+from aerona.domain.enums.demography import MartialStyle, Sex
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionState
+from aerona.domain.enums.kinds import IngredientRole, MealSlot
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType, UnitFamily, UnitKind
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.powers import PowerDeviceEffect
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
@@ -195,6 +195,23 @@ class EquipmentModelView(ApiModel):
 class IngredientView(ApiModel):
     commodity: CommodityKind
     share: int
+    role: IngredientRole
+    good_kind_id: int | None
+    good_name: str | None
+
+
+class DishStepView(ApiModel):
+    id: int
+    step: int
+    method: CookingMethod
+    duration: int
+    locked: list[str]
+
+
+class FlavourView(ApiModel):
+    flavour: str
+    label: str
+    value: int
 
 
 class CookingView(ApiModel):
@@ -203,6 +220,7 @@ class CookingView(ApiModel):
     dish_name: str
     popularity: int
     cooked: int
+    short_epochs: int
     since_epoch: int
     locked: list[str]
 
@@ -216,13 +234,19 @@ class DishView(ApiModel):
     origin: NodeRef | None
     method: CookingMethod
     course: DishCourse
+    category: MealSlot
     nourishment: int
     delight: int
     keeps: int
     prestige: int
+    prep_skill: int
     technique: Technique | None
     created_epoch: int
     retired: bool
+    derived_from_id: int | None
+    derived_from_name: str | None
+    flavours: list[FlavourView]
+    steps: list[DishStepView]
     ingredients: list[IngredientView]
     cooked_in: list[CookingView]
     locked: list[str]
@@ -371,7 +395,7 @@ class VesselSectionView(ApiModel):
 
 
 class AttractionView(ApiModel):
-    drawn_to: list[MortalSex] | None
+    drawn_to: list[Sex] | None
     attraction: int
     decline: int
     held: list[str]

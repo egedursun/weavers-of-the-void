@@ -5,12 +5,15 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import SpeciesRangeRow
+from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LegendaryQuestRow, ThreadRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import LegendaryQuestOutcome
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
@@ -25,7 +28,7 @@ from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_son, make_world, teach, tick, tuned
 
 
-async def test_mutation_and_chimera(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+async def test_mutation_and_merged_species(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
     ctx = tick(session, tuned(rules, "creatures", mutation_cursed_bonus_pct=100))
     beast = await make_entity(
         session, "Graveling", EntityType.SPECIES, SpeciesStats(strength=50, danger=40), world_id=cosmos.home.id, flags=[EntityFlag.CURSED]
@@ -33,9 +36,9 @@ async def test_mutation_and_chimera(session: AsyncSession, cosmos: Cosmos, rules
     assert await species_mutations(ctx) == 1
     assert EntityFlag.MUTATED in await EntityRepository(session).flags(beast.id)
     other = await make_entity(session, "Owlstag", EntityType.SPECIES, SpeciesStats(strength=30, danger=20), world_id=cosmos.home.id)
-    chimera = await merge_species(ctx, beast, other)
-    assert chimera.engine_kind is EngineKind.CHIMERA and EntityFlag.CHIMERA in await EntityRepository(session).flags(chimera.id)
-    assert await BondRepository(session).exists_between(chimera.id, beast.id, BondKind.DESCENDS_FROM)
+    merged = await merge_species(ctx, beast, other)
+    assert merged.engine_kind is EngineKind.MERGED_SPECIES and EntityFlag.MERGED_SPECIES in await EntityRepository(session).flags(merged.id)
+    assert await BondRepository(session).exists_between(merged.id, beast.id, BondKind.DESCENDS_FROM)
 
 
 async def test_mutation_chance_adds_the_might_term(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -76,13 +79,23 @@ async def test_stowaway_crosses_worlds(session: AsyncSession, cosmos: Cosmos, ru
     assert EntityFlag.INVASIVE in await EntityRepository(session).flags(carried.id)
 
 
-async def test_soul_binding_makes_a_golem(ctx: TickContext, cosmos: Cosmos) -> None:
+async def test_soul_binding_animates_a_work(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Hills", cosmos.home.id)
     soul = await make_entity(ctx.session, "Shade", EntityType.SPIRIT, SpiritStats(), world_id=cosmos.home.id, location_id=region.id)
     work = await make_entity(ctx.session, "Stone Gate", EntityType.STRUCTURE, StructureStats(), world_id=cosmos.home.id, location_id=region.id, power=6)
-    golem = await soul_bind(ctx, soul.id, work.id, "Aeron")
-    assert golem.engine_kind is EngineKind.GOLEM and soul.status is EntityStatus.DEAD
-    assert CreatureTrait.STONESKIN in await EntityRepository(ctx.session).traits(golem.id)
+    ctx.session.add(NodeMaterialRow(node_id=work.id, slot=MaterialSlot.BODY, material=MaterialKind.STONE))
+    animated = await soul_bind(ctx, soul.id, work.id, "Aeron")
+    assert animated.engine_kind is EngineKind.ANIMATED_WORK and soul.status is EntityStatus.DEAD
+    assert CreatureTrait.STONESKIN in await EntityRepository(ctx.session).traits(animated.id)
+
+
+async def test_a_soft_work_moves_without_a_hard_skin(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Hills", cosmos.home.id)
+    soul = await make_entity(ctx.session, "Shade", EntityType.SPIRIT, SpiritStats(), world_id=cosmos.home.id, location_id=region.id)
+    work = await make_entity(ctx.session, "Thatched Hall", EntityType.STRUCTURE, StructureStats(), world_id=cosmos.home.id, location_id=region.id, power=6)
+    ctx.session.add(NodeMaterialRow(node_id=work.id, slot=MaterialSlot.BODY, material=MaterialKind.THATCH))
+    animated = await soul_bind(ctx, soul.id, work.id, "Aeron")
+    assert CreatureTrait.STONESKIN not in await EntityRepository(ctx.session).traits(animated.id)
 
 
 async def test_souls_descend_to_their_own_world(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

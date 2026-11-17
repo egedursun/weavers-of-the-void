@@ -31,7 +31,7 @@ KNOWLEDGE_BRANCHES: dict[KnowledgeBranch, KeyedText[KnowledgeBranch]] = {
         KeyedText(B.PATHFINDING, "Pathfinding", "Can fold space with the cosmic travel resource."),
         KeyedText(B.VOID_LIVING, "Void Living", "Can settle worlds with thin or no air; loses fewer travellers."),
         KeyedText(B.IMMORTALITY, "Pursuit of Immortality", "Their mortals reach for immortality."),
-        KeyedText(B.BIOMANCY, "Biomancy", "Combines and alters living things: merges species into chimeras and steers mutations."),
+        KeyedText(B.BIOMANCY, "Biomancy", "Combines and alters living things: merges species into new ones and steers mutations."),
         KeyedText(B.FORBIDDEN, "Forbidden Knowledge", "Great power in war and magic, at the price of sanity and a leak into their world."),
         KeyedText(B.CIVICS, "Civics", "Their laws, offices, faith and thought grow into institutions that shape how the realm is run."),
     )

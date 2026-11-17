@@ -37,7 +37,6 @@ import {
   Scale,
   ScrollText,
   Shield,
-  Shovel,
   Skull,
   Sparkles,
   Sun,
@@ -47,8 +46,11 @@ import {
   Users,
   Utensils,
   WandSparkles,
-  Wind,
 } from 'lucide-react'
+import {
+  FUNERAL_SPEC,
+  type FuneralCustom,
+} from '@/features/entity/society/folkLabels'
 import { type Named } from '../realm/labels'
 
 export const TENETS: Record<string, Named> = {
@@ -104,7 +106,7 @@ export const TENETS: Record<string, Named> = {
     icon: Medal,
     tone: 'danger',
   },
-  divine_kingship: { label: 'Divine kingship', icon: Crown, tone: 'gold' },
+  divine_rule: { label: 'Divine rule', icon: Crown, tone: 'gold' },
   dietary_law: { label: 'Dietary law', icon: Utensils, tone: 'warning' },
   sacred_species: { label: 'Sacred beast', icon: PawPrint, tone: 'success' },
   pilgrimage_duty: {
@@ -170,10 +172,25 @@ export const FANATICISMS: Record<string, Named> = {
 }
 
 export const CLERGY: Record<string, Named> = {
-  high_priest: { label: 'High priest', icon: Crown, tone: 'gold' },
-  priest: { label: 'Priest', icon: Church, tone: 'info' },
-  monk: { label: 'Monk', icon: BookOpen, tone: 'verdigris' },
-  inquisitor: { label: 'Inquisitor', icon: Eye, tone: 'danger' },
+  leader: { label: 'Leader of the faith', icon: Crown, tone: 'gold' },
+  celebrant: { label: 'Celebrant', icon: Church, tone: 'info' },
+  ascetic: { label: 'Ascetic', icon: BookOpen, tone: 'verdigris' },
+  guardian_of_doctrine: {
+    label: 'Guardian of doctrine',
+    icon: Eye,
+    tone: 'danger',
+  },
+  teacher: { label: 'Teacher', icon: BookOpen, tone: 'info' },
+  healer: { label: 'Healer', icon: Church, tone: 'success' },
+  seer: { label: 'Seer', icon: Eye, tone: 'verdigris' },
+  keeper_of_sites: {
+    label: 'Keeper of holy sites',
+    icon: Church,
+    tone: 'gold',
+  },
+  missionary: { label: 'Missionary', icon: BookOpen, tone: 'warning' },
+  judge: { label: 'Judge', icon: Crown, tone: 'info' },
+  scribe: { label: 'Scribe', icon: BookOpen, tone: 'muted' },
 }
 
 export const HOLDINGS: Record<string, Named> = {
@@ -231,13 +248,7 @@ export const ALIGNMENTS: Record<string, Named> = {
   vengeful: { label: 'Vengeful', icon: Angry, tone: 'danger' },
 }
 
-export const RITES: Record<string, Named> = {
-  burial: { label: 'Buried', icon: Shovel, tone: 'muted' },
-  burning: { label: 'Burned', icon: Flame, tone: 'warning' },
-  exposure: { label: 'Given to the sky', icon: Wind, tone: 'info' },
-  nameless: { label: 'Buried nameless', icon: EyeOff, tone: 'warning' },
-  none: { label: 'Unburied', icon: CircleOff, tone: 'danger' },
-}
+export const RITES: Record<FuneralCustom, Named> = FUNERAL_SPEC
 
 export const REBIRTH_PATHS: Record<string, Named & { hint: string }> = {
   people: {
@@ -369,7 +380,7 @@ export function criteriaText(criteria: Criteria): string[] {
   if (criteria.needs_rite) lines.push('Given its rites')
   if (criteria.rites && criteria.rites.length > 0)
     lines.push(
-      `Rite: ${criteria.rites.map((rite) => RITES[rite]?.label ?? rite).join(', ')}`
+      `Rite: ${criteria.rites.map((rite) => (RITES as Record<string, Named>)[rite]?.label ?? rite).join(', ')}`
     )
   if (criteria.tenets_any && criteria.tenets_any.length > 0)
     lines.push(

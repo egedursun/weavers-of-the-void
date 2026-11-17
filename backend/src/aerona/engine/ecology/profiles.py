@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.flora import DEFAULT_YIELDS, PLANT_PRODUCTS
 from aerona.constants.units import PERCENT
+from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
@@ -19,6 +20,7 @@ from aerona.domain.enums.ecology import (
     GRAZERS,
     GROWN,
     SIZE_ORDER,
+    AnimalRole,
     Biochemistry,
     Diet,
     GrowthCycle,
@@ -26,7 +28,6 @@ from aerona.domain.enums.ecology import (
     SizeClass,
     Sociality,
     SpeciesClass,
-    SpeciesUse,
     YieldProduct,
 )
 from aerona.domain.enums.economy import CommodityKind
@@ -83,7 +84,7 @@ MILK = Product("milk", CommodityKind.MILK, None, 1)
 EGGS = Product("eggs", CommodityKind.EGGS, None, 1)
 FEATHERS = Product("feathers", CommodityKind.LUXURIES, None, 1)
 REAGENTS = Product("magic reagents", CommodityKind.MAGICAL_REAGENTS, None, 1)
-DRAGONBONE = Product("dragonbone", CommodityKind.WEAPONS, MaterialKind.DRAGONBONE, 1)
+GREAT_BONE = Product("great_bone", CommodityKind.WEAPONS, MaterialKind.GREAT_BONE, 1)
 PRODUCTS = {
     YieldProduct.MEAT: MEAT,
     YieldProduct.HIDE: HIDE,
@@ -96,7 +97,7 @@ PRODUCTS = {
     YieldProduct.MILK: MILK,
     YieldProduct.FEATHERS: FEATHERS,
     YieldProduct.MAGIC_REAGENTS: REAGENTS,
-    YieldProduct.DRAGONBONE: DRAGONBONE,
+    YieldProduct.GREAT_BONE: GREAT_BONE,
     YieldProduct.EGGS: EGGS,
 }
 PLANT_PLANS = {SpeciesClass.PLANT: P.ARBOREAL, SpeciesClass.FUNGUS: P.AMORPHOUS}
@@ -229,10 +230,9 @@ async def nature_of(
 ) -> Nature:
     parent = await parent_profile(session, species.id)
     kind = class_of(spec, traits, parent)
-    grown = kind in GROWN
-    plan = spec.body_plan or (PLANT_PLANS[kind] if grown and parent is None else await plan_of(session, species.id, traits, megafauna, parent))
+    plan = spec.body_plan or (PLANT_PLANS[kind] if kind in PLANT_PLANS and parent is None else await plan_of(session, species.id, traits, megafauna, parent))
     size = spec.size_class or size_of(species, plan, megafauna, parent)
-    diet = spec.diet or (PLANT_DIETS[kind] if grown and parent is None else diet_of(species, traits, plan, parent))
+    diet = spec.diet or (PLANT_DIETS[kind] if kind in PLANT_DIETS and parent is None else diet_of(species, traits, plan, parent))
     sociality = spec.sociality or sociality_of(diet, traits, parent)
     nocturnal = spec.nocturnal if spec.nocturnal is not None else parent.nocturnal if parent is not None else T.ECHOLOCATION in traits
     migratory = spec.migratory if spec.migratory is not None else parent.migratory if parent is not None else False
@@ -245,7 +245,7 @@ def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: in
     found.append(CHITIN if plan is P.INSECTOID or (T.ARMOURED in traits and size in SHELLED) else HIDE)
     found.append(BONE)
     if size in GREAT:
-        found.append(DRAGONBONE if T.FIRE_BREATHING in traits or might >= mighty else IVORY)
+        found.append(GREAT_BONE if T.FIRE_BREATHING in traits or might >= mighty else IVORY)
     if T.VENOMOUS in traits:
         found.append(VENOM)
     if diet in GRAZERS and size in KEPT_SIZES:
@@ -260,30 +260,36 @@ def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: in
     return list({item.product: item for item in found}.values())
 
 
-def uses_of(nature: Nature, tameability: int, traits: set[CreatureTrait], might: int, mighty: int) -> set[SpeciesUse]:
+def uses_of(nature: Nature, tameability: int, traits: set[CreatureTrait], might: int, mighty: int) -> set[AnimalRole]:
     size, diet = nature.size, nature.diet
-    found: set[SpeciesUse] = set()
+    found: set[AnimalRole] = set()
     if T.POISONOUS_FLESH not in traits and diet in GRAZERS:
-        found |= {SpeciesUse.FOOD, SpeciesUse.SACRIFICE}
+        found |= {AnimalRole.MEAT, AnimalRole.SACRED, AnimalRole.DAIRY}
+    if diet in GRAZERS and size not in DRAUGHT:
+        found.add(AnimalRole.FIBRE)
     if size in DRAUGHT and diet in GRAZERS:
-        found |= {SpeciesUse.MOUNT, SpeciesUse.LABOUR}
+        found |= {AnimalRole.MOUNT, AnimalRole.DRAFT}
     if size in {Z.LARGE, Z.HUGE, Z.COLOSSAL} and diet not in GRAZERS:
-        found.add(SpeciesUse.WAR)
+        found.add(AnimalRole.WAR)
     if (T.FLYING in traits or nature.plan in FLYERS) and size in DRAUGHT:
-        found.add(SpeciesUse.MOUNT)
+        found.add(AnimalRole.MOUNT)
     if T.PACK_HUNTER in traits or nature.sociality is Sociality.PACK or (diet is Diet.CARNIVORE and size is Z.MEDIUM):
-        found.add(SpeciesUse.GUARD)
+        found |= {AnimalRole.GUARD, AnimalRole.HUNTING, AnimalRole.SENSING}
+    if (T.FLYING in traits or nature.plan in FLYERS) and size in SHELLED:
+        found.add(AnimalRole.MESSENGER)
     if size in SHELLED and tameability >= PERCENT // 2:
-        found.add(SpeciesUse.COMPANION)
+        found.add(AnimalRole.COMPANION)
+    if tameability >= PERCENT * 3 // 4 and size not in SHELLED:
+        found.add(AnimalRole.ENTERTAINMENT)
     if might >= mighty:
-        found.add(SpeciesUse.MAGIC)
+        found.add(AnimalRole.REAGENT_SOURCE)
     if diet in PEST_HUNTERS and size in SHELLED:
-        found.add(SpeciesUse.PEST_CONTROL)
+        found.add(AnimalRole.PEST_CONTROL)
     return found
 
 
-def plant_uses(might: int, mighty: int) -> set[SpeciesUse]:
-    return {SpeciesUse.MAGIC} if might >= mighty else set()
+def plant_uses(might: int, mighty: int) -> set[AnimalRole]:
+    return {AnimalRole.REAGENT_SOURCE} if might >= mighty else set()
 
 
 def plant_products(nature: Nature, cycle: GrowthCycle, chosen: tuple[PlantYield, ...]) -> list[Product]:
@@ -308,7 +314,7 @@ async def inherited_products(session: AsyncSession, species_id: int) -> tuple[Yi
     parent = await parent_profile(session, species_id)
     if parent is None:
         return ()
-    names = set(await session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == parent.species_entity_id)))
+    names = set(await session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == parent.species_entity_id)))
     return tuple(item for item, product in PRODUCTS.items() if product.product in names)
 
 
@@ -395,7 +401,17 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
         products = yields_of(nature, traits, might, table.mighty, extra)
         kept = uses_of(nature, tameability, traits, might, table.mighty)
     for item in products:
-        ctx.session.add(SpeciesYieldRow(species_entity_id=species.id, product=item.product, commodity=item.commodity, material=item.material, rate=item.rate))
+        ctx.session.add(
+            SpeciesProductRow(
+                species_entity_id=species.id,
+                product=item.product,
+                commodity=item.commodity,
+                material=item.material,
+                rate=item.rate,
+                part=PRODUCT_PARTS.get(item.product),
+                locked=[],
+            )
+        )
     for use in kept:
         ctx.session.add(SpeciesUseRow(species_entity_id=species.id, use=use))
     await ctx.session.flush()

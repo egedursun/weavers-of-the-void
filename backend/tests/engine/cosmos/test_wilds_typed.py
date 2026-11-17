@@ -10,7 +10,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mind import MemoryRow
@@ -19,7 +19,7 @@ from aerona.domain.enums.body import BodyBuild, BodyPlan, HeightClass
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, SpeciesUse, YieldProduct
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
@@ -100,8 +100,8 @@ async def test_a_profile_is_built_from_typed_fields_and_never_from_its_words(ctx
     row = await profile_of(ctx, species)
     assert row.diet is Diet.HERBIVORE and row.sociality is Sociality.HERD
     assert not row.nocturnal and not row.migratory and row.body_plan is BodyPlan.QUADRUPED
-    products = set(await ctx.session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == species.id)))
-    assert "silk" not in products and "dragonbone" not in products
+    products = set(await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == species.id)))
+    assert "silk" not in products and "great_bone" not in products
     typed = await kind(
         ctx,
         cosmos,
@@ -112,7 +112,7 @@ async def test_a_profile_is_built_from_typed_fields_and_never_from_its_words(ctx
     shaped = await ctx.session.get(SpeciesProfileRow, typed.id)
     assert shaped is not None and shaped.body_plan is BodyPlan.INSECTOID and shaped.size_class is SizeClass.TINY
     assert shaped.nocturnal and shaped.migratory and shaped.sociality is Sociality.HIVE
-    made = set(await ctx.session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == typed.id)))
+    made = set(await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == typed.id)))
     assert {"silk", "chitin"} <= made
 
 
@@ -205,10 +205,10 @@ async def test_a_herd_in_a_like_land_does_not_drift(session: AsyncSession, cosmo
 
 def test_domestic_kinds_grow_for_work_and_shrink_for_company() -> None:
     rng = SeededRandom.for_epoch(1, 1, "size")
-    assert drifted_size(SizeClass.MEDIUM, {SpeciesUse.MOUNT}, rng, 0) is SizeClass.LARGE
-    assert drifted_size(SizeClass.MEDIUM, {SpeciesUse.COMPANION}, rng, 0) is SizeClass.SMALL
-    assert drifted_size(SizeClass.MEDIUM, {SpeciesUse.FOOD}, rng, 0) is SizeClass.MEDIUM
-    assert drifted_size(SizeClass.COLOSSAL, {SpeciesUse.WAR}, rng, 0) is SizeClass.COLOSSAL
+    assert drifted_size(SizeClass.MEDIUM, {AnimalRole.MOUNT}, rng, 0) is SizeClass.LARGE
+    assert drifted_size(SizeClass.MEDIUM, {AnimalRole.COMPANION}, rng, 0) is SizeClass.SMALL
+    assert drifted_size(SizeClass.MEDIUM, {AnimalRole.MEAT}, rng, 0) is SizeClass.MEDIUM
+    assert drifted_size(SizeClass.COLOSSAL, {AnimalRole.WAR}, rng, 0) is SizeClass.COLOSSAL
 
 
 def test_overall_abundance_is_the_weighted_total_of_the_ranges() -> None:
@@ -337,7 +337,7 @@ async def test_a_slain_kind_of_beast_yields_trophies_to_its_mortal_slayer(ctx: T
     assert await beasts.corpse(ctx, beast, row, hero) >= 2
     trophies = await beasts.owned_items(ctx, [hero.id])
     classes = {profile.material for profile in await ctx.session.scalars(select(ItemProfileRow).where(ItemProfileRow.item_entity_id.in_(trophies)))}
-    assert "dragonbone" in classes
+    assert "great_bone" in classes
 
 
 async def test_a_cowed_town_swears_tribute_and_breaks_it_when_it_cannot_pay(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

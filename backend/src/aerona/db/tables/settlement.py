@@ -108,6 +108,7 @@ class DistrictRow(Base):
     level: Mapped[int] = mapped_column(default=1)
     condition: Mapped[int] = mapped_column(default=100)
     material: Mapped[BuildMaterial] = mapped_column(enum_type(BuildMaterial, "material"), default=BuildMaterial.TIMBER)
+    world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="SET NULL"))
     built_epoch: Mapped[int]
     built_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     built_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
@@ -139,6 +140,7 @@ class SettlementInfrastructureRow(Base):
     settlement_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     walls_level: Mapped[int] = mapped_column(default=0)
     walls_material: Mapped[BuildMaterial] = mapped_column(enum_type(BuildMaterial, "walls_material"), default=BuildMaterial.TIMBER)
+    walls_world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="SET NULL"))
     walls_condition: Mapped[int] = mapped_column(default=100)
     gates: Mapped[int] = mapped_column(default=0)
     roads: Mapped[int] = mapped_column(default=0)

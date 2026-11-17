@@ -6,7 +6,7 @@ from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.titles import TitleTally, drift_lands, follow_rulers, press_claims, primary_title, seed_titles, usurp_and_create
@@ -40,7 +40,7 @@ async def test_every_realm_founds_a_title_that_follows_its_throne(realm: Realm) 
     tally = TitleTally()
     await seed_titles(ctx, await RealmBook.load(realm.session), tally)
     title = await primary_title(ctx, polity.id)
-    assert title is not None and title.rank is TitleRank.KINGDOM and title.holder_node_id == queen.id and title.emblem
+    assert title is not None and title.rank is TitleTier.REALM and title.holder_node_id == queen.id and title.emblem
     assert await realm.session.get(DeJureLinkRow, (title.title_entity_id, realm.region.id)) is not None
     office = await realm.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == polity.id))
     assert office is not None

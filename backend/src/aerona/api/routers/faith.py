@@ -115,7 +115,7 @@ async def state_of(session: AsyncSession, church: Church) -> tuple[PolityProfile
     realm = await session.scalar(
         select(PolityProfileRow).where(PolityProfileRow.state_religion_id == church.cult.id).order_by(PolityProfileRow.polity_entity_id).limit(1)
     )
-    if realm is None or not church.holds(TenetKind.DIVINE_KINGSHIP):
+    if realm is None or not church.holds(TenetKind.DIVINE_RULE):
         return realm, None
     ruler = await session.scalar(
         select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm.polity_entity_id, OfficeRow.kind == OfficeKind.RULER).limit(1)

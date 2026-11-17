@@ -64,10 +64,11 @@ async def gift_lines(scope: Scope, me: EntityRow) -> list[str]:
 def union_line(people: str, union: UnionCustomRow) -> str:
     parts = [
         f"form {words(union.form.value)}",
+        *([f"several partners on the {words(union.plural_side.value)} side"] if union.form.value == "plural" else []),
         f"made for {words(union.purpose.value)}",
         f"the joined live {words(union.residence.value)}",
         f"descent {words(union.descent.value)}",
-        "no exchange" if union.exchange.value == "none" else f"exchange {words(union.exchange.value)}",
+        "no exchange" if union.exchange.value == "none" else f"exchange {words(union.exchange.value)} worth {union.exchange_value}",
         f"{words(union.arrangement.value)}",
         "never ended" if union.dissolution.value == "none" else f"ended {words(union.dissolution.value)}",
     ]
@@ -75,6 +76,8 @@ def union_line(people: str, union: UnionCustomRow) -> str:
         parts.append(f"partners from the same {words(union.endogamy.value)}")
     if union.exogamy.value != "none":
         parts.append(f"partners from another {words(union.exogamy.value)}")
+    if union.kin_match.value != "none":
+        parts.append(f"matches sought among {words(union.kin_match.value)}s")
     return f"the customs of union of {people}: {', '.join(parts)}"
 
 
@@ -87,11 +90,7 @@ async def people_lines(scope: Scope, me: EntityRow) -> list[str]:
     kin = await session.get(KinshipSystemRow, people.id)
     if kin is not None:
         customs = [f"descent {words(kin.descent.value)}", f"couples live {words(kin.residence.value)}", f"lines grouped as {words(kin.descent_group.value)}"]
-        if kin.preference.value != "none":
-            customs.append(f"marriage by {words(kin.preference.value)}")
-        if kin.payment.value != "none":
-            customs.append(f"{an(words(kin.payment.value))} of {kin.payment_value} at each marriage")
-        if kin.levirate or kin.sororate:
+        if kin.sibling_union_first or kin.sibling_union_second:
             customs.append("the widowed wed the kin of the dead")
         found.append(f"the ways of kin of {people.name}: {', '.join(customs)}")
     union = await session.get(UnionCustomRow, people.id)

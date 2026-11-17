@@ -11,7 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
@@ -29,7 +29,7 @@ PURITY_DOMAINS = frozenset({Domain.LIGHT, Domain.SUN, Domain.GLASS, Domain.SALT,
 SUFFERING_DOMAINS = frozenset({Domain.BLOOD, Domain.PLAGUE, Domain.HUNGER, Domain.BONE, Domain.MADNESS})
 MARTIAL_DOMAINS = frozenset({Domain.WAR, Domain.HUNT})
 SEER_DOMAINS = frozenset({Domain.DREAM, Domain.STAR, Domain.MOON, Domain.TIME, Domain.KNOWLEDGE, Domain.MEMORY})
-SEER_RITES = frozenset({TraditionKind.INITIATION, TraditionKind.SCAR_RITE, TraditionKind.OFFERING})
+SEER_RITES = frozenset({TraditionFunction.RITE_OF_PASSAGE, TraditionFunction.BODY_MARKING, TraditionFunction.OFFERING})
 HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})
 SHAMEFUL_CAUSES = frozenset({HarmCause.PUNISHMENT, HarmCause.TORTURE})
 PEOPLE_TABLES = table_names((BondRow, EntityRow))

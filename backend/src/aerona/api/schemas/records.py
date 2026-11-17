@@ -17,7 +17,7 @@ from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import ActorKind, NodeKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, ReputationLabel, SonDeathCause, SonStatus, Stat
-from aerona.domain.enums.travel import ArrivalOutcome, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
+from aerona.domain.enums.travel import ArrivalOutcome, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMechanism, TravelMedium, TravelMethod
 from aerona.domain.enums.war import DebtStatus
 from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, FateMode, Gravity, LoreLanguage, SonDistribution, StarType, WorldType
 from aerona.domain.models.entity_stats import EntityStats
@@ -383,6 +383,8 @@ class RouteRecord(ApiModel):
     world_a_id: int
     world_b_id: int
     method: TravelMethod
+    medium: TravelMedium
+    mechanism: TravelMechanism
     duration_epochs: int
     danger: int
     known: bool

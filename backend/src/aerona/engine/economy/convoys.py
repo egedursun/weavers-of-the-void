@@ -4,6 +4,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.carriers import CARRIER_OF, CARRIERS
+from aerona.catalog.kinds.trade_modes import TRADE_MODES
+from aerona.catalog.preservation import PRESERVATION, WATER_DEFAULT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.discovery import ArtFormPractitionerRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow
@@ -18,7 +20,7 @@ from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.intrigue import BeliefSource
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
-from aerona.domain.enums.urban import ConvoyStatus, Preservation, TransportKind
+from aerona.domain.enums.urban import ConvoyStatus, PreservationMethod, TransportKind
 from aerona.engine.context import TickContext
 from aerona.engine.cuisine.dishes import carry_dish
 from aerona.engine.disease.book import DiseaseBook
@@ -69,7 +71,7 @@ async def route_capacity(session: AsyncSession, route_id: int) -> int | None:
 
 
 async def harbour_limit(session: AsyncSession, rules: Rules, profile: TradeRouteProfileRow) -> int | None:
-    if profile.mode is not TradeMode.SEA:
+    if not TRADE_MODES[profile.mode].seagoing:
         return None
     limits = []
     for end in (profile.first_market_id, profile.second_market_id):
@@ -99,8 +101,13 @@ async def fleet_of(ctx: TickContext, owner_id: int, mode: TradeMode, capacity: i
     return fleet
 
 
-def preservation_for(cargo: dict[str, int], mode: TradeMode) -> Preservation:
-    return Preservation.SALTED if mode in (TradeMode.SEA, TradeMode.RIVER) and cargo else Preservation.NONE
+async def preservation_for(ctx: TickContext, owner_id: int, cargo: dict[str, int], mode: TradeMode) -> PreservationMethod:
+    if not cargo:
+        return PreservationMethod.NONE
+    known = [method for method, spec in PRESERVATION.items() if spec.technique is not None and await has_technique(ctx.session, owner_id, spec.technique)]
+    if known:
+        return max(known, key=lambda method: PRESERVATION[method].keeping(ctx.rules))
+    return WATER_DEFAULT if TRADE_MODES[mode].waterborne else PreservationMethod.NONE
 
 
 async def load_cargo(ctx: TickContext, route_id: int) -> dict[str, int]:
@@ -132,7 +139,7 @@ async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfil
             owner_entity_id=owner_id,
             route_entity_id=route.id,
             cargo=cargo,
-            preservation=preservation_for(cargo, profile.mode),
+            preservation=await preservation_for(ctx, owner_id, cargo, profile.mode),
             animals=animals,
             vehicles=vehicles,
             guards=round_half_up(stat_or(origin, "defense", 0) / 10) if origin is not None else 0,
@@ -154,7 +161,7 @@ def fate_of(
     table = rules.convoys
     hunted = (rules.crime_orgs.privateer_pct if privateers else 0) + (table.war_raid_pct if war else 0) - (table.escort_relief if escorted else 0)
     raid = max(0.0, table.raid_pct * (profile.danger_bandits + profile.danger_beasts) / PERCENT + hunted - convoy.guards * table.guard_relief)
-    storm = table.storm_pct * profile.danger_sea / PERCENT if profile.mode is TradeMode.SEA else 0.0
+    storm = table.storm_pct * profile.danger_sea / PERCENT if TRADE_MODES[profile.mode].seagoing else 0.0
     delay = table.delay_pct * profile.danger_weather / PERCENT
     if roll < raid:
         return ConvoyStatus.RAIDED

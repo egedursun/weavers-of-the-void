@@ -22,6 +22,7 @@ DRAWER = "section-agrarian"
 AGRARIAN_MECHANICS = (
     Mechanic(
         key="thunen",
+        tools=("replan_land",),
         spec_item="S4.2/RP4",
         title="Rings of land use around each market: gardens, fuel wood, grain and herds by the cost of carrying goods, stretched by rivers, roads and canals",
         subsystem=S.ECONOMY,

@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civilization import unlocked
-from aerona.catalog.travel import TRAVEL_METHODS
+from aerona.catalog.travel import TRAVEL_METHODS, medium_of
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -32,7 +32,7 @@ from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.region import DangerHarm
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
+from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMedium, TravelMethod
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
 from aerona.engine.body.book import factor
@@ -107,23 +107,27 @@ ROAD_EVENT_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.VOID_STORM: "they were caught in a void storm",
     JourneyEventKind.CREATURE: "they met a cosmic creature",
     JourneyEventKind.LOST_WAY: "they lost their way and turned back",
-    JourneyEventKind.SWALLOWED: "some were digested inside the creature",
+    JourneyEventKind.NOT_RELEASED: "some were never let out of the being that carried them",
     JourneyEventKind.DREAM_NOT_RETURNED: "those left in the dream did not wake",
-    JourneyEventKind.MEMORY_LOSS: "the river's water took their memories",
+    JourneyEventKind.MEMORY_LOSS: "they lost their memories on the way",
 }
 ARMOUR_EVENTS = frozenset({JourneyEventKind.PIRATES, JourneyEventKind.CREATURE, JourneyEventKind.VOID_STORM})
-SPECIAL_EVENTS = frozenset({JourneyEventKind.SWALLOWED, JourneyEventKind.DREAM_NOT_RETURNED, JourneyEventKind.MEMORY_LOSS})
-SWALLOWED_TEXT: dict[JourneyEventKind, str] = {
+SPECIAL_EVENTS = frozenset({JourneyEventKind.NOT_RELEASED, JourneyEventKind.DREAM_NOT_RETURNED, JourneyEventKind.MEMORY_LOSS})
+LOSS_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.LOST_WAY: "they lost their bearings in the void",
-    JourneyEventKind.SWALLOWED: "the creature carrying them never let them go",
+    JourneyEventKind.NOT_RELEASED: "the creature carrying them never let them go",
     JourneyEventKind.DREAM_NOT_RETURNED: "no one woke from the dream",
-    JourneyEventKind.MEMORY_LOSS: "the river took every memory; forgetting who they were, they were lost in its water",
+    JourneyEventKind.MEMORY_LOSS: "they lost every memory on the way and could not find their way back",
     JourneyEventKind.PIRATES: "route raiders left no one alive",
-    JourneyEventKind.VOID_STORM: "a void storm swallowed them",
-    JourneyEventKind.CREATURE: "a cosmic creature swallowed the travellers",
+    JourneyEventKind.VOID_STORM: "a void storm destroyed them",
+    JourneyEventKind.CREATURE: "a cosmic creature killed the travellers",
 }
 COMMON_EVENTS = (JourneyEventKind.PIRATES, JourneyEventKind.VOID_STORM, JourneyEventKind.CREATURE, JourneyEventKind.LOST_WAY)
-METHOD_EVENTS = {M.SWALLOWED: JourneyEventKind.SWALLOWED, M.DREAM_JOURNEY: JourneyEventKind.DREAM_NOT_RETURNED, M.RIVER_OF_DEAD: JourneyEventKind.MEMORY_LOSS}
+MEDIUM_EVENTS = {
+    TravelMedium.BODY: JourneyEventKind.NOT_RELEASED,
+    TravelMedium.DREAM: JourneyEventKind.DREAM_NOT_RETURNED,
+    TravelMedium.DEATH: JourneyEventKind.MEMORY_LOSS,
+}
 INTENT_SENT = {
     JourneyIntent.COLONY: "a colony expedition",
     JourneyIntent.EXPLORATION: "an exploration expedition",
@@ -471,16 +475,16 @@ async def _ghost_ship(ctx: TickContext, journey: JourneyRow, traveller: EntityRo
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"{vehicle.name} Ghost",
+            name=f"{vehicle.name}, the Lost Vessel",
             entity_type=EntityType.LEGEND,
             body=f"{vehicle.name} vanished in the void with {traveller.name}'s travellers.",
             stats=LegendStats(spread=travel.ghost_ship_legend_spread),
             power=travel.ghost_ship_legend_power,
             world_id=journey.origin_world_id,
-            subtype="ghost ship",
+            subtype="lost vessel",
         ),
     )
-    await connect(ctx.session, legend.id, vehicle.id, BondKind.TELLS_OF, ctx.epoch, description="the ghost ship")
+    await connect(ctx.session, legend.id, vehicle.id, BondKind.TELLS_OF, ctx.epoch, description="the lost vessel")
     return legend
 
 
@@ -503,7 +507,7 @@ async def _lost_caravan(ctx: TickContext, journey: JourneyRow, traveller: Entity
         RecordSpec(
             name=f"{traveller.name} Lost Journey",
             entity_type=EntityType.LEGEND,
-            body=f"{travellers_counted_2} of {traveller.name} set out for {target}; {how}. Their names are spoken at home every year.",
+            body=f"{travellers_counted_2} of {traveller.name} set out for {target}; {how}.",
             stats=LegendStats(spread=travel.lost_caravan_legend_spread),
             power=travel.lost_caravan_legend_power,
             world_id=journey.origin_world_id,
@@ -529,7 +533,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     risk = road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)
     if not scene.rng.probability(risk * await ctx.hook_easing(traveller.id, DomainHook.ROAD_SAFETY)):
         return True
-    kind = METHOD_EVENTS.get(route.method) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else None)
+    kind = MEDIUM_EVENTS.get(medium_of(route.method)) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else None)
     if kind is None:
         met = await draw(ctx, route, journey.destination_world_id, scene.rng)
         if met is not None:
@@ -538,13 +542,13 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
         kind = scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
     if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle, rig)):
-        how = SWALLOWED_TEXT[kind]
+        how = LOSS_TEXT[kind]
         add_event(journey, ctx.epoch, kind, how, loss=journey.population)
         journey.status = JourneyStatus.LOST
         journey.end_epoch = ctx.epoch
         ghost = await _ghost_ship(ctx, journey, traveller, vehicle) if vehicle is not None and vehicle.status is EntityStatus.CANON else None
         caravan = await _lost_caravan(ctx, journey, traveller, target, how) if ghost is None and journey.population > 0 else None
-        suffix = f"; {vehicle.name} is now a ghost-ship legend" if ghost is not None and vehicle is not None else ""
+        suffix = f"; {vehicle.name} is now a legend of a lost vessel" if ghost is not None and vehicle is not None else ""
         travellers = f" ({several(journey.population, 'traveller', 'travellers')})" if journey.population else ""
         await note(
             ctx,
@@ -711,22 +715,22 @@ class Arrival:
     subjugated: bool = False
 
 
-async def _forget_on_river(ctx: TickContext, arrival: Arrival) -> None:
+async def _forget_on_crossing(ctx: TickContext, arrival: Arrival) -> None:
     costs = ctx.rules.travel_methods
     rng = ctx.rng(seed_of("river", arrival.journey.id))
-    if arrival.route.method is not M.RIVER_OF_DEAD or not (arrival.journey.memory_lost or rng.chance(costs.river_memory_loss_pct)):
+    if medium_of(arrival.route.method) is not TravelMedium.DEATH or not (arrival.journey.memory_lost or rng.chance(costs.river_memory_loss_pct)):
         return
     arrival.journey.memory_lost = True
     knowing = await active_bonds(ctx.session, [BondKind.KNOWS], sources=[arrival.traveller.id])
     forgotten = rng.sample(knowing, round(len(knowing) * costs.river_knowledge_loss_pct / PERCENT))
     bonds = BondRepository(ctx.session)
     for bond in forgotten:
-        await bonds.deactivate(bond, ctx.epoch, "forgotten on the river of the dead")
+        await bonds.deactivate(bond, ctx.epoch, "forgotten on the crossing of the dead")
     add_event(
         arrival.journey,
         ctx.epoch,
         JourneyEventKind.MEMORY_LOSS,
-        f"the living forgot on the river; {several(len(forgotten), 'kind', 'kinds')} of knowledge {agree(len(forgotten), 'was', 'were')} lost",
+        f"the living forgot on the crossing; {several(len(forgotten), 'kind', 'kinds')} of knowledge {agree(len(forgotten), 'was', 'were')} lost",
     )
 
 
@@ -755,7 +759,7 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
         sky = "airless" if arrival.target.atmosphere.value == "none" else "toxic"
         await note(
             ctx,
-            f"{traveller.name}'s colonists could not live under {arrival.target.name}'s {sky} sky; the colony died out in its first winter.",
+            f"{traveller.name}'s colonists could not live under {arrival.target.name}'s {sky} sky; the colony died out in its first year.",
             key="travel.colony_failed",
             ids=[traveller.id],
         )
@@ -922,12 +926,12 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
         await note(ctx, f"{traveller.name}'s travellers reached {name} but found no land to set foot on.", key="travel.no_land", ids=[traveller.id])
         return None
     arrival = Arrival(journey, traveller, route, region, target)
-    await _forget_on_river(ctx, arrival)
+    await _forget_on_crossing(ctx, arrival)
     if not await _dream_toll(ctx, arrival):
         return None
     carried = await stowaway(ctx, journey.origin_world_id, region)
     if carried is not None:
-        add_event(journey, ctx.epoch, JourneyEventKind.STOWAWAY, f"{carried.name} came ashore with them")
+        add_event(journey, ctx.epoch, JourneyEventKind.STOWAWAY, f"{carried.name} arrived with them")
         await note(
             ctx, f"{traveller.name}'s ships carried a stowaway species to {target.name}; it became invasive there.", key="travel.stowaway", ids=[carried.id]
         )

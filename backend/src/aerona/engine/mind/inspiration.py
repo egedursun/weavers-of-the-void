@@ -33,7 +33,9 @@ from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.renown.deeds import acclaim_deed, best_craft
 
 SEERS = frozenset({MortalRole.PRIEST, MortalRole.SAGE})
-FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT})
+FIGHTERS = frozenset(
+    {MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT}
+)
 FEVER_MATERIALS = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.IRON, MaterialKind.BRONZE, MaterialKind.STONE, MaterialKind.WOOD, MaterialKind.GLASS)
 ITEM_POWER = 3
 

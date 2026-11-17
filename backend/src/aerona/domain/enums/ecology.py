@@ -23,6 +23,8 @@ class Diet(StrEnum):
     MINERAL = "mineral"
     SOUL = "soul"
     VOID = "void"
+    PISCIVORE = "piscivore"
+    SANGUIVORE = "sanguivore"
 
 
 HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE, Diet.SOUL})
@@ -48,16 +50,22 @@ STAGE_ORDER = tuple(DomesticationStage)
 KEPT_STAGES = frozenset({DomesticationStage.HERDED, DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
 
 
-class SpeciesUse(StrEnum):
-    FOOD = "food"
-    LABOUR = "labour"
+class AnimalRole(StrEnum):
+    DRAFT = "draft"
     MOUNT = "mount"
-    WAR = "war"
+    DAIRY = "dairy"
+    FIBRE = "fibre"
+    MEAT = "meat"
     GUARD = "guard"
+    HUNTING = "hunting"
+    WAR = "war"
     COMPANION = "companion"
-    SACRIFICE = "sacrifice"
-    MAGIC = "magic"
+    SACRED = "sacred"
     PEST_CONTROL = "pest_control"
+    MESSENGER = "messenger"
+    SENSING = "sensing"
+    ENTERTAINMENT = "entertainment"
+    REAGENT_SOURCE = "reagent_source"
 
 
 class RangeTrend(StrEnum):
@@ -88,7 +96,7 @@ class YieldProduct(StrEnum):
     MILK = "milk"
     FEATHERS = "feathers"
     MAGIC_REAGENTS = "magic_reagents"
-    DRAGONBONE = "dragonbone"
+    GREAT_BONE = "great_bone"
     EGGS = "eggs"
 
 
@@ -222,7 +230,7 @@ class Temperament(StrEnum):
     CURIOUS = "curious"
     FIERCE = "fierce"
     CUNNING = "cunning"
-    ABDUCTOR = "abductor"
+    SEIZES_PREY = "seizes_prey"
 
 
 class Aversion(StrEnum):

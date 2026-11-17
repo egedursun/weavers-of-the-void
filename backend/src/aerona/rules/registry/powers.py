@@ -10,6 +10,8 @@ K = RuleGroup.FATE_AND_CHRONICLE
 
 @dataclass(frozen=True)
 class PowerSourceRules:
+    soul_draw_beings: int = rule(3, 1, 50, P, "Most beings near its user a source drawn from souls takes life from in one working")
+    soul_draw_pct: int = rule(100, 0, 500, P, "Share of a soul cost taken from the beings near the user, split between them (%)")
     density_floor: int = rule(15, 0, 100, P, "Density below which a land is overdrawn and suffers the source's depletion")
     locus_pct: int = rule(30, 0, 200, P, "Most a source drawn from feeling, dreams, story, bonds or made things moves a draw by its user's state (%)")
     sky_days: int = rule(28, 1, 1000, P, "Days of the sky cycle a tide of the sky follows")

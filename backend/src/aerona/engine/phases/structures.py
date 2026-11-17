@@ -1,7 +1,7 @@
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
-from aerona.engine.structures.backfill import backfill_structures
+from aerona.engine.structures.backfill import backfill_structures, snapshot_styles
 from aerona.engine.structures.functions import run_functions
 from aerona.engine.structures.types import type_standing
 from aerona.engine.structures.upkeep import upkeep_all
@@ -29,6 +29,7 @@ async def structure_survey(ctx: TickContext) -> None:
     for key, value in result.items():
         ctx.count(key, value)
     ctx.count("structures_typed", await type_standing(ctx))
+    ctx.count("structures_styled", await snapshot_styles(ctx))
 
 
 @reads(

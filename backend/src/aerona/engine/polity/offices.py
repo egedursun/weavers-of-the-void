@@ -388,7 +388,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.SENIORITY: [*siblings, *children, *housemates],
         SuccessionRule.ELECTIVE: [*housemates, *children, *siblings, *await subjects(ctx, realm)],
         SuccessionRule.TANISTRY: [*housemates, *children, *siblings],
-        SuccessionRule.MATRILINEAL: [*[item for item in siblings if sex_of(item) == "female"], *grandchildren, *children],
+        SuccessionRule.THROUGH_SECOND_LINE: [*[item for item in siblings if sex_of(item) == "female"], *grandchildren, *children],
         SuccessionRule.BY_COMBAT: [*children, *siblings, *housemates],
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
         SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
@@ -436,7 +436,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
                 -((stat(item, "strength") or 0) * table.combat_strength_pct + (stat(item, "agility") or 0) * (PERCENT - table.combat_strength_pct)),
                 item.id,
             )
-        if rule is SuccessionRule.MATRILINEAL:
+        if rule is SuccessionRule.THROUGH_SECOND_LINE:
             return (order[item.id], item.id)
         merit = (stat(item, "strength") or 0) + (stat(item, "charisma") or 0) + (item.importance or 0)
         return (rank, -(favour.get(item.id, 0) * PERCENT + merit), item.id)

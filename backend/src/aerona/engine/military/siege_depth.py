@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.kinds.siege import STARVATION
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import SoilKind
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeAction, SiegeWork, Stance, StarvationStage
+from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeAction, SiegeWork, Stance
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.society import SocialClass
@@ -32,7 +33,7 @@ from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
 
-SOFT_GROUND = frozenset({SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.ASH, SoilKind.BONE})
+SOFT_GROUND = frozenset({SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.TEPHRA, SoilKind.CALCAREOUS})
 WATER_DAYS = {WaterSupply.NONE: 60, WaterSupply.WELL: 100, WaterSupply.CISTERN: 160, WaterSupply.AQUEDUCT: 220}
 ACTION_WORKS = {
     SiegeAction.BLOCKADE: (SiegeWork.CIRCUMVALLATION,),
@@ -126,7 +127,7 @@ async def siege_sickness(ctx: TickContext, siege: SiegeRow, besieged: EntityRow)
 
 
 async def hunger_betrayal(ctx: TickContext, siege: SiegeRow, besieged: EntityRow) -> bool:
-    if siege.starvation not in {StarvationStage.FAMINE, StarvationStage.TABOO_BROKEN}:
+    if not STARVATION[siege.starvation].starving:
         return False
     town = await ctx.session.get(SettlementProfileRow, besieged.id)
     unrest = town.unrest if town is not None else PERCENT // 2

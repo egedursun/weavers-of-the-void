@@ -235,12 +235,12 @@ async def test_a_river_turned_into_a_neighbour_dries_and_waters_places(realm: Re
 async def test_held_soil_land_use_and_scars_survive_the_engine(realm: Realm) -> None:
     ground = await surveyed(realm)
     await people(realm, "Ploughmen", population=20000)
-    for field, value in (("farmed", 5), ("erosion", 70), ("soil_fertility", 33), ("soil", SoilKind.SALT.value)):
+    for field, value in (("farmed", 5), ("erosion", 70), ("soil_fertility", 33), ("soil", SoilKind.SALINE.value)):
         set_region_field(ground, field, value, lock=True)
     set_scar(ground, ScarKind.HAUNTED, 40, lock=True)
     set_biome(ground, 8, 70, lock=True)
     await land_use(context(realm.session))
     decay_scars(RULES, ground)
-    assert (ground.farmed, ground.erosion, ground.soil_fertility, ground.soil) == (5, 70, 33, SoilKind.SALT)
+    assert (ground.farmed, ground.erosion, ground.soil_fertility, ground.soil) == (5, 70, 33, SoilKind.SALINE)
     assert ground.scars[ScarKind.HAUNTED.value] == 40
     assert ground.biome_mix[8] == 70 and "biome_mix" in ground.locked

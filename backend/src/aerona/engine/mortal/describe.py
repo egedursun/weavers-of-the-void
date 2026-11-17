@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.mind_split import SUMMARIES
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalEquipmentRow, MortalProfileRow
-from aerona.domain.enums.mortal import Ability
 from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
 from aerona.engine.mortal.life import sex_of_stats
 from aerona.engine.primitives.stats import stat
@@ -21,8 +21,8 @@ async def life_lines(session: AsyncSession, rules: Rules, mortal: EntityRow, *, 
     if profile is None:
         return []
     lines = [f"Life: {profile.life_stage.value}, {sex_of_stats(mortal).value}; health {profile.health}/{FULL}"]
-    abilities = ", ".join(f"{ability.value} {stat(mortal, ability.value) or 0}" for ability in Ability)
-    lines.append(f"Abilities: {abilities}")
+    body_and_mind = ", ".join(f"{name} {stat(mortal, name) or 0}" for name in SUMMARIES)
+    lines.append(f"Body and mind: {body_and_mind}")
     lines.append(f"Standing: wealth {profile.wealth}, renown {profile.renown}, honour {profile.honour}, infamy {profile.infamy}")
     if profile.cause_of_death is not None:
         lines.append(f"Died of {profile.cause_of_death.value.replace('_', ' ')}")

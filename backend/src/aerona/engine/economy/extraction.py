@@ -1,6 +1,5 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
 
 from sqlalchemy import select
 
@@ -203,7 +202,8 @@ def season_fit(book: EconomyBook, world_id: int | None, kind: ExtractionKind) ->
     return warmest.travel / PERCENT
 
 
-KIND_JOBS = MappingProxyType(
+KIND_JOBS = total(
+    ExtractionKind,
     {
         ExtractionKind.MINING: Job.MINING,
         ExtractionKind.QUARRYING: Job.MINING,
@@ -212,7 +212,18 @@ KIND_JOBS = MappingProxyType(
         ExtractionKind.FARMING: Job.FARMING,
         ExtractionKind.GATHERING: Job.FARMING,
         ExtractionKind.LOGGING: Job.BUILDING,
-    }
+        ExtractionKind.DRILLING: Job.MINING,
+        ExtractionKind.PUMPING: Job.MINING,
+        ExtractionKind.DREDGING: Job.MINING,
+        ExtractionKind.DEEP_SEA: Job.MINING,
+        ExtractionKind.ATMOSPHERIC: Job.MINING,
+        ExtractionKind.ASTEROID: Job.MINING,
+        ExtractionKind.STELLAR: Job.CRAFTING,
+        ExtractionKind.SOURCE_HARVEST: Job.SCHOLARSHIP,
+        ExtractionKind.SALVAGE: Job.CRAFTING,
+        ExtractionKind.LIVING_HARVEST: Job.HERDING,
+        ExtractionKind.DISTILLATION: Job.CRAFTING,
+    },
 )
 
 

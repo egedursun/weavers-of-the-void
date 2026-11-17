@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.cosmography import SCOPE_LABELS, SCOPE_ORDER
-from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, travel_method_profile
+from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, medium_of, travel_method_profile
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -36,7 +36,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod, VehicleKind
+from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMedium, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 from aerona.engine.body.hits import Harm
@@ -46,7 +46,7 @@ from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_r
 from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
-from aerona.engine.cosmos.world_types import hidden_route_method, river_reaches
+from aerona.engine.cosmos.world_types import death_crossing_reaches, hidden_route_method
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.economy.materials import light_fabric, rig_of
 from aerona.engine.economy.stocks import goods_of
@@ -512,7 +512,7 @@ VEHICLE_TECHNIQUES: Mapping[VehicleKind, Technique | None] = total(
 async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: RouteRow) -> str | None:
     vehicle = TRAVEL_METHODS[route.method].required_vehicle
     if vehicle is VehicleKind.MOUNT and not await has_tamed_mount(session, traveller.id):
-        return "For a cosmic mount you must have tamed a flying or giant creature."
+        return "For a ridden crossing you must have tamed a flying or giant creature."
     if vehicle is VehicleKind.SHIP and not await owned_vessels(session, traveller.id, VehicleKind.SHIP):
         return "You need to own a ship for this route."
     if vehicle is VehicleKind.RIFT:
@@ -525,10 +525,10 @@ async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: R
 
 
 async def _passage_problem(session: AsyncSession, rules: Rules, traveller: EntityRow, route: RouteRow) -> str | None:
-    if route.method is TravelMethod.RIVER_OF_DEAD:
+    if medium_of(route.method) is TravelMedium.DEATH:
         ends = [await session.get(WorldRow, route.world_a_id), await session.get(WorldRow, route.world_b_id)]
-        if not any(world is not None and river_reaches(world.world_type) for world in ends):
-            return "The river of the dead only flows from the realm of the dead or the body of a dead god."
+        if not any(world is not None and death_crossing_reaches(world.world_type) for world in ends):
+            return "The crossing of the dead opens only from the realm of the dead or the body of a dead god."
     if route.method is TravelMethod.SPACE_FOLD and await cosmic_access(session, traveller.id, rules.travel.fold_min_abundance) is None:
         return "To fold space you need access to the cosmic travel resource: own a deposit or trade with its owner."
     return None
@@ -578,7 +578,7 @@ async def _gate_sacrifice(ctx: TickContext, spec: JourneySpec, carried: int) -> 
             await apply_hits(ctx, spec.traveller, Harm(costs.gate_sacrifice_hp, HarmCause.SACRIFICE, "was given to an ancient gate"))
         else:
             put_stat(ctx.rules, spec.traveller, HP_KEY, stat_or(spec.traveller, HP_KEY, 0) - costs.gate_sacrifice_hp)
-        text = "the gate would not open without its true name; the traveller paid in blood"
+        text = "the gate would not open without its true name; the traveller took harm to pass"
         return carried, JourneyEvent(epoch=ctx.epoch, kind=JourneyEventKind.SACRIFICE, text=text)
     return carried, None
 
@@ -628,7 +628,7 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     speed = stat_or(spec.vehicle, SPEED_KEY, rules.travel.default_vessel_speed) if spec.vehicle is not None else rules.travel.default_vessel_speed
     folding = False
     wants_fold = route.method is TravelMethod.SPACE_FOLD or (
-        route.method is not TravelMethod.SWALLOWED and route.duration_epochs > 1 and await knows(session, traveller.id, KnowledgeBranch.PATHFINDING)
+        route.method is not TravelMethod.CARRIED_WITHIN and route.duration_epochs > 1 and await knows(session, traveller.id, KnowledgeBranch.PATHFINDING)
     )
     if wants_fold:
         folding = await spend_cosmic_resource(ctx, traveller) is not None

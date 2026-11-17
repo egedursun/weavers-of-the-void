@@ -240,6 +240,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.gardens",
+    "table.genomes",
     "table.held_identities",
     "table.holder_levels",
     "table.household_members",

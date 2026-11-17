@@ -29,12 +29,13 @@ from aerona.domain.enums.environment import ScarKind, WeatherKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import Attribute, MemoryKind, SkillKind, TraitKind
-from aerona.domain.enums.mortal import CrimeKind, DeathCause, MarriageKind
+from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
 from aerona.domain.enums.tongues import LanguageModality
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus
 from aerona.engine.arts.forgery import FORGEABLE, forge, work_of
 from aerona.engine.communication.post import FORGER, send
@@ -81,7 +82,7 @@ POISON_PCT = 5
 PHASE = "phase"
 SCHEME_SLOT = "scheme"
 COVERING_WEATHER = frozenset({WeatherKind.FOG, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM})
-SABOTAGES = ((ScarKind.BLIGHTED, "blighted with pests"), (ScarKind.BURNED, "burned"), (ScarKind.SALTED_EARTH, "salted"))
+SABOTAGES = ((ScarKind.BLIGHTED, "blighted with pests"), (ScarKind.BURNED, "burned"), (ScarKind.MADE_BARREN, "salted"))
 PURSUIT_CUTTING_WEATHER = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM})
 
 
@@ -416,7 +417,7 @@ async def frame(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: E
 
 
 async def elope(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
-    await marry(ctx.session, owner, target, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description="eloped in secret")
+    await marry(ctx.session, owner, target, ctx.epoch, purpose=UnionPurpose.KINSHIP, description="eloped in secret")
     return f"{owner.name} and {target.name} eloped"
 
 

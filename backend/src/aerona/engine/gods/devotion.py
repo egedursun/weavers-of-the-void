@@ -267,31 +267,31 @@ async def sibling_scheme(ctx: TickContext, sibling: SonRow, son: SonRow, kind: S
     return DevotionResult(contribution, devotion, order.id if order is not None else None, text, slept)
 
 
-async def scatter_bones(ctx: TickContext, sibling: SonRow, son: SonRow) -> DevotionResult:
+async def hinder_return(ctx: TickContext, sibling: SonRow, son: SonRow) -> DevotionResult:
     death = ctx.rules.death
     if son.status is not SonStatus.DEAD:
-        raise ValidationFailedError("Only a dead sibling's bones can be scattered.")
+        raise ValidationFailedError("Only a dead sibling's return can be hindered.")
     if sibling.status is not SonStatus.ACTIVE or sibling.id == son.id:
-        raise ValidationFailedError("Only an awake sibling can scatter the bones.")
-    cost = death.scatter_bones_cost
+        raise ValidationFailedError("Only an awake sibling can hinder a return.")
+    cost = death.hinder_return_cost
     if sibling.essence < cost:
-        raise ValidationFailedError(f"Scattering the bones needs {cost} essence; {sibling.name} has {sibling.essence}.")
+        raise ValidationFailedError(f"Hindering a return needs {cost} essence; {sibling.name} has {sibling.essence}.")
     sibling.essence -= cost
     bonds = BondRepository(ctx.session)
     orders = await resurrection_orders(ctx.session, son.id)
     for order in orders:
-        set_trait(order, Trait.DEVOTION, max(0, trait_or(order, Trait.DEVOTION, 0) - death.scatter_bones_devotion_loss))
+        set_trait(order, Trait.DEVOTION, max(0, trait_or(order, Trait.DEVOTION, 0) - death.hinder_return_devotion_loss))
         if not await bonds.exists_between(order.id, sibling.id, BondKind.ENEMY):
             await bonds.connect(
-                BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.SCATTER_ENEMY.format(son=son.name), war_cause=WarCause.SCHISM)
+                BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.HINDERED_ENEMY.format(son=son.name), war_cause=WarCause.SCHISM)
             )
-    await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.scatter_bones_devotion_loss / 2, god_lines.SCATTER_NOTE)
-    line = god_lines.SCATTER
-    text = line.render(sibling=sibling.name, son=son.name, cost=cost, loss=death.scatter_bones_devotion_loss)
+    await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.hinder_return_devotion_loss / 2, god_lines.HINDERED_NOTE)
+    line = god_lines.HINDERED
+    text = line.render(sibling=sibling.name, son=son.name, cost=cost, loss=death.hinder_return_devotion_loss)
     await ctx.chronicle(ChronicleKind.RESURRECTION, text, template_key=line.key, entity_ids=[order.id for order in orders], son_id=sibling.id)
-    ctx.count("scatterings")
+    ctx.count("returns_hindered")
     await ctx.session.flush()
-    return DevotionResult(-death.scatter_bones_devotion_loss, max([trait_or(order, Trait.DEVOTION, 0) for order in orders], default=0), None, text)
+    return DevotionResult(-death.hinder_return_devotion_loss, max([trait_or(order, Trait.DEVOTION, 0) for order in orders], default=0), None, text)
 
 
 async def awake_foreign_gods(session: AsyncSession) -> list[ForeignGodRow]:

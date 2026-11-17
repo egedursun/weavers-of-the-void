@@ -10,8 +10,6 @@ from aerona.db.tables.crafts import (
     CatchGroundRow,
     ChemicalWorksRow,
     EmotionSpiritRow,
-    GameFollowingRow,
-    GameRow,
     IncorporealRightRow,
     InsurancePolicyRow,
     InsurerRow,
@@ -40,8 +38,6 @@ from aerona.domain.enums.crafts import (
     CatchRight,
     ChemicalProduct,
     ClockKind,
-    GameKind,
-    GameRule,
     Gear,
     InsuranceCover,
     LinkToken,
@@ -49,12 +45,13 @@ from aerona.domain.enums.crafts import (
     RightAcquired,
     RightKind,
 )
-from aerona.domain.enums.culture import ArtMedium, MagicSchool, Technique
+from aerona.domain.enums.culture import ArtMode, MagicSchool, Technique
 from aerona.domain.enums.customs import EvidenceKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.justice import CaseStage
+from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.mind import Emotion, SkillKind, SkillSource, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.settlement import SizeTier
@@ -68,7 +65,7 @@ from aerona.engine.crafts.catch import catch_factor, regrowth_scale, trap_factor
 from aerona.engine.crafts.chemistry import ChemistryTally, keep_chemistry
 from aerona.engine.crafts.clocks import ClockTally, keep_clocks
 from aerona.engine.crafts.cover import cargo_holders, claim
-from aerona.engine.crafts.games import GameTally, keep_games
+from aerona.engine.crafts.games import GameTally, keep_games, made_by, shaped
 from aerona.engine.crafts.grounds import GroundTally, keep_grounds
 from aerona.engine.crafts.haunting import bind_spirit, spirit_feelings
 from aerona.engine.crafts.heirs import pass_rights
@@ -208,7 +205,7 @@ async def test_a_work_becomes_its_makers_right_passes_to_the_heir_and_is_taken_w
     heir = await mortal(session, "Sael the Younger", world, town.id)
     await mortal(session, "Tamm", world, town.id)
     song = await entity(session, "The Long Air", EntityType.ARTWORK, ArtworkStats(renown=40), world_id=world.world.id, location_id=town.id)
-    session.add(ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMedium.SONG, author_entity_id=maker.id))
+    session.add(ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMode.MUSICAL, author_entity_id=maker.id))
     await session.flush()
     tally = RightsTally()
     await keep_rights(await at(session, 3, incorporeal={"infringe_chance": 0}), tally)
@@ -249,26 +246,25 @@ async def test_a_town_that_keeps_time_sets_up_a_clock_that_raises_output_and_unr
     assert await clock_output(session, rules, town.id) > 1 and await clock_muster(session, rules, town.id) > 1 and profile.unrest > before
 
 
-async def test_games_shape_their_followers_by_their_rule(session: AsyncSession, world: CoreWorld) -> None:
+async def test_games_shape_their_players_by_their_properties(session: AsyncSession, world: CoreWorld) -> None:
     town = await home(session, world, "Boardham")
     noble = await mortal(session, "Lord Cass", world, town.id)
     noble.social_class = SocialClass.NOBLE
-    strategy = GameRow(name="Fourfold", kind=GameKind.BOARD, rule=GameRule.STRATEGY, origin_entity_id=world.people.id, locked=[])
-    chance = GameRow(name="Knucklebones", kind=GameKind.DICE, rule=GameRule.CHANCE, origin_entity_id=world.people.id, locked=[])
-    session.add_all([strategy, chance])
+    strategy = shaped("Fourfold", GameCategory.BOARD, world.people, 0)
+    tactics = shaped("Fieldplan", GameCategory.TEAM, world.people, 0)
+    chance = shaped("Knucklebones", GameCategory.CHANCE, world.people, 0)
+    session.add_all([strategy, tactics, chance])
     await session.flush()
-    session.add_all(
-        [
-            GameFollowingRow(people_entity_id=world.people.id, game_id=strategy.id, popularity=100, locked=[]),
-            GameFollowingRow(people_entity_id=world.people.id, game_id=chance.id, popularity=100, locked=[]),
-        ]
-    )
+    for game in (strategy, tactics, chance):
+        holding = made_by(game, world.people.id, 0)
+        holding.strength = 100
+        session.add(holding)
     profile = await session.get(SettlementProfileRow, town.id)
     assert profile is not None
     crime = profile.crime
     await session.flush()
     tally = GameTally()
-    await keep_games(await at(session, 3, games={"invent_chance": 0, "spread_chance": 0, "strategy_xp": 50}), tally)
+    await keep_games(await at(session, 3, games={"invent_chance": 0, "strategy_xp": 50}), tally)
     trained = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == noble.id, SkillRow.skill == SkillKind.TACTICS))
     planned = await session.scalar(select(SkillRow).where(SkillRow.holder_node_id == noble.id, SkillRow.skill == SkillKind.STRATEGY))
     assert trained is not None and planned is not None and tally.trained >= 2 and tally.gambled >= 1 and profile.crime > crime

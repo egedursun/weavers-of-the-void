@@ -10,16 +10,18 @@ from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.queries import flags_by_entity
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.structures.profiles import ensure_profile, refresh, standing_state
+from aerona.engine.structures.profiles import ensure_profile, host_for, refresh, standing_state, style_for, style_snapshot
 from aerona.engine.structures.spec import resolve
 
 BACKFILL_FIXUP = "structures.typed_backfill"
+STYLE_FIXUP = "structures.style_snapshot"
 PREFIX_MIN = 4
 FALLBACK = StructureKind.MONUMENT
 
@@ -118,3 +120,23 @@ async def backfill_structures(ctx: TickContext) -> dict[str, int]:
         applied.result = {key: int(previous.get(key, 0)) + value for key, value in result.items()}
     await ctx.session.flush()
     return result
+
+
+async def snapshot_styles(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, STYLE_FIXUP) is not None:
+        return 0
+    taken = 0
+    for profile in list(await ctx.session.scalars(select(StructureProfileRow).where(StructureProfileRow.style_ornament.is_(None)))):
+        if held(profile.structure_entity_id):
+            continue
+        work = await ctx.session.get(EntityRow, profile.structure_entity_id)
+        style = await style_for(ctx.session, await host_for(ctx.session, work)) if work is not None else None
+        if style is None:
+            continue
+        for column, value in style_snapshot(style).items():
+            if column not in profile.locked:
+                setattr(profile, column, value)
+        taken += 1
+    ctx.session.add(AppliedFixupRow(key=STYLE_FIXUP, result={"styled": taken}))
+    await ctx.session.flush()
+    return taken

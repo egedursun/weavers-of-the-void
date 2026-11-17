@@ -138,6 +138,7 @@ OPERATIONS_MECHANICS = (
     ),
     Mechanic(
         key="ship_damage",
+        tools=("refit_section",),
         spec_item="S5.5/RP4",
         title="Ship damage by location: round shot holes the hull, chain shot the rigging, grape the crew, fire the sails, and raking runs the length",
         subsystem=S.WAR,
@@ -154,6 +155,7 @@ OPERATIONS_MECHANICS = (
     ),
     Mechanic(
         key="points_of_sail",
+        tools=("trim_sails",),
         spec_item="S5.5/RP4",
         title="Points of sail: speed by the angle to the wind, tacking and being caught in irons; galleys row against the wind at a cost to rowers",
         subsystem=S.WAR,
@@ -171,6 +173,7 @@ OPERATIONS_MECHANICS = (
     ),
     Mechanic(
         key="gunnery",
+        tools=("man_station",),
         spec_item="S5.5/RP4",
         title="Crew stations and gunnery: gunners, riggers, marines, officers and rowers; the rate of fire from gunners' skill, losses and command",
         subsystem=S.WAR,

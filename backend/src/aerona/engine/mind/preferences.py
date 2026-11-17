@@ -4,7 +4,6 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.peoples import AESTHETIC_MEDIA
 from aerona.catalog.preferences import ACTIVITY_VALUES, DRINKS, SPECIES_KINDS, STATIC_TARGETS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import ArtworkProfileRow, TraditionProfileRow
@@ -15,7 +14,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mind import PreferenceRow, SkillRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import CalendarSlot, TraditionKind
+from aerona.domain.enums.culture import CalendarSlot, TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import PreferenceKind, ValueAxis, ValueHolder
@@ -23,6 +22,7 @@ from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.totems import found_totem, totem_of
+from aerona.engine.lore.style import favoured_modes, style_of
 from aerona.engine.lore.traditions import cost_for
 from aerona.engine.mind.book import is_locked, mind_of, stored_values
 from aerona.engine.primitives.distance import RegionAtlas
@@ -95,7 +95,7 @@ async def home_terrain(session: AsyncSession, holder: EntityRow) -> str | None:
     return found.dominant_terrain.value if found is not None else None
 
 
-async def leanings(session: AsyncSession, people: EntityRow) -> dict[tuple[PreferenceKind, str], float]:
+async def leanings(session: AsyncSession, rules: Rules, people: EntityRow) -> dict[tuple[PreferenceKind, str], float]:
     values = await stored_values(session, ValueHolder.CULTURE, people.id)
     lean: dict[tuple[PreferenceKind, str], float] = defaultdict(float)
     terrain = await home_terrain(session, people)
@@ -106,9 +106,9 @@ async def leanings(session: AsyncSession, people: EntityRow) -> dict[tuple[Prefe
         if isinstance(domain, Domain):
             lean[(PreferenceKind.DEITY_ASPECT, domain.value)] += 2
     culture = await session.get(PeopleCultureRow, people.id)
-    if culture is not None and culture.aesthetic is not None:
-        for medium in AESTHETIC_MEDIA[culture.aesthetic]:
-            lean[(PreferenceKind.ART_FORM, medium.value)] += 2
+    style = style_of(culture)
+    for medium in favoured_modes(style, rules.customs.style_modes) if style is not None else []:
+        lean[(PreferenceKind.ART_FORM, medium.value)] += 2
     for activity, weights in ACTIVITY_VALUES.items():
         lean[(PreferenceKind.ACTIVITY, activity)] += sum(values.get(axis, 0) * weight for axis, weight in weights.items()) / STRENGTH_SPAN
     lean[(PreferenceKind.MATERIAL, "gold")] += values.get(ValueAxis.WEALTH, 0) / STRENGTH_SPAN
@@ -121,7 +121,7 @@ async def seed_culture(ctx: TickContext, people: EntityRow) -> int:
         return 0
     table = ctx.rules.preferences
     rng = ctx.rng(f"prefs.{people.id}")
-    lean = await leanings(ctx.session, people)
+    lean = await leanings(ctx.session, ctx.rules, people)
     made = 0
     for kind in PreferenceKind:
         pool = await species_targets(ctx.session, people.world_id, kind) if kind in SPECIES_KINDS else [(target, None) for target in STATIC_TARGETS[kind]]
@@ -232,9 +232,9 @@ async def make_taboos(ctx: TickContext, people: EntityRow) -> int:
         ctx.session.add(
             TraditionProfileRow(
                 tradition_entity_id=tradition.id,
-                kind=TraditionKind.TABOO,
+                kind=TraditionFunction.TABOO,
                 calendar_slot=None,
-                cost=cost_for(ctx, TraditionKind.TABOO),
+                cost=cost_for(ctx, TraditionFunction.TABOO),
                 effects={},
                 taboo_target=good,
                 origin_entity_id=people.id,
@@ -253,7 +253,7 @@ async def kept_taboo(ctx: TickContext, people_id: int, target: str) -> bool:
         return False
     found = await ctx.session.scalar(
         select(TraditionProfileRow.tradition_entity_id).where(
-            TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind == TraditionKind.TABOO, TraditionProfileRow.taboo_target == target
+            TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind == TraditionFunction.TABOO, TraditionProfileRow.taboo_target == target
         )
     )
     return found is not None

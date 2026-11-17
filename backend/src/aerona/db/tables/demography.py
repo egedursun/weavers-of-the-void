@@ -5,18 +5,15 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.demography import (
-    Aesthetic,
     AgeBand,
     CohortCondition,
-    FolkDiet,
     FuneralCustom,
     InheritanceCustom,
     Job,
-    MarriageCustom,
     MartialStyle,
     Sex,
 )
-from aerona.domain.enums.ecology import Biochemistry, SizeClass
+from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -71,7 +68,7 @@ class PeopleBiologyRow(Base):
     immunities: Mapped[list[int]] = mapped_column(JSON, default=list)
     body_plan: Mapped[BodyPlan] = mapped_column(enum_type(BodyPlan, "body_plan"), default=BodyPlan.HUMANOID)
     size_class: Mapped[SizeClass] = mapped_column(enum_type(SizeClass, "size_class"), default=SizeClass.MEDIUM)
-    diet: Mapped[FolkDiet] = mapped_column(enum_type(FolkDiet, "diet"), default=FolkDiet.OMNIVORE)
+    diet: Mapped[Diet] = mapped_column(enum_type(Diet, "diet"), default=Diet.OMNIVORE)
     biochemistry: Mapped[Biochemistry] = mapped_column(enum_type(Biochemistry, "biochemistry"), default=Biochemistry.CARBON_WATER)
     air: Mapped[AirNeed] = mapped_column(enum_type(AirNeed, "air"), default=AirNeed.OXYGEN)
     thermoregulation: Mapped[Thermoregulation] = mapped_column(enum_type(Thermoregulation, "thermoregulation"), default=Thermoregulation.ENDOTHERM)
@@ -86,6 +83,11 @@ class PeopleCultureRow(Base):
         between("cohesion", PERCENT_MIN, PERCENT_MAX),
         between("literacy", PERCENT_MIN, PERCENT_MAX),
         between("urbanisation", PERCENT_MIN, PERCENT_MAX),
+        between("ornament", PERCENT_MIN, PERCENT_MAX),
+        between("geometry", PERCENT_MIN, PERCENT_MAX),
+        between("colour", PERCENT_MIN, PERCENT_MAX),
+        between("scale", PERCENT_MIN, PERCENT_MAX),
+        between("symmetry", PERCENT_MIN, PERCENT_MAX),
     )
 
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -95,14 +97,17 @@ class PeopleCultureRow(Base):
     liturgical_language_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     trade_language_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     staples: Mapped[list[str]] = mapped_column(JSON, default=list)
-    aesthetic: Mapped[Aesthetic] = mapped_column(enum_type(Aesthetic, "aesthetic"))
+    ornament: Mapped[int] = mapped_column(default=50, server_default="50")
+    geometry: Mapped[int] = mapped_column(default=50, server_default="50")
+    colour: Mapped[int] = mapped_column(default=50, server_default="50")
+    scale: Mapped[int] = mapped_column(default=50, server_default="50")
+    symmetry: Mapped[int] = mapped_column(default=50, server_default="50")
+    motif_sources: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     martial_style: Mapped[MartialStyle] = mapped_column(enum_type(MartialStyle, "martial_style"))
     funeral_rite_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     funeral_rite: Mapped[FuneralCustom] = mapped_column(enum_type(FuneralCustom, "funeral_rite"), default=FuneralCustom.BURIAL)
     martial_record: Mapped[dict[str, list[int]]] = mapped_column(JSON, default=dict)
     martial_epoch: Mapped[int] = mapped_column(default=0)
-    marriage: Mapped[MarriageCustom] = mapped_column(enum_type(MarriageCustom, "marriage"))
-    endogamous: Mapped[bool] = mapped_column(default=False)
     inheritance: Mapped[InheritanceCustom] = mapped_column(enum_type(InheritanceCustom, "inheritance"))
     slavery_lawful: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

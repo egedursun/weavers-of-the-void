@@ -13,6 +13,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus, PantheonStructure, PantheonTie
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import domains_of
 from aerona.engine.notes import note
@@ -102,16 +103,25 @@ async def worshipped_by(ctx: TickContext, god_id: int) -> list[int]:
     return [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], targets=[god_id])]
 
 
+async def faithful_peoples(ctx: TickContext, god_id: int) -> dict[int, list[int]]:
+    found: dict[int, list[int]] = {}
+    for source in await worshipped_by(ctx, god_id):
+        people_id = await people_id_of(ctx.session, await ctx.session.get(EntityRow, source))
+        if people_id is not None:
+            found.setdefault(people_id, []).append(source)
+    return found
+
+
 async def syncretise(ctx: TickContext) -> int:
     table = ctx.rules.pantheon_life
     merged = 0
     sons = list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id)))
     for god in list(await ctx.session.scalars(select(ForeignGodRow).where(ForeignGodRow.status == ForeignGodStatus.AWAKE).order_by(ForeignGodRow.id))):
-        their = set(await worshipped_by(ctx, god.id))
+        their = set(await faithful_peoples(ctx, god.id))
         for son in sons:
             if held(god.id, son.id) or not set(domains_of(god)) & set(domains_of(son)):
                 continue
-            for people_id in sorted(their & set(await worshipped_by(ctx, son.id))):
+            for people_id in sorted(their & set(await faithful_peoples(ctx, son.id))):
                 people = await ctx.session.get(EntityRow, people_id)
                 if people is None or people.entity_type is not EntityType.PEOPLE:
                     continue
@@ -175,8 +185,8 @@ async def compete(ctx: TickContext) -> int:
         for second in gods[index + 1 :]:
             if first.domain_primary is not second.domain_primary or held(first.id, second.id):
                 continue
-            shared = set(await worshipped_by(ctx, first.id)) & set(await worshipped_by(ctx, second.id))
-            for people_id in sorted(shared):
+            first_faithful, second_faithful = await faithful_peoples(ctx, first.id), await faithful_peoples(ctx, second.id)
+            for people_id in sorted(set(first_faithful) & set(second_faithful)):
                 people = await ctx.session.get(EntityRow, people_id)
                 if people is None or held(people_id):
                     continue
@@ -185,15 +195,15 @@ async def compete(ctx: TickContext) -> int:
                     winner, loser = loser, winner
                 if not ctx.rng(f"compete.{first.id}.{second.id}.{people_id}.{ctx.epoch}").chance(table.switch_pct):
                     continue
-                bond = await ctx.session.scalar(
+                lost = (first_faithful if loser is first else second_faithful)[people_id]
+                for bond in await ctx.session.scalars(
                     select(BondRow).where(
-                        BondRow.source_node_id == people_id,
+                        BondRow.source_node_id.in_([source for source in lost if not held(source)]),
                         BondRow.target_node_id == loser.id,
                         BondRow.kind == BondKind.WORSHIPS,
                         BondRow.state == BondState.ACTIVE,
                     )
-                )
-                if bond is not None:
+                ):
                     bond.state, bond.closed_epoch, bond.closed_reason = BondState.PAST, ctx.epoch, f"turned to {winner.name}"
                     moved += 1
     return moved

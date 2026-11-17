@@ -4,8 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.chronicle import ChroniclePhase, write_line
-from aerona.catalog.domains import DOMAIN_LABELS, match_domain
-from aerona.catalog.worlds import WORLD_TYPES
+from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -18,12 +17,12 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochStepKind, EpochStepStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery, SonDistribution
+from aerona.engine.cosmos.canon_domains import canon_counts
 from aerona.epoch.context import EpochContext
 from aerona.epoch.state import attempted
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
 
-MIN_DOMAIN_WORD = 3
 PEOPLE_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 INHABITED_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT, EntityType.FACTION, EntityType.MORTAL)
 
@@ -65,16 +64,7 @@ async def worshipped_here(session: AsyncSession, world_id: int, son_ids: set[int
 
 
 async def wanted_domains(session: AsyncSession, world: WorldRow) -> set[Domain]:
-    wanted = set(WORLD_TYPES[world.world_type].domains)
-    regions = await session.scalars(
-        select(EntityRow).where(EntityRow.world_id == world.id, EntityRow.entity_type == EntityType.REGION, EntityRow.status == EntityStatus.CANON)
-    )
-    for region in regions:
-        for word in f"{region.subtype or ''} {region.name}".split():
-            domain = match_domain(word) if len(word) >= MIN_DOMAIN_WORD else None
-            if domain is not None:
-                wanted.add(domain)
-    return wanted
+    return set(await canon_counts(session, world))
 
 
 def protected(rules: Rules, son: SonRow, epoch: int) -> bool:

@@ -120,7 +120,7 @@ URBAN_MECHANICS = (
         backfill=f"{MIGRATION}: organisations open rackets from the first epoch after the upgrade",
         tables=(RacketRow.__tablename__, PayrollRow.__tablename__, CrimeStanceRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("bribe_official",),
+        tools=("bribe_official", "run_racket"),
         targets=("faction", "polity", "mortal"),
         couplings=(
             Coupling(S.ECONOMY, "rackets turn turf into coin", EdgeKind.FLOW, "crime_orgs.income_per_turf"),

@@ -86,9 +86,9 @@ export const TEMPERAMENT_KIND: Record<string, Named & { hint: string }> = {
     tone: 'gold',
     hint: 'Waits and chooses its moment',
   },
-  abductor: {
-    label: 'Abductor',
-    icon: Ghost,
+  seizes_prey: {
+    label: 'Seizes prey',
+    icon: Hand,
     tone: 'warning',
     hint: 'Carries people off rather than killing them',
   },

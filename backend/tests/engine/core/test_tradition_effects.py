@@ -60,7 +60,7 @@ async def test_a_vigil_calms_crime_and_the_restless_dead(session: AsyncSession, 
 
 
 async def test_a_scarring_rite_marks_those_who_come_of_age(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "test", rules=tuned_rules(traditions={"scar_rite_chance": 100}))
+    ctx = await manual_context(session, "test", rules=tuned_rules(traditions={"body_marking_chance": 100}))
     town = await settlement(session, "Brookhold", world, world.regions[0])
     rite: EntityRow = await entity(session, "The Marking", EntityType.TRADITION, TraditionStats(), world_id=world.world.id)
     youth = await mortal(session, "Ivo", world, town.id, age=16)

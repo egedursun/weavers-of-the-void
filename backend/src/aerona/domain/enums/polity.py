@@ -10,7 +10,7 @@ class GovernmentKind(StrEnum):
     TRIBAL_CONFEDERATION = "tribal_confederation"
     EMPIRE = "empire"
     HIVE_COUNCIL = "hive_council"
-    GOD_KINGDOM = "god_kingdom"
+    GOD_REALM = "god_realm"
     OCCUPATION = "occupation"
     JUNTA = "junta"
     CORPORATE_STATE = "corporate_state"
@@ -99,7 +99,7 @@ class SuccessionRule(StrEnum):
     SENIORITY = "seniority"
     ELECTIVE = "elective"
     TANISTRY = "tanistry"
-    MATRILINEAL = "matrilineal"
+    THROUGH_SECOND_LINE = "through_second_line"
     BY_COMBAT = "by_combat"
     DIVINE_CHOICE = "divine_choice"
     ULTIMOGENITURE = "ultimogeniture"
@@ -222,6 +222,12 @@ class HouseTrait(StrEnum):
     CURSED = "cursed"
     FERTILE = "fertile"
     SEER_GIFT = "seer_gift"
+    STRONG_BLOODED = "strong_blooded"
+    SWIFT = "swift"
+    QUICK_HEALING = "quick_healing"
+    SHARP_SENSED = "sharp_sensed"
+    STEADY = "steady"
+    QUICK_MINDED = "quick_minded"
 
 
 class OathKind(StrEnum):

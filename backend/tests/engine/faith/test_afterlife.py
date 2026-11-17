@@ -9,11 +9,11 @@ from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import (
     AfterlifeState,
-    FuneralRite,
     JudgementDoctrine,
     RebirthPath,
     SpiritAlignment,
@@ -49,12 +49,12 @@ from tests.engine.gods.factories import GodsWorld, bond, make_entity, make_son
 def test_criteria_match_every_typed_predicate() -> None:
     hall = StratumCriteria(violence_at_least=40, tenets_any=(TenetKind.HOLY_WAR,), needs_rite=True)
     deeds = {"violence": 50}
-    assert hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralRite.BURIAL, tenets={TenetKind.HOLY_WAR})
-    assert not hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralRite.NONE, tenets={TenetKind.HOLY_WAR})
-    assert not hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralRite.BURIAL, tenets=set())
-    assert not hall.matches(score=10, deeds={"violence": 10}, has_god=True, rite=FuneralRite.BURIAL, tenets={TenetKind.HOLY_WAR})
-    assert StratumCriteria(no_god=True).matches(score=0, deeds={}, has_god=False, rite=FuneralRite.NONE, tenets=set())
-    assert not StratumCriteria().matches(score=0, deeds={}, has_god=False, rite=FuneralRite.NONE, tenets=set())
+    assert hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralCustom.BURIAL, rite_kept=True, tenets={TenetKind.HOLY_WAR})
+    assert not hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralCustom.NONE, rite_kept=False, tenets={TenetKind.HOLY_WAR})
+    assert not hall.matches(score=10, deeds=deeds, has_god=True, rite=FuneralCustom.BURIAL, rite_kept=True, tenets=set())
+    assert not hall.matches(score=10, deeds={"violence": 10}, has_god=True, rite=FuneralCustom.BURIAL, rite_kept=True, tenets={TenetKind.HOLY_WAR})
+    assert StratumCriteria(no_god=True).matches(score=0, deeds={}, has_god=False, rite=FuneralCustom.NONE, rite_kept=False, tenets=set())
+    assert not StratumCriteria().matches(score=0, deeds={}, has_god=False, rite=FuneralCustom.NONE, rite_kept=False, tenets=set())
     assert StratumCriteria.read({"score_between": "25-60", "score_at_least": 60}).score_at_least == 60
     assert StratumCriteria.read({"priority": "high"}) == StratumCriteria()
 
@@ -67,7 +67,7 @@ async def test_routing_follows_priority_closure_and_ownership(session: AsyncSess
         row.id = index + 1
     paradise = next(row for row in strata if row.kind is StratumKind.REWARD)
     plain = next(row for row in strata if row.kind is StratumKind.COMMON)
-    common = {"deeds": {"violence": 0}, "rite": FuneralRite.BURIAL, "tenets": set[TenetKind]()}
+    common = {"deeds": {"violence": 0}, "rite": FuneralCustom.BURIAL, "tenets": set[TenetKind]()}
     assert route(strata, score=90, god=god, **common) is paradise
     assert route(strata, score=50, god=god, **common) is plain
     paradise.closed = True
@@ -81,10 +81,10 @@ async def test_routing_follows_priority_closure_and_ownership(session: AsyncSess
 
 def test_judgement_scores_come_from_rules(rules: Rules) -> None:
     table = rules.afterlife
-    assert score_of(table, {}, JudgementDoctrine.RITE, rite=FuneralRite.BURIAL, favoured=False, tenets=set()) == table.rite_score
-    assert score_of(table, {}, JudgementDoctrine.RITE, rite=FuneralRite.NONE, favoured=False, tenets=set()) == table.no_rite_score
-    assert score_of(table, {}, JudgementDoctrine.FAVOUR, rite=FuneralRite.NONE, favoured=True, tenets=set()) == table.favoured_score
-    assert score_of(table, {}, JudgementDoctrine.NONE, rite=FuneralRite.NONE, favoured=False, tenets=set()) == table.neutral_score
+    assert score_of(table, {}, JudgementDoctrine.RITE, rite=FuneralCustom.BURIAL, favoured=False, tenets=set()) == table.rite_score
+    assert score_of(table, {}, JudgementDoctrine.RITE, rite=FuneralCustom.NONE, favoured=False, tenets=set()) == table.no_rite_score
+    assert score_of(table, {}, JudgementDoctrine.FAVOUR, rite=FuneralCustom.NONE, favoured=True, tenets=set()) == table.favoured_score
+    assert score_of(table, {}, JudgementDoctrine.NONE, rite=FuneralCustom.NONE, favoured=False, tenets=set()) == table.neutral_score
 
 
 async def test_judged_souls_are_counted_and_leave_the_count(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -144,7 +144,7 @@ async def test_nameless_burial_seals_the_executed(session: AsyncSession, world: 
     await session.flush()
     soul = await spirit(session, world, world.region, "Shade of the Heretic")
     profile = await profile_for(ctx, soul, dead)
-    assert profile.rite is FuneralRite.NAMELESS
+    assert profile.rite is FuneralCustom.NAMELESS
     assert profile.sealed and profile.seal_strength == certain.nameless_seal
 
 

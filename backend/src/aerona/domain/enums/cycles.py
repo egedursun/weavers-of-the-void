@@ -77,18 +77,18 @@ class GiftState(StrEnum):
 
 
 class KinshipDescent(StrEnum):
-    PATRILINEAL = "patrilineal"
-    MATRILINEAL = "matrilineal"
+    THROUGH_FIRST_LINE = "through_first_line"
+    THROUGH_SECOND_LINE = "through_second_line"
     BILATERAL = "bilateral"
     DOUBLE = "double"
     AMBILINEAL = "ambilineal"
 
 
 class ResidenceRule(StrEnum):
-    PATRILOCAL = "patrilocal"
-    MATRILOCAL = "matrilocal"
-    NEOLOCAL = "neolocal"
-    AVUNCULOCAL = "avunculocal"
+    WITH_FIRST_FAMILY = "with_first_family"
+    WITH_SECOND_FAMILY = "with_second_family"
+    NEW_HOUSEHOLD = "new_household"
+    WITH_KIN_OF_THE_FIRST_LINE = "with_kin_of_the_first_line"
 
 
 class DescentGroup(StrEnum):
@@ -98,24 +98,22 @@ class DescentGroup(StrEnum):
     HOUSE = "house"
 
 
-class CousinTerms(StrEnum):
-    DISTINCT = "distinct"
-    PARALLEL_AS_SIBLINGS = "parallel_as_siblings"
-    ALL_AS_SIBLINGS = "all_as_siblings"
+class KinTermSystem(StrEnum):
+    GENERATIONAL = "generational"
+    LINEAL = "lineal"
+    BIFURCATE_MERGING = "bifurcate_merging"
+    BIFURCATE_COLLATERAL = "bifurcate_collateral"
+    CROSS_PARALLEL = "cross_parallel"
+    DESCRIPTIVE = "descriptive"
 
 
-class MarriagePreference(StrEnum):
-    NONE = "none"
-    CROSS_COUSIN = "cross_cousin"
-    CLAN_EXOGAMY = "clan_exogamy"
-    MOIETY_EXOGAMY = "moiety_exogamy"
-
-
-class MarriagePayment(StrEnum):
-    NONE = "none"
-    BRIDE_PRICE = "bride_price"
-    DOWRY = "dowry"
-    BRIDE_SERVICE = "bride_service"
+class AdoptionKind(StrEnum):
+    HEIR = "heir"
+    WARD = "ward"
+    FOSTER = "foster"
+    SPONSOR = "sponsor"
+    BLOOD_BOND = "blood_bond"
+    CHOSEN_KIN = "chosen_kin"
 
 
 class ReproductiveSystem(StrEnum):

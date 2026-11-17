@@ -4,12 +4,18 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.law_grammar import Grammar
+from aerona.constants.units import PERCENT
+from aerona.db.kind_concepts.registry import CONCEPTS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow
-from aerona.db.tables.culture import IdeologyAdherentRow
+from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow
+from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.kind_crafts import ColourMeaningRow
+from aerona.db.tables.law_grammar import LawExceptionRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.warfare import SiegeRow
@@ -27,14 +33,22 @@ from aerona.domain.enums.cosmography import (
     RiftCause,
     StarAge,
 )
-from aerona.domain.enums.culture import CurseKind, IdeologyTenet
+from aerona.domain.enums.creator import CovenantDuty, CreatorPromise, CreatorSignKind
+from aerona.domain.enums.culture import CurseKind, IdeologyTenet, Technique
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, GoodsFlow, MoneyBacking, MoneyForm
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.intrigue import PlotKind
+from aerona.domain.enums.kind_crafts import ColourMeaning
+from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
+from aerona.domain.enums.law_grammar import LawCondition, LawExceptionKind, LawOperator, LawTarget
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.models.entity_stats import BeastStats, FactionStats, ItemStats, PeopleStats, SpeciesStats, SpiritStats
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.models.entity_stats import BeastStats, FactionStats, ItemStats, NaturalLawStats, OuterBeingStats, PeopleStats, SpeciesStats, SpiritStats
+from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
@@ -42,12 +56,18 @@ from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraf
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.disease.control import DiseaseDesign, create_disease
+from aerona.engine.divine.creator_bonds import WIDER_SIGNS, offer
+from aerona.engine.divine.law_grammar import set_grammar
 from aerona.engine.ecology.beasts import profile_beast
+from aerona.engine.economy.stocks import goods_of
+from aerona.engine.gods.queries import creator_row
 from aerona.engine.intrigue.schemes import begin_scheme
+from aerona.engine.kinds.acts import hold_kind, make_kind
 from aerona.engine.lore import items
 from aerona.engine.lore.control import create_lore
 from aerona.engine.phases.native_faith import syncretize
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import set_stats
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.sides import SideIndex
@@ -56,6 +76,7 @@ from aerona.engine.services.war_geography import Neighbourhood
 from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import entity, mortal, settlement
+from tests.engine.cosmos.factories import teach
 from tests.engine.integration.factories import RichCosmos
 from tests.engine.lore.test_every_lore_kind import FIRST_VALUES
 
@@ -124,8 +145,39 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     strength = await MilitaryStrength.load(session, ctx.rules)
     await raise_army(ctx, strength, await SideIndex.load(session, await Neighbourhood.load(session, ctx.rules)), town, war)
     session.add(SiegeRow(war_id=war.id, besieged_entity_id=rival.id, besieger_entity_id=town.id, started_epoch=ctx.epoch))
+    await stir_laws(ctx, cosmos, town, mark)
+    await stir_gods(ctx, cosmos)
     await session.flush()
     await stir_heavens(ctx, cosmos)
+    await stir_kinds(ctx, cosmos, town, other)
+
+
+async def stir_laws(ctx: TickContext, cosmos: RichCosmos, town: EntityRow, mark: EntityRow) -> None:
+    session, home = ctx.session, cosmos.home
+    law = await entity(session, "Stirring Measure", EntityType.NATURAL_LAW, NaturalLawStats(), world_id=home.world.id)
+    await set_grammar(ctx, law, Grammar(LawTarget.STAT, LawOperator.SET, "prosperity", 70), LawCondition.ALWAYS, None, hold=False)
+    session.add(LawExceptionRow(law_entity_id=law.id, kind=LawExceptionKind.PERSON, node_id=mark.id, locked=[]))
+    lot = await entity(session, "Stirring Lot", EntityType.ITEM, ItemStats(damage=40, protection=40, might=60, curse=80), world_id=home.world.id)
+    await BondRepository(session).connect(BondDraft(home.people.id, lot.id, BondKind.OWNS, 1, None))
+    (await items.profile_of(ctx, lot)).curse = CurseKind.MISFORTUNE
+    for holder in (home.people.id, town.id):
+        session.add(HolderTechniqueRow(holder_entity_id=holder, technique=Technique.WRITTEN_LAW, since_epoch=0))
+
+
+async def stir_gods(ctx: TickContext, cosmos: RichCosmos) -> None:
+    session, home = ctx.session, cosmos.home
+    kin_god = NewForeignGod("Stirring Kin God", home.world.id, (home.son.domain_primary, None), power=30)
+    kin = await add_foreign_god(session, ctx.rules, ctx.rng(), ctx.epoch, kin_god)
+    bonds = BondRepository(session)
+    await bonds.connect(BondDraft(home.people.id, home.son.id, BondKind.WORSHIPS, 1, None))
+    towns = await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.world_id == home.world.id))
+    for town in list(towns):
+        if await people_id_of(session, town) == home.people.id:
+            await bonds.connect(BondDraft(town.id, kin.id, BondKind.WORSHIPS, 1, None))
+    creator = await creator_row(session)
+    if creator is not None:
+        await WIDER_SIGNS[CreatorSignKind.MARK](ctx, creator, home.people)
+        await offer(ctx, home.people.id, CovenantDuty.WORSHIP, CreatorPromise.PROTECTION, None)
 
 
 async def stir_heavens(ctx: TickContext, cosmos: RichCosmos) -> None:
@@ -144,15 +196,58 @@ async def stir_heavens(ctx: TickContext, cosmos: RichCosmos) -> None:
     distant.star_id, distant.parent_world_id, distant.dimension_id = None, None, plane.id
     rift = await open_rift(ctx, home.world, home.regions[0], plane, RiftCause.GOD, target_world=distant)
     rift.stability = 20
-    await create_being(ctx, BeingKind.STAR_EATER, home.world, region=home.regions[0], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST)
+    await create_being(ctx, BeingKind.STAR_FEEDER, home.world, region=home.regions[0], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST)
     await create_being(
-        ctx, BeingKind.RIFT_SPAWN, home.world, region=home.regions[1], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST, agenda=BeingAgenda.CONQUER
+        ctx, BeingKind.RIFT_BORN, home.world, region=home.regions[1], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST, agenda=BeingAgenda.CONQUER
     )
-    await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, home.regions[1], PhenomenonCause.DIVINE, intensity=90)
-    await form_phenomenon(ctx, PhenomenonKind.TIME_SLIP, home.regions[0], PhenomenonCause.DIVINE, intensity=60)
+    await form_phenomenon(ctx, PhenomenonKind.OUTSIDE_OPENING, home.regions[1], PhenomenonCause.DIVINE, intensity=90)
+    await form_phenomenon(ctx, PhenomenonKind.TIME_DISTORTION, home.regions[0], PhenomenonCause.DIVINE, intensity=60)
     for star in await session.scalars(select(StarRow).order_by(StarRow.id)):
         star.patron_son_id = home.son.id
         star.age_stage, star.lifecycle_clock = StarAge.DYING, 1
     for route in await session.scalars(select(RouteRow).order_by(RouteRow.id)):
         route.toll_controller_entity_id, route.toll_pct, route.piracy = home.people.id, 20, 60
+    home.world.leakage = 90
+    for name, size in (("Stirring Listener", 60), ("Stirring Hunger", 40)):
+        await entity(
+            session, name, EntityType.OUTER_BEING, OuterBeingStats(size=size, interest=80, influence=60), world_id=home.world.id, location_id=home.regions[0].id
+        )
     await session.flush()
+
+
+async def stir_kinds(ctx: TickContext, cosmos: RichCosmos, town: EntityRow, neighbour: EntityRow) -> None:
+    home = cosmos.home
+    made: dict[KindConcept, int] = {}
+    for concept, spec in CONCEPTS.items():
+        category = next(iter(spec.category))
+        values = {"name": f"Stirring {spec.label}", "category": category, "world_id": home.world.id, "origin_node_id": home.people.id}
+        kind = await make_kind(ctx, spec, values)
+        made[concept] = kind.id
+        if hasattr(kind, "prestige"):
+            kind.prestige = 90
+        for holder, stance, strength in ((home.people.id, KindStance.MAKES, 90), (neighbour.id, KindStance.USES, 60), (town.id, KindStance.USES, 70)):
+            await hold_kind(ctx, concept, kind.id, holder, stance=stance, strength=strength, spread=KindSpread.INVENTED)
+    colour = made.get(KindConcept.COLOUR_TERM)
+    if colour is not None:
+        ctx.session.add(ColourMeaningRow(colour_term_id=colour, culture_node_id=home.people.id, meaning=ColourMeaning.RANK, weight=90, since_epoch=ctx.epoch))
+    ctx.session.add(
+        CurrencyRow(
+            issuer_entity_id=town.id,
+            name="Stirring Notes",
+            metal=None,
+            purity=100,
+            supply=500,
+            trust=60,
+            minted_epoch=ctx.epoch,
+            form=MoneyForm.PAPER,
+            backing=MoneyBacking.DECREE,
+            convertible=False,
+            issuer_kind=CurrencyIssuer.COMMUNITY,
+        )
+    )
+    rival = await ctx.session.scalar(select(EntityRow).where(EntityRow.name == "Stirring Rival").limit(1))
+    if rival is not None:
+        await teach(ctx.session, rival, KnowledgeBranch.TRADE)
+        await goods_of(ctx.session, ctx.epoch).add(rival.id, CommodityKind.ORE, 40, GoodsFlow.EXTRACTION, material=MaterialKind.SILVER, force=True)
+        set_stats(rival, wealth=PERCENT)
+    await ctx.session.flush()

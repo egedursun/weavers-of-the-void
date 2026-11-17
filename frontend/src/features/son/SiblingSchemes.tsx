@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bone, HandHeart } from 'lucide-react'
+import { Ban, HandHeart } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
@@ -54,8 +54,8 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
   const sibling = awake.find((item) => item.id === siblingId) ?? null
   const scheme = SCHEMES.find((item) => item.kind === kind) ?? SCHEMES[0]
   const schemeCost = rule(scheme.rule)
-  const scatterCost = rule('death.scatter_bones_cost')
-  const scatterLoss = rule('death.scatter_bones_devotion_loss')
+  const hinderCost = rule('death.hinder_return_cost')
+  const hinderLoss = rule('death.hinder_return_devotion_loss')
   const plot = useGodAction({
     run: () =>
       unwrap(
@@ -65,10 +65,10 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
         })
       ),
   })
-  const scatter = useGodAction({
+  const hinder = useGodAction({
     run: () =>
       unwrap(
-        api.POST('/api/sons/{son_id}/scatter-bones', {
+        api.POST('/api/sons/{son_id}/hinder-return', {
           params: { path: { son_id: son.id } },
           body: { sibling_id: siblingId ?? 0 },
         })
@@ -131,17 +131,17 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
               onRun={() => plot.mutate()}
             />
             <ActionButton
-              label='Scatter their bones'
-              icon={Bone}
+              label='Hinder their return'
+              icon={Ban}
               variant='destructive'
-              blocked={blocked ?? short(scatterCost)}
-              pending={scatter.isPending}
+              blocked={blocked ?? short(hinderCost)}
+              pending={hinder.isPending}
               confirm={{
-                title: `Scatter the bones of ${son.name}?`,
-                description: `${sibling?.name ?? 'The sibling'} pays ${scatterCost ?? 'its'} essence; every resurrection cult loses ${scatterLoss ?? 'some'} devotion and becomes their enemy.`,
-                confirmLabel: 'Scatter them',
+                title: `Hinder the return of ${son.name}?`,
+                description: `${sibling?.name ?? 'The sibling'} pays ${hinderCost ?? 'its'} essence; every resurrection cult loses ${hinderLoss ?? 'some'} devotion and becomes their enemy.`,
+                confirmLabel: 'Hinder it',
               }}
-              onRun={() => scatter.mutate()}
+              onRun={() => hinder.mutate()}
             />
           </div>
           {schemeCost !== undefined && (

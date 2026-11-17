@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from aerona.catalog.peoples import FUNERAL_DEEDS
+from aerona.catalog.peoples import FUNERALS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import unheld
@@ -17,6 +17,7 @@ from aerona.engine.demography.mobility import class_mobility, desertion, ennoble
 from aerona.engine.demography.peoples import (
     biology_for,
     culture_for,
+    drift_union,
     ensure_profiles,
     homeland_diseases,
     kin_of,
@@ -93,6 +94,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.prostheses",
     "table.region_environment",
     "table.role_norms",
+    "table.union_customs",
     "table.world_maps",
 )
 @writes(
@@ -155,6 +157,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
+    "table.people_reproduction",
     "table.polity_members",
     "table.region_environment",
     "table.resource_profiles",
@@ -254,6 +257,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     victor = await record_battles(ctx.session, tally, culture, ctx.epoch)
     style = culture.martial_style
     refresh_culture(ctx.rules, culture, await culture_for(ctx.session, ctx.rules, people, ground), victor)
+    await drift_union(ctx.session, people)
     if culture.martial_style is not style:
         learned = ", learned from those who beat them" if culture.martial_style is victor else ""
         text = f"The {people.name} gave up fighting as {words(style)} and took up the way of {words(culture.martial_style)}{learned}."
@@ -261,7 +265,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     tradition = await rite_tradition(ctx.session, ctx.rules, people, culture, ctx.epoch)
     if tradition is not None:
         ctx.count("funeral_rites")
-        text = f"The {people.name} now {FUNERAL_DEEDS[culture.funeral_rite]}; {tradition.name} began."
+        text = f"The {people.name} now {FUNERALS[culture.funeral_rite].deed}; {tradition.name} began."
         await note(ctx, text, key="peoples.funeral_rite", ids=[people.id, tradition.id], kind=ChronicleKind.LINEAGE)
 
 
@@ -311,6 +315,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     "table.people_biology",
     "table.people_culture",
     "table.tradition_profiles",
+    "table.union_customs",
 )
 async def people_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)

@@ -590,7 +590,7 @@ SCAR_DECAY: Mapping[ScarKind, Callable[[Rules], int]] = total(
     {
         ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_decay,
         ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_decay,
-        ScarKind.SALTED_EARTH: lambda rules: rules.scars.salted_earth_decay,
+        ScarKind.MADE_BARREN: lambda rules: rules.scars.salted_earth_decay,
         ScarKind.BURNED: lambda rules: rules.scars.burned_decay,
         ScarKind.CRATER: lambda rules: rules.scars.crater_decay,
         ScarKind.HAUNTED: lambda rules: rules.scars.haunted_decay,
@@ -1118,9 +1118,9 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
         Notable(NotableYearKind.WEATHER, year, clamp_int(severity, 0, PERCENT), name, f"{label} fell{where} in the year {year.year}: {name}."),
     )
     if year.weather is WeatherKind.ASH_FALL and env.soil is not SoilKind.VOLCANIC and "soil" not in env.locked:
-        env.soil = SoilKind.ASH
+        env.soil = SoilKind.TEPHRA
         if "soil_base" not in env.locked:
-            env.soil_base = natural_soil(ctx.rules, SoilKind.ASH, env.moisture)
+            env.soil_base = natural_soil(ctx.rules, SoilKind.TEPHRA, env.moisture)
     return 1
 
 
@@ -1151,8 +1151,8 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.region_dominion",
     "table.region_environment",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.water_lifts",
     "table.world_biochemistries",
     "table.world_maps",

@@ -78,8 +78,10 @@ from tests.tools.every_setup_living import son_line
 from tests.tools.every_setup_minds import made_mind, made_realm, network, replicator, sealed_realm
 from tests.tools.every_setup_nature import first_kind, second_kind, two_kinds
 from tests.tools.every_setup_powers import kept_truth, son_granted
+from tests.tools.every_setup_ways import outer_near
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
+from tests.tools.ways_values import EVOLVED_TRAIT, OUTER_HUNGER
 
 REASON = "so that the valley keeps its promise"
 
@@ -228,7 +230,7 @@ SON_CASES: dict[str, Case] = {
             attack_delivery="breath",
             attack_effect="cold",
             attack_range="near",
-            temperament="abductor",
+            temperament="seizes_prey",
             habitat="deep",
         )
     ),
@@ -310,7 +312,7 @@ SON_CASES: dict[str, Case] = {
     "bless_bloodline": Case(plain(house_id=created("house")), house),
     "take_life": Case(plain(entity_id=mortal, how="a quiet end in sleep")),
     "resurrect_sibling": Case(plain(son_id=sibling), dead_sibling),
-    "scatter_bones": Case(plain(son_id=sibling), dead_sibling),
+    "hinder_return": Case(plain(son_id=sibling), dead_sibling),
     "reveal_tenet": Case(plain(cult_id=cult)),
     "open_rebirth_gate": Case(plain(spirit_id=created("spirit"), community_id=people), death_son),
     "move_to_world": Case(plain(world_id=lambda realm, _ids: realm.other_world_id)),
@@ -329,7 +331,7 @@ SON_CASES: dict[str, Case] = {
     "birth_world": Case(plain(inspiration="A world of long valleys and lamplit roads.")),
     "raise_district": Case(plain(settlement_id=settlement, kind="market", reason=REASON)),
     "design_district": Case(plain(name="Lamp Ward", reason=REASON)),
-    "shape_folk": Case(plain(people_id=people, endogamous=True, reason=REASON)),
+    "shape_folk": Case(plain(people_id=people, ornament=80, reason=REASON)),
     "forge_material": Case(plain(world_id=world, name="Lampglass", reason=REASON)),
     "commission_structure": Case(plain(community_id=settlement)),
     "commission_artwork": Case(plain(name="Road Hymn")),
@@ -356,7 +358,7 @@ SON_CASES: dict[str, Case] = {
     "mend_wound": Case(plain(wound_id=created("wound"), essence=5), wounded),
     "open_rift": Case(plain(region_id=region, dimension_id=created("dimension"), reason=REASON), heavens),
     "seal_rift": Case(plain(rift_id=created("rift"), reason=REASON), rifted),
-    "call_cosmic_being": Case(plain(kind="void_shepherd", region_id=region, reason=REASON)),
+    "call_cosmic_being": Case(plain(kind="void_keeper", region_id=region, reason=REASON)),
     "bind_cosmic_being": Case(plain(being_id=created("being"), reason=REASON), cosmic_being),
     "banish_cosmic_being": Case(plain(being_id=created("being"), reason=REASON), cosmic_being),
     "strike_being": Case(plain(being_id=created("being"), force=2, reason=REASON), cosmic_being),
@@ -378,7 +380,7 @@ SON_CASES: dict[str, Case] = {
     "bind_law_across_dimension": Case(plain(dimension_id=created("prime"), law_id=created("law"), reason=REASON), ruled_law),
     "set_cosmic_feature": Case(plain(kind="asteroid_field", name="Near Belt", star_id=created("star"), reason=REASON), home_star),
     "gather_star_system": Case(plain(name="Twin Hearth", star_ids=lambda _realm, ids: [ids["first_star"], ids["second_star"]], reason=REASON), two_stars),
-    "raise_phenomenon": Case(plain(kind="singing_stones", region_id=region, reason=REASON)),
+    "raise_phenomenon": Case(plain(kind="sounding_ground", region_id=region, reason=REASON)),
     "open_breach": Case(plain(being_id=created("outsider"), region_id=region, reason=REASON), outsider),
     "forge_ley_line": Case(plain(first_region_id=region, second_region_id=created("region"), reason=REASON), combined(second_region, surveyed)),
     "add_season": Case(plain(world_id=world, name="Long Thaw"), sky_son),
@@ -404,7 +406,17 @@ SON_CASES: dict[str, Case] = {
     "begin_long_plan": Case(plain(kind="wonder", name="The Long Work", target_id=settlement, steps=5, secrecy=60, reason=REASON)),
     "further_plan": Case(plain(plan_id=created("plan"), reason=REASON), son_plan),
     "shape_kinship": Case(
-        plain(people_id=people, descent="matrilineal", residence="matrilocal", preference="cross_cousin", payment="bride_price", reason=REASON)
+        plain(
+            people_id=people,
+            descent="through_second_line",
+            residence="with_second_family",
+            preference="cross_cousin",
+            payment="to_one_family",
+            kin_terms="cross_parallel",
+            adoption="ward",
+            first_side="female",
+            reason=REASON,
+        )
     ),
     "shape_unions": Case(
         plain(
@@ -511,4 +523,7 @@ SON_CASES: dict[str, Case] = {
     "set_natural_law": Case(plain(law_id=created("natural_law"), operator="multiply", value=140, condition="always", reason=REASON), son_natural_law),
     "bless_fortune": Case(plain(target_id=mortal, reason=REASON)),
     "curse_fortune": Case(plain(target_id=mortal, reason=REASON)),
+    "shape_kind": Case(plain(people_id=people, act="make", concept="good", category="grain", name="Hearth Cake", description=TEXT[:120], reason=REASON)),
+    "turn_hunger": Case(plain(outer_id=created("outer"), hunger=OUTER_HUNGER, reason=REASON), outer_near),
+    "shape_trait": Case(plain(species_id=species, trait=EVOLVED_TRAIT, raise_it=True, reason=REASON)),
 }

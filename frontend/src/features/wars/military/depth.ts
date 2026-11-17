@@ -399,7 +399,7 @@ const GOVERNMENTS: Record<string, string> = {
   tribal_confederation: 'a tribal confederation',
   empire: 'an empire',
   hive_council: 'a hive council',
-  god_kingdom: 'a kingdom of its god',
+  god_realm: 'a realm ruled by its god',
   occupation: 'an occupied land',
   junta: 'a military government',
   corporate_state: 'a corporate state',

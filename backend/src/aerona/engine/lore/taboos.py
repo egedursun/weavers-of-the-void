@@ -5,7 +5,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.engine.context import TickContext
@@ -25,7 +25,7 @@ async def home_of(session: AsyncSession, entity_id: int | None) -> int | None:
     return entity.location_id if entity.entity_type is EntityType.MORTAL else entity.id
 
 
-async def kept(session: AsyncSession, community_id: int | None, kind: TraditionKind, act: ActKind | None = None) -> list[int]:
+async def kept(session: AsyncSession, community_id: int | None, kind: TraditionFunction, act: ActKind | None = None) -> list[int]:
     if community_id is None:
         return []
     keeping = select(BondRow.target_node_id).where(
@@ -45,7 +45,7 @@ async def strength_of(session: AsyncSession, tradition_id: int, community_id: in
 
 async def forbidden(ctx: TickContext, actor_id: int | None, act: ActKind) -> bool:
     home = await home_of(ctx.session, actor_id)
-    for tradition_id in await kept(ctx.session, home, TraditionKind.TABOO, act):
+    for tradition_id in await kept(ctx.session, home, TraditionFunction.TABOO, act):
         held = await strength_of(ctx.session, tradition_id, home or 0)
         if ctx.rng(f"taboo.{tradition_id}.{actor_id}.{act.value}.{ctx.epoch}").chance(held):
             ctx.count(f"taboo_obeyed_{act.value}")
@@ -79,7 +79,7 @@ async def violated(ctx: TickContext, actor_id: int, act: ActKind) -> int:
     home = await home_of(ctx.session, actor_id)
     shamed = 0
     actor = await ctx.session.get(EntityRow, actor_id)
-    for tradition_id in await kept(ctx.session, home, TraditionKind.TABOO, act):
+    for tradition_id in await kept(ctx.session, home, TraditionFunction.TABOO, act):
         keepers = await keepers_of(ctx.session, tradition_id)
         label = act.value.replace("_", " ")
         found = await shame(ctx, actor_id, keepers, ctx.rules.traditions.taboo_infamy, f"broke the taboo on {label}")
@@ -119,7 +119,7 @@ async def guest_killed(ctx: TickContext, killer_id: int | None, victim: EntityRo
     if killer_id is None or killer_id == victim.id or not await guest_of(ctx.session, victim):
         return 0
     host = victim.location_id
-    laws = await kept(ctx.session, host, TraditionKind.HOSPITALITY_LAW)
+    laws = await kept(ctx.session, host, TraditionFunction.HOSPITALITY)
     if not laws:
         return await circuit_guest_killed(ctx, killer_id, victim)
     keepers = sorted({keeper for law in laws for keeper in await keepers_of(ctx.session, law)} | ({host} if host is not None else set()))
@@ -163,7 +163,7 @@ async def winter_rest(ctx: TickContext, attacker_id: int, defender_id: int, *, s
     if shamed:
         return False, shamed
     home = await home_of(ctx.session, defender_id)
-    for tradition_id in await kept(ctx.session, home, TraditionKind.TABOO, ActKind.WINTER_FIGHTING):
+    for tradition_id in await kept(ctx.session, home, TraditionFunction.TABOO, ActKind.WINTER_FIGHTING):
         await shame(ctx, attacker_id, await keepers_of(ctx.session, tradition_id), ctx.rules.traditions.taboo_infamy, "made war in the sacred winter")
         ctx.count("winter_war_infamy")
         shamed = True

@@ -248,6 +248,7 @@ REALM_MECHANICS = (
     ),
     Mechanic(
         key="vassal_duties",
+        tools=("swear_fealty",),
         spec_item="S5.13",
         title="Vassals pay tribute and send levies; disloyal vassals of weak lords revolt or change lords; realm diplomacy and pacts",
         subsystem=Subsystem.POLITY,

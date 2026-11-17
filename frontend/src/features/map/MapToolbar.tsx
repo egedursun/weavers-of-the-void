@@ -1,5 +1,8 @@
 import { type ReactNode } from 'react'
 import {
+  Banknote,
+  Shirt,
+  UtensilsCrossed,
   EyeOff,
   Wifi,
   Scroll,
@@ -114,6 +117,10 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   nutrients: Sprout,
   networks: Wifi,
   hidden: EyeOff,
+  cuisines: UtensilsCrossed,
+  dress: Shirt,
+  organisations: Building2,
+  money: Banknote,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

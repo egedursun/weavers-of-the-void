@@ -104,7 +104,7 @@ const CALENDAR = {
     {
       id: 22,
       name: 'The Midday Rest of Vale',
-      kind: 'siesta',
+      kind: 'rest_custom',
       season_position: 0,
       calendar_id: null,
       calendar_name: null,

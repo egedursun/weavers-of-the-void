@@ -175,10 +175,10 @@ async def tend_estates(ctx: TickContext, tally: EstateTally) -> None:
         if held(realm.entity.id) or not realm.members:
             continue
         shares = await realm_shares(ctx, realm)
-        for social_class in ESTATE_CLASSES:
+        for social_class in SocialClass:
             share = shares.get(social_class, 0.0)
             row = await estate_of(ctx, realm.entity.id, social_class)
-            ready = row is None and share >= table.found_share and realm.profile.capital_entity_id is not None
+            ready = social_class in ESTATE_CLASSES and row is None and share >= table.found_share and realm.profile.capital_entity_id is not None
             if ready and ctx.rng(seed_of("estate.found", realm.entity.id, social_class.value, ctx.epoch)).chance(table.found_pct):
                 row = await found_estate(ctx, realm, social_class)
                 tally.founded += 1

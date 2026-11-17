@@ -63,6 +63,7 @@ AFFAIRS_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="corruption_and_taxes",
+        tools=("set_levy",),
         spec_item="S4.6/RP2",
         title="Corruption grows from overreach, injustice, greed and tax farming and skims taxes; each kind of tax falls on its classes",
         subsystem=S.ECONOMY,

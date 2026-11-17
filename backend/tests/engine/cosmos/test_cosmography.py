@@ -164,7 +164,7 @@ async def test_a_rift_opens_a_passage_and_a_seal_closes_it(ctx: TickContext, cos
 
 async def test_a_ward_holds_a_phenomenon_back(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Fogland", cosmos.home.id)
-    body = await control.new_phenomenon(ctx, PhenomenonKind.LIVING_FOG, region.id, 60, PhenomenonCause.DIVINE)
+    body = await control.new_phenomenon(ctx, PhenomenonKind.MOVING_FOG, region.id, 60, PhenomenonCause.DIVINE)
     profile = await control.ward_phenomenon(ctx, body.id, 30, "Aeron")
     assert profile.containment >= 30
     footprint = await control.set_footprint(ctx, body.id, region.id, None)
@@ -212,7 +212,7 @@ async def test_a_held_load_stays_on_the_voyage(ctx: TickContext, cosmos: Cosmos)
 
 async def test_a_called_being_can_be_bound_and_banished(ctx: TickContext, cosmos: Cosmos) -> None:
     await ensure_ladder(ctx.session, ctx.rules)
-    being = await control.call_being(ctx, BeingKind.DIMENSION_WALKER, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
+    being = await control.call_being(ctx, BeingKind.DIMENSION_TRAVELLER, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
     bound = await control.bind(ctx, being.id, cosmos.creator.id, "Aeron")
     assert bound.phase is BeingPhase.BOUND
     banished = await control.banish(ctx, being.id, "Aeron")
@@ -223,7 +223,7 @@ async def test_a_called_being_can_be_bound_and_banished(ctx: TickContext, cosmos
 async def test_a_ward_of_enough_power_drives_a_manifest_being_home(ctx: TickContext, cosmos: Cosmos) -> None:
     await ensure_ladder(ctx.session, ctx.rules)
     region = await make_region(ctx.session, "Haunted Vale", cosmos.home.id)
-    being = await control.call_being(ctx, BeingKind.DIMENSION_WALKER, cosmos.home.id, region_id=region.id, home_dimension_id=None, name=None)
+    being = await control.call_being(ctx, BeingKind.DIMENSION_TRAVELLER, cosmos.home.id, region_id=region.id, home_dimension_id=None, name=None)
     profile = await control.edit_being(ctx, being.id, {"phase": "manifest"}, [])
     assert profile.phase is BeingPhase.MANIFEST
     assert await banish_near(ctx, region.id, "Aeron") == being.name
@@ -239,7 +239,7 @@ async def test_a_region_at_its_leak_peak_forms_a_leak_wound(session: AsyncSessio
     await session.flush()
     assert await leak_peaks(ctx, await Cosmography.load(session)) == 0
     kinds = list(await session.scalars(select(PhenomenonProfileRow.kind)))
-    assert kinds == [PhenomenonKind.LEAK_WOUND]
+    assert kinds == [PhenomenonKind.OUTSIDE_OPENING]
 
 
 async def test_the_home_galaxy_never_takes_a_numbered_name(ctx: TickContext, cosmos: Cosmos) -> None:

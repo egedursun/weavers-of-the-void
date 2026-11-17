@@ -1,13 +1,16 @@
 from collections import defaultdict
+from collections.abc import Mapping
 
 from sqlalchemy import select
 
 from aerona.catalog.genetics import GIFT_LOCI_ORDER, LOCI, LocusSpec
+from aerona.catalog.kinds.gifts import GIFT_STANCES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
+from aerona.db.tables.nature import SenseProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import SizeClass
@@ -15,6 +18,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.genetics import GiftStance, Locus
 from aerona.domain.enums.mind import ActKind, ValueHolder
+from aerona.domain.enums.nature import SenseKind, Thermoregulation
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.customs import people_of
@@ -35,6 +39,12 @@ COHORTS = "cohort_shares"
 HOT = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 COLD = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 LARGE = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
+SENSE_LOCI: dict[Locus, SenseKind] = {
+    Locus.SIGHT: SenseKind.SIGHT,
+    Locus.NIGHT_VISION: SenseKind.NIGHT_VISION,
+    Locus.SMELL: SenseKind.SMELL,
+    Locus.HEARING: SenseKind.HEARING,
+}
 
 
 def normalised(weights: dict[str, float]) -> dict[str, int]:
@@ -47,8 +57,23 @@ def normalised(weights: dict[str, float]) -> dict[str, int]:
     return shares
 
 
-def leaned(spec: LocusSpec, rng: SeededRandom, biology: PeopleBiologyRow | None) -> dict[str, int]:
+def climate_lean(locus: Locus, biology: PeopleBiologyRow) -> int:
+    cold = biology.acclimatised in COLD
+    hot = biology.acclimatised in HOT or biology.thermoregulation is Thermoregulation.ECTOTHERM
+    if locus is Locus.COLD_TOLERANCE:
+        return 1 if cold else -1 if hot else 0
+    if locus is Locus.HEAT_TOLERANCE:
+        return 1 if hot else -1 if cold else 0
+    return 0
+
+
+def leaned(spec: LocusSpec, rng: SeededRandom, biology: PeopleBiologyRow | None, senses: Mapping[SenseKind, int] | None = None) -> dict[str, int]:
     weights = {allele.key: allele.weight * (PERCENT + rng.integer(-JITTER, JITTER)) / PERCENT for allele in spec.alleles}
+    sense = SENSE_LOCI.get(spec.locus)
+    if sense is not None and senses and sense in senses:
+        tilt = (senses[sense] - PERCENT // 2) / (PERCENT // 2)
+        for allele in spec.alleles:
+            weights[allele.key] *= max(0.01, (PERCENT + allele.score * tilt * LEAN) / PERCENT)
     if biology is not None:
         if spec.locus is Locus.SKIN:
             for allele in spec.alleles:
@@ -56,18 +81,23 @@ def leaned(spec: LocusSpec, rng: SeededRandom, biology: PeopleBiologyRow | None)
                     weights[allele.key] *= (PERCENT + allele.score * LEAN // 5) / PERCENT
                 elif biology.acclimatised in COLD:
                     weights[allele.key] *= (PERCENT + (5 - allele.score) * LEAN // 5) / PERCENT
-        if spec.locus in (Locus.HEIGHT, Locus.GIANT_BLOOD) and biology.size_class in LARGE:
+        if spec.locus in (Locus.HEIGHT, Locus.GIANT_BLOOD, Locus.MUSCLE, Locus.BONE_DENSITY) and biology.size_class in LARGE:
             for allele in spec.alleles:
                 weights[allele.key] *= (PERCENT + max(0, allele.score) * LEAN) / PERCENT
+        lean = climate_lean(spec.locus, biology)
+        if lean:
+            for allele in spec.alleles:
+                weights[allele.key] *= max(1, PERCENT + allele.score * lean * LEAN) / PERCENT
     return normalised(weights)
 
 
 async def seed_pool(ctx: TickContext, people: EntityRow) -> AllelePoolRow:
     biology = await ctx.session.get(PeopleBiologyRow, people.id)
+    senses = {row.sense: row.acuity for row in await ctx.session.scalars(select(SenseProfileRow).where(SenseProfileRow.holder_entity_id == people.id))}
     rng = ctx.rng(f"genetics.pool.{people.id}")
     row = AllelePoolRow(
         people_node_id=people.id,
-        frequencies={locus.value: leaned(spec, rng, biology) for locus, spec in LOCI.items()},
+        frequencies={locus.value: leaned(spec, rng, biology, senses) for locus, spec in LOCI.items()},
         gift_stance=GiftStance.HONOURED,
         gifted_share=0,
         cohort_shares={},
@@ -180,7 +210,7 @@ async def tend_pool(ctx: TickContext, people: EntityRow, row: AllelePoolRow, mem
             shift += ctx.rules.gift.law_shift_pct
         if nature.has(NaturalLaw.GIFT_WITHERING, people.world_id):
             shift -= ctx.rules.gift.law_shift_pct
-        if row.gift_stance is GiftStance.PERSECUTED:
+        if GIFT_STANCES[row.gift_stance].culls_the_gift:
             shift -= ctx.rules.gift.persecution_pct
         shift += round(ctx.rules.gift.law_shift_pct * await ctx.hook_pct(people.id, DomainHook.BLOODLINE) / PERCENT)
         row.frequencies = shifted_gift(frequencies, shift) if shift else frequencies

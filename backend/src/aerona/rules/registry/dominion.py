@@ -82,6 +82,9 @@ class WorshipViewRules:
     appeasement_offering_pct: int = rule(20, 0, 200, D, "Extra faith a feared god gains from offerings meant to keep it away (%)")
     devotion_morale: int = rule(5, 0, 100, D, "Piety a devoted people's settlements gain toward their god each epoch")
     temple_shift: int = rule(4, 0, 100, D, "Splendour a temple of a god its people love gains each epoch, and one of a god they fear loses")
+    temple_style_pull: int = rule(
+        10, 0, 100, D, "Share of the gap each style axis of a god's temple closes each epoch toward the look its people give a god they love or fear (%)"
+    )
 
 
 @dataclass(frozen=True)

@@ -97,11 +97,31 @@ async def lie_unscavenged(ctx: TickContext, row: CarrionPulseRow, ground: Region
             add_scar(ground, ScarKind.HAUNTED, table.haunting)
 
 
+UNBURIED = "unburied dead"
+
+
+async def unburied_of(ctx: TickContext, region_id: int) -> list[EntityRow]:
+    query = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.SPIRIT,
+        EntityRow.status == EntityStatus.CANON,
+        EntityRow.location_id == region_id,
+        EntityRow.subtype == UNBURIED,
+    )
+    return list(await ctx.session.scalars(query.order_by(EntityRow.id)))
+
+
 async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnvironmentRow | None, region: EntityRow) -> None:
     table = ctx.rules.carrion
     if ground is not None:
         add_scar(ground, ScarKind.HAUNTED, table.haunting)
     if row.carrion < table.restless_dead or not ctx.rng(f"carrion.restless.{region.id}.{ctx.epoch}").chance(table.restless_chance):
+        return
+    strength = clamp_percent(row.carrion // table.restless_dead * 10)
+    unrest = clamp_percent(table.unburied_unrest_base + row.carrion // table.restless_dead * table.unburied_unrest_per)
+    walking = [spirit for spirit in await unburied_of(ctx, region.id) if not held(spirit.id)]
+    if walking:
+        spirit = walking[0]
+        set_stats(spirit, strength=max(strength, stat_or(spirit, "strength", 0)), unrest=unrest)
         return
     spirit = await create_record(
         ctx,
@@ -109,13 +129,30 @@ async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnviron
             entity_type=EntityType.SPIRIT,
             name=f"The Unburied of {region.name}",
             body=f"The restless dead of {region.name}, left where they fell.",
-            stats=SpiritStats(strength=clamp_percent(row.carrion // table.restless_dead * 10), unrest=PERCENT * 3 // 4),
+            stats=SpiritStats(strength=strength, unrest=unrest),
             power=2,
             world_id=region.world_id,
             location_id=region.id,
+            subtype=UNBURIED,
         ),
     )
     await note(ctx, f"The unburied dead of {region.name} did not rest: {spirit.name} walks there.", key="carrion.restless", ids=[region.id, spirit.id])
+
+
+async def settle_unburied(ctx: TickContext, unburied_regions: set[int]) -> int:
+    calmer = ctx.rules.carrion.unburied_calm
+    settled = 0
+    unnamed = select(EntityRow).where(EntityRow.entity_type == EntityType.SPIRIT, EntityRow.subtype.is_(None), EntityRow.description.like("The Unburied of %"))
+    for spirit in list(await ctx.session.scalars(unnamed)):
+        if not held(spirit.id):
+            spirit.subtype = UNBURIED
+    query = select(EntityRow).where(EntityRow.entity_type == EntityType.SPIRIT, EntityRow.status == EntityStatus.CANON, EntityRow.subtype == UNBURIED)
+    for spirit in list(await ctx.session.scalars(query.order_by(EntityRow.id))):
+        if held(spirit.id) or spirit.location_id in unburied_regions:
+            continue
+        set_stats(spirit, unrest=clamp_percent(stat_or(spirit, "unrest", 0) - calmer))
+        settled += 1
+    return settled
 
 
 async def mourn_cost(ctx: TickContext, region_id: int) -> None:
@@ -185,4 +222,6 @@ async def carrion(ctx: TickContext) -> None:
             await restless(ctx, row, ground, region)
         if not row.carrion and not row.kept:
             await ctx.session.delete(row)
+    still = {region_id for region_id, row in rows.items() if row.carrion >= table.restless_dead}
+    ctx.count("unburied_settling", await settle_unburied(ctx, still))
     await ctx.session.flush()

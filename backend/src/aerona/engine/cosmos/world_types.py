@@ -65,7 +65,7 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
             W.ASTEROID_BELT,
             capacity_pct=lambda rules: rules.world_physics.asteroid_belt_capacity,
             route_danger=lambda rules: rules.world_physics.asteroid_belt_route_danger,
-            hidden_route_method=TravelMethod.COSMIC_MOUNT,
+            hidden_route_method=TravelMethod.CARRIER_MOUNT,
             forced_gravity=Gravity.LOW,
         ),
         WorldTypeMechanics(W.TIDALLY_LOCKED, capacity_pct=lambda rules: rules.world_physics.tidally_locked_capacity),
@@ -74,7 +74,7 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
             capacity_pct=lambda rules: rules.world_physics.void_pocket_capacity,
             leak=lambda rules: rules.world_physics.void_pocket_leak,
             sanity_erosion=lambda rules: rules.world_physics.void_pocket_sanity_erosion,
-            hidden_route_method=TravelMethod.SWALLOWED,
+            hidden_route_method=TravelMethod.CARRIED_WITHIN,
             forced_atmosphere=Atmosphere.THIN,
         ),
         WorldTypeMechanics(
@@ -96,7 +96,7 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
             capacity_pct=lambda rules: rules.world_physics.corpse_world_capacity,
             leak=lambda rules: rules.world_physics.corpse_world_leak,
             fertility_decay=lambda rules: rules.world_physics.corpse_world_fertility_decay,
-            hidden_route_method=TravelMethod.RIVER_OF_DEAD,
+            hidden_route_method=TravelMethod.DEATH_CURRENT,
             disaster_pct={
                 Disaster.PLAGUE: lambda rules: rules.world_physics.corpse_world_plague_pct,
             },
@@ -166,7 +166,7 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
         WorldTypeMechanics(
             W.DWARF_PLANET,
             capacity_pct=lambda rules: rules.world_physics.dwarf_planet_capacity,
-            hidden_route_method=TravelMethod.COSMIC_MOUNT,
+            hidden_route_method=TravelMethod.CARRIER_MOUNT,
             forced_gravity=Gravity.LOW,
             forced_atmosphere=Atmosphere.THIN,
             ore_yield_pct=lambda rules: rules.world_physics.dwarf_planet_ore_yield,
@@ -215,7 +215,7 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
             capacity_pct=lambda rules: rules.world_physics.shattered_capacity,
             route_danger=lambda rules: rules.world_physics.shattered_route_danger,
             leak=lambda rules: rules.world_physics.shattered_leak,
-            hidden_route_method=TravelMethod.COSMIC_MOUNT,
+            hidden_route_method=TravelMethod.CARRIER_MOUNT,
             forced_gravity=Gravity.LOW,
             ore_yield_pct=lambda rules: rules.world_physics.shattered_ore_yield,
             disaster_pct={
@@ -276,8 +276,8 @@ def is_realm_of_dead(world_type: WorldType) -> bool:
     return WORLD_TYPES[world_type].realm_of_dead
 
 
-def river_reaches(world_type: WorldType) -> bool:
-    return is_realm_of_dead(world_type) or mechanics_of(world_type).hidden_route_method is TravelMethod.RIVER_OF_DEAD
+def death_crossing_reaches(world_type: WorldType) -> bool:
+    return is_realm_of_dead(world_type) or mechanics_of(world_type).hidden_route_method is TravelMethod.DEATH_CURRENT
 
 
 def is_living(world_type: WorldType) -> bool:
@@ -290,7 +290,7 @@ def is_mirror(world_type: WorldType) -> bool:
 
 def hidden_route_method(first: WorldType, second: WorldType) -> TravelMethod:
     if is_realm_of_dead(first) or is_realm_of_dead(second):
-        return TravelMethod.RIVER_OF_DEAD
+        return TravelMethod.DEATH_CURRENT
     for world_type in (first, second):
         methods = sorted(WORLD_TYPES[world_type].hidden_route_methods)
         if methods:

@@ -19,6 +19,17 @@ import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { SiteSection } from '@/features/gatherings/SiteSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import {
+  DressSection,
+  EmblemsSection,
+  MusicSection,
+  SubstancesSection,
+} from '@/features/kinds/CultureSections'
+import {
+  OrganisationKindsSection,
+  RankKindsSection,
+  WorkSection,
+} from '@/features/kinds/SocietySections'
 import { LawGrammarSection } from '@/features/lawGrammar/LawGrammarSection'
 import { MadeEntitySection } from '@/features/madeKinds/KindPages'
 import { MADE_ENTITY_TYPES } from '@/features/madeKinds/model'
@@ -143,6 +154,25 @@ const MIND_TYPES = new Set([
   'faction',
 ])
 
+const CULTURED = new Set(['people', 'culture'])
+const CULTURE_SECTIONS = [
+  'section-dress',
+  'section-emblems',
+  'section-music',
+  'section-substances',
+]
+
+const WORKING = new Set(['people', 'settlement', 'polity', 'culture'])
+const RANKED = new Set([
+  'people',
+  'settlement',
+  'polity',
+  'culture',
+  'cult',
+  'faction',
+])
+const ORGANISED = new Set(['people', 'polity', 'culture', 'cult', 'faction'])
+
 const SITE_TYPES = new Set(['place', 'structure', 'settlement', 'vessel'])
 const SITE_FLAGS = new Set(['ruin', 'previous_creation'])
 
@@ -156,6 +186,13 @@ const SECTION_LINKS = [
   { id: 'section-needs', label: 'Needs' },
   { id: 'section-class-wealth', label: 'Wealth' },
   { id: 'section-culture-drift', label: 'Drift' },
+  { id: 'section-dress', label: 'Dress' },
+  { id: 'section-emblems', label: 'Emblems' },
+  { id: 'section-music', label: 'Music' },
+  { id: 'section-substances', label: 'Substances' },
+  { id: 'section-work-kinds', label: 'Professions' },
+  { id: 'section-rank-kinds', label: 'Ranks' },
+  { id: 'section-organisation-kinds', label: 'Forms' },
   { id: 'section-loyalty', label: 'Loyalty' },
   { id: 'section-mobility', label: 'Rise and fall' },
   { id: 'section-settlement-plan', label: 'City' },
@@ -309,6 +346,12 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-loyalty')
   }
   if (entity.entity_type !== 'people') present.delete('section-culture-drift')
+  const cultured = CULTURED.has(entity.entity_type)
+  if (!cultured) for (const id of CULTURE_SECTIONS) present.delete(id)
+  if (!WORKING.has(entity.entity_type)) present.delete('section-work-kinds')
+  if (!RANKED.has(entity.entity_type)) present.delete('section-rank-kinds')
+  if (!ORGANISED.has(entity.entity_type))
+    present.delete('section-organisation-kinds')
   if (!trading && entity.entity_type !== 'mortal')
     present.delete('section-mobility')
   if (entity.entity_type !== 'people') present.delete('section-people-profile')
@@ -555,6 +598,26 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         {entity.entity_type === 'people' && (
           <CultureDriftSection
             communityId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {cultured && (
+          <>
+            <DressSection nodeId={entity.id} readOnlyReason={readOnly} />
+            <EmblemsSection nodeId={entity.id} readOnlyReason={readOnly} />
+            <MusicSection nodeId={entity.id} readOnlyReason={readOnly} />
+            <SubstancesSection nodeId={entity.id} readOnlyReason={readOnly} />
+          </>
+        )}
+        {WORKING.has(entity.entity_type) && (
+          <WorkSection nodeId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {RANKED.has(entity.entity_type) && (
+          <RankKindsSection nodeId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {ORGANISED.has(entity.entity_type) && (
+          <OrganisationKindsSection
+            nodeId={entity.id}
             readOnlyReason={readOnly}
           />
         )}

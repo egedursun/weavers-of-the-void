@@ -1,8 +1,8 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.genetics import DWELLINGS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdMemberRow, HouseholdRow
@@ -10,13 +10,14 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.genetics import DwellingKind
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.customs import people_of
 from aerona.engine.genetics.life import disease_factor
 from aerona.engine.gods.queries import community_of
+from aerona.engine.households.dwelling_kinds import dwelling_of_people
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -112,24 +113,29 @@ async def in_cave(session: AsyncSession, mortal: EntityRow) -> bool:
     return profile is not None and profile.kind is PlaceKind.CAVE
 
 
-async def settled_kind(session: AsyncSession, mortal: EntityRow) -> DwellingKind:
+async def settled_kind(session: AsyncSession, mortal: EntityRow) -> str:
     community = await community_of(session, mortal)
     if community is None or community.entity_type is not EntityType.SETTLEMENT:
-        return DwellingKind.TENT
+        return "tent"
     if (stat(community, "population") or 0) >= TOWN_POPULATION:
-        return DwellingKind.APARTMENT if mortal.social_class in WAGE_CLASSES else DwellingKind.TOWNHOUSE
-    return DwellingKind.LONGHOUSE if mortal.social_class in (SocialClass.WARRIOR, SocialClass.FARMER) else DwellingKind.HUT
+        return "apartment" if mortal.social_class in WAGE_CLASSES else "townhouse"
+    return "longhouse" if mortal.social_class in (SocialClass.WARRIOR, SocialClass.FARMER) else "hut"
 
 
-async def dwelling_kind_for(session: AsyncSession, mortal: EntityRow) -> DwellingKind:
+async def dwelling_key_for(session: AsyncSession, mortal: EntityRow) -> str:
     choices = (
-        (mortal.mortal_role is MortalRole.RULER or await rules_realm(session, mortal.id), DwellingKind.PALACE),
-        (await in_cave(session, mortal), DwellingKind.CAVE),
-        (mortal.mortal_role in SEA_ROLES, DwellingKind.SHIP),
-        (mortal.mortal_role in TOWER_ROLES, DwellingKind.TOWER),
-        (mortal.social_class is SocialClass.NOBLE, DwellingKind.MANOR),
+        (mortal.mortal_role is MortalRole.RULER or await rules_realm(session, mortal.id), "palace"),
+        (await in_cave(session, mortal), "cave"),
+        (mortal.mortal_role in SEA_ROLES, "ship"),
+        (mortal.mortal_role in TOWER_ROLES, "tower"),
+        (mortal.social_class is SocialClass.NOBLE, "manor"),
     )
-    return next((kind for chosen, kind in choices if chosen), None) or await settled_kind(session, mortal)
+    return next((key for chosen, key in choices if chosen), None) or await settled_kind(session, mortal)
+
+
+async def dwelling_kind_for(session: AsyncSession, mortal: EntityRow) -> DwellingKindRow:
+    people = await people_of(session, mortal)
+    return await dwelling_of_people(session, people.id if people is not None else None, await dwelling_key_for(session, mortal))
 
 
 CLASS_DISTRICTS: dict[SocialClass, tuple[DistrictKind, ...]] = {
@@ -162,8 +168,8 @@ async def district_for(session: AsyncSession, settlement_id: int | None, social_
     return (chosen or districts[0]).id
 
 
-def starting_quality(kind: DwellingKind, social_class: SocialClass | None) -> int:
-    return clamp_int(DWELLINGS[kind].quality + (CLASS_QUALITY.get(social_class, 0) if social_class is not None else 0), 0, PERCENT)
+def starting_quality(kind: DwellingKindRow, social_class: SocialClass | None) -> int:
+    return clamp_int(kind.quality + (CLASS_QUALITY.get(social_class, 0) if social_class is not None else 0), 0, PERCENT)
 
 
 async def sickness_factor(session: AsyncSession, rules: Rules, mortal_id: int) -> float:

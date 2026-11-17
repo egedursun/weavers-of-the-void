@@ -22,14 +22,16 @@ from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.world import DARK_STAR_TYPES
+from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.wounds import inflict
 from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
-from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.records import RecordSpec, open_record, retire_in
+from aerona.engine.primitives.stats import POPULATION_KEY, stat_or
 
 H = OuterHunger
 VOID_TENETS = (TenetKind.VOID_COMMUNION, TenetKind.FEEDING_THE_HUNGER, TenetKind.WHISPERED_SECRETS)
@@ -296,3 +298,31 @@ async def take_gain(ctx: TickContext, son: SonRow, being: EntityRow, gain: Barga
             return "gained a power"
     son.essence += essence
     return f"gained {essence} essence"
+
+
+async def found_outer_cult(ctx: TickContext, entity: EntityRow) -> EntityRow:
+    horror = ctx.rules.cosmic_horror
+    population = stat_or(entity, POPULATION_KEY, horror.whisperers_default_population)
+    cult = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            name=f"The outer cult of {entity.name}",
+            entity_type=EntityType.CULT,
+            body=f"A cult among {entity.name} that worships a being from outside the cosmos.",
+            stats=CultStats(
+                followers=max(horror.whisperers_min_followers, round(population * horror.whisperers_share_pct / PERCENT)),
+                zeal=horror.whisperers_zealotry,
+                influence=horror.whisperers_influence,
+            ),
+            power=horror.whisperers_power,
+            world_id=entity.world_id,
+            location_id=entity.id if entity.entity_type is EntityType.SETTLEMENT else entity.location_id,
+            subtype="outer cult",
+            flags=(EntityFlag.OUTER_CULT,),
+            sanity=horror.whisperers_sanity,
+        ),
+    )
+    await connect(ctx.session, cult.id, entity.id, BondKind.DESCENDS_FROM, ctx.epoch, description="born from within")
+    await seed_void_tenets(ctx, cult)
+    return cult

@@ -1,10 +1,12 @@
 from collections import Counter
+from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.tenets import DOMAIN_JUDGEMENT, DOMAIN_TENETS, OPPOSED, PASSION_TENETS, VALUE_TENETS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -15,7 +17,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.faith import ClergyOffice, JudgementDoctrine, RebirthPath, TenetKind
+from aerona.domain.enums.faith import ClergyFunction, JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import SocialClass
@@ -23,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.places import holy_place_ids
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.mind.book import skill_level, values_for
+from aerona.engine.mortal.learning import practise_subject
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -34,6 +37,31 @@ from aerona.rules.registry import Rules
 CLERGY_ROLES = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
 FOODS = (CommodityKind.LIVESTOCK, CommodityKind.FISH, CommodityKind.GRAIN)
 FILLERS = (TenetKind.PROSELYTISM, TenetKind.JUDGEMENT_BY_DEEDS, TenetKind.ANCESTOR_VENERATION)
+
+
+@dataclass(frozen=True)
+class ClergyDuty:
+    skill: SkillKind
+    tenets: tuple[TenetKind, ...] | None
+
+
+CF = ClergyFunction
+CLERGY_DUTIES = total(
+    ClergyFunction,
+    {
+        CF.LEADER: ClergyDuty(SkillKind.LEADERSHIP, None),
+        CF.CELEBRANT: ClergyDuty(SkillKind.RITUAL, None),
+        CF.ASCETIC: ClergyDuty(SkillKind.THEOLOGY, (TenetKind.MONASTIC_LEARNING, TenetKind.ASCETICISM)),
+        CF.GUARDIAN_OF_DOCTRINE: ClergyDuty(SkillKind.THEOLOGY, None),
+        CF.TEACHER: ClergyDuty(SkillKind.TEACHING, (TenetKind.MONASTIC_LEARNING,)),
+        CF.HEALER: ClergyDuty(SkillKind.MEDICINE, (TenetKind.PURITY_OF_BODY, TenetKind.SACRED_SUFFERING)),
+        CF.SEER: ClergyDuty(SkillKind.PROPHECY, (TenetKind.REINCARNATION, TenetKind.HIDDEN_GOD)),
+        CF.KEEPER_OF_SITES: ClergyDuty(SkillKind.RITUAL, (TenetKind.PILGRIMAGE_DUTY, TenetKind.ANCESTOR_VENERATION)),
+        CF.MISSIONARY: ClergyDuty(SkillKind.ORATORY, (TenetKind.PROSELYTISM,)),
+        CF.JUDGE: ClergyDuty(SkillKind.LAW, (TenetKind.JUDGEMENT_BY_DEEDS, TenetKind.JUDGEMENT_BY_FAITH)),
+        CF.SCRIBE: ClergyDuty(SkillKind.WRITING, (TenetKind.MONASTIC_LEARNING, TenetKind.WHISPERED_SECRETS)),
+    },
+)
 
 
 def passion_tenets(church: Church, threshold: int) -> list[TenetKind]:
@@ -217,7 +245,7 @@ async def clergy_of(ctx: TickContext, church: Church) -> list[EntityRow]:
 
 
 async def divine_king(ctx: TickContext, church: Church) -> EntityRow | None:
-    if not church.holds(TenetKind.DIVINE_KINGSHIP):
+    if not church.holds(TenetKind.DIVINE_RULE):
         return None
     realm = await ctx.session.scalar(
         select(PolityProfileRow).where(PolityProfileRow.state_religion_id == church.cult.id).order_by(PolityProfileRow.polity_entity_id).limit(1)
@@ -259,11 +287,10 @@ async def staff(ctx: TickContext, church: Church) -> int:
         reverse=True,
     )
     await clergy_numbers(ctx, church, doctrine, clergy, scored)
-    wanted = [ClergyOffice.HIGH_PRIEST, ClergyOffice.PRIEST]
-    if church.holds(TenetKind.MONASTIC_LEARNING) or church.holds(TenetKind.ASCETICISM):
-        wanted.append(ClergyOffice.MONK)
+    wanted = [ClergyFunction.LEADER, ClergyFunction.CELEBRANT]
+    wanted += [kind for kind, duty in CLERGY_DUTIES.items() if duty.tenets is not None and any(church.holds(tenet) for tenet in duty.tenets)]
     if doctrine.orthodoxy >= ctx.rules.inquisition.orthodoxy_suppress:
-        wanted.append(ClergyOffice.INQUISITOR)
+        wanted.append(ClergyFunction.GUARDIAN_OF_DOCTRINE)
     offices = {row.kind: row for row in await ctx.session.scalars(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == church.cult.id))}
     god_king = await divine_king(ctx, church)
     candidates = [item[2] for item in scored]
@@ -275,7 +302,7 @@ async def staff(ctx: TickContext, church: Church) -> int:
             ctx.session.add(row)
         if row.locked:
             continue
-        if kind is ClergyOffice.HIGH_PRIEST and god_king is not None:
+        if kind is ClergyFunction.LEADER and god_king is not None:
             if row.holder_entity_id != god_king.id:
                 row.holder_entity_id, row.since_epoch = god_king.id, ctx.epoch
                 filled += 1
@@ -286,7 +313,18 @@ async def staff(ctx: TickContext, church: Church) -> int:
         holder = candidates.pop(0) if candidates else None
         row.holder_entity_id, row.since_epoch = (holder.id if holder is not None else None), ctx.epoch
         filled += int(holder is not None)
+    await keep_duties(ctx, church, wanted, offices)
     return filled
+
+
+async def keep_duties(ctx: TickContext, church: Church, wanted: list[ClergyFunction], offices: dict[ClergyFunction, CultOfficeRow]) -> None:
+    for kind in wanted:
+        row = offices.get(kind)
+        if row is None or row.holder_entity_id is None or held(row.holder_entity_id):
+            continue
+        await practise_subject(
+            ctx.session, ctx.rules, row.holder_entity_id, CLERGY_DUTIES[kind].skill, subject_id=church.cult.id, xp=ctx.rules.doctrine.duty_xp, epoch=ctx.epoch
+        )
 
 
 async def ensure_doctrines(ctx: TickContext, book: FaithBook) -> int:

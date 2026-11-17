@@ -30,7 +30,7 @@ async def test_a_son_forges_a_typed_material_with_a_vein(database: Database) -> 
     assert "Dawnsilver" in text
     async with database.read() as session:
         row = await session.scalar(select(WorldMaterialRow).where(WorldMaterialRow.name == "Dawnsilver"))
-        assert row is not None and row.origin is MaterialOrigin.DIVINE and row.sanctity == 98 and row.deposit_entity_id is not None
+        assert row is not None and row.origin is MaterialOrigin.GOD_GIFT and row.sanctity == 98 and row.deposit_entity_id is not None
         vein = await session.get(ResourceProfileRow, row.deposit_entity_id)
         assert vein is not None and vein.world_material_id == row.id
     assert "world" in await rejected(toolkit, "forge_material", {"world_id": 999, "name": "Nothing", "family": "metal", "reason": REASON})

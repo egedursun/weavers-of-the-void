@@ -74,6 +74,7 @@ async def watch(ctx: TickContext, polity_id: int) -> int:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.settlement_profiles",
     "table.spy_networks",
     "table.surveillance_profiles",
 )

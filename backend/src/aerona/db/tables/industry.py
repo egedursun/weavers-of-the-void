@@ -42,6 +42,7 @@ class CommunityMethodRow(Base):
     community_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), index=True)
     process: Mapped[ProcessKind] = mapped_column(enum_type(ProcessKind, "process"))
     method: Mapped[MethodKind] = mapped_column(enum_type(MethodKind, "method"))
+    method_kind_id: Mapped[int | None] = mapped_column(ForeignKey("production_method_kinds.id", ondelete="SET NULL"))
     adopted_epoch: Mapped[int]
     displaced: Mapped[int] = mapped_column(default=0)
     obsolete_since: Mapped[int | None]

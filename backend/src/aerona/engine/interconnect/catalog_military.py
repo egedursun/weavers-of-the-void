@@ -71,7 +71,7 @@ MILITARY_MECHANICS = (
             Coupling(
                 Subsystem.KNOWLEDGE, "metallurgy and building unlock armour, engines and ships", EdgeKind.MODIFIER, "military_units.equipment_quality_pct"
             ),
-            Coupling(Subsystem.MAGIC, "war mages and golems take the field where magic is known", EdgeKind.MODIFIER, "military_units.magic_share_pct"),
+            Coupling(Subsystem.MAGIC, "war mages and animated works take the field where magic is known", EdgeKind.MODIFIER, "military_units.magic_share_pct"),
         ),
     ),
     Mechanic(
@@ -377,12 +377,12 @@ RAW: tuple[Raw, ...] = (
     (
         "void_spawn",
         "S5.1",
-        "Leak wounds spawn void things in the ranks",
+        "Rifts bring beings from outside the cosmos into the ranks",
         CAMPAIGN,
         STACKS,
         (A, W, "region"),
         ("unit_void_spawn",),
-        (S.COSMOS, "military_units.magic_share_pct", "void spawn"),
+        (S.COSMOS, "military_units.magic_share_pct", "beings from outside"),
     ),
     (
         "forged_armour",
@@ -661,7 +661,7 @@ RAW: tuple[Raw, ...] = (
     (
         "pyrrhic",
         "S5.3",
-        "A winner bled white wins a pyrrhic victory",
+        "A winner that lost most of its army wins a pyrrhic victory",
         CAMPAIGN,
         BATTLE_REPORT,
         AW,
@@ -938,7 +938,7 @@ RAW: tuple[Raw, ...] = (
     (
         "captive_sacrifice",
         "S5.7",
-        "Death-loving captors sacrifice captives",
+        "Captors whose faith calls for it sacrifice captives",
         ("prisoners",),
         CAPTIVES,
         (W, "cult", "son"),

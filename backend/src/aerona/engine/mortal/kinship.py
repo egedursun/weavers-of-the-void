@@ -8,7 +8,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mortal import MarriageEnd, MarriageKind
+from aerona.domain.enums.mortal import MarriageEnd
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.engine.primitives.queries import connect
 from aerona.engine.unions.customs import kept_past_death
 
@@ -50,7 +51,8 @@ async def marry(
     second: EntityRow,
     epoch: int,
     *,
-    kind: MarriageKind = MarriageKind.MONOGAMOUS,
+    form: UnionForm = UnionForm.PAIR,
+    purpose: UnionPurpose = UnionPurpose.KINSHIP,
     treaty_id: int | None = None,
     forced: bool = False,
     description: str | None = None,
@@ -60,7 +62,7 @@ async def marry(
         return existing
     await close_between(session, first.id, second.id, (BondKind.BETROTHED_TO,), epoch=epoch, reason="wed")
     await connect(session, first.id, second.id, BondKind.SPOUSE_OF, epoch, description=description)
-    row = MarriageRow(first_id=first.id, second_id=second.id, kind=kind, treaty_id=treaty_id, start_epoch=max(0, epoch), forced=forced)
+    row = MarriageRow(first_id=first.id, second_id=second.id, form=form, purpose=purpose, treaty_id=treaty_id, start_epoch=max(0, epoch), forced=forced)
     session.add(row)
     await session.flush()
     return row
@@ -134,9 +136,9 @@ async def backfill_kin(session: AsyncSession, epoch: int) -> dict[str, int]:
             continue
         if await marriage_between(session, first, second) is not None:
             continue
-        kind = MarriageKind.POLITICAL if arranged else MarriageKind.MONOGAMOUS
+        purpose = UnionPurpose.ALLIANCE if arranged else UnionPurpose.KINSHIP
         made = await connect(session, first, second, BondKind.SPOUSE_OF, bond.epoch, description=bond.description)
-        row = MarriageRow(first_id=first, second_id=second, kind=kind, start_epoch=max(0, bond.epoch), forced=False)
+        row = MarriageRow(first_id=first, second_id=second, purpose=purpose, start_epoch=max(0, bond.epoch), forced=False)
         if bond.state is not BondState.ACTIVE:
             row.end_epoch = bond.closed_epoch or epoch
             row.cause_end = MarriageEnd.DEATH

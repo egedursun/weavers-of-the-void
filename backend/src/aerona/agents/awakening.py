@@ -24,9 +24,11 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.kinds import KindSpread
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.kinds.genesis import KindSeed, found_kinds
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.genesis import AwakenPeoplesContext
 from aerona.prompts.data.images import fix_image_prompt
@@ -191,6 +193,8 @@ async def awaken_one(
     if son is not None:
         await bonds.connect(BondDraft(people.id, son.id, BondKind.WORSHIPS, epoch))
         await bonds.connect(BondDraft(settlement.id, son.id, BondKind.WORSHIPS, epoch))
+    seeds = [KindSeed(entry.concept, entry.category, entry.name, entry.description) for entry in item.kinds]
+    await found_kinds(session, rules, seeds, holder_id=people.id, world_id=region.world_id, epoch=epoch, spread=KindSpread.GENESIS)
     created = [people, language, settlement, resource, knowledge, tradition]
     text = (
         f"A new people awoke in the lands of {region.name}: {people.name}. It speaks {language.name}, founded {settlement.name}, "

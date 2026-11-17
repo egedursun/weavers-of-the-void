@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.materials import MATERIALS
 from aerona.constants.bond_texts import ITS_MIRROR
 from aerona.constants.cosmos import RECENT_DEATH_EPOCHS
 from aerona.constants.units import PERCENT
@@ -10,6 +11,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
+from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
@@ -17,6 +19,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mind import MemoryKind
@@ -77,7 +80,7 @@ async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, by: str, bin
     record = await ctx.session.get(SoulRow, soul.id)
     if record is not None:
         record.bound_to_entity_id = target.id
-    result = await _golem(ctx, soul, target, binder_id) if target.entity_type is EntityType.STRUCTURE else await _bind_object(ctx, target)
+    result = await _animate(ctx, soul, target, binder_id) if target.entity_type is EntityType.STRUCTURE else await _bind_object(ctx, target)
     walked = "; the work began to move" if result.id != target.id else ""
     await ctx.chronicle(
         ChronicleKind.SPIRIT, f"{by} bound {soul.name} to {target.name}{walked}.", template_key="beyond.soul_bound", entity_ids=[soul.id, target.id]
@@ -85,34 +88,39 @@ async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, by: str, bin
     return result
 
 
-async def _golem(ctx: TickContext, soul: EntityRow, work: EntityRow, binder_id: int | None) -> EntityRow:
+async def hard_bodied(ctx: TickContext, work: EntityRow) -> bool:
+    kind = await ctx.session.scalar(select(NodeMaterialRow.material).where(NodeMaterialRow.node_id == work.id, NodeMaterialRow.slot == MaterialSlot.BODY))
+    return kind is not None and MATERIALS[kind].hardness >= ctx.rules.beyond.animated_work_hard_from
+
+
+async def _animate(ctx: TickContext, soul: EntityRow, work: EntityRow, binder_id: int | None) -> EntityRow:
     beyond = ctx.rules.beyond
-    rng = ctx.rng("golem")
-    golem = await open_record(
+    rng = ctx.rng("animated_work")
+    animated = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"{work.name} Golem",
+            name=f"Animated {work.name}",
             entity_type=EntityType.SPECIES,
             body=f"{soul.name} was bound to {work.name}, and the work began to move.",
             stats=SpeciesStats(
-                hp=beyond.golem_hp,
-                strength=clamp_percent(beyond.golem_strength_base + rng.die(beyond.golem_strength_die)),
-                agility=beyond.golem_agility,
-                intelligence=clamp_percent(beyond.golem_intelligence_base + rng.die(beyond.golem_intelligence_die)),
-                danger=clamp_percent(beyond.golem_danger_base + rng.die(beyond.golem_danger_die)),
+                hp=beyond.animated_work_hp,
+                strength=clamp_percent(beyond.animated_work_strength_base + rng.die(beyond.animated_work_strength_die)),
+                agility=beyond.animated_work_agility,
+                intelligence=clamp_percent(beyond.animated_work_intelligence_base + rng.die(beyond.animated_work_intelligence_die)),
+                danger=clamp_percent(beyond.animated_work_danger_base + rng.die(beyond.animated_work_danger_die)),
             ),
-            power=max(beyond.golem_min_power, work.power_level),
+            power=max(beyond.animated_work_min_power, work.power_level),
             world_id=work.world_id,
             location_id=work.location_id,
-            subtype="golem",
-            engine_kind=EngineKind.GOLEM,
-            traits=(CreatureTrait.STONESKIN,),
+            subtype="animated work",
+            engine_kind=EngineKind.ANIMATED_WORK,
+            traits=(CreatureTrait.STONESKIN,) if await hard_bodied(ctx, work) else (),
         ),
     )
     if binder_id is not None:
-        await BondRepository(ctx.session).connect(BondDraft(binder_id, golem.id, BondKind.TAMED, ctx.epoch, "its own golem"))
-    return golem
+        await BondRepository(ctx.session).connect(BondDraft(binder_id, animated.id, BondKind.TAMED, ctx.epoch, "the work it bound a spirit into"))
+    return animated
 
 
 async def _bind_object(ctx: TickContext, target: EntityRow) -> EntityRow:
@@ -266,7 +274,7 @@ async def _toggle_skin(ctx: TickContext, world: WorldRow, region: EntityRow) -> 
         return f"{world.name} opened {region.name} again."
     await repository.add_flag(region.id, EntityFlag.PLANET_CLOSED, ctx.epoch)
     shift_bounded(ctx.rules, region, DANGER_KEY, beyond.planet_close_skin_danger, default=danger)
-    return f"{world.name} closed its skin over {region.name}; entering it is dangerous."
+    return f"{world.name} closed {region.name}; entering it is dangerous."
 
 
 async def planet_worship(ctx: TickContext, world: WorldRow) -> int:

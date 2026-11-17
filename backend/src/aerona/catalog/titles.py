@@ -1,19 +1,19 @@
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 
-TIER_RANKS: tuple[TitleRank, ...] = (TitleRank.LORDSHIP, TitleRank.COUNTY, TitleRank.DUCHY, TitleRank.KINGDOM, TitleRank.EMPIRE)
-FAITH_RANKS: tuple[TitleRank, ...] = (TitleRank.SEE, TitleRank.ARCHSEE, TitleRank.HIGH_SEAT)
-SEAT_RANKS = frozenset({*FAITH_RANKS, TitleRank.CAPTAINCY, TitleRank.GUILDMASTERSHIP})
-RANK_WORDS: dict[TitleRank, str] = {
-    TitleRank.LORDSHIP: "Lordship",
-    TitleRank.COUNTY: "County",
-    TitleRank.DUCHY: "Duchy",
-    TitleRank.KINGDOM: "Kingdom",
-    TitleRank.EMPIRE: "Empire",
-    TitleRank.SEE: "See",
-    TitleRank.ARCHSEE: "Archsee",
-    TitleRank.HIGH_SEAT: "High Seat",
-    TitleRank.CAPTAINCY: "Captaincy",
-    TitleRank.GUILDMASTERSHIP: "Guildmastership",
+TIER_RANKS: tuple[TitleTier, ...] = (TitleTier.LOCAL, TitleTier.DISTRICT, TitleTier.REGIONAL, TitleTier.REALM, TitleTier.IMPERIAL)
+FAITH_RANKS: tuple[TitleTier, ...] = (TitleTier.FAITH_LOCAL, TitleTier.FAITH_HIGH, TitleTier.FAITH_SUPREME)
+SEAT_RANKS = frozenset({*FAITH_RANKS, TitleTier.MILITARY, TitleTier.GUILD})
+RANK_WORDS: dict[TitleTier, str] = {
+    TitleTier.LOCAL: "Lordship",
+    TitleTier.DISTRICT: "County",
+    TitleTier.REGIONAL: "Duchy",
+    TitleTier.REALM: "Kingdom",
+    TitleTier.IMPERIAL: "Empire",
+    TitleTier.FAITH_LOCAL: "See",
+    TitleTier.FAITH_HIGH: "Archsee",
+    TitleTier.FAITH_SUPREME: "High Seat",
+    TitleTier.MILITARY: "Captaincy",
+    TitleTier.GUILD: "Guildmastership",
 }
 TENURE_LABELS: dict[TitleTenure, str] = {
     TitleTenure.FOUNDED: "Founded",

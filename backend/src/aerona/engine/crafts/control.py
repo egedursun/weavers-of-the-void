@@ -7,8 +7,6 @@ from aerona.db.tables.crafts import (
     AFFINITY_FIELDS,
     AID_FIELDS,
     CLOCK_FIELDS,
-    FOLLOWING_FIELDS,
-    GAME_FIELDS,
     GROUND_FIELDS,
     INSURER_FIELDS,
     LINK_FIELDS,
@@ -21,8 +19,6 @@ from aerona.db.tables.crafts import (
     CatchGroundRow,
     ChemicalWorksRow,
     EmotionSpiritRow,
-    GameFollowingRow,
-    GameRow,
     IncorporealRightRow,
     InsurancePolicyRow,
     InsurerRow,
@@ -65,8 +61,6 @@ KINDS: Mapping[str, Kind] = {
     "incorporeal_right": Kind(IncorporealRightRow, RIGHT_FIELDS, "held right", ("id",)),
     "assistive_aid": Kind(AssistiveAidRow, AID_FIELDS, "aid", ("holder_node_id", "kind")),
     "public_clock": Kind(PublicClockRow, CLOCK_FIELDS, "public clock", ("settlement_entity_id",)),
-    "game": Kind(GameRow, GAME_FIELDS, "game", ("id",)),
-    "game_following": Kind(GameFollowingRow, FOLLOWING_FIELDS, "following of a game", ("people_entity_id", "game_id")),
     "number_system": Kind(NumberSystemRow, NUMBER_FIELDS, "number system", ("people_entity_id",)),
     "material_affinity": Kind(MaterialAffinityRow, AFFINITY_FIELDS, "magical affinity", ("material_id", "school")),
     "sympathetic_link": Kind(SympatheticLinkRow, LINK_FIELDS, "sympathetic link", ("id",)),
@@ -82,9 +76,6 @@ async def checked(ctx: TickContext, values: Values) -> None:
     material = values.get("material_id")
     if isinstance(material, int) and await ctx.session.get(WorldMaterialRow, material) is None:
         raise ValidationFailedError("No such material.")
-    game = values.get("game_id")
-    if isinstance(game, int) and await ctx.session.get(GameRow, game) is None:
-        raise ValidationFailedError("No such game.")
 
 
 def key_of(kind: Kind, keys: Values) -> object:

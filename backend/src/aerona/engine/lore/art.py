@@ -1,7 +1,9 @@
 from sqlalchemy import select
 
+from aerona.catalog.art_modes import ART_MODES, IMAGE_MODES, PERFORMED_MODES, VERBAL_MODES
+from aerona.catalog.kinds.motifs import MOTIF_SOURCES
 from aerona.catalog.lore import ART_MESSAGES
-from aerona.catalog.peoples import AESTHETIC_AXES, AESTHETIC_IMAGES, AESTHETIC_MEDIA, AESTHETIC_SHUNS, IMAGE_NAMES
+from aerona.catalog.peoples import Style
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.bonds import BondRow
@@ -14,8 +16,7 @@ from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import PERFORMED_MEDIA, VERBAL_MEDIA, ArtMedium, Technique
-from aerona.domain.enums.demography import Aesthetic
+from aerona.domain.enums.culture import ArtMode, Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind, SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
@@ -23,8 +24,10 @@ from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import speakers
+from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.lore.printing import banned_for, scribe_pace
 from aerona.engine.lore.research import has_technique
+from aerona.engine.lore.style import image_mode, style_fit, style_message, style_of
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.preferences import art_fit, favourite, paint
@@ -35,50 +38,54 @@ from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.transform.lore import remember_artwork
-from aerona.rules.registry import Rules
 
 WEAK_CLAIM = 50
 HALF = 2
 PERFORMERS = (SkillKind.ORATORY, SkillKind.LORE)
-IMAGES = frozenset({ArtMedium.STATUE, ArtMedium.FRESCO, ArtMedium.MOSAIC, ArtMedium.CARVING, ArtMedium.TAPESTRY, ArtMedium.ARCHITECTURE_ORNAMENT})
+IMAGES = IMAGE_MODES
 
 
-async def favourite_form(ctx: TickContext, seat: EntityRow) -> ArtMedium | None:
+async def favourite_form(ctx: TickContext, seat: EntityRow) -> ArtMode | None:
     people = await people_of(ctx.session, seat)
     loved = await favourite(ctx.session, people.id, PreferenceKind.ART_FORM) if people is not None else None
     if loved is None or loved.strength < ctx.rules.preferences.noted_above:
         return None
-    return ArtMedium(loved.target)
+    return ArtMode(loved.target)
 
 
-async def taste_of(ctx: TickContext, holder: EntityRow) -> Aesthetic | None:
+async def taste_of(ctx: TickContext, holder: EntityRow) -> Style | None:
     people = await people_of(ctx.session, holder)
-    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.aesthetic if culture is not None else None
-
-
-def aesthetic_fit(rules: Rules, taste: Aesthetic | None, medium: ArtMedium) -> float:
-    if taste is None:
-        return 1.0
-    if medium in AESTHETIC_MEDIA[taste]:
-        return rules.customs.aesthetic_fit_pct / PERCENT
-    if medium in AESTHETIC_SHUNS[taste]:
-        return rules.customs.aesthetic_clash_pct / PERCENT
-    return 1.0
-
-
-def taste_message(rules: Rules, taste: Aesthetic | None, medium: ArtMedium, message: dict[str, int]) -> dict[str, int]:
-    if taste is None or medium not in AESTHETIC_MEDIA[taste]:
-        return dict(message)
-    axis = AESTHETIC_AXES[taste].value
-    return {**message, axis: message.get(axis, 0) + rules.customs.aesthetic_message}
+    return style_of(await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None)
 
 
 async def subject_of(ctx: TickContext, artwork_id: int) -> int | None:
     statement = select(BondRow.target_node_id).where(
         BondRow.source_node_id == artwork_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )
-    return await ctx.session.scalar(statement.order_by(BondRow.id).limit(1))
+    celebrated = await ctx.session.scalar(statement.order_by(BondRow.id).limit(1))
+    return celebrated if celebrated is not None else await motif_subject(ctx, artwork_id)
+
+
+async def motif_subject(ctx: TickContext, artwork_id: int) -> int | None:
+    artwork = await ctx.session.get(EntityRow, artwork_id)
+    home = await ctx.session.get(EntityRow, artwork.location_id) if artwork is not None and artwork.location_id is not None else None
+    people = await people_of(ctx.session, home) if home is not None else None
+    if artwork is None or people is None:
+        return None
+    for source in await people_motifs(ctx.session, people.id):
+        spec = MOTIF_SOURCES[source]
+        if not spec.entity_types:
+            continue
+        found = await ctx.session.scalars(
+            select(EntityRow.id)
+            .where(EntityRow.world_id == artwork.world_id, EntityRow.entity_type.in_(sorted(spec.entity_types)), EntityRow.status == spec.status)
+            .where(EntityRow.id != artwork.id)
+            .order_by(EntityRow.id)
+        )
+        candidates = list(found)
+        if candidates:
+            return candidates[artwork.id % len(candidates)]
+    return None
 
 
 async def author_of(ctx: TickContext, artwork_id: int) -> int | None:
@@ -94,21 +101,21 @@ async def spoken(ctx: TickContext, entity_id: int | None) -> int | None:
     return await ctx.session.scalar(statement.order_by(BondRow.id).limit(1))
 
 
-async def profile_of(ctx: TickContext, artwork: EntityRow, medium: ArtMedium | None = None) -> ArtworkProfileRow:
+async def profile_of(ctx: TickContext, artwork: EntityRow, medium: ArtMode | None = None) -> ArtworkProfileRow:
     row = await ctx.session.get(ArtworkProfileRow, artwork.id)
     if row is not None:
         return row
-    chosen = medium or ArtMedium.SONG
+    chosen = medium or ArtMode.MUSICAL
     row = ArtworkProfileRow(
         artwork_entity_id=artwork.id,
         medium=chosen,
-        performed=chosen in PERFORMED_MEDIA,
+        performed=chosen in PERFORMED_MODES,
         author_entity_id=await author_of(ctx, artwork.id),
         subject_node_id=await subject_of(ctx, artwork.id),
         message={axis.value: value for axis, value in ART_MESSAGES[chosen].items()},
         quality=clamp_int(stat_or(artwork, "renown", PERCENT // HALF), 0, PERCENT),
         copies=1,
-        language_entity_id=await spoken(ctx, artwork.location_id) if chosen in VERBAL_MEDIA else None,
+        language_entity_id=await spoken(ctx, artwork.location_id) if chosen in VERBAL_MODES else None,
         translations=[],
         propaganda=False,
         canon=False,
@@ -133,9 +140,9 @@ async def press_on(ctx: TickContext, community_id: int, row: ArtworkProfileRow, 
         return False
     holder = await ctx.session.get(EntityRow, community_id)
     taste = await taste_of(ctx, holder) if holder is not None else None
-    tasted = weight * aesthetic_fit(ctx.rules, taste, row.medium)
+    tasted = weight * style_fit(ctx.rules, taste, row.medium)
     moved = False
-    for key, value in taste_message(ctx.rules, taste, row.medium, row.message).items():
+    for key, value in style_message(ctx.rules, taste, row.medium, row.message).items():
         step = round_half_up(value * tasted)
         if step:
             axis = ValueAxis(key)
@@ -234,7 +241,7 @@ async def knows(ctx: TickContext, community_id: int, language_id: int) -> bool:
 
 
 async def translate(ctx: TickContext, artwork: EntityRow, row: ArtworkProfileRow) -> int | None:
-    if row.medium not in VERBAL_MEDIA or row.language_entity_id is None or artwork.location_id is None:
+    if row.medium not in VERBAL_MODES or row.language_entity_id is None or artwork.location_id is None:
         return None
     scribe = await skilled(ctx, artwork.location_id, (SkillKind.LANGUAGES, SkillKind.WRITING), ctx.rules.interpreters.interpreter_skill)
     if scribe is None or not ctx.rng(f"translate.{artwork.id}.{ctx.epoch}").chance(ctx.rules.art.translation_chance):
@@ -290,7 +297,7 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
     counts["translated"] = int(scribe is not None)
     if scribe is not None:
         await note(ctx, f"{artwork.name} was put into another tongue and its message carried further.", key="art.translated", ids=[artwork.id, scribe])
-    if row.medium in VERBAL_MEDIA and (stat(artwork, "renown") or 0) >= PERCENT // HALF and "copies" not in row.locked:
+    if row.medium in VERBAL_MODES and (stat(artwork, "renown") or 0) >= PERCENT // HALF and "copies" not in row.locked:
         printed = await has_technique(ctx.session, artwork.location_id, Technique.PRINTING)
         gain = ctx.rules.art.copies_gain + (ctx.rules.technique_effects.printing_copies if printed else 0)
         pace = await scribe_pace(ctx.session, ctx.rules, artwork.location_id)
@@ -323,7 +330,7 @@ async def commission_work(
     patron_id: int,
     *,
     name: str,
-    medium: ArtMedium,
+    medium: ArtMode,
     author_id: int | None,
     subject_id: int | None,
     message: dict[str, int] | None,
@@ -365,14 +372,14 @@ async def commission_work(
         ArtworkProfileRow(
             artwork_entity_id=work.id,
             medium=medium,
-            performed=medium in PERFORMED_MEDIA,
+            performed=medium in PERFORMED_MODES,
             author_entity_id=author.id if author is not None else None,
             patron_entity_id=patron.id,
             subject_node_id=subject.id if subject is not None else None,
             message=dict(message) if message else {axis.value: value for axis, value in ART_MESSAGES[medium].items()},
             quality=clamp_int(skill if skill is not None else PERCENT // HALF, 0, PERCENT),
             copies=1,
-            language_entity_id=await spoken(ctx, home.id) if medium in VERBAL_MEDIA else None,
+            language_entity_id=await spoken(ctx, home.id) if medium in VERBAL_MODES else None,
             translations=[],
             propaganda=False,
             canon=False,
@@ -416,14 +423,14 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
         return None
     realm.treasury -= table.cost
     taste = await taste_of(ctx, seat)
-    medium = AESTHETIC_IMAGES[taste] if taste is not None else ArtMedium.STATUE
+    medium = image_mode(taste)
     loved = await favourite_form(ctx, seat)
     medium = loved if loved is not None else medium
     message = {ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2}
     work = await create_record(
         ctx,
         RecordSpec(
-            name=IMAGE_NAMES.get(medium, IMAGE_NAMES[ArtMedium.STATUE]).format(ruler=ruler.name),
+            name=f"{ART_MODES[medium].label} of {ruler.name}",
             entity_type=EntityType.ARTWORK,
             stats=ArtworkStats(renown=PERCENT // HALF, influence=PERCENT // HALF),
             body=f"Raised in {seat.name} by order of the realm to praise {ruler.name}.",
@@ -436,10 +443,10 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
         ArtworkProfileRow(
             artwork_entity_id=work.id,
             medium=medium,
-            performed=medium in PERFORMED_MEDIA,
+            performed=medium in PERFORMED_MODES,
             patron_entity_id=realm.polity_entity_id,
             subject_node_id=ruler.id,
-            message=taste_message(ctx.rules, taste, medium, message),
+            message=style_message(ctx.rules, taste, medium, message),
             quality=PERCENT // HALF,
             copies=1,
             translations=[],

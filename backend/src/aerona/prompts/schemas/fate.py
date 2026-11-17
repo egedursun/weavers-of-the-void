@@ -88,16 +88,12 @@ class FateJudgmentOutput(OutputModel):
     advanced_stories: list[AdvancedThreadOutput] = Field(
         description="If an event or record of this age concretely advanced an open story even though nobody gave story_id"
     )
-    new_stories: list[NewThreadOutput] = Field(
-        description="New open stories born this age: unresolved questions, unfinished business, quests, rivalries, bonds or changes still unfolding"
-    )
+    new_stories: list[NewThreadOutput] = Field(description="New open stories born this age: whatever this age left unresolved or still unfolding")
     rewards: list[RewardOutput] = Field(description="Fame for sons who advanced open stories or visibly enriched the world")
     facts: list[FactOutput] = Field(
-        description="MANDATORY. From every creation you accepted or fixed and every record you named, 1 to 3 short, definite facts: propositions that must not be violated in the future (what it is made of, what it forbids, whom it belongs to, when it opens…). Do not repeat recorded bonds like location, creator, language and patron; the engine writes those already"
+        description="MANDATORY. From every creation you accepted or fixed and every record you named, 1 to 3 short, definite facts: propositions about the thing itself that must not be violated in the future. Do not repeat recorded bonds like location, creator, language and patron; the engine writes those already"
     )
-    words: list[FateWordOutput] = Field(
-        description="New words that enter the languages from this age's events (names of places, heroes, disasters, knowledge); must fit the language's sound system"
-    )
+    words: list[FateWordOutput] = Field(description="New words that enter the languages from this age's events; must fit the language's sound system")
 
 
 class ExtraJudgmentOutput(OutputModel):

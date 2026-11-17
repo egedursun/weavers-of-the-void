@@ -1,6 +1,5 @@
 from sqlalchemy import select
 
-from aerona.catalog.genetics import DWELLINGS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import DwellingRow, HouseholdMemberRow, HouseholdRow
@@ -47,9 +46,9 @@ async def found_household(ctx: TickContext, head: EntityRow) -> HouseholdRow:
     ctx.session.add(
         DwellingRow(
             household_id=household.id,
-            kind=kind,
+            dwelling_kind_id=kind.id,
             quality=starting_quality(kind, head.social_class),
-            rooms=DWELLINGS[kind].rooms,
+            rooms=kind.rooms,
             settlement_node_id=household.settlement_node_id,
             district_id=await district_for(ctx.session, household.settlement_node_id, head.social_class),
             built_epoch=ctx.epoch,

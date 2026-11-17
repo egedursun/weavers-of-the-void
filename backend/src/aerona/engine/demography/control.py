@@ -11,20 +11,11 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import (
-    Aesthetic,
-    AgeBand,
-    CohortCondition,
-    FolkDiet,
-    FuneralCustom,
-    InheritanceCustom,
-    MarriageCustom,
-    MartialStyle,
-    NaturalTrait,
-)
-from aerona.domain.enums.ecology import Biochemistry, SizeClass
+from aerona.domain.enums.demography import AgeBand, CohortCondition, FuneralCustom, InheritanceCustom, MartialStyle, MotifSource, NaturalTrait
+from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -32,6 +23,7 @@ from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.nature import Thermoregulation
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionForm
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.bound import sync_bound_share
@@ -51,13 +43,22 @@ FOUNDED_POWER = 2
 FOUNDED_SUBTYPE = "people"
 
 BIOLOGY_NUMBERS = {"maturity_years": (1, 1000), "adult_years": (1, 10000), "elder_years": (1, 10000), "fertility_pct": (0, 500)}
-CULTURE_NUMBERS = {"cohesion": (0, PERCENT), "literacy": (0, PERCENT), "urbanisation": (0, PERCENT)}
+CULTURE_NUMBERS = {
+    "cohesion": (0, PERCENT),
+    "literacy": (0, PERCENT),
+    "urbanisation": (0, PERCENT),
+    "ornament": (0, PERCENT),
+    "geometry": (0, PERCENT),
+    "colour": (0, PERCENT),
+    "scale": (0, PERCENT),
+    "symmetry": (0, PERCENT),
+}
 BIOLOGY_CHOICES: dict[str, type[StrEnum]] = {
     "acclimatised": TemperatureBand,
     "staple": CommodityKind,
     "body_plan": BodyPlan,
     "size_class": SizeClass,
-    "diet": FolkDiet,
+    "diet": Diet,
     "biochemistry": Biochemistry,
     "air": AirNeed,
     "thermoregulation": Thermoregulation,
@@ -65,16 +66,19 @@ BIOLOGY_CHOICES: dict[str, type[StrEnum]] = {
 BIOLOGY_GRAVITY = ("gravity_low", "gravity_high")
 GRAVITY_HUNDREDTHS = (1, 10000)
 CULTURE_CHOICES: dict[str, type[StrEnum]] = {
-    "aesthetic": Aesthetic,
     "martial_style": MartialStyle,
-    "marriage": MarriageCustom,
     "inheritance": InheritanceCustom,
     "funeral_rite": FuneralCustom,
 }
-CULTURE_FLAGS = ("endogamous", "slavery_lawful")
+CULTURE_FLAGS = ("slavery_lawful",)
+UNION_CHOICES: dict[str, tuple[str, type[StrEnum]]] = {
+    "union_form": ("form", UnionForm),
+    "plural_side": ("plural_side", PluralSide),
+    "endogamy": ("endogamy", PartnerScope),
+}
 DORMANCY_REASON = "player.dormancy"
 BIOLOGY_LISTS: dict[str, type[StrEnum]] = {"traits": NaturalTrait}
-CULTURE_LISTS: dict[str, type[StrEnum]] = {"staples": CommodityKind}
+CULTURE_LISTS: dict[str, type[StrEnum]] = {"staples": CommodityKind, "motif_sources": MotifSource}
 CULTURE_LINKS = {"liturgical_language_id": EntityType.LANGUAGE, "trade_language_id": EntityType.LANGUAGE, "funeral_rite_id": EntityType.TRADITION}
 RECORD_KEYS = {"martial_wins": 0, "martial_losses": 1}
 RECORD_LOCK = "martial_record"
@@ -273,7 +277,13 @@ async def found_people(
     await bind_language_and_faith(ctx, founded)
     rows = await profiles(ctx, founded)
     for key, value in values.items():
-        await apply(ctx, founded, rows, key, value)
+        if key not in UNION_CHOICES:
+            await apply(ctx, founded, rows, key, value)
+    union = await ctx.session.get(UnionCustomRow, founded.id)
+    for key, (column, kind) in UNION_CHOICES.items():
+        if key in values and union is not None:
+            setattr(union, column, choice(key, values[key], kind))
+            union.locked = sorted({*union.locked, column})
     await rite_tradition(ctx.session, ctx.rules, founded, rows[1], ctx.epoch)
     await ctx.session.flush()
     return founded

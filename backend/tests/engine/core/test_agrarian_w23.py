@@ -22,7 +22,7 @@ from aerona.db.tables.agrarian import (
 from aerona.db.tables.collective import GenerationRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.cycles import GiftRow
-from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
@@ -622,7 +622,7 @@ async def test_fodder_crops_return_the_fixed_element_and_root_crops_draw_mineral
     ground.farmed = 60
     for name, commodity in (("Vetch", CommodityKind.FODDER), ("Tuber", CommodityKind.TUBERS)):
         crop = await entity(session, name, EntityType.SPECIES, SpeciesStats(), world_id=world.world.id, location_id=ground.entity_id)
-        session.add(SpeciesYieldRow(species_entity_id=crop.id, product=name.lower(), commodity=commodity))
+        session.add(SpeciesProductRow(species_entity_id=crop.id, product=name.lower(), commodity=commodity))
         session.add(RegionCropRow(region_entity_id=ground.entity_id, plant_entity_id=crop.id, share=100, locked=[]))
     await session.flush()
     atlas = await RegionAtlas.load(session)
@@ -686,7 +686,7 @@ async def test_a_young_world_depends_on_its_rare_sacred_yield_at_once(session: A
     world.world.created_epoch = ctx.epoch
     source = world.regions[0]
     session.add(SpeciesRangeRow(species_entity_id=world.species.id, region_entity_id=source.id, abundance=50, fit=100, since_epoch=0, locked=[]))
-    session.add(SpeciesYieldRow(species_entity_id=world.species.id, product="first_yield", commodity=CommodityKind.HERBS))
+    session.add(SpeciesProductRow(species_entity_id=world.species.id, product="first_yield", commodity=CommodityKind.HERBS))
     hollin = await town(session, world, "Hollin", 0, BIG)
     cult = await entity(session, "The Keepers", EntityType.CULT, CultStats(), world_id=world.world.id, location_id=hollin.id)
     await BondRepository(session).connect(BondDraft(cult.id, world.son.id, BondKind.WORSHIPS, 0))

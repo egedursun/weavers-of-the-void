@@ -247,6 +247,8 @@ def book_gaps(texts: dict[Path, str]) -> list[str]:
         f"table {table} is a kind of node but its records never reach its book and codex entry (add it to OWNER_TABLES)"
         for table in sorted(node_tables(texts, names) - owners)
     ]
+    if "KIND_TABLES" in typed and not all(re.search(rf"\b{name}\b", rendered) for name in ("add_kind_sections", "CONCEPTS", "KindHoldingRow")):
+        errors.append("the authored kind tables are kept out of the generic book records but no book or codex code renders every concept and its holdings")
     book = "\n".join(path.read_text(encoding="utf-8") for path in BOOK_TEMPLATES)
     codex = CODEX_TEMPLATE.read_text(encoding="utf-8")
     for snippet in BOOK_SECTIONS:

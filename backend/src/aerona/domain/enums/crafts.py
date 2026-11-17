@@ -77,20 +77,6 @@ class ClockKind(StrEnum):
     ASTRONOMICAL = "astronomical"
 
 
-class GameKind(StrEnum):
-    BOARD = "board"
-    DICE = "dice"
-    CARDS = "cards"
-    BALL = "ball"
-    WRESTLING = "wrestling"
-
-
-class GameRule(StrEnum):
-    STRATEGY = "strategy"
-    CHANCE = "chance"
-    PHYSICAL = "physical"
-
-
 class Notation(StrEnum):
     ADDITIVE = "additive"
     POSITIONAL = "positional"

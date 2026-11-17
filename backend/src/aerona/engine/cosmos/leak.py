@@ -28,7 +28,7 @@ from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.rules.registry import Rules
 
-LEAKING_METHODS = frozenset({TravelMethod.ANCIENT_GATE, TravelMethod.SWALLOWED, TravelMethod.DREAM_JOURNEY})
+LEAKING_METHODS = frozenset({TravelMethod.ANCIENT_GATE, TravelMethod.CARRIED_WITHIN, TravelMethod.DREAM_JOURNEY})
 LAND_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 PATRON_KINDS = frozenset({NodeKind.SON, NodeKind.CREATOR})
 BREAKDOWN_DECIMALS = 1
@@ -110,7 +110,7 @@ async def wound_leak(session: AsyncSession, rules: Rules, world_id: int) -> floa
     statement = (
         select(PhenomenonProfileRow.intensity)
         .join(EntityRow, EntityRow.id == PhenomenonProfileRow.entity_id)
-        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, PhenomenonProfileRow.kind == PhenomenonKind.OUTSIDE_OPENING)
     )
     return sum(intensity * rules.phenomena.leak_wound_leak / PERCENT for intensity in await session.scalars(statement))
 

@@ -12,7 +12,7 @@ class LandAct(StrEnum):
     SHIFT_RIVER = "shift_river"
     PARCH = "parch"
     GREEN = "green"
-    SALT_SOIL = "salt_soil"
+    MAKE_SALINE = "make_saline"
     ENRICH_SOIL = "enrich_soil"
     RAISE_LAND = "raise_land"
     LOWER_LAND = "lower_land"

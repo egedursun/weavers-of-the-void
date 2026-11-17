@@ -23,6 +23,7 @@ import {
   Scale,
   ScrollText,
   Settings,
+  Shapes,
   Share2,
   SlidersHorizontal,
   Sparkles,
@@ -50,6 +51,7 @@ export type NavRoute =
   | '/interconnections'
   | '/wars'
   | '/economy'
+  | '/kinds'
   | '/chronicle'
   | '/languages'
   | '/gallery'
@@ -287,6 +289,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Coins,
         description:
           'Trade routes, market prices, materials, coins, loans and debts.',
+      },
+      {
+        id: 'kinds',
+        title: 'Kinds',
+        to: '/kinds',
+        icon: Shapes,
+        description:
+          'Every kind of thing the peoples make and hold: goods, dishes, drinks, dress, crafts, games, professions and more.',
       },
     ],
   },

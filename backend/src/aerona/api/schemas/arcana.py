@@ -17,6 +17,7 @@ from aerona.domain.enums.mythic import (
     ServitorOrigin,
     ServitorRole,
 )
+from aerona.domain.enums.nature_kinds import OfficeDuty
 
 
 class GrammarView(ApiModel):
@@ -103,6 +104,8 @@ class HeroquestView(ApiModel):
     legend: NodeRef | None
     god: NodeRef | None
     realm: MythicRealm
+    realm_kind_id: int | None
+    realm_kind_name: str | None
     place: NodeRef | None
     steps: int
     step: int
@@ -165,6 +168,9 @@ class CosmicOfficeView(ApiModel):
     since_epoch: int | None
     neglect: int
     duty: int
+    office_kind_id: int | None
+    office_duty: OfficeDuty
+    office_name: str | None
     locked: list[str]
 
 

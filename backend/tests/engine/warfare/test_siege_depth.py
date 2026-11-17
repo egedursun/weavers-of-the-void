@@ -95,7 +95,7 @@ async def test_walls_ground_and_water_shape_the_siege(session: AsyncSession, wor
     assert repair_factor(ctx, BuildMaterial.TIMBER) > repair_factor(ctx, BuildMaterial.STONE)
     soft = RegionEnvironmentRow(soil=SoilKind.LOAM)
     hard = RegionEnvironmentRow(
-        soil=next(kind for kind in SoilKind if kind not in {SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.ASH, SoilKind.BONE})
+        soil=next(kind for kind in SoilKind if kind not in {SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.TEPHRA, SoilKind.CALCAREOUS})
     )
     assert mining_factor(ctx, soft) > mining_factor(ctx, hard) and mining_factor(ctx, None) == 1.0
     assert water_days(None) == WATER_DAYS[WaterSupply.WELL]

@@ -2,12 +2,12 @@ from sqlalchemy import select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
+from aerona.catalog.kinds.crafts_labels import GAME_LABELS, MEANING_LABELS
 from aerona.core.grammar import an
 from aerona.db.tables.crafts import (
     AssistiveAidRow,
     ChemicalWorksRow,
     EmotionSpiritRow,
-    GameFollowingRow,
     GameRow,
     IncorporealRightRow,
     InsurancePolicyRow,
@@ -16,8 +16,12 @@ from aerona.db.tables.crafts import (
     SympatheticLinkRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.kind_crafts import ColourMeaningRow, ColourTermRow
+from aerona.db.tables.kinds import KindHoldingRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.crafts import Notation
+from aerona.domain.enums.kind_crafts import ColourMeaning
+from aerona.domain.enums.kinds import KindConcept
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.distance import RegionAtlas
 
@@ -28,13 +32,23 @@ async def people_lines(scope: Scope, folk_id: int) -> list[str]:
     session = scope.session
     found: list[str] = []
     games = await session.execute(
-        select(GameRow, GameFollowingRow.popularity)
-        .join(GameFollowingRow, GameFollowingRow.game_id == GameRow.id)
-        .where(GameFollowingRow.people_entity_id == folk_id)
-        .order_by(GameFollowingRow.popularity.desc(), GameRow.id)
+        select(GameRow, KindHoldingRow.strength)
+        .join(KindHoldingRow, KindHoldingRow.kind_id == GameRow.id)
+        .where(KindHoldingRow.concept == KindConcept.GAME, KindHoldingRow.holder_node_id == folk_id)
+        .order_by(KindHoldingRow.strength.desc(), GameRow.id)
         .limit(LIST_LINES)
     )
-    found += [f"your people play {game.name}, {an(words(game.kind.value))} game of {words(game.rule.value)}" for game, _ in games]
+    found += [
+        f"your people play {game.name}, {an(GAME_LABELS[game.category.value].lower())}, left {game.chance_share} of 100 to chance" for game, _ in games.all()
+    ]
+    meanings = await session.execute(
+        select(ColourTermRow.name, ColourMeaningRow.meaning)
+        .join(ColourMeaningRow, ColourMeaningRow.colour_term_id == ColourTermRow.id)
+        .where(ColourMeaningRow.culture_node_id == folk_id, ColourMeaningRow.meaning != ColourMeaning.NONE)
+        .order_by(ColourMeaningRow.weight.desc(), ColourTermRow.id)
+        .limit(LIST_LINES)
+    )
+    found += [f"to your people the colour {name} means {MEANING_LABELS[meaning.value].lower()}" for name, meaning in meanings.all()]
     system = await session.get(NumberSystemRow, folk_id)
     if system is not None:
         marks = [*(["with a zero"] if system.zero else []), *(["written by place"] if system.notation is Notation.POSITIONAL else [])]

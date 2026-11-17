@@ -3,6 +3,7 @@ from math import ceil
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.orders import ECHELON_ORDERS
 from aerona.catalog.operations import ECHELON_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -271,8 +272,7 @@ def wanted_order(profile: ArmyProfileRow, attacking: bool, short: bool) -> Echel
 
 
 def cost_of(rules: Rules, order: EchelonOrder) -> int:
-    table = rules.order_of_battle
-    return table.attack_cost if order is EchelonOrder.ATTACK else table.order_cost
+    return int(getattr(rules.order_of_battle, ECHELON_ORDERS[order].cost_rule))
 
 
 async def issue_orders(ctx: TickContext, army_id: int, profile: ArmyProfileRow, *, attacking: bool, short: bool, tally: CommandTally) -> CommandReport:
@@ -321,12 +321,13 @@ async def apply_orders(ctx: TickContext, army_id: int, profile: ArmyProfileRow, 
         order = orders.get(stack.echelon_id or -1)
         if order is None or "organisation" in stack.locked:
             continue
-        if order is EchelonOrder.STANDING:
-            stack.organisation = clamp_int(stack.organisation - table.standing_organisation, 0, PERCENT)
-        elif order is EchelonOrder.MANOEUVRE:
-            stack.organisation = clamp_int(stack.organisation + table.manoeuvre_organisation, 0, PERCENT)
-    if any(order is EchelonOrder.HOLD for order in orders.values()) and "entrenchment" not in profile.locked:
-        profile.entrenchment = clamp_int(profile.entrenchment + table.hold_entrench, 0, PERCENT)
+        spec = ECHELON_ORDERS[order]
+        if spec.organisation_rule is not None:
+            shift = spec.organisation_sign * int(getattr(table, spec.organisation_rule))
+            stack.organisation = clamp_int(stack.organisation + shift, 0, PERCENT)
+    entrench = max((int(getattr(table, rule)) for rule in (ECHELON_ORDERS[order].entrench_rule for order in orders.values()) if rule), default=0)
+    if entrench and "entrenchment" not in profile.locked:
+        profile.entrenchment = clamp_int(profile.entrenchment + entrench, 0, PERCENT)
 
 
 async def command_edge(ctx: TickContext, army_id: int) -> float:
@@ -336,6 +337,9 @@ async def command_edge(ctx: TickContext, army_id: int) -> float:
     total = sum(row.count for row in stacks)
     if total <= 0:
         return 1.0
-    attack = sum(row.count for row in stacks if brigades[row.echelon_id or -1] is EchelonOrder.ATTACK) / total
-    standing = sum(row.count for row in stacks if brigades[row.echelon_id or -1] is EchelonOrder.STANDING) / total
-    return max(0.1, 1 + attack * table.attack_edge_pct / PERCENT - standing * table.standing_edge_pct / PERCENT)
+    edge = 0.0
+    for row in stacks:
+        spec = ECHELON_ORDERS[brigades[row.echelon_id or -1]]
+        if spec.edge_rule is not None:
+            edge += row.count / total * spec.edge_sign * int(getattr(table, spec.edge_rule)) / PERCENT
+    return max(0.1, 1 + edge)

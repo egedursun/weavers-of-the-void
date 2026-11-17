@@ -156,7 +156,7 @@ async def core_people(ctx: TickContext, realm_id: int) -> int | None:
     return folk.id if folk is not None else None
 
 
-SERVING = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN})
+SERVING = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.CAPTAIN})
 PATH_WAIT: Mapping[Naturalisation, int] = total(
     Naturalisation,
     {

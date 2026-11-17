@@ -11,7 +11,7 @@ from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -289,7 +289,7 @@ async def festival(ctx: TickContext, comet: CosmicFeatureRow, body: EntityRow, w
             location_id=keepers[0].location_id,
         ),
     )
-    await profile_of(ctx, tradition, TraditionKind.FESTIVAL)
+    await profile_of(ctx, tradition, TraditionFunction.FESTIVAL)
     await connect(ctx.session, tradition.id, body.id, BondKind.TELLS_OF, ctx.epoch, description="kept at its returns")
     for keeper in sorted(keepers, key=lambda row: row.id):
         await connect(ctx.session, keeper.id, tradition.id, BondKind.CELEBRATES, ctx.epoch, description="at the comet's return")

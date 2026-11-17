@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from aerona.catalog.divine_grammar import VERB_SIGN
+from aerona.catalog.kinds.council import VOTING_RULES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.core.total import total
@@ -111,17 +112,16 @@ def foreign_vote(god: ForeignGodRow, motion: CouncilMotion, target: int | None) 
 
 
 def weight_of(rule: VotingRule, god: SonRow | ForeignGodRow) -> int:
-    if rule is VotingRule.WEIGHTED_BY_STANDING:
-        return max(1, god.fame if isinstance(god, SonRow) else god.faith)
-    if rule is VotingRule.WEIGHTED_BY_RANK:
-        return max(1, god.level if isinstance(god, SonRow) else god.power // 10)
-    return 1
+    spec = VOTING_RULES[rule]
+    if isinstance(god, SonRow):
+        return max(1, int(getattr(god, spec.son_weight))) if spec.son_weight is not None else 1
+    return max(1, int(getattr(god, spec.foreign_weight)) // spec.foreign_divisor) if spec.foreign_weight is not None else 1
 
 
 def carried(procedure: CouncilProcedureRow, weights: Mapping[int, tuple[int, bool]], seats: int) -> bool:
     if seats == 0 or len(weights) * PERCENT < procedure.quorum_pct * seats:
         return False
-    if procedure.voting_rule is VotingRule.UNANIMITY:
+    if VOTING_RULES[procedure.voting_rule].everyone_agrees:
         return all(vote for _, vote in weights.values())
     yes = sum(weight for weight, vote in weights.values() if vote)
     no = sum(weight for weight, vote in weights.values() if not vote)

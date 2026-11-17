@@ -4,24 +4,35 @@ from aerona.core.grammar import several
 from aerona.db.tables.unions import UNION_TERM_MAX
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cycles import (
+    AdoptionKind,
     ChallengeKind,
-    CousinTerms,
     CyclePhase,
     DescentGroup,
     GiftOccasion,
     KinshipDescent,
+    KinTermSystem,
     LabourRegime,
     LegacyKind,
     LongPlanKind,
     ManumissionPath,
-    MarriagePayment,
-    MarriagePreference,
     MobilityMode,
     ReproductiveCaste,
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
+from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.unions import (
+    KinMatch,
+    PartnerScope,
+    PluralSide,
+    UnionArrangement,
+    UnionDescent,
+    UnionDissolution,
+    UnionExchange,
+    UnionForm,
+    UnionPurpose,
+    UnionResidence,
+)
 from aerona.engine.cycles import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -177,27 +188,29 @@ class DebtEdit(Edited):
 class KinshipDraft(Command):
     people_id: int
     descent: KinshipDescent = KinshipDescent.BILATERAL
-    residence: ResidenceRule = ResidenceRule.NEOLOCAL
+    residence: ResidenceRule = ResidenceRule.NEW_HOUSEHOLD
     descent_group: DescentGroup = DescentGroup.LINEAGE
-    cousin_terms: CousinTerms = CousinTerms.DISTINCT
-    preference: MarriagePreference = MarriagePreference.NONE
-    payment: MarriagePayment = MarriagePayment.NONE
-    payment_value: int = Field(default=10, ge=0, le=MANY)
-    levirate: bool = False
-    sororate: bool = False
+    kin_terms: KinTermSystem = KinTermSystem.LINEAL
+    adoption: AdoptionKind = AdoptionKind.FOSTER
+    first_side: Sex
+    sibling_union_first: bool = False
+    sibling_union_second: bool = False
 
 
 class UnionDraft(Command):
     people_id: int
     form: UnionForm = UnionForm.PAIR
+    plural_side: PluralSide = PluralSide.EITHER
     purpose: UnionPurpose = UnionPurpose.KINSHIP
     residence: UnionResidence = UnionResidence.NEW_HOUSEHOLD
     descent: UnionDescent = UnionDescent.THROUGH_BOTH
     exchange: UnionExchange = UnionExchange.NONE
+    exchange_value: int = Field(default=10, ge=0, le=MANY)
     arrangement: UnionArrangement = UnionArrangement.BOTH_CONSENT
     dissolution: UnionDissolution = UnionDissolution.BY_CUSTOM
     endogamy: PartnerScope = PartnerScope.NONE
     exogamy: PartnerScope = PartnerScope.NONE
+    kin_match: KinMatch = KinMatch.NONE
     term_epochs: int = Field(default=4, ge=1, le=UNION_TERM_MAX)
 
 
@@ -548,12 +561,11 @@ async def kinship_set(scope: PlayerScope, command: KinshipDraft) -> Effect:
         "descent": command.descent.value,
         "residence": command.residence.value,
         "descent_group": command.descent_group.value,
-        "cousin_terms": command.cousin_terms.value,
-        "preference": command.preference.value,
-        "payment": command.payment.value,
-        "payment_value": command.payment_value,
-        "levirate": command.levirate,
-        "sororate": command.sororate,
+        "kin_terms": command.kin_terms.value,
+        "adoption": command.adoption.value,
+        "first_side": command.first_side.value,
+        "sibling_union_first": command.sibling_union_first,
+        "sibling_union_second": command.sibling_union_second,
     }
     await control.set_kinship(await scope.context("kinship_set"), command.people_id, values)
     return Effect("Their ways of kin are set.", command.people_id)

@@ -12,34 +12,55 @@ class LegendArchetype(StrEnum):
     MONSTER = "monster"
     TRICKSTER = "trickster"
     CREATION = "creation"
-    FLOOD = "flood"
+    WORLD_DISASTER = "world_disaster"
     BETRAYAL = "betrayal"
-    LOST_PARADISE = "lost_paradise"
+    LOST_GOLDEN_AGE = "lost_golden_age"
     CHOSEN_ONE = "chosen_one"
     CURSED_LINE = "cursed_line"
-    RETURN_OF_THE_KING = "return_of_the_king"
+    RETURN_OF_A_RULER = "return_of_a_ruler"
     HAUNTED_PLACE = "haunted_place"
+    FOUNDING = "founding"
+    EXILE = "exile"
+    TRANSFORMATION = "transformation"
+    BARGAIN = "bargain"
+    SACRIFICE = "sacrifice"
+    RIVALRY = "rivalry"
+    DISCOVERY = "discovery"
+    DECEPTION = "deception"
+    UNION = "union"
+    ASCENT = "ascent"
+    FALL = "fall"
 
 
-class TraditionKind(StrEnum):
+class TraditionFunction(StrEnum):
     FESTIVAL = "festival"
     FAST = "fast"
-    FUNERAL_RITE = "funeral_rite"
-    INITIATION = "initiation"
-    MARRIAGE_RITE = "marriage_rite"
-    COMING_OF_AGE = "coming_of_age"
+    RITE_OF_PASSAGE = "rite_of_passage"
     TABOO = "taboo"
     OFFERING = "offering"
     PILGRIMAGE = "pilgrimage"
-    HOSPITALITY_LAW = "hospitality_law"
+    HOSPITALITY = "hospitality"
     DUEL_CUSTOM = "duel_custom"
     MOURNING = "mourning"
-    HARVEST_RITE = "harvest_rite"
-    WAR_DANCE = "war_dance"
-    SCAR_RITE = "scar_rite"
-    ANCESTOR_FEAST = "ancestor_feast"
-    SIESTA = "siesta"
-    NIGHT_VIGIL = "night_vigil"
+    SEASONAL_RITE = "seasonal_rite"
+    MARTIAL_DISPLAY = "martial_display"
+    BODY_MARKING = "body_marking"
+    ANCESTRAL_RITE = "ancestral_rite"
+    REST_CUSTOM = "rest_custom"
+    VIGIL = "vigil"
+    GIFT_CUSTOM = "gift_custom"
+    PURIFICATION = "purification"
+    COMMEMORATION = "commemoration"
+    COMPETITION = "competition"
+
+
+class RiteStage(StrEnum):
+    BIRTH = "birth"
+    NAMING = "naming"
+    COMING_OF_AGE = "coming_of_age"
+    UNION = "union"
+    ELDERHOOD = "elderhood"
+    DEATH = "death"
 
 
 class Technique(StrEnum):
@@ -355,19 +376,24 @@ class ItemDeed(StrEnum):
     CAPTURED = "captured"
 
 
-class ArtMedium(StrEnum):
-    SONG = "song"
-    EPIC_POEM = "epic_poem"
-    PLAY = "play"
-    STATUE = "statue"
-    FRESCO = "fresco"
-    TAPESTRY = "tapestry"
-    MOSAIC = "mosaic"
-    BOOK = "book"
-    DANCE = "dance"
-    MUSIC = "music"
-    CARVING = "carving"
-    ARCHITECTURE_ORNAMENT = "architecture_ornament"
+class ArtMode(StrEnum):
+    VERBAL = "verbal"
+    MUSICAL = "musical"
+    MOVEMENT = "movement"
+    FLAT_IMAGE = "flat_image"
+    SOLID_IMAGE = "solid_image"
+    BUILT = "built"
+    WORN = "worn"
+    CULINARY = "culinary"
+    SCENT = "scent"
+    LIGHT = "light"
+    RECORDED = "recorded"
+    INTERACTIVE = "interactive"
+    LANDSCAPE = "landscape"
+    BODY = "body"
+    RITUAL_PERFORMANCE = "ritual_performance"
+    TEXTILE_IMAGE = "textile_image"
+    MADE_MIND_ART = "made_mind_art"
 
 
 class LanguageRegister(StrEnum):
@@ -438,10 +464,6 @@ class CustomCatalog(StrEnum):
     ARCHETYPE = "archetype"
     ITEM_CLASS = "item_class"
     RITE_EFFECT = "rite_effect"
-
-
-PERFORMED_MEDIA = frozenset({ArtMedium.SONG, ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.DANCE, ArtMedium.MUSIC})
-VERBAL_MEDIA = frozenset({ArtMedium.SONG, ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.BOOK})
 
 
 class SayingKind(StrEnum):

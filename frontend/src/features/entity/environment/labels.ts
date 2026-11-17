@@ -86,10 +86,14 @@ export const SOIL: Record<string, string> = {
   sand: 'Sand',
   volcanic: 'Volcanic soil',
   peat: 'Peat',
-  salt: 'Salt flats',
-  ash: 'Ash',
-  crystal: 'Crystal grit',
-  bone: 'Bone meal',
+  saline: 'Saline soil',
+  tephra: 'Tephra',
+  crystalline: 'Crystalline soil',
+  calcareous: 'Calcareous soil',
+  laterite: 'Laterite',
+  permafrost: 'Permafrost',
+  regolith: 'Regolith',
+  artificial: 'Made ground',
 }
 
 export const BAND: Record<string, Named> = {
@@ -165,7 +169,7 @@ export const WEATHER_EFFECTS: Record<string, string> = {
 export const SCARS: Record<components['schemas']['ScarKind'], Named> = {
   battlefield: { label: 'Battlefield', icon: Swords, tone: 'danger' },
   plague_ground: { label: 'Plague ground', icon: Biohazard, tone: 'danger' },
-  salted_earth: { label: 'Salted earth', icon: Hexagon, tone: 'warning' },
+  made_barren: { label: 'Made barren', icon: Hexagon, tone: 'warning' },
   burned: { label: 'Burned land', icon: Flame, tone: 'warning' },
   crater: { label: 'Crater', icon: Mountain, tone: 'warning' },
   haunted: { label: 'Haunted ground', icon: Ghost, tone: 'verdigris' },

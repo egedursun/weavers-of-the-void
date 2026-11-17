@@ -908,7 +908,7 @@ export function ContestsCard({
     <MindCard
       title='Contests of wit'
       icon={CONTEST_ICON}
-      hint='Riddles, flytings, debates, games, trials, songs and tales for honour, a hand, a wager, a place, a freedom or a god’s favour.'
+      hint='Riddles, contests of insults, debates, games, trials, songs and tales for honour, a union, a wager, a place, a freedom or a god’s favour.'
       wide
     >
       {view.contests.length === 0 ? (

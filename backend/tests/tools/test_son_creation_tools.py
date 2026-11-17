@@ -21,7 +21,7 @@ CASES: dict[str, tuple[EntityType, dict[str, Any]]] = {
     "found_cult": (EntityType.CULT, {"name": "Order of the Tide"}),
     "found_faction": (EntityType.FACTION, {"name": "Salt Guild", "faction_kind": "merchant_guild"}),
     "hang_celestial": (EntityType.CELESTIAL, {"name": "Lantern Moon"}),
-    "create_artwork": (EntityType.ARTWORK, {"name": "The Drowned Choir", "medium": "song"}),
+    "create_artwork": (EntityType.ARTWORK, {"name": "The Drowned Choir", "medium": "musical"}),
     "decree_law": (EntityType.LAW, {"name": "Law of Salt", "law_kind": "tolls"}),
     "summon_spirit": (EntityType.SPIRIT, {"name": "Whisper of Brine"}),
     "inspire_knowledge": (EntityType.KNOWLEDGE, {"name": "Salt Smelting", "branch": "metallurgy"}),

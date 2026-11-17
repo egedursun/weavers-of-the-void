@@ -416,7 +416,7 @@ class ProstheticsRules:
     crystal: int = rule(45, 0, 100, G, "Function a crystal prosthesis restores at full quality (%)")
     star_metal: int = rule(90, 0, 100, G, "Function a star-metal prosthesis restores at full quality (%)")
     living_wood: int = rule(85, 0, 100, G, "Function a living-wood prosthesis restores at full quality (%)")
-    dragonbone: int = rule(80, 0, 100, G, "Function a dragonbone prosthesis restores at full quality (%)")
+    great_bone: int = rule(80, 0, 100, G, "Function a prosthesis of great bone restores at full quality (%)")
     skysteel: int = rule(88, 0, 100, G, "Function a skysteel prosthesis restores at full quality (%)")
     other: int = rule(40, 0, 100, G, "Function a prosthesis of any other material restores at full quality (%)")
 

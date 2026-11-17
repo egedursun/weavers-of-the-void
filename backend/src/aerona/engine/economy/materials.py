@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.foe_natures import FOE_BANES
 from aerona.catalog.materials import ALLOYS, MATERIALS, METAL_FAMILIES, MaterialSpec
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -260,12 +261,9 @@ def holy_edge(rules: Rules, props: MaterialProps | None, natures: frozenset[FoeN
     table = rules.materials
     lift = 0.0
     for nature in natures:
-        if nature is FoeNature.UNDEAD:
-            lift += props.sanctity * table.sanctity_undead_pct / PERCENT / PERCENT
-        elif nature is FoeNature.CURSED:
-            lift += props.sanctity * table.sanctity_cursed_pct / PERCENT / PERCENT
-        elif nature is FoeNature.VOID:
-            lift += (props.sanctity * table.sanctity_void_pct - props.corruption * table.corruption_void_pct) / PERCENT / PERCENT
+        bane = FOE_BANES[nature]
+        tainted = props.corruption * int(getattr(table, bane.corruption_rule)) if bane.corruption_rule is not None else 0
+        lift += (props.sanctity * int(getattr(table, bane.sanctity_rule)) - tainted) / PERCENT / PERCENT
     return max(WORTH_FLOOR, 1 + lift)
 
 

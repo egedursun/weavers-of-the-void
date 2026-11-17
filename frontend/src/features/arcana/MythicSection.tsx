@@ -35,6 +35,7 @@ import { NodePicker } from '@/features/dominion/parts'
 import { TextField } from '@/features/entity/economy/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { useKindTable } from '@/features/kinds/api'
 import { CosmicOfficesPanel } from './CosmicOfficesPanel'
 import {
   type GeasView,
@@ -171,6 +172,7 @@ function QuestCard({
   const busy = why(blocked, edit.isPending, advance.isPending, remove.isPending)
   const state = QUEST_STATES[quest.state]
   const realm = REALMS[quest.realm]
+  const realmKinds = useKindTable('realm', null)
   const questing = quest.state === 'questing'
   return (
     <RecordRow
@@ -224,7 +226,11 @@ function QuestCard({
         />
       </div>
       <div className='flex min-w-0 flex-wrap gap-1.5'>
-        <Chip icon={realm.icon}>{realm.label}</Chip>
+        <Chip icon={realm.icon}>
+          {quest.realm_kind_name
+            ? `${quest.realm_kind_name} · ${realm.label}`
+            : realm.label}
+        </Chip>
         {quest.next_trial && (
           <Chip icon={TRIALS[quest.next_trial].icon}>
             {`Next: ${TRIALS[quest.next_trial].label.toLowerCase()}`}
@@ -265,6 +271,12 @@ function QuestCard({
             table: table(QUEST_STATES),
           },
           { key: 'realm', label: 'Realm', kind: 'pick', table: table(REALMS) },
+          {
+            key: 'realm_kind_id',
+            label: 'Realm it enters',
+            kind: 'pick',
+            table: realmKinds,
+          },
           { key: 'boon', label: 'Boon', kind: 'pick', table: table(BOONS) },
           { key: 'steps', label: 'Steps', kind: 'number', min: 1 },
           { key: 'step', label: 'Step reached', kind: 'number', min: 0 },

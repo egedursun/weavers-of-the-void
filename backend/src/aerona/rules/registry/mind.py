@@ -191,7 +191,7 @@ class NeedsRules:
     status_hero: int = rule(85, 0, 100, G, "Standing a hero feels they hold")
     status_chosen: int = rule(85, 0, 100, G, "Standing a god's chosen feels they hold")
     status_saint: int = rule(80, 0, 100, G, "Standing a saint feels they hold")
-    status_knight: int = rule(75, 0, 100, G, "Standing a knight feels they hold")
+    status_sworn_warrior: int = rule(75, 0, 100, G, "Standing a sworn warrior feels they hold")
     status_priest: int = rule(70, 0, 100, G, "Standing a priest feels they hold")
     status_seer: int = rule(70, 0, 100, G, "Standing a seer feels they hold")
     status_captain: int = rule(70, 0, 100, G, "Standing a captain feels they hold")

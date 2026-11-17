@@ -22,8 +22,8 @@ from aerona.db.tables.polity import TreatyBreachRow
 from aerona.db.tables.renown import DeedRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import PartOfSpeech
-from aerona.domain.enums.culture import ArtMedium, ItemClass
-from aerona.domain.enums.discovery import AnomalyKind, ArtDiscipline, TheoryDomain
+from aerona.domain.enums.culture import ArtMode, ItemClass
+from aerona.domain.enums.discovery import AnomalyKind, TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
@@ -112,7 +112,7 @@ async def test_an_art_form_spreads_loses_mastery_across_tongues_lends_artworks_q
     await tongue(session, realm, "Bel", partner, {})
     await bond(session, home.id, partner.id, BondKind.TRADES_WITH)
     poet = await make(session, "Ila Sor", EntityType.MORTAL, realm.world.id, location_id=home.id)
-    form = await art_forms.found_form(ctx, home, ArtDiscipline.POETRY, "The Long Verse", founder=poet, parents=[], structure={"metre": "long"})
+    form = await art_forms.found_form(ctx, home, ArtMode.VERBAL, "The Long Verse", founder=poet, parents=[], structure={"metre": "long"})
     profile = await session.get_one(ArtFormProfileRow, form.id)
     assert profile.language_entity_id is not None
     assert await art_forms.spread(ctx) >= 1
@@ -120,12 +120,12 @@ async def test_an_art_form_spreads_loses_mastery_across_tongues_lends_artworks_q
     source = await session.get_one(ArtFormPractitionerRow, (form.id, home.id))
     assert carried is not None and carried.mastery < source.mastery // 2 + 1
     work = await make_entity(session, "The First Verse", EntityType.ARTWORK, world_id=realm.world.id, stats=ArtworkStats(renown=10))
-    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMedium.EPIC_POEM, author_entity_id=poet.id, quality=50, locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMode.VERBAL, author_entity_id=poet.id, quality=50, locked=[]))
     await session.flush()
     assert await art_forms.credit_artworks(ctx) == 1
     artwork = await session.get_one(ArtworkProfileRow, work.id)
     assert artwork.art_form_entity_id == form.id and artwork.quality > 50
-    lone = await art_forms.found_form(ctx, home, ArtDiscipline.DANCE, "The Quiet Step", founder=None, parents=[], structure={})
+    lone = await art_forms.found_form(ctx, home, ArtMode.MOVEMENT, "The Quiet Step", founder=None, parents=[], structure={})
     for row in list(await session.scalars(select(ArtFormPractitionerRow).where(ArtFormPractitionerRow.art_form_entity_id == lone.id))):
         await session.delete(row)
     lone_profile = await session.get_one(ArtFormProfileRow, lone.id)

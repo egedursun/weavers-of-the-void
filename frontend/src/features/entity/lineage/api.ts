@@ -15,9 +15,9 @@ export type Home = components['schemas']['HomeView']
 export type Household = components['schemas']['HouseholdView']
 export type Member = components['schemas']['HouseholdMemberView']
 export type Dwelling = components['schemas']['DwellingView']
+export type DwellingKindOption = components['schemas']['DwellingKindOption']
 export type Aggregate = components['schemas']['AggregateView']
 export type HouseholdRole = components['schemas']['HouseholdRole']
-export type DwellingKind = components['schemas']['DwellingKind']
 export type SocialClass = components['schemas']['SocialClass']
 
 export function lineageKey(nodeId: number) {

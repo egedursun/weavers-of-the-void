@@ -183,7 +183,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
       </OrderBlock>
       <OrderBlock
         title='Bind a soul to a vessel'
-        description='A free soul is bound into an item, a vessel or a work; a structure wakes as a golem.'
+        description='A free soul is bound into an item, a vessel or a work; a structure begins to move and act.'
       >
         <OrderFields>
           <EntityPicker

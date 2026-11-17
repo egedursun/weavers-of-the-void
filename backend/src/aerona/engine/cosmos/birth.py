@@ -36,6 +36,7 @@ from aerona.domain.models.entity_stats import CelestialStats, EntityStats, Langu
 from aerona.domain.models.phonology import Phonology
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.canon_domains import canon_domains
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god, parse_domains
 from aerona.engine.cosmos.maps import store_world_map
 from aerona.engine.cosmos.resources import DepositSpec, cosmic_deposits, create_cosmic_deposit, set_mechanics
@@ -448,7 +449,7 @@ async def _old_god(ctx: TickContext, state: BirthState, output: NewWorldOutput) 
     item = output.old_god
     if item is None or not item.name.strip():
         return
-    fallback = WORLD_TYPES[state.world.world_type].domains
+    fallback = await canon_domains(ctx.session, state.world, ctx.rng("birth_old_god_domains"))
     god = await add_foreign_god(
         ctx.session,
         ctx.rules,

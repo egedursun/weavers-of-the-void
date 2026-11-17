@@ -1,11 +1,6 @@
 import {
-  Copy,
-  Move,
-  AudioLines,
-  Dices,
-  Cog,
-  Database,
   Anchor,
+  AudioLines,
   Ban,
   BookOpen,
   Bot,
@@ -13,7 +8,12 @@ import {
   CircleDashed,
   Clock,
   Cloud,
+  Cog,
+  Copy,
   Crown,
+  Database,
+  Dices,
+  DoorOpen,
   Droplets,
   Eye,
   Feather,
@@ -26,6 +26,7 @@ import {
   Hammer,
   Hand,
   Heart,
+  HeartPulse,
   Hourglass,
   Image,
   Infinity as InfinityIcon,
@@ -34,12 +35,12 @@ import {
   Leaf,
   Lightbulb,
   Link,
-  type LucideIcon,
   Map,
   MapPin,
   Megaphone,
   Moon,
   Mountain,
+  Move,
   Music,
   PawPrint,
   Repeat,
@@ -61,6 +62,7 @@ import {
   Wind,
   X,
   Zap,
+  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -230,6 +232,19 @@ export const OFFICES: Record<Schema['CosmicOffice'], Named> = {
   oaths: { label: 'Office of oaths', icon: Gavel, tone: 'warning' },
   herald: { label: 'Office of the herald', icon: Megaphone, tone: 'verdigris' },
   hunt: { label: 'Office of the hunt', icon: PawPrint, tone: 'success' },
+}
+
+export const OFFICE_DUTIES: Record<Schema['OfficeDuty'], Named> = {
+  the_dead: { label: 'Duty to the dead', icon: Skull, tone: 'muted' },
+  thresholds: { label: 'Duty to thresholds', icon: DoorOpen, tone: 'info' },
+  the_sky: { label: 'Duty to the sky', icon: Star, tone: 'gold' },
+  oaths: { label: 'Duty to oaths', icon: Gavel, tone: 'warning' },
+  messages: { label: 'Duty to messages', icon: Megaphone, tone: 'verdigris' },
+  the_hunt: { label: 'Duty to the hunt', icon: PawPrint, tone: 'success' },
+  judgement: { label: 'Duty of judgement', icon: Scale, tone: 'warning' },
+  memory: { label: 'Duty of memory', icon: BookOpen, tone: 'info' },
+  making: { label: 'Duty of making', icon: Hammer, tone: 'gold' },
+  healing: { label: 'Duty of healing', icon: HeartPulse, tone: 'success' },
 }
 
 export const OFFICE_CHOICES: Record<Schema['OfficeChoice'], Named> = {

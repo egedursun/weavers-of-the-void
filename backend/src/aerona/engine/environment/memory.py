@@ -149,7 +149,7 @@ async def gather(session: AsyncSession, rules: Rules, atlas: RegionAtlas, since_
             )
         )
     corpses = await session.scalars(
-        select(EntityRow).where(EntityRow.engine_kind == EngineKind.GOD_CORPSE, EntityRow.status == EntityStatus.CANON, EntityRow.birth_epoch >= since_epoch)
+        select(EntityRow).where(EntityRow.engine_kind == EngineKind.DEAD_GOD, EntityRow.status == EntityStatus.CANON, EntityRow.birth_epoch >= since_epoch)
     )
     for corpse in corpses:
         region = atlas.top_region(corpse.id)
@@ -262,7 +262,7 @@ async def derive_sacredness(
         region = atlas.top_region(site_id)
         if region is not None:
             added[region] += table.sacred_pilgrimage_site
-    corpses = await session.scalars(select(EntityRow.id).where(EntityRow.engine_kind == EngineKind.GOD_CORPSE, EntityRow.status == EntityStatus.CANON))
+    corpses = await session.scalars(select(EntityRow.id).where(EntityRow.engine_kind == EngineKind.DEAD_GOD, EntityRow.status == EntityStatus.CANON))
     for corpse_id in corpses:
         region = atlas.top_region(corpse_id)
         if region is not None:

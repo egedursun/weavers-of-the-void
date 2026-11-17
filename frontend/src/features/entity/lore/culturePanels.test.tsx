@@ -104,7 +104,7 @@ describe('culture panels', () => {
         id={9}
         blocked={null}
         card={{
-          archetype: 'lost_paradise',
+          archetype: 'lost_golden_age',
           credence: 55,
           distortion: 20,
           subject: null,

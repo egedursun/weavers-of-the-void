@@ -9,6 +9,9 @@ from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.lineage import (
     AggregateView,
     AlleleView,
+    BloodEffectView,
+    CarriedAlleleView,
+    DwellingKindOption,
     DwellingView,
     FurnishingView,
     GeneView,
@@ -23,12 +26,16 @@ from aerona.api.schemas.lineage import (
     LocusView,
     PoolView,
     ResemblanceView,
+    TiedTraitView,
 )
 from aerona.api.schemas.mind import LabelView
 from aerona.api.views.common import node_ref, node_refs
-from aerona.catalog.genetics import DWELLINGS, GIFT_STANCE_LABELS, HOUSEHOLD_DECISION_LABELS, HOUSEHOLD_ROLE_LABELS, LOCI, LOCUS_GROUP_LABELS
+from aerona.catalog.genetic_effects import EFFECT_POINTS, GENETIC_EFFECT_LABELS
+from aerona.catalog.genetics import GIFT_STANCE_LABELS, HARMFUL, HOUSEHOLD_DECISION_LABELS, HOUSEHOLD_ROLE_LABELS, LOCI, LOCUS_GROUP_LABELS
+from aerona.catalog.mind import TRAITS
 from aerona.core.errors import NotFoundError
 from aerona.core.grammar import an
+from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
@@ -36,10 +43,13 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.genetics import GeneticEffect
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import SocialClass
-from aerona.engine.genetics.genome import appearance_text, aptitudes, pair_of, phenotype
+from aerona.engine.genetics.genome import appearance_text, aptitudes, carried_alleles, describe_effects, effect_pct, pair_of, phenotype, score_of, tied_traits
+from aerona.engine.households.dwelling_kinds import dwelling_kind_row
 from aerona.engine.households.homes import expectation, furnishings
+from aerona.engine.mind.book import traits_of
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["lineage"])
@@ -80,7 +90,7 @@ def class_label(social_class: SocialClass) -> str:
     return social_class.value.replace("_", " ").capitalize()
 
 
-def loci_views(frequencies: Mapping[str, Mapping[str, int]] | None) -> list[LocusView]:
+def loci_views(rules: Rules, frequencies: Mapping[str, Mapping[str, int]] | None) -> list[LocusView]:
     return [
         LocusView(
             locus=locus,
@@ -88,7 +98,12 @@ def loci_views(frequencies: Mapping[str, Mapping[str, int]] | None) -> list[Locu
             group=spec.group,
             group_label=LOCUS_GROUP_LABELS[spec.group],
             alleles=[
-                AlleleView(key=allele.key, label=allele.label, frequency=(frequencies or {}).get(locus.value, {}).get(allele.key) if frequencies else None)
+                AlleleView(
+                    key=allele.key,
+                    label=allele.label,
+                    frequency=(frequencies or {}).get(locus.value, {}).get(allele.key) if frequencies else None,
+                    effects=describe_effects(rules, locus, allele.score),
+                )
                 for allele in spec.alleles
             ],
         )
@@ -96,8 +111,33 @@ def loci_views(frequencies: Mapping[str, Mapping[str, int]] | None) -> list[Locu
     ]
 
 
+async def blood_views(session: AsyncSession, rules: Rules, row: GenomeRow) -> tuple[list[TiedTraitView], list[CarriedAlleleView], list[BloodEffectView]]:
+    owned = await traits_of(session, row.holder_node_id)
+    tied = [
+        TiedTraitView(trait=trait, trait_label=TRAITS[trait].label, locus=locus, locus_label=LOCI[locus].label, held=trait in owned)
+        for locus, trait in tied_traits(row.genes)
+    ]
+    carried = [
+        CarriedAlleleView(
+            locus=locus,
+            locus_label=LOCI[locus].label,
+            allele=allele,
+            allele_label=LOCI[locus].allele(allele).label,
+            harmful=HARMFUL.get(locus) == allele,
+        )
+        for locus, allele in carried_alleles(row.genes)
+    ]
+    effects = [
+        BloodEffectView(effect=channel, label=GENETIC_EFFECT_LABELS[channel], amount=amount, per_epoch=channel in EFFECT_POINTS)
+        for channel in GeneticEffect
+        if (amount := effect_pct(rules, row.genes, channel))
+    ]
+    return tied, carried, effects
+
+
 async def genome_view(session: AsyncSession, rules: Rules, row: GenomeRow) -> GenomeView:
     gifts = aptitudes(rules, row.genes)
+    tied, carried, effects = await blood_views(session, rules, row)
     parents = await node_refs(session, [int(key) for key in row.likeness])
     return GenomeView(
         genes=[
@@ -105,10 +145,12 @@ async def genome_view(session: AsyncSession, rules: Rules, row: GenomeRow) -> Ge
                 locus=locus,
                 label=spec.label,
                 group=spec.group,
+                group_label=LOCUS_GROUP_LABELS[spec.group],
                 first=pair_of(row.genes, locus)[0],
                 second=pair_of(row.genes, locus)[1],
                 shown=phenotype(row.genes, locus),
                 shown_label=spec.allele(phenotype(row.genes, locus)).label,
+                effects=describe_effects(rules, locus, score_of(row.genes, locus)),
             )
             for locus, spec in LOCI.items()
         ],
@@ -129,14 +171,17 @@ async def genome_view(session: AsyncSession, rules: Rules, row: GenomeRow) -> Ge
         potential=dict(row.potential),
         divine_son=await node_ref(session, row.divine_son_id),
         likeness=[LikenessView(parent=parents[int(key)], likeness=value) for key, value in sorted(row.likeness.items()) if int(key) in parents],
+        tied_traits=tied,
+        carried=carried,
+        blood_effects=effects,
         epoch=row.epoch,
         held=sorted(row.locked or []),
     )
 
 
-def pool_view(row: AllelePoolRow) -> PoolView:
+def pool_view(rules: Rules, row: AllelePoolRow) -> PoolView:
     return PoolView(
-        loci=loci_views(row.frequencies),
+        loci=loci_views(rules, row.frequencies),
         gift_stance=row.gift_stance,
         gift_stance_label=GIFT_STANCE_LABELS[row.gift_stance],
         gifted_share=row.gifted_share,
@@ -188,11 +233,18 @@ async def lineage_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Line
             can_hold_likeness=can_likeness,
             reason=reason,
             genome=await genome_view(session, rules, genome_row) if genome_row is not None else None,
-            pool=pool_view(pool_row) if pool_row is not None else None,
+            pool=pool_view(rules, pool_row) if pool_row is not None else None,
             resemblance=resemblance_view(likeness_row) if likeness_row is not None else None,
-            loci=loci_views(None),
+            loci=loci_views(rules, None),
             stances=labels(GIFT_STANCE_LABELS),
         )
+
+
+async def dwelling_options(session: AsyncSession) -> list[DwellingKindOption]:
+    rows = await session.scalars(
+        select(DwellingKindRow).where(DwellingKindRow.retired.is_(False)).order_by(DwellingKindRow.built_in.desc(), DwellingKindRow.id)
+    )
+    return [DwellingKindOption(id=row.id, name=row.name, level=row.category, built_in=row.built_in) for row in rows]
 
 
 async def dwelling_view(session: AsyncSession, rules: Rules, row: DwellingRow, social_class: SocialClass | None) -> DwellingView:
@@ -202,9 +254,11 @@ async def dwelling_view(session: AsyncSession, rules: Rules, row: DwellingRow, s
     refs = await node_refs(session, [item.item_node_id for item in items])
     district = await session.get(DistrictRow, row.district_id) if row.district_id is not None else None
     count = await furnishings(session, row.id)
+    kind = await dwelling_kind_row(session, row.dwelling_kind_id)
     return DwellingView(
-        kind=row.kind,
-        kind_label=DWELLINGS[row.kind].label,
+        dwelling_kind_id=row.dwelling_kind_id,
+        kind_name=kind.name,
+        level=kind.category,
         quality=row.quality,
         effective_quality=min(100, row.quality + count * rules.households.furnishing_quality),
         expected_quality=expectation(social_class),
@@ -275,14 +329,16 @@ async def household_view(session: AsyncSession, rules: Rules, row: HouseholdRow)
     )
 
 
-def aggregate_view(row: HouseholdAggregateRow) -> AggregateView:
+async def aggregate_view(session: AsyncSession, row: HouseholdAggregateRow) -> AggregateView:
+    kind = await dwelling_kind_row(session, row.dwelling_kind_id)
     return AggregateView(
         social_class=row.social_class,
         social_class_label=class_label(row.social_class),
         households=row.households,
         mean_size=row.mean_size,
-        dwelling_kind=row.dwelling_kind,
-        dwelling_label=DWELLINGS[row.dwelling_kind].label,
+        dwelling_kind_id=row.dwelling_kind_id,
+        dwelling_name=kind.name,
+        dwelling_level=kind.category,
         quality=row.quality,
         wealth=row.wealth,
         epoch=row.epoch,
@@ -340,9 +396,9 @@ async def home_view(services: ServicesDep, node_id: int = Path(ge=1)) -> HomeVie
             reason=reason,
             household=await household_view(session, rules, own) if own is not None else None,
             households=[await household_view(session, rules, row) for row in local],
-            aggregates=[aggregate_view(row) for row in sorted(aggregates, key=lambda row: row.social_class.value)],
+            aggregates=[await aggregate_view(session, row) for row in sorted(aggregates, key=lambda row: row.social_class.value)],
             roles=labels(HOUSEHOLD_ROLE_LABELS),
-            dwellings=[LabelView(key=kind_key.value, label=spec.label) for kind_key, spec in DWELLINGS.items()],
+            dwellings=await dwelling_options(session),
             classes=[LabelView(key=social.value, label=class_label(social)) for social in SocialClass],
             neighbours=[LabelView(key=str(row.id), label=row.name) for row in nearby],
         )

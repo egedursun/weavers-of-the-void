@@ -81,6 +81,8 @@ const DATA: CosmosData = {
       world_a_id: 1,
       world_b_id: 2,
       method: 'light_sail',
+      medium: 'space',
+      mechanism: 'sail',
       duration_epochs: 3,
       danger: 20,
       known: false,

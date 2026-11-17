@@ -14,16 +14,18 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
-from aerona.domain.enums.demography import AgeBand, MarriageCustom, Sex
+from aerona.domain.enums.demography import AgeBand, Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
-from aerona.engine.body.customs import people_of
+from aerona.domain.enums.unions import PluralSide, UnionForm
+from aerona.engine.body.customs import people_id_of, people_of
 from aerona.engine.collective.book import population_of, shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import asabiyya_factor
 from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
+from aerona.engine.cycles.sides import first_sex, system_of_people
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -107,7 +109,7 @@ async def measure(ctx: TickContext, community: EntityRow, tally: DemographyTally
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     profile = await ctx.session.get(SettlementProfileRow, community.id)
     transition = await transition_of(ctx, community.id)
-    elders = counts.get((AgeBand.ELDER, Sex.FEMALE), 0) + counts.get((AgeBand.ELDER, Sex.MALE), 0)
+    elders = sum(counts.get((AgeBand.ELDER, sex), 0) for sex in Sex)
     if "elder_share" not in transition.locked:
         transition.elder_share = clamp_int(elders * PERCENT / everyone, 0, PERCENT)
     if "urban_share" not in transition.locked:
@@ -132,6 +134,21 @@ async def measure(ctx: TickContext, community: EntityRow, tally: DemographyTally
             shift(profile, "public_order", table.elder_stability / 5)
 
 
+async def scarce_side_plural(ctx: TickContext, community_id: int) -> bool:
+    form = await law_param(ctx.session, community_id, LawKind.MARRIAGE_LAW, "form")
+    if form == UnionForm.GROUP.value:
+        return True
+    if form != UnionForm.PLURAL.value:
+        return False
+    side = str(await law_param(ctx.session, community_id, LawKind.MARRIAGE_LAW, "plural_side") or PluralSide.EITHER.value)
+    if side == PluralSide.EITHER.value:
+        return True
+    town = await ctx.session.get(EntityRow, community_id)
+    system = await system_of_people(ctx.session, await people_id_of(ctx.session, town)) if town is not None else None
+    scarce = PluralSide.FIRST if system is None or first_sex(system) == Sex.MALE.value else PluralSide.SECOND
+    return side == scarce.value
+
+
 async def fertility_factor(ctx: TickContext, community_id: int) -> float:
     table = ctx.rules.sex_ratio
     transition = await ctx.session.get(DemographicTransitionRow, community_id)
@@ -139,7 +156,7 @@ async def fertility_factor(ctx: TickContext, community_id: int) -> float:
     factor *= await breeding_factor(ctx.session, ctx.rules, community_id)
     ratio = await ctx.session.get(SexRatioRow, community_id) if await fixed_sexes_at(ctx.session, community_id) else None
     if ratio is not None and ratio.males_per_hundred < table.skew_at:
-        several = await law_param(ctx.session, community_id, LawKind.MARRIAGE_LAW, "custom") == MarriageCustom.POLYGYNY.value
+        several = await scarce_side_plural(ctx, community_id)
         lack = (table.skew_at - ratio.males_per_hundred) / PERCENT
         factor *= 1 - lack * (PERCENT - (table.polygamy_pct if several else 0)) / PERCENT
         factor *= 1 - table.late_marriage_pct / PERCENT * lack

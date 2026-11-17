@@ -2,7 +2,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.culture import BookContentRow, ItemHistoryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.culture import ArtMedium, ItemDeed
+from aerona.domain.enums.culture import ArtMode, ItemDeed
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.lore import art, items
@@ -84,7 +84,7 @@ async def commission(
     patron_id: int,
     *,
     name: str,
-    medium: ArtMedium,
+    medium: ArtMode,
     author_id: int | None,
     subject_id: int | None,
     message: dict[str, int] | None,

@@ -79,7 +79,7 @@ async def test_plague_takes_named_mortals_of_the_struck_people(session: AsyncSes
 async def test_ruler_role_follows_the_dominant_class(session: AsyncSession, world: CoreWorld) -> None:
     rules = Rules()
     city = await settlement(session, "Crownmere", world, world.regions[1])
-    assert ruler_role(rules, city, {SocialClass.WARRIOR: 60.0, SocialClass.FARMER: 40.0}) == "warlord"
+    assert ruler_role(rules, city, {SocialClass.WARRIOR: 60.0, SocialClass.FARMER: 40.0}) == "warrior-ruler"
     assert ruler_role(rules, city, {SocialClass.WARRIOR: 20.0, SocialClass.FARMER: 25.0}) == "sovereign"
     assert ruler_role(rules, None, {SocialClass.WARRIOR: 60.0}) == "heir"
 
@@ -88,7 +88,7 @@ async def test_road_swallow_chance_depends_on_the_event_and_the_armour(session: 
     rules = tune(Rules(), travel={"lost_chance": 50, "special_loss_chance": 20, "raid_loss_chance": 10, "armor_risk_divisor": 100})
     ship = await entity(session, "Iron Gull", EntityType.VESSEL, VesselStats(armor=50), world_id=world.world.id)
     assert swallow_chance(rules, JourneyEventKind.LOST_WAY, ship) == 50
-    assert swallow_chance(rules, JourneyEventKind.SWALLOWED, None) == 20
+    assert swallow_chance(rules, JourneyEventKind.NOT_RELEASED, None) == 20
     assert swallow_chance(rules, JourneyEventKind.PIRATES, None) == 10
     assert swallow_chance(rules, JourneyEventKind.PIRATES, ship) == 5
 

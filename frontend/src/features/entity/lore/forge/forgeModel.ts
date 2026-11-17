@@ -7,7 +7,7 @@ import {
   Wheat,
 } from 'lucide-react'
 import {
-  artMediumValues,
+  artModeValues,
   ideologyTenetValues,
   itemClassValues,
   knowledgeBranchValues,
@@ -15,7 +15,7 @@ import {
   magicSchoolValues,
   magicSourceValues,
   prophecyPredicateValues,
-  traditionKindValues,
+  traditionFunctionValues,
 } from '@/api/generated/schema'
 import { ACTS } from '../cultureLabels'
 import { ART_DISCIPLINES, THEORY_DOMAINS } from '../discoveryLabels'
@@ -147,7 +147,7 @@ export const FORGE_FIELDS: Record<ForgeKind, ForgeField[]> = {
       key: 'kind',
       label: 'Kind of custom',
       kind: 'enum',
-      table: named(traditionKindValues, TRADITION_KINDS),
+      table: named(traditionFunctionValues, TRADITION_KINDS),
       required: true,
     },
     {
@@ -234,7 +234,7 @@ export const FORGE_FIELDS: Record<ForgeKind, ForgeField[]> = {
       key: 'medium',
       label: 'Medium',
       kind: 'enum',
-      table: named(artMediumValues, MEDIUMS),
+      table: named(artModeValues, MEDIUMS),
       required: true,
     },
     {

@@ -102,7 +102,7 @@ def generate(
         bite = rng.pick([PackageKind.SNAKE_VENOM, PackageKind.LYCANTHROPY, PackageKind.VAMPIRISM, PackageKind.VOID_TAINT])
     temperament = temperament_of(rng, aggression, fear)
     if monster and rng.chance(table.abductor_pct):
-        temperament = Temperament.ABDUCTOR
+        temperament = Temperament.SEIZES_PREY
     return CreatureAnatomyRow(
         node_id=node_id,
         limbs=limbs,

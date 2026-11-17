@@ -32,7 +32,7 @@ def test_borrowed_textile_imagery_in_model_text_is_caught() -> None:
         "OPEN STORIES (threads Fate is tracking)",
     ):
         assert "borrowed imagery" in rules_hit(module, PROMPT, text), text
-    assert "borrowed imagery" not in rules_hit(module, PROMPT, "weave_chimera")
+    assert "borrowed imagery" not in rules_hit(module, PROMPT, "merge_species")
     assert "borrowed imagery" not in rules_hit(module, TEMPLATE, "{% for thread in threads %}{{ thread.id }}{% endfor %}")
     assert "borrowed imagery" not in rules_hit(module, PROMPT, "You declare a bond between two existing things.")
 
@@ -315,6 +315,19 @@ def test_enum_values_reach_the_bias_gate() -> None:
     assert not module.enum_findings()
 
 
+def test_gendered_and_borrowed_custom_values_are_caught_and_side_based_names_are_not() -> None:
+    module = checker()
+    enums = module.ENUMS / "sample.py"
+    for value in ("bride", "knight", "monk", "county", "duchy", "matrilineal", "patrilocal", "polygyny", "dowry", "mothership", "king"):
+        hits = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert "gendered value" in hits, value
+    for value in ("siesta", "flyting", "war_dance", "scar_rite", "drinking_hall", "silver_tongue", "iron_nerve", "return_of_the_king", "inquisitor"):
+        hits = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert "borrowed custom name" in hits, value
+    for value in ("through_second_line", "with_first_family", "sworn_warrior", "rest_custom", "insult_contest", "union", "persuasive", "count_down"):
+        assert not {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}, value
+
+
 def test_a_proper_name_or_example_placeholder_is_caught() -> None:
     module = checker()
     screen = REPOSITORY_ROOT / "frontend/src/features/sample/Form.tsx"
@@ -335,3 +348,68 @@ def test_a_place_given_a_will_or_a_mood_is_caught() -> None:
     for text in ("Dunes and dried seas under a merciless sun.", "A world wrapped in rainforest, loud with life.", "a world crowned by rings"):
         assert rule in rules_hit(module, PROMPT, text), text
     assert rule not in rules_hit(module, PROMPT, "A dry world of sand and stone with little water.")
+
+
+def test_a_scene_carried_by_an_enum_value_is_caught() -> None:
+    module = checker()
+    enums = REPOSITORY_ROOT / "backend/src/aerona/domain/enums/travel.py"
+    rule = "scene in an enum value"
+    for value in ("river_of_dead", "salted_earth", "god_corpse", "star_eater", "living_constellation", "swallowed"):
+        found = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert rule in found, value
+    for value in ("death_current", "made_barren", "dead_god", "star_feeder", "star_pattern_mind", "consumed"):
+        found = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert rule not in found, value
+
+
+def test_a_scene_in_a_travel_or_phenomenon_name_is_caught() -> None:
+    module = checker()
+    rule = "scene in a travel or phenomenon name"
+    for text in ("River of the dead", "Being swallowed", "God-corpse aura", "a feeding star eater"):
+        assert rule in rules_hit(module, PROMPT, text), text
+    for text in ("Crossing of the dead", "Carried within a being", "Divine residue"):
+        assert rule not in rules_hit(module, PROMPT, text), text
+
+
+def test_authored_kind_names_written_by_our_code_reach_the_bias_gate(tmp_path: Path) -> None:
+    module = checker()
+    builder = tmp_path / "built_in.py"
+    builder.write_text(
+        'NAMES = {"first": "Bread of the queen", "second": "Common bread"}\n'
+        "def rows():\n"
+        '    return [GoodKindRow(name=NAMES["first"], description="A loaf the knights carry")]\n',
+        encoding="utf-8",
+    )
+    texts = [value for _, value in module.kind_text(builder, {"GoodKindRow"})]
+    assert {"Bread of the queen", "Common bread", "A loaf the knights carry"} <= set(texts)
+    hits = {finding.rule for value in texts for finding in module.matches(builder, 1, value, True, False, enum_value=True)}
+    assert "gendered value" in hits
+    assert "GoodKindRow" in module.kind_rows()
+    assert not module.kind_findings()
+
+
+def test_an_open_example_list_in_any_model_text_is_caught() -> None:
+    module = checker()
+    hits = rules_hit(module, PROMPT, "Concrete details of its own (a habit, a material, a sound, a colour…) and specific to it")
+    assert "open example list" in hits
+    assert "open example list" in rules_hit(module, PROMPT, "its terms (amount, commodity, epochs, region_id...)")
+    assert "open example list" not in rules_hit(module, PROMPT, "Its role: signatory, overlord, vassal or guarantor")
+
+
+def test_a_paired_motif_in_an_enum_value_is_caught() -> None:
+    module = checker()
+    enums = REPOSITORY_ROOT / "backend/src/aerona/domain/enums/world.py"
+    for value in ("sand_and_ash", "crowns_and_knives", "salt_and_bone"):
+        hits = {finding.rule for finding in module.matches(enums, 1, value.replace("_", " "), True, False, enum_value=True)}
+        assert "paired motif in an enum value" in hits
+    assert not {finding.rule for finding in module.matches(enums, 1, "court intrigue", True, False, enum_value=True)}
+
+
+def test_a_borrowed_creature_name_in_our_wording_or_an_enum_value_is_caught() -> None:
+    module = checker()
+    assert "borrowed creature name" in rules_hit(module, PROMPT, "Bound to a monument, a golem is born.")
+    assert "borrowed creature name" in rules_hit(module, PROMPT, "The chimera carries the traits of both species.")
+    enums = REPOSITORY_ROOT / "backend/src/aerona/domain/enums/material.py"
+    hits = {finding.rule for finding in module.matches(enums, 1, "dragonbone", True, False, enum_value=True)}
+    assert "borrowed creature name" in hits
+    assert "borrowed creature name" not in rules_hit(module, PROMPT, "Bound to a monument, the monument moves and acts.")

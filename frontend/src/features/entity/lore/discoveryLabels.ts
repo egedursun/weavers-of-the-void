@@ -10,18 +10,11 @@ import {
   Brain,
   CircleAlert,
   Eye,
-  Feather,
-  Footprints,
   HeartPulse,
   Landmark,
   Leaf,
   Microscope,
-  Music,
   Orbit,
-  Paintbrush,
-  PenTool,
-  Shirt,
-  Theater,
   Users,
   Biohazard,
   Bomb,
@@ -48,7 +41,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
-import { type LoreNamed } from './model'
+import { MEDIUMS, type LoreNamed } from './model'
 
 type Schemas = components['schemas']
 
@@ -142,18 +135,4 @@ export const ANOMALY_KINDS: Record<Schemas['AnomalyKind'], LoreNamed> = {
   divine_sign: { label: 'A god showed otherwise', icon: Eye, tone: 'gold' },
 }
 
-export const ART_DISCIPLINES: Record<Schemas['ArtDiscipline'], LoreNamed> = {
-  music: { label: 'Music', icon: Music, tone: 'verdigris' },
-  poetry: { label: 'Poetry', icon: Feather, tone: 'gold' },
-  dance: { label: 'Dance', icon: Footprints, tone: 'info' },
-  theatre: { label: 'Theatre', icon: Theater, tone: 'warning' },
-  painting: { label: 'Painting', icon: Paintbrush, tone: 'info' },
-  sculpture: { label: 'Sculpture', icon: Gem, tone: 'gold' },
-  architecture_style: {
-    label: 'Style of building',
-    icon: Building2,
-    tone: 'gold',
-  },
-  textile: { label: 'Textile', icon: Shirt, tone: 'verdigris' },
-  calligraphy: { label: 'Calligraphy', icon: PenTool, tone: 'info' },
-}
+export const ART_DISCIPLINES: Record<Schemas['ArtMode'], LoreNamed> = MEDIUMS

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.resistances import RESISTANCES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -38,7 +39,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.powers import effects
 from aerona.engine.powers.devices import devices_of
 from aerona.engine.powers.kinds import SEASONS, access_refused, licence_refused, structure_holds, suffer, system_bond
-from aerona.engine.powers.sources import draw, drawn_from_land, hazard_of, knows_source, polity_of, resistances_of, source_level, tide_factor
+from aerona.engine.powers.sources import draw, drawn_from_land, hazard_of, knows_source, patron_short, polity_of, resistances_of, source_level, tide_factor
 from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -161,33 +162,65 @@ async def seated_apart(ctx: TickContext, target: EntityRow, power: PowerRow) -> 
     return power.form.value in MIND_FORMS and mind is not None and mind.seat in MADE_SEATS
 
 
+async def dampeners(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return (await devices_of(ctx.session, [target.id])).count(PowerDeviceEffect.DAMPEN) * PERCENT
+
+
+async def willpower(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return await attribute(ctx.session, ctx.rules, target, Attribute.WILLPOWER)
+
+
+async def focus(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return await attribute(ctx.session, ctx.rules, target, Attribute.FOCUS)
+
+
+async def piety(_ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return stat_or(target, "piety", 0)
+
+
+async def sanctity(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return await sanctity_at(ctx, target)
+
+
+async def iron(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    return PERCENT if await carries_iron(ctx, target) else 0
+
+
+async def counter_power(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    counter = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == target.id, PowerRow.state == PowerState.ACTIVE).limit(1))
+    return PERCENT if counter is not None else 0
+
+
+async def distance(ctx: TickContext, target: EntityRow, user: EntityRow) -> int:
+    far = target.location_id != user.location_id
+    return PERCENT if far and PowerDeviceEffect.EXTEND_RANGE not in await devices_of(ctx.session, [user.id]) else 0
+
+
+async def nothing(_ctx: TickContext, _target: EntityRow, _user: EntityRow) -> int:
+    return 0
+
+
+RESISTANCE_READERS: Mapping[str, Callable[[TickContext, EntityRow, EntityRow], Awaitable[int]]] = {
+    "devices": dampeners,
+    "willpower": willpower,
+    "focus": focus,
+    "piety": piety,
+    "sanctity": sanctity,
+    "iron": iron,
+    "counter_power": counter_power,
+    "distance": distance,
+    "nothing": nothing,
+}
+
+
 async def resistance(ctx: TickContext, target: EntityRow | None, kinds: list[ResistanceKind], user: EntityRow) -> float:
     if target is None or target.id == user.id or target.entity_type is not EntityType.MORTAL or kinds == [ResistanceKind.NONE]:
         return 0.0
     total = 0
     for kind in kinds:
         total += await bonus(ctx.session, target.id, EffectTarget.RESISTANCE, kind.value)
-    if ResistanceKind.DAMPENER in kinds:
-        total += (await devices_of(ctx.session, [target.id])).count(PowerDeviceEffect.DAMPEN) * PERCENT // 4
-    if ResistanceKind.WILL in kinds:
-        total += await attribute(ctx.session, ctx.rules, target, Attribute.WILLPOWER) // 2
-    if ResistanceKind.DISCIPLINE in kinds:
-        total += await attribute(ctx.session, ctx.rules, target, Attribute.FOCUS) // 2
-    if ResistanceKind.FAITH in kinds:
-        total += stat_or(target, "piety", 0) // 2
-    if ResistanceKind.SANCTITY in kinds:
-        total += await sanctity_at(ctx, target) // 2
-    if ResistanceKind.MATERIAL in kinds and await carries_iron(ctx, target):
-        total += PERCENT // 4
-    if ResistanceKind.COUNTER_SOURCE in kinds:
-        counter = await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == target.id, PowerRow.state == PowerState.ACTIVE).limit(1))
-        total += PERCENT // 4 if counter is not None else 0
-    if (
-        ResistanceKind.DISTANCE in kinds
-        and target.location_id != user.location_id
-        and PowerDeviceEffect.EXTEND_RANGE not in await devices_of(ctx.session, [user.id])
-    ):
-        total += PERCENT // 4
+        spec = RESISTANCES[kind]
+        total += await RESISTANCE_READERS[spec.reads](ctx, target, user) * spec.share_pct // PERCENT
     return min(1.0, total / (PERCENT * 2))
 
 
@@ -239,6 +272,8 @@ async def allowed(ctx: TickContext, user: EntityRow, power: PowerRow, source: Po
     town = user.location_id
     if source is not None and (refused := await source_refused(ctx, user, source)) is not None:
         return refused
+    if source is not None and (short := await patron_short(ctx, user, source.id, power.strength)) is not None:
+        return short
     if power.form.value in MIND_FORMS and town is not None and str(await law_param(ctx.session, town, LawKind.POWER_LAW, "mind_powers")) == "banned":
         return "powers over minds are banned here"
     return None

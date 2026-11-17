@@ -20,7 +20,5 @@ async def test_a_son_shapes_the_customs_of_its_own_people(database: Database) ->
         assert culture.martial_style is MartialStyle.SHOCK
         assert culture.funeral_rite is FuneralCustom.SKY_BURIAL
         assert {"martial_style", "funeral_rite"} <= set(culture.locked)
-    assert "does not worship you" in await rejected(
-        toolkit, "shape_folk", {"people_id": realm.other_people_id, "aesthetic": "ornate", "reason": "a gift of beauty"}
-    )
+    assert "does not worship you" in await rejected(toolkit, "shape_folk", {"people_id": realm.other_people_id, "ornament": 90, "reason": "a gift of beauty"})
     assert "at least one custom" in await rejected(toolkit, "shape_folk", {"people_id": realm.people_id, "reason": "nothing at all to say"})

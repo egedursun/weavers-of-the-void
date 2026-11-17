@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Ban, DoorClosed, DoorOpen, Save, Trash2, Unlink } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { funeralRiteValues, tenetKindValues } from '@/api/generated/schema'
+import { funeralCustomValues, tenetKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -270,7 +270,7 @@ export function StratumEditor({
         </div>
         <Toggles
           label='Only these rites'
-          values={funeralRiteValues}
+          values={funeralCustomValues}
           chosen={rites}
           table={RITES}
           blocked={busy}

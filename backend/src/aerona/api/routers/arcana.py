@@ -29,7 +29,9 @@ from aerona.core.errors import NotFoundError
 from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import ItemEnchantmentRow, LegendProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
+from aerona.db.tables.nature_kinds import DivineOfficeKindRow, RealmKindRow
 from aerona.domain.enums.mythic import CosmicOffice, HeroquestState, OfficeChoice
+from aerona.engine.kinds.nature import office_duty
 
 router = APIRouter(tags=["arcana"])
 Id = Annotated[int, Path(ge=1)]
@@ -142,6 +144,8 @@ async def quest_views(session: AsyncSession, rows: list[HeroquestRow]) -> list[H
     legends = [row.legend_entity_id for row in rows if row.legend_entity_id is not None]
     found = select(LegendProfileRow.legend_entity_id, LegendProfileRow.archetype).where(LegendProfileRow.legend_entity_id.in_(legends))
     archetypes = {legend_id: archetype for legend_id, archetype in await session.execute(found)} if legends else {}
+    realm_ids = [row.realm_kind_id for row in rows if row.realm_kind_id is not None]
+    realm_names = {kind.id: kind.name for kind in await session.scalars(select(RealmKindRow).where(RealmKindRow.id.in_(realm_ids)))}
     return [
         HeroquestView(
             id=row.id,
@@ -149,6 +153,8 @@ async def quest_views(session: AsyncSession, rows: list[HeroquestRow]) -> list[H
             legend=at(refs, row.legend_entity_id),
             god=at(refs, row.god_node_id),
             realm=row.realm,
+            realm_kind_id=row.realm_kind_id,
+            realm_kind_name=realm_names.get(row.realm_kind_id) if row.realm_kind_id is not None else None,
             place=at(refs, row.place_entity_id),
             steps=row.steps,
             step=row.step,
@@ -229,6 +235,8 @@ async def geas_views(session: AsyncSession, rows: list[GeasRow]) -> list[GeasVie
 
 async def office_views(session: AsyncSession, rows: list[CosmicOfficeRow]) -> list[CosmicOfficeView]:
     refs = await refs_for(session, [row.holder_node_id for row in rows])
+    kind_ids = [row.office_kind_id for row in rows if row.office_kind_id is not None]
+    office_names = {kind.id: kind.name for kind in await session.scalars(select(DivineOfficeKindRow).where(DivineOfficeKindRow.id.in_(kind_ids)))}
     return [
         CosmicOfficeView(
             office=row.office,
@@ -237,6 +245,9 @@ async def office_views(session: AsyncSession, rows: list[CosmicOfficeRow]) -> li
             since_epoch=row.since_epoch,
             neglect=row.neglect,
             duty=row.duty,
+            office_kind_id=row.office_kind_id,
+            office_duty=(await office_duty(session, row))[0],
+            office_name=office_names.get(row.office_kind_id) if row.office_kind_id is not None else None,
             locked=list(row.locked),
         )
         for row in rows

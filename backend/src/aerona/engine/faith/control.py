@@ -24,13 +24,13 @@ from aerona.db.tables.faith import (
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import (
     AfterlifeState,
     BindingKind,
-    ClergyOffice,
+    ClergyFunction,
     FanaticismKind,
-    FuneralRite,
     HoldingKind,
     JudgementDoctrine,
     RebirthPath,
@@ -81,7 +81,7 @@ def count(key: str, value: object) -> int:
     return value
 
 
-def choice[E: (JudgementDoctrine, RebirthPath, FanaticismKind, SpiritAlignment, FuneralRite, AfterlifeState)](kind: type[E], key: str, value: object) -> E:
+def choice[E: (JudgementDoctrine, RebirthPath, FanaticismKind, SpiritAlignment, FuneralCustom, AfterlifeState)](kind: type[E], key: str, value: object) -> E:
     try:
         return kind(str(value))
     except ValueError as error:
@@ -240,7 +240,7 @@ async def revelation_fit(ctx: TickContext, cult_id: int, tenet: TenetKind) -> in
 
 
 async def set_office(
-    ctx: TickContext, cult_id: int, kind: ClergyOffice, *, holder_id: int | None, locked: bool | None, remove: bool, vacate: bool = False
+    ctx: TickContext, cult_id: int, kind: ClergyFunction, *, holder_id: int | None, locked: bool | None, remove: bool, vacate: bool = False
 ) -> CultOfficeRow | None:
     await church(ctx, cult_id)
     row = await ctx.session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == cult_id, CultOfficeRow.kind == kind).limit(1))
@@ -554,7 +554,7 @@ async def set_alignment(ctx: TickContext, profile: SpiritProfileRow, value: obje
 
 
 async def set_rite(ctx: TickContext, profile: SpiritProfileRow, value: object) -> None:
-    profile.rite = choice(FuneralRite, "rite", value)
+    profile.rite = choice(FuneralCustom, "rite", value)
 
 
 SpiritSetter = Callable[[TickContext, SpiritProfileRow, object], Awaitable[None]]

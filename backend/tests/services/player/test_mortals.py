@@ -6,17 +6,16 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_undo import UndoRun
 from aerona.db.tables.body import ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.economy import WorldMaterialRow
-from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.mind import MemoryRow, SkillRow, TraitRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.body import BodyPart, ConditionKind, InjuryKind
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import KindFamily, MemoryKind, NeedKind, SkillKind, TraitKind, ValueAxis
-from aerona.domain.enums.modifier import ModifierSource
-from aerona.domain.enums.mortal import Ability, CrimeKind, EquipmentSlot, LifeStage, MarriageEnd, MortalSex, PunishmentKind
+from aerona.domain.enums.mortal import CrimeKind, EquipmentSlot, LifeStage, MarriageEnd, PunishmentKind
 from aerona.domain.models.entity_stats import ItemStats, MortalStats
 from aerona.engine.lore.items import profile_of
 from aerona.engine.mortal.kin import spouses_of
@@ -65,17 +64,9 @@ async def test_a_life_value_is_set_held_released_and_undone(scope: PlayerScope, 
     assert await _undo(session, outcome.ledger_entry_id, world.cosmos.epoch) == []
 
 
-async def test_an_ability_is_pinned_and_released(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+async def test_a_mortal_sex_is_set(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     mortal_id = await _mortal(session, world, "Brin")
-    await mortals.set_ability(scope, mortals.SetAbility(mortal_id=mortal_id, ability=Ability.WISDOM, value=90))
-    pins = list(
-        await session.scalars(select(ModifierRow.target_key).where(ModifierRow.target_node_id == mortal_id, ModifierRow.source_kind == ModifierSource.PIN))
-    )
-    assert pins == ["wisdom"]
-    await mortals.release_ability(scope, mortals.ReleaseAbility(mortal_id=mortal_id, ability=Ability.WISDOM))
-    with pytest.raises(ValidationFailedError):
-        await mortals.release_ability(scope, mortals.ReleaseAbility(mortal_id=mortal_id, ability=Ability.WISDOM))
-    await mortals.set_sex(scope, mortals.SetSex(mortal_id=mortal_id, sex=MortalSex.OTHER))
+    await mortals.set_sex(scope, mortals.SetSex(mortal_id=mortal_id, sex=Sex.OTHER))
 
 
 async def test_marriages_are_made_forced_ended_and_struck(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
@@ -189,7 +180,7 @@ async def test_a_prosthesis_of_a_world_material(scope: PlayerScope, session: Asy
     mortal_id = await _mortal(session, world, "Orla")
     material = WorldMaterialRow(
         world_id=world.world.id,
-        origin=MaterialOrigin.GOD_REMAINS,
+        origin=MaterialOrigin.DEAD_GOD,
         name="Godbone",
         family=MaterialFamily.PRECIOUS,
         hardness=90,

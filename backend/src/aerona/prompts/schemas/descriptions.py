@@ -7,6 +7,7 @@ from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS, RESOURCE_
 from aerona.catalog.powers import POWERS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
+from aerona.db.kind_concepts.registry import CONCEPTS
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.son import ExistenceMode
@@ -63,6 +64,10 @@ def layer_kind_catalogue() -> str:
     return "; ".join(f"{kind} ({DIMENSION_KINDS[kind].label}: {DIMENSION_KINDS[kind].description})" for kind in LAYER_KINDS)
 
 
+def kind_category_catalogue() -> str:
+    return "; ".join(f"{concept} ({spec.plural}: {', '.join(spec.category_labels)})" for concept, spec in CONCEPTS.items())
+
+
 def design_budget(rules: Rules) -> str:
     table = rules.god_design
     poles = "; ".join(f"{scale}: {SCALE_POLES[scale][0]} at +3, {SCALE_POLES[scale][1]} at -3" for scale in DivineScale)
@@ -91,4 +96,5 @@ def description_variables(rules: Rules) -> dict[str, object]:
         "world_ages": world_age_catalogue(),
         "dimension_kinds": layer_kind_catalogue(),
         "design_budget": design_budget(rules),
+        "kind_categories": kind_category_catalogue(),
     }

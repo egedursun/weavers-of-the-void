@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.domain.enums.culture import SayingKind
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect
+from aerona.domain.enums.kinds import KindConcept
 from aerona.prompts.schemas.base import OutputModel
 from aerona.prompts.schemas.shared import ExistenceOutput
 
@@ -34,16 +35,27 @@ class SayingOutput(OutputModel):
     text: str
 
 
+class DeepenedKind(OutputModel):
+    concept: KindConcept = Field(description="What sort of thing it is")
+    category: str = Field(description="Its category among those listed for its sort of thing: {{ kind_categories }}")
+    name: str = Field(description="Its name, in the entity's own language")
+    description: str = Field(description="1 to 2 sentences: what it is and how it is made or used")
+
+
 class DeepenOutput(OutputModel):
     history: str = Field(description="The entity's history through the ages, 2 to 4 paragraphs")
-    rumours: list[str] = Field(default_factory=list, description="Rumours circulating among mortals, some true, some false")
+    rumours: list[str] = Field(default_factory=list, description="Rumours circulating among mortals, true or false")
     sayings: list[SayingOutput] = Field(default_factory=list, description="Mortals' sayings about it; may contain words from the naming language")
     details: list[str] = Field(
         default_factory=list,
-        description="Concrete details of its own; each of a different kind (a habit, a material, a non-numeric measure, a ban, a sound, a texture, a colour…) and specific to this entity; never use the same sense twice",
+        description="Concrete details of its own, each of a different kind and specific to this entity; no two details of the same kind",
     )
-    hidden_truth: str = Field(default="", description="A truth nobody knows, connected to the entity's own history or to the laws of the world")
+    hidden_truth: str = Field(default="", description="A truth nobody knows, if it has one, connected to the entity's own history or to the laws of the world")
     special: dict[str, str] | None = None
+    kinds: list[DeepenedKind] = Field(
+        default_factory=list,
+        description="Only for a people, a settlement, a realm, a faction or a cult: kinds of things it has come to make since it was last described; none otherwise",
+    )
 
 
 class EpicSectionOutput(OutputModel):
@@ -68,23 +80,23 @@ class GodNameOutput(OutputModel):
 class CreatorDepthOutput(OutputModel):
     history: str = Field(description="How the god changed through the ages, 2 to 3 paragraphs")
     names: list[GodNameOutput]
-    secrets: list[str] = Field(default_factory=list, description="Secrets even the god's own children do not know")
+    secrets: list[str] = Field(default_factory=list, description="Secrets even the god's own children do not know, if it keeps any")
     fears: list[str] = Field(default_factory=list)
-    prohibitions: list[str] = Field(description="Prohibitions the god set on creation and what happens when they are broken")
+    prohibitions: list[str] = Field(description="Prohibitions the god set on creation, if any, and what happens when they are broken")
     gifts: list[str] = Field(default_factory=list, description="Gifts the god gave to mortals and to the god's children")
     desire: str = Field(description="What the god really wants from all of creation")
     sayings: list[SayingOutput] = Field(default_factory=list)
     rumours: list[str] = Field(default_factory=list)
-    hidden_truth: str = Field(default="", description="The truth about the god that lies at the foundation of the cosmos")
+    hidden_truth: str = Field(default="", description="The truth about the god that lies at the foundation of the cosmos, if there is one")
 
 
 class ForeignPersonalityOutput(OutputModel):
     appearance: str = Field(description="Appearance; 1 to 2 sentences, concrete")
     temperament: str = Field(description="Temperament; 1 to 2 sentences, concrete")
-    obsession: str = Field(description="Obsession; 1 to 2 sentences, concrete")
-    fear: str = Field(description="Fear; 1 to 2 sentences, concrete")
+    obsession: str = Field(description="What drives it most, if anything; 1 to 2 sentences, concrete")
+    fear: str = Field(description="What it fears, if anything; 1 to 2 sentences, concrete")
     speech: str = Field(description="Speech; 1 to 2 sentences, concrete")
-    secret: str = Field(description="Its secret; 1 to 2 sentences, concrete")
+    secret: str = Field(description="Its secret, if it keeps one; 1 to 2 sentences, concrete")
 
 
 class ForeignPowerOutput(OutputModel):
@@ -105,7 +117,7 @@ class ForeignGodDepthOutput(OutputModel):
     desire: str = Field(description="What it really wants")
     view_of_pantheon: str = Field(default="", description="How it looks on the newly arrived pantheon and its sons; consistent with its attitude")
     worship: str = Field(default="", description="How its worshippers worship it: rites, offerings, prohibitions")
-    hidden_truth: str = Field(default="", description="The truth about it that nobody knows")
+    hidden_truth: str = Field(default="", description="The truth about it that nobody knows, if there is one")
     image_prompt: str = Field(description="English portrait image prompt of this god. {{ image_prompt_rules }}")
 
 

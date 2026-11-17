@@ -94,7 +94,7 @@ async def in_time_slip(session: AsyncSession, region_id: int | None) -> bool:
     statement = (
         select(PhenomenonFootprintRow.phenomenon_entity_id)
         .join(PhenomenonProfileRow, PhenomenonProfileRow.entity_id == PhenomenonFootprintRow.phenomenon_entity_id)
-        .where(PhenomenonFootprintRow.region_entity_id == region_id, PhenomenonProfileRow.kind == PhenomenonKind.TIME_SLIP)
+        .where(PhenomenonFootprintRow.region_entity_id == region_id, PhenomenonProfileRow.kind == PhenomenonKind.TIME_DISTORTION)
     )
     return await session.scalar(statement.limit(1)) is not None
 

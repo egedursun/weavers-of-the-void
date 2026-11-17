@@ -1,8 +1,9 @@
+from collections.abc import Mapping
 from types import MappingProxyType
 
+from aerona.catalog.peoples import Style
 from aerona.core.total import total
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import CreatureDeed, DivineScale, Manifestation, PerceivedAlignment
 
@@ -134,7 +135,12 @@ DOMAIN_CURSES = total(
     },
 )
 
-ALIGNMENT_AESTHETICS = MappingProxyType({PerceivedAlignment.BENEVOLENT: Aesthetic.ORNATE, PerceivedAlignment.MALEVOLENT: Aesthetic.MACABRE})
+ALIGNMENT_LOOKS: Mapping[PerceivedAlignment, Style] = MappingProxyType(
+    {
+        PerceivedAlignment.BENEVOLENT: Style(ornament=90, geometry=50, colour=80, scale=60, symmetry=60),
+        PerceivedAlignment.MALEVOLENT: Style(ornament=60, geometry=40, colour=25, scale=50, symmetry=45),
+    }
+)
 
 ALIGNMENT_MANIFESTATIONS = total(
     PerceivedAlignment,

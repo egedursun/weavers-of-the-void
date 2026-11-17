@@ -419,7 +419,7 @@ async def test_a_vessel_with_a_target_world_opens_a_route_of_its_kind(database: 
     vessel = toolkit.created_entity_ids[-1]
     async with database.read() as session:
         route = await session.scalar(select(RouteRow).where(RouteRow.vehicle_entity_id == vessel))
-    assert route is not None and route.method is TravelMethod.COSMIC_MOUNT and "Velmor" in text
+    assert route is not None and route.method is TravelMethod.CARRIER_MOUNT and "Velmor" in text
 
 
 async def test_a_natural_law_carries_its_mechanic(database: Database) -> None:
@@ -472,11 +472,11 @@ async def test_scattering_bones_turns_the_resurrection_cults_hostile(database: D
         session.add(ResurrectionOrderRow(cult_entity_id=cult.id, son_id=dead.id))
         cult_id = cult.id
     toolkit = await son_toolkit(database, realm.son_id, action_points=3)
-    await ok(toolkit, "scatter_bones", {"son_id": realm.sibling_id})
-    loss = Rules().death.scatter_bones_devotion_loss
+    await ok(toolkit, "hinder_return", {"son_id": realm.sibling_id})
+    loss = Rules().death.hinder_return_devotion_loss
     assert (await entity(database, cult_id)).stats.model_dump()["devotion"] == max(0, 50 - loss)
     assert realm.son_id in await outgoing(database, cult_id, BondKind.ENEMY)
-    assert "already plotted" in await rejected(toolkit, "scatter_bones", {"son_id": realm.sibling_id})
+    assert "already plotted" in await rejected(toolkit, "hinder_return", {"son_id": realm.sibling_id})
 
 
 async def test_extinguishing_a_star_darkens_its_worlds_and_chills_the_siblings(database: Database) -> None:

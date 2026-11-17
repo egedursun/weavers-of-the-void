@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
@@ -10,7 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import GriefRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import RiteStage, TraditionFunction
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import Attribute, Facet, GriefStage, MemoryKind, ThoughtKind, TraitKind, TraitSource
 from aerona.engine.context import TickContext
@@ -26,7 +26,7 @@ from aerona.rules.registry import Rules
 
 GRIEF_LOCK = "griefs"
 GRIEFS_KEY = "griefs"
-MOURNING_TRADITIONS = (TraditionKind.MOURNING, TraditionKind.FUNERAL_RITE)
+MOURNING_TRADITIONS = (TraditionFunction.MOURNING,)
 OPEN_STAGES = (GriefStage.SHOCK, GriefStage.MOURNING)
 MIDPOINT = 50
 FACET_SPAN = 50
@@ -65,7 +65,10 @@ async def mourning_stretch(session: AsyncSession, rules: Rules, mourner: EntityR
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community.id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     found = await session.scalar(
         select(TraditionProfileRow.tradition_entity_id)
-        .where(TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind.in_(MOURNING_TRADITIONS))
+        .where(
+            TraditionProfileRow.tradition_entity_id.in_(kept),
+            or_(TraditionProfileRow.kind.in_(MOURNING_TRADITIONS), TraditionProfileRow.stage == RiteStage.DEATH),
+        )
         .limit(1)
     )
     return rules.grief.tradition_pct / PERCENT if found is not None else 1.0

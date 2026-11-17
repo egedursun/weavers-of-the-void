@@ -21,7 +21,7 @@ class MaterialKind(StrEnum):
     CRYSTAL = "crystal"
     IVORY = "ivory"
     CHITIN = "chitin"
-    DRAGONBONE = "dragonbone"
+    GREAT_BONE = "great_bone"
     STAR_METAL = "star_metal"
     VOID_GLASS = "void_glass"
     GODFLESH = "godflesh"

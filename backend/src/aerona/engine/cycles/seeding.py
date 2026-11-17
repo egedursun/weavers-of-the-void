@@ -8,28 +8,31 @@ from aerona.db.tables.collective import RoleNormRow
 from aerona.db.tables.cycles import KinshipSystemRow, PeopleReproductionRow
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import (
-    CousinTerms,
+    AdoptionKind,
     DescentGroup,
     KinshipDescent,
-    MarriagePayment,
-    MarriagePreference,
+    KinTermSystem,
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import InheritanceCustom, NaturalTrait
+from aerona.domain.enums.demography import InheritanceCustom, NaturalTrait, Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.unions import KinMatch, PartnerScope, UnionExchange
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.sides import drawn_side
 from aerona.engine.mind.book import stored_values
+from aerona.engine.unions.axes import Spousing, fresh_custom
 from aerona.rules.registry import Rules
 
 MALE_LINES = frozenset({RoleEligibility.MALE_ONLY, RoleEligibility.MALE_PREFERRED})
 FEMALE_LINES = frozenset({RoleEligibility.FEMALE_ONLY, RoleEligibility.FEMALE_PREFERRED})
-RESIDENCES = {KinshipDescent.PATRILINEAL: ResidenceRule.PATRILOCAL, KinshipDescent.MATRILINEAL: ResidenceRule.MATRILOCAL}
+RESIDENCES = {KinshipDescent.THROUGH_FIRST_LINE: ResidenceRule.WITH_FIRST_FAMILY, KinshipDescent.THROUGH_SECOND_LINE: ResidenceRule.WITH_SECOND_FAMILY}
 BUDDING_PLANS = frozenset({BodyPlan.AMORPHOUS, BodyPlan.CONSTRUCT})
 
 
@@ -82,15 +85,30 @@ def reading_of(spread: Spread, values: dict[ValueAxis, int]) -> Reading:
 
 
 def line_for(people_id: int) -> KinshipDescent:
-    return SeededRandom.for_epoch(people_id, 0, "descent").pick([KinshipDescent.PATRILINEAL, KinshipDescent.MATRILINEAL])
+    return SeededRandom.for_epoch(people_id, 0, "descent").pick([KinshipDescent.THROUGH_FIRST_LINE, KinshipDescent.THROUGH_SECOND_LINE])
 
 
-def descent_for(culture: PeopleCultureRow | None, heirs: RoleEligibility | None, reading: Reading, rules: Rules, people_id: int) -> KinshipDescent:
-    table = rules.kinship_systems
-    if (culture is not None and culture.inheritance is InheritanceCustom.MATRILINEAL) or heirs in FEMALE_LINES:
-        return KinshipDescent.MATRILINEAL
+def line_of_sex(first: Sex, sex: Sex) -> KinshipDescent:
+    return KinshipDescent.THROUGH_FIRST_LINE if first is sex else KinshipDescent.THROUGH_SECOND_LINE
+
+
+def named_line(culture: PeopleCultureRow | None, heirs: RoleEligibility | None, first: Sex) -> KinshipDescent | None:
+    if culture is not None and culture.inheritance is InheritanceCustom.THROUGH_SECOND_LINE:
+        return KinshipDescent.THROUGH_SECOND_LINE
+    if heirs in FEMALE_LINES:
+        return line_of_sex(first, Sex.FEMALE)
     if heirs in MALE_LINES:
-        return KinshipDescent.PATRILINEAL
+        return line_of_sex(first, Sex.MALE)
+    return None
+
+
+def descent_for(
+    culture: PeopleCultureRow | None, heirs: RoleEligibility | None, reading: Reading, rules: Rules, *, people_id: int, first: Sex
+) -> KinshipDescent:
+    table = rules.kinship_systems
+    named = named_line(culture, heirs, first)
+    if named is not None:
+        return named
     if reading.kin >= table.double_at:
         return KinshipDescent.DOUBLE
     if reading.kin >= table.unilineal_at:
@@ -101,13 +119,15 @@ def descent_for(culture: PeopleCultureRow | None, heirs: RoleEligibility | None,
 
 
 def residence_for(descent: KinshipDescent, reading: Reading, rules: Rules, people_id: int) -> ResidenceRule:
-    if descent is KinshipDescent.MATRILINEAL and reading.kin >= rules.kinship_systems.avunculocal_at:
-        return ResidenceRule.AVUNCULOCAL
+    if descent is KinshipDescent.THROUGH_SECOND_LINE and reading.kin >= rules.kinship_systems.first_line_kin_at:
+        return ResidenceRule.WITH_KIN_OF_THE_FIRST_LINE
     if descent in RESIDENCES:
         return RESIDENCES[descent]
     if descent is KinshipDescent.BILATERAL:
-        return ResidenceRule.NEOLOCAL
-    return SeededRandom.for_epoch(people_id, 0, "residence").pick([ResidenceRule.PATRILOCAL, ResidenceRule.MATRILOCAL, ResidenceRule.NEOLOCAL])
+        return ResidenceRule.NEW_HOUSEHOLD
+    return SeededRandom.for_epoch(people_id, 0, "residence").pick(
+        [ResidenceRule.WITH_FIRST_FAMILY, ResidenceRule.WITH_SECOND_FAMILY, ResidenceRule.NEW_HOUSEHOLD]
+    )
 
 
 def group_for(reading: Reading, rules: Rules) -> DescentGroup:
@@ -121,33 +141,55 @@ def group_for(reading: Reading, rules: Rules) -> DescentGroup:
     return DescentGroup.LINEAGE
 
 
-def cousins_for(reading: Reading, rules: Rules) -> CousinTerms:
+def cousins_for(reading: Reading, rules: Rules, descent: KinshipDescent) -> KinTermSystem:
     table = rules.kinship_systems
+    unilineal = descent in (KinshipDescent.THROUGH_FIRST_LINE, KinshipDescent.THROUGH_SECOND_LINE)
     if reading.kin >= table.all_siblings_at:
-        return CousinTerms.ALL_AS_SIBLINGS
+        return KinTermSystem.GENERATIONAL
     if reading.kin >= table.parallel_siblings_at:
-        return CousinTerms.PARALLEL_AS_SIBLINGS
-    return CousinTerms.DISTINCT
+        return KinTermSystem.BIFURCATE_MERGING if unilineal else KinTermSystem.CROSS_PARALLEL
+    if reading.kin <= table.descriptive_at:
+        return KinTermSystem.DESCRIPTIVE
+    return KinTermSystem.BIFURCATE_COLLATERAL if unilineal else KinTermSystem.LINEAL
 
 
-def preference_for(culture: PeopleCultureRow | None, group: DescentGroup, reading: Reading, rules: Rules) -> MarriagePreference:
-    cross = reading.kin >= rules.kinship_systems.cross_cousin_at
-    if culture is not None and culture.endogamous:
-        return MarriagePreference.CROSS_COUSIN if cross else MarriagePreference.NONE
+def adoption_for(reading: Reading, rules: Rules) -> AdoptionKind:
+    table = rules.kinship_systems
+    if reading.hierarchy >= table.heir_adoption_at:
+        return AdoptionKind.HEIR
+    if reading.kin >= table.chosen_kin_at:
+        return AdoptionKind.CHOSEN_KIN
+    if reading.wealth >= table.sponsor_at:
+        return AdoptionKind.SPONSOR
+    return AdoptionKind.FOSTER
+
+
+def match_for(endogamous: bool, group: DescentGroup, reading: Reading, rules: Rules) -> tuple[PartnerScope, KinMatch]:
+    cross = KinMatch.CROSS_COUSIN if reading.kin >= rules.kinship_systems.cross_cousin_at else KinMatch.NONE
+    if endogamous:
+        return PartnerScope.NONE, cross
     if group is DescentGroup.MOIETY:
-        return MarriagePreference.MOIETY_EXOGAMY
+        return PartnerScope.MOIETY, KinMatch.NONE
     if group is DescentGroup.CLAN:
-        return MarriagePreference.CLAN_EXOGAMY
-    return MarriagePreference.CROSS_COUSIN if cross else MarriagePreference.NONE
+        return PartnerScope.LINE, KinMatch.NONE
+    return PartnerScope.NONE, cross
 
 
-def payment_for(reading: Reading, rules: Rules) -> MarriagePayment:
+def exchange_for(reading: Reading, rules: Rules) -> UnionExchange:
     table = rules.kinship_systems
     if reading.wealth >= table.payment_at:
-        return MarriagePayment.DOWRY if reading.hierarchy >= 0 else MarriagePayment.BRIDE_PRICE
+        return UnionExchange.FROM_ONE_FAMILY if reading.hierarchy >= 0 else UnionExchange.TO_ONE_FAMILY
     if reading.perseverance >= table.payment_at:
-        return MarriagePayment.BRIDE_SERVICE
-    return MarriagePayment.NONE
+        return UnionExchange.SERVICE
+    return UnionExchange.NONE
+
+
+def set_matching(union: UnionCustomRow, group: DescentGroup, reading: Reading, rules: Rules) -> None:
+    exogamy, kin_match = match_for(union.endogamy is PartnerScope.PEOPLE, group, reading, rules)
+    values = {"exogamy": exogamy, "kin_match": kin_match, "exchange": exchange_for(reading, rules), "exchange_value": rules.kinship_systems.payment_value}
+    for field, value in values.items():
+        if field not in union.locked:
+            setattr(union, field, value)
 
 
 async def heir_rule(ctx: TickContext, people_id: int) -> RoleEligibility | None:
@@ -159,22 +201,27 @@ async def seed_kinship(ctx: TickContext, people: EntityRow, spread: Spread) -> K
     table = ctx.rules.kinship_systems
     culture = await ctx.session.get(PeopleCultureRow, people.id)
     reading = reading_of(spread, await stored_values(ctx.session, ValueHolder.CULTURE, people.id))
-    descent = descent_for(culture, await heir_rule(ctx, people.id), reading, ctx.rules, people.id)
+    first = drawn_side(people.id)
+    descent = descent_for(culture, await heir_rule(ctx, people.id), reading, ctx.rules, people_id=people.id, first=first)
     group = group_for(reading, ctx.rules)
     row = KinshipSystemRow(
         people_entity_id=people.id,
         descent=descent,
+        first_side=first,
         residence=residence_for(descent, reading, ctx.rules, people.id),
         descent_group=group,
-        cousin_terms=cousins_for(reading, ctx.rules),
-        preference=preference_for(culture, group, reading, ctx.rules),
-        payment=payment_for(reading, ctx.rules),
-        payment_value=table.payment_value,
-        levirate=reading.kin >= table.levirate_at,
-        sororate=reading.family >= table.sororate_at,
+        kin_terms=cousins_for(reading, ctx.rules, descent),
+        adoption=adoption_for(reading, ctx.rules),
+        sibling_union_first=reading.kin >= table.first_side_sibling_union_at,
+        sibling_union_second=reading.family >= table.second_side_sibling_union_at,
         locked=[],
     )
     ctx.session.add(row)
+    union = await ctx.session.get(UnionCustomRow, people.id)
+    if union is None:
+        union = fresh_custom(people.id, Spousing(), row, ctx.rules.kinship.union_payment)
+        ctx.session.add(union)
+    set_matching(union, group, reading, ctx.rules)
     return row
 
 

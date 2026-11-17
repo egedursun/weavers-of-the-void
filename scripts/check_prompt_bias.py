@@ -30,6 +30,7 @@ SKIPPED = (
     BACKEND / "migration/legacy",
     BACKEND / "rules/renames.py",
     BACKEND / "constants/agents.py",
+    BACKEND / "catalog/body_words.py",
     FRONTEND / "api/generated",
 )
 MORTAL_KINSHIP = re.compile(
@@ -63,6 +64,26 @@ PATTERNS = (
     Pattern(
         "borrowed imagery in a value",
         re.compile(r"\b(threads?|webs?|woven|stitch(?:es|ed)?)\b", re.IGNORECASE),
+        enum_only=True,
+    ),
+    Pattern(
+        "gendered value",
+        re.compile(
+            r"\b(brides?|grooms?|kings?|kingship|kingdoms?|queens?|lords?|lordships?|lad(?:y|ies)|dukes?|duch(?:y|ies|ess)|count(?:y|ies|ess)|"
+            r"princes?|princess(?:es)?|emperors?|empress(?:es)?|monks?|nuns?|knights?|abbots?|abbess(?:es)?|"
+            r"patri(?:lineal|local|archs?)|matri(?:lineal|local|archs?)|avunculocal|polygyny|polyandry|dowry|widow(?:er)?s?|maidens?|"
+            r"mothers?|mothership|sisters?|daughters?|wi(?:fe|ves)|husbands?|levirate|sororate|priestess(?:es)?)\b",
+            re.IGNORECASE,
+        ),
+        enum_only=True,
+    ),
+    Pattern(
+        "borrowed custom name",
+        re.compile(
+            r"\b(siesta|flyting|war dance|scar rite|drinking hall|hunting lodge|silver tongue|iron nerve|swift blade|cold eye|shadow step|"
+            r"granary keeper|ledger mind|battle eye|warlord|archsee|gavelkind|inquisitors?|twilight of (?:the )?gods|return of the king|lost paradise)\b",
+            re.IGNORECASE,
+        ),
         enum_only=True,
     ),
     Pattern(
@@ -212,6 +233,10 @@ PATTERNS = (
         ),
     ),
     Pattern(
+        "open example list",
+        re.compile(r"\((?:[^()]*?, ){2,}[^()]*?(?:…|\.\.\.|\bor another\b|\betc\.?)\s*\)"),
+    ),
+    Pattern(
         "image example list",
         re.compile(r":\s*(?:[\w'-]+(?: [\w'-]+){0,3}, ){2,}(?:or |and )?[\w'-]+|\((?:[^()]*?, ){2,}[^()]*\)"),
         prose_only=True,
@@ -264,6 +289,32 @@ PATTERNS = (
             r"\b(?:made minds?|artificial minds?|thinking machines?|machines?|constructs?|automatons?|robots?|androids?|golems?|clones?|designed beings?)\b[^.;:]{0,30}\b(?:she|her|hers|herself)\b|\b(?:gynoids?|fembots?|(?:android|robot) (?:woman|women|girl|girls))\b",
             re.IGNORECASE,
         ),
+    ),
+    Pattern(
+        "scene in an enum value",
+        re.compile(
+            r"\b(salted earth|salt soil|river of dead|cosmic mount|swallowed|god remains|god corpse|leak crystal|abductor|eternal storm|"
+            r"living fog|crystal bloom|dead zone|mirror lake|singing stones|ghost road|star eater|nebula mind|leviathan|void shepherd|"
+            r"cosmic titan|veil warden|plane sovereign|living constellation|ley nexus|time slip)\b",
+            re.IGNORECASE,
+        ),
+        enum_only=True,
+    ),
+    Pattern(
+        "borrowed creature name",
+        re.compile(r"\b(?:golems?|chimeras?|dragonbone|homunculi|homunculus|revenants?|liches|lich|ghouls?|wraiths?)\b", re.IGNORECASE),
+    ),
+    Pattern(
+        "paired motif in an enum value",
+        re.compile(
+            r"\b(?:sand|ash|salt|bone|blood|crowns?|knives?|thorns?|skulls?|embers?|iron|silver|gold) and (?:sand|ash|salt|bone|blood|crowns?|knives?|thorns?|skulls?|embers?|iron|silver|gold)\b",
+            re.IGNORECASE,
+        ),
+        enum_only=True,
+    ),
+    Pattern(
+        "scene in a travel or phenomenon name",
+        re.compile(r"\b(river of the dead|being swallowed|god-corpse|cosmic mount|ghost road|living constellation|star eater)\b", re.IGNORECASE),
     ),
     Pattern(
         MEDIUM_RULE,
@@ -371,8 +422,76 @@ def enum_findings() -> list[Finding]:
     return found
 
 
+KIND_FIELDS = frozenset({"name", "description", "label", "plural", "hint", "category_labels"})
+KIND_SPEC_CALLS = frozenset({"ConceptSpec", "KindProperty"})
+
+
+def kind_rows(tables: Path = BACKEND / "db/tables") -> set[str]:
+    found = {"KindRow"}
+    trees = [ast.parse(path.read_text(encoding="utf-8")) for path in sorted(tables.glob("*.py"))]
+    grew = True
+    while grew:
+        grew = False
+        for tree in trees:
+            for node in tree.body:
+                if isinstance(node, ast.ClassDef) and node.name not in found and any(getattr(base, "id", "") in found for base in node.bases):
+                    found.add(node.name)
+                    grew = True
+    return found - {"KindRow"}
+
+
+def constant_strings(tree: ast.Module, names: set[str]) -> list[tuple[int, str]]:
+    found: list[tuple[int, str]] = []
+    for node in tree.body:
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+        if any(isinstance(target, ast.Name) and target.id in names for target in targets) and getattr(node, "value", None) is not None:
+            found += [(item.lineno, item.value) for item in ast.walk(node) if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+    return found
+
+
+def imported(tree: ast.Module) -> dict[str, Path]:
+    found: dict[str, Path] = {}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("aerona."):
+            path = BACKEND.parent / Path(*node.module.split("."))
+            for alias in node.names:
+                found[alias.asname or alias.name] = path.with_suffix(".py")
+    return found
+
+
+def kind_text(path: Path, rows: set[str]) -> list[tuple[int, str]]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    sources = imported(tree)
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and (node.func.id in rows or node.func.id in KIND_SPEC_CALLS)):
+            continue
+        values = node.args if node.func.id in KIND_SPEC_CALLS else []
+        values = [*values, *(item.value for item in node.keywords if item.arg in KIND_FIELDS)]
+        for value in values:
+            found += [(item.lineno, item.value) for item in ast.walk(value) if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+            for name in {item.id for item in ast.walk(value) if isinstance(item, ast.Name) and item.id.isupper()}:
+                home = sources.get(name)
+                if home is not None and home.exists():
+                    found += constant_strings(ast.parse(home.read_text(encoding="utf-8")), {name})
+                else:
+                    found += constant_strings(tree, {name})
+    return found
+
+
+def kind_findings() -> list[Finding]:
+    rows = kind_rows()
+    found: list[Finding] = []
+    for path in backend_targets():
+        if path.suffix != ".py" or path.is_relative_to(BACKEND / "db/tables"):
+            continue
+        for line, value in kind_text(path, rows):
+            found.extend(matches(path, line, value.replace("_", " "), True, False, enum_value=True))
+    return found
+
+
 def scan() -> list[Finding]:
-    findings: list[Finding] = enum_findings()
+    findings: list[Finding] = [*enum_findings(), *kind_findings()]
     for path in backend_targets():
         feeding = path.is_relative_to(PROMPTS) or under(path, MODEL_FEEDING)
         creating = under(path, CREATION_TEXT)

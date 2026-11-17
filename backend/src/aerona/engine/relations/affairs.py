@@ -2,11 +2,12 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held, write_blocked
-from aerona.domain.enums.mind import ActKind, Emotion, HonourModel, MemoryKind, ThoughtKind
+from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, ThoughtKind
 from aerona.domain.enums.mortal import MarriageEnd
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.relations import RelationType
@@ -62,7 +63,7 @@ async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spo
     rng = ctx.rng(seed_of("affair_end", cheat.id, spouse.id, ctx.epoch))
     told: list[str] = []
     model = await honour_of(ctx.session, (await culture_of(ctx.session, spouse.id) or spouse).id)
-    if model is HonourModel.HONOUR and rng.chance(table.affair_duel_pct):
+    if HONOUR_MODELS[model].affairs_end_in_duels and rng.chance(table.affair_duel_pct):
         await remember(
             ctx.session, ctx.rules, holder_id=spouse.id, subject_id=lover.id, kind=MemoryKind.HUMILIATED_ME, magnitude=table.affair_memory, epoch=ctx.epoch
         )

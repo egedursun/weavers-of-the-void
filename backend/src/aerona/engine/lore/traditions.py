@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.lore import TRADITIONS
+from aerona.catalog.lore import TRADITIONS, tradition_spec
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.bonds import BondRow
@@ -19,7 +19,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, TraditionEffectKind, TraditionKind
+from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
@@ -47,7 +47,7 @@ from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
 
-K = TraditionKind
+K = TraditionFunction
 E = TraditionEffectKind
 FIT = 50
 HUNGRY = 0
@@ -65,9 +65,9 @@ class Keeping:
     in_season: bool | None = None
 
 
-FEASTS = frozenset({K.FESTIVAL, K.ANCESTOR_FEAST, K.HARVEST_RITE, K.MARRIAGE_RITE, K.COMING_OF_AGE})
-GIFTS = frozenset({K.OFFERING, K.PILGRIMAGE, K.FUNERAL_RITE})
-SCARRING = frozenset({K.INITIATION, K.SCAR_RITE})
+FEASTS = frozenset({K.FESTIVAL, K.ANCESTRAL_RITE, K.SEASONAL_RITE, K.RITE_OF_PASSAGE})
+GIFTS = frozenset({K.OFFERING, K.PILGRIMAGE})
+SCARRING = frozenset({K.BODY_MARKING})
 AXES = frozenset(axis.value for axis in ValueAxis)
 CLASSES = frozenset(item.value for item in SocialClass)
 SPEC_EFFECTS = {
@@ -92,7 +92,7 @@ SLOT_EFFECTS = {
 }
 
 
-def cost_for(ctx: TickContext, kind: TraditionKind) -> dict[str, int]:
+def cost_for(ctx: TickContext, kind: TraditionFunction) -> dict[str, int]:
     table = ctx.rules.traditions
     if kind in FEASTS:
         return {"food": table.festival_food}
@@ -110,8 +110,8 @@ def default_magnitude(ctx: TickContext, effect: TraditionEffectKind) -> int:
         E.FOOD_SAVED: table.fast_food,
         E.FERTILITY: table.marriage_fertility_pct,
         E.HARVEST: table.harvest_blessing,
-        E.MARTIAL: table.war_dance_martial,
-        E.PLACATION: table.ancestor_feast_placation,
+        E.MARTIAL: table.martial_display_martial,
+        E.PLACATION: table.ancestral_rite_placation,
         E.SAFETY: table.hospitality_danger,
         E.VALUE: table.value_push,
         E.REST: table.rest_pct,
@@ -134,7 +134,7 @@ async def seed_effects(ctx: TickContext, row: TraditionProfileRow, *, replace: b
         for axis, value in params.values.items():
             planned[(E.VALUE, ValueAxis(axis).value)] = value
     if not planned:
-        spec = TRADITIONS[row.kind]
+        spec = tradition_spec(row.kind, row.stage)
         for found in (SPEC_EFFECTS[key] for key in spec.effects if key in SPEC_EFFECTS):
             planned[(found, "")] = default_magnitude(ctx, found)
         for axis, value in spec.values.items():
@@ -150,13 +150,13 @@ async def apply_custom_kind(ctx: TickContext, row: TraditionProfileRow) -> None:
     if custom is None:
         return
     if "kind" not in row.locked:
-        row.kind = TraditionKind(custom.base)
+        row.kind = TraditionFunction(custom.base)
     params = params_of(custom, TraditionKindParams)
     if params.cost and "cost" not in row.locked:
         row.cost = {Commodity(key).value: value for key, value in params.cost.items()}
 
 
-async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionKind = K.FESTIVAL) -> TraditionProfileRow:
+async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunction = K.FESTIVAL) -> TraditionProfileRow:
     row = await ctx.session.get(TraditionProfileRow, tradition.id)
     if row is not None:
         return row
@@ -260,7 +260,7 @@ async def scar_youths(ctx: TickContext, community: EntityRow, tradition: EntityR
     for youth in youths:
         if (stat(youth, "age") or 0) != MATURITY:
             continue
-        if ctx.rng(f"scar_rite.{tradition.id}.{youth.id}.{ctx.epoch}").chance(ctx.rules.traditions.scar_rite_chance):
+        if ctx.rng(f"scar_rite.{tradition.id}.{youth.id}.{ctx.epoch}").chance(ctx.rules.traditions.body_marking_chance):
             harm = Harm(ctx.rules.traditions.scar_harm, HarmCause.RITUAL, f"marked by {tradition.name}", part="face")
             await apply_hits(ctx, youth, harm, lethal=False)
             await judged(ctx, community.id, youth.id, ActKind.RITUAL_SCARRING, note=tradition.name)
@@ -327,13 +327,13 @@ async def rest(ctx: TickContext, community: EntityRow, share: float) -> None:
     table = ctx.rules.seasonal
     town = await ctx.session.get(SettlementProfileRow, community.id)
     if town is not None and "unrest" not in town.locked:
-        town.unrest = clamp_int(town.unrest - round_half_up(table.siesta_unrest * share), 0, PERCENT)
+        town.unrest = clamp_int(town.unrest - round_half_up(table.rest_custom_unrest * share), 0, PERCENT)
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     if society is not None:
         for social_class in SocialClass:
             key = f"satisfaction_{social_class.value}"
-            setattr(society, key, clamp_int(getattr(society, key) + round_half_up(table.siesta_satisfaction * share), 0, PERCENT))
-    shift_stat(community, "prosperity", -round_half_up(table.siesta_prosperity * share), 0)
+            setattr(society, key, clamp_int(getattr(society, key) + round_half_up(table.rest_custom_satisfaction * share), 0, PERCENT))
+    shift_stat(community, "prosperity", -round_half_up(table.rest_custom_prosperity * share), 0)
 
 
 async def keep_vigil(ctx: TickContext, community: EntityRow, share: float) -> None:
@@ -342,7 +342,7 @@ async def keep_vigil(ctx: TickContext, community: EntityRow, share: float) -> No
     if town is not None and "crime" not in town.locked:
         town.crime = clamp_int(town.crime - round_half_up(table.vigil_crime * share), 0, PERCENT)
     await push_values(ctx, community, {ValueAxis.PIETY: table.vigil_piety}, share)
-    await placate(ctx, community, round_half_up(ctx.rules.traditions.ancestor_feast_placation * share))
+    await placate(ctx, community, round_half_up(ctx.rules.traditions.ancestral_rite_placation * share))
 
 
 async def slot_fits(ctx: TickContext, world_id: int | None, slot: CalendarSlot) -> bool:
@@ -476,7 +476,7 @@ async def resent_taboo(ctx: TickContext, community_id: int) -> int:
     return resented
 
 
-async def keeps(ctx: TickContext, community_id: int, kind: TraditionKind) -> bool:
+async def keeps(ctx: TickContext, community_id: int, kind: TraditionFunction) -> bool:
     traditions = select(BondRow.target_node_id).where(
         BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )
@@ -508,7 +508,7 @@ async def found_commemoration(
     ctx: TickContext,
     *,
     name: str,
-    kind: TraditionKind,
+    kind: TraditionFunction,
     world_id: int | None,
     place_id: int | None,
     keepers: list[int],

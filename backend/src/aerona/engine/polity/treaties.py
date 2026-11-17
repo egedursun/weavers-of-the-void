@@ -17,9 +17,9 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.communication.post import proposal_pending
 from aerona.engine.context import TickContext
@@ -336,7 +336,7 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
                 first_spouse,
                 second_spouse,
                 ctx.epoch,
-                kind=MarriageKind.POLITICAL,
+                purpose=UnionPurpose.ALLIANCE,
                 treaty_id=profile.treaty_entity_id,
                 description="marriage by treaty",
             )

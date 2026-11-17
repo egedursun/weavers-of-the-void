@@ -20,7 +20,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.integrity import Criticality, HarmForce
@@ -65,6 +64,11 @@ PROFILE_NUMBERS: dict[str, tuple[int, int]] = {
     "upkeep_coin": (0, 10**9),
     "upkeep_goods": (0, 10**9),
     "unpaid_epochs": (0, 10**6),
+    "style_ornament": (0, PERCENT),
+    "style_geometry": (0, PERCENT),
+    "style_colour": (0, PERCENT),
+    "style_scale": (0, PERCENT),
+    "style_symmetry": (0, PERCENT),
 }
 PROFILE_FLAGS = ("on_ley_line", "anchor")
 PROFILE_REFS = ("host_entity_id", "architect_entity_id", "builder_entity_id", "dedicated_son_id", "design_id")
@@ -261,7 +265,6 @@ async def set_material(ctx: TickContext, work: EntityRow, profile: StructureProf
 PROFILE_CHOICES: dict[str, type] = {
     "kind": StructureKind,
     "construction_state": ConstructionState,
-    "aesthetic": Aesthetic,
     "builder_kind": BuilderKind,
 }
 

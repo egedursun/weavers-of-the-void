@@ -22,7 +22,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import CohortKey, cohorts_of, place, pyramid, sexes, weights_for
+from aerona.engine.demography.cohorts import CohortKey, cohorts_of, combat_weights, place, pyramid, sex_spec, sexes, weights_for
 from aerona.engine.environment.seasons import DRY, WET
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.primitives.distance import RegionAtlas
@@ -120,7 +120,7 @@ async def derive_footprint(session: AsyncSession, atlas: RegionAtlas, event: Ent
     return added
 
 
-def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, amount: int) -> dict[CohortKey, int]:
+def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, amount: int, combat: Mapping[Sex, float]) -> dict[CohortKey, int]:
     if amount <= 0:
         return {}
     copies = {
@@ -138,7 +138,7 @@ def cohort_split(rows: Mapping[CohortKey, CohortRow], category: FlowCategory, am
     if sum(row.count for row in copies.values()) <= 0:
         return {}
     before = {key: row.count for key, row in copies.items()}
-    place(copies, weights_for(copies, category), amount, add=False)
+    place(copies, weights_for(copies, category, combat=combat), amount, add=False)
     return {key: before[key] - row.count for key, row in copies.items() if before[key] > row.count}
 
 
@@ -153,7 +153,8 @@ async def record_casualties(ctx: TickContext, event_id: int, community: EntityRo
     if dead <= 0 or community.entity_type not in SOCIETY_TYPES:
         return 0
     rows = await cohorts_of(ctx.session, community.id)
-    split = cohort_split(rows, category, dead) or even_split(dead, pyramid(ctx.rules), sexes(ctx.rules))
+    combat = await combat_weights(ctx.session, community)
+    split = cohort_split(rows, category, dead, combat) or even_split(dead, pyramid(ctx.rules), sexes(ctx.rules, await sex_spec(ctx.session, community)))
     for (age, sex, social_class, _), count in sorted(split.items(), key=lambda item: tuple(part.value for part in item[0])):
         key = (event_id, community.id, age, sex, social_class, phase)
         row = await ctx.session.get(EventCasualtyRow, key)

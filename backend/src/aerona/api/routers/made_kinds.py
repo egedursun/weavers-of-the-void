@@ -14,8 +14,10 @@ from aerona.api.schemas.made_kinds import (
     CarriedView,
     CookingView,
     DesignSectionView,
+    DishStepView,
     DishView,
     EquipmentModelView,
+    FlavourView,
     GroupSectionView,
     IngredientView,
     KindRef,
@@ -48,11 +50,12 @@ from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow
-from aerona.db.tables.cuisine import CommunityDishRow, DishIngredientRow, DishRow
+from aerona.db.tables.cuisine import FLAVOURS, CommunityDishRow, DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.equipment import ArmyUnitEquipmentRow, EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow, UnitDesignTechniqueRow
 from aerona.db.tables.integrity import MegastructureRow, StructureDesignSectionRow, StructureSectionRow
+from aerona.db.tables.kinds import GoodKindRow
 from aerona.db.tables.military import ArmyUnitRow, UnitDesignRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeRow
@@ -60,8 +63,8 @@ from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.vehicles import DesignMountRow, DesignSectionRow, DesignTechniqueRow, VehicleGroupRow, VehicleGroupSectionRow, VesselSectionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import InjuryState
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.integrity import Criticality, SectionState
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.structure import BuildingForm
 from aerona.engine.body.decline import decline_severity
@@ -331,9 +334,19 @@ def cooking_view(row: CommunityDishRow, refs: dict[int, NodeRef], names: dict[in
         dish_name=names.get(row.dish_id, "a lost dish"),
         popularity=row.popularity,
         cooked=row.cooked,
+        short_epochs=row.short_epochs,
         since_epoch=row.since_epoch,
         locked=list(row.locked),
     )
+
+
+def ingredient_view(item: DishIngredientRow, goods: dict[int, str]) -> IngredientView:
+    good_name = goods.get(item.good_kind_id) if item.good_kind_id is not None else None
+    return IngredientView(commodity=item.commodity, share=item.share, role=item.role, good_kind_id=item.good_kind_id, good_name=good_name)
+
+
+def step_view(item: DishStepRow) -> DishStepView:
+    return DishStepView(id=item.id, step=item.step, method=item.method, duration=item.duration, locked=list(item.locked))
 
 
 async def dishes(session: AsyncSession, rows: list[DishRow]) -> list[DishView]:
@@ -341,6 +354,11 @@ async def dishes(session: AsyncSession, rows: list[DishRow]) -> list[DishView]:
     ingredients = grouped(
         await session.scalars(select(DishIngredientRow).where(DishIngredientRow.dish_id.in_(ids)).order_by(DishIngredientRow.share.desc())), "dish_id"
     )
+    steps = grouped(await session.scalars(select(DishStepRow).where(DishStepRow.dish_id.in_(ids)).order_by(DishStepRow.step)), "dish_id")
+    good_ids = [item.good_kind_id for items in ingredients.values() for item in items if item.good_kind_id is not None]
+    goods = {row.id: row.name for row in await session.scalars(select(GoodKindRow).where(GoodKindRow.id.in_(good_ids)))}
+    parent_ids = [row.derived_from_id for row in rows if row.derived_from_id is not None]
+    parents = {row.id: row.name for row in await session.scalars(select(DishRow).where(DishRow.id.in_(parent_ids)))}
     cooked = grouped(
         await session.scalars(select(CommunityDishRow).where(CommunityDishRow.dish_id.in_(ids)).order_by(CommunityDishRow.popularity.desc())), "dish_id"
     )
@@ -356,14 +374,20 @@ async def dishes(session: AsyncSession, rows: list[DishRow]) -> list[DishView]:
             origin=at(refs, row.origin_node_id),
             method=row.method,
             course=row.course,
+            category=row.category,
             nourishment=row.nourishment,
             delight=row.delight,
             keeps=row.keeps,
             prestige=row.prestige,
+            prep_skill=row.prep_skill,
             technique=row.technique,
             created_epoch=row.created_epoch,
             retired=row.retired,
-            ingredients=[IngredientView(commodity=item.commodity, share=item.share) for item in ingredients.get(row.id, [])],
+            derived_from_id=row.derived_from_id,
+            derived_from_name=parents.get(row.derived_from_id) if row.derived_from_id is not None else None,
+            flavours=[FlavourView(flavour=flavour, label=flavour.capitalize(), value=getattr(row, flavour)) for flavour in FLAVOURS],
+            steps=[step_view(item) for item in steps.get(row.id, [])],
+            ingredients=[ingredient_view(item, goods) for item in ingredients.get(row.id, [])],
             cooked_in=[cooking_view(item, refs, names) for item in cooked.get(row.id, [])],
             locked=list(row.locked),
         )
@@ -663,7 +687,7 @@ async def attraction_view(session: AsyncSession, node_id: int) -> AttractionView
     profile = await session.get(MortalProfileRow, node_id)
     if profile is None:
         return None
-    drawn = [MortalSex(value) for value in profile.drawn_to] if profile.drawn_to is not None else None
+    drawn = [Sex(value) for value in profile.drawn_to] if profile.drawn_to is not None else None
     return AttractionView(
         drawn_to=drawn,
         attraction=profile.attraction,

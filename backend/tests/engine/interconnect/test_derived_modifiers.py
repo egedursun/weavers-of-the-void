@@ -14,7 +14,7 @@ from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.faith import TenetKind
@@ -88,7 +88,7 @@ async def test_laws_treaties_structures_tenets_and_traditions_derive_modifiers(s
     cult = await make(session, "Flame", EntityType.CULT, world_id, followers=300, zeal=40, influence=30)
     session.add(CultTenetRow(cult_entity_id=cult.id, tenet=TenetKind.PROSELYTISM))
     feast = await record(session, "Feast", EntityType.TRADITION, world_id)
-    session.add(TraditionProfileRow(tradition_entity_id=feast.id, kind=TraditionKind.OFFERING, effects={"piety": 2}))
+    session.add(TraditionProfileRow(tradition_entity_id=feast.id, kind=TraditionFunction.OFFERING, effects={"piety": 2}))
     session.add(TraditionParticipationRow(tradition_entity_id=feast.id, community_entity_id=town.id, participation=100))
     await session.flush()
     await derive_tick_modifiers(make_ctx(session, RULES))

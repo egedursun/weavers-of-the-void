@@ -5,7 +5,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.tables.ecology import SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, SymbiontRow
@@ -191,7 +191,7 @@ async def plant_line(call: MortalCall, args: LineInput) -> str:
     region = (await RegionAtlas.load(call.session)).top_region(call.me.id)
     if region is None or held(region):
         fail(MortalResult.PLANTING_DECLINED, why="you have no land to plant in")
-    yields = set(await call.session.scalars(select(SpeciesYieldRow.commodity).where(SpeciesYieldRow.species_entity_id == line.species_entity_id)))
+    yields = set(await call.session.scalars(select(SpeciesProductRow.commodity).where(SpeciesProductRow.species_entity_id == line.species_entity_id)))
     land = await call.session.get(RegionEnvironmentRow, region)
     kind = kind_of({commodity for commodity in yields if commodity is not None}, land, call.rules.commons.woods_forest)
     row = await attempt(

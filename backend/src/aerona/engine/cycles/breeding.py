@@ -5,7 +5,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.cycles import MortalCasteRow, PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
-from aerona.domain.enums.mortal import MortalSex
+from aerona.domain.enums.demography import Sex
 from aerona.engine.cycles.lineage import caste_of, reproduction_of, sexes_fixed
 from aerona.rules.registry import Rules
 
@@ -47,10 +47,10 @@ async def soldier_factor(session: AsyncSession, rules: Rules, community: EntityR
     return max(0.1, 1 + (row.soldier_pct - table.soldier_norm_pct) * table.soldier_levy_weight / PERCENT / PERCENT)
 
 
-def born_sex(rules: Rules, system: ReproductiveSystem, rng: SeededRandom) -> MortalSex:
+def born_sex(rules: Rules, system: ReproductiveSystem, rng: SeededRandom) -> Sex:
     if system in SEXLESS or rng.chance(rules.fertility.other_sex_pct):
-        return MortalSex.OTHER
-    return MortalSex.FEMALE if rng.chance(PERCENT // 2) else MortalSex.MALE
+        return Sex.OTHER
+    return Sex.FEMALE if rng.chance(PERCENT // 2) else Sex.MALE
 
 
 def caste_for(row: PeopleReproductionRow, rng: SeededRandom) -> ReproductiveCaste:

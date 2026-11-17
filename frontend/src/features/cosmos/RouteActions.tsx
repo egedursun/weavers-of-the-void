@@ -71,7 +71,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
           params: { path: { route_id: route.id } },
         })
       ),
-    success: 'Route stitched again',
+    success: 'Route opened again',
   })
   const reveal = useCosmicAction({
     run: () =>

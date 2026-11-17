@@ -17,16 +17,24 @@ export const LANDS_ICON = Scroll
 export const HISTORY_ICON = Landmark
 
 export const RANKS: Record<string, Named> = {
-  lordship: { label: 'Lordship', icon: Shield, tone: 'muted' },
-  county: { label: 'County', icon: Shield, tone: 'info' },
-  duchy: { label: 'Duchy', icon: Castle, tone: 'verdigris' },
-  kingdom: { label: 'Kingdom', icon: Crown, tone: 'gold' },
-  empire: { label: 'Empire', icon: Gem, tone: 'gold' },
-  see: { label: 'See', icon: Church, tone: 'info' },
-  archsee: { label: 'Archsee', icon: Church, tone: 'verdigris' },
-  high_seat: { label: 'High Seat', icon: Church, tone: 'gold' },
-  captaincy: { label: 'Captaincy', icon: Swords, tone: 'danger' },
-  guildmastership: { label: 'Guildmastership', icon: Hammer, tone: 'warning' },
+  local: { label: 'Local', icon: Shield, tone: 'muted' },
+  district: { label: 'District', icon: Shield, tone: 'info' },
+  regional: { label: 'Regional', icon: Castle, tone: 'verdigris' },
+  realm: { label: 'Realm', icon: Crown, tone: 'gold' },
+  imperial: { label: 'Imperial', icon: Gem, tone: 'gold' },
+  faith_local: { label: 'Local seat of a faith', icon: Church, tone: 'info' },
+  faith_high: {
+    label: 'High seat of a faith',
+    icon: Church,
+    tone: 'verdigris',
+  },
+  faith_supreme: {
+    label: 'Foremost seat of a faith',
+    icon: Church,
+    tone: 'gold',
+  },
+  military: { label: 'Military command', icon: Swords, tone: 'danger' },
+  guild: { label: 'Head of a guild', icon: Hammer, tone: 'warning' },
 }
 
 export const TENURE_ICON = Anchor

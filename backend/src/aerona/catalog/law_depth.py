@@ -43,7 +43,7 @@ REGISTRY_TEXT = total(
         RegistryKind.LAND_TITLE: "title to land",
         RegistryKind.DEBT: "debt",
         RegistryKind.SALE: "sale",
-        RegistryKind.DOWRY: "dowry",
+        RegistryKind.UNION_PORTION: "portion given at a union",
         RegistryKind.INDENTURE: "indenture",
         RegistryKind.PATENT: "patent",
         RegistryKind.PATTERN: "registered pattern",
@@ -56,7 +56,7 @@ REGISTRY_TEXT = total(
     },
 )
 PAID_IN_WORK = frozenset({RegistryKind.INDENTURE})
-OWED = frozenset({RegistryKind.DEBT, RegistryKind.SALE, RegistryKind.DOWRY, RegistryKind.INDENTURE})
+OWED = frozenset({RegistryKind.DEBT, RegistryKind.SALE, RegistryKind.UNION_PORTION, RegistryKind.INDENTURE})
 MOTIVE_LOYALTY = total(
     RecruitMotive,
     {

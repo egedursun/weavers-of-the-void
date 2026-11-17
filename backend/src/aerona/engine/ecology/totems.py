@@ -8,7 +8,7 @@ from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import SIZE_ORDER, SizeClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -46,9 +46,9 @@ async def found_totem(ctx: TickContext, people: EntityRow, species: EntityRow) -
     ctx.session.add(
         TraditionProfileRow(
             tradition_entity_id=tradition.id,
-            kind=TraditionKind.FESTIVAL,
+            kind=TraditionFunction.FESTIVAL,
             calendar_slot=None,
-            cost=cost_for(ctx, TraditionKind.FESTIVAL),
+            cost=cost_for(ctx, TraditionFunction.FESTIVAL),
             effects={},
             taboo_target=None,
             origin_entity_id=species.id,

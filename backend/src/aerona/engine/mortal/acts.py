@@ -20,8 +20,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
-from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
+from aerona.domain.enums.mind import ActKind, Attribute, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
+from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.afflictions import afflict
@@ -34,7 +34,7 @@ from aerona.engine.collective.roles import breach_cost, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.folkways.biases import lean
-from aerona.engine.genetics.life import madness_factor
+from aerona.engine.genetics.life import madness_factor, stress_factor
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import is_locked, mind_of, needs_of, traits_of, values_for
@@ -42,11 +42,10 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember, strength_of
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.space import value_alignment
-from aerona.engine.mind.split import facet_weight, facets_of
+from aerona.engine.mind.split import facet_weight, facets_of, stored_attribute
 from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mind.values import liege_of
 from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
-from aerona.engine.mortal.life import ability
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_renown, add_wealth
 from aerona.engine.notes import note
@@ -70,7 +69,7 @@ BREAK_TRAITS: dict[StressBreak, frozenset[TraitKind]] = {
     StressBreak.VICE: frozenset({TraitKind.GLUTTONOUS, TraitKind.LUSTFUL, TraitKind.GREEDY}),
     StressBreak.REVELATION: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY}),
 }
-FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN, MortalRole.OFFICER})
+FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.CAPTAIN, MortalRole.OFFICER})
 CAREER_ROLES = partial(
     CareerPath,
     {
@@ -210,9 +209,10 @@ async def accumulate_stress(ctx: TickContext, mortal: EntityRow, profile: Mortal
         gain += table.war_stress
     if abs(profile.loyalty_liege - profile.loyalty_community) >= table.duty_gap:
         gain += table.duty_conflict_stress
-    relief = 1 - (ability(mortal, Ability.WILLPOWER) - FULL // 2) / PERCENT * table.willpower_relief_pct / PERCENT
+    relief = 1 - (await stored_attribute(ctx.session, mortal, Attribute.WILLPOWER) - FULL // 2) / PERCENT * table.willpower_relief_pct / PERCENT
     fragility = 1 + facet_weight(facets, STRESS_FACETS) * ctx.rules.mind_split.stress_facet_pct / PERCENT
     rest = await ctx.hook_factor(mortal.id, DomainHook.REST)
+    gain *= stress_factor(ctx.rules, await ctx.session.get(GenomeRow, mortal.id))
     profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay * rest, 0, FULL)
 
 
@@ -299,7 +299,7 @@ async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
 
 async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
     await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=banded(ctx, ctx.rules.harm_bands.revelation, mortal.id))
-    seer = ctx.rules.stress.revelation_seer_chance * (1 + (ability(mortal, Ability.WISDOM) - FULL // 2) / PERCENT)
+    seer = ctx.rules.stress.revelation_seer_chance * (1 + (await stored_attribute(ctx.session, mortal, Attribute.INTUITION) - FULL // 2) / PERCENT)
     if rng.chance(seer) and not await role_locked(ctx, mortal):
         mortal.mortal_role = MortalRole.SEER
     return f"{mortal.name} broke under the strain, and in the breaking saw visions."
@@ -409,7 +409,7 @@ async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -
     if not rng.chance(table.plot_chance):
         return False
     watch = await perception_of(ctx.session, ctx.rules, liege) * table.plot_discovery_pct / PERCENT
-    cunning = ability(mortal, Ability.PERCEPTION) / 2 + (FULL // 4 if TraitKind.DECEITFUL in traits else 0)
+    cunning = await stored_attribute(ctx.session, mortal, Attribute.SOCIAL_AWARENESS) / 2 + (FULL // 4 if TraitKind.DECEITFUL in traits else 0)
     if rng.chance(max(0.0, min(float(FULL), watch - cunning + FULL // 2))):
         await remember(
             ctx.session,
@@ -538,7 +538,7 @@ async def bribe(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
     liege = await liege_of(ctx.session, mortal)
     if liege is None:
         return False
-    resolve = ability(liege, Ability.WILLPOWER)
+    resolve = await stored_attribute(ctx.session, liege, Attribute.WILLPOWER)
     if ctx.rng(seed_of("bribe", mortal.id, ctx.epoch)).chance(resolve):
         return False
     await add_wealth(ctx.session, mortal.id, -table.bribe_cost, ctx.epoch)

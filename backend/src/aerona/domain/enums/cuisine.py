@@ -25,6 +25,16 @@ class CookingMethod(StrEnum):
     FREEZE_DRIED = "freeze_dried"
     IRRADIATED = "irradiated"
     CONJURED = "conjured"
+    INFUSED = "infused"
+    DISTILLED = "distilled"
+    CHURNED = "churned"
+    SPROUTED = "sprouted"
+    ALKALI_TREATED = "alkali_treated"
+    CULTURED = "cultured"
+    CURED_WITH_MINERAL = "cured_with_mineral"
+    AGED = "aged"
+    EXTRUDED = "extruded"
+    PRESSURE_COOKED = "pressure_cooked"
 
 
 class DishCourse(StrEnum):

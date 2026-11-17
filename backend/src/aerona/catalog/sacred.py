@@ -48,7 +48,7 @@ PLACE_SPIRITS = partial(
         P.LAIR,
         P.NEXUS,
         P.SHRINE_SITE,
-        P.GOD_CORPSE,
+        P.DEAD_GOD_SITE,
         P.MINE_SITE,
         P.WRECK_SITE,
         P.MEGASTRUCTURE_RUIN,

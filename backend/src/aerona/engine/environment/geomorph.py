@@ -95,7 +95,7 @@ def set_soil(rules: Rules, env: RegionEnvironmentRow, soil: SoilKind, *, base_dr
 
 
 def natural_soil_kind(rules: Rules, env: RegionEnvironmentRow, world_type: WorldType) -> SoilKind:
-    return SoilKind.SALT if world_type in SALT_WORLDS else soil_of(rules, geography_of(env), world_type, env.wetland)
+    return SoilKind.SALINE if world_type in SALT_WORLDS else soil_of(rules, geography_of(env), world_type, env.wetland)
 
 
 async def land_line(ctx: TickContext, region: EntityRow | None, key: str, text: str, ids: list[int] | None = None) -> int | None:
@@ -148,7 +148,7 @@ async def desertify(ctx: TickContext, env: RegionEnvironmentRow, shape: RegionGe
 
 def salt_source(rules: Rules, env: RegionEnvironmentRow, shape: RegionGeomorphRow, world_type: WorldType | None) -> bool:
     table = rules.geomorphology
-    salted = env.scars.get(ScarKind.SALTED_EARTH.value, 0) >= table.salted_earth_salt_depth
+    salted = env.scars.get(ScarKind.MADE_BARREN.value, 0) >= table.salted_earth_salt_depth
     flat = shape.desertified and env.river_class is RiverClass.NONE and env.rainfall < table.salt_flat_rainfall_below
     return salted or flat or world_type in SALT_WORLDS
 
@@ -182,18 +182,18 @@ async def reshape(ctx: TickContext) -> Counter[str]:
         if turned == "land.desert_retreat" and env.soil is SoilKind.SAND and world_type is not None:
             set_soil(rules, env, natural_soil_kind(rules, env, world_type))
         salty = salt_source(rules, env, shape, world_type)
-        if salty and set_soil(rules, env, SoilKind.SALT):
+        if salty and set_soil(rules, env, SoilKind.SALINE):
             turned = turned or "land.salted"
-        elif not salty and env.soil is SoilKind.SALT and world_type is not None and natural_soil_kind(rules, env, world_type) is not SoilKind.SALT:
+        elif not salty and env.soil is SoilKind.SALINE and world_type is not None and natural_soil_kind(rules, env, world_type) is not SoilKind.SALINE:
             set_soil(rules, env, natural_soil_kind(rules, env, world_type))
-        if env.soil is SoilKind.ASH and shape.ash_since_epoch is None:
+        if env.soil is SoilKind.TEPHRA and shape.ash_since_epoch is None:
             shape.ash_since_epoch = ctx.epoch
-        elif env.soil is SoilKind.ASH and shape.ash_since_epoch is not None and ctx.epoch - shape.ash_since_epoch >= table.ash_weathering_epochs:
+        elif env.soil is SoilKind.TEPHRA and shape.ash_since_epoch is not None and ctx.epoch - shape.ash_since_epoch >= table.ash_weathering_epochs:
             if set_soil(rules, env, SoilKind.VOLCANIC):
                 shape.ash_since_epoch = None
                 await land_line(ctx, region, "land.ash_weathered", LINES["land.ash_weathered"].format(region=region.name))
                 counts["ash_weathered"] += 1
-        elif env.soil is not SoilKind.ASH:
+        elif env.soil is not SoilKind.TEPHRA:
             shape.ash_since_epoch = None
         if turned is not None:
             await land_line(ctx, region, turned, LINES[turned].format(region=region.name))
@@ -306,7 +306,7 @@ async def erupted(ctx: TickContext, target: EntityRow, severity: int) -> RegionG
     if "volcanic_pressure" not in shape.locked:
         shape.volcanic_pressure = 0
     shape.last_eruption_epoch = ctx.epoch
-    if set_soil(ctx.rules, ground, SoilKind.ASH):
+    if set_soil(ctx.rules, ground, SoilKind.TEPHRA):
         shape.ash_since_epoch = ctx.epoch
     scars = dict(ground.scars)
     scars[ScarKind.BURNED.value] = clamp_int(

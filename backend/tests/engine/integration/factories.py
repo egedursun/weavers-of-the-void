@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
 from aerona.db.tables.routes import RouteRow
@@ -147,8 +147,8 @@ async def frontier(session: AsyncSession, home: CoreWorld, index: int) -> Fronti
     )
     session.add(SpeciesProfileRow(species_entity_id=crop.id, species_class=SpeciesClass.PLANT, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC))
     session.add(PlantProfileRow(species_entity_id=crop.id, cultivation=Cultivation.CULTIVATED, since_epoch=1))
-    session.add(SpeciesYieldRow(species_entity_id=crop.id, product="grain", commodity=CommodityKind.GRAIN, rate=2))
-    session.add(SpeciesYieldRow(species_entity_id=crop.id, product="fibre", commodity=CommodityKind.FIBRE, rate=1))
+    session.add(SpeciesProductRow(species_entity_id=crop.id, product="grain", commodity=CommodityKind.GRAIN, rate=2))
+    session.add(SpeciesProductRow(species_entity_id=crop.id, product="fibre", commodity=CommodityKind.FIBRE, rate=1))
     session.add(SpeciesRangeRow(species_entity_id=crop.id, region_entity_id=regions[0].id, abundance=40))
     session.add(RegionCropRow(region_entity_id=regions[0].id, plant_entity_id=crop.id, share=60, since_epoch=1))
     await entity(

@@ -47,7 +47,7 @@ from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.collective import AccountKind, RoleEligibility, RoleKind
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ArtMode, Technique
 from aerona.domain.enums.cycles import (
     ChallengeKind,
     ChallengeResponse,
@@ -60,23 +60,22 @@ from aerona.domain.enums.cycles import (
     LongPlanKind,
     LongPlanStatus,
     ManumissionPath,
-    MarriagePayment,
     MobilityMode,
     ReproductiveCaste,
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, Job, MarriageCustom, MartialStyle, Sex
-from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.demography import AgeBand, CohortCondition, InheritanceCustom, Job, MartialStyle, Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
-from aerona.domain.enums.mortal import CareerPath, MarriageEnd, MarriageKind, MortalSex
+from aerona.domain.enums.mortal import CareerPath, MarriageEnd
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
 from aerona.domain.enums.structure import ConstructionStatus, StructureKind
+from aerona.domain.enums.unions import UnionExchange, UnionPurpose
 from aerona.domain.models.entity_stats import ArtFormStats, HouseStats, MortalStats, PeopleStats, PolityStats, StructureStats
 from aerona.engine.collective.roles import career_open, combat_sexes, role_rank
 from aerona.engine.context import TickContext
@@ -84,7 +83,7 @@ from aerona.engine.cycles.asabiyya import AsabiyyaTally, homeland_psi, keep_asab
 from aerona.engine.cycles.bondage import BondageTally, bind_migrants, keep_markets, lay_corvees, raise_freed, serve_terms, work_corvees
 from aerona.engine.cycles.breeding import born_sex, caste_for
 from aerona.engine.cycles.challenge import ChallengeTally, meet_challenges
-from aerona.engine.cycles.control import free_bound, new_plan, set_kinship, set_legacy
+from aerona.engine.cycles.control import free_bound, new_plan, set_kinship, set_legacy, set_union
 from aerona.engine.cycles.gifts import GiftTally, balance, give, keep_offerings, return_gift, settle_due
 from aerona.engine.cycles.hospitality import circuit_partners, circuit_stops
 from aerona.engine.cycles.indenture import freed_stigma
@@ -373,7 +372,7 @@ async def test_unanswered_offerings_breed_neglect(session: AsyncSession, world: 
     assert any(f"community {town.id}" in line for line in lines)
 
 
-async def test_matrilineal_kin_inherit_through_sisters_and_couples_move(session: AsyncSession, world: CoreWorld) -> None:
+async def test_second_line_kin_inherit_through_the_second_line_and_couples_move(session: AsyncSession, world: CoreWorld) -> None:
     town = await town_of(session, world, "Ashby")
     far = await town_of(session, world, "Farside", region=1)
     session.add(
@@ -382,30 +381,32 @@ async def test_matrilineal_kin_inherit_through_sisters_and_couples_move(session:
             cohesion=50,
             literacy=10,
             urbanisation=10,
-            aesthetic=next(iter(Aesthetic)),
             martial_style=MartialStyle.SHIELDWALL,
-            marriage=next(iter(MarriageCustom)),
             inheritance=InheritanceCustom.PRIMOGENITURE,
             locked=[],
         )
     )
     ctx = await context(session)
-    await set_kinship(ctx, world.people.id, {"descent": KinshipDescent.MATRILINEAL.value, "residence": ResidenceRule.MATRILOCAL.value, "levirate": True})
-    grand = await mortal(session, "Grand", world, town.id, sex=MortalSex.FEMALE.value)
-    uncle = await mortal(session, "Uncle", world, town.id, sex=MortalSex.MALE.value)
-    sister = await mortal(session, "Sister", world, town.id, sex=MortalSex.FEMALE.value)
-    nephew = await mortal(session, "Nephew", world, town.id, sex=MortalSex.MALE.value)
-    son = await mortal(session, "Own", world, town.id, sex=MortalSex.MALE.value)
+    await set_kinship(
+        ctx,
+        world.people.id,
+        {"descent": KinshipDescent.THROUGH_SECOND_LINE.value, "residence": ResidenceRule.WITH_SECOND_FAMILY.value, "sibling_union_first": True},
+    )
+    grand = await mortal(session, "Grand", world, town.id, sex=Sex.FEMALE.value)
+    uncle = await mortal(session, "Uncle", world, town.id, sex=Sex.MALE.value)
+    sister = await mortal(session, "Sister", world, town.id, sex=Sex.FEMALE.value)
+    nephew = await mortal(session, "Nephew", world, town.id, sex=Sex.MALE.value)
+    son = await mortal(session, "Own", world, town.id, sex=Sex.MALE.value)
     for parent, child in ((grand, uncle), (grand, sister), (sister, nephew), (uncle, son)):
         await add_parent(session, parent.id, child.id, 0)
     for mortal_row in (grand, uncle, sister, nephew, son):
         await BondRepository(session).connect(BondDraft(mortal_row.id, world.people.id, BondKind.MEMBER_OF, 0))
     await session.flush()
-    assert await inheritance_of(session, uncle) is InheritanceCustom.MATRILINEAL
+    assert await inheritance_of(session, uncle) is InheritanceCustom.THROUGH_SECOND_LINE
     heirs = await descent_heirs(session, uncle, [son])
     assert [heir.id for heir in heirs] == [nephew.id]
-    bride = await mortal(session, "Bride", world, far.id, sex=MortalSex.FEMALE.value)
-    groom = await mortal(session, "Groom", world, town.id, sex=MortalSex.MALE.value)
+    bride = await mortal(session, "Bride", world, far.id, sex=Sex.FEMALE.value)
+    groom = await mortal(session, "Groom", world, town.id, sex=Sex.MALE.value)
     await BondRepository(session).connect(BondDraft(groom.id, world.people.id, BondKind.MEMBER_OF, 0))
     ctx = await at_epoch(session, 3)
     await marry(session, groom, bride, ctx.epoch)
@@ -413,14 +414,14 @@ async def test_matrilineal_kin_inherit_through_sisters_and_couples_move(session:
     assert groom.location_id == far.id
 
 
-async def test_levirate_weds_the_widow_to_a_sibling_of_the_dead(session: AsyncSession, world: CoreWorld) -> None:
+async def test_a_first_side_sibling_union_weds_the_widow_to_a_sibling_of_the_dead(session: AsyncSession, world: CoreWorld) -> None:
     town = await town_of(session, world, "Ashby")
     ctx = await context(session)
-    await set_kinship(ctx, world.people.id, {"levirate": True})
-    elder = await mortal(session, "Elder", world, town.id, sex=MortalSex.FEMALE.value)
-    dead = await mortal(session, "Fallen", world, town.id, sex=MortalSex.MALE.value)
-    sibling = await mortal(session, "Sibling", world, town.id, sex=MortalSex.MALE.value)
-    widow = await mortal(session, "Widow", world, town.id, sex=MortalSex.FEMALE.value)
+    await set_kinship(ctx, world.people.id, {"sibling_union_first": True})
+    elder = await mortal(session, "Elder", world, town.id, sex=Sex.FEMALE.value)
+    dead = await mortal(session, "Fallen", world, town.id, sex=Sex.MALE.value)
+    sibling = await mortal(session, "Sibling", world, town.id, sex=Sex.MALE.value)
+    widow = await mortal(session, "Widow", world, town.id, sex=Sex.FEMALE.value)
     for child in (dead, sibling):
         await add_parent(session, elder.id, child.id, 0)
     for row in (elder, dead, sibling, widow):
@@ -434,7 +435,7 @@ async def test_levirate_weds_the_widow_to_a_sibling_of_the_dead(session: AsyncSe
     await session.flush()
     tally = KinshipTally()
     await keep_kinship(ctx, tally)
-    assert tally.levirate == 1
+    assert tally.sibling_union_first == 1
     wed = await session.scalar(select(MarriageRow).where(MarriageRow.first_id == widow.id, MarriageRow.second_id == sibling.id))
     assert wed is not None
 
@@ -442,9 +443,10 @@ async def test_levirate_weds_the_widow_to_a_sibling_of_the_dead(session: AsyncSe
 async def test_marriages_between_lines_build_an_alliance_and_rank(session: AsyncSession, world: CoreWorld) -> None:
     town = await town_of(session, world, "Ashby")
     ctx = await context(session)
-    await set_kinship(ctx, world.people.id, {"residence": ResidenceRule.PATRILOCAL.value, "payment": MarriagePayment.DOWRY.value, "payment_value": 10})
+    await set_kinship(ctx, world.people.id, {"residence": ResidenceRule.WITH_FIRST_FAMILY.value})
+    await set_union(ctx, world.people.id, {"exchange": UnionExchange.FROM_ONE_FAMILY.value, "exchange_value": 10})
     houses = []
-    for name, sex in (("Ward", MortalSex.FEMALE), ("Vane", MortalSex.MALE)):
+    for name, sex in (("Ward", Sex.FEMALE), ("Vane", Sex.MALE)):
         member = await mortal(session, f"{name} heir", world, town.id, sex=sex.value)
         await BondRepository(session).connect(BondDraft(member.id, world.people.id, BondKind.MEMBER_OF, 0))
         house = await entity(session, name, EntityType.HOUSE, HouseStats(), world_id=world.world.id)
@@ -453,7 +455,7 @@ async def test_marriages_between_lines_build_an_alliance_and_rank(session: Async
         houses.append((house, member))
     await session.flush()
     ctx = await at_epoch(session, 5)
-    await marry(session, houses[0][1], houses[1][1], ctx.epoch, kind=MarriageKind.POLITICAL)
+    await marry(session, houses[0][1], houses[1][1], ctx.epoch, purpose=UnionPurpose.ALLIANCE)
     await keep_kinship(ctx, KinshipTally())
     alliance = await session.get(MarriageAllianceRow, (houses[0][0].id, houses[1][0].id))
     assert alliance is not None and alliance.marriages == 1
@@ -482,16 +484,16 @@ async def test_reproductive_systems_steer_births_castes_and_sexes(session: Async
     assert await breeds(session, first, second)
     assert not await may_wed(session, ctx.rules, first, second)
     rng = ctx.rng("born")
-    assert born_sex(ctx.rules, ReproductiveSystem.CASTE, rng) is MortalSex.OTHER
+    assert born_sex(ctx.rules, ReproductiveSystem.CASTE, rng) is Sex.OTHER
     row = await session.get(PeopleReproductionRow, world.people.id)
     assert row is not None and caste_for(row, rng) in {ReproductiveCaste.BREEDER, ReproductiveCaste.SOLDIER}
     row.system = ReproductiveSystem.SEQUENTIAL
     row.change_age = 30
-    changer = await mortal(session, "Changer", world, town.id, sex=MortalSex.FEMALE.value, age=30)
+    changer = await mortal(session, "Changer", world, town.id, sex=Sex.FEMALE.value, age=30)
     await BondRepository(session).connect(BondDraft(changer.id, world.people.id, BondKind.MEMBER_OF, 0))
     await session.flush()
     await keep_reproduction(ctx, ReproductionTally())
-    assert isinstance(changer.stats, MortalStats) and changer.stats.sex == MortalSex.MALE.value
+    assert isinstance(changer.stats, MortalStats) and changer.stats.sex == Sex.MALE.value
 
 
 async def test_peoples_read_their_ways_of_kin_and_birth_from_their_customs(session: AsyncSession, world: CoreWorld) -> None:
@@ -548,9 +550,7 @@ async def test_a_successor_people_keeps_its_legacies_and_names_its_forebear(sess
                 cohesion=50,
                 literacy=10,
                 urbanisation=10,
-                aesthetic=next(iter(Aesthetic)),
                 martial_style=style,
-                marriage=next(iter(MarriageCustom)),
                 inheritance=InheritanceCustom.PRIMOGENITURE,
                 locked=[],
             )
@@ -608,9 +608,7 @@ async def test_bondage_markets_and_the_ways_to_freedom(session: AsyncSession, wo
             cohesion=50,
             literacy=10,
             urbanisation=10,
-            aesthetic=next(iter(Aesthetic)),
             martial_style=MartialStyle.SHIELDWALL,
-            marriage=next(iter(MarriageCustom)),
             inheritance=InheritanceCustom.PRIMOGENITURE,
             slavery_lawful=True,
             locked=[],
@@ -653,7 +651,7 @@ async def test_a_mortal_knows_its_gifts_kin_and_bonds(session: AsyncSession, wor
     me = await mortal(session, "Iska", world, town.id)
     await BondRepository(session).connect(BondDraft(me.id, world.people.id, BondKind.MEMBER_OF, 0))
     ctx = await context(session)
-    await set_kinship(ctx, world.people.id, {"payment": MarriagePayment.BRIDE_PRICE.value})
+    await set_union(ctx, world.people.id, {"exchange": UnionExchange.TO_ONE_FAMILY.value})
     session.add(
         GiftRow(
             giver_node_id=world.son.id, receiver_node_id=me.id, value=30, occasion=GiftOccasion.FEAST, state=GiftState.OPEN, due_epoch=4, epoch=1, locked=[]
@@ -676,7 +674,7 @@ async def test_a_mortal_knows_its_gifts_kin_and_bonds(session: AsyncSession, wor
     await session.flush()
     lines = await mortal_cycle_lines(await load_scope(session, ctx.rules), me)
     text = " ".join(lines)
-    assert "you owe" in text and "bride price" in text and "bound in indenture, newcomers of" in text
+    assert "you owe" in text and "exchange to one family worth 10" in text and "bound in indenture, newcomers of" in text
     assert "9 freed by will here stand at 40 of 100 among the freeborn" in text
 
 
@@ -706,7 +704,7 @@ async def test_peoples_of_different_values_read_different_ways_of_kin(session: A
             session.add(CultureValueRow(entity_id=people.id, axis=axis, value=value))
     await session.flush()
     await seed_peoples(await context(session), SeedTally())
-    systems = {(row.descent, row.descent_group, row.cousin_terms) for row in await session.scalars(select(KinshipSystemRow))}
+    systems = {(row.descent, row.descent_group, row.kin_terms) for row in await session.scalars(select(KinshipSystemRow))}
     assert len(systems) >= 4
 
 
@@ -923,7 +921,7 @@ async def test_a_people_keeps_the_techniques_and_arts_of_those_it_came_from_and_
     technique = next(iter(Technique))
     session.add(HolderTechniqueRow(holder_entity_id=world.people.id, technique=technique, since_epoch=0, secret=False))
     form = await entity(session, "Night Song", EntityType.ART_FORM, ArtFormStats(), world_id=world.world.id)
-    session.add(ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtDiscipline.MUSIC, origin_culture_id=absorbed.id, locked=[]))
+    session.add(ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtMode.MUSICAL, origin_culture_id=absorbed.id, locked=[]))
     await BondRepository(session).connect(BondDraft(successor.id, world.people.id, BondKind.DESCENDS_FROM, 1))
     await BondRepository(session).connect(BondDraft(absorbed.id, successor.id, BondKind.PART_OF, 1))
     await session.flush()

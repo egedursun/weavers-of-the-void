@@ -17,14 +17,14 @@ from aerona.db.tables.culture import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import (
-    ArtMedium,
+    ArtMode,
     CustomCatalog,
     IdeologyTenet,
     ItemClass,
     LegendArchetype,
     MagicSchool,
     ProphecyPredicate,
-    TraditionKind,
+    TraditionFunction,
 )
 from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.models.entity_stats import SettlementStats
@@ -66,23 +66,23 @@ async def forge(scope: PlayerScope, world: PlayerWorld, entity_type: EntityType,
 
 
 async def test_every_lore_kind_can_be_forged_with_its_typed_profile(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
-    legend = await forge(scope, world, EntityType.LEGEND, archetype=LegendArchetype.FLOOD.value, credence=70)
-    tradition = await forge(scope, world, EntityType.TRADITION, kind=TraditionKind.WAR_DANCE.value)
+    legend = await forge(scope, world, EntityType.LEGEND, archetype=LegendArchetype.WORLD_DISASTER.value, credence=70)
+    tradition = await forge(scope, world, EntityType.TRADITION, kind=TraditionFunction.MARTIAL_DISPLAY.value)
     creed = await forge(scope, world, EntityType.IDEOLOGY, tenets=[IdeologyTenet.EGALITARIANISM.value, IdeologyTenet.RATIONALISM.value])
     rite = await forge(scope, world, EntityType.RITE, school=MagicSchool.STORM.value, power=6)
     prophecy = await forge(scope, world, EntityType.PROPHECY, predicate=ProphecyPredicate.SKY_EVENT.value, sky_kind="eclipse", within_epochs=4)
     item = await forge(scope, world, EntityType.ITEM, item_class=ItemClass.CROWN.value, quality=90)
-    artwork = await forge(scope, world, EntityType.ARTWORK, medium=ArtMedium.FRESCO.value)
+    artwork = await forge(scope, world, EntityType.ARTWORK, medium=ArtMode.FLAT_IMAGE.value)
     knowledge = await forge(scope, world, EntityType.KNOWLEDGE, branch="medicine", level=3)
     assert (await row(session, LegendProfileRow, legend)).credence == 70
-    assert (await row(session, TraditionProfileRow, tradition)).kind is TraditionKind.WAR_DANCE
+    assert (await row(session, TraditionProfileRow, tradition)).kind is TraditionFunction.MARTIAL_DISPLAY
     tenets = set(await session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id == creed)))
     assert tenets == {IdeologyTenet.EGALITARIANISM, IdeologyTenet.RATIONALISM}
     assert (await row(session, RiteProfileRow, rite)).power == 6
     condition = await row(session, ProphecyConditionRow, prophecy)
     assert condition.args == {"kind": "eclipse", "epochs": 4}
     assert (await row(session, ItemProfileRow, item)).quality == 90
-    assert (await row(session, ArtworkProfileRow, artwork)).medium is ArtMedium.FRESCO
+    assert (await row(session, ArtworkProfileRow, artwork)).medium is ArtMode.FLAT_IMAGE
     made = await session.get(EntityRow, knowledge)
     assert made is not None and made.knowledge_branch is not None and made.knowledge_branch.value == "medicine"
 

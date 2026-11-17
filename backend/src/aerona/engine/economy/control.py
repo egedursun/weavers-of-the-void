@@ -59,6 +59,7 @@ class MaterialText:
     branch: KnowledgeBranch | None = None
     clear_branch: bool = False
     hold: bool | None = None
+    source_node_id: int | None = None
 
 
 PLAIN_TEXT = MaterialText()
@@ -75,6 +76,8 @@ def apply_text(row: WorldMaterialRow, name: str | None, text: MaterialText) -> N
         row.branch = None if text.clear_branch else text.branch
     if text.hold is not None:
         row.held = text.hold
+    if text.source_node_id is not None:
+        row.source_node_id = text.source_node_id or None
 
 
 async def edit_material(
@@ -107,6 +110,7 @@ async def edit_material(
             row = WorldMaterialRow(
                 world_id=world_id,
                 origin=MaterialOrigin.CATALOG,
+                source_node_id=world_id,
                 base_kind=material,
                 family=spec.family,
                 branch=spec.branch,

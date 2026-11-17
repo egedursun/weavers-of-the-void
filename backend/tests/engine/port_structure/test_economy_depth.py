@@ -60,7 +60,7 @@ from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.economy.survey import DEPTH_FIXUP, PROFILE_FIXUP, depth_backfill, profile_resources
 from aerona.engine.economy.workshop_designs import NewDesign, capacity_scale, create_design, output_scale, workshop_store_units
 from aerona.engine.phases.market import market
-from aerona.engine.phases.production import species_yields
+from aerona.engine.phases.production import species_products
 from aerona.engine.phases.society_economy import default_society, save_society
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import found_polity
@@ -179,7 +179,7 @@ async def test_wild_herds_fish_and_silk_open_grounds(session: AsyncSession, worl
     beast = await entity(session, "Plains Aurochs", EntityType.SPECIES, SpeciesStats(abundance=60), world_id=world.world.id, location_id=world.regions[0].id)
     session.add(BodyRow(node_id=beast.id, plan=BodyPlan.QUADRUPED, fingers=0))
     await session.flush()
-    await species_yields(await manual_context(session, "yields", Rules()))
+    await species_products(await manual_context(session, "yields", Rules()))
     grounds = list(await session.scalars(select(EntityRow).where(EntityRow.maker_entity_id == beast.id, EntityRow.entity_type == EntityType.RESOURCE)))
     profiles = list(await session.scalars(select(ResourceProfileRow).where(ResourceProfileRow.resource_entity_id.in_([ground.id for ground in grounds]))))
     kinds = {profile.commodity for profile in profiles}
@@ -360,7 +360,7 @@ async def test_workshop_designs_scale_capacity_output_and_storage(session: Async
 async def test_world_specific_substances_come_from_events_as_pending_named_deposits(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await manual_context(session, "substance", Rules())
     place = world.regions[0]
-    origins = [MaterialOrigin.GOD_REMAINS, MaterialOrigin.DEAD_STAR, MaterialOrigin.BEAST, MaterialOrigin.LEAK_CRYSTAL, MaterialOrigin.RESEARCH]
+    origins = [MaterialOrigin.DEAD_GOD, MaterialOrigin.STAR, MaterialOrigin.BEAST, MaterialOrigin.RIFT, MaterialOrigin.RESEARCH]
     for origin in origins:
         source = (await settlement(session, f"Source {origin.value}", world, place)).id
         row = await new_substance(ctx, origin, place, source_node_id=source)

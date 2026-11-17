@@ -7,6 +7,11 @@ from aerona.engine.context import Publisher, TickContext
 from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.cosmos.routes import connect_all_worlds
 from aerona.engine.cosmos.worlds import align_moons, pair_mirrors
+from aerona.engine.economy.good_kinds import ensure_built_in_goods
+from aerona.engine.households.dwelling_kinds import ensure_built_in_dwellings
+from aerona.engine.kinds.culture_life import ensure_culture_built_ins
+from aerona.engine.kinds.nature import ensure_built_ins as ensure_nature_built_ins
+from aerona.engine.kinds.society import ensure_built_ins as ensure_society_built_ins
 from aerona.engine.phases.exploration import recover_intuitions
 from aerona.engine.pipeline import current_environment
 from aerona.engine.primitives.manual import silent
@@ -30,6 +35,16 @@ async def worlds_connected(ctx: TickContext) -> int:
     return await connect_all_worlds(ctx)
 
 
+async def dwellings_built_in(ctx: TickContext) -> int:
+    return await ensure_built_in_dwellings(ctx.session)
+
+
+async def kinds_built_in(ctx: TickContext) -> int:
+    session = ctx.session
+    made = await ensure_built_in_goods(session) + await ensure_nature_built_ins(session)
+    return made + await ensure_society_built_ins(session) + await ensure_culture_built_ins(session)
+
+
 async def maps_drawn(ctx: TickContext) -> int:
     return len(await refresh_world_maps(ctx.session, ctx.rules, ctx.epoch))
 
@@ -40,6 +55,8 @@ STARTUP_STEPS: tuple[tuple[str, StartupStep], ...] = (
     ("recover_intuitions", intuitions_recovered),
     ("connect_all_worlds", worlds_connected),
     ("world_maps", maps_drawn),
+    ("built_in_dwellings", dwellings_built_in),
+    ("built_in_kinds", kinds_built_in),
 )
 
 

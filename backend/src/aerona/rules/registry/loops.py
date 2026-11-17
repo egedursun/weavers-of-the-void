@@ -38,3 +38,5 @@ class LoopRules:
     delay_monsoon_migration: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a failed monsoon drives people away")
     delay_redistribution_collapse: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the cost of a redistributing centre strains its treasury")
     delay_novelty_drain: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a form everyone has loses its freshness")
+    delay_kind_prestige: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the spread of a kind lends it prestige, or wears it thin once everyone holds it")
+    delay_kind_substitution: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a good that stays dear moves its people to a substitute")

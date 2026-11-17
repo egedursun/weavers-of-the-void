@@ -32,6 +32,8 @@ class EditDistrict(Command):
     kind: DistrictKind | None = None
     design_id: int | None = None
     clear_design: bool = False
+    world_material_id: int | None = None
+    clear_world_material: bool = False
     release: list[str] = Field(default_factory=list)
 
 
@@ -109,6 +111,8 @@ async def edit_district(scope: PlayerScope, command: EditDistrict) -> Effect:
         design_id=command.design_id,
         clear_design=command.clear_design,
         release=tuple(command.release),
+        world_material_id=command.world_material_id,
+        clear_world_material=command.clear_world_material,
     )
     district = await control.edit_district(await scope.context("district_edit"), command.district_id, change)
     return Effect(f"The district is now level {district.level} at condition {district.condition}.", district.settlement_entity_id)

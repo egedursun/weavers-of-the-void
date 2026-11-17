@@ -71,7 +71,7 @@ LAW_MECHANICS = (
     Mechanic(
         key="registries",
         spec_item="S4.5/RP3",
-        title="Registries: titles to land and contracts of debt, sale, dowry and indenture are recorded, enforced by courts under a written code",
+        title="Registries: titles to land and contracts of debt, sale, union portions and indenture are recorded, enforced by courts under a written code",
         subsystem=S.LAW,
         phases=("registries",),
         surface=Surface(drawer=LAW_SECTION),
@@ -87,6 +87,7 @@ LAW_MECHANICS = (
     ),
     Mechanic(
         key="jurisdictions",
+        tools=("claim_courts",),
         spec_item="S4.5/RP3",
         title="Jurisdiction: churches, guilds and foreign realms claim their own courts, sparing their members and struggling with the crown",
         subsystem=S.LAW,

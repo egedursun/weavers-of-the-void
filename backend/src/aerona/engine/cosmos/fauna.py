@@ -38,50 +38,50 @@ async def common_child(session: AsyncSession, first: int, second: int) -> bool:
     return await session.scalar(statement.limit(1)) is not None
 
 
-def _chimera_stat(rng: SeededRandom, rules: Rules, first: EntityRow, second: EntityRow, key: str) -> int:
+def _merged_stat(rng: SeededRandom, rules: Rules, first: EntityRow, second: EntityRow, key: str) -> int:
     creatures = rules.creatures
-    default = creatures.chimera_default_stat
+    default = creatures.merged_default_stat
     average = (stat_or(first, key, default) + stat_or(second, key, default)) / 2
-    ceiling = creatures.chimera_hp_cap if key == HP_KEY else 100
-    return clamp_int(average + rng.die(creatures.chimera_die) - creatures.chimera_shift, 0, ceiling)
+    ceiling = creatures.merged_hp_cap if key == HP_KEY else 100
+    return clamp_int(average + rng.die(creatures.merged_die) - creatures.merged_shift, 0, ceiling)
 
 
 async def merge_species(
     ctx: TickContext, first: EntityRow, second: EntityRow, *, name: str | None = None, maker: EntityRow | None = None, description: str | None = None
 ) -> EntityRow:
     creatures = ctx.rules.creatures
-    rng = ctx.rng("chimera")
+    rng = ctx.rng("merged_species")
     traits = list(dict.fromkeys([*sorted(await traits_of(ctx.session, first.id)), *sorted(await traits_of(ctx.session, second.id))]))
     stats = SpeciesStats(
-        hp=max(1, _chimera_stat(rng, ctx.rules, first, second, HP_KEY)),
-        strength=_chimera_stat(rng, ctx.rules, first, second, STRENGTH_KEY),
-        agility=_chimera_stat(rng, ctx.rules, first, second, "agility"),
-        intelligence=_chimera_stat(rng, ctx.rules, first, second, INTELLIGENCE_KEY),
-        danger=clamp_percent(_chimera_stat(rng, ctx.rules, first, second, DANGER_KEY) + creatures.chimera_danger_bonus),
+        hp=max(1, _merged_stat(rng, ctx.rules, first, second, HP_KEY)),
+        strength=_merged_stat(rng, ctx.rules, first, second, STRENGTH_KEY),
+        agility=_merged_stat(rng, ctx.rules, first, second, "agility"),
+        intelligence=_merged_stat(rng, ctx.rules, first, second, INTELLIGENCE_KEY),
+        danger=clamp_percent(_merged_stat(rng, ctx.rules, first, second, DANGER_KEY) + creatures.merged_danger_bonus),
     )
-    chimera = await open_record(
+    merged = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
             name=name or f"{first.name.split()[0]}-{second.name.split()[0]}",
             entity_type=EntityType.SPECIES,
-            body=description or f"A chimera made by combining {first.name} and {second.name}.",
+            body=description or f"A merged species made by combining {first.name} and {second.name}.",
             stats=stats,
             power=max(first.power_level, second.power_level),
             world_id=first.world_id,
             location_id=first.location_id or second.location_id,
-            subtype="chimera",
-            engine_kind=EngineKind.CHIMERA,
-            flags=(EntityFlag.CHIMERA,),
-            traits=traits[: creatures.chimera_trait_cap],
+            subtype="merged species",
+            engine_kind=EngineKind.MERGED_SPECIES,
+            flags=(EntityFlag.MERGED_SPECIES,),
+            traits=traits[: creatures.merged_trait_cap],
         ),
     )
     bonds = BondRepository(ctx.session)
     for parent in (first, second):
-        await bonds.connect(BondDraft(chimera.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, "chimera"))
+        await bonds.connect(BondDraft(merged.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, "merged species"))
     if maker is not None:
-        await bonds.connect(BondDraft(maker.id, chimera.id, BondKind.PRODUCED, ctx.epoch, "made a chimera"))
-    return chimera
+        await bonds.connect(BondDraft(maker.id, merged.id, BondKind.PRODUCED, ctx.epoch, "merged species"))
+    return merged
 
 
 async def stowaway(ctx: TickContext, origin_world_id: int, region: EntityRow) -> EntityRow | None:

@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.dominion import ALIGNMENT_AESTHETICS
+from aerona.catalog.dominion import ALIGNMENT_LOOKS
+from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.constants.units import PERCENT
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
@@ -14,8 +15,10 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
+from aerona.engine.lore.style import axis_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import has_stat, shift_stat, stat_or
+from aerona.engine.structures.profiles import style_column
 from aerona.rules.registry import Rules
 
 OFFERING_DIVISOR = 10
@@ -28,6 +31,16 @@ class WorshipTally:
     appeasing: int = 0
     temples: int = 0
     offerings: int = 0
+
+
+def lean_style(profile: StructureProfileRow, look: Style, pull: int) -> None:
+    for axis in STYLE_AXES:
+        column = style_column(axis)
+        if column in profile.locked:
+            continue
+        current = getattr(profile, column)
+        target = axis_of(look, axis)
+        setattr(profile, column, target if current is None else current + round_half_up((target - current) * pull / PERCENT))
 
 
 def perceived_of(rules: Rules, love: int, fear: int) -> PerceivedAlignment:
@@ -63,12 +76,12 @@ async def reshape_temples(ctx: TickContext, community: EntityRow, god_id: int, p
             EntityRow.status == EntityStatus.CANON,
         )
     )
-    look = ALIGNMENT_AESTHETICS.get(perceived)
+    look = ALIGNMENT_LOOKS.get(perceived)
     for temple, profile in temples:
         if held(temple.id):
             continue
-        if look is not None and "aesthetic" not in profile.locked:
-            profile.aesthetic = look
+        if look is not None:
+            lean_style(profile, look, table.temple_style_pull)
         if has_stat(temple, "splendor") and perceived is not PerceivedAlignment.AMBIVALENT:
             step = table.temple_shift if perceived is PerceivedAlignment.BENEVOLENT else -table.temple_shift
             shift_stat(temple, "splendor", step)

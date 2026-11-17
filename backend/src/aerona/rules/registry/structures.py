@@ -34,6 +34,7 @@ class ConstructionRules:
     splendor_architect_per_level: int = rule(3, 0, 50, G, "Splendour per level of the architect's engineering")
     aesthetic_fit: int = rule(10, 0, 100, G, "Splendour when the style suits the people who look at it")
     aesthetic_clash: int = rule(6, 0, 100, G, "Splendour lost when the style is foreign to the people who look at it")
+    style_match_gap: int = rule(15, 0, 100, G, "Average gap across the style axes within which a work's style suits the people who look at it")
     durability_hardness_pct: int = rule(35, 0, 500, G, "Durability from its material's hardness (%)")
     durability_toughness_pct: int = rule(30, 0, 500, G, "Durability from its material's toughness (%)")
     durability_decay_pct: int = rule(25, 0, 500, G, "Durability lost to its material's decay (%)")

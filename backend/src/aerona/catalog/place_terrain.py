@@ -70,8 +70,8 @@ PLACE_KINDS = total(
         K.LAIR: PlaceKindSpec("Lair", None, C.HEAVY, W.NONE, H.LOW, True, R.PROFANE, (S.BURIED_RELIC, S.HIDDEN_RESOURCE), True),
         K.NEXUS: PlaceKindSpec("Ley nexus", None, C.OPEN, W.NONE, H.FLAT, False, R.HOLY, (S.LOST_RITE, S.LOST_KNOWLEDGE, S.SEALED_REALM), False),
         K.SHRINE_SITE: PlaceKindSpec("Shrine site", None, C.LIGHT, W.SPRING, H.LOW, False, R.HOLY, (S.LOST_RITE, S.BURIED_RELIC), False),
-        K.GOD_CORPSE: PlaceKindSpec(
-            "God corpse", None, C.LIGHT, W.NONE, H.HIGH, False, R.HOLY, (S.SEALED_SPIRIT, S.LOST_KNOWLEDGE, S.BURIED_RELIC, S.SEALED_REALM), True
+        K.DEAD_GOD_SITE: PlaceKindSpec(
+            "Where a god died", None, C.LIGHT, W.NONE, H.HIGH, False, R.HOLY, (S.SEALED_SPIRIT, S.LOST_KNOWLEDGE, S.BURIED_RELIC, S.SEALED_REALM), True
         ),
         K.MINE_SITE: PlaceKindSpec(
             "Mine site", T.UNDERGROUND, C.LIGHT, W.NONE, H.LOW, False, R.PROFANE, (S.HIDDEN_RESOURCE, S.SEALED_SPIRIT, S.UNDERWORLD_ENTRANCE), True

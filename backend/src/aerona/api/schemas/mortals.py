@@ -1,31 +1,18 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.mind import KindFamily, Profession
-from aerona.domain.enums.mortal import (
-    Ability,
-    CareerPath,
-    DeathCause,
-    EquipmentSlot,
-    LifeStage,
-    MarriageEnd,
-    MarriageKind,
-    MortalSex,
-    StressBreak,
-)
+from aerona.domain.enums.mortal import CareerPath, DeathCause, EquipmentSlot, LifeStage, MarriageEnd, StressBreak
 from aerona.domain.enums.society import SocialClass
-
-
-class AbilityView(ApiModel):
-    ability: Ability
-    value: int
-    held: bool
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 
 
 class MarriageView(ApiModel):
     id: int
     spouse: NodeRef | None
-    kind: MarriageKind
+    form: UnionForm
+    purpose: UnionPurpose
     treaty: NodeRef | None
     start_epoch: int
     end_epoch: int | None
@@ -49,8 +36,7 @@ class SlotView(ApiModel):
 
 class MortalProfileView(ApiModel):
     mortal: NodeRef
-    sex: MortalSex
-    abilities: list[AbilityView]
+    sex: Sex
     life_stage: LifeStage
     fertility: int
     health: int
@@ -94,7 +80,7 @@ class TreePerson(ApiModel):
     id: int
     name: str
     living: bool
-    sex: MortalSex | None
+    sex: Sex | None
     parents: list[int]
     spouses: list[int]
     generation: int

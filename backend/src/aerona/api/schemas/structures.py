@@ -1,5 +1,4 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.material import MaterialKind
@@ -75,7 +74,11 @@ class StructureView(ApiModel):
     architect_name: str | None
     dedicated_son_id: int | None
     dedicated_son_name: str | None
-    aesthetic: Aesthetic | None
+    style_ornament: int | None
+    style_geometry: int | None
+    style_colour: int | None
+    style_scale: int | None
+    style_symmetry: int | None
     on_ley_line: bool
     own_effects: list[StructureEffect]
     attuned: bool

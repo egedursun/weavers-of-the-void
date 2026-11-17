@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.agrarian import FamineLoreRow
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
@@ -17,9 +18,8 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import SeasonSpell
 from aerona.domain.enums.body import ConditionKind, HarmCause
-from aerona.domain.enums.culture import TraditionKind
-from aerona.domain.enums.demography import FolkDiet
-from aerona.domain.enums.ecology import Biochemistry
+from aerona.domain.enums.culture import TraditionFunction
+from aerona.domain.enums.ecology import Biochemistry, Diet
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
@@ -48,17 +48,22 @@ GROUPS: Mapping[str, frozenset[CommodityKind]] = {
     "mineral": frozenset({CommodityKind.FISH, CommodityKind.HERBS}),
 }
 SPECIAL = frozenset({CommodityKind.LUXURIES, CommodityKind.MAGICAL_REAGENTS})
-NEEDS: Mapping[FolkDiet, tuple[Nutrient, ...]] = {
-    FolkDiet.OMNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.FRESH, Nutrient.MINERAL),
-    FolkDiet.HERBIVORE: (Nutrient.ENERGY, Nutrient.FRESH, Nutrient.MINERAL),
-    FolkDiet.CARNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
-    FolkDiet.PISCIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
-    FolkDiet.SCAVENGER: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.MINERAL),
-    FolkDiet.SANGUIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN),
-    FolkDiet.LITHOVORE: (Nutrient.ENERGY, Nutrient.MINERAL),
-    FolkDiet.ESSENCE_FEEDER: (Nutrient.ENERGY, Nutrient.ESSENCE),
-    FolkDiet.PHOTOTROPH: (Nutrient.ENERGY, Nutrient.LIGHT, Nutrient.MINERAL),
-}
+NEEDS: Mapping[Diet, tuple[Nutrient, ...]] = total(
+    Diet,
+    {
+        Diet.OMNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.FRESH, Nutrient.MINERAL),
+        Diet.HERBIVORE: (Nutrient.ENERGY, Nutrient.FRESH, Nutrient.MINERAL),
+        Diet.CARNIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
+        Diet.PISCIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.FAT, Nutrient.MINERAL),
+        Diet.FILTER: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.MINERAL),
+        Diet.SCAVENGER: (Nutrient.ENERGY, Nutrient.PROTEIN, Nutrient.MINERAL),
+        Diet.SANGUIVORE: (Nutrient.ENERGY, Nutrient.PROTEIN),
+        Diet.MINERAL: (Nutrient.ENERGY, Nutrient.MINERAL),
+        Diet.SOUL: (Nutrient.ENERGY, Nutrient.ESSENCE),
+        Diet.VOID: (Nutrient.ENERGY, Nutrient.ESSENCE),
+        Diet.PHOTOSYNTHETIC: (Nutrient.ENERGY, Nutrient.LIGHT, Nutrient.MINERAL),
+    },
+)
 CHARGED = frozenset({Biochemistry.CRYSTAL, Biochemistry.SILICON})
 ELITE = frozenset({SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.MERCHANT, SocialClass.PROFESSIONAL})
 LOWLY = frozenset({SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST})
@@ -77,7 +82,7 @@ class NutritionTally:
 
 def needs_for(biology: PeopleBiologyRow | None) -> tuple[Nutrient, ...]:
     if biology is None:
-        return NEEDS[FolkDiet.OMNIVORE]
+        return NEEDS[Diet.OMNIVORE]
     found = NEEDS[biology.diet]
     return (*found, Nutrient.CHARGE) if biology.biochemistry in CHARGED else found
 
@@ -118,7 +123,7 @@ async def derive_diet(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
     if "special" not in row.locked:
         row.special = clamp_int(round_half_up(sum(goods.get(kind, 0) for kind in SPECIAL) * PERCENT / food) if food else 0, 0, PERCENT)
     if "energy" not in row.locked:
-        fasting = ctx.rules.nutrition.fast_energy if await keeps(ctx, town.id, TraditionKind.FAST) else 0
+        fasting = ctx.rules.nutrition.fast_energy if await keeps(ctx, town.id, TraditionFunction.FAST) else 0
         row.energy = clamp_int(PERCENT - (await pressures_of(ctx.session, town.id)).get(PressureKind.HUNGER, 0) - fasting, 0, PERCENT)
     await season_and_craft(ctx, town, row)
     row.updated_epoch = ctx.epoch
@@ -257,7 +262,7 @@ async def keep_nutrition(ctx: TickContext, tally: NutritionTally) -> None:
             ctx.session.add(diet)
         await derive_diet(ctx, town, diet)
         tally.diets += 1
-        needs = await needs_of(ctx, people) if people is not None else {nutrient: ctx.rules.nutrition.need_weight for nutrient in NEEDS[FolkDiet.OMNIVORE]}
+        needs = await needs_of(ctx, people) if people is not None else {nutrient: ctx.rules.nutrition.need_weight for nutrient in NEEDS[Diet.OMNIVORE]}
         row = await score_row(ctx, town.id)
         magic = await branch_level(ctx.session, town.id, KnowledgeBranch.MAGIC) * ctx.rules.nutrition.essence_per_magic
         score_from(ctx, row, diet, needs, light=await light_of(ctx, town.world_id), magic=magic)

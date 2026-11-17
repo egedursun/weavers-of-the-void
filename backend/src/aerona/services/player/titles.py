@@ -9,7 +9,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.titles import TITLE_FIELDS, DeJureLinkRow, TitleProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.polity.titles import POWER, emblem_of, record_holder
 from aerona.engine.primitives.manual import manual_context
@@ -21,7 +21,7 @@ SPAN = 100
 
 
 class CreateTitle(Command):
-    rank: TitleRank
+    rank: TitleTier
     name: str = Field(min_length=1, max_length=200)
     holder_id: int | None = None
     polity_id: int | None = None
@@ -35,7 +35,7 @@ class TitleTarget(Command):
 
 class EditTitle(Command):
     title_id: int
-    rank: TitleRank | None = None
+    rank: TitleTier | None = None
     liege_id: int | None = None
     clear_liege: bool = False
     polity_id: int | None = None

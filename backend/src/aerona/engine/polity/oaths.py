@@ -316,7 +316,7 @@ async def pledges(ctx: TickContext, rulers: dict[int, int]) -> int:
     companions: dict[int, list[EntityRow]] = {}
     for mortal in unheld(mortals):
         lord = rulers.get(mortal.location_id or -1)
-        sworn = mortal.mortal_role is MortalRole.KNIGHT and lord is not None and lord != mortal.id
+        sworn = mortal.mortal_role is MortalRole.SWORN_WARRIOR and lord is not None and lord != mortal.id
         if sworn and ctx.rng(f"protection.{mortal.id}.{ctx.epoch}").chance(table.protection_chance):
             await swear(ctx, mortal, OathKind.PROTECTION, recipient_id=lord, note_text="to guard the ruler")
             made += 1

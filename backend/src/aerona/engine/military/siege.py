@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.siege import STARVATION
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -32,6 +33,7 @@ from aerona.engine.folkways.biases import lean_community
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.honours.units import HonourTally, honour_siege
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.kinds.nature import sturdiness
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import smash
 from aerona.engine.lore.blueprints import design_factor
@@ -71,7 +73,6 @@ from aerona.engine.structures.damage import mend_defences, strike_defences
 from aerona.engine.vehicles.fleet import siege_power
 
 DEFAULT_SUPPLIES = 180
-HALF = 2
 SHELLED = "was struck when the siege engines shelled {town}"
 
 
@@ -166,7 +167,7 @@ async def action_for(ctx: TickContext, siege: SiegeRow, march: March, engines: f
     sappers = any(row.kind is UnitKind.SAPPERS and row.count > 0 for row in rows)
     choices = (
         (siege.breaches >= table.assault_breaches > 0, SiegeAction.ASSAULT),
-        (siege.starvation in {StarvationStage.FAMINE, StarvationStage.TABOO_BROKEN}, SiegeAction.NEGOTIATE),
+        (STARVATION[siege.starvation].starving, SiegeAction.NEGOTIATE),
         (sappers, SiegeAction.MINE),
         (engines > 0, SiegeAction.BOMBARD),
         (siege.starvation is StarvationStage.RATIONING, SiegeAction.NEGOTIATE),
@@ -206,7 +207,8 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
     if action is SiegeAction.BOMBARD:
         await shelled(ctx, siege, engines)
     if action is SiegeAction.BOMBARD and "walls_condition" not in (walls.locked or []):
-        damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates)
+        sturdy = await sturdiness(ctx.session, ctx.rules, material, walls.walls_world_material_id)
+        damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates / max(0.1, sturdy))
         walls.walls_condition = clamp_int(walls.walls_condition - damage, 0, PERCENT)
         await strike_defences(ctx, siege.besieged_entity_id, damage, "the siege engines")
     if action is SiegeAction.MINE:
@@ -239,10 +241,9 @@ async def surrenders(ctx: TickContext, siege: SiegeRow, action: SiegeAction) -> 
     table = ctx.rules.siegecraft
     rng = ctx.rng(f"surrender.{siege.id}.{siege.rounds}")
     leaning = await lean_community(ctx, siege.besieged_entity_id, BiasedDecision.SURRENDER)
-    if siege.starvation is StarvationStage.TABOO_BROKEN:
-        return rng.chance(table.surrender_chance * HALF * leaning)
-    if siege.starvation is StarvationStage.FAMINE:
-        return rng.chance(table.surrender_chance * leaning)
+    hunger = STARVATION[siege.starvation].surrender_pct
+    if hunger:
+        return rng.chance(table.surrender_chance * hunger / PERCENT * leaning)
     return action is SiegeAction.NEGOTIATE and rng.chance(table.negotiate_chance * leaning)
 
 

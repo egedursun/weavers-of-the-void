@@ -7,8 +7,6 @@ from aerona.domain.enums.crafts import (
     CatchRight,
     ChemicalProduct,
     ClockKind,
-    GameKind,
-    GameRule,
     Gear,
     InsuranceCover,
     LinkToken,
@@ -95,23 +93,6 @@ class ClockView(ApiModel):
     locked: list[str]
 
 
-class GameView(ApiModel):
-    id: int
-    name: str
-    kind: GameKind
-    rule: GameRule
-    origin: NodeRef | None
-    created_epoch: int
-    locked: list[str]
-
-
-class FollowingView(ApiModel):
-    game: GameView
-    popularity: int
-    adopted_epoch: int
-    locked: list[str]
-
-
 class NumbersView(ApiModel):
     base: int
     notation: Notation
@@ -155,11 +136,6 @@ class AffinityMaterialChoice(ApiModel):
     name: str
 
 
-class GameChoice(ApiModel):
-    id: int
-    name: str
-
-
 class CraftsNodeView(ApiModel):
     node: NodeRef
     people: NodeRef | None
@@ -171,10 +147,8 @@ class CraftsNodeView(ApiModel):
     rights: list[HeldRightView]
     aids: list[AidView]
     clock: ClockView | None
-    followings: list[FollowingView]
     numbers: NumbersView | None
     affinities: list[AffinityView]
     links: list[LinkView]
     spirits: list[SpiritView]
     materials: list[AffinityMaterialChoice]
-    games: list[GameChoice]

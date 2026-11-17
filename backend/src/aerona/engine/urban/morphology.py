@@ -1,4 +1,5 @@
-from aerona.catalog.urban import FIRE_RULE, HAULING_RULE, TALL_HOMES
+from aerona.catalog.kinds.morphologies import MORPHOLOGIES
+from aerona.catalog.urban import TALL_HOMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.domain.enums.urban import HousingLevel, Morphology
@@ -6,17 +7,18 @@ from aerona.rules.registry import Rules
 
 
 def spread_of(rules: Rules, morphology: Morphology) -> float:
-    key = FIRE_RULE.get(morphology)
+    key = MORPHOLOGIES[morphology].fire_rule
     return 1.0 if key is None else int(getattr(rules.morphology, key)) / PERCENT
 
 
 def hauling_of(rules: Rules, morphology: Morphology) -> float:
-    key = HAULING_RULE.get(morphology)
+    key = MORPHOLOGIES[morphology].hauling_rule
     return 1.0 if key is None else 1 + int(getattr(rules.morphology, key)) / PERCENT
 
 
 def siege_of(rules: Rules, morphology: Morphology) -> int:
-    return rules.morphology.concentric_siege if morphology is Morphology.CONCENTRIC else 0
+    key = MORPHOLOGIES[morphology].siege_rule
+    return 0 if key is None else int(getattr(rules.morphology, key))
 
 
 def replan(profile: SettlementProfileRow) -> bool:

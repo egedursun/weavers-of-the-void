@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
-import { clergyOfficeValues } from '@/api/generated/schema'
+import { clergyFunctionValues } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
@@ -201,7 +201,7 @@ export function ClergyOffices({
   blocked: string | null
 }) {
   const id = doctrine.cult?.id ?? 0
-  const missing = clergyOfficeValues.filter(
+  const missing = clergyFunctionValues.filter(
     (kind) => !doctrine.clergy.some((office) => office.kind === kind)
   )
   const [kind, setKind] = useState<string>(missing[0] ?? 'priest')

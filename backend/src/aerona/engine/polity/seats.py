@@ -12,7 +12,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import GUILD_KINDS, FactionKind, FactionRank
 from aerona.domain.enums.renown import Currency
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.doctrine import CLERGY_ROLES
@@ -38,7 +38,7 @@ class SeatTally:
 @dataclass(frozen=True)
 class Seat:
     institution: EntityRow
-    rank: TitleRank
+    rank: TitleTier
     home_id: int | None
     holder_id: int | None
 
@@ -78,21 +78,21 @@ async def faith_seats(ctx: TickContext) -> list[Seat]:
         for cult in await ctx.session.scalars(
             select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
         )
-        if (stat(cult, FOLLOWERS) or 0) >= table.see_followers
+        if (stat(cult, FOLLOWERS) or 0) >= table.faith_local_followers
     ]
     largest: dict[int, EntityRow] = {}
     for cult in cults:
         best = largest.get(cult.world_id or 0)
-        if (stat(cult, FOLLOWERS) or 0) >= table.archsee_followers and (best is None or (stat(cult, FOLLOWERS) or 0) > (stat(best, FOLLOWERS) or 0)):
+        if (stat(cult, FOLLOWERS) or 0) >= table.faith_high_followers and (best is None or (stat(cult, FOLLOWERS) or 0) > (stat(best, FOLLOWERS) or 0)):
             largest[cult.world_id or 0] = cult
     seats: list[Seat] = []
     for cult in cults:
         if largest.get(cult.world_id or 0) is cult:
-            rank = TitleRank.HIGH_SEAT
-        elif (stat(cult, FOLLOWERS) or 0) >= table.archsee_followers:
-            rank = TitleRank.ARCHSEE
+            rank = TitleTier.FAITH_SUPREME
+        elif (stat(cult, FOLLOWERS) or 0) >= table.faith_high_followers:
+            rank = TitleTier.FAITH_HIGH
         else:
-            rank = TitleRank.SEE
+            rank = TitleTier.FAITH_LOCAL
         seats.append(Seat(cult, rank, cult.location_id, await foremost_cleric(ctx, cult)))
     return seats
 
@@ -106,7 +106,7 @@ async def company_seats(ctx: TickContext) -> list[Seat]:
     )
     seats: list[Seat] = []
     for faction, profile in list(rows):
-        rank = TitleRank.CAPTAINCY if profile.kind is FactionKind.MERCENARY_COMPANY else TitleRank.GUILDMASTERSHIP
+        rank = TitleTier.MILITARY if profile.kind is FactionKind.MERCENARY_COMPANY else TitleTier.GUILD
         seats.append(Seat(faction, rank, profile.home_entity_id or faction.location_id, await faction_leader(ctx, faction.id)))
     return seats
 
@@ -122,7 +122,7 @@ async def seat_of(ctx: TickContext, institution_id: int) -> TitleProfileRow | No
     return found
 
 
-def seat_prestige(ctx: TickContext, rank: TitleRank) -> int:
+def seat_prestige(ctx: TickContext, rank: TitleTier) -> int:
     step = FAITH_RANKS.index(rank) + 1 if rank in FAITH_RANKS else 1
     return min(PERCENT, ctx.rules.titles.rank_prestige * step)
 

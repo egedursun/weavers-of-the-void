@@ -14,6 +14,9 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { type Named } from '@/features/entity/economy/labels'
+import { ChoiceSelect } from '@/features/entity/economy/parts'
+import { useKinds } from '@/features/kinds/api'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -177,11 +180,28 @@ function MethodRow({
   hold: boolean
 }) {
   const spec = named(PROCESSES, row.process)
+  const kinds = useKinds('production_method', null)
+  const authored: Record<string, Named> = {
+    '0': { label: 'The way as it is known', icon: spec.icon, tone: 'muted' },
+    ...Object.fromEntries(
+      (kinds.data ?? [])
+        .filter((kind) => !kind.retired && kind.category === row.process)
+        .map((kind) => [
+          String(kind.id),
+          { label: kind.name, icon: spec.icon, tone: 'gold' as const },
+        ])
+    ),
+  }
   const pick = useGodAction({
-    run: (method: MethodKind) =>
+    run: ({ method, kind }: { method: MethodKind; kind: number | null }) =>
       unwrap(
         api.POST('/api/actions/method:set', {
-          body: { community_id: view.node_id, method, hold },
+          body: {
+            community_id: view.node_id,
+            method,
+            method_kind_id: kind,
+            hold,
+          },
         })
       ),
   })
@@ -234,9 +254,30 @@ function MethodRow({
               option={option}
               current={option.method === row.method}
               busy={busy}
-              onPick={(method) => pick.mutate(method)}
+              onPick={(method) =>
+                pick.mutate({ method, kind: row.method_kind_id ?? null })
+              }
             />
           ))}
+          <div className='p-3'>
+            <ChoiceSelect
+              label='Worked in the way of'
+              value={String(row.method_kind_id ?? 0)}
+              table={authored}
+              blocked={
+                busy ??
+                (Object.keys(authored).length > 1
+                  ? null
+                  : 'No way of this work has been made in the world yet')
+              }
+              onPick={(value) =>
+                pick.mutate({
+                  method: row.method,
+                  kind: value === '0' ? null : Number(value),
+                })
+              }
+            />
+          </div>
         </div>
       }
     />

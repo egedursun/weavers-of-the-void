@@ -9,6 +9,7 @@ import {
   starTypeValues,
   travelMethodValues,
   worldTypeValues,
+  type components,
 } from '@/api/generated/schema'
 import {
   type Atmosphere,
@@ -78,16 +79,42 @@ export const DEAD_STAR_TYPES: ReadonlySet<StarType> = new Set([
   'black_hole',
 ])
 
+export const TRAVEL_MEDIUM_LABEL: Record<
+  components['schemas']['TravelMedium'],
+  string
+> = {
+  space: 'through space',
+  dimension: 'between dimensions',
+  dream: 'through dreams',
+  death: 'through the realm of the dead',
+  divine: 'by divine power',
+  body: 'carried inside a being',
+}
+
+export const TRAVEL_MECHANISM_LABEL: Record<
+  components['schemas']['TravelMechanism'],
+  string
+> = {
+  gate: 'by a gate',
+  fold: 'by folding the way',
+  sail: 'under sail or drive',
+  mount: 'on a ridden creature',
+  bridge: 'over a bridge',
+  current: 'on a current',
+  carrier_being: 'within a carrier being',
+  orbit: 'along an orbit',
+}
+
 export const TRAVEL_METHOD_LABEL: Record<TravelMethod, string> = {
   ancient_gate: 'Ancient gate',
   space_fold: 'Space folding',
   light_sail: 'Light sail',
-  cosmic_mount: 'Cosmic mount',
+  carrier_mount: 'Ridden crossing',
   dream_journey: 'Dream journey',
-  river_of_dead: 'River of the dead',
+  death_current: 'Crossing of the dead',
   divine_bridge: 'Divine bridge',
   slingshot_orbit: 'Slingshot orbit',
-  swallowed: 'Swallowing',
+  carried_within: 'Carried within a being',
   wormhole: 'Wormhole',
   void_ark: 'Void ark',
   galactic_gate: 'Galactic gate',

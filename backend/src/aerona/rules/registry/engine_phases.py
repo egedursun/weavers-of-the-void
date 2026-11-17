@@ -342,7 +342,7 @@ class EnginePhasesRules:
     ley_lines: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ley lines")
     economy_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: economy survey")
     world_materials: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: world materials")
-    species_yields: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: species yields")
+    species_products: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: species yields")
     deposit_finding: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: deposit finding")
     refining: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: refining")
     markets: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: markets")
@@ -442,7 +442,11 @@ class EnginePhasesRules:
         "Run the engine step: gifts returned or lapsed, rank-claiming feasts, ceremonial circuits, offerings and marriage payments",
     )
     kinship_systems: int = rule(
-        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: residence after marriage, levirate and sororate, and alliances between lines"
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: residence after marriage, sibling_union_first and sibling_union_second, and alliances between lines",
     )
     reproduction_systems: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: sex changes, castes and budding")
     nomadism: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: camps following their pastures, herds, tribute, raids and confederations")
@@ -676,3 +680,23 @@ class EnginePhasesRules:
     )
     collections: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: museums, treasuries, royal collections and cabinets gather their pieces")
     gardens: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: gardens, parks, groves and cemeteries are laid out and kept")
+    ways_of_life: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: kinds of things spread between peoples, fade and retire")
+    foodways: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: peoples come to their own drinks and cuisines, share drinks of welcome and feast"
+    )
+    culture_kinds: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: held tenets move their holders' values, and the built-in tenets, fears, readings and aims are kept",
+    )
+    crafts_of_life: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the dress, tools, music, games and substances a people holds shape its towns"
+    )
+    society_kinds: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: professions, ranks and forms of organisation shape a people's classes, towns and factions"
+    )
+    traits_and_works: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: held traits pull their holders' stats and production methods work by their rows"
+    )

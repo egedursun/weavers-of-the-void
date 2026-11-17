@@ -16,10 +16,10 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import ActKind, TraitKind
-from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import OfficeKind, OfficePower
 from aerona.domain.enums.regime import ClientRole, PowerStance
 from aerona.domain.enums.settlement import TreasuryEntry
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
@@ -358,7 +358,7 @@ async def bind_by_marriage(ctx: TickContext, realm: Realm, base: PowerBaseRow, s
     for ours in await unwed_kin(ctx, realm.ruler_id):
         for theirs in await unwed_kin(ctx, subject.id):
             if ours.id != theirs.id and await may_wed(ctx.session, ctx.rules, ours, theirs):
-                await marry(ctx.session, ours, theirs, ctx.epoch, kind=MarriageKind.POLITICAL, description="a match to bind an overmighty subject")
+                await marry(ctx.session, ours, theirs, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="a match to bind an overmighty subject")
                 shift(base, "threat", -ctx.rules.power_bases.marriage_cut)
                 if "stance" not in base.locked:
                     base.stance = PowerStance.LOYAL

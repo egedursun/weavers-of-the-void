@@ -16,6 +16,7 @@ from aerona.catalog.theories import DISCIPLINES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
 from aerona.catalog.worlds import WORLD_TYPES
+from aerona.db.kind_concepts.society import BUILT_IN_ORGANISATIONS
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.agrarian import AidKind, KeystoneUse, PerennialKind, PreparednessKind
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
@@ -26,19 +27,19 @@ from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKin
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.cosmography import DimensionElement
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
-from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
+from aerona.domain.enums.culture import ArtMode, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.cycles import (
+    AdoptionKind,
     ChallengeKind,
     KinshipDescent,
+    KinTermSystem,
     LongPlanKind,
     ManumissionPath,
-    MarriagePayment,
-    MarriagePreference,
     ReproductiveSystem,
     ResidenceRule,
 )
-from aerona.domain.enums.demography import MartialStyle
-from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
+from aerona.domain.enums.demography import FuneralCustom, MartialStyle, Sex
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.ecology import (
     AttackDelivery,
     AttackEffect,
@@ -60,8 +61,8 @@ from aerona.domain.enums.ecology import (
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.evolution import PlagueResponse
-from aerona.domain.enums.faction import FactionKind, FoundableFaction
-from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
@@ -70,13 +71,24 @@ from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRole
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.operations import EchelonOrder, QuirkKind
 from aerona.domain.enums.place import PlaceKind, SecretKind
-from aerona.domain.enums.polity import CLOSURES, LawKind
+from aerona.domain.enums.polity import CLOSURES, HouseTrait, LawKind
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, OmenVerdict, PetitionKind, SacramentKind, SacramentProtection
 from aerona.domain.enums.structure import BuildingForm
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
-from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
+from aerona.domain.enums.unions import (
+    KinMatch,
+    PartnerScope,
+    PluralSide,
+    UnionArrangement,
+    UnionDescent,
+    UnionDissolution,
+    UnionExchange,
+    UnionForm,
+    UnionPurpose,
+    UnionResidence,
+)
 from aerona.domain.enums.vehicles import MountKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
@@ -133,7 +145,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "resource_mechanics": resource_mechanics(),
         "knowledge_branches": knowledge_branches(),
         "theory_domains": ", ".join(domain.value for domain in TheoryDomain),
-        "art_disciplines": ", ".join(discipline.value for discipline in ArtDiscipline),
+        "art_disciplines": ", ".join(discipline.value for discipline in ArtMode),
         "art_structures": "; ".join(f"{discipline.value}: {', '.join(spec.structure)}" for discipline, spec in DISCIPLINES.items()),
         "body_plans": "; ".join(f"{plan} ({spec.label})" for plan, spec in PLANS.items() if plan is not BodyPlan.DIVINE_MANIFEST),
         "creature_traits": "; ".join(f"{trait} ({spec.effect})" for trait, spec in CREATURE_TRAITS.items()),
@@ -151,7 +163,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "materials": [material.value for material in MaterialKind],
         "material_families": [family.value for family in MaterialFamily],
         "structure_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in STRUCTURES.items()),
-        "art_media": ", ".join(medium.value for medium in ArtMedium),
+        "art_media": ", ".join(medium.value for medium in ArtMode),
         "magic_schools": ", ".join(school.value for school in MagicSchool),
         "magic_sources": ", ".join(source.value for source in MagicSource),
         "rite_effects": ", ".join(effect.value for effect in RiteEffectKind),
@@ -162,7 +174,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "spell_ranges": ", ".join(item.value for item in SpellRange),
         "spell_durations": ", ".join(item.value for item in SpellDuration),
         "spell_targets": ", ".join(item.value for item in SpellTarget),
-        "foundable_factions": ", ".join(item.value for item in FoundableFaction),
+        "foundable_factions": ", ".join(kind.value for kind, body in BUILT_IN_ORGANISATIONS.items() if body.foundable),
         "faction_kinds": ", ".join(item.value for item in FactionKind),
         "servitor_roles": ", ".join(item.value for item in ServitorRole),
         "geas_modes": ", ".join(item.value for item in GeasMode),
@@ -176,6 +188,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "storylet_ids": ", ".join(item.value for item in StoryletId),
         "long_plan_kinds": ", ".join(item.value for item in LongPlanKind),
         "kinship_descents": ", ".join(item.value for item in KinshipDescent),
+        "kin_term_systems": ", ".join(item.value for item in KinTermSystem),
+        "adoption_kinds": ", ".join(item.value for item in AdoptionKind),
+        "first_sides": ", ".join(item.value for item in Sex),
         "union_forms": ", ".join(item.value for item in UnionForm),
         "union_purposes": ", ".join(item.value for item in UnionPurpose),
         "union_residences": ", ".join(item.value for item in UnionResidence),
@@ -184,9 +199,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "union_arrangements": ", ".join(item.value for item in UnionArrangement),
         "union_dissolutions": ", ".join(item.value for item in UnionDissolution),
         "partner_scopes": ", ".join(item.value for item in PartnerScope),
+        "kin_matches": ", ".join(item.value for item in KinMatch),
+        "plural_sides": ", ".join(item.value for item in PluralSide),
         "residence_rules": ", ".join(item.value for item in ResidenceRule),
-        "marriage_preferences": ", ".join(item.value for item in MarriagePreference),
-        "marriage_payments": ", ".join(item.value for item in MarriagePayment),
         "reproductive_systems": ", ".join(item.value for item in ReproductiveSystem),
         "challenge_kinds": ", ".join(item.value for item in ChallengeKind),
         "manumission_paths": ", ".join(item.value for item in ManumissionPath),
@@ -217,6 +232,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "dish_courses": ", ".join(item.value for item in DishCourse),
         "building_forms": ", ".join(item.value for item in BuildingForm),
         "martial_styles": ", ".join(item.value for item in MartialStyle),
+        "house_traits": ", ".join(item.value for item in HouseTrait),
         "formations": ", ".join(item.value for item in Formation),
         "law_kinds": ", ".join(item.value for item in LawKind),
         "armour_types": ", ".join(item.value for item in ArmourType),
@@ -246,7 +262,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "awakening_triggers": [kind.value for kind in AwakeningTrigger],
         "tissue_materials": [kind.value for kind in TissueMaterial],
         "tenets": "; ".join(f"{tenet} ({effect})" for tenet, effect in TENET_EFFECTS.items()),
-        "funeral_rites": [rite.value for rite in FuneralRite],
+        "funeral_rites": [rite.value for rite in FuneralCustom],
         "judgements": [doctrine.value for doctrine in JudgementDoctrine],
         "rebirth_paths": [path.value for path in RebirthPath],
         "place_kinds": [kind.value for kind in PlaceKind],

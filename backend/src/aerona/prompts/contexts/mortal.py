@@ -230,6 +230,7 @@ class HomeLine(ContextItem):
     powers: list[str] = Field(default_factory=list)
     living: list[str] = Field(default_factory=list)
     fortune: list[str] = Field(default_factory=list)
+    ways_of_life: list[str] = Field(default_factory=list)
     home_and_trust: list[str] = Field(default_factory=list)
 
 

@@ -14,6 +14,8 @@ import {
   Feather,
   Fish,
   Flame,
+  CircleSlash,
+  EyeOff,
   Gem,
   Ghost,
   HeartPulse,
@@ -50,7 +52,7 @@ import { type Spec, fieldLabel } from './labels'
 type Schemas = components['schemas']
 export type BodyPlan = Schemas['BodyPlan']
 export type SizeClass = Schemas['SizeClass']
-export type FolkDiet = Schemas['FolkDiet']
+export type Diet = Schemas['Diet']
 export type NaturalTrait = Schemas['NaturalTrait']
 export type FuneralCustom = Schemas['FuneralCustom']
 
@@ -138,7 +140,7 @@ export const SIZE_CLASS_SPEC: Record<SizeClass, Spec> = {
   colossal: { label: 'Colossal', icon: Mountain, tone: 'danger' },
 }
 
-export const DIET_SPEC: Record<FolkDiet, Spec> = {
+export const DIET_SPEC: Record<Diet, Spec> = {
   omnivore: {
     label: 'Eat anything',
     icon: Utensils,
@@ -175,19 +177,31 @@ export const DIET_SPEC: Record<FolkDiet, Spec> = {
     tone: 'danger',
     hint: 'Live on the blood of herds',
   },
-  lithovore: {
+  filter: {
+    label: 'Filter feeders',
+    icon: Shell,
+    tone: 'info',
+    hint: 'Sift the water for food; starve far from the sea',
+  },
+  mineral: {
     label: 'Stone eaters',
     icon: Gem,
     tone: 'warning',
     hint: 'Ore and stone are bread to them',
   },
-  essence_feeder: {
+  soul: {
     label: 'Essence feeders',
     icon: Sparkles,
     tone: 'verdigris',
     hint: 'Fed by magic in the land and lore',
   },
-  phototroph: {
+  void: {
+    label: 'Fed by nothing seen',
+    icon: Ghost,
+    tone: 'muted',
+    hint: 'Draw a thin living from magic alone',
+  },
+  photosynthetic: {
     label: 'Light eaters',
     icon: Sun,
     tone: 'gold',
@@ -263,19 +277,19 @@ export const FUNERAL_SPEC: Record<FuneralCustom, Spec> = {
     label: 'Burial',
     icon: Shovel,
     tone: 'muted',
-    hint: 'Laid in the earth',
+    hint: 'Laid in the ground',
   },
   cremation: {
     label: 'Cremation',
     icon: Flame,
     tone: 'warning',
-    hint: 'Burned on pyres; little sickness, few ghosts',
+    hint: 'Burned; little sickness, few restless dead',
   },
   sky_burial: {
-    label: 'Sky burial',
+    label: 'Open laying',
     icon: Cloud,
     tone: 'info',
-    hint: 'Given to the birds; corpses carry sickness',
+    hint: 'Left in the open; the remains carry sickness',
   },
   sea_burial: {
     label: 'Sea burial',
@@ -287,31 +301,43 @@ export const FUNERAL_SPEC: Record<FuneralCustom, Spec> = {
     label: 'Entombment',
     icon: Landmark,
     tone: 'gold',
-    hint: 'Sealed in tombs; ancestors watch and are mourned',
+    hint: 'Closed in tombs; ancestors are kept and mourned',
   },
   ancestor_shrine: {
     label: 'Ancestor shrines',
     icon: Church,
     tone: 'verdigris',
-    hint: 'Bones kept at home; many guardian spirits',
+    hint: 'Remains kept at home; many guardian spirits',
   },
   endocannibalism: {
-    label: 'The last feast',
+    label: 'Funerary eating',
     icon: Utensils,
     tone: 'danger',
     hint: 'They eat of their dead; sickness spreads',
   },
   reanimation: {
-    label: 'Raising the dead',
+    label: 'Raising',
     icon: Skull,
     tone: 'danger',
     hint: 'The dead march in the levy; ghosts walk',
   },
   soul_binding: {
-    label: 'Soul stones',
+    label: 'Soul binding',
     icon: Gem,
     tone: 'verdigris',
-    hint: 'Souls bound in stone; no restless dead',
+    hint: 'Souls bound into vessels; no restless dead',
+  },
+  nameless: {
+    label: 'Nameless rite',
+    icon: EyeOff,
+    tone: 'danger',
+    hint: 'Put away without a name; the soul is sealed from its strata',
+  },
+  none: {
+    label: 'No rite',
+    icon: CircleSlash,
+    tone: 'muted',
+    hint: 'No rite is held; the dead are judged as if unmourned',
   },
 }
 

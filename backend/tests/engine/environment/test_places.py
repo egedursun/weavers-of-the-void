@@ -67,16 +67,16 @@ def test_the_recorded_subtype_is_read_once_by_the_fixup() -> None:
 async def test_existing_places_take_their_kind_once_and_new_places_read_typed_signs(realm: Realm) -> None:
     await surveyed(realm)
     old = await place(realm, "Old Pass", "pass")
-    corpse = await place(realm, "Corpse", "pass", engine_kind=EngineKind.GOD_CORPSE)
+    corpse = await place(realm, "Corpse", "pass", engine_kind=EngineKind.DEAD_GOD)
     await environment_survey(context(realm.session))
     assert (await realm.session.get(PlaceProfileRow, old)).kind is PlaceKind.PASS
     assert (await realm.session.get(PlaceProfileRow, corpse)).kind is PlaceKind.PASS
     ground = await realm.session.get(PlaceEnvironmentRow, old)
     assert ground.chokepoint and ground.terrain is TerrainKind.HIGH_PASS
     assert await realm.session.get(AppliedFixupRow, KIND_FIXUP) is not None
-    later = await place(realm, "Later Pass", "pass", engine_kind=EngineKind.GOD_CORPSE)
+    later = await place(realm, "Later Pass", "pass", engine_kind=EngineKind.DEAD_GOD)
     await environment_survey(context(realm.session))
-    assert (await realm.session.get(PlaceProfileRow, later)).kind is PlaceKind.GOD_CORPSE
+    assert (await realm.session.get(PlaceProfileRow, later)).kind is PlaceKind.DEAD_GOD_SITE
 
 
 def test_typed_signs_choose_a_kind_without_reading_prose() -> None:

@@ -350,6 +350,7 @@ class ArmsDesignView(ApiModel):
 class ArmsView(ArmsDesignView):
     holder_kind: HeraldryHolderKind
     motto: str | None
+    emblem_system_id: int | None
     parent: NodeRef | None
     quartered: NodeRef | None
     since_epoch: int

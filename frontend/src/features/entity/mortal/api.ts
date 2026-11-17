@@ -10,13 +10,13 @@ export type TreePerson = components['schemas']['TreePerson']
 export type KinLink = components['schemas']['KinLink']
 export type Marriage = components['schemas']['MarriageView']
 export type Slot = components['schemas']['SlotView']
-export type Ability = components['schemas']['Ability']
 export type EquipmentSlot = components['schemas']['EquipmentSlot']
 export type CrimeKind = components['schemas']['CrimeKind']
 export type PunishmentKind = components['schemas']['PunishmentKind']
-export type MarriageKind = components['schemas']['MarriageKind']
+export type UnionForm = components['schemas']['UnionForm']
+export type UnionPurpose = components['schemas']['UnionPurpose']
 export type MarriageEnd = components['schemas']['MarriageEnd']
-export type MortalSex = components['schemas']['MortalSex']
+export type MortalSex = components['schemas']['Sex']
 
 export function profileKey(mortalId: number) {
   return [...loreKeys.entity(mortalId), 'mortal-profile'] as const

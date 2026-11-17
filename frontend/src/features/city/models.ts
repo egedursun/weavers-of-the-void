@@ -854,7 +854,7 @@ const PLACE_LOOK: Record<Schema['PlaceKind'], Part> = {
   island: { model: nature('hill_single_B'), scale: 0.8 },
   nexus: { model: spooky('shrine_candles'), scale: SPOOKY },
   shrine_site: { model: spooky('shrine'), scale: SPOOKY },
-  god_corpse: { model: spooky('bone_A'), scale: SPOOKY * 2 },
+  dead_god_site: { model: spooky('shrine'), scale: SPOOKY * 2 },
   mine_site: { model: building('mine', 'red'), scale: 0.6 },
   harbour_site: { model: neutral('building_bridge_A'), scale: 0.6 },
   crossroads: { model: nature('rock_single_A'), scale: 0.5 },

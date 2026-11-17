@@ -118,6 +118,7 @@ async def salvage(ctx: TickContext) -> int:
 
 
 @reads(
+    "table.applied_fixups",
     "table.augments",
     "table.cult_doctrines",
     "table.culture_values",

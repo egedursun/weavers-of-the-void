@@ -6,12 +6,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.faction import FoundableFaction
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.fortune.profiles import fortune_of, shift_fortune
+from aerona.engine.kinds.society import mortals_may_found
 from aerona.engine.mythic.heroquests import renown_of
-from aerona.engine.phases.factions import FOUNDED_AS, decree_faction
+from aerona.engine.phases.factions import decree_faction
 from aerona.engine.sacred.places import town_of
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -35,7 +36,7 @@ async def take_care(call: MortalCall, _args: ToolInput) -> str:
 
 
 class FoundFactionInput(ToolInput):
-    kind: FoundableFaction
+    kind: FactionKind
 
 
 async def found_faction(call: MortalCall, args: FoundFactionInput) -> str:
@@ -47,8 +48,10 @@ async def found_faction(call: MortalCall, args: FoundFactionInput) -> str:
         fail(MortalResult.FACTION_DECLINED, why="too few know your name to follow you")
     if await points_of(call.session, call.me) < table.found_cost:
         fail(MortalResult.FACTION_DECLINED, why="you cannot pay what founding it would cost")
+    if not await mortals_may_found(call.session, town, args.kind):
+        fail(MortalResult.FACTION_DECLINED, why="no mortal founds a body of that kind among your people")
     try:
-        faction = await decree_faction(call.tick, town.id, FOUNDED_AS[args.kind])
+        faction = await decree_faction(call.tick, town.id, args.kind)
     except (ConflictError, ValidationFailedError) as error:
         fail(MortalResult.FACTION_DECLINED, why=str(error).rstrip("."))
     await shift_points(call.session, call.me, -table.found_cost)

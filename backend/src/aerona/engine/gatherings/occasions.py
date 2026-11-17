@@ -17,7 +17,7 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.titles import TitleHolderRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.mortal import LifeStage, PunishmentKind
@@ -33,7 +33,7 @@ from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
 
 G = GatheringKind
-MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.HUNTER, MortalRole.OFFICER})
+MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.HUNTER, MortalRole.OFFICER})
 PERFORMER_ROLES = frozenset({MortalRole.ARTISAN, MortalRole.SCRIBE, MortalRole.PRIEST, MortalRole.JOURNALIST})
 
 TESTING_LAWS = frozenset({"registered", "licensed", "conscripted"})
@@ -150,7 +150,7 @@ async def festivals(ctx: TickContext) -> list[Occasion]:
     rows = await ctx.session.execute(
         select(TraditionParticipationRow.tradition_entity_id, TraditionParticipationRow.community_entity_id)
         .join(TraditionProfileRow, TraditionProfileRow.tradition_entity_id == TraditionParticipationRow.tradition_entity_id)
-        .where(TraditionProfileRow.kind == TraditionKind.FESTIVAL)
+        .where(TraditionProfileRow.kind == TraditionFunction.FESTIVAL)
         .order_by(TraditionParticipationRow.tradition_entity_id, TraditionParticipationRow.community_entity_id)
     )
     for tradition_id, community_id in rows:

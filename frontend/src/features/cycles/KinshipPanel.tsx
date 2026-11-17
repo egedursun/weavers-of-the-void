@@ -22,12 +22,12 @@ import { Ref } from '@/features/gatherings/parts'
 import { type CyclesView, useCycleAction } from './api'
 import {
   CASTES,
-  COUSINS,
+  ADOPTIONS,
+  FIRST_SIDES,
+  KIN_TERMS,
   DESCENTS,
   GROUPS,
   LEGACIES,
-  PAYMENTS,
-  PREFERENCES,
   RESIDENCES,
   SYSTEMS,
   YES_NO,
@@ -35,7 +35,9 @@ import {
 import { clamp, LINE_TYPES, MANY, SPAN, useRow } from './model'
 import { TextField } from './parts'
 import {
+  KIN_MATCHES,
   PARTNER_SCOPES,
+  PLURAL_SIDES,
   UNION_ARRANGEMENTS,
   UNION_DESCENTS,
   UNION_DISSOLUTIONS,
@@ -101,31 +103,35 @@ function KinshipCard({
           table: table(GROUPS),
         },
         {
-          key: 'cousin_terms',
-          label: 'Cousin terms',
+          key: 'kin_terms',
+          label: 'Kin terms',
           kind: 'pick',
-          table: table(COUSINS),
+          table: table(KIN_TERMS),
         },
         {
-          key: 'preference',
-          label: 'Preferred spouse',
+          key: 'adoption',
+          label: 'Adoption custom',
           kind: 'pick',
-          table: table(PREFERENCES),
+          table: table(ADOPTIONS),
         },
         {
-          key: 'payment',
-          label: 'Marriage payment',
+          key: 'first_side',
+          label: 'Which side is first',
           kind: 'pick',
-          table: table(PAYMENTS),
+          table: table(FIRST_SIDES),
         },
         {
-          key: 'payment_value',
-          label: 'Worth of the payment',
-          kind: 'number',
-          min: 0,
+          key: 'sibling_union_first',
+          label: 'Widow weds a sibling of the first side',
+          kind: 'pick',
+          table: YES_NO,
         },
-        { key: 'levirate', label: 'Levirate', kind: 'pick', table: YES_NO },
-        { key: 'sororate', label: 'Sororate', kind: 'pick', table: YES_NO },
+        {
+          key: 'sibling_union_second',
+          label: 'Widow weds a sibling of the second side',
+          kind: 'pick',
+          table: YES_NO,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -133,24 +139,28 @@ function KinshipCard({
       onRemove={action.onRemove}
       extra={
         <>
-          <Chip icon={COUSINS[row.cousin_terms].icon}>
-            {COUSINS[row.cousin_terms].label}
+          <Chip icon={KIN_TERMS[row.kin_terms].icon}>
+            {KIN_TERMS[row.kin_terms].label}
           </Chip>
-          <Chip icon={PREFERENCES[row.preference].icon}>
-            {PREFERENCES[row.preference].label}
+          <Chip icon={ADOPTIONS[row.adoption].icon}>
+            {ADOPTIONS[row.adoption].label}
           </Chip>
-          <Chip icon={PAYMENTS[row.payment].icon}>
-            {row.payment === 'none'
-              ? PAYMENTS.none.label
-              : `${PAYMENTS[row.payment].label}, ${row.payment_value}`}
+          <Chip icon={FIRST_SIDES[row.first_side].icon}>
+            {FIRST_SIDES[row.first_side].label}
           </Chip>
-          {row.levirate && <Chip icon={HeartHandshake}>Levirate</Chip>}
-          {row.sororate && <Chip icon={HeartHandshake}>Sororate</Chip>}
+          {row.sibling_union_first && (
+            <Chip icon={HeartHandshake}>Sibling union, first side</Chip>
+          )}
+          {row.sibling_union_second && (
+            <Chip icon={HeartHandshake}>Sibling union, second side</Chip>
+          )}
         </>
       }
     />
   )
 }
+
+const NO_SIDE = 'Choose which side the people counts as first'
 
 function KinshipForge({
   peopleId,
@@ -163,33 +173,36 @@ function KinshipForge({
 }) {
   const [descent, setDescent] = useState<keyof typeof DESCENTS>('bilateral')
   const [residence, setResidence] =
-    useState<keyof typeof RESIDENCES>('neolocal')
-  const [preference, setPreference] = useState<keyof typeof PREFERENCES>('none')
-  const [payment, setPayment] = useState<keyof typeof PAYMENTS>('none')
+    useState<keyof typeof RESIDENCES>('new_household')
+  const [terms, setTerms] = useState<keyof typeof KIN_TERMS>('lineal')
+  const [adoption, setAdoption] = useState<keyof typeof ADOPTIONS>('foster')
+  const [side, setSide] = useState<keyof typeof FIRST_SIDES | ''>('')
   const setting = useCycleAction(
     'kinship:set',
     (_: void) => ({
       people_id: peopleId,
       descent,
       residence,
-      preference,
-      payment,
+      kin_terms: terms,
+      adoption,
+      first_side: side === '' ? 'other' : side,
     }),
     'Their ways of kin are set'
   )
   const busy = why(isPeople ? blocked : NOT_PEOPLE, setting.isPending)
+  const ready = busy ?? (side === '' ? NO_SIDE : null)
   return (
     <ForgeCard
       icon={GitBranch}
       tone='verdigris'
       title='Set their ways of kin'
-      note='Reckon descent, residence, the preferred spouse and the marriage payment.'
+      note='Reckon descent, residence, kin terms and adoption. First and second are the two sides as the people names them.'
       columns={4}
       action={
         <Button
           size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
+          disabled={ready !== null}
+          disabledReason={ready ?? undefined}
           onClick={() => setting.mutate()}
         >
           <GitBranch />
@@ -212,18 +225,26 @@ function KinshipForge({
         onPick={(value) => setResidence(value as keyof typeof RESIDENCES)}
       />
       <MindPicker
-        label='Preferred spouse'
-        value={preference}
-        table={table(PREFERENCES)}
+        label='Kin terms'
+        value={terms}
+        table={table(KIN_TERMS)}
         blocked={busy}
-        onPick={(value) => setPreference(value as keyof typeof PREFERENCES)}
+        onPick={(value) => setTerms(value as keyof typeof KIN_TERMS)}
       />
       <MindPicker
-        label='Payment'
-        value={payment}
-        table={table(PAYMENTS)}
+        label='Adoption custom'
+        value={adoption}
+        table={table(ADOPTIONS)}
         blocked={busy}
-        onPick={(value) => setPayment(value as keyof typeof PAYMENTS)}
+        onPick={(value) => setAdoption(value as keyof typeof ADOPTIONS)}
+      />
+      <MindPicker
+        label='Which side is first'
+        value={side}
+        table={table(FIRST_SIDES)}
+        blocked={busy}
+        placeholder='Choose the first side'
+        onPick={(value) => setSide(value as keyof typeof FIRST_SIDES)}
       />
     </ForgeCard>
   )
@@ -265,6 +286,12 @@ function UnionCard({
           table: table(UNION_FORMS),
         },
         {
+          key: 'plural_side',
+          label: 'Side that may take several partners',
+          kind: 'pick',
+          table: table(PLURAL_SIDES),
+        },
+        {
           key: 'purpose',
           label: 'What unions are for',
           kind: 'pick',
@@ -287,6 +314,12 @@ function UnionCard({
           label: 'What passes between families',
           kind: 'pick',
           table: table(UNION_EXCHANGES),
+        },
+        {
+          key: 'exchange_value',
+          label: 'Worth of the exchange',
+          kind: 'number',
+          min: 0,
         },
         {
           key: 'arrangement',
@@ -313,6 +346,12 @@ function UnionCard({
           table: table(PARTNER_SCOPES),
         },
         {
+          key: 'kin_match',
+          label: 'Kin sought as partners',
+          kind: 'pick',
+          table: table(KIN_MATCHES),
+        },
+        {
           key: 'term_epochs',
           label: 'Epochs a term union lasts',
           kind: 'number',
@@ -329,8 +368,19 @@ function UnionCard({
           <Chip icon={UNION_DESCENTS[row.descent].icon}>
             Lines run {UNION_DESCENTS[row.descent].label.toLowerCase()}
           </Chip>
+          {row.form === 'plural' && (
+            <Chip icon={PLURAL_SIDES[row.plural_side].icon}>
+              Several partners:{' '}
+              {PLURAL_SIDES[row.plural_side].label.toLowerCase()}
+            </Chip>
+          )}
           <Chip icon={UNION_EXCHANGES[row.exchange].icon}>
-            {UNION_EXCHANGES[row.exchange].label}
+            {row.exchange === 'none'
+              ? UNION_EXCHANGES.none.label
+              : `${UNION_EXCHANGES[row.exchange].label}, worth ${row.exchange_value}`}
+          </Chip>
+          <Chip icon={KIN_MATCHES[row.kin_match].icon}>
+            {KIN_MATCHES[row.kin_match].label}
           </Chip>
           <Chip icon={UNION_ARRANGEMENTS[row.arrangement].icon}>
             {UNION_ARRANGEMENTS[row.arrangement].label}
@@ -367,6 +417,9 @@ function UnionForge({
   blocked: string | null
 }) {
   const [form, setForm] = useState<Union['form']>('pair')
+  const [side, setSide] = useState<Union['plural_side']>('either')
+  const [worth, setWorth] = useState('10')
+  const [kinMatch, setKinMatch] = useState<Union['kin_match']>('none')
   const [purpose, setPurpose] = useState<Union['purpose']>('kinship')
   const [residence, setResidence] =
     useState<Union['residence']>('new_household')
@@ -384,14 +437,17 @@ function UnionForge({
     (_: void) => ({
       people_id: peopleId,
       form,
+      plural_side: side,
       purpose,
       residence,
       descent,
       exchange,
+      exchange_value: clamp(worth, MANY, 0),
       arrangement,
       dissolution,
       endogamy,
       exogamy,
+      kin_match: kinMatch,
       term_epochs: clamp(term, 100, 1),
     }),
     'Their customs of union are set'
@@ -424,6 +480,15 @@ function UnionForge({
         onPick={(value) => setForm(value as Union['form'])}
       />
       <MindPicker
+        label='Several partners on'
+        value={side}
+        table={table(PLURAL_SIDES)}
+        blocked={
+          busy ?? (form === 'plural' ? null : 'Only a plural form names a side')
+        }
+        onPick={(value) => setSide(value as Union['plural_side'])}
+      />
+      <MindPicker
         label='Purpose'
         value={purpose}
         table={table(UNION_PURPOSES)}
@@ -450,6 +515,16 @@ function UnionForge({
         table={table(UNION_EXCHANGES)}
         blocked={busy}
         onPick={(value) => setExchange(value as Union['exchange'])}
+      />
+      <NumberField
+        label='Worth of the exchange'
+        value={worth}
+        min={0}
+        blocked={
+          busy ??
+          (exchange === 'none' ? 'Nothing passes, so nothing is worth' : null)
+        }
+        onChange={setWorth}
       />
       <MindPicker
         label='Arranged by'
@@ -478,6 +553,13 @@ function UnionForge({
         table={table(PARTNER_SCOPES)}
         blocked={busy}
         onPick={(value) => setExogamy(value as Union['exogamy'])}
+      />
+      <MindPicker
+        label='Kin sought'
+        value={kinMatch}
+        table={table(KIN_MATCHES)}
+        blocked={busy}
+        onPick={(value) => setKinMatch(value as Union['kin_match'])}
       />
       <NumberField
         label='Term in epochs'
@@ -926,7 +1008,7 @@ function LegacyForge({
       icon={ScrollText}
       tone='gold'
       title='Have them keep a legacy'
-      note='Name a way of war, an aesthetic or a rite by its key, a god or an art form by its id, a technique by its key, or a value.'
+      note='Name a way of war or a rite by its key, a style by its five axes as ornament,geometry,colour,scale,symmetry from 0 to 100, a god or an art form by its id, a technique by its key, or a value.'
       columns={3}
       action={
         <Button

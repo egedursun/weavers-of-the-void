@@ -21,7 +21,7 @@ from aerona.domain.enums.culture import (
     SummonForm,
     Technique,
     TraditionEffectKind,
-    TraditionKind,
+    TraditionFunction,
 )
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
@@ -80,7 +80,7 @@ PARAMS: dict[CustomCatalog, type[KindParams]] = {
 BASES: dict[CustomCatalog, type[StrEnum]] = {
     CustomCatalog.TECHNIQUE: Technique,
     CustomCatalog.TENET: IdeologyTenet,
-    CustomCatalog.TRADITION_KIND: TraditionKind,
+    CustomCatalog.TRADITION_KIND: TraditionFunction,
     CustomCatalog.ARCHETYPE: LegendArchetype,
     CustomCatalog.ITEM_CLASS: ItemClass,
     CustomCatalog.RITE_EFFECT: RiteEffectKind,

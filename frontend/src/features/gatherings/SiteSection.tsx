@@ -754,7 +754,7 @@ function BeginDig({
     (dig) => dig.status === 'open' || dig.status === 'stalled'
   )
   const missing = !site.diggable
-    ? 'Only a ruin, a god corpse, a crater or a burial ground can be dug'
+    ? 'Only a ruin, a place where a god died, a crater or a burial ground can be dug'
     : open
       ? 'A dig is already under way here'
       : leader === null

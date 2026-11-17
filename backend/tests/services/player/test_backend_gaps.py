@@ -87,9 +87,9 @@ async def test_sibling_scheme_and_scatter_actions(scope: PlayerScope, session: A
     outcome = await death.sibling_scheme(scope, death.SiblingScheme(sibling_id=friend.id, son_id=dead.id, kind=SchemeKind.RITE))
     assert outcome.values["contribution"] == rules.death.sibling_rite_devotion
     assert friend.essence == 500 - rules.death.sibling_rite_cost
-    scattered = await death.scatter_bones(scope, death.ScatterBones(sibling_id=friend.id, son_id=dead.id))
-    assert scattered.values["contribution"] == -rules.death.scatter_bones_devotion_loss
-    assert await action_kinds(session) == [ActionKind.SIBLING_SCHEME, ActionKind.SCATTER_BONES]
+    scattered = await death.hinder_return(scope, death.HinderReturn(sibling_id=friend.id, son_id=dead.id))
+    assert scattered.values["contribution"] == -rules.death.hinder_return_devotion_loss
+    assert await action_kinds(session) == [ActionKind.SIBLING_SCHEME, ActionKind.HINDER_RETURN]
     with pytest.raises(ValidationFailedError):
         await death.sibling_scheme(scope, death.SiblingScheme(sibling_id=friend.id, son_id=friend.id, kind=SchemeKind.RITE))
 
@@ -122,7 +122,7 @@ async def test_economy_actions_run_and_cure_addiction(scope: PlayerScope, sessio
 
 
 async def test_new_actions_are_in_the_catalogue() -> None:
-    for action_id in ("sibling:scheme", "sibling:scatter", "rebellion:force", "economy:resources", "economy:cosmic", "addiction:cure"):
+    for action_id in ("sibling:scheme", "sibling:hinder_return", "rebellion:force", "economy:resources", "economy:cosmic", "addiction:cure"):
         assert catalog.action(action_id).sync is not None
 
 

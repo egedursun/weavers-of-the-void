@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.session import Database
 from aerona.db.write_guard import WRITE_GUARD
+from aerona.engine.context import TickContext
 from aerona.engine.parallel.effects import Effect, EffectKind, commit, merged
 from aerona.engine.parallel.pool import compute_shards
 from aerona.engine.pipeline import TICK_ORDER, current_environment, run_phases
+from aerona.engine.startup import dwellings_built_in, kinds_built_in
 from aerona.engine.stats import within_budget
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld
@@ -61,6 +63,10 @@ async def test_effects_commit_serially_and_spare_held_nodes(session: AsyncSessio
 async def test_a_tick_of_the_reference_world_stays_within_its_statement_budget(database: Database) -> None:
     async with database.write() as session:
         await seed_rich_cosmos(session)
+    prepared = await current_environment(database, rules=Rules())
+    async with database.write() as session:
+        await dwellings_built_in(TickContext(prepared, session, "startup.built_in_dwellings"))
+        await kinds_built_in(TickContext(prepared, session, "startup.built_in_kinds"))
     statements = 0
 
     def counted(*_: object) -> None:

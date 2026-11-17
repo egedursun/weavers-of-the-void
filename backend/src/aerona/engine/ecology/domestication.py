@@ -10,20 +10,22 @@ from aerona.db.tables.ecology import (
     BeastProfileRow,
     HerdRow,
     SpeciesCustomUseRow,
+    SpeciesProductRow,
     SpeciesProfileRow,
     SpeciesUseKindRow,
     SpeciesUseRow,
-    SpeciesYieldRow,
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, AnimalRole, BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
@@ -37,6 +39,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
@@ -48,7 +51,7 @@ HUNTING_DIETS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
 HOUSED = frozenset({S.DOMESTICATED, S.BREED})
 TEN = 10
 PRODUCT_PROCESS = {product: process for process, product in HERD_PROCESSES.items()}
-HERD_PRODUCTS = frozenset(PRODUCT_PROCESS)
+PART_PROCESS = {ProductPart.MILK: ProcessKind.MILKING, ProductPart.FIBRE: ProcessKind.SHEARING, ProductPart.EGGS: ProcessKind.EGG_LAYING}
 
 
 async def keeper_of(ctx: TickContext, tamer: EntityRow) -> EntityRow | None:
@@ -106,11 +109,11 @@ async def feed(ctx: TickContext, herd: HerdRow) -> bool:
     return fed
 
 
-BRED_BIG = frozenset({SpeciesUse.MOUNT, SpeciesUse.LABOUR, SpeciesUse.WAR})
-BRED_SMALL = frozenset({SpeciesUse.COMPANION})
+BRED_BIG = frozenset({AnimalRole.MOUNT, AnimalRole.DRAFT, AnimalRole.WAR})
+BRED_SMALL = frozenset({AnimalRole.COMPANION})
 
 
-def drifted_size(size: SizeClass, kinds: set[SpeciesUse], rng: SeededRandom, chance: int) -> SizeClass:
+def drifted_size(size: SizeClass, kinds: set[AnimalRole], rng: SeededRandom, chance: int) -> SizeClass:
     index = SIZE_ORDER.index(size)
     if kinds & BRED_BIG:
         index += 1
@@ -152,7 +155,7 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
     row.fear_of_people = clamp_int(source.fear_of_people - table.tame_drift, 0, PERCENT)
     row.tameability = clamp_int(source.tameability + table.tame_gain, 0, PERCENT)
     row.stage, row.stage_epoch, row.domesticated_from_id = stage, ctx.epoch, parent.id
-    for item in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == child.id)):
+    for item in await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == child.id)):
         item.rate = max(item.rate, round_half_up(item.rate * (1 + table.yield_gain_pct / PERCENT)))
     for use in await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == parent.id)):
         if await ctx.session.get(SpeciesUseRow, (child.id, use)) is None:
@@ -222,13 +225,13 @@ async def rehome(ctx: TickContext, herd: HerdRow, child: EntityRow, stage: Domes
     await ctx.session.flush()
 
 
-async def use_boosts(ctx: TickContext, species_id: int) -> dict[SpeciesUse, int]:
+async def use_boosts(ctx: TickContext, species_id: int) -> dict[AnimalRole, int]:
     rows = await ctx.session.execute(
         select(SpeciesUseKindRow.base_use, SpeciesUseKindRow.output_pct)
         .join(SpeciesCustomUseRow, SpeciesCustomUseRow.kind_id == SpeciesUseKindRow.id)
         .where(SpeciesCustomUseRow.species_entity_id == species_id)
     )
-    found: dict[SpeciesUse, int] = {}
+    found: dict[AnimalRole, int] = {}
     for use, output in rows:
         found[use] = max(found.get(use, 0), output)
     return found
@@ -244,23 +247,32 @@ async def produce(ctx: TickContext, herd: HerdRow) -> int:
     tens = herd.head / TEN
     made = 0
     outputs = (
-        ((SpeciesUse.FOOD,), CommodityKind.LIVESTOCK, table.livestock_per_head),
-        ((SpeciesUse.MOUNT, SpeciesUse.WAR), CommodityKind.MOUNTS, table.mounts_per_head),
-        ((SpeciesUse.SACRIFICE,), CommodityKind.SACRED_GOODS, table.sacred_per_head),
-        ((SpeciesUse.MAGIC,), CommodityKind.MAGICAL_REAGENTS, table.reagents_per_head),
+        ((AnimalRole.MEAT,), CommodityKind.LIVESTOCK, table.livestock_per_head),
+        ((AnimalRole.MOUNT, AnimalRole.WAR), CommodityKind.MOUNTS, table.mounts_per_head),
+        ((AnimalRole.SACRED,), CommodityKind.SACRED_GOODS, table.sacred_per_head),
+        ((AnimalRole.REAGENT_SOURCE,), CommodityKind.MAGICAL_REAGENTS, table.reagents_per_head),
+        ((AnimalRole.DAIRY,), CommodityKind.MILK, table.dairy_per_head),
+        ((AnimalRole.FIBRE,), CommodityKind.WOOL, table.fibre_per_head),
+        ((AnimalRole.HUNTING,), CommodityKind.MEAT, table.hunting_per_head),
     )
     for wanted, commodity, rate in outputs:
         present = [use for use in wanted if use in kinds]
         if present:
             scale = max(boost.get(use, PERCENT) for use in present) / PERCENT
             made += await ledger.add(herd.community_entity_id, commodity, round_half_up(tens * rate * scale), GoodsFlow.PRODUCTION)
-    if SpeciesUse.COMPANION in kinds:
+    calm = (table.companion_calm if AnimalRole.COMPANION in kinds else 0) + (table.entertainment_calm if AnimalRole.ENTERTAINMENT in kinds else 0)
+    if calm:
         town = await ctx.session.get(SettlementProfileRow, herd.community_entity_id)
         if town is not None and "unrest" not in town.locked:
-            town.unrest = clamp_int(town.unrest - table.companion_calm, 0, PERCENT)
-    for item in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == herd.species_entity_id)):
-        if item.product in HERD_PRODUCTS and item.commodity is not None:
-            spec = await method_of(ctx.session, herd.community_entity_id, PRODUCT_PROCESS[item.product])
+            town.unrest = clamp_int(town.unrest - calm, 0, PERCENT)
+    if AnimalRole.MESSENGER in kinds:
+        community = await ctx.session.get(EntityRow, herd.community_entity_id)
+        if community is not None:
+            add_prosperity(ctx.rules, community, table.messenger_prosperity)
+    for item in await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == herd.species_entity_id)):
+        process = PART_PROCESS.get(item.part) if item.part is not None else PRODUCT_PROCESS.get(item.product)
+        if process is not None and item.commodity is not None:
+            spec = await method_of(ctx.session, herd.community_entity_id, process)
             made += await ledger.add(
                 herd.community_entity_id,
                 item.commodity,
@@ -325,10 +337,10 @@ async def herd_uses(ctx: TickContext, community_id: int) -> set[str]:
             continue
         uses = set(await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == herd.species_entity_id)))
         found |= {use.value for use in uses}
-        if SpeciesUse.MOUNT in uses and CreatureTrait.FLYING in await traits_of(ctx.session, herd.species_entity_id):
+        if AnimalRole.MOUNT in uses and CreatureTrait.FLYING in await traits_of(ctx.session, herd.species_entity_id):
             found.add("sky_mount")
     if await holding(ctx.session, community_id, CommodityKind.MOUNTS) > 0:
-        found.add(SpeciesUse.MOUNT.value)
+        found.add(AnimalRole.MOUNT.value)
     bound = await ctx.session.scalar(
         select(BeastProfileRow.beast_entity_id).where(BeastProfileRow.bound_to_node_id == community_id, BeastProfileRow.temper == BeastTemper.BOUND).limit(1)
     )
@@ -345,7 +357,7 @@ async def domestic_head(ctx: TickContext, species_id: int) -> int | None:
     return sum(heads)
 
 
-async def kept_for(ctx: TickContext, community_id: int, use: SpeciesUse) -> int:
+async def kept_for(ctx: TickContext, community_id: int, use: AnimalRole) -> int:
     uses = select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == use)
     heads = await ctx.session.scalars(
         select(HerdRow.head).where(HerdRow.community_entity_id == community_id, HerdRow.species_entity_id.in_(uses), HerdRow.stage.in_(list(KEPT)))
@@ -355,7 +367,7 @@ async def kept_for(ctx: TickContext, community_id: int, use: SpeciesUse) -> int:
 
 async def draught(ctx: TickContext, community_id: int) -> float:
     table = ctx.rules.domestication
-    return 1 + table.labour_pct / PERCENT * min(1.0, await kept_for(ctx, community_id, SpeciesUse.LABOUR) / table.labour_head)
+    return 1 + table.labour_pct / PERCENT * min(1.0, await kept_for(ctx, community_id, AnimalRole.DRAFT) / table.labour_head)
 
 
 async def trained_heads(session: AsyncSession, community_id: int, training: HerdTraining) -> int:
@@ -368,7 +380,8 @@ def trained_effect(rules: Rules, trained: int) -> float:
 
 
 async def guarded(ctx: TickContext, community_id: int) -> float:
-    kept = ctx.rules.domestication.guard_pct if await kept_for(ctx, community_id, SpeciesUse.GUARD) > 0 else 0
+    kept = ctx.rules.domestication.guard_pct if await kept_for(ctx, community_id, AnimalRole.GUARD) > 0 else 0
+    kept += ctx.rules.domestication.sensing_pct if await kept_for(ctx, community_id, AnimalRole.SENSING) > 0 else 0
     drilled = ctx.rules.husbandry.guard_pct * trained_effect(ctx.rules, await trained_heads(ctx.session, community_id, HerdTraining.GUARD))
     return max(0.0, 1 - (kept + drilled) / PERCENT)
 
@@ -381,9 +394,9 @@ def drill(rules: Rules, herd: HerdRow, skill: int) -> int:
 
 async def training_for(ctx: TickContext, herd: HerdRow) -> HerdTraining | None:
     uses = set(await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == herd.species_entity_id)))
-    if SpeciesUse.WAR in uses:
+    if AnimalRole.WAR in uses:
         return HerdTraining.WAR
-    if SpeciesUse.GUARD in uses:
+    if AnimalRole.GUARD in uses:
         return HerdTraining.GUARD
     profile = await ctx.session.get(SpeciesProfileRow, herd.species_entity_id)
     return HerdTraining.HUNTING if profile is not None and profile.diet in HUNTING_DIETS else None

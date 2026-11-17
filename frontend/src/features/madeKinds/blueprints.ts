@@ -3761,7 +3761,7 @@ const SPACE_TUG = starship(
   ]
 )
 
-const MOTHERSHIP = starship(
+const CARRIER_VESSEL = starship(
   'M 30 150 Q 120 92 280 88 Q 440 92 530 150 Q 440 208 280 212 Q 120 208 30 150 Z',
   { x: 130, y: 120, w: 300, h: 60 },
   [
@@ -4140,7 +4140,7 @@ export const BLUEPRINTS = {
   spaceplane: SPACEPLANE,
   escape_pod: ESCAPE_POD,
   space_tug: SPACE_TUG,
-  mothership: MOTHERSHIP,
+  carrier_vessel: CARRIER_VESSEL,
   battle_mech: BATTLE_MECH,
   bioship: BIOSHIP,
   high_rise: HIGH_RISE,
@@ -4281,7 +4281,7 @@ const FRAME_SHAPES: Record<VehicleFrame, Silhouette> = {
   spaceplane: 'spaceplane',
   escape_pod: 'escape_pod',
   space_tug: 'space_tug',
-  mothership: 'mothership',
+  carrier_vessel: 'carrier_vessel',
   battle_mech: 'battle_mech',
   bioship: 'bioship',
 }

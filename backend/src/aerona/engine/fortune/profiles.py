@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import LuckBeliefRow
 from aerona.db.tables.fortune import FortuneLawRow, FortuneProfileRow, FortuneSourceRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneLaw, FortuneSourceKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
@@ -111,7 +112,8 @@ async def keep_fortune(ctx: TickContext) -> int:
         if not row.locked and not held(row.holder_node_id):
             await ctx.session.delete(row)
     kept = 0
-    holders = set(by_holder) | set(await ctx.session.scalars(select(FortuneProfileRow.node_id)))
+    living = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    holders = set(by_holder) | set(await ctx.session.scalars(select(FortuneProfileRow.node_id))) | set(await ctx.session.scalars(living))
     for node_id in sorted(holders):
         if held(node_id):
             continue

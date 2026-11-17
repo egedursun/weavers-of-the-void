@@ -44,7 +44,11 @@ const TEMPLE = {
   architect_name: null,
   dedicated_son_id: null,
   dedicated_son_name: null,
-  aesthetic: 'ornate',
+  style_ornament: 90,
+  style_geometry: 50,
+  style_colour: 80,
+  style_scale: 60,
+  style_symmetry: 60,
   on_ley_line: true,
   attuned: true,
   anchor: false,
@@ -176,6 +180,19 @@ describe('structures', () => {
     expect(callsTo('POST', '/api/actions/structure:edit')[1].body).toEqual({
       structure_id: 50,
       values: { level: 3 },
+      release: [],
+    })
+    await expect
+      .element(screen.getByText('Decoration 90 · Colour 80 · Scale 60'))
+      .toBeVisible()
+    await screen.getByRole('spinbutton', { name: 'Decoration' }).fill('20')
+    await screen.getByRole('button', { name: 'Set Decoration' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/structure:edit'))
+      .toHaveLength(3)
+    expect(callsTo('POST', '/api/actions/structure:edit')[2].body).toEqual({
+      structure_id: 50,
+      values: { style_ornament: 20 },
       release: [],
     })
   })

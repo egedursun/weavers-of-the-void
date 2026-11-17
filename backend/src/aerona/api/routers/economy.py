@@ -39,6 +39,7 @@ from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import CHAIN_STEPS, WORKSHOP_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.db.kind_concepts.nature import ORIGIN_SOURCE
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
@@ -102,6 +103,7 @@ def material_view(
         label=props.label,
         family=props.family,
         origin=origin,
+        source=ORIGIN_SOURCE[origin],
         edited=edited,
         hardness=props.hardness,
         toughness=props.toughness,
@@ -585,6 +587,10 @@ async def currencies(services: ServicesDep) -> list[CurrencyView]:
                 supply=row.supply,
                 minted_epoch=row.minted_epoch,
                 debased_epoch=row.debased_epoch,
+                form=row.form,
+                backing=row.backing,
+                convertible=row.convertible,
+                issuer_kind=row.issuer_kind,
                 users=sorted(users.get(row.id, [])),
                 held=row.held,
             )

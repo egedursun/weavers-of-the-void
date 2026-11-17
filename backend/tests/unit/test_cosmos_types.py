@@ -12,7 +12,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.material import MINERAL_KINDS
 from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Atmosphere, ClimateEra, Gravity, StarType, WorldType
 from aerona.engine.cosmos.star_types import STAR_TYPE_MECHANICS, brightness_band, fitted_brightness, kindled_brightness, star_capacity_pct, star_heat
-from aerona.engine.cosmos.world_types import disaster_pct, mechanics_of, ore_yield_pct, river_reaches
+from aerona.engine.cosmos.world_types import death_crossing_reaches, disaster_pct, mechanics_of, ore_yield_pct
 from aerona.engine.environment.battleground import ENDLESS_DAY_WORLDS
 from aerona.engine.environment.profile import (
     WORLD_MINERALS,
@@ -160,8 +160,8 @@ def test_place_natures_have_unique_subtypes() -> None:
 
 
 def test_corpse_world_carries_the_river_of_the_dead() -> None:
-    assert river_reaches(WorldType.DEAD) and river_reaches(WorldType.CORPSE_WORLD)
-    assert not river_reaches(WorldType.ORDINARY)
+    assert death_crossing_reaches(WorldType.DEAD) and death_crossing_reaches(WorldType.CORPSE_WORLD)
+    assert not death_crossing_reaches(WorldType.ORDINARY)
 
 
 def test_prompts_list_every_star_and_world_type_with_its_nature() -> None:

@@ -86,6 +86,16 @@ TYPED: tuple[InvariantSpec, ...] = (
     InvariantSpec("seat_god", "divine_council_seats", "a seat on the council of the gods is held by a god", Remedy.REPORT, "the seat taken away"),
     InvariantSpec("tie_gods", "pantheon_ties", "a tie within a pantheon joins two gods", Remedy.REPORT, "the tie undone"),
     InvariantSpec("syncretism_kinds", "syncretisms", "a joining of gods names a son, a foreign god and a people", Remedy.REPORT, "the joining undone"),
+    InvariantSpec("money_metal", "currencies", "only coin and commodity money are made of metal", Remedy.REPAIR, "the metal cleared"),
+    InvariantSpec("material_source", "world_materials", "a substance's source is a thing of the kind its origin names", Remedy.REPAIR, "the source cleared"),
+    InvariantSpec("holding_kind", "kind_holdings", "a holding of a kind of thing names a kind of its own concept", Remedy.REPAIR, "the holding dropped"),
+    InvariantSpec("kind_lineage", "good_kinds", "a kind of thing derives from another kind of its concept, not itself", Remedy.REPAIR, "the lineage cut"),
+    InvariantSpec(
+        "kind_ranges", "good_kinds", "each property of a kind of thing lies within the range its concept allows", Remedy.REPAIR, "brought into range"
+    ),
+    InvariantSpec(
+        "genome_alleles", "genomes", "every allele a genome carries is an allele of its locus", Remedy.REPAIR, "set to the common allele of the locus"
+    ),
 )
 
 DERIVED_REASONS: dict[str, str] = {

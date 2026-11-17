@@ -32,7 +32,7 @@ REASON = "because the tide demands it"
 
 TYPED_DEFAULTS: dict[str, dict[str, str]] = {
     "tell_legend": {"archetype": "monster"},
-    "create_artwork": {"medium": "song"},
+    "create_artwork": {"medium": "musical"},
     "forge_item": {"item_class": "blade"},
     "found_tradition": {"tradition_kind": "festival"},
     "utter_prophecy": {"predicate": "sky_event"},
@@ -277,7 +277,7 @@ async def test_death_tools(database: Database) -> None:
     assert "chance" in text
     plot = await ok(toolkit, "resurrect_sibling", {"son_id": realm.sibling_id, "path": "rite"})
     assert "devotion" in plot.lower()
-    assert "already plotted" in await rejected(toolkit, "scatter_bones", {"son_id": realm.sibling_id})
+    assert "already plotted" in await rejected(toolkit, "hinder_return", {"son_id": realm.sibling_id})
 
 
 async def test_cosmic_tools(database: Database) -> None:

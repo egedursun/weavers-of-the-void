@@ -237,7 +237,7 @@ DIVINE_MECHANICS = (
         fields=("hunger", "reach", "fed", "strength"),
         tables=(OuterBeingProfileRow.__tablename__, BreachPointRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("ward_against_outer", "bargain_with_outsider"),
+        tools=("ward_against_outer", "bargain_with_outsider", "turn_hunger"),
         targets=("outer_being",),
         couplings=(
             Coupling(S.FAITH, "an outer being that feeds on souls takes them from the realm", EdgeKind.FLOW, "outer_beings.bite_per_interest"),

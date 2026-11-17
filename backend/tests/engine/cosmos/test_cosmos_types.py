@@ -176,7 +176,7 @@ async def test_a_wormhole_throat_opens_and_shuts(ctx: TickContext, cosmos: Cosmo
 
 async def test_the_river_of_the_dead_flows_from_a_corpse_world(ctx: TickContext, cosmos: Cosmos) -> None:
     corpse = await make_world(ctx.session, "Godbody", WorldType.CORPSE_WORLD)
-    river = await make_route(ctx.session, cosmos.home.id, corpse.id, TravelMethod.RIVER_OF_DEAD)
+    river = await make_route(ctx.session, cosmos.home.id, corpse.id, TravelMethod.DEATH_CURRENT)
     people = await make_entity(ctx.session, "Tarn", EntityType.PEOPLE, PeopleStats(population=500), world_id=cosmos.home.id)
     problem = await can_use_route(ctx.session, ctx.rules, ctx.epoch, people, river)
     assert problem is None or "river" not in problem

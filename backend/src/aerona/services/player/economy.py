@@ -4,7 +4,7 @@ from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.economy import CommodityKind, MaterialFamily, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, MaterialFamily, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy import control, control_depth
@@ -25,6 +25,7 @@ class EditMaterial(Command):
     branch: KnowledgeBranch | None = None
     clear_branch: bool = False
     hold: bool | None = None
+    source_node_id: int | None = None
 
 
 class GrantStock(Command):
@@ -81,6 +82,10 @@ class EditCurrency(Command):
     supply: int | None = Field(default=None, ge=0)
     name: str | None = Field(default=None, max_length=NAME_MAX)
     metal: MaterialKind | None = None
+    form: MoneyForm | None = None
+    backing: MoneyBacking | None = None
+    convertible: bool | None = None
+    issuer_kind: CurrencyIssuer | None = None
     hold: bool | None = None
 
 
@@ -108,7 +113,12 @@ class InjectHoard(Command):
 async def edit_material(scope: PlayerScope, command: EditMaterial) -> Effect:
     ctx = await scope.context("material_edit")
     text = control.MaterialText(
-        description=command.description, family=command.family, branch=command.branch, clear_branch=command.clear_branch, hold=command.hold
+        description=command.description,
+        family=command.family,
+        branch=command.branch,
+        clear_branch=command.clear_branch,
+        hold=command.hold,
+        source_node_id=command.source_node_id,
     )
     row = await control.edit_material(
         ctx, command.world_id, material=command.material, world_material_id=command.world_material_id, values=command.values, name=command.name, text=text
@@ -183,6 +193,9 @@ async def set_toll(scope: PlayerScope, command: SetToll) -> Effect:
 async def edit_currency(scope: PlayerScope, command: EditCurrency) -> Effect:
     ctx = await scope.context("currency_edit")
     row = await control.edit_currency(ctx, command.currency_id, purity=command.purity, trust=command.trust, supply=command.supply)
+    await control_depth.reshape_currency(
+        ctx, row, control_depth.MoneyShape(form=command.form, backing=command.backing, convertible=command.convertible, issuer_kind=command.issuer_kind)
+    )
     await control_depth.rename_currency(ctx, row, command.name, command.metal, command.hold)
     return Effect(f"{row.name}: purity {row.purity}, trust {row.trust}, {several(row.supply, 'coin', 'coins')} abroad.", row.item_entity_id)
 

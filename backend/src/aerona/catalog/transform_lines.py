@@ -25,7 +25,7 @@ LINES = MappingProxyType(
         K.LEGEND_FIXED: Line("transform.legend_fixed", "The legend {subject} was fixed into the work {result}."),
         K.ARTWORK_REMEMBERED: Line("transform.artwork_remembered", "The lost work {subject} lives on as the legend {result}."),
         K.EVENT_PHENOMENON: Line("transform.event_phenomenon", "The happening {subject} outlasted its moment and stayed in the world as {result}."),
-        K.GOD_CORPSE: Line("transform.god_corpse", "The body of {subject} became the place {result}."),
+        K.DEAD_GOD: Line("transform.dead_god", "The body of {subject} became the place {result}."),
         K.CONSTRUCT: Line("transform.construct", "The made thing {subject} woke and moved as {result}."),
         K.BEAST_PROMOTION: Line("transform.beast_promotion", "One of the kind {subject} grew past its kin into the beast {result}."),
         K.LANGUAGE_DEATH: Line("transform.language_death", "The last speakers of {subject} were gone; the language is dead."),

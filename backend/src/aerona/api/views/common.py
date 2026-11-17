@@ -20,6 +20,7 @@ from aerona.api.schemas.records import (
     SonPublic,
     SonRecord,
 )
+from aerona.catalog.travel import TRAVEL_MODEL
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -198,8 +199,10 @@ async def route_records(session: AsyncSession, rules: Rules, routes: Sequence[Ro
             open=status.is_open, state=status.state, reason=status.reason, opens_epoch=status.opens_epoch, closes_epoch=status.closes_epoch
         )
         scope = ladder.scope_by_id(route.world_a_id, route.world_b_id)
-        records.append(RouteRecord.model_validate({**{key: getattr(route, key) for key in ROUTE_FIELDS}, "status": state, "scope": scope}))
+        medium, mechanism = TRAVEL_MODEL[route.method]
+        fields = {key: getattr(route, key) for key in ROUTE_FIELDS}
+        records.append(RouteRecord.model_validate({**fields, "status": state, "scope": scope, "medium": medium, "mechanism": mechanism}))
     return records
 
 
-ROUTE_FIELDS = tuple(name for name in RouteRecord.model_fields if name not in ("status", "scope"))
+ROUTE_FIELDS = tuple(name for name in RouteRecord.model_fields if name not in ("status", "scope", "medium", "mechanism"))

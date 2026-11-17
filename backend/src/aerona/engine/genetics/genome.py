@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import PACKAGES
+from aerona.catalog.genetic_effects import ATTRIBUTE_WORDS, EFFECT_POINTS, EFFECT_SCALES, GENETIC_EFFECT_LABELS, LOCUS_EFFECTS, STAT_WORDS
 from aerona.catalog.genetics import GIFT_LOCI_ORDER, HARMFUL, LOCI, LOOKS_LOCI, SCHOOL_OF_LOCUS, VISIBLE_LOCI, LocusSpec
+from aerona.catalog.mind import SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.afflictions import AfflictionRow
@@ -12,9 +14,9 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, InjuryKind, InjuryState
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.genetics import Locus
-from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.mortal import Ability
+from aerona.domain.enums.genetics import GeneticEffect, Locus
+from aerona.domain.enums.living import LineTrait
+from aerona.domain.enums.mind import Attribute, SkillKind, TraitKind
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -28,7 +30,7 @@ PAIR = 2
 def pair_of(genes: Mapping[str, list[str]], locus: Locus) -> tuple[str, str]:
     spec = LOCI[locus]
     found = genes.get(locus.value) or []
-    first = found[0] if found and found[0] in spec.keys else spec.alleles[0].key
+    first = found[0] if found and found[0] in spec.keys else spec.common.key
     second = found[1] if len(found) >= PAIR and found[1] in spec.keys else first
     return first, second
 
@@ -151,15 +153,15 @@ async def consanguinity(session: AsyncSession, rules: Rules, first_id: int, seco
 
 def potential_of(rules: Rules, rng: SeededRandom, first: Mapping[str, int], second: Mapping[str, int], fallback: Mapping[str, int]) -> dict[str, int]:
     deviation = rules.genetics.potential_deviation
+    middle = PERCENT // PAIR
     return {
-        ability.value: clamp_int(
-            (first.get(ability.value, fallback.get(ability.value, PERCENT // PAIR)) + second.get(ability.value, fallback.get(ability.value, PERCENT // PAIR)))
-            / PAIR
+        member.value: clamp_int(
+            (first.get(member.value, fallback.get(member.value, middle)) + second.get(member.value, fallback.get(member.value, middle))) / PAIR
             + rng.integer(-deviation, deviation),
             0,
             PERCENT,
         )
-        for ability in Ability
+        for member in Attribute
     }
 
 
@@ -201,13 +203,87 @@ def likeness(genes: Mapping[str, list[str]], other: Mapping[str, list[str]]) -> 
     return round_half_up(same * PERCENT / max(1, len(VISIBLE_LOCI)))
 
 
-COLOUR_CRAFTS = frozenset({SkillKind.WEAVING, SkillKind.POTTERY, SkillKind.JEWELLING})
+def effect_steps(genes: Mapping[str, list[str]], channel: GeneticEffect) -> int:
+    return sum(score_of(genes, locus) * spec.effects[channel] for locus, spec in LOCUS_EFFECTS.items() if channel in spec.effects)
 
 
-def colour_factor(rules: Rules, genome: GenomeRow | None, skill: SkillKind) -> float:
-    if genome is None or skill not in COLOUR_CRAFTS or not score_of(genome.genes, Locus.COLOUR_BLINDNESS):
+def effect_pct(rules: Rules, genes: Mapping[str, list[str]], channel: GeneticEffect) -> int:
+    return effect_steps(genes, channel) * EFFECT_SCALES[channel](rules)
+
+
+def effect_factor(rules: Rules, genome: GenomeRow | None, channel: GeneticEffect) -> float:
+    return 1.0 if genome is None else max(0.0, 1 + effect_pct(rules, genome.genes, channel) / PERCENT)
+
+
+def learning_factor(rules: Rules, genome: GenomeRow | None, skill: SkillKind) -> float:
+    if genome is None:
         return 1.0
-    return max(0.0, 1 - rules.genetics.colour_blind_pct / PERCENT)
+    share = sum(score_of(genome.genes, locus) * spec.skills[skill] for locus, spec in LOCUS_EFFECTS.items() if skill in spec.skills)
+    return max(0.0, 1 + share * rules.genetics.learning_pct / PERCENT / PERCENT)
+
+
+def stat_shifts(rules: Rules, genes: Mapping[str, list[str]]) -> dict[str, int]:
+    shifts: dict[str, int] = {}
+    for locus, spec in LOCUS_EFFECTS.items():
+        score = score_of(genes, locus)
+        for key, points in spec.stats.items():
+            shifts[key] = shifts.get(key, 0) + score * points
+    return {key: round_half_up(value * rules.genetics.stat_step_pct / PERCENT) for key, value in shifts.items() if value}
+
+
+def attribute_shifts(rules: Rules, genes: Mapping[str, list[str]]) -> dict[Attribute, int]:
+    shifts: dict[Attribute, int] = {}
+    for locus, spec in LOCUS_EFFECTS.items():
+        score = score_of(genes, locus)
+        for member, points in spec.attributes.items():
+            shifts[member] = shifts.get(member, 0) + score * points
+    return {member: round_half_up(value * rules.genetics.attribute_step_pct / PERCENT) for member, value in shifts.items() if value}
+
+
+def tied_traits(genes: Mapping[str, list[str]]) -> list[tuple[Locus, TraitKind]]:
+    return [(locus, trait) for locus, spec in LOCUS_EFFECTS.items() for allele, trait in spec.traits if phenotype(genes, locus) == allele]
+
+
+def line_traits(rules: Rules, genes: Mapping[str, list[str]]) -> dict[LineTrait, int]:
+    found: dict[LineTrait, int] = {}
+    for locus, spec in LOCUS_EFFECTS.items():
+        score = score_of(genes, locus)
+        if spec.line_trait is not None and score:
+            found[spec.line_trait] = found.get(spec.line_trait, 0) + score * rules.genetics.germline_trait
+    return {trait: value for trait, value in found.items() if value}
+
+
+def signed(value: int) -> str:
+    return f"+{value}" if value > 0 else str(value)
+
+
+def describe_effects(rules: Rules, locus: Locus, score: int) -> list[str]:
+    if not score:
+        return []
+    spec = LOCUS_EFFECTS[locus]
+    lines = [
+        f"{STAT_WORDS[key]} {signed(round_half_up(score * points * rules.genetics.stat_step_pct / PERCENT))} at birth" for key, points in spec.stats.items()
+    ]
+    lines += [
+        f"Inborn {ATTRIBUTE_WORDS[member]} {signed(round_half_up(score * points * rules.genetics.attribute_step_pct / PERCENT))}"
+        for member, points in spec.attributes.items()
+    ]
+    for skill, share in spec.skills.items():
+        pace = round_half_up(score * share * rules.genetics.learning_pct / PERCENT)
+        lines.append(f"Learns {SKILLS[skill].label.lower()} {abs(pace)}% {'faster' if pace > 0 else 'slower'}")
+    for channel, weight in spec.effects.items():
+        amount = score * weight * EFFECT_SCALES[channel](rules)
+        unit = " each epoch" if channel in EFFECT_POINTS else "%"
+        lines.append(f"{GENETIC_EFFECT_LABELS[channel]} {signed(amount)}{unit}")
+    return lines
+
+
+def carried_alleles(genes: Mapping[str, list[str]]) -> list[tuple[Locus, str]]:
+    hidden: list[tuple[Locus, str]] = []
+    for locus in LOCI:
+        shown = phenotype(genes, locus)
+        hidden.extend((locus, key) for key in dict.fromkeys(pair_of(genes, locus)) if key != shown and not LOCI[locus].graded)
+    return hidden
 
 
 def gift_factors(rules: Rules, genome: GenomeRow | None, school: MagicSchool) -> tuple[float, float]:

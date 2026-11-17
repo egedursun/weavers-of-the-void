@@ -1,7 +1,7 @@
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LegendProfileRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.culture import LegendArchetype, TraditionKind
+from aerona.domain.enums.culture import LegendArchetype, RiteStage, TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.lore import legends, traditions
@@ -10,38 +10,48 @@ from aerona.engine.primitives.words import names_word
 
 TYPED_KINDS_FIXUP = "lore.typed_kinds_backfill"
 A = LegendArchetype
-K = TraditionKind
+K = TraditionFunction
 LEGEND_WORDS = (
-    (("flood", "deluge"), A.FLOOD),
-    (("king", "return", "throne"), A.RETURN_OF_THE_KING),
+    (("flood", "deluge"), A.WORLD_DISASTER),
+    (("king", "return", "throne"), A.RETURN_OF_A_RULER),
     (("betray", "traitor"), A.BETRAYAL),
     (("curse", "doom"), A.CURSED_LINE),
     (("ghost", "haunt", "shade"), A.HAUNTED_PLACE),
     (("chosen", "prophet"), A.CHOSEN_ONE),
     (("trick", "fox", "thief"), A.TRICKSTER),
     (("beginning", "creation", "first"), A.CREATION),
-    (("paradise", "golden", "lost"), A.LOST_PARADISE),
+    (("paradise", "golden", "lost"), A.LOST_GOLDEN_AGE),
     (("beast", "dragon", "monster", "serpent"), A.MONSTER),
+)
+STAGE_WORDS = (
+    (("funeral", "burial"), RiteStage.DEATH),
+    (("wedding", "marriage"), RiteStage.UNION),
+    (("naming",), RiteStage.NAMING),
+    (("birth",), RiteStage.BIRTH),
+    (("elder",), RiteStage.ELDERHOOD),
+    (("initiation", "coming of age"), RiteStage.COMING_OF_AGE),
 )
 TRADITION_WORDS = (
     (("mourning", "lament", "wake"), K.MOURNING),
-    (("funeral", "burial", "pyre"), K.FUNERAL_RITE),
+    (("funeral", "burial"), K.RITE_OF_PASSAGE),
     (("plague",), K.FAST),
-    (("remembrance", "victory", "festival", "feast day", "carnival"), K.FESTIVAL),
-    (("ancestor",), K.ANCESTOR_FEAST),
-    (("harvest", "sowing"), K.HARVEST_RITE),
+    (("remembrance", "memorial", "commemoration"), K.COMMEMORATION),
+    (("victory", "festival", "feast day", "carnival"), K.FESTIVAL),
+    (("ancestor",), K.ANCESTRAL_RITE),
+    (("harvest", "sowing"), K.SEASONAL_RITE),
     (("fast", "lent"), K.FAST),
-    (("initiation",), K.INITIATION),
-    (("wedding", "marriage"), K.MARRIAGE_RITE),
-    (("coming of age", "naming"), K.COMING_OF_AGE),
+    (("initiation", "wedding", "marriage", "coming of age", "naming", "birth", "elder"), K.RITE_OF_PASSAGE),
     (("taboo", "forbidden"), K.TABOO),
     (("offering", "sacrifice"), K.OFFERING),
     (("pilgrimage",), K.PILGRIMAGE),
-    (("hospitality", "guest"), K.HOSPITALITY_LAW),
+    (("hospitality", "guest"), K.HOSPITALITY),
     (("duel", "honour"), K.DUEL_CUSTOM),
-    (("war dance", "war-dance", "dance"), K.WAR_DANCE),
-    (("scar",), K.SCAR_RITE),
+    (("war dance", "war-dance", "dance"), K.MARTIAL_DISPLAY),
+    (("scar",), K.BODY_MARKING),
     (("oath", "peace"), K.FESTIVAL),
+    (("gift", "giving"), K.GIFT_CUSTOM),
+    (("purification", "cleansing"), K.PURIFICATION),
+    (("games", "contest", "tournament"), K.COMPETITION),
 )
 
 
@@ -74,6 +84,8 @@ async def backfill_traditions(ctx: TickContext) -> dict[str, int]:
         row = await ctx.session.get(TraditionProfileRow, tradition.id)
         if row is None:
             row = await traditions.profile_of(ctx, tradition, read_once(tradition, TRADITION_WORDS) or K.FESTIVAL)
+            if row.kind is K.RITE_OF_PASSAGE and row.stage is None:
+                row.stage = read_once(tradition, STAGE_WORDS)
             counts["traditions_typed"] += 1
         counts["traditions_effects"] += await traditions.seed_effects(ctx, row)
         if row.origin_incident_id is None and row.origin_entity_id is not None:

@@ -14,7 +14,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import ClaimBasis, LawKind, OfficeKind
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.statecraft import SubjectKind
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
@@ -38,7 +38,7 @@ LIEGE = "de_jure_liege_entity_id"
 DRIFT = "drift"
 RANK = "rank"
 EQUAL_SPLIT = "equal"
-RANK_ORDER = (TitleRank.LORDSHIP, TitleRank.COUNTY, TitleRank.DUCHY, TitleRank.KINGDOM, TitleRank.EMPIRE)
+RANK_ORDER = (TitleTier.LOCAL, TitleTier.DISTRICT, TitleTier.REGIONAL, TitleTier.REALM, TitleTier.IMPERIAL)
 POWER = 3
 
 
@@ -56,11 +56,11 @@ class TitleTally:
     partitioned: int = 0
 
 
-def rank_of(tier: int) -> TitleRank:
+def rank_of(tier: int) -> TitleTier:
     return TIER_RANKS[min(max(tier, 0), len(TIER_RANKS) - 1)]
 
 
-def rank_index(rank: TitleRank) -> int:
+def rank_index(rank: TitleTier) -> int:
     return RANK_ORDER.index(rank) if rank in RANK_ORDER else 0
 
 
@@ -105,7 +105,7 @@ async def regalia_of(ctx: TickContext, realm_id: int) -> list[int]:
     )
 
 
-async def found_title(ctx: TickContext, realm: Realm, rank: TitleRank, tenure: TitleTenure, lands: set[int]) -> TitleProfileRow:
+async def found_title(ctx: TickContext, realm: Realm, rank: TitleTier, tenure: TitleTenure, lands: set[int]) -> TitleProfileRow:
     entity = await create_record(
         ctx,
         RecordSpec(

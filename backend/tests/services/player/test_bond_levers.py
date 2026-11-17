@@ -73,7 +73,7 @@ async def test_the_god_kindles_calls_on_and_quenches_a_passion_and_sets_a_rank(s
 
 async def test_the_god_stages_retells_and_strikes_contests_and_arguments(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     first, second = await hero(session, world, "Afan"), await hero(session, world, "Bryn")
-    made = await bonds.stage_contest(scope, bonds.HoldContest(challenger_id=first, defender_id=second, kind=ContestKind.FLYTING))
+    made = await bonds.stage_contest(scope, bonds.HoldContest(challenger_id=first, defender_id=second, kind=ContestKind.INSULT_CONTEST))
     contest = await session.get(ContestRow, made.values["contest_id"])
     assert contest is not None and len(contest.rounds) > 0
     await bonds.edit_contest(scope, bonds.EditContest(contest_id=contest.id, outcome=ContestEnd.DRAWN, famous=True, note="sung in the halls"))

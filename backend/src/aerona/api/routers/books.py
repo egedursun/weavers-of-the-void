@@ -45,7 +45,7 @@ from aerona.services.exchange import stream_and_delete
 router = APIRouter(tags=["books"])
 
 UNSAFE_FILE_CHARACTERS = re.compile(r"[^A-Za-z0-9_-]+")
-FALLBACK_NAME = "weavers-of-the-void"
+FALLBACK_NAME = "cosmos"
 BOOK_FILENAME_SUFFIX = "-book.pdf"
 NO_MAP = "This world has no map yet."
 NO_FONT = "No such font."

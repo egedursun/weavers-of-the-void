@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import {
+  Anchor,
+  Brain,
   Dna,
+  Dumbbell,
+  Eye,
   FileSignature,
+  HeartPulse,
   LockOpen,
   Merge,
   Plus,
   Save,
+  ScanEye,
   Shield,
   Trash2,
   UserPlus,
   Users,
+  Zap,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -67,7 +74,17 @@ const HOUSE_TRAITS: Record<string, Named> = {
   god_blooded: { label: 'God-blooded', icon: Dna, tone: 'gold' },
   cursed: { label: 'Cursed', icon: Dna, tone: 'danger' },
   fertile: { label: 'Fertile', icon: Users, tone: 'verdigris' },
-  seer_gift: { label: 'Seer’s gift', icon: Dna, tone: 'info' },
+  seer_gift: { label: 'Seer’s gift', icon: Eye, tone: 'info' },
+  strong_blooded: { label: 'Strong-blooded', icon: Dumbbell, tone: 'success' },
+  swift: { label: 'Swift', icon: Zap, tone: 'success' },
+  quick_healing: {
+    label: 'Quick to heal',
+    icon: HeartPulse,
+    tone: 'verdigris',
+  },
+  sharp_sensed: { label: 'Sharp of sense', icon: ScanEye, tone: 'info' },
+  steady: { label: 'Steady under strain', icon: Anchor, tone: 'gold' },
+  quick_minded: { label: 'Quick of mind', icon: Brain, tone: 'info' },
 }
 
 export function FoundHouse({ blocked }: { blocked: string | null }) {

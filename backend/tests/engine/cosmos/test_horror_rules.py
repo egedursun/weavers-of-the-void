@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
@@ -82,3 +83,17 @@ async def test_a_tight_world_suffers_no_horror(session: AsyncSession, cosmos: Co
     ctx = tick(session, rules)
     cosmos.home.leakage = 0
     assert await spontaneous_horror(ctx) is None
+
+
+async def test_a_held_people_neither_loses_its_mind_nor_breeds_an_outer_cult(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    ctx = tick(session, tuned(rules, "cosmic_horror", madness_chance=100, whisperers_chance=100, madness_population_loss_pct=10))
+    people = await make_entity(session, "Tarn", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)
+    people.sanity = 5
+    token = HELD_SCOPE.set(HeldScope(only=None, nodes=frozenset({people.id})))
+    try:
+        await update_sanity(ctx, await KnowledgeMap.load(session))
+    finally:
+        HELD_SCOPE.reset(token)
+    assert people.sanity == 5
+    assert people.stats.population == 5000
+    assert not {"horror.madness_epidemic", "horror.whisperers"} & await keys(session)

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.civics import LAW_GATES
+from aerona.catalog.kinds.governance import DECISION_RULES
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -160,7 +161,7 @@ async def hear_ruler(ctx: TickContext, hearing: Hearing) -> None:
     if ruler is None or held(ruler):
         return
     rule = hearing.realm.profile.decision_rule
-    weight = table.ruler_weight if rule is DecisionRule.AUTOCRATIC else table.ruler_weight // 2
+    weight = table.ruler_weight // DECISION_RULES[rule].ruler_divisor
     stand = stand_from(table.stance_threshold, await judge_values(ctx, hearing.row, await values_for(ctx.session, ruler)), weight)
     if stand is not None:
         hearing.stands[ruler] = stand
@@ -169,7 +170,7 @@ async def hear_ruler(ctx: TickContext, hearing: Hearing) -> None:
 async def hear_council(ctx: TickContext, hearing: Hearing) -> None:
     table = ctx.rules.enactment
     rule = hearing.realm.profile.decision_rule
-    weight = table.council_weight if rule is DecisionRule.COUNCIL else table.council_weight // 2 if rule is DecisionRule.ASSEMBLY else table.council_weight // 3
+    weight = table.council_weight // DECISION_RULES[rule].council_divisor
     for office in hearing.realm.offices:
         holder = office.holder_entity_id
         if office.kind not in COUNCIL or holder is None or holder in hearing.stands or held(holder):

@@ -3,7 +3,7 @@ from enum import StrEnum
 
 class WorldEnd(StrEnum):
     SHATTERED = "shattered"
-    SWALLOWED = "swallowed"
+    CONSUMED = "consumed"
     FROZEN_DEAD = "frozen_dead"
     SUNK_INTO_VOID = "sunk_into_void"
     FORGOTTEN = "forgotten"

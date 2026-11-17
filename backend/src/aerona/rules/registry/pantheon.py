@@ -68,9 +68,7 @@ class PantheonRules:
         "Awakening pressure: each son acting (creating or entering the chronicle) on that world this epoch; merely staying there doesn't count",
     )
     sleep_per_expedition: int = rule(20, 0, 1000, RuleGroup.CIVILIZATION, "Awakening pressure: each expedition setting out to that world or each route opened")
-    sleep_per_event: int = rule(
-        6, 0, 1000, RuleGroup.CIVILIZATION, "Awakening pressure: each major event on that world this epoch (war, disaster, plague, battle\u2026)"
-    )
+    sleep_per_event: int = rule(6, 0, 1000, RuleGroup.CIVILIZATION, "Awakening pressure: each major event on that world this epoch")
     sleep_per_land: int = rule(8, 0, 1000, RuleGroup.CIVILIZATION, "Awakening pressure: each new region or place opened on that world by sons or mortals")
     sleep_per_relic: int = rule(
         25, 0, 1000, RuleGroup.CIVILIZATION, "Awakening pressure: each ancient remnant or trace of a previous creation found on that world"

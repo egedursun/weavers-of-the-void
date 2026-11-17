@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, PeaceTermRow, WarAimRow
 from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow
@@ -9,7 +10,7 @@ from aerona.db.tables.warfare import CaptiveRow, WarRow
 from aerona.domain.enums.military import CaptiveFate, PeaceTermKind, WarAimKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
-from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
+from aerona.domain.enums.war import CaptiveStatus, WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
 from aerona.engine.mind.book import values_for
@@ -36,7 +37,7 @@ AIM_TERMS: dict[WarAimKind, PeaceTermKind] = {
     A.CHANGE_GOVERNMENT: K.GOVERNMENT,
     A.SEIZE_ROUTE: K.TRADE_CONCESSION,
 }
-TRADE_CAUSES = frozenset({WarCause.TRADE_ROUTE, WarCause.RESOURCE, WarCause.DEBT})
+TRADE_CAUSES = frozenset(cause for cause, spec in WAR_CAUSES.items() if spec.over_trade)
 TREATY_ENDINGS = {
     WarEnding.VICTORY: TreatyKind.PEACE,
     WarEnding.CONQUEST: TreatyKind.PEACE,

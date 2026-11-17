@@ -6,6 +6,7 @@ from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.structure import StructureKind
@@ -149,6 +150,13 @@ class AwakenedKnowledge(AwakenedRecord):
     branch: KnowledgeBranch
 
 
+class AwakenedKind(OutputModel):
+    concept: KindConcept = Field(description="What sort of thing it is")
+    category: str = Field(description="Its category among those listed for its sort of thing: {{ kind_categories }}")
+    name: str = Field(description="Its name among the people, in their own language")
+    description: str = Field(description="1 to 2 sentences: what it is and how the people make or use it, as the seed and this people call for")
+
+
 class AwakenedPeople(OutputModel):
     region_id: int
     people: AwakenedPeopleRecord
@@ -157,6 +165,10 @@ class AwakenedPeople(OutputModel):
     resource: AwakenedResource
     knowledge: AwakenedKnowledge
     tradition: AwakenedRecord
+    kinds: list[AwakenedKind] = Field(
+        default_factory=list,
+        description="The people's own kinds of things, one or more for each sort of thing that fits this people; none that the seed rules out",
+    )
     worshipped_son_id: int = Field(description="The son they worship; 0 if none")
 
 

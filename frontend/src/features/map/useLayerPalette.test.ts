@@ -70,4 +70,31 @@ describe('layer palette', () => {
     expect(political.categories[0].label).toBe('Kethrani')
     expect(buildLayerPalette(VIEW, 'terrain', NAMES, TOKENS).tints.size).toBe(0)
   })
+
+  it('tints regions by their most held cuisine and their form of money', () => {
+    const ways = {
+      ...VIEW,
+      kinds: {
+        '1': [
+          { concept: 'cuisine', kind_id: 11, name: 'Hearth Fare', share: 60 },
+          { concept: 'garment', kind_id: 21, name: 'Long Wrap', share: 80 },
+        ],
+        '2': [
+          { concept: 'cuisine', kind_id: 12, name: 'River Fare', share: 90 },
+        ],
+      },
+      money: { '1': { form: 'ledger' } },
+    } as unknown as MapView
+    const cuisines = buildLayerPalette(ways, 'cuisines', NAMES, TOKENS)
+    expect(cuisines.tints.get(4)?.key).toBe('cuisines:11')
+    expect(cuisines.categories.map((item) => item.label).sort()).toEqual([
+      'Hearth Fare',
+      'River Fare',
+    ])
+    const dress = buildLayerPalette(ways, 'dress', NAMES, TOKENS)
+    expect(dress.categories.map((item) => item.label)).toEqual(['Long Wrap'])
+    const money = buildLayerPalette(ways, 'money', NAMES, TOKENS)
+    expect(money.tints.get(1)?.key).toBe('money:ledger')
+    expect(money.categories[0].label).not.toBe('ledger')
+  })
 })

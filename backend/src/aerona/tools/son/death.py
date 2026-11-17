@@ -11,7 +11,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import ActorKind
-from aerona.engine.gods.devotion import SchemeKind, resurrection_state, scatter_bones, scheme_cost, sibling_scheme
+from aerona.engine.gods.devotion import SchemeKind, hinder_return, resurrection_state, scheme_cost, sibling_scheme
 from aerona.engine.gods.mortality import Killer, attempt_kill, failed_kill_refund, kill_cost
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -87,10 +87,10 @@ async def resurrect_sibling(call: SonCall, args: ResurrectInput) -> str:
 async def scatter(call: SonCall, args: ScatterInput) -> str:
     dead = await _dead_sibling(call, args.son_id)
     call.target(dead.id)
-    outcome = await scatter_bones(call.tick, call.son, dead)
-    call.log.essence_spent += call.rules.death.scatter_bones_cost
+    outcome = await hinder_return(call.tick, call.son, dead)
+    call.log.essence_spent += call.rules.death.hinder_return_cost
     await call.bump(TurnCounter.INTRIGUE)
-    return result(SonResult.SCATTERED, text=outcome.text)
+    return result(SonResult.RETURN_HINDERED, text=outcome.text)
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:
@@ -99,10 +99,10 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
         ToolSpec(SonToolId.TAKE_LIFE, son, TakeLifeInput, ToolMeta(ActionKind.TAKE_LIFE, son_standard_action, rarity_gate=gate(Gate.TAKE_LIFE)), take_life),
         ToolSpec(SonToolId.RESURRECT_SIBLING, son, ResurrectInput, ToolMeta(ActionKind.SIBLING_SCHEME, son_standard_action), resurrect_sibling),
         ToolSpec(
-            SonToolId.SCATTER_BONES,
+            SonToolId.HINDER_RETURN,
             son,
             ScatterInput,
-            ToolMeta(ActionKind.SCATTER_BONES, son_standard_action, essence_cost=lambda rules: rules.death.scatter_bones_cost),
+            ToolMeta(ActionKind.HINDER_RETURN, son_standard_action, essence_cost=lambda rules: rules.death.hinder_return_cost),
             scatter,
         ),
     ]

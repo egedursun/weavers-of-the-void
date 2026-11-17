@@ -1,9 +1,10 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
+from aerona.db.tables.kinds import KindRow
 from aerona.domain.enums.crafts import (
     AffinityMode,
     AssistiveAid,
@@ -11,8 +12,6 @@ from aerona.domain.enums.crafts import (
     CatchRight,
     ChemicalProduct,
     ClockKind,
-    GameKind,
-    GameRule,
     Gear,
     InsuranceCover,
     LinkToken,
@@ -21,8 +20,9 @@ from aerona.domain.enums.crafts import (
     RightKind,
 )
 from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.mind import Emotion
+from aerona.domain.enums.mind import Emotion, SkillKind
 
 GROUND_FIELDS = ("ground", "gear", "right", "owner_node_id", "effort", "collapse_at", "collapsed", "last_catch", "first_stock")
 WORKS_FIELDS = ("output", "hazard", "pollution", "accidents")
@@ -31,8 +31,6 @@ POLICY_FIELDS = ("insurer_entity_id", "cover", "premium", "sum_insured", "active
 RIGHT_FIELDS = ("holder_node_id", "kind", "subject_node_id", "name", "acquired", "licensed_to_node_id")
 AID_FIELDS = ("quality",)
 CLOCK_FIELDS = ("kind", "precision", "built_epoch")
-GAME_FIELDS = ("name", "kind", "rule", "origin_entity_id")
-FOLLOWING_FIELDS = ("popularity", "adopted_epoch")
 NUMBER_FIELDS = ("base", "notation", "zero", "numeracy")
 AFFINITY_FIELDS = ("mode", "power")
 LINK_FIELDS = ("token", "strength", "obtained_epoch")
@@ -147,28 +145,30 @@ class PublicClockRow(Base):
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
-class GameRow(Base):
+class GameRow(KindRow):
     __tablename__ = "games"
-    __table_args__ = (at_least("created_epoch", 0),)
+    __table_args__ = (
+        at_least("created_epoch", 0),
+        between("chance_share", PERCENT_MIN, PERCENT_MAX),
+        between("violence", PERCENT_MIN, PERCENT_MAX),
+        between("team_size", 1, 500),
+        between("betting", PERCENT_MIN, PERCENT_MAX),
+        between("spectators", PERCENT_MIN, PERCENT_MAX),
+        between("prestige", PERCENT_MIN, PERCENT_MAX),
+    )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
-    kind: Mapped[GameKind] = mapped_column(enum_type(GameKind, "kind"))
-    rule: Mapped[GameRule] = mapped_column(enum_type(GameRule, "rule"))
-    origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
-    created_epoch: Mapped[int] = mapped_column(default=0)
-    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
-
-
-class GameFollowingRow(Base):
-    __tablename__ = "game_followings"
-    __table_args__ = (between("popularity", PERCENT_MIN, PERCENT_MAX), at_least("adopted_epoch", 0))
-
-    people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"), primary_key=True)
-    popularity: Mapped[int] = mapped_column(default=30)
-    adopted_epoch: Mapped[int] = mapped_column(default=0)
-    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    origin_node_id: Mapped[int | None] = mapped_column("origin_entity_id", ForeignKey("nodes.id", ondelete="SET NULL"), index=True)
+    built_in: Mapped[bool] = mapped_column(default=False, server_default=false())
+    retired: Mapped[bool] = mapped_column(default=False, server_default=false())
+    derived_from_id: Mapped[int | None] = mapped_column(ForeignKey("games.id", ondelete="SET NULL"))
+    category: Mapped[GameCategory] = mapped_column("kind", enum_type(GameCategory, "kind"))
+    skill: Mapped[SkillKind | None] = mapped_column(enum_type(SkillKind, "skill"))
+    chance_share: Mapped[int] = mapped_column(default=30, server_default="30")
+    violence: Mapped[int] = mapped_column(default=0, server_default="0")
+    team_size: Mapped[int] = mapped_column(default=1, server_default="1")
+    betting: Mapped[int] = mapped_column(default=10, server_default="10")
+    spectators: Mapped[int] = mapped_column(default=20, server_default="20")
+    prestige: Mapped[int] = mapped_column(default=10, server_default="10")
 
 
 class NumberSystemRow(Base):

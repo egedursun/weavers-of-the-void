@@ -11,7 +11,6 @@ from aerona.domain.enums.divine import OuterHunger
 class PlanSpec:
     plan: BodyPlan
     label: str
-    words: tuple[str, ...]
     height: HeightClass
     build: BodyBuild
 
@@ -22,75 +21,65 @@ PLANS: dict[BodyPlan, PlanSpec] = {
         PlanSpec(
             BodyPlan.HUMANOID,
             "two legs, two arms, a head",
-            ("folk", "people", "kin", "giant", "dwarf", "elf", "troll", "ogre"),
             HeightClass.AVERAGE,
             BodyBuild.AVERAGE,
         ),
         PlanSpec(
             BodyPlan.QUADRUPED,
             "four legs and a head",
-            ("hound", "wolf", "horse", "boar", "cat", "deer", "bear", "ox", "goat", "beast"),
             HeightClass.AVERAGE,
             BodyBuild.AVERAGE,
         ),
         PlanSpec(
             BodyPlan.AVIAN,
             "wings, two legs and a beak",
-            ("bird", "hawk", "eagle", "owl", "raven", "crow", "griffin", "roc", "feather"),
             HeightClass.SHORT,
             BodyBuild.SLIGHT,
         ),
         PlanSpec(
             BodyPlan.SERPENTINE,
             "a long limbless body",
-            ("serpent", "snake", "wyrm", "eel", "naga", "worm", "viper", "adder"),
             HeightClass.SHORT,
             BodyBuild.AVERAGE,
         ),
         PlanSpec(
             BodyPlan.INSECTOID,
             "six legs, a shell and feelers",
-            ("insect", "beetle", "ant", "spider", "mantis", "wasp", "bee", "locust", "scorpion"),
             HeightClass.SHORT,
             BodyBuild.SLIGHT,
         ),
         PlanSpec(
             BodyPlan.AQUATIC,
             "fins, gills and a tail",
-            ("fish", "whale", "shark", "squid", "cuttlefish", "kraken", "seal", "fin", "gill"),
             HeightClass.AVERAGE,
             BodyBuild.HEAVY,
         ),
-        PlanSpec(BodyPlan.AMORPHOUS, "a shapeless mass", ("ooze", "slime", "jelly", "blob", "mire", "sludge"), HeightClass.SHORT, BodyBuild.HEAVY),
+        PlanSpec(BodyPlan.AMORPHOUS, "a shapeless mass", HeightClass.SHORT, BodyBuild.HEAVY),
         PlanSpec(
             BodyPlan.ARBOREAL,
             "long arms for climbing and a gripping tail",
-            ("ape", "monkey", "sloth", "dryad", "treefolk", "canopy", "vine"),
             HeightClass.AVERAGE,
             BodyBuild.SLIGHT,
         ),
         PlanSpec(
             BodyPlan.INCORPOREAL,
-            "no flesh, only a shape of light or shadow",
-            ("ghost", "spirit", "wraith", "shade", "phantom", "wisp", "specter"),
+            "no flesh, a form without a body",
             HeightClass.AVERAGE,
             BodyBuild.SLIGHT,
         ),
         PlanSpec(
             BodyPlan.COLOSSAL,
-            "a body the size of a hill",
-            ("colossus", "titan", "leviathan", "behemoth", "mammoth", "mountain"),
+            "a body far larger than a dwelling",
             HeightClass.GIANT,
             BodyBuild.GIANT,
         ),
         PlanSpec(
             BodyPlan.CONSTRUCT,
-            "a made body of stone, metal or wood",
-            ("golem", "construct", "automaton", "clockwork", "statue", "effigy"),
+            "a body that was made rather than born",
             HeightClass.TALL,
             BodyBuild.HEAVY,
         ),
-        PlanSpec(BodyPlan.DIVINE_MANIFEST, "a god's manifest form", (), HeightClass.TALL, BodyBuild.AVERAGE),
+        PlanSpec(BodyPlan.DIVINE_MANIFEST, "a god's manifest form", HeightClass.TALL, BodyBuild.AVERAGE),
     )
 }
 
@@ -103,20 +92,20 @@ BEING_PLANS: MappingProxyType[BeingKind, BodyPlan] = total(
     BeingKind,
     {
         BeingKind.PLANAR_NATIVE: BodyPlan.HUMANOID,
-        BeingKind.DIMENSION_WALKER: BodyPlan.HUMANOID,
-        BeingKind.RIFT_SPAWN: BodyPlan.INSECTOID,
+        BeingKind.DIMENSION_TRAVELLER: BodyPlan.HUMANOID,
+        BeingKind.RIFT_BORN: BodyPlan.INSECTOID,
         BeingKind.HIGHER_DIMENSIONAL: BodyPlan.DIVINE_MANIFEST,
-        BeingKind.STAR_EATER: BodyPlan.COLOSSAL,
-        BeingKind.NEBULA_MIND: BodyPlan.AMORPHOUS,
-        BeingKind.GALACTIC_LEVIATHAN: BodyPlan.SERPENTINE,
-        BeingKind.VOID_SHEPHERD: BodyPlan.COLOSSAL,
-        BeingKind.ECHO: BodyPlan.INCORPOREAL,
-        BeingKind.TIME_WANDERER: BodyPlan.INCORPOREAL,
-        BeingKind.COSMIC_TITAN: BodyPlan.COLOSSAL,
-        BeingKind.VEIL_WARDEN: BodyPlan.INCORPOREAL,
-        BeingKind.PLANE_SOVEREIGN: BodyPlan.DIVINE_MANIFEST,
+        BeingKind.STAR_FEEDER: BodyPlan.COLOSSAL,
+        BeingKind.CLOUD_MIND: BodyPlan.AMORPHOUS,
+        BeingKind.GALAXY_SCALE_BEING: BodyPlan.SERPENTINE,
+        BeingKind.VOID_KEEPER: BodyPlan.COLOSSAL,
+        BeingKind.MIRRORED_DOUBLE: BodyPlan.INCORPOREAL,
+        BeingKind.TIME_TRAVELLER: BodyPlan.INCORPOREAL,
+        BeingKind.SYSTEM_SCALE_BEING: BodyPlan.COLOSSAL,
+        BeingKind.BOUNDARY_KEEPER: BodyPlan.INCORPOREAL,
+        BeingKind.DIMENSION_RULER: BodyPlan.DIVINE_MANIFEST,
         BeingKind.SWARM_INTELLIGENCE: BodyPlan.AMORPHOUS,
-        BeingKind.LIVING_CONSTELLATION: BodyPlan.INCORPOREAL,
+        BeingKind.STAR_PATTERN_MIND: BodyPlan.INCORPOREAL,
     },
 )
 HUNGER_PLANS: MappingProxyType[OuterHunger, BodyPlan] = total(

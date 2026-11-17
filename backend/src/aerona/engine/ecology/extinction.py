@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow
-from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -20,7 +20,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 CRAFTS = {
     "venom": KnowledgeBranch.MEDICINE,
     "magic reagents": KnowledgeBranch.MAGIC,
-    "dragonbone": KnowledgeBranch.METALLURGY,
+    "great_bone": KnowledgeBranch.METALLURGY,
     "chitin": KnowledgeBranch.METALLURGY,
     "ivory": KnowledgeBranch.TRADE,
     "silk": KnowledgeBranch.TRADE,
@@ -29,7 +29,7 @@ CRAFTS = {
 
 
 async def still_yielded(ctx: TickContext, species: EntityRow, product: str) -> bool:
-    others = select(SpeciesYieldRow.species_entity_id).where(SpeciesYieldRow.product == product, SpeciesYieldRow.species_entity_id != species.id)
+    others = select(SpeciesProductRow.species_entity_id).where(SpeciesProductRow.product == product, SpeciesProductRow.species_entity_id != species.id)
     found = await ctx.session.scalar(
         select(EntityRow.id).where(EntityRow.id.in_(others), EntityRow.status == EntityStatus.CANON, EntityRow.world_id == species.world_id).limit(1)
     )
@@ -38,7 +38,7 @@ async def still_yielded(ctx: TickContext, species: EntityRow, product: str) -> b
 
 async def lost_crafts(ctx: TickContext, species: EntityRow) -> int:
     lost = 0
-    products = await ctx.session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == species.id))
+    products = await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == species.id))
     for product in list(products):
         branch = CRAFTS.get(product)
         if branch is None or await still_yielded(ctx, species, product):

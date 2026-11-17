@@ -971,125 +971,139 @@ class GalacticZoneRules:
 
 @dataclass(frozen=True)
 class PhenomenonKindRules:
-    eternal_storm_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Eternal storm: magic density its regions gain at full intensity")
-    eternal_storm_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Eternal storm: sanity those in its regions lose per epoch at full intensity")
+    eternal_storm_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Lasting storm: magic density its regions gain at full intensity")
+    eternal_storm_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Lasting storm: sanity those in its regions lose per epoch at full intensity")
     eternal_storm_fertility: int = rule(
-        -10, -100, 100, RuleGroup.PHENOMENA, "Eternal storm: soil fertility its regions gain at full intensity (loses when below 0)"
+        -10, -100, 100, RuleGroup.PHENOMENA, "Lasting storm: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    eternal_storm_danger: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Eternal storm: danger it adds to its regions at full intensity")
+    eternal_storm_danger: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Lasting storm: danger it adds to its regions at full intensity")
     eternal_storm_passability: int = rule(
-        -30, -100, 100, RuleGroup.PHENOMENA, "Eternal storm: passability its regions gain at full intensity (lose when below 0)"
+        -30, -100, 100, RuleGroup.PHENOMENA, "Lasting storm: passability its regions gain at full intensity (lose when below 0)"
     )
-    eternal_storm_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Eternal storm: piety pilgrims to it bring their communities at full intensity")
-    eternal_storm_growth: int = rule(2, -50, 50, RuleGroup.PHENOMENA, "Eternal storm: growth it is born with")
-    time_slip_magic: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Time slip: magic density its regions gain at full intensity")
-    time_slip_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Time slip: sanity those in its regions lose per epoch at full intensity")
-    time_slip_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Time slip: soil fertility its regions gain at full intensity (loses when below 0)")
-    time_slip_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Time slip: danger it adds to its regions at full intensity")
-    time_slip_passability: int = rule(-10, -100, 100, RuleGroup.PHENOMENA, "Time slip: passability its regions gain at full intensity (lose when below 0)")
-    time_slip_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Time slip: piety pilgrims to it bring their communities at full intensity")
-    time_slip_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Time slip: growth it is born with")
-    leak_wound_magic: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Leak wound: magic density its regions gain at full intensity")
-    leak_wound_sanity: int = rule(4, 0, 20, RuleGroup.PHENOMENA, "Leak wound: sanity those in its regions lose per epoch at full intensity")
-    leak_wound_fertility: int = rule(-10, -100, 100, RuleGroup.PHENOMENA, "Leak wound: soil fertility its regions gain at full intensity (loses when below 0)")
-    leak_wound_danger: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Leak wound: danger it adds to its regions at full intensity")
-    leak_wound_passability: int = rule(-20, -100, 100, RuleGroup.PHENOMENA, "Leak wound: passability its regions gain at full intensity (lose when below 0)")
-    leak_wound_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Leak wound: piety pilgrims to it bring their communities at full intensity")
-    leak_wound_growth: int = rule(4, -50, 50, RuleGroup.PHENOMENA, "Leak wound: growth it is born with")
-    ley_nexus_flare_magic: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Ley nexus flare: magic density its regions gain at full intensity")
-    ley_nexus_flare_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Ley nexus flare: sanity those in its regions lose per epoch at full intensity")
+    eternal_storm_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Lasting storm: piety pilgrims to it bring their communities at full intensity")
+    eternal_storm_growth: int = rule(2, -50, 50, RuleGroup.PHENOMENA, "Lasting storm: growth it is born with")
+    time_slip_magic: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Time distortion: magic density its regions gain at full intensity")
+    time_slip_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Time distortion: sanity those in its regions lose per epoch at full intensity")
+    time_slip_fertility: int = rule(
+        0, -100, 100, RuleGroup.PHENOMENA, "Time distortion: soil fertility its regions gain at full intensity (loses when below 0)"
+    )
+    time_slip_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Time distortion: danger it adds to its regions at full intensity")
+    time_slip_passability: int = rule(
+        -10, -100, 100, RuleGroup.PHENOMENA, "Time distortion: passability its regions gain at full intensity (lose when below 0)"
+    )
+    time_slip_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Time distortion: piety pilgrims to it bring their communities at full intensity")
+    time_slip_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Time distortion: growth it is born with")
+    leak_wound_magic: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Opening to the outside: magic density its regions gain at full intensity")
+    leak_wound_sanity: int = rule(4, 0, 20, RuleGroup.PHENOMENA, "Opening to the outside: sanity those in its regions lose per epoch at full intensity")
+    leak_wound_fertility: int = rule(
+        -10, -100, 100, RuleGroup.PHENOMENA, "Opening to the outside: soil fertility its regions gain at full intensity (loses when below 0)"
+    )
+    leak_wound_danger: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Opening to the outside: danger it adds to its regions at full intensity")
+    leak_wound_passability: int = rule(
+        -20, -100, 100, RuleGroup.PHENOMENA, "Opening to the outside: passability its regions gain at full intensity (lose when below 0)"
+    )
+    leak_wound_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Opening to the outside: piety pilgrims to it bring their communities at full intensity")
+    leak_wound_growth: int = rule(4, -50, 50, RuleGroup.PHENOMENA, "Opening to the outside: growth it is born with")
+    ley_nexus_flare_magic: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Power surge: magic density its regions gain at full intensity")
+    ley_nexus_flare_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Power surge: sanity those in its regions lose per epoch at full intensity")
     ley_nexus_flare_fertility: int = rule(
-        5, -100, 100, RuleGroup.PHENOMENA, "Ley nexus flare: soil fertility its regions gain at full intensity (loses when below 0)"
+        5, -100, 100, RuleGroup.PHENOMENA, "Power surge: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    ley_nexus_flare_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Ley nexus flare: danger it adds to its regions at full intensity")
+    ley_nexus_flare_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Power surge: danger it adds to its regions at full intensity")
     ley_nexus_flare_passability: int = rule(
-        0, -100, 100, RuleGroup.PHENOMENA, "Ley nexus flare: passability its regions gain at full intensity (lose when below 0)"
+        0, -100, 100, RuleGroup.PHENOMENA, "Power surge: passability its regions gain at full intensity (lose when below 0)"
     )
-    ley_nexus_flare_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Ley nexus flare: piety pilgrims to it bring their communities at full intensity")
-    ley_nexus_flare_growth: int = rule(3, -50, 50, RuleGroup.PHENOMENA, "Ley nexus flare: growth it is born with")
-    god_corpse_aura_magic: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "God-corpse aura: magic density its regions gain at full intensity")
-    god_corpse_aura_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "God-corpse aura: sanity those in its regions lose per epoch at full intensity")
+    ley_nexus_flare_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Power surge: piety pilgrims to it bring their communities at full intensity")
+    ley_nexus_flare_growth: int = rule(3, -50, 50, RuleGroup.PHENOMENA, "Power surge: growth it is born with")
+    god_corpse_aura_magic: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Divine residue: magic density its regions gain at full intensity")
+    god_corpse_aura_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Divine residue: sanity those in its regions lose per epoch at full intensity")
     god_corpse_aura_fertility: int = rule(
-        -5, -100, 100, RuleGroup.PHENOMENA, "God-corpse aura: soil fertility its regions gain at full intensity (loses when below 0)"
+        -5, -100, 100, RuleGroup.PHENOMENA, "Divine residue: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    god_corpse_aura_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "God-corpse aura: danger it adds to its regions at full intensity")
+    god_corpse_aura_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Divine residue: danger it adds to its regions at full intensity")
     god_corpse_aura_passability: int = rule(
-        -10, -100, 100, RuleGroup.PHENOMENA, "God-corpse aura: passability its regions gain at full intensity (lose when below 0)"
+        -10, -100, 100, RuleGroup.PHENOMENA, "Divine residue: passability its regions gain at full intensity (lose when below 0)"
     )
-    god_corpse_aura_piety: int = rule(15, 0, 50, RuleGroup.PHENOMENA, "God-corpse aura: piety pilgrims to it bring their communities at full intensity")
-    god_corpse_aura_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "God-corpse aura: growth it is born with")
-    living_fog_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Living fog: magic density its regions gain at full intensity")
-    living_fog_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Living fog: sanity those in its regions lose per epoch at full intensity")
-    living_fog_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Living fog: soil fertility its regions gain at full intensity (loses when below 0)")
-    living_fog_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Living fog: danger it adds to its regions at full intensity")
-    living_fog_passability: int = rule(-25, -100, 100, RuleGroup.PHENOMENA, "Living fog: passability its regions gain at full intensity (lose when below 0)")
-    living_fog_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Living fog: piety pilgrims to it bring their communities at full intensity")
-    living_fog_growth: int = rule(5, -50, 50, RuleGroup.PHENOMENA, "Living fog: growth it is born with")
-    crystal_bloom_magic: int = rule(25, 0, 100, RuleGroup.PHENOMENA, "Crystal bloom: magic density its regions gain at full intensity")
-    crystal_bloom_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Crystal bloom: sanity those in its regions lose per epoch at full intensity")
+    god_corpse_aura_piety: int = rule(15, 0, 50, RuleGroup.PHENOMENA, "Divine residue: piety pilgrims to it bring their communities at full intensity")
+    god_corpse_aura_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Divine residue: growth it is born with")
+    living_fog_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Moving fog: magic density its regions gain at full intensity")
+    living_fog_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Moving fog: sanity those in its regions lose per epoch at full intensity")
+    living_fog_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Moving fog: soil fertility its regions gain at full intensity (loses when below 0)")
+    living_fog_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Moving fog: danger it adds to its regions at full intensity")
+    living_fog_passability: int = rule(-25, -100, 100, RuleGroup.PHENOMENA, "Moving fog: passability its regions gain at full intensity (lose when below 0)")
+    living_fog_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Moving fog: piety pilgrims to it bring their communities at full intensity")
+    living_fog_growth: int = rule(5, -50, 50, RuleGroup.PHENOMENA, "Moving fog: growth it is born with")
+    crystal_bloom_magic: int = rule(25, 0, 100, RuleGroup.PHENOMENA, "Mineral growth: magic density its regions gain at full intensity")
+    crystal_bloom_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Mineral growth: sanity those in its regions lose per epoch at full intensity")
     crystal_bloom_fertility: int = rule(
-        -5, -100, 100, RuleGroup.PHENOMENA, "Crystal bloom: soil fertility its regions gain at full intensity (loses when below 0)"
+        -5, -100, 100, RuleGroup.PHENOMENA, "Mineral growth: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    crystal_bloom_danger: int = rule(5, 0, 100, RuleGroup.PHENOMENA, "Crystal bloom: danger it adds to its regions at full intensity")
+    crystal_bloom_danger: int = rule(5, 0, 100, RuleGroup.PHENOMENA, "Mineral growth: danger it adds to its regions at full intensity")
     crystal_bloom_passability: int = rule(
-        -10, -100, 100, RuleGroup.PHENOMENA, "Crystal bloom: passability its regions gain at full intensity (lose when below 0)"
+        -10, -100, 100, RuleGroup.PHENOMENA, "Mineral growth: passability its regions gain at full intensity (lose when below 0)"
     )
-    crystal_bloom_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Crystal bloom: piety pilgrims to it bring their communities at full intensity")
-    crystal_bloom_growth: int = rule(3, -50, 50, RuleGroup.PHENOMENA, "Crystal bloom: growth it is born with")
-    dead_zone_magic: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Dead zone: magic density its regions gain at full intensity")
-    dead_zone_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Dead zone: sanity those in its regions lose per epoch at full intensity")
-    dead_zone_fertility: int = rule(-40, -100, 100, RuleGroup.PHENOMENA, "Dead zone: soil fertility its regions gain at full intensity (loses when below 0)")
-    dead_zone_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Dead zone: danger it adds to its regions at full intensity")
-    dead_zone_passability: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Dead zone: passability its regions gain at full intensity (lose when below 0)")
-    dead_zone_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Dead zone: piety pilgrims to it bring their communities at full intensity")
-    dead_zone_growth: int = rule(2, -50, 50, RuleGroup.PHENOMENA, "Dead zone: growth it is born with")
-    mirror_lake_magic: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Mirror lake: magic density its regions gain at full intensity")
-    mirror_lake_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Mirror lake: sanity those in its regions lose per epoch at full intensity")
-    mirror_lake_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Mirror lake: soil fertility its regions gain at full intensity (loses when below 0)")
-    mirror_lake_danger: int = rule(5, 0, 100, RuleGroup.PHENOMENA, "Mirror lake: danger it adds to its regions at full intensity")
-    mirror_lake_passability: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Mirror lake: passability its regions gain at full intensity (lose when below 0)")
-    mirror_lake_piety: int = rule(10, 0, 50, RuleGroup.PHENOMENA, "Mirror lake: piety pilgrims to it bring their communities at full intensity")
-    mirror_lake_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Mirror lake: growth it is born with")
-    gravity_well_magic: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Gravity well: magic density its regions gain at full intensity")
-    gravity_well_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Gravity well: sanity those in its regions lose per epoch at full intensity")
+    crystal_bloom_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Mineral growth: piety pilgrims to it bring their communities at full intensity")
+    crystal_bloom_growth: int = rule(3, -50, 50, RuleGroup.PHENOMENA, "Mineral growth: growth it is born with")
+    dead_zone_magic: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Barren ground: magic density its regions gain at full intensity")
+    dead_zone_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Barren ground: sanity those in its regions lose per epoch at full intensity")
+    dead_zone_fertility: int = rule(
+        -40, -100, 100, RuleGroup.PHENOMENA, "Barren ground: soil fertility its regions gain at full intensity (loses when below 0)"
+    )
+    dead_zone_danger: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Barren ground: danger it adds to its regions at full intensity")
+    dead_zone_passability: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Barren ground: passability its regions gain at full intensity (lose when below 0)")
+    dead_zone_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Barren ground: piety pilgrims to it bring their communities at full intensity")
+    dead_zone_growth: int = rule(2, -50, 50, RuleGroup.PHENOMENA, "Barren ground: growth it is born with")
+    mirror_lake_magic: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Distant view: magic density its regions gain at full intensity")
+    mirror_lake_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Distant view: sanity those in its regions lose per epoch at full intensity")
+    mirror_lake_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Distant view: soil fertility its regions gain at full intensity (loses when below 0)")
+    mirror_lake_danger: int = rule(5, 0, 100, RuleGroup.PHENOMENA, "Distant view: danger it adds to its regions at full intensity")
+    mirror_lake_passability: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Distant view: passability its regions gain at full intensity (lose when below 0)")
+    mirror_lake_piety: int = rule(10, 0, 50, RuleGroup.PHENOMENA, "Distant view: piety pilgrims to it bring their communities at full intensity")
+    mirror_lake_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Distant view: growth it is born with")
+    gravity_well_magic: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Gravity anomaly: magic density its regions gain at full intensity")
+    gravity_well_sanity: int = rule(1, 0, 20, RuleGroup.PHENOMENA, "Gravity anomaly: sanity those in its regions lose per epoch at full intensity")
     gravity_well_fertility: int = rule(
-        -5, -100, 100, RuleGroup.PHENOMENA, "Gravity well: soil fertility its regions gain at full intensity (loses when below 0)"
+        -5, -100, 100, RuleGroup.PHENOMENA, "Gravity anomaly: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    gravity_well_danger: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Gravity well: danger it adds to its regions at full intensity")
+    gravity_well_danger: int = rule(20, 0, 100, RuleGroup.PHENOMENA, "Gravity anomaly: danger it adds to its regions at full intensity")
     gravity_well_passability: int = rule(
-        -40, -100, 100, RuleGroup.PHENOMENA, "Gravity well: passability its regions gain at full intensity (lose when below 0)"
+        -40, -100, 100, RuleGroup.PHENOMENA, "Gravity anomaly: passability its regions gain at full intensity (lose when below 0)"
     )
-    gravity_well_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Gravity well: piety pilgrims to it bring their communities at full intensity")
-    gravity_well_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Gravity well: growth it is born with")
-    singing_stones_magic: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Singing stones: magic density its regions gain at full intensity")
-    singing_stones_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Singing stones: sanity those in its regions lose per epoch at full intensity")
+    gravity_well_piety: int = rule(0, 0, 50, RuleGroup.PHENOMENA, "Gravity anomaly: piety pilgrims to it bring their communities at full intensity")
+    gravity_well_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Gravity anomaly: growth it is born with")
+    singing_stones_magic: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Sounding ground: magic density its regions gain at full intensity")
+    singing_stones_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Sounding ground: sanity those in its regions lose per epoch at full intensity")
     singing_stones_fertility: int = rule(
-        0, -100, 100, RuleGroup.PHENOMENA, "Singing stones: soil fertility its regions gain at full intensity (loses when below 0)"
+        0, -100, 100, RuleGroup.PHENOMENA, "Sounding ground: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    singing_stones_danger: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Singing stones: danger it adds to its regions at full intensity")
+    singing_stones_danger: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Sounding ground: danger it adds to its regions at full intensity")
     singing_stones_passability: int = rule(
-        0, -100, 100, RuleGroup.PHENOMENA, "Singing stones: passability its regions gain at full intensity (lose when below 0)"
+        0, -100, 100, RuleGroup.PHENOMENA, "Sounding ground: passability its regions gain at full intensity (lose when below 0)"
     )
-    singing_stones_piety: int = rule(15, 0, 50, RuleGroup.PHENOMENA, "Singing stones: piety pilgrims to it bring their communities at full intensity")
-    singing_stones_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Singing stones: growth it is born with")
-    aurora_permanent_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Lasting aurora: magic density its regions gain at full intensity")
-    aurora_permanent_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Lasting aurora: sanity those in its regions lose per epoch at full intensity")
+    singing_stones_piety: int = rule(15, 0, 50, RuleGroup.PHENOMENA, "Sounding ground: piety pilgrims to it bring their communities at full intensity")
+    singing_stones_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Sounding ground: growth it is born with")
+    aurora_permanent_magic: int = rule(10, 0, 100, RuleGroup.PHENOMENA, "Lasting lights: magic density its regions gain at full intensity")
+    aurora_permanent_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Lasting lights: sanity those in its regions lose per epoch at full intensity")
     aurora_permanent_fertility: int = rule(
-        0, -100, 100, RuleGroup.PHENOMENA, "Lasting aurora: soil fertility its regions gain at full intensity (loses when below 0)"
+        0, -100, 100, RuleGroup.PHENOMENA, "Lasting lights: soil fertility its regions gain at full intensity (loses when below 0)"
     )
-    aurora_permanent_danger: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Lasting aurora: danger it adds to its regions at full intensity")
+    aurora_permanent_danger: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Lasting lights: danger it adds to its regions at full intensity")
     aurora_permanent_passability: int = rule(
-        0, -100, 100, RuleGroup.PHENOMENA, "Lasting aurora: passability its regions gain at full intensity (lose when below 0)"
+        0, -100, 100, RuleGroup.PHENOMENA, "Lasting lights: passability its regions gain at full intensity (lose when below 0)"
     )
-    aurora_permanent_piety: int = rule(20, 0, 50, RuleGroup.PHENOMENA, "Lasting aurora: piety pilgrims to it bring their communities at full intensity")
-    aurora_permanent_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Lasting aurora: growth it is born with")
-    ghost_road_magic: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Ghost road: magic density its regions gain at full intensity")
-    ghost_road_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Ghost road: sanity those in its regions lose per epoch at full intensity")
-    ghost_road_fertility: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Ghost road: soil fertility its regions gain at full intensity (loses when below 0)")
-    ghost_road_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Ghost road: danger it adds to its regions at full intensity")
-    ghost_road_passability: int = rule(0, -100, 100, RuleGroup.PHENOMENA, "Ghost road: passability its regions gain at full intensity (lose when below 0)")
-    ghost_road_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Ghost road: piety pilgrims to it bring their communities at full intensity")
-    ghost_road_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Ghost road: growth it is born with")
+    aurora_permanent_piety: int = rule(20, 0, 50, RuleGroup.PHENOMENA, "Lasting lights: piety pilgrims to it bring their communities at full intensity")
+    aurora_permanent_growth: int = rule(0, -50, 50, RuleGroup.PHENOMENA, "Lasting lights: growth it is born with")
+    ghost_road_magic: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Path of the dead: magic density its regions gain at full intensity")
+    ghost_road_sanity: int = rule(2, 0, 20, RuleGroup.PHENOMENA, "Path of the dead: sanity those in its regions lose per epoch at full intensity")
+    ghost_road_fertility: int = rule(
+        0, -100, 100, RuleGroup.PHENOMENA, "Path of the dead: soil fertility its regions gain at full intensity (loses when below 0)"
+    )
+    ghost_road_danger: int = rule(15, 0, 100, RuleGroup.PHENOMENA, "Path of the dead: danger it adds to its regions at full intensity")
+    ghost_road_passability: int = rule(
+        0, -100, 100, RuleGroup.PHENOMENA, "Path of the dead: passability its regions gain at full intensity (lose when below 0)"
+    )
+    ghost_road_piety: int = rule(5, 0, 50, RuleGroup.PHENOMENA, "Path of the dead: piety pilgrims to it bring their communities at full intensity")
+    ghost_road_growth: int = rule(1, -50, 50, RuleGroup.PHENOMENA, "Path of the dead: growth it is born with")
     blight_magic: int = rule(0, 0, 100, RuleGroup.PHENOMENA, "Blight: magic density its regions gain at full intensity")
     blight_sanity: int = rule(0, 0, 20, RuleGroup.PHENOMENA, "Blight: sanity those in its regions lose per epoch at full intensity")
     blight_fertility: int = rule(-30, -100, 100, RuleGroup.PHENOMENA, "Blight: soil fertility its regions gain at full intensity (loses when below 0)")
@@ -1104,14 +1118,14 @@ class BeingKindRules:
     planar_native_might: int = rule(30, 0, 100, RuleGroup.PHENOMENA, "Planar native: might it is born with")
     planar_native_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Planar native: veil it adds each epoch to the dimension it is in (thins when below 0)")
     planar_native_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Planar native: doom it adds each epoch while manifest (eases when below 0)")
-    dimension_walker_might: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Dimension walker: might it is born with")
+    dimension_walker_might: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Dimension traveller: might it is born with")
     dimension_walker_veil: int = rule(
-        -2, -20, 20, RuleGroup.PHENOMENA, "Dimension walker: veil it adds each epoch to the dimension it is in (thins when below 0)"
+        -2, -20, 20, RuleGroup.PHENOMENA, "Dimension traveller: veil it adds each epoch to the dimension it is in (thins when below 0)"
     )
-    dimension_walker_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Dimension walker: doom it adds each epoch while manifest (eases when below 0)")
-    rift_spawn_might: int = rule(40, 0, 100, RuleGroup.PHENOMENA, "Rift spawn: might it is born with")
-    rift_spawn_veil: int = rule(-3, -20, 20, RuleGroup.PHENOMENA, "Rift spawn: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    rift_spawn_doom: int = rule(1, -10, 10, RuleGroup.PHENOMENA, "Rift spawn: doom it adds each epoch while manifest (eases when below 0)")
+    dimension_walker_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Dimension traveller: doom it adds each epoch while manifest (eases when below 0)")
+    rift_spawn_might: int = rule(40, 0, 100, RuleGroup.PHENOMENA, "Rift-born: might it is born with")
+    rift_spawn_veil: int = rule(-3, -20, 20, RuleGroup.PHENOMENA, "Rift-born: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    rift_spawn_doom: int = rule(1, -10, 10, RuleGroup.PHENOMENA, "Rift-born: doom it adds each epoch while manifest (eases when below 0)")
     higher_dimensional_might: int = rule(70, 0, 100, RuleGroup.PHENOMENA, "Higher-dimensional entity: might it is born with")
     higher_dimensional_veil: int = rule(
         -2, -20, 20, RuleGroup.PHENOMENA, "Higher-dimensional entity: veil it adds each epoch to the dimension it is in (thins when below 0)"
@@ -1119,42 +1133,42 @@ class BeingKindRules:
     higher_dimensional_doom: int = rule(
         1, -10, 10, RuleGroup.PHENOMENA, "Higher-dimensional entity: doom it adds each epoch while manifest (eases when below 0)"
     )
-    star_eater_might: int = rule(80, 0, 100, RuleGroup.PHENOMENA, "Star eater: might it is born with")
-    star_eater_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Star eater: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    star_eater_doom: int = rule(2, -10, 10, RuleGroup.PHENOMENA, "Star eater: doom it adds each epoch while manifest (eases when below 0)")
-    nebula_mind_might: int = rule(60, 0, 100, RuleGroup.PHENOMENA, "Nebula mind: might it is born with")
-    nebula_mind_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Nebula mind: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    nebula_mind_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Nebula mind: doom it adds each epoch while manifest (eases when below 0)")
-    galactic_leviathan_might: int = rule(75, 0, 100, RuleGroup.PHENOMENA, "Galactic leviathan: might it is born with")
+    star_eater_might: int = rule(80, 0, 100, RuleGroup.PHENOMENA, "Star feeder: might it is born with")
+    star_eater_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Star feeder: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    star_eater_doom: int = rule(2, -10, 10, RuleGroup.PHENOMENA, "Star feeder: doom it adds each epoch while manifest (eases when below 0)")
+    nebula_mind_might: int = rule(60, 0, 100, RuleGroup.PHENOMENA, "Cloud mind: might it is born with")
+    nebula_mind_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Cloud mind: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    nebula_mind_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Cloud mind: doom it adds each epoch while manifest (eases when below 0)")
+    galactic_leviathan_might: int = rule(75, 0, 100, RuleGroup.PHENOMENA, "Galaxy-scale being: might it is born with")
     galactic_leviathan_veil: int = rule(
-        0, -20, 20, RuleGroup.PHENOMENA, "Galactic leviathan: veil it adds each epoch to the dimension it is in (thins when below 0)"
+        0, -20, 20, RuleGroup.PHENOMENA, "Galaxy-scale being: veil it adds each epoch to the dimension it is in (thins when below 0)"
     )
-    galactic_leviathan_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Galactic leviathan: doom it adds each epoch while manifest (eases when below 0)")
-    void_shepherd_might: int = rule(55, 0, 100, RuleGroup.PHENOMENA, "Void shepherd: might it is born with")
-    void_shepherd_veil: int = rule(1, -20, 20, RuleGroup.PHENOMENA, "Void shepherd: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    void_shepherd_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Void shepherd: doom it adds each epoch while manifest (eases when below 0)")
-    echo_might: int = rule(25, 0, 100, RuleGroup.PHENOMENA, "Echo: might it is born with")
-    echo_veil: int = rule(-1, -20, 20, RuleGroup.PHENOMENA, "Echo: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    echo_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Echo: doom it adds each epoch while manifest (eases when below 0)")
-    time_wanderer_might: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Time wanderer: might it is born with")
-    time_wanderer_veil: int = rule(-1, -20, 20, RuleGroup.PHENOMENA, "Time wanderer: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    time_wanderer_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Time wanderer: doom it adds each epoch while manifest (eases when below 0)")
-    cosmic_titan_might: int = rule(90, 0, 100, RuleGroup.PHENOMENA, "Cosmic titan: might it is born with")
-    cosmic_titan_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Cosmic titan: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    cosmic_titan_doom: int = rule(1, -10, 10, RuleGroup.PHENOMENA, "Cosmic titan: doom it adds each epoch while manifest (eases when below 0)")
-    veil_warden_might: int = rule(60, 0, 100, RuleGroup.PHENOMENA, "Veil warden: might it is born with")
-    veil_warden_veil: int = rule(3, -20, 20, RuleGroup.PHENOMENA, "Veil warden: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    veil_warden_doom: int = rule(-1, -10, 10, RuleGroup.PHENOMENA, "Veil warden: doom it adds each epoch while manifest (eases when below 0)")
-    plane_sovereign_might: int = rule(85, 0, 100, RuleGroup.PHENOMENA, "Plane sovereign: might it is born with")
-    plane_sovereign_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Plane sovereign: veil it adds each epoch to the dimension it is in (thins when below 0)")
-    plane_sovereign_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Plane sovereign: doom it adds each epoch while manifest (eases when below 0)")
+    galactic_leviathan_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Galaxy-scale being: doom it adds each epoch while manifest (eases when below 0)")
+    void_shepherd_might: int = rule(55, 0, 100, RuleGroup.PHENOMENA, "Void keeper: might it is born with")
+    void_shepherd_veil: int = rule(1, -20, 20, RuleGroup.PHENOMENA, "Void keeper: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    void_shepherd_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Void keeper: doom it adds each epoch while manifest (eases when below 0)")
+    echo_might: int = rule(25, 0, 100, RuleGroup.PHENOMENA, "Mirrored double: might it is born with")
+    echo_veil: int = rule(-1, -20, 20, RuleGroup.PHENOMENA, "Mirrored double: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    echo_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Mirrored double: doom it adds each epoch while manifest (eases when below 0)")
+    time_wanderer_might: int = rule(50, 0, 100, RuleGroup.PHENOMENA, "Time traveller: might it is born with")
+    time_wanderer_veil: int = rule(-1, -20, 20, RuleGroup.PHENOMENA, "Time traveller: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    time_wanderer_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Time traveller: doom it adds each epoch while manifest (eases when below 0)")
+    cosmic_titan_might: int = rule(90, 0, 100, RuleGroup.PHENOMENA, "System-scale being: might it is born with")
+    cosmic_titan_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "System-scale being: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    cosmic_titan_doom: int = rule(1, -10, 10, RuleGroup.PHENOMENA, "System-scale being: doom it adds each epoch while manifest (eases when below 0)")
+    veil_warden_might: int = rule(60, 0, 100, RuleGroup.PHENOMENA, "Boundary keeper: might it is born with")
+    veil_warden_veil: int = rule(3, -20, 20, RuleGroup.PHENOMENA, "Boundary keeper: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    veil_warden_doom: int = rule(-1, -10, 10, RuleGroup.PHENOMENA, "Boundary keeper: doom it adds each epoch while manifest (eases when below 0)")
+    plane_sovereign_might: int = rule(85, 0, 100, RuleGroup.PHENOMENA, "Dimension ruler: might it is born with")
+    plane_sovereign_veil: int = rule(0, -20, 20, RuleGroup.PHENOMENA, "Dimension ruler: veil it adds each epoch to the dimension it is in (thins when below 0)")
+    plane_sovereign_doom: int = rule(0, -10, 10, RuleGroup.PHENOMENA, "Dimension ruler: doom it adds each epoch while manifest (eases when below 0)")
     swarm_intelligence_might: int = rule(45, 0, 100, RuleGroup.PHENOMENA, "Swarm intelligence: might it is born with")
     swarm_intelligence_veil: int = rule(
         -1, -20, 20, RuleGroup.PHENOMENA, "Swarm intelligence: veil it adds each epoch to the dimension it is in (thins when below 0)"
     )
     swarm_intelligence_doom: int = rule(1, -10, 10, RuleGroup.PHENOMENA, "Swarm intelligence: doom it adds each epoch while manifest (eases when below 0)")
-    living_constellation_might: int = rule(55, 0, 100, RuleGroup.PHENOMENA, "Living constellation: might it is born with")
+    living_constellation_might: int = rule(55, 0, 100, RuleGroup.PHENOMENA, "Star-pattern mind: might it is born with")
     living_constellation_veil: int = rule(
-        0, -20, 20, RuleGroup.PHENOMENA, "Living constellation: veil it adds each epoch to the dimension it is in (thins when below 0)"
+        0, -20, 20, RuleGroup.PHENOMENA, "Star-pattern mind: veil it adds each epoch to the dimension it is in (thins when below 0)"
     )
-    living_constellation_doom: int = rule(-1, -10, 10, RuleGroup.PHENOMENA, "Living constellation: doom it adds each epoch while manifest (eases when below 0)")
+    living_constellation_doom: int = rule(-1, -10, 10, RuleGroup.PHENOMENA, "Star-pattern mind: doom it adds each epoch while manifest (eases when below 0)")

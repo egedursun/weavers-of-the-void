@@ -21,7 +21,7 @@ class TenetKind(StrEnum):
     JUDGEMENT_BY_FAITH = "judgement_by_faith"
     REINCARNATION = "reincarnation"
     MARTYRDOM_GLORY = "martyrdom_glory"
-    DIVINE_KINGSHIP = "divine_kingship"
+    DIVINE_RULE = "divine_rule"
     DIETARY_LAW = "dietary_law"
     SACRED_SPECIES = "sacred_species"
     PILGRIMAGE_DUTY = "pilgrimage_duty"
@@ -40,11 +40,18 @@ class JudgementDoctrine(StrEnum):
     NONE = "none"
 
 
-class ClergyOffice(StrEnum):
-    HIGH_PRIEST = "high_priest"
-    PRIEST = "priest"
-    MONK = "monk"
-    INQUISITOR = "inquisitor"
+class ClergyFunction(StrEnum):
+    LEADER = "leader"
+    CELEBRANT = "celebrant"
+    ASCETIC = "ascetic"
+    GUARDIAN_OF_DOCTRINE = "guardian_of_doctrine"
+    TEACHER = "teacher"
+    HEALER = "healer"
+    SEER = "seer"
+    KEEPER_OF_SITES = "keeper_of_sites"
+    MISSIONARY = "missionary"
+    JUDGE = "judge"
+    SCRIBE = "scribe"
 
 
 class HoldingKind(StrEnum):
@@ -151,14 +158,6 @@ class ReincarnationGate(StrEnum):
     NATURAL_LAW = "natural_law"
     RITE = "rite"
     GOD = "god"
-
-
-class FuneralRite(StrEnum):
-    BURIAL = "burial"
-    BURNING = "burning"
-    EXPOSURE = "exposure"
-    NAMELESS = "nameless"
-    NONE = "none"
 
 
 class RebirthPath(StrEnum):

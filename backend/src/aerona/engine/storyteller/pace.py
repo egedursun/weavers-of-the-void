@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.kinds.tension import TENSION_PUSH
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
@@ -74,11 +75,11 @@ def band_of(rules: Rules, tension: int, target: int) -> TensionBand:
 
 def boost_of(rules: Rules, tension: int, target: int, band: TensionBand) -> int:
     table = rules.storyteller
-    if band is TensionBand.IN_BAND:
+    push = TENSION_PUSH[band]
+    if not push:
         return 0
     off = abs(tension - target) - table.band
-    size = min(table.boost_max_pct, off * table.boost_per_point_pct)
-    return size if band is TensionBand.QUIET else -size
+    return push * min(table.boost_max_pct, off * table.boost_per_point_pct)
 
 
 async def drama(ctx: TickContext, world_id: int) -> int:

@@ -31,7 +31,7 @@ async def art_movements(ctx: TickContext) -> None:
     count(ctx, "art_movements", tally)
 
 
-@reads("settlement.population", "table.clubs", "table.faction_profiles", "table.game_followings", "table.games", "table.leagues")
+@reads("settlement.population", "table.clubs", "table.faction_profiles", "table.games", "table.kind_holdings", "table.leagues")
 async def pastimes(ctx: TickContext) -> None:
     tally = SportTally()
     await keep_sport(ctx, tally)

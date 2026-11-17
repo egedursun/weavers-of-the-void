@@ -113,7 +113,7 @@ CHRONICLE_KINDS: dict[ChronicleKind, ChronicleKindSpec] = {
         ChronicleKindSpec(K.ADVENTURE, "Adventure"),
         ChronicleKindSpec(K.INTRIGUE, "Intrigue"),
         ChronicleKindSpec(K.RESCUE, "Rescue"),
-        ChronicleKindSpec(K.CHIMERA, "Chimera"),
+        ChronicleKindSpec(K.MERGED_SPECIES, "Merged species"),
         ChronicleKindSpec(K.ESCAPE, "Escape"),
         ChronicleKindSpec(K.DOMESTICATION, "Domestication"),
         ChronicleKindSpec(K.AGE_CHANGE, "Change of age"),

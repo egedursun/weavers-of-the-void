@@ -2,20 +2,18 @@ from aerona.api.schemas.common import ApiModel
 from aerona.catalog.peoples import MountFit
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.demography import (
-    Aesthetic,
     AgeBand,
     CohortCondition,
-    FolkDiet,
     FuneralCustom,
     InheritanceCustom,
     Job,
-    MarriageCustom,
     MartialStyle,
+    MotifSource,
     NaturalTrait,
     Sex,
 )
 from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
-from aerona.domain.enums.ecology import Biochemistry, SizeClass
+from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import PressureKind, ValueAxis
@@ -81,7 +79,7 @@ class BiologyView(ApiModel):
     immunities: list[LinkedRecord]
     body_plan: BodyPlan
     size_class: SizeClass
-    diet: FolkDiet
+    diet: Diet
     edible: list[CommodityKind]
     effects: KinEffectsView
     biochemistry: Biochemistry = Biochemistry.CARBON_WATER
@@ -102,10 +100,13 @@ class CultureView(ApiModel):
     cohesion: int
     literacy: int
     urbanisation: int
-    aesthetic: Aesthetic
+    ornament: int
+    geometry: int
+    colour: int
+    scale: int
+    symmetry: int
+    motif_sources: list[MotifSource]
     martial_style: MartialStyle
-    marriage: MarriageCustom
-    endogamous: bool
     inheritance: InheritanceCustom
     slavery_lawful: bool
     staples: list[CommodityKind]
@@ -283,6 +284,7 @@ class DistrictView(ApiModel):
     level: int
     condition: int
     material: BuildMaterial
+    world_material_id: int | None
     built_epoch: int
     design_id: int | None
     locked: list[str]
@@ -345,6 +347,7 @@ class DistrictEffectsView(ApiModel):
 class InfrastructureView(ApiModel):
     walls_level: int
     walls_material: BuildMaterial
+    walls_world_material_id: int | None
     walls_condition: int
     gates: int
     roads: int

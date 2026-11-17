@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 
+from aerona.catalog.reproduction import SexSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
+from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, sex_spec, sexes, total
 from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import apportion, round_half_up
@@ -49,10 +50,10 @@ def death_rate(rules: Rules, band: AgeBand) -> float:
     return {A.CHILD: table.child_death_pct_per_year, A.ADULT: table.adult_death_pct_per_year, A.ELDER: table.elder_death_pct_per_year}[band] / PERCENT
 
 
-def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiologyRow | None, pressures: Pressures) -> VitalYear:
+def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiologyRow | None, pressures: Pressures, spec: SexSpec) -> VitalYear:
     table = rules.demography
     fertility = (biology.fertility_pct if biology is not None else PERCENT) / PERCENT
-    mothers = sum(row.count for key, row in rows.items() if key[0] is A.ADULT and key[1] is Sex.FEMALE and key[3] is not CohortCondition.SICK)
+    bearers = sum(row.count for key, row in rows.items() if key[0] is A.ADULT and key[1] in spec.bearing and key[3] is not CohortCondition.SICK)
     birth_rate = table.birth_pct_per_year / PERCENT * fertility * pressures.fertility
     famine = pressures.hunger**2
     birth_rate *= max(0.0, 1 - famine * table.hunger_birth_pct / PERCENT) * max(0.0, 1 - pressures.stress * table.stress_birth_pct / PERCENT)
@@ -64,7 +65,7 @@ def one_year(rules: Rules, rows: dict[CohortKey, CohortRow], biology: PeopleBiol
     for band in DEATH_RATES:
         people = sum(row.count for key, row in rows.items() if key[0] is band)
         deaths[band] = round_half_up(people * min(1.0, death_rate(rules, band) * extra * pressures.mortality))
-    return VitalYear(round_half_up(mothers * birth_rate), deaths)
+    return VitalYear(round_half_up(bearers * birth_rate), deaths)
 
 
 def take(rows: dict[CohortKey, CohortRow], band: AgeBand, amount: int) -> int:
@@ -78,16 +79,14 @@ def take(rows: dict[CohortKey, CohortRow], band: AgeBand, amount: int) -> int:
     return done
 
 
-async def give_births(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], births: int) -> int:
+async def give_births(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], births: int, spec: SexSpec) -> int:
     if births <= 0:
         return 0
     shares = await class_shares(ctx.session, ctx.rules, community.id)
     weight = sum(max(0.0, value) for value in shares.values()) or 1.0
-    female = ctx.rules.cohorts.female_pct / PERCENT
+    kinds = sexes(ctx.rules, spec)
     placed = 0
-    slots = [
-        (sex, social_class, max(0.0, share) / weight * (female if sex is Sex.FEMALE else 1 - female)) for sex in Sex for social_class, share in shares.items()
-    ]
+    slots = [(sex, social_class, max(0.0, share) / weight * sex_share) for sex, sex_share in kinds.items() for social_class, share in shares.items()]
     slots = [slot for slot in slots if slot[2] > 0]
     counts = apportion(births, {(sex, social_class): part for sex, social_class, part in slots})
     for sex, social_class, _part in slots:
@@ -107,9 +106,10 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
     deaths = 0
     table = ctx.rules.peoples
     spans = (biology.maturity_years, biology.adult_years) if biology is not None else (table.maturity_years, table.adult_years)
+    spec = await sex_spec(ctx.session, community)
     for _ in range(sampled):
-        year = one_year(ctx.rules, rows, biology, pressures)
-        births += await give_births(ctx, community, rows, year.births)
+        year = one_year(ctx.rules, rows, biology, pressures, spec)
+        births += await give_births(ctx, community, rows, year.births, spec)
         deaths += sum(take(rows, band, amount) for band, amount in year.deaths.items())
         age_cohorts(ctx.session, community, rows, spans, ctx.epoch)
     remaining = round_half_up(ctx.rules.time.years_per_epoch * pressures.time) - sampled

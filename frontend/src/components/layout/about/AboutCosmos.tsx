@@ -58,7 +58,7 @@ export function AboutCosmos() {
       icon: Globe,
     },
     {
-      label: 'Records woven',
+      label: 'Records kept',
       value: totals ? formatCompact(totals.records) : '-',
       icon: BookOpenText,
     },

@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.dreams import DREAM_TRUTH
 from aerona.catalog.thoughts import EMOTIONS, NEED_READINGS, NEEDS, READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
@@ -22,6 +24,7 @@ from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
+from aerona.engine.kinds.culture_life import reading_kind_for
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import locked_for, needs_of, stored_values
 from aerona.engine.mind.split import facets_of
@@ -40,6 +43,7 @@ DREAMS_KEY = "dreams"
 SEERS = frozenset({MortalRole.SEER, MortalRole.CHOSEN, MortalRole.SAINT})
 DREADFUL = frozenset({"fear", "anxiety", "despair", "grief"})
 FAVOURED = (DreamReading.OMEN_OF_FAVOUR, DreamReading.OMEN_OF_PLENTY)
+READ_THOUGHTS = {True: ThoughtKind.HAD_GOOD_DREAM, False: ThoughtKind.HAD_NIGHTMARE}
 
 
 @dataclass(frozen=True)
@@ -284,7 +288,7 @@ async def interpret(ctx: TickContext, mortal: EntityRow, row: DreamRow, mind: Mi
     row.reader_node_id = reader.id
     row.reading = await reading_of(ctx, mortal, row, mind)
     level = await ctx.session.scalar(select(SkillRow.level).where(SkillRow.holder_node_id == reader.id, SkillRow.skill == SkillKind.PROPHECY).limit(1)) or 0
-    truth = level * table.reading_skill_pct / PERCENT if row.kind is DreamKind.PROPHETIC else level * table.reading_skill_pct / PERCENT / 2
+    truth = level * table.reading_skill_pct / PERCENT * DREAM_TRUTH[row.kind] / PERCENT
     row.reading_true = ctx.rng(seed_of("truth", row.id)).chance(min(PERCENT, truth))
     await read_into(ctx, mortal, row)
     return row.reading
@@ -294,8 +298,12 @@ async def read_into(ctx: TickContext, mortal: EntityRow, row: DreamRow) -> None:
     spec = READINGS.get(row.reading)
     if spec is None:
         return
-    await think(ctx.session, ctx.rules, mortal.id, spec.thought, ctx.epoch, subject_id=row.reader_node_id)
-    await shift_mind(ctx.session, ctx.rules, mortal.id, spec.beliefs, spec.facets)
+    kind = await reading_kind_for(ctx.session, mortal, row.reading)
+    row.reading_kind_id = kind.id if kind is not None else None
+    beliefs = MappingProxyType({kind.value_axis: kind.lean} if kind.value_axis is not None else {}) if kind is not None else spec.beliefs
+    thought = spec.thought if kind is None or kind.valence == 0 else READ_THOUGHTS[kind.valence > 0]
+    await think(ctx.session, ctx.rules, mortal.id, thought, ctx.epoch, subject_id=row.reader_node_id)
+    await shift_mind(ctx.session, ctx.rules, mortal.id, beliefs, spec.facets)
     if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
         reader = await ctx.session.get(EntityRow, row.reader_node_id) if row.reader_node_id is not None else None
         by = f" by {reader.name}" if reader is not None and reader.id != mortal.id else ""

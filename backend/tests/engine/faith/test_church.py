@@ -17,7 +17,7 @@ from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import PlaceCover, WaterSource
-from aerona.domain.enums.faith import ClergyOffice, HoldingKind, TenetKind
+from aerona.domain.enums.faith import ClergyFunction, HoldingKind, TenetKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitKind, TraitSource
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
@@ -140,16 +140,16 @@ async def seat_realm(session: AsyncSession, world: GodsWorld, faith, ruler) -> P
     return realm
 
 
-async def test_divine_kingship_fuses_the_crown_and_the_high_priesthood(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
+async def test_divine_rule_fuses_the_crown_and_the_leadership_of_the_faith(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     ctx = tick(session, rules)
-    faith = await faithful(session, world, tenets=(TenetKind.DIVINE_KINGSHIP,))
+    faith = await faithful(session, world, tenets=(TenetKind.DIVINE_RULE,))
     king = await mortal(session, world, faith.town, "King Oru")
     await mortal(session, world, faith.town, "Priest Ama", role=MortalRole.PRIEST)
     realm = await seat_realm(session, world, faith, king)
     church = await church_of(session, faith.cult.id)
     assert (await divine_king(ctx, church)) == king
     await staff(ctx, church)
-    high = await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == faith.cult.id, CultOfficeRow.kind == ClergyOffice.HIGH_PRIEST))
+    high = await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == faith.cult.id, CultOfficeRow.kind == ClergyFunction.LEADER))
     assert high is not None and high.holder_entity_id == king.id
     assert await clergy_sway(session, rules, realm.polity_entity_id) == 0
     assert await investiture(ctx, church) is None
@@ -170,10 +170,10 @@ async def test_a_held_office_is_not_refilled(session: AsyncSession, world: GodsW
     ctx = tick(session, rules)
     faith = await faithful(session, world)
     await mortal(session, world, faith.town, "Priest Lo", role=MortalRole.PRIEST)
-    session.add(CultOfficeRow(cult_entity_id=faith.cult.id, kind=ClergyOffice.HIGH_PRIEST, holder_entity_id=None, since_epoch=1, locked=True))
+    session.add(CultOfficeRow(cult_entity_id=faith.cult.id, kind=ClergyFunction.LEADER, holder_entity_id=None, since_epoch=1, locked=True))
     await session.flush()
     await staff(ctx, await church_of(session, faith.cult.id))
-    high = await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == faith.cult.id, CultOfficeRow.kind == ClergyOffice.HIGH_PRIEST))
+    high = await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == faith.cult.id, CultOfficeRow.kind == ClergyFunction.LEADER))
     assert high is not None and high.holder_entity_id is None
 
 

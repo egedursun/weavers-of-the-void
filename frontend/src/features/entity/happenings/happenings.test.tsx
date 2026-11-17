@@ -92,7 +92,7 @@ const HERE = {
 const LAND = {
   region_id: 7,
   region: 'Vale',
-  soil: 'ash',
+  soil: 'tephra',
   terrain: 'volcanic',
   river_class: 'river',
   rainfall: 30,

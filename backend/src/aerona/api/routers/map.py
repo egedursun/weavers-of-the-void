@@ -31,6 +31,8 @@ from aerona.api.schemas.maps import (
     RegionDeJure,
     RegionDivineRule,
     RegionGround,
+    RegionKind,
+    RegionMoney,
     RegionRealm,
     RegionStocks,
     RegionTongue,
@@ -83,6 +85,7 @@ from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
+from aerona.services.kind_map import region_kinds, region_money
 from aerona.services.map_lines import region_creators, relation_lines, routed_roads, war_sites
 from aerona.services.wiki import (
     event_markers,
@@ -208,6 +211,11 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             holy=await holy_marks(session, world_id, positions),
             lore=await lore_marks(session, world_id, positions, current),
             tongues=await region_tongues(session, world_id),
+            kinds={
+                region: [RegionKind(concept=item.concept, kind_id=item.kind_id, name=item.name, share=item.share) for item in items]
+                for region, items in (await region_kinds(session, world_id)).items()
+            },
+            money={region: RegionMoney(form=form) for region, form in (await region_money(session, world_id)).items()},
             lairs=await lair_marks(session, world_id, positions, rules.beasts.raid_reach),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),

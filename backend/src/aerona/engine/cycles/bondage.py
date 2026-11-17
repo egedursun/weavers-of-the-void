@@ -35,6 +35,7 @@ from aerona.engine.demography.bound import BOUND, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of, row_for
 from aerona.engine.demography.events import captive_origins
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.genetics.genome import genome_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import ethic_reading
@@ -358,7 +359,8 @@ async def origin_factors(ctx: TickContext, town: EntityRow) -> tuple[float, floa
             select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.affiliated_entity_id == origin.id).limit(table.appearance_sample)
         )
         for mortal in folk:
-            beauty += stat_or(mortal, "beauty", HALF)
+            genome = await genome_of(ctx.session, mortal.id)
+            beauty += genome.beauty if genome is not None else HALF
             seen += 1
     foreign = 1 - distance / len(origins) * table.origin_weight / PERCENT / PERCENT
     looks = 1 + ((beauty / seen if seen else HALF) - HALF) * table.appearance_weight / PERCENT / HALF

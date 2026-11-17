@@ -42,7 +42,7 @@ export const SPECIES = {
   domesticated_from: null,
   sacred_to: null,
   traits: ['mind_reader', 'stoneskin'],
-  uses: ['food', 'companion'],
+  uses: ['meat', 'companion'],
   yields: [
     {
       product: 'meat',
@@ -155,7 +155,7 @@ export const ANATOMY = {
   skin: 'plates',
   bone: 'rigid',
   bite: null,
-  temperament: 'abductor',
+  temperament: 'seizes_prey',
   hoards: 'gold',
   hates: 'fire',
   awakening: 'deep_mining',

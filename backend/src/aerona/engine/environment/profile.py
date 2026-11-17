@@ -2,7 +2,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
 from aerona.cartography.biomes import Biome
-from aerona.catalog.climate import climate_profile
+from aerona.catalog.climate import CLIMATES, climate_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
@@ -76,25 +76,27 @@ WORLD_TERRAIN: dict[WorldType, TerrainKind] = {
 
 WORLD_SOIL: dict[WorldType, SoilKind] = {
     WorldType.LAVA: SoilKind.VOLCANIC,
-    WorldType.CRYSTAL: SoilKind.CRYSTAL,
-    WorldType.DEAD: SoilKind.BONE,
-    WorldType.CORPSE_WORLD: SoilKind.BONE,
+    WorldType.CRYSTAL: SoilKind.CRYSTALLINE,
+    WorldType.DEAD: SoilKind.CALCAREOUS,
+    WorldType.CORPSE_WORLD: SoilKind.CALCAREOUS,
     WorldType.SAND: SoilKind.SAND,
-    WorldType.ICE: SoilKind.THIN,
-    WorldType.ASTEROID_BELT: SoilKind.THIN,
-    WorldType.VOID_POCKET: SoilKind.ASH,
-    WorldType.FORGE: SoilKind.ASH,
+    WorldType.ICE: SoilKind.PERMAFROST,
+    WorldType.ASTEROID_BELT: SoilKind.REGOLITH,
+    WorldType.VOID_POCKET: SoilKind.TEPHRA,
+    WorldType.FORGE: SoilKind.TEPHRA,
     WorldType.IRON: SoilKind.THIN,
-    WorldType.CARBON: SoilKind.ASH,
+    WorldType.CARBON: SoilKind.TEPHRA,
     WorldType.GREENHOUSE: SoilKind.VOLCANIC,
-    WorldType.DWARF_PLANET: SoilKind.THIN,
+    WorldType.DWARF_PLANET: SoilKind.REGOLITH,
     WorldType.CHTHONIAN: SoilKind.VOLCANIC,
-    WorldType.JUNGLE: SoilKind.PEAT,
+    WorldType.JUNGLE: SoilKind.LATERITE,
     WorldType.FUNGAL: SoilKind.PEAT,
     WorldType.SHATTERED: SoilKind.THIN,
-    WorldType.ICE_SHELL: SoilKind.THIN,
+    WorldType.ICE_SHELL: SoilKind.PERMAFROST,
     WorldType.METHANE: SoilKind.THIN,
-    WorldType.HYCEAN: SoilKind.SALT,
+    WorldType.HYCEAN: SoilKind.SALINE,
+    WorldType.GODS_PALACE: SoilKind.ARTIFICIAL,
+    WorldType.GENERATION_SHIP: SoilKind.ARTIFICIAL,
 }
 
 WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {
@@ -110,25 +112,32 @@ WORLD_MINERALS: dict[WorldType, tuple[MaterialKind, ...]] = {
     WorldType.ICE_SHELL: (MaterialKind.SALT,),
 }
 
-SOIL_FERTILITY: dict[SoilKind, Callable[[Rules], int]] = {
-    SoilKind.THIN: lambda rules: rules.environment.soil_thin,
-    SoilKind.LOAM: lambda rules: rules.environment.soil_loam,
-    SoilKind.CLAY: lambda rules: rules.environment.soil_clay,
-    SoilKind.SAND: lambda rules: rules.environment.soil_sand,
-    SoilKind.VOLCANIC: lambda rules: rules.environment.soil_volcanic,
-    SoilKind.PEAT: lambda rules: rules.environment.soil_peat,
-    SoilKind.SALT: lambda rules: rules.environment.soil_salt,
-    SoilKind.ASH: lambda rules: rules.environment.soil_ash,
-    SoilKind.CRYSTAL: lambda rules: rules.environment.soil_crystal,
-    SoilKind.BONE: lambda rules: rules.environment.soil_bone,
-}
+SOIL_FERTILITY: Mapping[SoilKind, Callable[[Rules], int]] = total(
+    SoilKind,
+    {
+        SoilKind.THIN: lambda rules: rules.environment.soil_thin,
+        SoilKind.LOAM: lambda rules: rules.environment.soil_loam,
+        SoilKind.CLAY: lambda rules: rules.environment.soil_clay,
+        SoilKind.SAND: lambda rules: rules.environment.soil_sand,
+        SoilKind.VOLCANIC: lambda rules: rules.environment.soil_volcanic,
+        SoilKind.PEAT: lambda rules: rules.environment.soil_peat,
+        SoilKind.SALINE: lambda rules: rules.environment.soil_salt,
+        SoilKind.TEPHRA: lambda rules: rules.environment.soil_ash,
+        SoilKind.CRYSTALLINE: lambda rules: rules.environment.soil_crystal,
+        SoilKind.CALCAREOUS: lambda rules: rules.environment.soil_bone,
+        SoilKind.LATERITE: lambda rules: rules.environment.soil_laterite,
+        SoilKind.PERMAFROST: lambda rules: rules.environment.soil_permafrost,
+        SoilKind.REGOLITH: lambda rules: rules.environment.soil_regolith,
+        SoilKind.ARTIFICIAL: lambda rules: rules.environment.soil_artificial,
+    },
+)
 
 SCAR_FERTILITY: Mapping[ScarKind, Callable[[Rules], int]] = total(
     ScarKind,
     {
         ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_fertility_pct,
         ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_fertility_pct,
-        ScarKind.SALTED_EARTH: lambda rules: rules.scars.salted_earth_fertility_pct,
+        ScarKind.MADE_BARREN: lambda rules: rules.scars.salted_earth_fertility_pct,
         ScarKind.BURNED: lambda rules: rules.scars.burned_fertility_pct,
         ScarKind.CRATER: lambda rules: rules.scars.crater_fertility_pct,
         ScarKind.HAUNTED: lambda rules: rules.scars.haunted_fertility_pct,
@@ -248,8 +257,8 @@ def temperature_of(rules: Rules, geography: Geography, around: Surroundings) -> 
         value += (settings.coast_moderation_target - value) * settings.coast_moderation_pct / PERCENT
     if around.era is not None:
         value += climate_profile(rules, around.era).temperature_shift
-        if around.era is ClimateEra.ICE_AGE and around.highland:
-            value -= rules.climate_effects.mountain_ice_loss
+        if around.highland:
+            value -= CLIMATES[around.era].highland_cooling(rules)
     return clamp_int(value, 0, PERCENT)
 
 
@@ -260,10 +269,9 @@ def rainfall_of(rules: Rules, geography: Geography, around: Surroundings) -> int
     value += around.shift_rain
     if around.era is not None:
         shift = climate_profile(rules, around.era).rain_shift
-        if around.era is ClimateEra.DROUGHT and around.coastal:
-            shift = round_half_up(shift / rules.climate_effects.coast_drought_divisor)
-        if around.era is ClimateEra.RAIN and around.coastal:
-            shift += rules.climate_effects.coast_rain_bonus
+        if around.coastal:
+            spec = CLIMATES[around.era]
+            shift = round_half_up(shift / spec.coast_rain_divisor(rules)) + spec.coast_rain_bonus(rules)
         value += shift
     return clamp_int(value, 0, PERCENT)
 

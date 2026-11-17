@@ -1,7 +1,7 @@
-from aerona.domain.enums.faction import FactionKind, FoundableFaction
+from aerona.db.kind_concepts.society import BUILT_IN_ORGANISATIONS
 from aerona.engine.phases.factions import BLUEPRINTS
 
 
-def test_every_foundable_faction_has_a_blueprint() -> None:
+def test_every_foundable_organisation_kind_has_a_blueprint() -> None:
     drawn = {item.kind for item in BLUEPRINTS}
-    assert [kind for kind in FoundableFaction if FactionKind(kind.value) not in drawn] == []
+    assert [kind for kind, body in BUILT_IN_ORGANISATIONS.items() if body.foundable and kind not in drawn] == []

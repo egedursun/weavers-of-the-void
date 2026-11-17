@@ -6,7 +6,7 @@ from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.faith import (
     BindingKind,
-    ClergyOffice,
+    ClergyFunction,
     HoldingKind,
     SpiritAlignment,
     StratumActivity,
@@ -44,7 +44,7 @@ class SetTenet(Command):
 
 class SetOffice(Command):
     cult_id: int
-    kind: ClergyOffice
+    kind: ClergyFunction
     holder_id: int | None = None
     locked: bool | None = None
     vacate: bool = False

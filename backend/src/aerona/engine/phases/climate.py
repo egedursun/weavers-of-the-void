@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.climate import ClimateProfile, climate_profile, climate_weights
+from aerona.catalog.climate import CLIMATES, ClimateProfile, climate_profile, climate_weights
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
@@ -47,11 +47,11 @@ class ClimateState:
 
 
 def plague_pct(rules: Rules, era: ClimateEra) -> int:
-    return rules.climate_effects.scorching_age_plague_freq if era is ClimateEra.SCORCHING else PERCENT
+    return CLIMATES[era].plague_pct(rules)
 
 
 def population_loss_pct(rules: Rules, era: ClimateEra) -> int:
-    return rules.climate_effects.ice_age_population_loss if era is ClimateEra.ICE_AGE else 0
+    return CLIMATES[era].population_loss_pct(rules)
 
 
 async def apply_climate_effect(ctx: TickContext, world: WorldRow, era: ClimateEra) -> int:

@@ -12,7 +12,7 @@ from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.ecology import SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind, WeatherEffect
@@ -115,7 +115,7 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     region = book.ground.region_of(community.id)
     held = await holdings(ctx.session, community.id)
     beasts = held.get(CommodityKind.LIVESTOCK, 0) + held.get(CommodityKind.MOUNTS, 0)
-    draught = await kept_for(ctx, community.id, SpeciesUse.LABOUR)
+    draught = await kept_for(ctx, community.id, AnimalRole.DRAFT)
     muscle = (
         pooled_workers(book, community) * table.muscle_per_100_workers / PERCENT
         + beasts * table.muscle_per_10_beasts / 10

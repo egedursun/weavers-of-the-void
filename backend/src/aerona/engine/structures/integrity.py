@@ -4,6 +4,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.sections import SECTION_STATES
 from aerona.catalog.structure_sections import LAYOUTS, PartSpec
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -244,9 +245,8 @@ def working_share(rows: list[StructureSectionRow]) -> float:
     shares = sum(row.share for row in rows)
     up = 0.0
     for row in rows:
-        factor = {SectionState.SOUND: 1.0, SectionState.DAMAGED: 0.75, SectionState.DISABLED: 0.25 if row.criticality is Criticality.MINOR else 0.0}.get(
-            row.state, 0.0
-        )
+        spec = SECTION_STATES[row.state]
+        factor = (spec.minor_function_pct if row.criticality is Criticality.MINOR else spec.function_pct) / PERCENT
         up += row.share * factor
     return up / shares if shares else 1.0
 

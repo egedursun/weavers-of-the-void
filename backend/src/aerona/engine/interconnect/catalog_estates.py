@@ -39,6 +39,7 @@ ESTATE_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="movements",
+        tools=("raise_movement",),
         spec_item="S4.3/RP2",
         title=(
             "Movements for abolition, independence, revival, land reform or a wider franchise grow from pressures, protest, "

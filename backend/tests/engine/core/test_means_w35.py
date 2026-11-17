@@ -11,7 +11,7 @@ from aerona.db.tables.means import ContainerStockRow, NavigationKitRow, Security
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.culture import ArtMedium, ItemClass, Technique
+from aerona.domain.enums.culture import ArtMode, ItemClass, Technique
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.integrity import HarmForce
@@ -245,8 +245,8 @@ async def test_epic_poems_plays_and_book_items_are_written_on_their_maker_s_medi
     tome = await entity(session, "A Bound Book", EntityType.ITEM, ItemStats(), world_id=world.world.id, location_id=town.id)
     session.add_all(
         [
-            ArtworkProfileRow(artwork_entity_id=poem.id, medium=ArtMedium.EPIC_POEM, author_entity_id=poet.id),
-            ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMedium.SONG, author_entity_id=poet.id),
+            ArtworkProfileRow(artwork_entity_id=poem.id, medium=ArtMode.VERBAL, author_entity_id=poet.id),
+            ArtworkProfileRow(artwork_entity_id=song.id, medium=ArtMode.MUSICAL, author_entity_id=poet.id),
             ItemProfileRow(item_entity_id=tome.id, item_class=ItemClass.BOOK, locked=[]),
         ]
     )

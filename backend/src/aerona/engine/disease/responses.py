@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
@@ -10,10 +11,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CureResearchRow, PlagueResponseRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.evolution import PlagueResponse
-from aerona.domain.enums.faith import FuneralRite
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import quarantine
@@ -28,8 +29,13 @@ from aerona.engine.primitives.stats import shift_bounded
 
 R = PlagueResponse
 STABILITY = "stability"
-UNBURNED = frozenset({FuneralRite.BURIAL, FuneralRite.EXPOSURE, FuneralRite.NAMELESS})
 LEANING_FLOOR = 0.05
+
+
+def bodies_left(rite: FuneralCustom | None) -> bool:
+    return rite is not None and FUNERALS[rite].body_left
+
+
 LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
     R.CLOSE_BORDERS: (ValueAxis.TRADITION, ValueAxis.LOYALTY),
     R.QUARANTINE: (ValueAxis.LAW, ValueAxis.KNOWLEDGE),
@@ -70,7 +76,7 @@ async def institutions_in(session: AsyncSession, community_id: int) -> list[int]
 
 async def options_for(ctx: TickContext, community: EntityRow) -> list[PlagueResponse]:
     options = [R.CLOSE_BORDERS, R.QUARANTINE, R.EXPEL_SICK]
-    if await funeral_custom(ctx, community.id) not in UNBURNED:
+    if not bodies_left(await funeral_custom(ctx, community.id)):
         options.append(R.BURN_DEAD)
     worships = await ctx.session.scalar(
         select(BondRow.id).where(BondRow.source_node_id == community.id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE).limit(1)
@@ -125,7 +131,7 @@ async def bear(ctx: TickContext, row: PlagueResponseRow, community: EntityRow, t
         tally.riots += 1
         await note(ctx, f"The folk of {community.name} rose against the quarantine.", key="disease.quarantine_riot", ids=[community.id])
     elif row.response is R.BURN_DEAD:
-        if await funeral_custom(ctx, community.id) in UNBURNED:
+        if bodies_left(await funeral_custom(ctx, community.id)):
             shift_bounded(ctx.rules, community, STABILITY, -table.burn_cohesion * weight)
     elif row.response is R.EXPEL_SICK:
         profile = await ctx.session.get(DiseaseProfileRow, row.disease_entity_id)

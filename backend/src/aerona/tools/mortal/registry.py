@@ -47,6 +47,7 @@ from aerona.tools.mortal import (
     heroes,
     intrigue,
     justice,
+    kinds,
     knowledge,
     language,
     law_depth,
@@ -75,6 +76,7 @@ from aerona.tools.mortal import (
     treaties,
     urban_depth,
     war,
+    ways_of_rule,
     works,
 )
 from aerona.tools.mortal.support import civilization_tier, rules_a_realm, worships_dead_son
@@ -316,6 +318,8 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     eras.specs,
     nature.specs,
     crafts.specs,
+    kinds.specs,
+    ways_of_rule.specs,
     customs.specs,
     gatherings.specs,
     letters.specs,

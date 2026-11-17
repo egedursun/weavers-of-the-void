@@ -220,7 +220,7 @@ ROOM_PLACES = MappingProxyType(
         PlaceKind.CAVERN_SYSTEM: (R.GATE, R.STAIR, R.CHAMBER, R.CHAMBER, R.LAIR, R.HEART),
         PlaceKind.RUIN: (R.GATE, R.HALL, R.CELL, R.LIBRARY, R.VAULT),
         PlaceKind.SHRINE_SITE: (R.GATE, R.HALL, R.SHRINE),
-        PlaceKind.GOD_CORPSE: (R.GATE, R.CHAMBER, R.CRYPT, R.HEART),
+        PlaceKind.DEAD_GOD_SITE: (R.GATE, R.CHAMBER, R.CRYPT, R.HEART),
         PlaceKind.BURIAL_GROUND: (R.GATE, R.CRYPT, R.CRYPT, R.VAULT),
         PlaceKind.MINE_SITE: (R.GATE, R.STAIR, R.CHAMBER, R.STORE),
         PlaceKind.WRECK_SITE: (R.GATE, R.HALL, R.STORE, R.VAULT),
@@ -261,7 +261,7 @@ GUARDED_ROOMS = frozenset({R.LAIR, R.HEART, R.VAULT, R.CRYPT})
 EXCAVATION_PLACES = frozenset(
     {
         PlaceKind.RUIN,
-        PlaceKind.GOD_CORPSE,
+        PlaceKind.DEAD_GOD_SITE,
         PlaceKind.CRATER,
         PlaceKind.BURIAL_GROUND,
         PlaceKind.WRECK_SITE,

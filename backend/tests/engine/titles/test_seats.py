@@ -2,14 +2,14 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind, FactionRank
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.models.entity_stats import CultStats, FactionStats
 from aerona.engine.polity.seats import SeatTally, seat_of, tend_seats
 from tests.engine.society.factories import Realm, context, make, mortal, settlement, tuned
 
 
 async def test_faiths_companies_and_guilds_raise_seats_held_by_their_leaders(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(titles={"see_followers": 100, "archsee_followers": 1000, "seat_prestige": 3}))
+    ctx = context(realm.session, tuned(titles={"faith_local_followers": 100, "faith_high_followers": 1000, "seat_prestige": 3}))
     town = await settlement(realm, "Morrowdeep")
     great = await make(realm.session, "Choir of Dawn", EntityType.CULT, CultStats(followers=5000), world_id=realm.world.id, location_id=town.id)
     lesser = await make(realm.session, "Choir of Dusk", EntityType.CULT, CultStats(followers=1500), world_id=realm.world.id, location_id=town.id)
@@ -30,12 +30,12 @@ async def test_faiths_companies_and_guilds_raise_seats_held_by_their_leaders(rea
     await tend_seats(ctx, tally)
     assert tally.founded == 5
     ranks = {cult.id: (await seat_of(ctx, cult.id)) for cult in (great, lesser, small)}
-    assert [row.rank if row else None for row in ranks.values()] == [TitleRank.HIGH_SEAT, TitleRank.ARCHSEE, TitleRank.SEE]
+    assert [row.rank if row else None for row in ranks.values()] == [TitleTier.FAITH_SUPREME, TitleTier.FAITH_HIGH, TitleTier.FAITH_LOCAL]
     assert all(row is not None and row.holder_node_id == cleric.id for row in ranks.values())
     captaincy = await seat_of(ctx, company.id)
     mastership = await seat_of(ctx, guild.id)
-    assert captaincy is not None and captaincy.rank is TitleRank.CAPTAINCY and captaincy.holder_node_id == captain.id
-    assert mastership is not None and mastership.rank is TitleRank.GUILDMASTERSHIP and mastership.holder_node_id == master.id
+    assert captaincy is not None and captaincy.rank is TitleTier.MILITARY and captaincy.holder_node_id == captain.id
+    assert mastership is not None and mastership.rank is TitleTier.GUILD and mastership.holder_node_id == master.id
     purse = await realm.session.get(RulerCurrencyRow, captain.id)
     assert purse is not None and purse.prestige == 3
     company.status, company.end_epoch = EntityStatus.DESTROYED, 3

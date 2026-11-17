@@ -42,7 +42,7 @@ import {
   rangeTrendValues,
   sizeClassValues,
   socialityValues,
-  speciesUseValues,
+  animalRoleValues,
 } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -62,6 +62,9 @@ import {
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { type Named } from '@/features/entity/economy/labels'
+import { ChoiceSelect } from '@/features/entity/economy/parts'
+import { useKinds } from '@/features/kinds/api'
 import { speciesRangeSearch } from '@/features/map/speciesRange'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useSons } from '@/features/pantheon/api'
@@ -103,6 +106,8 @@ import {
   named,
   plain,
   titled,
+  PRODUCT_PARTS,
+  type ProductPart,
 } from './labels'
 import {
   AdjustPanel,
@@ -608,14 +613,14 @@ function UsesAndYields({ card }: { card: SpeciesCard }) {
       title='Uses and yields'
       icon={Package}
       tone='gold'
-      hint={`Kept for ${card.uses.length} of ${plural(speciesUseValues.length, 'use', 'uses')}; yields are per head each epoch`}
+      hint={`Kept for ${card.uses.length} of ${plural(animalRoleValues.length, 'use', 'uses')}; yields are per head each epoch`}
       wide
     >
       <div
         data-surface='SpeciesUses'
         className='flex min-w-0 flex-wrap gap-1.5'
       >
-        {speciesUseValues.map((use) => {
+        {animalRoleValues.map((use) => {
           const spec = named(USE, use)
           const held = card.uses.includes(use)
           return (
@@ -1169,12 +1174,23 @@ function YieldControls({ id, card, blocked }: Blocked) {
       .filter((row) => row.world_material_id !== null)
       .map((row) => [String(row.world_material_id), row.label])
   )
+  const goodKinds = useKinds('good', null)
+  const goods: Record<string, Named> = Object.fromEntries(
+    (goodKinds.data ?? [])
+      .filter((kind) => !kind.retired)
+      .map((kind) => [
+        String(kind.id),
+        { label: kind.name, icon: Package, tone: 'gold' as const },
+      ])
+  )
   const set = useGodAction<{
     product: string
     commodity: string | null
     material: string | null
     stuff?: number | null
     rate: number
+    part?: ProductPart | null
+    good?: number | null
   }>({
     run: ({
       product: name,
@@ -1182,6 +1198,8 @@ function YieldControls({ id, card, blocked }: Blocked) {
       material: matter,
       stuff: own,
       rate: amount,
+      part,
+      good,
     }) =>
       unwrap(
         api.POST('/api/actions/species:yield', {
@@ -1192,6 +1210,8 @@ function YieldControls({ id, card, blocked }: Blocked) {
             material: (matter || null) as 'hide' | null,
             world_material_id: own ?? null,
             rate: amount,
+            part: part ?? null,
+            good_kind_id: good ?? null,
           },
         })
       ),
@@ -1200,7 +1220,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
     run: ({ use: kind, held }) =>
       unwrap(
         api.POST('/api/actions/species:use', {
-          body: { species_id: id, use: kind as 'food', held },
+          body: { species_id: id, use: kind as 'meat', held },
         })
       ),
   })
@@ -1210,7 +1230,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
     <div className='flex min-w-0 flex-col gap-3'>
       <Group title='Kept for' icon={Wheat}>
         <ul className='grid min-w-0 grid-cols-1 gap-2 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
-          <Paged items={speciesUseValues} as='li'>
+          <Paged items={animalRoleValues} as='li'>
             {(key) => {
               const spec = named(USE, key)
               return (
@@ -1241,13 +1261,16 @@ function YieldControls({ id, card, blocked }: Blocked) {
                 key={`${row.product}-${row.rate}`}
                 row={row}
                 busy={busy}
-                onSet={(next) =>
+                goods={goods}
+                onSet={(next, part, good) =>
                   set.mutate({
                     product: row.product,
                     commodity: row.commodity ?? null,
                     material: row.material ?? null,
                     stuff: row.world_material_id ?? null,
                     rate: next,
+                    part,
+                    good,
                   })
                 }
               />
@@ -1338,14 +1361,23 @@ function YieldControls({ id, card, blocked }: Blocked) {
   )
 }
 
+const PART_CHOICES: Record<string, Named> = Object.fromEntries(
+  Object.entries(PRODUCT_PARTS).map(([key, part]) => [
+    key,
+    { label: part.label, icon: part.icon, tone: part.tone ?? 'muted' },
+  ])
+)
+
 function YieldRow({
   row,
   busy,
+  goods: goodKinds,
   onSet,
 }: {
   row: SpeciesCard['yields'][number]
   busy: string | null
-  onSet: (rate: number) => void
+  goods: Record<string, Named>
+  onSet: (rate: number, part?: ProductPart | null, good?: number | null) => void
 }) {
   const [rate, setRate] = useState(String(row.rate))
   const goods = row.commodity ? COMMODITY[row.commodity] : null
@@ -1359,7 +1391,8 @@ function YieldRow({
         </Text>
         <Muted as='span' variant='caption' truncate>
           {[
-            goods?.label,
+            row.part ? PRODUCT_PARTS[row.part].label : null,
+            row.good_kind_name ?? goods?.label,
             row.material && plain(MATERIAL, row.material) !== goods?.label
               ? plain(MATERIAL, row.material)
               : null,
@@ -1367,6 +1400,29 @@ function YieldRow({
             .filter(Boolean)
             .join(' · ')}
         </Muted>
+      </div>
+      <div className='grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+        <ChoiceSelect
+          label={`${label} part`}
+          value={row.part ?? ''}
+          table={PART_CHOICES}
+          blocked={busy}
+          placeholder='Which part it is'
+          onPick={(value) => onSet(row.rate, value as ProductPart)}
+        />
+        <ChoiceSelect
+          label={`${label} good`}
+          value={String(row.good_kind_id ?? '')}
+          table={goodKinds}
+          blocked={
+            busy ??
+            (Object.keys(goodKinds).length > 0
+              ? null
+              : 'No good of this world is known yet')
+          }
+          placeholder='Which good it counts as'
+          onPick={(value) => onSet(row.rate, null, Number(value))}
+        />
       </div>
       <Input
         className='w-20'

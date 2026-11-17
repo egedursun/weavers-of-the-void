@@ -14,18 +14,18 @@ class TravelMethodsRules:
     light_sail_danger: int = rule(20, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Light sail: danger")
     rocketry_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Rocketry: journey duration (epochs)")
     rocketry_danger: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Rocketry: danger")
-    cosmic_mount_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Cosmic mount: journey duration (epochs)")
-    cosmic_mount_danger: int = rule(35, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Cosmic mount: danger")
+    cosmic_mount_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Ridden crossing: journey duration (epochs)")
+    cosmic_mount_danger: int = rule(35, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Ridden crossing: danger")
     dream_journey_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Dream journey: journey duration (epochs)")
     dream_journey_danger: int = rule(45, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Dream journey: danger")
-    river_of_dead_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "River of the dead: journey duration (epochs)")
-    river_of_dead_danger: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "River of the dead: danger")
+    river_of_dead_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Crossing of the dead: journey duration (epochs)")
+    river_of_dead_danger: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Crossing of the dead: danger")
     divine_bridge_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Divine bridge: journey duration (epochs)")
     divine_bridge_danger: int = rule(10, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Divine bridge: danger")
     slingshot_orbit_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Slingshot orbit: journey duration (epochs)")
     slingshot_orbit_danger: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Slingshot orbit: danger")
-    swallowed_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Being swallowed: journey duration (epochs)")
-    swallowed_danger: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Being swallowed: danger")
+    swallowed_duration: int = rule(2, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Carried within a being: journey duration (epochs)")
+    swallowed_danger: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Carried within a being: danger")
     wormhole_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: journey duration (epochs)")
     wormhole_danger: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: danger")
     void_ark_duration: int = rule(6, 1, 100, RuleGroup.COSMOS_AND_TRAVEL, "Void ark: journey duration before its reach (epochs)")
@@ -58,7 +58,7 @@ class TravelMethodsRules:
     dream_lone_no_return_pct: int = rule(
         10, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Dream journey: chance a lone traveller's soul never returns and the body dies (%)"
     )
-    river_memory_loss_pct: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "River of the dead: chance the living lose their memories on the way (%)")
+    river_memory_loss_pct: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Crossing of the dead: chance the living lose their memories on the way (%)")
     river_knowledge_loss_pct: int = rule(
-        50, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "River of the dead: share of knowledge forgotten by travellers who lost their memories (%)"
+        50, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Crossing of the dead: share of knowledge forgotten by travellers who lost their memories (%)"
     )

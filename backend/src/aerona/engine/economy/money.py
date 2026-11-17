@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.materials import COIN_MATERIALS
+from aerona.catalog.money import MONEY_FORMS, REFORMS, issuer_kind_of
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
@@ -11,7 +12,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
@@ -42,6 +43,7 @@ class MoneyTally:
     minted: int = 0
     adopted: int = 0
     debased: int = 0
+    reformed: int = 0
     lent: int = 0
     repaid: int = 0
     defaulted: int = 0
@@ -116,6 +118,7 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
         supply=0,
         trust=table.start_trust,
         minted_epoch=ctx.epoch,
+        issuer_kind=issuer_kind_of(issuer.entity_type, issuer.engine_kind),
     )
     ctx.session.add(currency)
     await ctx.session.flush()
@@ -146,6 +149,8 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
         if riches(issuer) < ctx.rules.trade.coinage_min_wealth or not ctx.rng(f"mint.{issuer.id}.{ctx.epoch}").chance(ctx.rules.trade.coinage_chance):
             return
         currency = await found_currency(ctx, issuer, lot.material)
+    if not MONEY_FORMS[currency.form].uses_metal:
+        return
     units = min(lot.quantity, table.mint_ore_units)
     taken = await goods_of(ctx.session, ctx.epoch).take(issuer.id, CommodityKind.ORE, units, GoodsFlow.INPUT, material=lot.material)
     struck = sum(item.quantity for item in taken) * table.coins_per_unit * PERCENT // max(1, currency.purity)
@@ -188,7 +193,8 @@ async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, 
     issuer = book.entities.get(currency.issuer_entity_id) or await ctx.session.get(EntityRow, currency.issuer_entity_id)
     if issuer is None or currency.purity <= 0 or (currency.held and not forced):
         return False
-    currency.purity = clamp_int(currency.purity - table.debase_step, 0, PERCENT)
+    if MONEY_FORMS[currency.form].uses_metal:
+        currency.purity = clamp_int(currency.purity - table.debase_step, 0, PERCENT)
     currency.trust = clamp_int(currency.trust - table.debase_trust_loss, 0, PERCENT)
     currency.supply = round_half_up(currency.supply * (PERCENT + table.debase_step) / PERCENT)
     currency.debased_epoch = ctx.epoch
@@ -206,17 +212,52 @@ async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, 
     return True
 
 
+async def reform(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, issuer: EntityRow) -> bool:
+    later = REFORMS[REFORMS.index(currency.form) + 1 :] if currency.form in REFORMS else REFORMS
+    known = [form for form in later if (technique := MONEY_FORMS[form].technique) is None or not book.lacks(issuer.id, technique)]
+    if not known or not ctx.rng(f"reform.{currency.id}.{ctx.epoch}").chance(ctx.rules.money.reform_chance):
+        return False
+    form = known[-1]
+    if currency.form in (MoneyForm.COIN, MoneyForm.COMMODITY):
+        currency.backing = MoneyBacking.METAL if currency.metal is not None else MoneyBacking.DECREE
+        currency.convertible = currency.metal is not None
+    currency.form = form
+    currency.metal = None
+    currency.purity = PERCENT
+    await note(
+        ctx, f"{issuer.name} moved {currency.name} to {MONEY_FORMS[form].label.lower()}.", key="money.reformed", ids=[issuer.id], kind=ChronicleKind.TRADE
+    )
+    return True
+
+
+async def strain(ctx: TickContext, currency: CurrencyRow) -> None:
+    table = ctx.rules.money
+    spec = MONEY_FORMS[currency.form]
+    rng = ctx.rng(f"money.strain.{currency.id}.{ctx.epoch}")
+    copied = table.counterfeit_chance * spec.counterfeit_pct * (PERCENT - currency.trust) // (PERCENT * PERCENT)
+    if rng.chance(copied):
+        currency.trust = clamp_int(currency.trust - table.counterfeit_trust_loss, 0, PERCENT)
+    if spec.intrusion and rng.chance(table.intrusion_chance):
+        currency.supply = max(0, currency.supply - currency.supply * table.intrusion_supply_pct // PERCENT)
+    if not spec.uses_metal:
+        currency.supply += table.issue_units
+
+
 async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
     table = ctx.rules.money
     for currency in (await currencies(ctx)).values():
-        if currency.held or currency.metal is None:
+        if currency.held:
             continue
         issuer = book.entities.get(currency.issuer_entity_id)
         if issuer is None:
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss, 0, PERCENT)
             continue
-        purity = await lagged(ctx, BalanceLoop.DEBASEMENT, issuer.id, currency.purity, subject=currency.id)
-        currency.trust = clamp_int(currency.trust + (purity - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)
+        if await reform(ctx, book, currency, issuer):
+            tally.reformed += 1
+        await strain(ctx, currency)
+        standing = currency.purity if MONEY_FORMS[currency.form].uses_metal else riches(issuer)
+        anchor = await lagged(ctx, BalanceLoop.DEBASEMENT, issuer.id, standing, subject=currency.id)
+        currency.trust = clamp_int(currency.trust + (anchor - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)
         at_war = await _at_war(ctx, issuer.id)
         tempted = at_war and riches(issuer) < table.debase_wealth_below and ctx.rng(f"debase.{currency.id}.{ctx.epoch}").chance(table.debase_chance)
         if tempted and await debase(ctx, book, currency):

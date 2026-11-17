@@ -10,6 +10,7 @@ class AgeBand(StrEnum):
 class Sex(StrEnum):
     FEMALE = "female"
     MALE = "male"
+    OTHER = "other"
 
 
 class CohortCondition(StrEnum):
@@ -36,13 +37,16 @@ class Job(StrEnum):
     IDLE = "idle"
 
 
-class Aesthetic(StrEnum):
-    AUSTERE = "austere"
-    ORNATE = "ornate"
-    GEOMETRIC = "geometric"
-    NATURAL = "natural"
-    MACABRE = "macabre"
-    CELESTIAL = "celestial"
+class MotifSource(StrEnum):
+    LIVING_THINGS = "living_things"
+    LAND = "land"
+    SKY = "sky"
+    GODS = "gods"
+    ANCESTORS = "ancestors"
+    PEOPLE = "people"
+    MADE_THINGS = "made_things"
+    WRITING = "writing"
+    PATTERN = "pattern"
 
 
 class MartialStyle(StrEnum):
@@ -64,32 +68,13 @@ class MartialStyle(StrEnum):
     COMBINED_ARMS = "combined_arms"
 
 
-class MarriageCustom(StrEnum):
-    MONOGAMY = "monogamy"
-    POLYGYNY = "polygyny"
-    POLYANDRY = "polyandry"
-    GROUP = "group"
-
-
 class InheritanceCustom(StrEnum):
-    GAVELKIND = "gavelkind"
+    EQUAL_SHARES = "equal_shares"
     PRIMOGENITURE = "primogeniture"
     ULTIMOGENITURE = "ultimogeniture"
-    MATRILINEAL = "matrilineal"
+    THROUGH_SECOND_LINE = "through_second_line"
     ELECTIVE = "elective"
     BY_MERIT = "by_merit"
-
-
-class FolkDiet(StrEnum):
-    OMNIVORE = "omnivore"
-    HERBIVORE = "herbivore"
-    CARNIVORE = "carnivore"
-    PISCIVORE = "piscivore"
-    SCAVENGER = "scavenger"
-    SANGUIVORE = "sanguivore"
-    LITHOVORE = "lithovore"
-    ESSENCE_FEEDER = "essence_feeder"
-    PHOTOTROPH = "phototroph"
 
 
 class NaturalTrait(StrEnum):
@@ -115,3 +100,5 @@ class FuneralCustom(StrEnum):
     ENDOCANNIBALISM = "endocannibalism"
     REANIMATION = "reanimation"
     SOUL_BINDING = "soul_binding"
+    NAMELESS = "nameless"
+    NONE = "none"

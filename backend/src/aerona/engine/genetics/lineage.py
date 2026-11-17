@@ -3,6 +3,7 @@ from collections import Counter
 from sqlalchemy import select
 
 from aerona.catalog.genetics import LOCI, LOOKS_LOCI
+from aerona.catalog.kinds.gifts import GIFT_STANCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -14,7 +15,6 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.genetics import GiftStance
 from aerona.domain.enums.mind import PreferenceKind
 from aerona.domain.enums.polity import HouseTrait
 from aerona.engine.context import TickContext
@@ -111,13 +111,12 @@ async def stance_effects(ctx: TickContext, pool: AllelePoolRow, members: list[tu
         profile = await ctx.session.get(MortalProfileRow, mortal.id)
         if profile is None:
             continue
-        if pool.gift_stance is GiftStance.HONOURED:
+        spec = GIFT_STANCES[pool.gift_stance]
+        if spec.renown:
             mortal.importance = (mortal.importance or 0) + table.honour_renown
-        elif pool.gift_stance is GiftStance.FEARED:
-            profile.stress = clamp_int(profile.stress + table.fear_stress, 0, PERCENT)
-        elif pool.gift_stance is GiftStance.PERSECUTED:
-            profile.stress = clamp_int(profile.stress + table.fear_stress * 2, 0, PERCENT)
-        elif pool.gift_stance is GiftStance.TAXED and "standing" not in (profile.locked or []):
+        if spec.fear_times:
+            profile.stress = clamp_int(profile.stress + table.fear_stress * spec.fear_times, 0, PERCENT)
+        if spec.taxed and "standing" not in (profile.locked or []):
             paid = min(profile.wealth, table.tax_wealth)
             profile.wealth -= paid
             town = await ctx.session.get(SettlementProfileRow, mortal.location_id) if mortal.location_id is not None else None

@@ -6,6 +6,7 @@ from aerona.constants.schema import NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
+    AnimalRole,
     BeastTemper,
     Biochemistry,
     Diet,
@@ -15,11 +16,11 @@ from aerona.domain.enums.ecology import (
     SizeClass,
     Sociality,
     SpeciesClass,
-    SpeciesUse,
     YieldProduct,
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import BeastStats, SpeciesStats
 from aerona.engine.ecology import anatomy_control, control, pet_control
@@ -62,11 +63,13 @@ class SpeciesYield(Command):
     material: MaterialKind | None = None
     world_material_id: int | None = None
     rate: int
+    part: ProductPart | None = None
+    good_kind_id: int | None = None
 
 
 class Use(Command):
     species_id: int
-    use: SpeciesUse
+    use: AnimalRole
     held: bool = True
 
 
@@ -199,7 +202,7 @@ class Treasure(Command):
 
 class NewUseKind(Command):
     name: Annotated[str, Field(min_length=1, max_length=NAME_MAX_LENGTH)]
-    base_use: SpeciesUse
+    base_use: AnimalRole
     output_pct: Annotated[int, Field(ge=0, le=1000)] = 100
     description: Annotated[str, Field(max_length=SHORT_TEXT_MAX_LENGTH)] | None = None
 
@@ -275,6 +278,8 @@ async def set_yield(scope: PlayerScope, command: SpeciesYield) -> Effect:
         material=command.material,
         rate=command.rate,
         world_material_id=command.world_material_id,
+        part=command.part,
+        good_kind_id=command.good_kind_id,
     )
     return Effect(f"It yields {row.rate} {row.product}." if row is not None else f"It yields no {command.product}.", command.species_id)
 

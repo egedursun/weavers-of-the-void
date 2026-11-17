@@ -4,6 +4,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.economy import (
     CommodityFamily,
     CommodityKind,
+    CurrencyIssuer,
     ExtractionKind,
     FoeNature,
     GoodsFlow,
@@ -11,6 +12,8 @@ from aerona.domain.enums.economy import (
     MaterialFamily,
     MaterialOrigin,
     MaterialSlot,
+    MoneyBacking,
+    MoneyForm,
     TradeLoss,
     TradeMode,
     TradeRouteStatus,
@@ -18,6 +21,7 @@ from aerona.domain.enums.economy import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature_kinds import MaterialSource
 from aerona.domain.enums.polity import DebtRemedy
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 
@@ -28,6 +32,7 @@ class MaterialView(ApiModel):
     label: str
     family: MaterialFamily
     origin: MaterialOrigin
+    source: MaterialSource
     edited: bool
     hardness: int
     toughness: int
@@ -307,6 +312,10 @@ class CurrencyView(ApiModel):
     supply: int
     minted_epoch: int
     debased_epoch: int | None
+    form: MoneyForm
+    backing: MoneyBacking
+    convertible: bool
+    issuer_kind: CurrencyIssuer
     users: list[int]
     held: bool = False
 

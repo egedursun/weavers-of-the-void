@@ -16,6 +16,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind
 from aerona.engine.agrarian.ruin import harm_ruin
 from aerona.engine.context import TickContext
+from aerona.engine.kinds.nature import sturdiness
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -258,7 +259,8 @@ async def damage_districts(ctx: TickContext, settlement: EntityRow, harm: Distri
     struck: list[str] = []
     base = harm_loss(ctx.rules, harm) * max(0.0, scale)
     for district in rows:
-        loss = round_half_up(base * material_factor(ctx.rules, harm, district.material))
+        sturdy = await sturdiness(ctx.session, ctx.rules, district.material, district.world_material_id)
+        loss = round_half_up(base * material_factor(ctx.rules, harm, district.material) / max(0.1, sturdy))
         if loss <= 0:
             continue
         struck.append(district.kind.value.replace("_", " "))

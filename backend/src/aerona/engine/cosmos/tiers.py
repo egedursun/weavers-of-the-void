@@ -127,7 +127,7 @@ def base_tier(scene: TierScene, entity: EntityRow) -> tuple[int, set[int]]:
     tier = T.TRIBE
     if population >= threshold(civ.city_state_population, T.CITY_STATE) and known >= civ.city_state_knowledge:
         tier = T.CITY_STATE
-        if (len(governed) >= civ.kingdom_ruled_places or population >= threshold(civ.kingdom_population, T.KINGDOM)) and known >= civ.kingdom_knowledge:
+        if (len(governed) >= civ.realm_ruled_places or population >= threshold(civ.realm_population, T.KINGDOM)) and known >= civ.realm_knowledge:
             tier = T.KINGDOM
     return tier, worlds
 

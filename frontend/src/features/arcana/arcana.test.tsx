@@ -229,6 +229,9 @@ describe('myth', () => {
         since_epoch: 2,
         neglect: 0,
         duty: 40,
+        office_kind_id: null,
+        office_duty: 'the_dead',
+        office_name: null,
         locked: [],
       },
     ])

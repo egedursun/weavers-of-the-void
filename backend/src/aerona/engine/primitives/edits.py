@@ -1,7 +1,7 @@
 import re
 from typing import cast
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, Float, Integer, Table
+from sqlalchemy import JSON, Boolean, CheckConstraint, Float, Integer, Table, inspect
 from sqlalchemy.sql.sqltypes import Enum as SqlEnum
 
 from aerona.core.errors import ValidationFailedError
@@ -18,15 +18,16 @@ def table_of(row: Base) -> Table:
 
 
 def bounds(row: Base) -> dict[str, tuple[int, int | None]]:
+    keys = {str(column.name): str(key) for key, column in inspect(type(row)).columns.items()}
     found: dict[str, tuple[int, int | None]] = {}
     for constraint in table_of(row).constraints:
         if not isinstance(constraint, CheckConstraint):
             continue
         text = str(constraint.sqltext)
         if match := RANGE.match(text):
-            found[match.group(1)] = (int(match.group(2)), int(match.group(3)))
+            found[keys.get(match.group(1), match.group(1))] = (int(match.group(2)), int(match.group(3)))
         elif match := FLOOR.match(text):
-            found[match.group(1)] = (int(match.group(2)), None)
+            found[keys.get(match.group(1), match.group(1))] = (int(match.group(2)), None)
     return found
 
 
@@ -62,7 +63,7 @@ def empty_value(kind: object, nullable: bool, message: str) -> object:
 
 
 def coerce(row: Base, key: str, value: object, limits: dict[str, tuple[int, int | None]]) -> object:
-    column = table_of(row).columns.get(key)
+    column = inspect(type(row)).columns.get(key)
     if column is None or column.primary_key or key in FIXED:
         raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} cannot be set here.")
     kind = column.type

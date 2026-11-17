@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.culture import ArtMedium, ItemDeed
+from aerona.domain.enums.culture import ArtMode, ItemDeed
 from aerona.engine.lore import made_control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -32,7 +32,7 @@ class BookContent(Command):
 
 class CommissionArtwork(Command):
     patron_id: int
-    medium: ArtMedium
+    medium: ArtMode
     name: str = ""
     author_id: int | None = None
     subject_id: int | None = None

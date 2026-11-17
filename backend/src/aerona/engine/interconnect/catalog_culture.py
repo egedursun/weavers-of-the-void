@@ -104,7 +104,7 @@ CULTURE_RAW: tuple[Raw, ...] = (
         LORE,
         ("legend", "house", "polity"),
         ("credence",),
-        (S.POLITY, "belief.return_king_usurper", "legitimacy"),
+        (S.POLITY, "belief.return_ruler_usurper", "legitimacy"),
     ),
     (
         "calendar_feasts",

@@ -76,7 +76,7 @@ async def test_unaffordable_scheme_is_skipped(session: AsyncSession, world: Gods
 
 async def test_hostile_sibling_scatters_the_bones_on_their_own(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     tuned = _tuned(
-        rules, auto_scatter_chance=100, auto_scatter_relation=30, auto_intrigue_chance=0, scatter_bones_devotion_loss=10, rite_chance=0, sacrifice_chance=0
+        rules, auto_hinder_chance=100, auto_hinder_relation=30, auto_intrigue_chance=0, hinder_return_devotion_loss=10, rite_chance=0, sacrifice_chance=0
     )
     dead = await make_son(session, "Velkar", world.world.id)
     rival = await make_son(session, "Iolen", world.world.id, essence=500)
@@ -88,7 +88,7 @@ async def test_hostile_sibling_scatters_the_bones_on_their_own(session: AsyncSes
     before = (await resurrection_state(session, tuned, dead, 3)).devotion
     await death_engine(make_context(session, tuned, 4, "death_engine"))
     after = await resurrection_state(session, tuned, dead, 4)
-    assert after is not None and after.devotion == before - tuned.death.scatter_bones_devotion_loss
-    assert rival.essence == 500 - tuned.death.scatter_bones_cost
-    assert god_lines.SCATTER.key in await chronicle_keys(session)
+    assert after is not None and after.devotion == before - tuned.death.hinder_return_devotion_loss
+    assert rival.essence == 500 - tuned.death.hinder_return_cost
+    assert god_lines.HINDERED.key in await chronicle_keys(session)
     assert rival.status is SonStatus.ACTIVE

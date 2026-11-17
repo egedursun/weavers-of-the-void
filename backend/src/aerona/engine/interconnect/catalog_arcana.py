@@ -184,7 +184,7 @@ MYTHIC_MECHANICS = (
     Mechanic(
         key="servitors",
         spec_item="S3.3/RP3",
-        title="Divine servitors: heralds, guardians, angels, furies, psychopomps and choirs in a god's service, loyal while their god is regarded",
+        title="Divine servitors: beings in a god's service, each serving in one role, loyal while their god is regarded",
         subsystem=S.GODS,
         phases=("servitors",),
         surface=Surface(drawer=MYTHIC_SECTION),

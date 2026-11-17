@@ -8,7 +8,8 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.demography import Aesthetic, FolkDiet, FuneralCustom, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, MartialStyle
+from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.demography import control
 from aerona.prompts import SonToolId
@@ -22,11 +23,13 @@ from aerona.tools.son.support import ensure_in_reach, require_essence
 
 FIELD_WORDS = {
     "martial_style": "way of war",
-    "aesthetic": "taste in beauty",
+    "ornament": "ornament",
+    "geometry": "geometric form",
+    "colour": "colour",
+    "scale": "scale",
+    "symmetry": "symmetry",
     "funeral_rite": "funeral rite",
-    "marriage": "marriage custom",
     "inheritance": "inheritance",
-    "endogamous": "marrying within",
     "diet": "diet",
 }
 
@@ -34,27 +37,31 @@ FIELD_WORDS = {
 class ShapeFolkInput(ToolInput):
     people_id: int
     martial_style: MartialStyle | None = None
-    aesthetic: Aesthetic | None = None
+    ornament: Annotated[int, Field(ge=0, le=100)] | None = None
+    geometry: Annotated[int, Field(ge=0, le=100)] | None = None
+    colour: Annotated[int, Field(ge=0, le=100)] | None = None
+    scale: Annotated[int, Field(ge=0, le=100)] | None = None
+    symmetry: Annotated[int, Field(ge=0, le=100)] | None = None
     funeral_rite: FuneralCustom | None = None
-    marriage: MarriageCustom | None = None
     inheritance: InheritanceCustom | None = None
-    endogamous: bool | None = None
-    diet: FolkDiet | None = None
+    diet: Diet | None = None
     reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
-def chosen(args: ShapeFolkInput) -> dict[str, str | bool]:
-    found: dict[str, str | bool] = {}
+def chosen(args: ShapeFolkInput) -> dict[str, str | bool | int]:
+    found: dict[str, str | bool | int] = {}
     for key in FIELD_WORDS:
         value = getattr(args, key)
         if value is not None:
-            found[key] = value if isinstance(value, bool) else str(value)
+            found[key] = value if isinstance(value, (bool, int)) else str(value)
     return found
 
 
-def spoken(key: str, value: str | bool) -> str:
+def spoken(key: str, value: str | bool | int) -> str:
     if isinstance(value, bool):
         return f"{FIELD_WORDS[key]} {'yes' if value else 'no'}"
+    if isinstance(value, int):
+        return f"{FIELD_WORDS[key]} {value} of 100"
     return f"{FIELD_WORDS[key]} {value.replace('_', ' ')}"
 
 

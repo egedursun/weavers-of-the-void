@@ -193,7 +193,7 @@ async def free_captives(ctx: TickContext, beast: EntityRow) -> int:
 
 
 def is_abductor(anatomy: CreatureAnatomyRow | None) -> bool:
-    return anatomy is not None and anatomy.temperament is Temperament.ABDUCTOR
+    return anatomy is not None and anatomy.temperament is Temperament.SEIZES_PREY
 
 
 async def void_trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -> int:

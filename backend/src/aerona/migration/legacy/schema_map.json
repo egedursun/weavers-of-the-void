@@ -1019,7 +1019,7 @@
       "macera": "adventure",
       "entrika": "intrigue",
       "kurtaris": "rescue",
-      "kimera": "chimera",
+      "kimera": "merged_species",
       "kacis": "escape",
       "evcillestirme": "domestication",
       "cag_degisimi": "age_change",
@@ -1156,12 +1156,12 @@
       "kapi": "ancient_gate",
       "katlama": "space_fold",
       "yelken": "light_sail",
-      "binek": "cosmic_mount",
+      "binek": "carrier_mount",
       "ruya": "dream_journey",
-      "olu_nehri": "river_of_dead",
+      "olu_nehri": "death_current",
       "kopru": "divine_bridge",
       "sapan": "slingshot_orbit",
-      "yutulma": "swallowed"
+      "yutulma": "carried_within"
     },
     "journey_intent": {
       "koloni": "colony",
@@ -1434,15 +1434,15 @@
       "kozmik seyahat kaynağı": "cosmic_travel_resource"
     },
     "species": {
-      "golem": "golem",
-      "kimera": "chimera"
+      "golem": "animated_work",
+      "kimera": "merged_species"
     },
     "mortal": {
       "ayna doğumu": "mirror_birth",
       "çırak": "apprentice"
     },
     "place": {
-      "tanrı cesedi": "god_corpse"
+      "tanrı cesedi": "dead_god"
     },
     "settlement": {
       "koloni": "colony"
@@ -1469,8 +1469,8 @@
     "kozmik arşiv": "cosmic_archive",
     "boşluk korsanı": "route_raiders",
     "harika": "wonder",
-    "golem": "golem",
-    "tanrı cesedi": "god_corpse"
+    "golem": "animated_work",
+    "tanrı cesedi": "dead_god"
   },
   "species_classes": {
     "bitki": "plant",
@@ -1492,7 +1492,7 @@
       "kahraman": "hero",
       "savaşçı": "warrior",
       "muhafız savaşçı": "warrior",
-      "şövalye": "knight",
+      "şövalye": "sworn_warrior",
       "avcı": "hunter",
       "seçilmiş": "chosen",
       "kâhin": "seer",
@@ -1583,7 +1583,7 @@
       "öncü": "pioneer",
       "altın çağ": "golden_age",
       "ölümsüz": "immortal",
-      "kimera": "chimera",
+      "kimera": "merged_species",
       "mutasyon": "mutation",
       "mutant": "mutant",
       "mutasyon geçirdi": "mutated",
@@ -1777,7 +1777,7 @@
         "keşf|buldu"
       ],
       [
-        "swallowed",
+        "not_released",
         "yutul"
       ]
     ]
@@ -4254,9 +4254,9 @@
     "MEDENIYET.koloni_yakin_sans": "civilization.colony_near_independence_chance",
     "MEDENIYET.koloni_yas": "civilization.colony_independence_min_age",
     "MEDENIYET.kozmik_dunya": "civilization.cosmic_worlds",
-    "MEDENIYET.krallik_bilgi": "civilization.kingdom_knowledge",
-    "MEDENIYET.krallik_nufus": "civilization.kingdom_population",
-    "MEDENIYET.krallik_yonetim": "civilization.kingdom_ruled_places",
+    "MEDENIYET.krallik_bilgi": "civilization.realm_knowledge",
+    "MEDENIYET.krallik_nufus": "civilization.realm_population",
+    "MEDENIYET.krallik_yonetim": "civilization.realm_ruled_places",
     "MEDENIYET.onceki_yaratilis_sans": "civilization.previous_creation_relic_chance",
     "MEDENIYET.sehir_bilgi": "civilization.city_state_knowledge",
     "MEDENIYET.sehir_nufus": "civilization.city_state_population",
@@ -4577,10 +4577,10 @@
     "OLUM.can_al_tur": "death.take_life_per_epoch",
     "OLUM.can_al_yaratici_direnc": "death.take_life_creator_resist",
     "OLUM.can_kurbani_adanmislik": "death.self_sacrifice_devotion",
-    "OLUM.dagit_adanmislik": "death.scatter_bones_devotion_loss",
-    "OLUM.dagit_bedel": "death.scatter_bones_cost",
-    "OLUM.dagit_oto_iliski": "death.auto_scatter_relation",
-    "OLUM.dagit_oto_sans": "death.auto_scatter_chance",
+    "OLUM.dagit_adanmislik": "death.hinder_return_devotion_loss",
+    "OLUM.dagit_bedel": "death.hinder_return_cost",
+    "OLUM.dagit_oto_iliski": "death.auto_hinder_relation",
+    "OLUM.dagit_oto_sans": "death.auto_hinder_chance",
     "OLUM.dirilis_en_az_cag": "death.resurrection_min_epochs",
     "OLUM.dua_adanmislik": "death.prayer_devotion",
     "OLUM.hac_carpan": "death.pilgrimage_multiplier_pct",
@@ -4862,15 +4862,15 @@
     "OTESI.gezegen_sans": "beyond.planet_acts_chance",
     "OTESI.gezegene_tapma_sans": "beyond.planet_worship_chance",
     "OTESI.gezegene_tapma_tavan": "beyond.planet_worship_candidates",
-    "OTESI.golem_can": "beyond.golem_hp",
-    "OTESI.golem_ceviklik": "beyond.golem_agility",
-    "OTESI.golem_guc_taban": "beyond.golem_strength_base",
-    "OTESI.golem_guc_zar": "beyond.golem_strength_die",
-    "OTESI.golem_seviye": "beyond.golem_min_power",
-    "OTESI.golem_tehlike_taban": "beyond.golem_danger_base",
-    "OTESI.golem_tehlike_zar": "beyond.golem_danger_die",
-    "OTESI.golem_zeka_taban": "beyond.golem_intelligence_base",
-    "OTESI.golem_zeka_zar": "beyond.golem_intelligence_die",
+    "OTESI.golem_can": "beyond.animated_work_hp",
+    "OTESI.golem_ceviklik": "beyond.animated_work_agility",
+    "OTESI.golem_guc_taban": "beyond.animated_work_strength_base",
+    "OTESI.golem_guc_zar": "beyond.animated_work_strength_die",
+    "OTESI.golem_seviye": "beyond.animated_work_min_power",
+    "OTESI.golem_tehlike_taban": "beyond.animated_work_danger_base",
+    "OTESI.golem_tehlike_zar": "beyond.animated_work_danger_die",
+    "OTESI.golem_zeka_taban": "beyond.animated_work_intelligence_base",
+    "OTESI.golem_zeka_zar": "beyond.animated_work_intelligence_die",
     "OTESI.hiclik_firtina_sans": "beyond.void_storm_chance",
     "OTESI.inen_ruh_guc_taban": "beyond.descended_spirit_strength_base",
     "OTESI.inen_ruh_guc_zar": "beyond.descended_spirit_strength_die",
@@ -5467,17 +5467,17 @@
     "YARATIK.iz_seviye": "creatures.trace_power",
     "YARATIK.kacak_sans": "creatures.stowaway_chance",
     "YARATIK.kacak_tehlike_tavan": "creatures.stowaway_danger_cap",
-    "YARATIK.kimera_can_tavan": "creatures.chimera_hp_cap",
-    "YARATIK.kimera_dokuma_mesafe": "creatures.chimera_merge_distance",
-    "YARATIK.kimera_dokuma_sans": "creatures.chimera_merge_chance",
-    "YARATIK.kimera_kacis_bolen": "creatures.chimera_escape_divisor",
-    "YARATIK.kimera_kacis_kayip": "creatures.chimera_escape_population_loss_pct",
-    "YARATIK.kimera_kayma": "creatures.chimera_shift",
-    "YARATIK.kimera_ozellik_tavan": "creatures.chimera_trait_cap",
-    "YARATIK.kimera_stat_varsayilan": "creatures.chimera_default_stat",
-    "YARATIK.kimera_tehlike": "creatures.chimera_danger_bonus",
-    "YARATIK.kimera_tehlike_varsayilan": "creatures.chimera_default_danger",
-    "YARATIK.kimera_zar": "creatures.chimera_die",
+    "YARATIK.kimera_can_tavan": "creatures.merged_hp_cap",
+    "YARATIK.kimera_dokuma_mesafe": "creatures.species_merge_distance",
+    "YARATIK.kimera_dokuma_sans": "creatures.species_merge_chance",
+    "YARATIK.kimera_kacis_bolen": "creatures.merged_escape_divisor",
+    "YARATIK.kimera_kacis_kayip": "creatures.merged_escape_population_loss_pct",
+    "YARATIK.kimera_kayma": "creatures.merged_shift",
+    "YARATIK.kimera_ozellik_tavan": "creatures.merged_trait_cap",
+    "YARATIK.kimera_stat_varsayilan": "creatures.merged_default_stat",
+    "YARATIK.kimera_tehlike": "creatures.merged_danger_bonus",
+    "YARATIK.kimera_tehlike_varsayilan": "creatures.merged_default_danger",
+    "YARATIK.kimera_zar": "creatures.merged_die",
     "YARATIK.megafauna_iz_sans": "creatures.megafauna_trace_chance",
     "YARATIK.megafauna_seviye": "creatures.megafauna_min_power",
     "YARATIK.melez_sans": "creatures.hybrid_chance",

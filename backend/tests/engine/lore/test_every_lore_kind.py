@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, ItemClass, LegendArchetype, MagicSchool, ProphecyPredicate, TraditionKind
-from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
+from aerona.domain.enums.culture import ArtMode, IdeologyTenet, ItemClass, LegendArchetype, MagicSchool, ProphecyPredicate, TraditionFunction
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.lore.control import PROFILES, create_lore, edit_profile
@@ -13,15 +13,15 @@ from tests.engine.society.factories import Realm, context
 FIRST_VALUES: dict[EntityType, dict[str, Any]] = {
     EntityType.LANGUAGE: {},
     EntityType.LEGEND: {"archetype": next(iter(LegendArchetype)).value},
-    EntityType.TRADITION: {"kind": next(iter(TraditionKind)).value},
+    EntityType.TRADITION: {"kind": next(iter(TraditionFunction)).value},
     EntityType.IDEOLOGY: {"tenets": [next(iter(IdeologyTenet)).value]},
     EntityType.RITE: {"school": next(iter(MagicSchool)).value},
     EntityType.PROPHECY: {"predicate": next(iter(ProphecyPredicate)).value},
     EntityType.ITEM: {"item_class": next(iter(ItemClass)).value},
-    EntityType.ARTWORK: {"medium": next(iter(ArtMedium)).value},
+    EntityType.ARTWORK: {"medium": next(iter(ArtMode)).value},
     EntityType.KNOWLEDGE: {"branch": next(iter(KnowledgeBranch)).value},
     EntityType.THEORY: {"domain": next(iter(TheoryDomain)).value},
-    EntityType.ART_FORM: {"discipline": next(iter(ArtDiscipline)).value},
+    EntityType.ART_FORM: {"discipline": next(iter(ArtMode)).value},
 }
 
 

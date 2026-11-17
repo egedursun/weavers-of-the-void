@@ -1083,7 +1083,7 @@ Tool summary:
 | 42 | lanetle | curse | Distinguished (etkile) | 1 | 12+2×power (×50% curser) | – |
 | 43 | can_al | take_life | Rare (can_al) and OLUM.can_al_tur>0 | 1 | canAlmaBedeli | OLUM.can_al_tur |
 | 44 | kardesini_dirilt | resurrect_sibling | OLUM.kardes_tur>0 and a dead sibling exists | 1 | 45/70/25 by path | OLUM.kardes_tur (shared) |
-| 45 | kemikleri_dagit | scatter_bones | same as 44 | 1 | OLUM.dagit_bedel | OLUM.kardes_tur (shared) |
+| 45 | kemikleri_dagit | hinder_return | same as 44 | 1 | OLUM.dagit_bedel | OLUM.kardes_tur (shared) |
 | 46 | mucize | miracle | Distinguished (mucize) | 1 | OGUL_KOZMIK.mucize()+power | – |
 | 47 | ruya_gonder | send_dream | Rare (nadir_araclar) | 1 | 10 | – |
 | 48 | afet_gonder | send_disaster | Rare (nadir_araclar) | 1 | OGUL_KOZMIK.afet()+2×power | – |
@@ -1489,7 +1489,7 @@ NOTE: `tdef.ad === 'Halk'` compares the Turkish display label — use the type k
 - Validation: AP; `ctx.entrika >= kardes_tur` → "You already plotted a resurrection this epoch (World rule OLUM.kardes_tur = {n})."; errors thrown by `kardesEntrikasi` returned as rejections: "A resurrection plot is only made for a dead sibling." / "Only an awake sibling makes the plot." / "Invalid path: ayin | inis | pazarlik." / "{path} needs {cost} essence; {name} has {oz} (World rule OLUM.kardes_{path}_bedel)." / "There is no awake foreign god to bargain with."
 - Effect (`kardesEntrikasi`): rite → devotion += ayin amount; descent → `kardes_inis_basari`% devotion += inis amount, else plotter `durum='uykuda'`, `uyku_kalan = kardes_inis_uyku`; bargain → first awake foreign god (same world first); the dead son's oldest worshipping community's 'tapar' moves to that foreign god ('y'); devotion += pazarlik amount. Cost deducted; devotion added to resurrection cults (`adanmislikEkle`); if devotion added: relation(plotter, dead) += kardes_ayin_adanmislik/2; chronicle 'dirilis': "{me} performed a {path} for their dead sibling {dead} ({cost} essence){extra}{; devotion N}." Then ap −= 1, ctx.entrika++. Result: "{text}{ Resurrection: devotion {d}/{needed}{, at the earliest in {k} epochs}.} {status}". (Note: no `uyudun()` suffix even though descent can put the son to sleep; the gate catches the next call.)
 
-**45. `kemikleri_dagit` → `scatter_bones`** (1 AP; Ess `OLUM.dagit_bedel`; shared Limit `kardes_tur`)
+**45. `kemikleri_dagit` → `hinder_return`** (1 AP; Ess `OLUM.dagit_bedel`; shared Limit `kardes_tur`)
 - Description: "You scatter a dead sibling's bones: the devotion of those awaiting their return falls by {dagit_adanmislik}, the resurrection is delayed. Resurrection cults become your enemies. {dagit_bedel} essence, 1 action, {once} per epoch (shared with the resurrection plot)."
 - Input: `ogul_id` int.
 - Validation: AP; `ctx.entrika >= kardes_tur` → "You already plotted this epoch (World rule OLUM.kardes_tur = {n})."; thrown: "Only a dead god's bones are scattered." / "Only an awake sibling scatters bones." / "Scattering the bones needs {cost} essence; {name} has {oz}."

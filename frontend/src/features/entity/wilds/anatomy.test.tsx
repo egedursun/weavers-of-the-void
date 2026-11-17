@@ -23,7 +23,7 @@ describe('creature anatomy', () => {
     onApi('POST', '/api/actions/anatomy:edit', ACCEPTED_ACTION)
     const { screen } = await renderApp(<BeastSection beastId={9} />)
     await expect.element(screen.getByText('Body and nature')).toBeVisible()
-    await expect.element(screen.getByText('Abductor').first()).toBeVisible()
+    await expect.element(screen.getByText('Seizes prey').first()).toBeVisible()
     await expect.element(screen.getByText('Deep mining').first()).toBeVisible()
     await screen.getByRole('combobox', { name: 'Skin' }).click()
     await screen.getByRole('option', { name: 'Hide' }).click()

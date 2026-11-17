@@ -18,6 +18,7 @@ from aerona.db.session import Database
 NODES = "nodes"
 REGISTRY = "name_registry"
 IMAGES = "images"
+BUILT_IN_KEY = "built_in_key"
 FIRST_SUFFIX = 2
 INCOMPATIBLE = "The file cannot be merged into this world."
 
@@ -47,6 +48,7 @@ class HostState:
     max_ids: dict[str, int]
     taken_names: set[str]
     image_names: set[str]
+    built_ins: dict[str, dict[str, int]] = field(default_factory=dict)
 
 
 @dataclass
@@ -84,7 +86,13 @@ async def read_host_state(session: AsyncSession) -> HostState:
             max_ids[table.name] = int(value or 0)
     taken = set((await session.scalars(text(f'SELECT normalized FROM "{REGISTRY}"'))).all())
     images = set((await session.scalars(text(f'SELECT file_name FROM "{IMAGES}"'))).all())
-    return HostState(max_ids, taken, images)
+    built_ins: dict[str, dict[str, int]] = {}
+    for table in Base.metadata.sorted_tables:
+        key = _generated_key(table)
+        if key is not None and BUILT_IN_KEY in table.columns:
+            rows = await session.execute(text(f'SELECT "{BUILT_IN_KEY}", "{key}" FROM "{table.name}" WHERE "{BUILT_IN_KEY}" IS NOT NULL'))
+            built_ins[table.name] = {str(found): int(row_id) for found, row_id in rows.all()}
+    return HostState(max_ids, taken, images, built_ins)
 
 
 def _generated_key(table: Table) -> str | None:
@@ -112,8 +120,9 @@ def plan_merge(guest: Mapping[str, GuestTable], host: HostState) -> MergePlan:
             continue
         links = _foreign_keys(table, data.columns)
         required = [name for name, column in ((c.name, c) for c in table.columns) if name in links and (not column.nullable or column.primary_key)]
-        kept = [row for row in data.rows if _admits(table.name, row, required, links, maps)]
-        skipped[table.name] = len(data.rows) - len(kept)
+        admitted = [row for row in data.rows if _admits(table.name, row, required, links, maps)]
+        kept = _without_built_ins(table, admitted, maps, host)
+        skipped[table.name] = len(data.rows) - len(admitted)
         survivors[table.name] = kept
         _allocate(table, kept, links, maps, host)
     names = _resolve_names(guest, survivors.get(NODES, []), host)
@@ -137,6 +146,21 @@ def _admits(table: str, row: dict[str, Any], required: list[str], links: dict[st
     if table == NODES and row["kind"] in MERGE_SKIPPED_NODE_KINDS:
         return False
     return all(row[name] is not None and row[name] in maps[links[name]] for name in required)
+
+
+def _without_built_ins(table: Table, rows: list[dict[str, Any]], maps: dict[str, dict[Any, Any]], host: HostState) -> list[dict[str, Any]]:
+    known = host.built_ins.get(table.name, {})
+    key = _generated_key(table)
+    if not known or key is None:
+        return rows
+    kept: list[dict[str, Any]] = []
+    for row in rows:
+        found = known.get(str(row.get(BUILT_IN_KEY)))
+        if found is None:
+            kept.append(row)
+        else:
+            maps[table.name][row[key]] = found
+    return kept
 
 
 def _allocate(table: Table, kept: list[dict[str, Any]], links: dict[str, str], maps: dict[str, dict[Any, Any]], host: HostState) -> None:

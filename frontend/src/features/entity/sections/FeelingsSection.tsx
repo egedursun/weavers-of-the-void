@@ -425,6 +425,11 @@ function DreamCard({
           <Muted variant='caption'>{`Epoch ${item.epoch} · intensity ${item.intensity}`}</Muted>
         </div>
         {item.recurring && <Badge variant='outline'>Recurring</Badge>}
+        {item.reading_name && (
+          <Badge variant='outline'>
+            Read in their way as {item.reading_name}
+          </Badge>
+        )}
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         {item.sender && <NodeChip node={item.sender} />}

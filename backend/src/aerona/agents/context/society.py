@@ -6,6 +6,7 @@ from aerona.agents.context.military import army_sheet, fleet_sheet, grievance_sh
 from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
 from aerona.agents.context.wilds import crop_lines, pet_lines, wild_lines
+from aerona.catalog.kinds.motifs import MOTIF_LABELS
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
@@ -30,6 +31,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.demography.biology import record_of
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.queries import community_of
+from aerona.engine.lore.motifs import motifs_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 from aerona.engine.structures.describe import structure_lines
@@ -173,11 +175,13 @@ async def folk_lines(session: AsyncSession, biology: PeopleBiologyRow | None, cu
     if culture is None:
         return lines
     wins, losses = record_of(culture, culture.martial_style.value)
+    motif_words = ", ".join(MOTIF_LABELS[source].lower() for source in motifs_of(culture)) or "nothing named"
     lines += [
         f"fights as {words(culture.martial_style.value)} ({several(wins, 'victory', 'victories')}, {several(losses, 'defeat', 'defeats')})",
-        f"{words(culture.marriage.value)}, {'marrying only their own' if culture.endogamous else 'marrying outside their people'}",
         f"inheritance by {words(culture.inheritance.value)}",
-        f"{words(culture.aesthetic.value)} art",
+        f"art: ornament {culture.ornament}, geometric over organic {culture.geometry}, colour {culture.colour}, "
+        f"scale {culture.scale}, symmetry {culture.symmetry} (of 100)",
+        f"motifs drawn from {motif_words}",
         f"funeral rite: {words(culture.funeral_rite.value)}",
         f"urbanisation {culture.urbanisation}",
     ]

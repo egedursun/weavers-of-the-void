@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
+from aerona.catalog.kinds.gathering_outcomes import GATHERING_RESULTS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an, several
 from aerona.core.random import SeededRandom
@@ -22,7 +23,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, CollectionRole, GatheringKind, GatheringOutcome, GatheringStatus, GuestRole
@@ -298,7 +299,7 @@ async def strike_at(ctx: TickContext, holding: Holding, tally: GatheringTally) -
 
 async def massacre_chance(ctx: TickContext, host: EntityRow) -> float:
     table = ctx.rules.gatherings
-    if await kept(ctx.session, host.location_id, TraditionKind.HOSPITALITY_LAW):
+    if await kept(ctx.session, host.location_id, TraditionFunction.HOSPITALITY):
         return 0.0
     culture = await culture_of(ctx.session, host.id)
     ethic = (await ethics_of(ctx.session, culture.id)).get(ActKind.GUEST_KILLING) if culture is not None else None
@@ -622,7 +623,7 @@ async def remember(ctx: TickContext, holding: Holding) -> None:
         if node in holding.harmed:
             await think(ctx.session, ctx.rules, node, ThoughtKind.WAS_WOUNDED, ctx.epoch, subject_id=holding.row.host_node_id)
             continue
-        kind = ThoughtKind.WITNESSED_ATROCITY if holding.outcome is GatheringOutcome.MASSACRE else thought
+        kind = GATHERING_RESULTS[holding.outcome].thought or thought
         await think(ctx.session, ctx.rules, node, kind, ctx.epoch, subject_id=holding.row.host_node_id, intensity=ctx.rules.gatherings.thought_intensity)
         if holding.row.milestone is not None and node != holding.row.host_node_id:
             await mind_remember(
@@ -685,7 +686,7 @@ async def hold(ctx: TickContext, row: GatheringRow, atlas: RegionAtlas, tally: G
         if node in holding.guests:
             holding.guests[node].harmed = True
     if "status" not in row.locked:
-        row.status = GatheringStatus.DISRUPTED if holding.outcome in (GatheringOutcome.VIOLENT, GatheringOutcome.MASSACRE) else GatheringStatus.HELD
+        row.status = GatheringStatus.DISRUPTED if GATHERING_RESULTS[holding.outcome].disrupts else GatheringStatus.HELD
     if "outcome" not in row.locked:
         row.outcome = holding.outcome
     await remember(ctx, holding)

@@ -7,6 +7,7 @@ from aerona.catalog.civilization import TIER_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -21,6 +22,7 @@ from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.cycles import AdoptionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
@@ -30,6 +32,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats, Knowledge
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteBook, method_label, world_name
 from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock, tier_of
+from aerona.engine.cycles.lineage import kinship_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mortal.kin import fosterers_of, parents_of
 from aerona.engine.notes import note
@@ -54,6 +57,26 @@ PROSPERITY_KEY = "prosperity"
 AGE_KEY = "age"
 SILVER = "silver"
 GRAIN = "grain"
+
+
+@dataclass(frozen=True)
+class AdoptionTie:
+    words: str
+    regard_pct: int
+    heir: bool
+
+
+ADOPTION_TIES = total(
+    AdoptionKind,
+    {
+        AdoptionKind.HEIR: AdoptionTie("as an heir", 150, heir=True),
+        AdoptionKind.WARD: AdoptionTie("as a ward", 70, heir=False),
+        AdoptionKind.FOSTER: AdoptionTie("as a fosterling", 100, heir=False),
+        AdoptionKind.SPONSOR: AdoptionTie("under a sponsorship", 60, heir=False),
+        AdoptionKind.BLOOD_BOND: AdoptionTie("by a bond of blood", 130, heir=False),
+        AdoptionKind.CHOSEN_KIN: AdoptionTie("as chosen kin", 120, heir=False),
+    },
+)
 
 
 def tier_name(tier: int) -> str:
@@ -133,7 +156,7 @@ async def declare_independence(ctx: TickContext, colony: EntityRow, mother: Enti
     await repository.remove_flag(colony.id, EntityFlag.COLONY)
     await repository.add_flag(colony.id, EntityFlag.INDEPENDENT, ctx.epoch)
     fought = war and await declare_war(ctx, mother.id, colony.id, "war of independence", cause=WarCause.INDEPENDENCE)
-    tail = "; the motherland declared it an enemy" if fought else " and the motherland had to let it go"
+    tail = "; the homeland declared it an enemy" if fought else " and the homeland had to let it go"
     text = f"{colony.name} declared its independence from {mother.name}{tail}."
     await ctx.chronicle(ChronicleKind.CIVILIZATION, text, template_key="civilization.independence", entity_ids=[colony.id, mother.id])
     await note(ctx, text, key="civilization.independence_note", ids=[colony.id, mother.id])
@@ -476,10 +499,20 @@ async def spontaneous_barter(ctx: TickContext) -> None:
         await note(ctx, await swap_goods(ctx, *candidate), key="civilization.barter_note", ids=[item.id for item in candidate])
 
 
+async def adoption_custom(ctx: TickContext, adopter: EntityRow) -> AdoptionKind:
+    system = await kinship_of(ctx.session, adopter)
+    return system.adoption if system is not None else AdoptionKind.FOSTER
+
+
 async def adopt(ctx: TickContext, adopter: EntityRow, child: EntityRow) -> str:
-    await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.FOSTERED_BY, ctx.epoch, "adopted: left alone, taken in"))
-    await change_relation(ctx, adopter.id, child.id, ctx.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note="adoption")
-    text = f"{adopter.name} adopted the orphaned {child.name}."
+    kind = await adoption_custom(ctx, adopter)
+    tie = ADOPTION_TIES[kind]
+    await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.FOSTERED_BY, ctx.epoch, f"adopted: {tie.words}"))
+    relation = ctx.rules.civilization.adoption_relation * tie.regard_pct // PERCENT
+    await change_relation(ctx, adopter.id, child.id, relation, MemoryKind.GOODWILL, note="adoption")
+    if tie.heir:
+        await BondRepository(ctx.session).connect(BondDraft(adopter.id, child.id, BondKind.PARENT_OF, ctx.epoch, "made heir by adoption"))
+    text = f"{adopter.name} took in the orphaned {child.name}, {tie.words}."
     await ctx.chronicle(ChronicleKind.LINEAGE, text, template_key="civilization.adoption", entity_ids=[adopter.id, child.id])
     return text
 

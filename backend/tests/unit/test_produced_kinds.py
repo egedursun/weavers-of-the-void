@@ -2,7 +2,7 @@ from pathlib import Path
 
 from aerona.catalog.titles import SEAT_RANKS, TIER_RANKS
 from aerona.domain.enums.statecraft import SubjectKind
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 
 ENGINE = Path(__file__).resolve().parents[2] / "src" / "aerona" / "engine"
 
@@ -12,7 +12,7 @@ def engine_text() -> str:
 
 
 def test_every_title_rank_has_an_engine_path_that_raises_it() -> None:
-    assert set(TitleRank) == set(TIER_RANKS) | SEAT_RANKS
+    assert set(TitleTier) == set(TIER_RANKS) | SEAT_RANKS
 
 
 def test_every_subject_kind_is_chosen_by_the_engine() -> None:

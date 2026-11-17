@@ -28,6 +28,7 @@ from aerona.domain.enums.mind import Profession, ValueAxis
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.kinds.professions import professions_by_purity
 from aerona.engine.mind.book import values_for
 from aerona.engine.mortal.kin import close_kin_of, parents_of
 from aerona.engine.primitives.folk import folk_among, towns_of_people
@@ -95,7 +96,7 @@ async def seed_culture(ctx: TickContext, people: EntityRow, tally: PurityTally) 
         )
     tally.seeded += 1
     if values.get(ValueAxis.HIERARCHY, 0) >= table.castes_from and not await ranks_of(ctx, people.id):
-        professions = [item.value for item in rng.sample(list(Profession), len(Profession))]
+        professions = [item.value for item in await professions_by_purity(ctx.session, people.id)]
         count = max(2, table.ranks)
         size = max(1, len(professions) // count)
         for index in range(count):
@@ -126,8 +127,8 @@ async def impure_professions(ctx: TickContext, people_id: int) -> set[str]:
     ranks = await ranks_of(ctx, people_id)
     if ranks:
         return set(ranks[-1].professions)
-    rng = ctx.rng(seed_of("purity.professions", people_id))
-    return {item.value for item in rng.sample(list(Profession), min(len(Profession), ctx.rules.purity.impure_professions))}
+    ordered = await professions_by_purity(ctx.session, people_id)
+    return {item.value for item in ordered[len(ordered) - min(len(ordered), ctx.rules.purity.impure_professions) :]}
 
 
 @dataclass

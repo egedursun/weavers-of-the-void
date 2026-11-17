@@ -13,7 +13,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
 
-CUTTING_SCARS = (ScarKind.SALTED_EARTH, ScarKind.LEAK_WOUND)
+CUTTING_SCARS = (ScarKind.MADE_BARREN, ScarKind.LEAK_WOUND)
 
 
 @dataclass

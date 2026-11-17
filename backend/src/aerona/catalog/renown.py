@@ -82,7 +82,7 @@ ACT_RENOWN: MappingProxyType[ActKind, ActRenown] = MappingProxyType(
 CONTEST_RENOWN: MappingProxyType[ContestKind, tuple[ReputationAxis, SkillKind | None]] = MappingProxyType(
     {
         ContestKind.RIDDLE_GAME: (X.WISDOM, None),
-        ContestKind.FLYTING: (X.SKILL_RENOWN, SkillKind.ORATORY),
+        ContestKind.INSULT_CONTEST: (X.SKILL_RENOWN, SkillKind.ORATORY),
         ContestKind.DEBATE: (X.WISDOM, None),
         ContestKind.GAME_OF_SKILL: (X.SKILL_RENOWN, SkillKind.TACTICS),
         ContestKind.TRIAL_OF_WISDOM: (X.WISDOM, None),

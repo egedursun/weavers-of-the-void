@@ -32,8 +32,7 @@ from aerona.domain.enums.couplings import (
     TeachingKind,
     TeachingState,
 )
-from aerona.domain.enums.culture import MagicSchool, MagicSource
-from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.culture import ArtMode, MagicSchool, MagicSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
@@ -214,7 +213,7 @@ async def test_fashion_wears_out_as_a_form_spreads_and_only_forms_and_dishes_hav
         cosmos = await seed_rich_cosmos(session)
         ctx = await manual_context(session, "w41_fashion", Rules())
         form = await entity(ctx.session, "Reed Song", EntityType.ART_FORM, ArtFormStats(), world_id=cosmos.home.world.id)
-        ctx.session.add(ArtFormProfileRow(art_form_entity_id=form.id, discipline=next(iter(ArtDiscipline))))
+        ctx.session.add(ArtFormProfileRow(art_form_entity_id=form.id, discipline=next(iter(ArtMode))))
         await ctx.session.flush()
         with pytest.raises(ValidationFailedError):
             await control.set_novelty(ctx, cosmos.home.people.id, {"novelty": 10}, [])

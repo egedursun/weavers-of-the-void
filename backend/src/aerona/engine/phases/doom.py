@@ -117,7 +117,7 @@ async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
 
 VARIANT_ITEMS: dict[ApocalypseVariant, frozenset[DoomItem]] = {
     ApocalypseVariant.WORLD_WAR: frozenset({DoomItem.WARS, DoomItem.DANGEROUS_TECH}),
-    ApocalypseVariant.TWILIGHT_OF_GODS: frozenset({DoomItem.GODLESS, DoomItem.REBEL_SONS}),
+    ApocalypseVariant.END_OF_THE_GODS: frozenset({DoomItem.GODLESS, DoomItem.REBEL_SONS}),
     ApocalypseVariant.OUTER_DESCENT: frozenset({DoomItem.CURSED, DoomItem.RESTLESS_SPIRITS, DoomItem.LEAK_WOUNDS, DoomItem.HOT_REGIONS}),
     ApocalypseVariant.DIMENSIONAL_COLLAPSE: frozenset({DoomItem.OPEN_RIFTS, DoomItem.INCURSIONS, DoomItem.CONVERGENCES, DoomItem.UNMAKERS}),
     ApocalypseVariant.GALACTIC_DEATH: frozenset({DoomItem.GAMMA_BURSTS, DoomItem.COLLAPSED_LIFE}),
@@ -154,7 +154,7 @@ async def cosmic_items(ctx: TickContext) -> dict[DoomItem, float]:
         )
         or 0
     )
-    wounds = sum(1 for profile in await ctx.session.scalars(select(PhenomenonProfileRow).where(PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)))
+    wounds = sum(1 for profile in await ctx.session.scalars(select(PhenomenonProfileRow).where(PhenomenonProfileRow.kind == PhenomenonKind.OUTSIDE_OPENING)))
     hot = int(
         await ctx.session.scalar(select(func.count()).select_from(RegionEnvironmentRow).where(RegionEnvironmentRow.leak >= ctx.rules.world_life.leak_hot)) or 0
     )
@@ -189,7 +189,7 @@ def dominant_variant(rules: Rules, items: dict[DoomItem, float]) -> ApocalypseVa
 
 async def end_by(ctx: TickContext, variant: ApocalypseVariant) -> None:
     doom = ctx.rules.apocalypse
-    if variant is ApocalypseVariant.TWILIGHT_OF_GODS:
+    if variant is ApocalypseVariant.END_OF_THE_GODS:
         for son in await living_sons(ctx.session):
             if not held(son.id):
                 son.existence = son.existence // doom.twilight_fade_mult

@@ -100,7 +100,11 @@ export const TEMPLATES: Record<Schema['ArcTemplate'], Named> = {
     icon: TrendingDown,
     tone: 'warning',
   },
-  rags_to_riches: { label: 'Rags to riches', icon: TrendingUp, tone: 'gold' },
+  rags_to_riches: {
+    label: 'From poverty to wealth',
+    icon: TrendingUp,
+    tone: 'gold',
+  },
   revenge: { label: 'Revenge', icon: Swords, tone: 'danger' },
   redemption: { label: 'Redemption', icon: HandHeart, tone: 'success' },
   quest: { label: 'Quest', icon: Route, tone: 'info' },
@@ -176,8 +180,8 @@ export const VARIANTS: Record<Schema['ApocalypseVariant'], Named> = {
   ruin: { label: 'Ruin', icon: Mountain, tone: 'warning' },
   world_war: { label: 'A war of worlds', icon: Swords, tone: 'danger' },
   outer_descent: { label: 'A descent from outside', icon: Eye, tone: 'danger' },
-  twilight_of_gods: {
-    label: 'The twilight of the gods',
+  end_of_the_gods: {
+    label: 'The end of the gods',
     icon: Moon,
     tone: 'muted',
   },

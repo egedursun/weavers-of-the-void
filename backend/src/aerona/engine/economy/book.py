@@ -8,7 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import LabourRow
-from aerona.db.tables.ecology import HerdRow, SpeciesYieldRow
+from aerona.db.tables.ecology import HerdRow, SpeciesProductRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
@@ -133,8 +133,8 @@ class EconomyBook:
         self.industry = {row.community_node_id: row for row in await ctx.session.scalars(select(CommunityIndustryRow))}
         self.pollution = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
         self.crops = await CropBook.load(ctx.session, ctx.rules, self.ground.regions)
-        kept = select(HerdRow.community_entity_id, SpeciesYieldRow.product).join(
-            SpeciesYieldRow, SpeciesYieldRow.species_entity_id == HerdRow.species_entity_id
+        kept = select(HerdRow.community_entity_id, SpeciesProductRow.product).join(
+            SpeciesProductRow, SpeciesProductRow.species_entity_id == HerdRow.species_entity_id
         )
         for community_id, product in await ctx.session.execute(kept.where(HerdRow.head > 0, HerdRow.stage.in_(list(KEPT_STAGES)))):
             self.herd_products.setdefault(community_id, set()).add(product)

@@ -15,6 +15,7 @@ from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -302,7 +303,7 @@ async def joining(ctx: TickContext, people: EntityRow, largest: EntityRow, *, ra
     cycles = ctx.rules.life_cycles
     shared = bool(await tongues(ctx, people.id) & await tongues(ctx, largest.id))
     rng = ctx.rng(f"peoples.{people.id}")
-    kinship = await closeness(ctx.session, people.id, largest.id) * assimilation_factor(ctx.rules, await ctx.session.get(PeopleCultureRow, people.id))
+    kinship = await closeness(ctx.session, people.id, largest.id) * assimilation_factor(ctx.rules, await ctx.session.get(UnionCustomRow, people.id))
     kinship /= max(0.1, await asabiyya_factor(ctx.session, [people.id], ctx.rules.asabiyya.assimilation_weight))
     if await folds_in(ctx, people, largest, shared=shared):
         return False if rng.chance(cycles.assimilation_chance * 2 * kinship) else None
@@ -490,7 +491,7 @@ def swallow_sentence(event: EntityRow | None) -> str:
 
 async def swallow(ctx: TickContext, place: EntityRow, event: EntityRow | None) -> int:
     moved = await EntityRepository(ctx.session).transfer_contents(place, ctx.epoch)
-    await end_record(ctx, place, EntityFlag.SWALLOWED, swallow_sentence(event), EntityStatus.DESTROYED)
+    await end_record(ctx, place, EntityFlag.LOST_IN_DISASTER, swallow_sentence(event), EntityStatus.DESTROYED)
     if event is not None:
         await BondRepository(ctx.session).connect(BondDraft(event.id, place.id, BondKind.CAUSED, ctx.epoch, "swallowed"))
     return moved

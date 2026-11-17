@@ -14,9 +14,9 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
 from aerona.domain.enums.storyteller import RecoveryKind
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
@@ -189,7 +189,7 @@ async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, s
         until=ctx.epoch + (ctx.rules.treaties.marriage_treaty_epochs if marriage else ctx.rules.treaties.alliance_epochs),
     )
     if marriage and spouses is not None:
-        await marry(ctx.session, spouses[0], spouses[1], ctx.epoch, kind=MarriageKind.POLITICAL, treaty_id=treaty.id, description="marriage alliance")
+        await marry(ctx.session, spouses[0], spouses[1], ctx.epoch, purpose=UnionPurpose.ALLIANCE, treaty_id=treaty.id, description="marriage alliance")
     if marriage:
         await change_relation(ctx, first.id, second.id, rules.marriage_relation, MemoryKind.MARRIED_INTO, note="marriage")
     ctx.count("alliances")

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.flora import world_life
+from aerona.catalog.kinds.terraform import TERRAFORM_AIMS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
@@ -27,18 +28,6 @@ from aerona.engine.primitives.stats import scale_stat
 from aerona.rules.registry import Rules
 
 ABUNDANCE_KEY = "abundance"
-AIR_AIMS = frozenset({TerraformAim.THICKEN_AIR, TerraformAim.THIN_AIR, TerraformAim.BREATHABLE_AIR, TerraformAim.WARM, TerraformAim.COOL})
-AIM_LABELS: dict[TerraformAim, str] = {
-    TerraformAim.THICKEN_AIR: "thicken its air",
-    TerraformAim.THIN_AIR: "thin its air",
-    TerraformAim.BREATHABLE_AIR: "make its air breathable",
-    TerraformAim.WARM: "warm it",
-    TerraformAim.COOL: "cool it",
-    TerraformAim.WATER: "give it water",
-    TerraformAim.DRY: "dry it",
-    TerraformAim.BRIGHTEN: "raise its brightness",
-    TerraformAim.DARKEN: "lower its brightness",
-}
 
 
 def shift(physics: WorldPhysicsRow, key: str, amount: int) -> bool:
@@ -49,26 +38,20 @@ def shift(physics: WorldPhysicsRow, key: str, amount: int) -> bool:
 
 
 def reshape(rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int, breath: str = AIR_GAS[AirNeed.OXYGEN]) -> bool:
-    if aim in (TerraformAim.THICKEN_AIR, TerraformAim.THIN_AIR):
+    spec = TERRAFORM_AIMS[aim]
+    if spec.reshaping == "pressure":
         if "pressure" in physics.locked:
             return False
-        sign = 1 if aim is TerraformAim.THICKEN_AIR else -1
+        sign = spec.sign
         physics.pressure = max(0.0, round(physics.pressure + sign * step * rules.terraforming.pressure_hundredths / PERCENT, 3))
         return True
-    if aim is TerraformAim.BREATHABLE_AIR:
+    if spec.reshaping == "breathable":
         moved = shift(physics, breath, step)
         for gas in sorted(set(AIR_GAS.values()) - {breath, AIR_GAS[AirNeed.OXYGEN]}):
             moved |= shift(physics, gas, -min(step, getattr(physics, gas)))
         return moved
-    moves = {
-        TerraformAim.WARM: ("carbon_dioxide", step),
-        TerraformAim.COOL: ("carbon_dioxide", -min(step, physics.carbon_dioxide)),
-        TerraformAim.WATER: ("hydrosphere", step),
-        TerraformAim.DRY: ("hydrosphere", -step),
-        TerraformAim.BRIGHTEN: ("albedo", step),
-        TerraformAim.DARKEN: ("albedo", -step),
-    }
-    key, amount = moves[aim]
+    key = spec.column or ""
+    amount = -min(step, getattr(physics, key)) if spec.floored else spec.sign * step
     return shift(physics, key, amount)
 
 
@@ -112,7 +95,7 @@ async def terraform_cycle(ctx: TickContext) -> int:
             continue
         if reshape(ctx.rules, physics, project.aim, project.step, await breath_of(ctx, project.by_node_id)):
             moved += 1
-            if project.aim in AIR_AIMS:
+            if TERRAFORM_AIMS[project.aim].touches_air:
                 await harm_natives(ctx, world, physics, project)
                 await settle_chemistry(ctx, world, physics)
         if "epochs_left" not in project.locked:
@@ -120,7 +103,7 @@ async def terraform_cycle(ctx: TickContext) -> int:
         if project.epochs_left <= 0:
             await note(
                 ctx,
-                f"The work to {AIM_LABELS[project.aim]} came to its end on {world.name}.",
+                f"The work to {TERRAFORM_AIMS[project.aim].words} came to its end on {world.name}.",
                 key="terraform.finished",
                 world_id=world.id,
                 kind=ChronicleKind.WORLD,
@@ -149,7 +132,7 @@ async def begin(
         locked=[],
     )
     ctx.session.add(project)
-    await note(ctx, f"{by} began to {AIM_LABELS[aim]}: {world.name}.", key="terraform.begun", world_id=world.id, kind=ChronicleKind.MIRACLE)
+    await note(ctx, f"{by} began to {TERRAFORM_AIMS[aim].words}: {world.name}.", key="terraform.begun", world_id=world.id, kind=ChronicleKind.MIRACLE)
     await ctx.session.flush()
     return project
 

@@ -91,6 +91,7 @@ async def divine_standing(ctx: TickContext) -> None:
 @reads(
     "table.bonds",
     "table.castings",
+    "table.culture_values",
     "table.divine_powers",
     "table.divine_wounds",
     "table.foreign_god_powers",

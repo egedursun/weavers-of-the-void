@@ -43,7 +43,7 @@ from aerona.rules.registry import Rules
 
 STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM, WeatherKind.HAIL})
 WINDY = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
-EXOTIC_METHODS = frozenset({TravelMethod.DREAM_JOURNEY, TravelMethod.RIVER_OF_DEAD})
+EXOTIC_METHODS = frozenset({TravelMethod.DREAM_JOURNEY, TravelMethod.DEATH_CURRENT})
 AFLOAT = frozenset({VesselStatus.AFLOAT, VesselStatus.DAMAGED})
 BACKFILL_FIXUP = "military.vessel_profiles"
 

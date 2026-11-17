@@ -16,7 +16,7 @@ from aerona.domain.enums.genetics import GiftStance, Locus
 from aerona.domain.enums.mind import ActKind, EthicalStance, SkillKind
 from aerona.domain.enums.polity import HouseTrait
 from aerona.domain.models.entity_stats import FactionStats, HouseStats
-from aerona.engine.genetics.genome import aptitude, colour_factor, consanguinity, gift_factors, inherited_genes, likeness, phenotype
+from aerona.engine.genetics.genome import aptitude, consanguinity, gift_factors, inherited_genes, learning_factor, likeness, phenotype
 from aerona.engine.genetics.life import bless_blood, express, fertility_factor, found_genome, madness_factor, refresh_genome
 from aerona.engine.genetics.lineage import examine_children, seed_looks, tend_resemblance
 from aerona.engine.genetics.pools import members_by_people, seed_pool, tend_pool
@@ -30,7 +30,7 @@ RULES = Rules()
 
 
 def genes(**pairs: tuple[str, str]) -> dict[str, list[str]]:
-    found = {locus.value: [spec.alleles[0].key, spec.alleles[0].key] for locus, spec in LOCI.items()}
+    found = {locus.value: [spec.common.key, spec.common.key] for locus, spec in LOCI.items()}
     found.update({key: list(value) for key, value in pairs.items()})
     return found
 
@@ -151,9 +151,9 @@ async def test_a_house_is_known_by_its_shared_look_and_orders_take_gifted_childr
 def test_colour_blindness_slows_crafts_of_colour_and_the_gift_steadies_and_strengthens_rites() -> None:
     blind = GenomeRow(genes=genes(colour_blindness=("blind", "blind")))
     seeing = GenomeRow(genes=genes())
-    assert colour_factor(RULES, blind, SkillKind.WEAVING) < 1.0
-    assert colour_factor(RULES, blind, SkillKind.SMITHING) == 1.0
-    assert colour_factor(RULES, seeing, SkillKind.WEAVING) == 1.0
+    assert learning_factor(RULES, blind, SkillKind.WEAVING) < 1.0
+    assert learning_factor(RULES, blind, SkillKind.SMITHING) == 1.0
+    assert learning_factor(RULES, seeing, SkillKind.WEAVING) == 1.0
     gifted = GenomeRow(genes=genes(gift_storm=("gifted", "gifted")))
     steadiness, strength = gift_factors(RULES, gifted, MagicSchool.STORM)
     assert steadiness < 1.0 and strength > 1.0

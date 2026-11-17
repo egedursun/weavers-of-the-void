@@ -74,9 +74,9 @@ export const PASSION_KINDS: Record<string, Named> = {
 }
 
 export const CIRCLE_KINDS: Record<string, Named> = {
-  drinking_hall: { label: 'Drinking hall', icon: Beer, tone: 'success' },
+  drinking_circle: { label: 'Drinking circle', icon: Beer, tone: 'success' },
   poets_circle: { label: "Poets' circle", icon: Feather, tone: 'verdigris' },
-  hunting_lodge: { label: 'Hunting lodge', icon: Trees, tone: 'success' },
+  hunting_circle: { label: 'Hunting circle', icon: Trees, tone: 'success' },
   secret_society: { label: 'Secret society', icon: Drama, tone: 'muted' },
   study_circle: { label: 'Study circle', icon: BookOpen, tone: 'info' },
   prayer_circle: { label: 'Prayer circle', icon: Sparkles, tone: 'gold' },
@@ -94,7 +94,11 @@ export const GROUP_KINDS: Record<string, Named> = {
 
 export const CONTEST_KINDS: Record<string, Named> = {
   riddle_game: { label: 'Riddle game', icon: Puzzle, tone: 'info' },
-  flyting: { label: 'Flyting', icon: Feather, tone: 'warning' },
+  insult_contest: {
+    label: 'Contest of insults',
+    icon: Feather,
+    tone: 'warning',
+  },
   debate: { label: 'Debate', icon: Scale, tone: 'info' },
   game_of_skill: { label: 'Game of skill', icon: Target, tone: 'success' },
   trial_of_wisdom: { label: 'Trial of wisdom', icon: BookOpen, tone: 'gold' },

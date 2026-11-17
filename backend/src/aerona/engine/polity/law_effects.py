@@ -15,7 +15,8 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.collective.roles import allowed_heirs
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.lineage import descent_heirs
+from aerona.engine.cycles.lineage import descent_heirs, kinship_of
+from aerona.engine.cycles.sides import second_sex
 from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm
@@ -191,7 +192,8 @@ async def bequest_order(session: AsyncSession, mortal: EntityRow, heirs: list[En
         return heirs
     split = await law_param(session, mortal.location_id, LawKind.INHERITANCE_SPLIT, "split") if mortal.location_id is not None else None
     if split is None:
-        return heirs_by_custom(await inheritance_of(session, mortal), heirs)
+        system = await kinship_of(session, mortal)
+        return heirs_by_custom(await inheritance_of(session, mortal), heirs, second_sex(system) if system is not None else None)
     by_age = sorted(heirs, key=lambda heir: (-(stat(heir, "age") or 0), heir.id))
     if split == "youngest":
         return by_age[-1:]

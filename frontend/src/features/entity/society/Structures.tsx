@@ -16,7 +16,11 @@ import {
   RotateCcw,
   Ruler,
   Shield,
+  Shapes,
   Sparkles,
+  Palette,
+  Maximize2,
+  FlipHorizontal2,
   Trash2,
   TriangleAlert,
   Users,
@@ -57,7 +61,7 @@ import {
   MATERIAL_LABEL,
   type MaterialKind,
 } from '../economy/labels'
-import { AESTHETIC_SPEC, CLASS_SPEC, SIZE_SPEC, type Spec } from './labels'
+import { CLASS_SPEC, SIZE_SPEC, type Spec } from './labels'
 import {
   AdjustPanel,
   ChoiceEditor,
@@ -756,6 +760,14 @@ export function PeopleStructuresSection({
   )
 }
 
+const STYLE_MIDDLE = 50
+const STYLE_NUMBERS = [
+  { key: 'style_ornament', icon: Sparkles },
+  { key: 'style_geometry', icon: Shapes },
+  { key: 'style_colour', icon: Palette },
+  { key: 'style_scale', icon: Maximize2 },
+  { key: 'style_symmetry', icon: FlipHorizontal2 },
+] as const
 const NUMBERS: {
   key: string
   icon: NumberField['icon']
@@ -900,15 +912,6 @@ function StructureAdjust({
           onPick={(value) => set('material', value)}
         />
         <ChoiceEditor
-          label={structureField('aesthetic')}
-          value={view.aesthetic ?? 'austere'}
-          table={AESTHETIC_SPEC}
-          held={view.locked.includes('aesthetic')}
-          blocked={busy}
-          hint='Its style; fitting the people who see it adds splendour'
-          onPick={(value) => set('aesthetic', value)}
-        />
-        <ChoiceEditor
           label={structureField('builder_kind')}
           value={view.builder_kind ?? 'community'}
           table={BUILDER_SPEC}
@@ -957,6 +960,26 @@ function StructureAdjust({
               value: current[item.key],
               min: item.min,
               max: item.max,
+            }}
+            held={view.locked.includes(item.key)}
+            blocked={busy}
+            pending={edit.isPending}
+            onSet={(value) => set(item.key, value)}
+          />
+        ))}
+      </EditorGroup>
+      <EditorGroup title='Style' icon={PenTool}>
+        {STYLE_NUMBERS.map((item) => (
+          <NumberEditor
+            key={`${item.key}-${view[item.key] ?? STYLE_MIDDLE}`}
+            id={id}
+            field={{
+              key: item.key,
+              label: structureField(item.key),
+              icon: item.icon,
+              value: view[item.key] ?? STYLE_MIDDLE,
+              min: 0,
+              max: PERCENT,
             }}
             held={view.locked.includes(item.key)}
             blocked={busy}
@@ -1313,9 +1336,9 @@ export function StructureSection({
                 icon={PenTool}
                 label='Style'
                 value={
-                  data.aesthetic
-                    ? AESTHETIC_SPEC[data.aesthetic].label
-                    : 'Plain'
+                  data.style_ornament === null
+                    ? 'None kept'
+                    : `Decoration ${data.style_ornament} · Colour ${data.style_colour} · Scale ${data.style_scale}`
                 }
               />
               <MiniStat

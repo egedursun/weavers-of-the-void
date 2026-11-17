@@ -121,7 +121,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers import effects as power_effects
-from aerona.engine.powers.sources import rite_draw
+from aerona.engine.powers.sources import patron_pays, rite_draw
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
@@ -299,16 +299,7 @@ async def priced(ctx: TickContext, caster: EntityRow) -> bool:
 
 
 async def pay_divine(ctx: TickContext, caster: EntityRow, amount: int) -> bool:
-    patron = await patron_of(ctx, caster)
-    son = await ctx.session.get(SonRow, patron) if patron is not None else None
-    if son is not None and son.essence >= amount:
-        son.essence -= amount
-        return True
-    god = await ctx.session.get(ForeignGodRow, patron) if patron is not None else None
-    if god is not None and god.faith >= amount:
-        god.faith -= amount
-        return True
-    return False
+    return await patron_pays(ctx, caster, amount)
 
 
 async def captives_of(ctx: TickContext, caster: EntityRow) -> CaptiveCohortRow | None:
@@ -981,7 +972,7 @@ async def phenomenon(ctx: TickContext, region: EntityRow) -> None:
         ),
     )
     await note(ctx, f"A rite gone wrong left a storm over {region.name} that will not die.", key="magic.eternal_storm", ids=[region.id])
-    await form_phenomenon(ctx, PhenomenonKind.ETERNAL_STORM, region, PhenomenonCause.RITE_BACKLASH)
+    await form_phenomenon(ctx, PhenomenonKind.LASTING_STORM, region, PhenomenonCause.RITE_BACKLASH)
 
 
 async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> BacklashKind:
@@ -1005,7 +996,7 @@ async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> 
             and region.entity_type is EntityType.REGION
             and ctx.rng(f"backlash_wound.{caster.id}").chance(ctx.rules.phenomena.backlash_chance)
         ):
-            await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, region, PhenomenonCause.RITE_BACKLASH)
+            await form_phenomenon(ctx, PhenomenonKind.OUTSIDE_OPENING, region, PhenomenonCause.RITE_BACKLASH)
         if world is not None and ctx.rng(f"backlash_rift.{caster.id}.{ctx.epoch}").chance(ctx.rules.rifts.backlash_chance):
             torn = region if region is not None and region.entity_type is EntityType.REGION else None
             await tear_toward(ctx, world, torn, RiftCause.RITE_BACKLASH, by_node_id=caster.id)

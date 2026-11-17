@@ -336,7 +336,7 @@ async def dimensional_event(
             ctx.session, ctx.rules, DimensionDraft(f"{dimension.name} Branch", DimensionKind.QUANTUM_BRANCH, ctx.epoch, parent_dimension_id=dimension.id)
         )
     elif kind is DimensionalEventKind.INCURSION and world is not None:
-        being = await create_being(ctx, BeingKind.RIFT_SPAWN, world, home_dimension_id=dimension.id)
+        being = await create_being(ctx, BeingKind.RIFT_BORN, world, home_dimension_id=dimension.id)
         return await planes.open_event(ctx, dimension, kind, intensity, other=other, world=world, subject_id=being.id)
     elif kind is DimensionalEventKind.BLEED and world is not None:
         world.time_factor = max(0.01, world.time_factor + (dimension.time_factor - world.time_factor) * intensity / 100)

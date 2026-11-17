@@ -4,7 +4,7 @@ from aerona.catalog import god_lines
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -141,7 +141,7 @@ async def colossal_remains(ctx: TickContext, beast: EntityRow, profile: BeastPro
     )
     goods = GoodsLedger(ctx.session, ctx.epoch)
     if profile is not None and profile.species_entity_id is not None:
-        for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == profile.species_entity_id))):
+        for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == profile.species_entity_id))):
             if item.commodity is not None and item.material is not None:
                 amount = ctx.rules.beasts.corpse_yield * item.rate * ctx.rules.transform.colossal_yield
                 await goods.add(place.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material, world_material_id=item.world_material_id)

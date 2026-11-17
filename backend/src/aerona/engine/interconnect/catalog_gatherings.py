@@ -82,7 +82,7 @@ GATHERING_MECHANICS = (
         exposure=Exposure.CONTEXT,
         targets=("world",),
         couplings=(
-            Coupling(S.ECOLOGY, "beasts climb out of the deep more or less often", EdgeKind.MODIFIER, "storyteller.boost_max_pct"),
+            Coupling(S.ECOLOGY, "beasts appear more or less often", EdgeKind.MODIFIER, "storyteller.boost_max_pct"),
             Coupling(
                 S.WAR, "feuds turn to raids more or less often, and peace comes sooner after hard years", EdgeKind.MODIFIER, "storyteller.boost_per_point_pct"
             ),
@@ -117,7 +117,7 @@ GATHERING_MECHANICS = (
     Mechanic(
         key="excavations",
         spec_item="S6.2/RP2",
-        title="Digs at ruins, god corpses, craters, burial grounds, the remains of earlier creations and wrecks, stage by stage, with their risks and finds",
+        title="Digs at ruins, places where gods died, craters, burial grounds, earlier creations and wrecks, stage by stage, with their risks and finds",
         subsystem=S.KNOWLEDGE,
         phases=("excavations",),
         surface=Surface(drawer=SITE_SECTION),

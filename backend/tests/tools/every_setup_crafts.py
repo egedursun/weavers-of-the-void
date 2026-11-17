@@ -25,7 +25,7 @@ PROPERTIES = {
 
 async def material_resource(session: AsyncSession, realm: Realm) -> Ids:
     material = WorldMaterialRow(
-        world_id=realm.cosmos.world_id, origin=MaterialOrigin.GOD_REMAINS, name="Starbone", family=MaterialFamily.EXOTIC, created_epoch=0, **PROPERTIES
+        world_id=realm.cosmos.world_id, origin=MaterialOrigin.DEAD_GOD, name="Starbone", family=MaterialFamily.EXOTIC, created_epoch=0, **PROPERTIES
     )
     session.add(material)
     await session.flush()

@@ -85,6 +85,7 @@ from aerona.engine.demography.biology import (
 from aerona.engine.demography.labour import AGE_WORK, condition_work, jobs_for, mobilisation
 from aerona.engine.demography.mobility import inequality
 from aerona.engine.disease.harm import community_targets
+from aerona.engine.lore.motifs import motifs_of
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import known_levels
@@ -252,10 +253,13 @@ async def culture_view(session: AsyncSession, culture: PeopleCultureRow) -> Cult
         cohesion=culture.cohesion,
         literacy=culture.literacy,
         urbanisation=culture.urbanisation,
-        aesthetic=culture.aesthetic,
+        ornament=culture.ornament,
+        geometry=culture.geometry,
+        colour=culture.colour,
+        scale=culture.scale,
+        symmetry=culture.symmetry,
+        motif_sources=motifs_of(culture),
         martial_style=culture.martial_style,
-        marriage=culture.marriage,
-        endogamous=culture.endogamous,
         inheritance=culture.inheritance,
         slavery_lawful=culture.slavery_lawful,
         staples=[CommodityKind(item) for item in culture.staples if item in CommodityKind._value2member_map_],
@@ -496,6 +500,7 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             infrastructure=InfrastructureView(
                 walls_level=infrastructure.walls_level,
                 walls_material=infrastructure.walls_material,
+                walls_world_material_id=infrastructure.walls_world_material_id,
                 walls_condition=infrastructure.walls_condition,
                 gates=infrastructure.gates,
                 roads=infrastructure.roads,
@@ -516,6 +521,7 @@ async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) ->
                     level=row.level,
                     condition=row.condition,
                     material=row.material,
+                    world_material_id=row.world_material_id,
                     built_epoch=row.built_epoch,
                     design_id=row.design_id,
                     locked=list(row.locked or []),

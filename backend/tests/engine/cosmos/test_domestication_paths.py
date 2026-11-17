@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.ecology import HerdRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import Diet, DomesticationStage, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, Diet, DomesticationStage, SizeClass
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.models.entity_stats import MortalStats
@@ -60,7 +60,7 @@ async def test_a_kept_herd_is_herded_then_domesticated_then_bred(ctx: TickContex
 async def test_a_capped_epoch_advances_no_herd_and_draught_beasts_lift_the_fields(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(ctx.session, "Pasture Downs", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    ox = await kind(ctx, cosmos, region.id, "Ox", SpeciesSpec(size_class=SizeClass.LARGE, diet=Diet.HERBIVORE), SpeciesUse.LABOUR)
+    ox = await kind(ctx, cosmos, region.id, "Ox", SpeciesSpec(size_class=SizeClass.LARGE, diet=Diet.HERBIVORE), AnimalRole.DRAFT)
     row = herd(hold, ox, head=rules.domestication.labour_head, stage=S.DOMESTICATED)
     ctx.session.add(row)
     await ctx.session.flush()

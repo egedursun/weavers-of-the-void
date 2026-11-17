@@ -536,6 +536,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.marriages",
     "table.memories",
     "table.mind_facets",
+    "table.mind_profiles",
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",

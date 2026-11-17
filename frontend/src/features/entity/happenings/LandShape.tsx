@@ -127,7 +127,7 @@ function ShapeSummary({ data }: { data: LandShape }) {
         icon={soil?.icon ?? Sun}
         tone={soil?.tone ?? 'muted'}
         hint={
-          data.soil === 'ash' && data.ash_since_epoch !== null
+          data.soil === 'tephra' && data.ash_since_epoch !== null
             ? `Weathers into rich soil by age ${data.ash_since_epoch + data.ash_weathering_epochs}`
             : data.soil_locked
               ? 'Held by your hand'

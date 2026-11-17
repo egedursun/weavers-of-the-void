@@ -215,20 +215,6 @@ REACH_RULE = total(
         M.SPRAWL: "sprawl_reach",
     },
 )
-FIRE_RULE = {
-    M.PLANNED: "planned_fire_pct",
-    M.ORGANIC: "organic_fire_pct",
-    M.GRID: "grid_fire_pct",
-    M.VERTICAL: "vertical_fire_pct",
-    M.SPRAWL: "sprawl_fire_pct",
-}
-HAULING_RULE = {
-    M.PLANNED: "planned_hauling_pct",
-    M.ORGANIC: "organic_hauling_pct",
-    M.GRID: "grid_hauling_pct",
-    M.VERTICAL: "vertical_hauling_pct",
-    M.SPRAWL: "sprawl_hauling_pct",
-}
 DENSITY_RULE = total(
     DistrictKind,
     {

@@ -306,10 +306,10 @@ async def bind_spirit(call: SonCall, args: BindSpiritInput) -> str:
     bound = await soul_bind(call.tick, spirit.id, target.id, call.son.name, call.son.id)
     call.spend_essence(cost)
     call.target(target.id)
-    golem = bound.id if bound.id != target.id else None
-    if golem is not None:
-        call.remember_creation(golem)
-    return result(SonResult.SPIRIT_BOUND, golem=golem)
+    animated = bound.id if bound.id != target.id else None
+    if animated is not None:
+        call.remember_creation(animated)
+    return result(SonResult.SPIRIT_BOUND, animated=animated)
 
 
 async def _hanging_place(call: SonCall, args: HangStarInput) -> None:

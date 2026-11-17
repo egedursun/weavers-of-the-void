@@ -27,6 +27,7 @@ CHOICES: dict[str, tuple[str, type[SizeTier] | type[WaterSupply] | type[BuildMat
     "walls_material": ("infrastructure", BuildMaterial),
 }
 FLAGS = ("sewers", "free_city", "rationing")
+WALL_STUFF_KEY = "walls_world_material_id"
 DESIGN_SCALES = ("housing", "food_store", "goods_store", "harbour")
 POSITIVE_NUMBERS = ("militia", "investment_pool", "siege_supplies", "siege_water", "siege_disease", "construction_capacity", "hauling_capacity")
 GARRISON_KEY = "garrison_entity_id"
@@ -44,7 +45,7 @@ INFRA_NUMBERS = {
     "irrigation": (0, 5),
 }
 PROFILE_KEYS = (*PROFILE_NUMBERS, *POSITIVE_NUMBERS, "admin_capacity", "size_tier", "free_city", "rationing", GARRISON_KEY, FOREIGNERS_KEY)
-INFRA_KEYS = (*INFRA_NUMBERS, "water", "walls_material", "sewers")
+INFRA_KEYS = (*INFRA_NUMBERS, "water", "walls_material", "sewers", WALL_STUFF_KEY)
 
 
 async def town(ctx: TickContext, settlement_id: int) -> Town:
@@ -88,6 +89,9 @@ def set_field(ctx: TickContext, found: Town, key: str, value: int | str | bool) 
             raise ValidationFailedError(f"{value} is not a known {key.replace('_', ' ')}.") from error
         target = infrastructure if holder == "infrastructure" else profile
         target.locked = lock(target.locked, key)
+    elif key == WALL_STUFF_KEY:
+        infrastructure.walls_world_material_id = None if value in (0, False) else bounded(key, value, 1, 10**12)
+        infrastructure.locked = lock(infrastructure.locked, key)
     elif key in FLAGS:
         target = infrastructure if key == "sewers" else profile
         setattr(target, key, bool(value))
@@ -169,6 +173,8 @@ class DistrictChange:
     design_id: int | None = None
     clear_design: bool = False
     release: tuple[str, ...] = ()
+    world_material_id: int | None = None
+    clear_world_material: bool = False
 
 
 def set_district_values(district: DistrictRow, change: DistrictChange) -> list[str]:
@@ -186,6 +192,11 @@ def set_district_values(district: DistrictRow, change: DistrictChange) -> list[s
     if change.material is not None:
         district.material = change.material
         locked = lock(locked, MATERIAL_KEY)
+    if change.world_material_id is not None:
+        district.world_material_id = change.world_material_id
+        locked = lock(locked, MATERIAL_KEY)
+    elif change.clear_world_material:
+        district.world_material_id = None
     return locked
 
 

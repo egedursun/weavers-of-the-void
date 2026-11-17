@@ -75,8 +75,8 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
     3,
     1
   ),
-  cosmic_mount: method(
-    '--cosmos-route-cosmic-mount',
+  carrier_mount: method(
+    '--cosmos-route-carrier-mount',
     [4, 4],
     1.6,
     0.18,
@@ -95,8 +95,8 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
     3.8,
     1.3
   ),
-  river_of_dead: method(
-    '--cosmos-route-river-of-dead',
+  death_current: method(
+    '--cosmos-route-death-current',
     [2, 3],
     1.8,
     -0.25,
@@ -125,9 +125,19 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
     3.4,
     1.1
   ),
-  swallowed: method('--cosmos-route-swallowed', [], 3.2, -0.1, 0.5, 8, 6, 1, {
-    opacity: 0.55,
-  }),
+  carried_within: method(
+    '--cosmos-route-carried-within',
+    [],
+    3.2,
+    -0.1,
+    0.5,
+    8,
+    6,
+    1,
+    {
+      opacity: 0.55,
+    }
+  ),
   wormhole: method(
     '--cosmos-route-wormhole',
     [3, 2],

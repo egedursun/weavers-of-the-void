@@ -8,6 +8,7 @@ from aerona.domain.enums.cosmography import (
     BeingKind,
     BeingPhase,
     BeingScale,
+    BeingSense,
     Causality,
     ClusterKind,
     DimensionalEventKind,
@@ -20,7 +21,11 @@ from aerona.domain.enums.cosmography import (
     GalaxyType,
     OmenReading,
     PhenomenonCause,
+    PhenomenonEffect,
     PhenomenonKind,
+    PhenomenonPersistence,
+    PhenomenonScope,
+    PhenomenonTarget,
     RiftCause,
     RiftState,
     RouteScope,
@@ -28,6 +33,7 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import StratumKind
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import Discovery
@@ -177,6 +183,8 @@ class CosmicBeingRecord(ApiModel):
     target_world_id: int | None
     mirrored_entity_id: int | None
     manifest_epochs: int
+    substrate: MindSeat = MindSeat.BODY
+    sense: BeingSense = BeingSense.SIGHT
     locked: list[str]
 
 
@@ -196,6 +204,10 @@ class PhenomenonRecord(ApiModel):
     cause: PhenomenonCause
     cause_node_id: int | None
     formed_epoch: int
+    target: PhenomenonTarget = PhenomenonTarget.WEATHER
+    effect: PhenomenonEffect = PhenomenonEffect.INTENSIFY
+    scope: PhenomenonScope = PhenomenonScope.REGION
+    persistence: PhenomenonPersistence = PhenomenonPersistence.LASTING
     locked: list[str]
     footprints: list[FootprintRecord] = Field(default_factory=list)
 

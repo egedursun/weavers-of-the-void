@@ -1,17 +1,18 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.catalog.art_modes import ART_MODES
 from aerona.core.total import total
 from aerona.domain.enums.culture import (
-    ArtMedium,
     IdeologyTenet,
     ItemClass,
     LegendArchetype,
     MagicSchool,
     MagicSource,
     RiteEffectKind,
+    RiteStage,
     SayingKind,
-    TraditionKind,
+    TraditionFunction,
 )
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ValueAxis
@@ -19,7 +20,7 @@ from aerona.domain.enums.society import SocialClass
 
 V = ValueAxis
 A = LegendArchetype
-K = TraditionKind
+K = TraditionFunction
 IT = IdeologyTenet
 S = MagicSchool
 D = Domain
@@ -32,13 +33,24 @@ LEGEND_MORALS = MappingProxyType(
         A.MONSTER: {V.MARTIAL: 5, V.XENOPHILIA: -5},
         A.TRICKSTER: {V.TRADITION: -5, V.HIERARCHY: -5},
         A.CREATION: {V.PIETY: 10, V.TRADITION: 5},
-        A.FLOOD: {V.PIETY: 10, V.NATURE: 5},
+        A.WORLD_DISASTER: {V.PIETY: 10, V.NATURE: 5},
         A.BETRAYAL: {V.HONOUR: 10, V.KINSHIP: 5, V.XENOPHILIA: -5},
-        A.LOST_PARADISE: {V.TRADITION: 10, V.PURITY: 5},
+        A.LOST_GOLDEN_AGE: {V.TRADITION: 10, V.PURITY: 5},
         A.CHOSEN_ONE: {V.PIETY: 5, V.HIERARCHY: 5},
         A.CURSED_LINE: {V.SUPERSTITION: 10, V.KINSHIP: -5},
-        A.RETURN_OF_THE_KING: {V.HIERARCHY: 10, V.TRADITION: 5},
+        A.RETURN_OF_A_RULER: {V.HIERARCHY: 10, V.TRADITION: 5},
         A.HAUNTED_PLACE: {V.SUPERSTITION: 10, V.DEATH: 5},
+        A.FOUNDING: {V.TRADITION: 5, V.KINSHIP: 5},
+        A.EXILE: {V.XENOPHILIA: 5, V.KINSHIP: -5},
+        A.TRANSFORMATION: {V.TRADITION: -5, V.NATURE: 5},
+        A.BARGAIN: {V.HONOUR: 5, V.SUPERSTITION: 5},
+        A.SACRIFICE: {V.PIETY: 10, V.KINSHIP: 5},
+        A.RIVALRY: {V.COMPETITION: 10, V.HONOUR: 5},
+        A.DISCOVERY: {V.XENOPHILIA: 5, V.TRADITION: -5},
+        A.DECEPTION: {V.HONOUR: 10, V.SUPERSTITION: 5},
+        A.UNION: {V.KINSHIP: 10, V.XENOPHILIA: 5},
+        A.ASCENT: {V.HIERARCHY: 5, V.COMPETITION: 5},
+        A.FALL: {V.HIERARCHY: -5, V.TRADITION: 5},
     }
 )
 
@@ -48,8 +60,8 @@ DISTORTED = MappingProxyType(
         V.PIETY: A.CHOSEN_ONE,
         V.SUPERSTITION: A.CURSED_LINE,
         V.MARTIAL: A.HERO_QUEST,
-        V.TRADITION: A.LOST_PARADISE,
-        V.HIERARCHY: A.RETURN_OF_THE_KING,
+        V.TRADITION: A.LOST_GOLDEN_AGE,
+        V.HIERARCHY: A.RETURN_OF_A_RULER,
         V.DEATH: A.HAUNTED_PLACE,
     }
 )
@@ -57,7 +69,7 @@ DISTORTED = MappingProxyType(
 
 @dataclass(frozen=True)
 class TraditionSpec:
-    kind: TraditionKind
+    kind: TraditionFunction
     cost: dict[str, int] = field(default_factory=dict)
     effects: dict[str, int] = field(default_factory=dict)
     values: dict[ValueAxis, int] = field(default_factory=dict)
@@ -69,25 +81,43 @@ TRADITIONS = MappingProxyType(
         for spec in (
             TraditionSpec(K.FESTIVAL, {"food": 2}, {"cohesion": 4, "satisfaction": 3}),
             TraditionSpec(K.FAST, {}, {"piety": 2, "food_saved": 1}, {V.PIETY: 1, V.PURITY: 1}),
-            TraditionSpec(K.FUNERAL_RITE, {"goods": 1}, {"rite": 1}, {V.DEATH: 1}),
-            TraditionSpec(K.INITIATION, {}, {"scar": 1, "cohesion": 2}, {V.MARTIAL: 1}),
-            TraditionSpec(K.MARRIAGE_RITE, {"food": 1}, {"fertility": 5}, {V.KINSHIP: 1}),
-            TraditionSpec(K.COMING_OF_AGE, {"food": 1}, {"cohesion": 2}, {V.TRADITION: 1}),
+            TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 2}, {V.TRADITION: 1}),
             TraditionSpec(K.TABOO, {}, {"taboo": 1}, {V.PURITY: 1, V.TRADITION: 1}),
             TraditionSpec(K.OFFERING, {"goods": 1}, {"piety": 2}, {V.PIETY: 1}),
             TraditionSpec(K.PILGRIMAGE, {"food": 1}, {"piety": 3}, {V.PIETY: 1}),
-            TraditionSpec(K.HOSPITALITY_LAW, {}, {"hospitality": 1}, {V.XENOPHILIA: 2, V.HONOUR: 1}),
+            TraditionSpec(K.HOSPITALITY, {}, {"hospitality": 1}, {V.XENOPHILIA: 2, V.HONOUR: 1}),
             TraditionSpec(K.DUEL_CUSTOM, {}, {"duels": 1}, {V.HONOUR: 2, V.MARTIAL: 1}),
             TraditionSpec(K.MOURNING, {}, {"cohesion": 2}, {V.DEATH: 1, V.KINSHIP: 1}),
-            TraditionSpec(K.HARVEST_RITE, {"food": 1}, {"harvest": 1, "cohesion": 2}, {V.NATURE: 1}),
-            TraditionSpec(K.WAR_DANCE, {}, {"martial": 2}, {V.MARTIAL: 2}),
-            TraditionSpec(K.SCAR_RITE, {}, {"scar": 1}, {V.MARTIAL: 1, V.PURITY: -1}),
-            TraditionSpec(K.ANCESTOR_FEAST, {"food": 2}, {"placation": 1}, {V.KINSHIP: 1, V.DEATH: 1}),
-            TraditionSpec(K.SIESTA, {}, {"rest": 1}, {V.TRADITION: 1}),
-            TraditionSpec(K.NIGHT_VIGIL, {}, {"vigil": 1}, {V.PIETY: 1, V.DEATH: 1}),
+            TraditionSpec(K.SEASONAL_RITE, {"food": 1}, {"harvest": 1, "cohesion": 2}, {V.NATURE: 1}),
+            TraditionSpec(K.MARTIAL_DISPLAY, {}, {"martial": 2}, {V.MARTIAL: 2}),
+            TraditionSpec(K.BODY_MARKING, {}, {"scar": 1}, {V.MARTIAL: 1, V.PURITY: -1}),
+            TraditionSpec(K.ANCESTRAL_RITE, {"food": 2}, {"placation": 1}, {V.KINSHIP: 1, V.DEATH: 1}),
+            TraditionSpec(K.REST_CUSTOM, {}, {"rest": 1}, {V.TRADITION: 1}),
+            TraditionSpec(K.VIGIL, {}, {"vigil": 1}, {V.PIETY: 1, V.DEATH: 1}),
+            TraditionSpec(K.GIFT_CUSTOM, {"goods": 1}, {"cohesion": 2, "hospitality": 1}, {V.KINSHIP: 1, V.XENOPHILIA: 1}),
+            TraditionSpec(K.PURIFICATION, {}, {"piety": 2}, {V.PURITY: 2}),
+            TraditionSpec(K.COMMEMORATION, {"food": 1}, {"cohesion": 3}, {V.TRADITION: 2}),
+            TraditionSpec(K.COMPETITION, {"food": 1}, {"satisfaction": 2, "martial": 1}, {V.COMPETITION: 2}),
         )
     }
 )
+
+STAGES = total(
+    RiteStage,
+    {
+        RiteStage.BIRTH: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 2}, {V.KINSHIP: 1}),
+        RiteStage.NAMING: TraditionSpec(K.RITE_OF_PASSAGE, {}, {"cohesion": 1}, {V.TRADITION: 1}),
+        RiteStage.COMING_OF_AGE: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 2}, {V.TRADITION: 1, V.MARTIAL: 1}),
+        RiteStage.UNION: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"fertility": 5}, {V.KINSHIP: 1}),
+        RiteStage.ELDERHOOD: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 1}, {V.TRADITION: 1, V.KINSHIP: 1}),
+        RiteStage.DEATH: TraditionSpec(K.RITE_OF_PASSAGE, {"goods": 1}, {"rite": 1}, {V.DEATH: 1}),
+    },
+)
+
+
+def tradition_spec(kind: TraditionFunction, stage: RiteStage | None) -> TraditionSpec:
+    return STAGES[stage] if kind is TraditionFunction.RITE_OF_PASSAGE and stage is not None else TRADITIONS[kind]
+
 
 IDEOLOGY_VALUES = MappingProxyType(
     {
@@ -341,39 +371,9 @@ ITEM_WORDS = MappingProxyType(
     }
 )
 
-ART_MESSAGES = MappingProxyType(
-    {
-        ArtMedium.SONG: {V.KINSHIP: 3},
-        ArtMedium.EPIC_POEM: {V.HONOUR: 5, V.MARTIAL: 3},
-        ArtMedium.PLAY: {V.MERCY: 3},
-        ArtMedium.STATUE: {V.HIERARCHY: 4, V.MARTIAL: 2},
-        ArtMedium.FRESCO: {V.PIETY: 4},
-        ArtMedium.TAPESTRY: {V.TRADITION: 4},
-        ArtMedium.MOSAIC: {V.PIETY: 3},
-        ArtMedium.BOOK: {V.KNOWLEDGE: 5},
-        ArtMedium.DANCE: {V.KINSHIP: 2, V.MARTIAL: 2},
-        ArtMedium.MUSIC: {V.KINSHIP: 3},
-        ArtMedium.CARVING: {V.TRADITION: 3},
-        ArtMedium.ARCHITECTURE_ORNAMENT: {V.HIERARCHY: 3},
-    }
-)
+ART_MESSAGES = MappingProxyType({mode: spec.message for mode, spec in ART_MODES.items()})
 
-ART_WORDS = MappingProxyType(
-    {
-        ArtMedium.EPIC_POEM: ("epic", "saga", "poem", "ballad", "lay", "verse"),
-        ArtMedium.SONG: ("song", "hymn", "chant", "anthem", "lament"),
-        ArtMedium.PLAY: ("play", "drama", "tragedy", "comedy"),
-        ArtMedium.STATUE: ("statue", "colossus", "bust", "sculpture"),
-        ArtMedium.FRESCO: ("fresco", "mural", "painting"),
-        ArtMedium.TAPESTRY: ("tapestry", "weaving", "embroidery"),
-        ArtMedium.MOSAIC: ("mosaic",),
-        ArtMedium.BOOK: ("book", "chronicle", "codex", "treatise", "history", "annals"),
-        ArtMedium.DANCE: ("dance",),
-        ArtMedium.MUSIC: ("music", "symphony", "melody", "drum"),
-        ArtMedium.CARVING: ("carving", "relief", "stele", "totem"),
-        ArtMedium.ARCHITECTURE_ORNAMENT: ("frieze", "ornament", "gate", "arch"),
-    }
-)
+ART_WORDS = MappingProxyType({mode: spec.words for mode, spec in ART_MODES.items()})
 
 SAYING_KIND_LABELS = total(
     SayingKind,

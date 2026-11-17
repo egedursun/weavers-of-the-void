@@ -284,6 +284,52 @@ export const METHOD: Record<Schema['CookingMethod'], Named> = {
   freeze_dried: { label: 'Freeze-dried', icon: Snowflake, tone: 'info' },
   irradiated: { label: 'Irradiated', icon: Radiation, tone: 'warning' },
   conjured: { label: 'Conjured', icon: WandSparkles, tone: 'verdigris' },
+  infused: { label: 'Infused', icon: CookingPot, tone: 'verdigris' },
+  distilled: { label: 'Distilled', icon: FlaskConical, tone: 'info' },
+  churned: { label: 'Churned', icon: Milk, tone: 'gold' },
+  sprouted: { label: 'Sprouted', icon: Leaf, tone: 'success' },
+  alkali_treated: {
+    label: 'Treated with alkali',
+    icon: Droplets,
+    tone: 'muted',
+  },
+  cultured: { label: 'Cultured', icon: Sparkles, tone: 'verdigris' },
+  cured_with_mineral: {
+    label: 'Cured with minerals',
+    icon: Gem,
+    tone: 'muted',
+  },
+  aged: { label: 'Aged', icon: Package, tone: 'gold' },
+  extruded: { label: 'Extruded', icon: Layers, tone: 'info' },
+  pressure_cooked: {
+    label: 'Pressure-cooked',
+    icon: CookingPot,
+    tone: 'warning',
+  },
+}
+
+export const INGREDIENT_ROLE: Record<Schema['IngredientRole'], Named> = {
+  base: { label: 'Base', icon: Wheat, tone: 'gold' },
+  protein: { label: 'Protein', icon: Utensils, tone: 'danger' },
+  fat: { label: 'Fat', icon: Droplets, tone: 'warning' },
+  seasoning: { label: 'Seasoning', icon: Leaf, tone: 'success' },
+  garnish: { label: 'Garnish', icon: Sparkles, tone: 'verdigris' },
+  binder: { label: 'Binder', icon: Layers, tone: 'muted' },
+  liquid: { label: 'Liquid', icon: Waves, tone: 'info' },
+  leavening: { label: 'Leavening', icon: Wind, tone: 'muted' },
+  preservative: { label: 'Preservative', icon: Package, tone: 'info' },
+  colouring: { label: 'Colouring', icon: Gem, tone: 'gold' },
+}
+
+export const MEAL: Record<Schema['MealSlot'], Named> = {
+  daily_meal: { label: 'Daily meal', icon: Soup, tone: 'gold' },
+  snack: { label: 'Snack', icon: Croissant, tone: 'muted' },
+  feast: { label: 'Feast', icon: PartyPopper, tone: 'gold' },
+  rite: { label: 'Rite', icon: Scroll, tone: 'verdigris' },
+  ration: { label: 'Ration', icon: Package, tone: 'info' },
+  remedy: { label: 'Remedy', icon: Pill, tone: 'success' },
+  travel_food: { label: 'Travel food', icon: Footprints, tone: 'info' },
+  famine_food: { label: 'Famine food', icon: HeartCrack, tone: 'danger' },
 }
 
 export const COURSE: Record<Schema['DishCourse'], Named> = {

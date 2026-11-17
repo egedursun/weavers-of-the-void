@@ -707,7 +707,7 @@ describe('cosmos chrome', () => {
       'Divine bridge',
       'Dream journey',
       'Space fold',
-      'River of the dead',
+      'Crossing of the dead',
     ])
       await expect.element(legend.getByText(label)).toBeVisible()
     await expect.element(legend.getByText('Voyage under way')).toBeVisible()

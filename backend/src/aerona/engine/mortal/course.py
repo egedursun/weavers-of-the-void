@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.kinds.life_stages import LIFE_STAGES
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -9,6 +10,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
@@ -16,14 +18,20 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
-from aerona.domain.enums.mortal import Ability, DeathCause, LifeStage, MarriageEnd, MarriageKind
+from aerona.domain.enums.genetics import GeneticEffect
+from aerona.domain.enums.mind import Attribute, MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
+from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageEnd
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.lineage import union_of
+from aerona.engine.environment.book import region_environment
+from aerona.engine.genetics.genome import effect_steps
+from aerona.engine.genetics.life import climate_health
 from aerona.engine.law.prisons import realm_of_town
 from aerona.engine.military.terms import war_between
 from aerona.engine.mind.aspirations import open_wants
@@ -33,10 +41,11 @@ from aerona.engine.mind.needs import role_status
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.skills import practise
 from aerona.engine.mind.space import blend
+from aerona.engine.mind.split import seed_split, stored_attribute
 from aerona.engine.mortal.death import HARM_DEATHS
 from aerona.engine.mortal.kin import betrothed_of, children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, end_marriage, foster, marriage_between, marriages_of, marry
-from aerona.engine.mortal.life import ability, adult, assign_sex, refresh_life, seed_abilities, stage_rank
+from aerona.engine.mortal.life import adult, assign_sex, refresh_life, stage_rank
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
@@ -46,11 +55,12 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.unions.axes import spousing_of
 from aerona.engine.unions.customs import divorce_rule
 
 ROLE_CLASSES: dict[MortalRole, SocialClass] = {
     MortalRole.RULER: SocialClass.NOBLE,
-    MortalRole.KNIGHT: SocialClass.NOBLE,
+    MortalRole.SWORN_WARRIOR: SocialClass.NOBLE,
     MortalRole.PRIEST: SocialClass.PRIEST,
     MortalRole.SAINT: SocialClass.PRIEST,
     MortalRole.SEER: SocialClass.PRIEST,
@@ -84,7 +94,6 @@ DEATH_FLAGS: dict[EntityFlag, DeathCause] = {
 }
 SCHOOL_KINDS = frozenset({EngineKind.SCHOOL, EngineKind.LIBRARY})
 TEMPLE_KINDS = frozenset({EngineKind.TEMPLE})
-PLURAL_CUSTOMS = ("polygyny", "polyandry", "group")
 DEATH_FIXUP = "mortal.death_causes"
 FULL = PERCENT
 
@@ -111,9 +120,7 @@ async def heritage_class(ctx: TickContext, mortal: EntityRow) -> SocialClass:
 
 async def seed_mortal(ctx: TickContext, mortal: EntityRow) -> bool:
     profile, created = await ensure_profile(ctx.session, mortal.id, ctx.epoch)
-    abilities = seed_abilities(ctx.rules, mortal, ctx.rng(seed_of("abilities", mortal.id)))
-    if abilities:
-        set_stats(mortal, **abilities)
+    await seed_split(ctx.session, ctx.rules, mortal, ctx.rng(seed_of("body_and_mind", mortal.id)))
     assign_sex(mortal)
     if mortal.social_class is None:
         mortal.social_class = await heritage_class(ctx, mortal)
@@ -183,16 +190,17 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
             mortal,
             strength=clamp_int((stat_or(mortal, "strength", FULL // 2)) - table.elder_strength_decline, 0, FULL),
             agility=clamp_int((stat_or(mortal, "agility", FULL // 2)) - table.elder_agility_decline, 0, FULL),
-            endurance=clamp_int(ability(mortal, Ability.ENDURANCE) - table.elder_endurance_decline, 0, FULL),
-            wisdom=clamp_int(ability(mortal, Ability.WISDOM) + table.elder_wisdom_gain, 0, FULL),
+            endurance=clamp_int((stat_or(mortal, "endurance", FULL // 2)) - table.elder_endurance_decline, 0, FULL),
+            wisdom=clamp_int((stat_or(mortal, "wisdom", FULL // 2)) + table.elder_wisdom_gain, 0, FULL),
         )
         rng = ctx.rng(seed_of("age_condition", mortal.id, ctx.epoch))
         if rng.chance(table.age_condition_chance):
             kind = rng.pick((ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS))
             await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
-    if stage is not before and stage_rank(stage) > stage_rank(before) and stage in (LifeStage.ADULT, LifeStage.ELDER):
-        await note(ctx, f"{mortal.name} came into {'adulthood' if stage is LifeStage.ADULT else 'old age'}.", key=f"life.{stage.value}", ids=[mortal.id])
+    reached = LIFE_STAGES[stage].reached
+    if stage is not before and stage_rank(stage) > stage_rank(before) and reached is not None:
+        await note(ctx, f"{mortal.name} came into {reached}.", key=f"life.{stage.value}", ids=[mortal.id])
     return stage
 
 
@@ -207,9 +215,22 @@ async def update_health(ctx: TickContext, mortal: EntityRow, profile: MortalProf
     )
     wounds = await ctx.session.scalars(select(InjuryRow.severity).where(InjuryRow.bearer_node_id == mortal.id, InjuryRow.state.in_(list(OPEN_INJURY_STATES))))
     loss = sum(chronic) * table.elder_health_loss + sum(wounds)
-    loss += table.ancient_health_loss if stage is LifeStage.ANCIENT else table.elder_health_loss if stage is LifeStage.ELDER else 0
-    gain = table.health_recovery * (1 + (ability(mortal, Ability.ENDURANCE) - FULL // 2) / PERCENT) if stage not in (LifeStage.ELDER, LifeStage.ANCIENT) else 0
+    age_loss = LIFE_STAGES[stage].age_loss
+    loss += getattr(table, age_loss) if age_loss is not None else 0
+    mending = await stored_attribute(ctx.session, mortal, Attribute.RECUPERATION)
+    gain = table.health_recovery * (1 + (mending - FULL // 2) / PERCENT) if LIFE_STAGES[stage].recovers else 0
+    gain += await land_health(ctx, mortal)
     profile.health = clamp_int(profile.health + gain - loss, 0, FULL)
+
+
+async def land_health(ctx: TickContext, mortal: EntityRow) -> int:
+    genome = await ctx.session.get(GenomeRow, mortal.id)
+    if genome is None or mortal.location_id is None:
+        return 0
+    if not effect_steps(genome.genes, GeneticEffect.COLD) and not effect_steps(genome.genes, GeneticEffect.HEAT):
+        return 0
+    ground = await region_environment(ctx.session, mortal.location_id)
+    return climate_health(ctx.rules, genome, ground.temperature_band if ground is not None else None)
 
 
 async def institution_bonus(ctx: TickContext, community_id: int | None) -> tuple[float, float]:
@@ -293,7 +314,7 @@ async def patronise(ctx: TickContext, mortal: EntityRow, profile: MortalProfileR
     table = ctx.rules.standing
     if profile.wealth < table.patronage_wealth or mortal.location_id is None:
         return False
-    if not ctx.rng(seed_of("patronage", mortal.id, ctx.epoch)).chance(ability(mortal, Ability.CREATIVITY)):
+    if not ctx.rng(seed_of("patronage", mortal.id, ctx.epoch)).chance(await stored_attribute(ctx.session, mortal, Attribute.CREATIVITY)):
         return False
     authors = select(EntityRow.id).where(await present_among(ctx.session, [mortal.location_id]), EntityRow.entity_type == EntityType.MORTAL)
     work = await ctx.session.scalar(
@@ -365,7 +386,7 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
             and adult(partner_profile.life_stage)
             and rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal))
         ):
-            await marry(ctx.session, mortal, partner, ctx.epoch, kind=MarriageKind.POLITICAL, description="as they were promised")
+            await marry(ctx.session, mortal, partner, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="as they were promised")
             await note(ctx, f"{mortal.name} and {partner.name} were wed as they had been promised.", key="kin.marriage", ids=[mortal.id, partner.id])
             return "married"
     married = bool(await partners_of(ctx.session, mortal.id))
@@ -379,7 +400,9 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         plural = await plural_custom(ctx, mortal)
         if (married and not plural) or not rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal)):
             continue
-        await marry(ctx.session, mortal, lover, ctx.epoch, kind=MarriageKind.PLURAL if married else MarriageKind.MONOGAMOUS, description="for love")
+        await marry(
+            ctx.session, mortal, lover, ctx.epoch, form=UnionForm.PLURAL if married else UnionForm.PAIR, purpose=UnionPurpose.LOVE, description="for love"
+        )
         await note(ctx, f"{mortal.name} and {lover.name} were wed.", key="kin.marriage", ids=[mortal.id, lover.id])
         return "married"
     return await end_marriages(ctx, mortal, rng)
@@ -394,9 +417,7 @@ async def divorce_custom(ctx: TickContext, mortal: EntityRow) -> str:
 
 
 async def plural_custom(ctx: TickContext, mortal: EntityRow) -> bool:
-    people = await people_of(ctx.session, mortal)
-    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture is not None and culture.marriage.value in PLURAL_CUSTOMS
+    return spousing_of(await union_of(ctx.session, mortal)).several
 
 
 async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:

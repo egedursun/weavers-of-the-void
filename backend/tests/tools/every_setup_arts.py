@@ -9,7 +9,7 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.domain.enums.arts import ClubKind, ForgeryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import CommandToken, ContractStatus, OrderKind
-from aerona.domain.enums.culture import ArtMedium
+from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -26,7 +26,7 @@ async def art_work(session: AsyncSession, realm: Realm) -> Ids:
     work = await make_entity(
         session, "The Long Stair", EntityType.ARTWORK, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=ArtworkStats()
     )
-    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMedium.FRESCO, author_entity_id=realm.mortal_id, quality=60, locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMode.FLAT_IMAGE, author_entity_id=realm.mortal_id, quality=60, locked=[]))
     await session.flush()
     return {"artwork": work.id}
 
@@ -36,7 +36,7 @@ async def sold_work(session: AsyncSession, realm: Realm) -> Ids:
     work = await make_entity(
         session, "The Short Stair", EntityType.ARTWORK, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=ArtworkStats()
     )
-    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMedium.FRESCO, author_entity_id=other["mortal"], quality=40, locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMode.FLAT_IMAGE, author_entity_id=other["mortal"], quality=40, locked=[]))
     session.add(ArtPriceRow(artwork_entity_id=work.id, price=0, locked=["price"]))
     await connect(session, other["mortal"], work.id, BondKind.OWNS, EPOCH)
     await session.flush()

@@ -7,6 +7,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, POLLUTION_COLUMNS, CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.nature_kinds import ProductionMethodKindRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.ownership import LEDGER_COLUMNS, SiteProfitRow
 from aerona.domain.enums.action import ActionKind
@@ -22,6 +23,7 @@ STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality
 class SetMethod(Command):
     community_id: int
     method: MethodKind
+    method_kind_id: int | None = None
     hold: bool = True
 
 
@@ -140,6 +142,11 @@ async def set_method(scope: PlayerScope, command: SetMethod) -> Effect:
         row = CommunityMethodRow(community_node_id=place.id, process=spec.process, method=spec.kind, adopted_epoch=await scope.epoch(), displaced=0, locked=[])
         scope.session.add(row)
     row.method, row.adopted_epoch = spec.kind, await scope.epoch()
+    if command.method_kind_id is not None:
+        kind = await scope.session.get(ProductionMethodKindRow, command.method_kind_id)
+        if kind is None or kind.category is not spec.process:
+            raise ValidationFailedError(f"No method of {PROCESS_LABELS[spec.process].lower()} with that id.")
+    row.method_kind_id = command.method_kind_id
     row.locked = held(row.locked, ["method"], command.hold)
     await scope.session.flush()
     return Effect(

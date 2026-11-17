@@ -11,7 +11,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.models.entity_stats import PolityStats, TitleStats
 from aerona.engine.prehistory.control import configure
 from aerona.engine.prehistory.run import run_prehistory
@@ -55,7 +55,7 @@ async def fallen_kingdom(session: AsyncSession, world_id: int, ruler_id: int) ->
     realm.status, realm.end_epoch = EntityStatus.DESTROYED, realm.birth_epoch
     title = await entity(session, "Throne of the Elder Crown", EntityType.TITLE, TitleStats(), world_id=world_id)
     session.add(
-        TitleProfileRow(title_entity_id=title.id, rank=TitleRank.EMPIRE, holder_node_id=ruler_id, polity_entity_id=realm.id, regalia=[], drift={}, locked=[])
+        TitleProfileRow(title_entity_id=title.id, rank=TitleTier.IMPERIAL, holder_node_id=ruler_id, polity_entity_id=realm.id, regalia=[], drift={}, locked=[])
     )
     await session.flush()
 

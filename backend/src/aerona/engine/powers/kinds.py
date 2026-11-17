@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.catalog.kinds.power_hazards import POWER_HAZARDS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -236,23 +237,28 @@ async def triggered(ctx: TickContext, holder: EntityRow, triggers: set[PowerTrig
 
 
 async def suffer(ctx: TickContext, user: EntityRow, power: PowerRow, hazard: PowerHazard) -> str | None:
-    table = ctx.rules.powers
     if held(user.id):
         return None
-    profile = await ctx.session.get(MortalProfileRow, user.id)
-    if hazard is PowerHazard.INJURY:
-        shift_stat(user, "hp", -table.scar_hp, 0)
-    elif hazard in {PowerHazard.MADNESS, PowerHazard.DEPENDENCY} and profile is not None and "stress" not in (profile.locked or []):
-        profile.stress = clamp_percent(profile.stress + table.hazard_stress)
-    elif hazard is PowerHazard.BURNOUT and "state" not in power.locked:
-        power.state = PowerState.EXHAUSTED
-    elif hazard is PowerHazard.WARPING:
-        await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
-    elif hazard is PowerHazard.ESCAPE and "state" not in power.locked:
-        power.state = PowerState.STRAINED
-    elif hazard is PowerHazard.ATTENTION and user.location_id is not None:
-        shift_stat(user, "renown", table.hazard_stress // 2, 0)
-    elif hazard in {PowerHazard.LEAK, PowerHazard.DEPLETION}:
-        return hazard.value
-    await note(ctx, f"Drawing on power marked {user.name}: {hazard.value.replace('_', ' ')}.", key="power.hazard", ids=[user.id])
+    spec = POWER_HAZARDS[hazard]
+    await harm(ctx, user, power, spec.harm)
+    if spec.noted:
+        await note(ctx, f"Drawing on power marked {user.name}: {hazard.value.replace('_', ' ')}.", key="power.hazard", ids=[user.id])
     return hazard.value
+
+
+async def harm(ctx: TickContext, user: EntityRow, power: PowerRow, kind: str) -> None:
+    table = ctx.rules.powers
+    if kind == "wound":
+        shift_stat(user, "hp", -table.scar_hp, 0)
+    elif kind == "stress":
+        profile = await ctx.session.get(MortalProfileRow, user.id)
+        if profile is not None and "stress" not in (profile.locked or []):
+            profile.stress = clamp_percent(profile.stress + table.hazard_stress)
+    elif kind == "exhaust" and "state" not in power.locked:
+        power.state = PowerState.EXHAUSTED
+    elif kind == "mutate":
+        await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
+    elif kind == "strain" and "state" not in power.locked:
+        power.state = PowerState.STRAINED
+    elif kind == "notice" and user.location_id is not None:
+        shift_stat(user, "renown", table.hazard_stress // 2, 0)

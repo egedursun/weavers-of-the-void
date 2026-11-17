@@ -5,13 +5,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.equipment import FAMILIES
+from aerona.catalog.kinds.labels import MEAL_SLOT_LABELS, METHOD_LABELS, ROLE_LABELS
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
 from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.collective import DesignRow
-from aerona.db.tables.cuisine import CommunityDishRow, DishIngredientRow, DishRow
+from aerona.db.tables.cuisine import FLAVOURS, CommunityDishRow, DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.equipment import EquipmentModelRow, UnitDesignEquipmentRow, UnitDesignTechniqueRow
 from aerona.db.tables.integrity import StructureDesignSectionRow
 from aerona.db.tables.military import ArmyUnitRow, UnitDesignRow
@@ -290,6 +291,11 @@ class MadeBook:
             list(await self.session.scalars(select(CommunityDishRow).where(CommunityDishRow.dish_id.in_(ids)).order_by(CommunityDishRow.popularity.desc()))),
             "dish_id",
         )
+        steps = grouped(list(await self.session.scalars(select(DishStepRow).where(DishStepRow.dish_id.in_(ids)).order_by(DishStepRow.step))), "dish_id")
+        names = {
+            row.id: row.name
+            for row in await self.session.scalars(select(DishRow).where(DishRow.id.in_([row.derived_from_id for row in rows if row.derived_from_id])))
+        }
         found: list[KindArticle] = []
         for row in rows:
             article = KindArticle(
@@ -298,17 +304,34 @@ class MadeBook:
                 self.maker(row.origin_node_id),
                 row.description,
                 facts(
+                    ("Meal", MEAL_SLOT_LABELS[row.category.value]),
                     ("Nourishment", row.nourishment),
                     ("Delight", row.delight),
                     ("Keeps", f"{several(row.keeps, 'epoch', 'epochs')}"),
                     ("Prestige", row.prestige),
+                    ("Skill to make", row.prep_skill),
                     ("Technique it needs", lower(row.technique) if row.technique else NONE),
+                    ("Made from", names.get(row.derived_from_id, NONE) if row.derived_from_id else NONE),
                     ("First cooked in epoch", row.created_epoch),
                 ),
             )
             made = foods.get(row.id, [])
             if made:
-                article.lines.append("Made of " + ", ".join(f"{lower(item.commodity)} ({item.share}%)" for item in made) + ".")
+                article.tables.append(
+                    KindTable(
+                        "Ingredients",
+                        ["Food", "Role", "Share"],
+                        [[lower(item.commodity), ROLE_LABELS[item.role.value], f"{item.share}%"] for item in made],
+                    )
+                )
+            stepped = steps.get(row.id, [])
+            if stepped:
+                article.tables.append(
+                    KindTable(
+                        "Steps", ["Step", "Method", "Hours"], [[str(item.step), METHOD_LABELS[item.method.value], str(item.duration)] for item in stepped]
+                    )
+                )
+            article.tables.append(KindTable("Taste", ["Taste", "Strength"], [[flavour.capitalize(), str(getattr(row, flavour))] for flavour in FLAVOURS]))
             cooked = kitchens.get(row.id, [])
             if cooked:
                 article.tables.append(

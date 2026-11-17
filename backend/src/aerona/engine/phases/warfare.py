@@ -67,6 +67,7 @@ from aerona.engine.eras.effects import tech_factor
 from aerona.engine.honours.units import HonourTally, disband_units, honour_battle
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
+from aerona.engine.kinds.nature import sturdiness
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.lore.rites import warded
@@ -1102,6 +1103,8 @@ async def _powers(
         town = await ctx.session.get(SettlementProfileRow, besieged.id)
         rings = siege_of(ctx.rules, town.morphology) if town is not None else 0
         defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls, rings) * await warded(ctx, besieged.id)
+        if walls is not None:
+            defender_power *= await sturdiness(ctx.session, ctx.rules, walls.walls_material, walls.walls_world_material_id)
         defender_power *= await tech_factor(ctx.session, ctx.rules, besieged.id, EraChannel.FORTIFICATION)
     return attacker_power, defender_power
 
@@ -1269,7 +1272,7 @@ async def _salt_earth(ctx: TickContext, war: WarRow, settlement: WarSettlement, 
     ground = await region_environment(ctx.session, loser.id)
     if ground is None:
         return ""
-    add_scar(ground, ScarKind.SALTED_EARTH, settings.salted_depth)
+    add_scar(ground, ScarKind.MADE_BARREN, settings.salted_depth)
     return f" The conquerors salted the fields of {loser.name}."
 
 

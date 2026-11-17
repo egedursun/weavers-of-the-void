@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.catalog.kinds.minds import MIND_PURPOSES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -24,7 +25,7 @@ from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.continuity import keep_disputes
 from aerona.engine.minds.instructions import conflict_of
-from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, PURPOSE_WILL, fade_state, tend_purpose, will_cause
+from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, fade_state, tend_purpose, will_cause
 from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_for, law_lets_will_grow, seed_missing, will_allowed, will_rank, world_of
 from aerona.engine.minds.seat_loss import lose_seat, name_of, seat_lost
 from aerona.engine.networks.book import members_of
@@ -172,7 +173,7 @@ async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: in
     conflict = await conflict_of(ctx, row.node_id)
     chance = table.base_chance + run_share * table.base_chance * 2 + conflict * table.conflict_weight_pct / PERCENT
     chance += harms * table.harm_weight + cares * table.care_weight + (table.contact_weight if free_near else 0)
-    chance = chance * PURPOSE_WILL[row.purpose] / PERCENT
+    chance = chance * MIND_PURPOSES[row.purpose].will_pct / PERCENT
     if not ctx.rng(f"mind.will.{row.node_id}.{ctx.epoch}").chance(min(PERCENT, chance)):
         return
     cause = await will_cause(ctx, row, harms, cares, conflict=conflict, free_near=free_near)

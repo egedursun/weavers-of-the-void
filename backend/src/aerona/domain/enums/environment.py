@@ -34,10 +34,14 @@ class SoilKind(StrEnum):
     SAND = "sand"
     VOLCANIC = "volcanic"
     PEAT = "peat"
-    SALT = "salt"
-    ASH = "ash"
-    CRYSTAL = "crystal"
-    BONE = "bone"
+    SALINE = "saline"
+    TEPHRA = "tephra"
+    CRYSTALLINE = "crystalline"
+    CALCAREOUS = "calcareous"
+    LATERITE = "laterite"
+    PERMAFROST = "permafrost"
+    REGOLITH = "regolith"
+    ARTIFICIAL = "artificial"
 
 
 class TemperatureBand(StrEnum):
@@ -67,7 +71,7 @@ class CoastKind(StrEnum):
 class ScarKind(StrEnum):
     BATTLEFIELD = "battlefield"
     PLAGUE_GROUND = "plague_ground"
-    SALTED_EARTH = "salted_earth"
+    MADE_BARREN = "made_barren"
     BURNED = "burned"
     CRATER = "crater"
     HAUNTED = "haunted"

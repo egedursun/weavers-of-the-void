@@ -8,7 +8,7 @@ from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.arcana import RechargeRule
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
-    ArtMedium,
+    ArtMode,
     BacklashKind,
     BoostTrigger,
     CalendarSlot,
@@ -26,14 +26,15 @@ from aerona.domain.enums.culture import (
     ProphecyState,
     ResearchChooser,
     RiteEffectKind,
+    RiteStage,
     RumourChannel,
     SpeakerKind,
     SummonForm,
     Technique,
     TraditionEffectKind,
-    TraditionKind,
+    TraditionFunction,
 )
-from aerona.domain.enums.faith import FuneralRite
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -110,7 +111,8 @@ class TraditionProfileRow(Base):
     __table_args__ = (at_least("season_position", 0),)
 
     tradition_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    kind: Mapped[TraditionKind] = mapped_column(enum_type(TraditionKind, "kind"))
+    kind: Mapped[TraditionFunction] = mapped_column(enum_type(TraditionFunction, "kind"))
+    stage: Mapped[RiteStage | None] = mapped_column(enum_type(RiteStage, "stage"))
     custom_kind_id: Mapped[int | None] = mapped_column(ForeignKey("custom_kinds.id", ondelete="SET NULL"))
     calendar_slot: Mapped[CalendarSlot | None] = mapped_column(enum_type(CalendarSlot, "calendar_slot"))
     season_position: Mapped[int | None]
@@ -121,7 +123,7 @@ class TraditionProfileRow(Base):
     effects: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     taboo_target: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     taboo_act: Mapped[ActKind | None] = mapped_column(enum_type(ActKind, "taboo_act"))
-    funeral_rite: Mapped[FuneralRite | None] = mapped_column(enum_type(FuneralRite, "funeral_rite"))
+    funeral_rite: Mapped[FuneralCustom | None] = mapped_column(enum_type(FuneralCustom, "funeral_rite"))
     origin_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
@@ -385,7 +387,7 @@ class ArtworkProfileRow(Base):
     __table_args__ = (between("quality", PERCENT_MIN, PERCENT_MAX), at_least("copies", 0))
 
     artwork_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    medium: Mapped[ArtMedium] = mapped_column(enum_type(ArtMedium, "medium"))
+    medium: Mapped[ArtMode] = mapped_column(enum_type(ArtMode, "medium"))
     performed: Mapped[bool] = mapped_column(default=False)
     author_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     patron_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

@@ -1,13 +1,15 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.culture import ArtMedium
-from aerona.domain.enums.demography import Aesthetic, FolkDiet, FuneralCustom, Job, NaturalTrait
+from aerona.domain.enums.culture import ArtMode
+from aerona.domain.enums.demography import FuneralCustom, Job, NaturalTrait
 from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand, TerrainKind
-from aerona.domain.enums.faith import FuneralRite
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait
 
@@ -60,12 +62,18 @@ class DietSpec:
 
 @dataclass(frozen=True)
 class FuneralSpec:
+    label: str
+    deed: str
     contagion_pct: int
     spirit_pct: int
     restless_shift: int
     mourning_pct: int
     binds_spirits: bool = False
     raises_dead: bool = False
+    body_left: bool = True
+    counts_as_rite: bool = True
+    seals: bool = False
+    cultural: bool = True
 
 
 KIN: dict[BodyPlan, KinSpec] = {
@@ -121,23 +129,28 @@ FINE_JOBS = frozenset({J.CRAFTING, J.SCHOLARSHIP, J.TRADE})
 
 FOOD_SOURCES = frozenset({FoodSource.FIELDS, FoodSource.PASTURE, FoodSource.SEA})
 
-DIETS: dict[FolkDiet, DietSpec] = {
-    FolkDiet.OMNIVORE: DietSpec(
-        {FoodSource.FIELDS: 100, FoodSource.PASTURE: 100, FoodSource.SEA: 100},
-        frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.LIVESTOCK, CommodityKind.FISH}),
-    ),
-    FolkDiet.HERBIVORE: DietSpec({FoodSource.FIELDS: 110}, frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FODDER})),
-    FolkDiet.CARNIVORE: DietSpec({FoodSource.PASTURE: 110, FoodSource.SEA: 100}, frozenset({CommodityKind.LIVESTOCK, CommodityKind.FISH})),
-    FolkDiet.PISCIVORE: DietSpec({FoodSource.SEA: 140}, frozenset({CommodityKind.FISH})),
-    FolkDiet.SCAVENGER: DietSpec(
-        {FoodSource.FIELDS: 70, FoodSource.PASTURE: 70, FoodSource.SEA: 70},
-        frozenset({CommodityKind.GRAIN, CommodityKind.FODDER, CommodityKind.LIVESTOCK, CommodityKind.FISH}),
-    ),
-    FolkDiet.SANGUIVORE: DietSpec({FoodSource.PASTURE: 60}, frozenset({CommodityKind.LIVESTOCK})),
-    FolkDiet.LITHOVORE: DietSpec({FoodSource.STONE: 100}, frozenset({CommodityKind.STONE, CommodityKind.ORE})),
-    FolkDiet.ESSENCE_FEEDER: DietSpec({FoodSource.ESSENCE: 100}, frozenset({CommodityKind.MAGICAL_REAGENTS, CommodityKind.INCENSE})),
-    FolkDiet.PHOTOTROPH: DietSpec({FoodSource.SUN: 100}, frozenset()),
-}
+DIETS: Mapping[Diet, DietSpec] = total(
+    Diet,
+    {
+        Diet.OMNIVORE: DietSpec(
+            {FoodSource.FIELDS: 100, FoodSource.PASTURE: 100, FoodSource.SEA: 100},
+            frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.LIVESTOCK, CommodityKind.FISH}),
+        ),
+        Diet.HERBIVORE: DietSpec({FoodSource.FIELDS: 110}, frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FODDER})),
+        Diet.CARNIVORE: DietSpec({FoodSource.PASTURE: 110, FoodSource.SEA: 100}, frozenset({CommodityKind.LIVESTOCK, CommodityKind.FISH})),
+        Diet.PISCIVORE: DietSpec({FoodSource.SEA: 140}, frozenset({CommodityKind.FISH})),
+        Diet.FILTER: DietSpec({FoodSource.SEA: 120}, frozenset({CommodityKind.FISH})),
+        Diet.SCAVENGER: DietSpec(
+            {FoodSource.FIELDS: 70, FoodSource.PASTURE: 70, FoodSource.SEA: 70},
+            frozenset({CommodityKind.GRAIN, CommodityKind.FODDER, CommodityKind.LIVESTOCK, CommodityKind.FISH}),
+        ),
+        Diet.SANGUIVORE: DietSpec({FoodSource.PASTURE: 60}, frozenset({CommodityKind.LIVESTOCK})),
+        Diet.MINERAL: DietSpec({FoodSource.STONE: 100}, frozenset({CommodityKind.STONE, CommodityKind.ORE})),
+        Diet.SOUL: DietSpec({FoodSource.ESSENCE: 100}, frozenset({CommodityKind.MAGICAL_REAGENTS, CommodityKind.INCENSE})),
+        Diet.VOID: DietSpec({FoodSource.ESSENCE: 80}, frozenset({CommodityKind.MAGICAL_REAGENTS})),
+        Diet.PHOTOSYNTHETIC: DietSpec({FoodSource.SUN: 100}, frozenset()),
+    },
+)
 
 SUN_BY_BAND: dict[TemperatureBand, int] = {
     TemperatureBand.FROZEN: 30,
@@ -157,30 +170,18 @@ STAPLE_BY_SOURCE: dict[FoodSource, CommodityKind] = {
     FoodSource.SUN: CommodityKind.FODDER,
 }
 
-ECOLOGY_DIETS: dict[Diet, FolkDiet] = {
-    Diet.HERBIVORE: FolkDiet.HERBIVORE,
-    Diet.CARNIVORE: FolkDiet.CARNIVORE,
-    Diet.OMNIVORE: FolkDiet.OMNIVORE,
-    Diet.SCAVENGER: FolkDiet.SCAVENGER,
-    Diet.FILTER: FolkDiet.PISCIVORE,
-    Diet.PHOTOSYNTHETIC: FolkDiet.PHOTOTROPH,
-    Diet.MINERAL: FolkDiet.LITHOVORE,
-    Diet.SOUL: FolkDiet.ESSENCE_FEEDER,
-    Diet.VOID: FolkDiet.ESSENCE_FEEDER,
-}
-
-CREATURE_DIETS: tuple[tuple[CreatureTrait, FolkDiet], ...] = (
-    (CreatureTrait.IRON_EATING, FolkDiet.LITHOVORE),
-    (CreatureTrait.STONESKIN, FolkDiet.LITHOVORE),
-    (CreatureTrait.SOUL_EATER, FolkDiet.ESSENCE_FEEDER),
-    (CreatureTrait.RADIANT, FolkDiet.PHOTOTROPH),
+CREATURE_DIETS: tuple[tuple[CreatureTrait, Diet], ...] = (
+    (CreatureTrait.IRON_EATING, Diet.MINERAL),
+    (CreatureTrait.STONESKIN, Diet.MINERAL),
+    (CreatureTrait.SOUL_EATER, Diet.SOUL),
+    (CreatureTrait.RADIANT, Diet.PHOTOSYNTHETIC),
 )
 
-PLAN_DIETS: dict[BodyPlan, FolkDiet] = {
-    BodyPlan.CONSTRUCT: FolkDiet.LITHOVORE,
-    BodyPlan.INCORPOREAL: FolkDiet.ESSENCE_FEEDER,
-    BodyPlan.DIVINE_MANIFEST: FolkDiet.ESSENCE_FEEDER,
-    BodyPlan.AQUATIC: FolkDiet.PISCIVORE,
+PLAN_DIETS: dict[BodyPlan, Diet] = {
+    BodyPlan.CONSTRUCT: Diet.MINERAL,
+    BodyPlan.INCORPOREAL: Diet.SOUL,
+    BodyPlan.DIVINE_MANIFEST: Diet.SOUL,
+    BodyPlan.AQUATIC: Diet.PISCIVORE,
 }
 
 CREATURE_NATURES: dict[CreatureTrait, NaturalTrait] = {
@@ -218,94 +219,72 @@ CREATURE_PLANS: tuple[tuple[CreatureTrait, BodyPlan], ...] = (
     (CreatureTrait.AQUATIC, BodyPlan.AQUATIC),
 )
 
-FUNERALS: dict[FuneralCustom, FuneralSpec] = {
-    FuneralCustom.BURIAL: FuneralSpec(100, 100, 0, 100),
-    FuneralCustom.CREMATION: FuneralSpec(70, 70, -10, 90),
-    FuneralCustom.SKY_BURIAL: FuneralSpec(115, 80, 5, 80),
-    FuneralCustom.SEA_BURIAL: FuneralSpec(85, 90, 10, 85),
-    FuneralCustom.ENTOMBMENT: FuneralSpec(95, 130, -5, 140),
-    FuneralCustom.ANCESTOR_SHRINE: FuneralSpec(110, 150, -15, 130),
-    FuneralCustom.ENDOCANNIBALISM: FuneralSpec(160, 60, 15, 110),
-    FuneralCustom.REANIMATION: FuneralSpec(130, 160, 30, 60, raises_dead=True),
-    FuneralCustom.SOUL_BINDING: FuneralSpec(90, 50, -100, 100, binds_spirits=True),
-}
+F = FuneralCustom
+FUNERALS = total(
+    FuneralCustom,
+    {
+        F.BURIAL: FuneralSpec("Burial", "lay their dead in the ground", 100, 100, 0, 100),
+        F.CREMATION: FuneralSpec("Cremation", "burn their dead", 70, 70, -10, 90, body_left=False),
+        F.SKY_BURIAL: FuneralSpec("Open laying", "leave their dead in the open", 115, 80, 5, 80),
+        F.SEA_BURIAL: FuneralSpec("Water burial", "give their dead to the water", 85, 90, 10, 85),
+        F.ENTOMBMENT: FuneralSpec("Entombment", "close their dead in tombs", 95, 130, -5, 140),
+        F.ANCESTOR_SHRINE: FuneralSpec("Ancestor shrine", "keep the remains of their dead at home shrines", 110, 150, -15, 130),
+        F.ENDOCANNIBALISM: FuneralSpec("Funerary eating", "eat of their dead", 160, 60, 15, 110),
+        F.REANIMATION: FuneralSpec("Raising", "raise their dead to serve again", 130, 160, 30, 60, raises_dead=True, body_left=False, counts_as_rite=False),
+        F.SOUL_BINDING: FuneralSpec("Soul binding", "bind the souls of their dead into vessels", 90, 50, -100, 100, binds_spirits=True, body_left=False),
+        F.NAMELESS: FuneralSpec("Nameless rite", "put away their dead without their names", 100, 60, 20, 60, seals=True, cultural=False),
+        F.NONE: FuneralSpec("No rite", "hold no rite for their dead", 130, 70, 25, 50, counts_as_rite=False, cultural=False),
+    },
+)
 
-FUNERAL_NAMES: dict[FuneralCustom, str] = {
-    FuneralCustom.BURIAL: "The Burial Rite of {people}",
-    FuneralCustom.CREMATION: "The Pyres of {people}",
-    FuneralCustom.SKY_BURIAL: "The Sky Burial of {people}",
-    FuneralCustom.SEA_BURIAL: "The Sea Farewell of {people}",
-    FuneralCustom.ENTOMBMENT: "The Tombs of {people}",
-    FuneralCustom.ANCESTOR_SHRINE: "The Ancestor Shrines of {people}",
-    FuneralCustom.ENDOCANNIBALISM: "The Last Feast of {people}",
-    FuneralCustom.REANIMATION: "The Raising of the Dead of {people}",
-    FuneralCustom.SOUL_BINDING: "The Soul Binding of {people}",
-}
+CULTURAL_FUNERALS = frozenset(custom for custom, spec in FUNERALS.items() if spec.cultural)
 
-FUNERAL_DEEDS: dict[FuneralCustom, str] = {
-    FuneralCustom.BURIAL: "lay their dead in the earth",
-    FuneralCustom.CREMATION: "burn their dead on pyres",
-    FuneralCustom.SKY_BURIAL: "lay their dead open to the sky",
-    FuneralCustom.SEA_BURIAL: "give their dead to the waters",
-    FuneralCustom.ENTOMBMENT: "seal their dead in tombs",
-    FuneralCustom.ANCESTOR_SHRINE: "keep the bones of their dead at home shrines",
-    FuneralCustom.ENDOCANNIBALISM: "eat of their dead to keep them close",
-    FuneralCustom.REANIMATION: "raise their dead to serve again",
-    FuneralCustom.SOUL_BINDING: "bind the souls of their dead into vessels",
-}
 
-AESTHETIC_MEDIA: dict[Aesthetic, frozenset[ArtMedium]] = {
-    Aesthetic.AUSTERE: frozenset({ArtMedium.CARVING, ArtMedium.SONG, ArtMedium.EPIC_POEM}),
-    Aesthetic.ORNATE: frozenset({ArtMedium.TAPESTRY, ArtMedium.MOSAIC, ArtMedium.ARCHITECTURE_ORNAMENT}),
-    Aesthetic.GEOMETRIC: frozenset({ArtMedium.MOSAIC, ArtMedium.BOOK, ArtMedium.ARCHITECTURE_ORNAMENT}),
-    Aesthetic.NATURAL: frozenset({ArtMedium.CARVING, ArtMedium.DANCE, ArtMedium.MUSIC}),
-    Aesthetic.MACABRE: frozenset({ArtMedium.FRESCO, ArtMedium.STATUE, ArtMedium.PLAY}),
-    Aesthetic.CELESTIAL: frozenset({ArtMedium.FRESCO, ArtMedium.MUSIC, ArtMedium.STATUE}),
-}
+@dataclass(frozen=True)
+class Style:
+    ornament: int
+    geometry: int
+    colour: int
+    scale: int
+    symmetry: int
 
-AESTHETIC_SHUNS: dict[Aesthetic, frozenset[ArtMedium]] = {
-    Aesthetic.AUSTERE: frozenset({ArtMedium.TAPESTRY, ArtMedium.ARCHITECTURE_ORNAMENT, ArtMedium.MOSAIC}),
-    Aesthetic.ORNATE: frozenset({ArtMedium.CARVING}),
-    Aesthetic.GEOMETRIC: frozenset({ArtMedium.DANCE, ArtMedium.STATUE}),
-    Aesthetic.NATURAL: frozenset({ArtMedium.ARCHITECTURE_ORNAMENT, ArtMedium.MOSAIC}),
-    Aesthetic.MACABRE: frozenset({ArtMedium.DANCE, ArtMedium.TAPESTRY}),
-    Aesthetic.CELESTIAL: frozenset({ArtMedium.PLAY, ArtMedium.CARVING}),
-}
 
-AESTHETIC_AXES: dict[Aesthetic, ValueAxis] = {
-    Aesthetic.AUSTERE: ValueAxis.TRADITION,
-    Aesthetic.ORNATE: ValueAxis.WEALTH,
-    Aesthetic.GEOMETRIC: ValueAxis.KNOWLEDGE,
-    Aesthetic.NATURAL: ValueAxis.NATURE,
-    Aesthetic.MACABRE: ValueAxis.DEATH,
-    Aesthetic.CELESTIAL: ValueAxis.PIETY,
-}
-
-AESTHETIC_IMAGES: dict[Aesthetic, ArtMedium] = {
-    Aesthetic.AUSTERE: ArtMedium.CARVING,
-    Aesthetic.ORNATE: ArtMedium.MOSAIC,
-    Aesthetic.GEOMETRIC: ArtMedium.ARCHITECTURE_ORNAMENT,
-    Aesthetic.NATURAL: ArtMedium.CARVING,
-    Aesthetic.MACABRE: ArtMedium.STATUE,
-    Aesthetic.CELESTIAL: ArtMedium.FRESCO,
-}
-
-IMAGE_NAMES: dict[ArtMedium, str] = {
-    ArtMedium.CARVING: "The Carving of {ruler}",
-    ArtMedium.MOSAIC: "The Mosaic of {ruler}",
-    ArtMedium.ARCHITECTURE_ORNAMENT: "The Ornamented Gate of {ruler}",
-    ArtMedium.STATUE: "The Statue of {ruler}",
-    ArtMedium.FRESCO: "The Fresco of {ruler}",
-}
-
-FAITH_RITES: dict[FuneralCustom, FuneralRite] = {
-    FuneralCustom.BURIAL: FuneralRite.BURIAL,
-    FuneralCustom.CREMATION: FuneralRite.BURNING,
-    FuneralCustom.SKY_BURIAL: FuneralRite.EXPOSURE,
-    FuneralCustom.SEA_BURIAL: FuneralRite.EXPOSURE,
-    FuneralCustom.ENTOMBMENT: FuneralRite.BURIAL,
-    FuneralCustom.ANCESTOR_SHRINE: FuneralRite.BURIAL,
-    FuneralCustom.ENDOCANNIBALISM: FuneralRite.EXPOSURE,
-    FuneralCustom.REANIMATION: FuneralRite.NONE,
-    FuneralCustom.SOUL_BINDING: FuneralRite.BURNING,
-}
+STYLE_AXES = ("ornament", "geometry", "colour", "scale", "symmetry")
+STYLE_MIDPOINT = 50
+STYLE_NEUTRAL = Style(ornament=50, geometry=50, colour=50, scale=50, symmetry=50)
+VALUE_STYLE: Mapping[ValueAxis, Style] = MappingProxyType(
+    {
+        ValueAxis.MARTIAL: Style(ornament=15, geometry=55, colour=20, scale=45, symmetry=65),
+        ValueAxis.WEALTH: Style(ornament=90, geometry=50, colour=80, scale=60, symmetry=60),
+        ValueAxis.KNOWLEDGE: Style(ornament=50, geometry=90, colour=45, scale=55, symmetry=85),
+        ValueAxis.NATURE: Style(ornament=40, geometry=10, colour=55, scale=40, symmetry=30),
+        ValueAxis.DEATH: Style(ornament=60, geometry=40, colour=25, scale=50, symmetry=45),
+        ValueAxis.PIETY: Style(ornament=60, geometry=65, colour=70, scale=80, symmetry=70),
+    }
+)
+MODE_STYLE: MappingProxyType[ArtMode, Style] = total(
+    ArtMode,
+    {
+        ArtMode.VERBAL: Style(ornament=0, geometry=20, colour=-20, scale=0, symmetry=20),
+        ArtMode.MUSICAL: Style(ornament=10, geometry=0, colour=-20, scale=0, symmetry=20),
+        ArtMode.MOVEMENT: Style(ornament=10, geometry=-30, colour=10, scale=0, symmetry=-10),
+        ArtMode.FLAT_IMAGE: Style(ornament=20, geometry=10, colour=40, scale=0, symmetry=0),
+        ArtMode.SOLID_IMAGE: Style(ornament=-10, geometry=0, colour=-20, scale=20, symmetry=10),
+        ArtMode.BUILT: Style(ornament=10, geometry=30, colour=0, scale=40, symmetry=30),
+        ArtMode.WORN: Style(ornament=30, geometry=0, colour=30, scale=-20, symmetry=0),
+        ArtMode.CULINARY: Style(ornament=20, geometry=-10, colour=20, scale=-20, symmetry=0),
+        ArtMode.SCENT: Style(ornament=10, geometry=-20, colour=0, scale=-20, symmetry=-10),
+        ArtMode.LIGHT: Style(ornament=10, geometry=10, colour=40, scale=30, symmetry=10),
+        ArtMode.RECORDED: Style(ornament=0, geometry=20, colour=10, scale=0, symmetry=10),
+        ArtMode.INTERACTIVE: Style(ornament=10, geometry=20, colour=20, scale=0, symmetry=-10),
+        ArtMode.LANDSCAPE: Style(ornament=0, geometry=-30, colour=20, scale=40, symmetry=-20),
+        ArtMode.BODY: Style(ornament=30, geometry=-20, colour=20, scale=-30, symmetry=0),
+        ArtMode.RITUAL_PERFORMANCE: Style(ornament=30, geometry=0, colour=10, scale=20, symmetry=20),
+        ArtMode.TEXTILE_IMAGE: Style(ornament=40, geometry=20, colour=40, scale=-10, symmetry=20),
+        ArtMode.MADE_MIND_ART: Style(ornament=0, geometry=30, colour=10, scale=0, symmetry=0),
+    },
+)
+STYLE_VALUES: MappingProxyType[str, ValueAxis] = MappingProxyType(
+    {"ornament": ValueAxis.WEALTH, "geometry": ValueAxis.KNOWLEDGE, "colour": ValueAxis.ARTWORK, "scale": ValueAxis.HIERARCHY, "symmetry": ValueAxis.TRADITION}
+)
+IMAGE_MODES = (ArtMode.FLAT_IMAGE, ArtMode.SOLID_IMAGE, ArtMode.BUILT, ArtMode.TEXTILE_IMAGE, ArtMode.LIGHT)

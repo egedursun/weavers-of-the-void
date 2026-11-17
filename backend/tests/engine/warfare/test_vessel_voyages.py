@@ -78,7 +78,7 @@ async def test_strange_waters_reveal_hidden_routes_and_renown_makes_a_legend(ses
     ctx = make_ctx(session)
     vessel, row = await ship(ctx, world_id, "Wraith", strangeness=100)
     other = await seed_world(session, "Farshore", "Farshore Sun")
-    route = RouteRow(world_a_id=world_id, world_b_id=other.id, method=TravelMethod.RIVER_OF_DEAD, duration_epochs=1, danger=10, known=False, created_epoch=1)
+    route = RouteRow(world_a_id=world_id, world_b_id=other.id, method=TravelMethod.DEATH_CURRENT, duration_epochs=1, danger=10, known=False, created_epoch=1)
     session.add(route)
     await session.flush()
     tally = SeaTally()

@@ -263,7 +263,7 @@ async def _sibling_lines(scope: SonScope) -> list[SonOpportunity]:
                 death_age=dead.death_epoch or epoch,
                 devotion=state.devotion,
                 remaining=state.remaining or None,
-                enemy=relation[dead.id] <= -rules.death.auto_scatter_relation,
+                enemy=relation[dead.id] <= -rules.death.auto_hinder_relation,
                 corpse_id=state.corpse.id if state.corpse is not None else None,
                 cult=ValuedRecord(id=strongest.id, name=strongest.name, value=strongest.devotion) if strongest is not None else None,
             )

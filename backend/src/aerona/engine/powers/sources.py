@@ -1,8 +1,10 @@
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.power_costs import POWER_COSTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.powers import (
@@ -17,7 +19,9 @@ from aerona.db.tables.powers import (
     SourceLawRow,
     SourceTideRow,
 )
+from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -32,16 +36,20 @@ from aerona.domain.enums.powers import (
     SourceRelation,
     SourceRenewal,
 )
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.purse import points_of, shift_points
+from aerona.engine.faith.book import patron_node
 from aerona.engine.fortune.profiles import shift_fortune
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers.kinds import locus_factor, tide_wave
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat
@@ -139,27 +147,95 @@ async def polity_of(session: AsyncSession, town_id: int | None) -> int | None:
 async def pay_costs(ctx: TickContext, user: EntityRow, source_id: int, strength: int) -> None:
     for cost in await costs_of(ctx.session, source_id):
         amount = max(1, strength * cost.weight // PERCENT)
-        if cost.cost in {PowerCost.HP, PowerCost.FATIGUE, PowerCost.STRAIN, PowerCost.SANITY, PowerCost.EMOTION, PowerCost.MEMORY}:
-            profile = await ctx.session.get(MortalProfileRow, user.id)
-            if profile is not None and "stress" not in (profile.locked or []):
-                profile.stress = clamp_percent(profile.stress + amount)
-        elif cost.cost in {PowerCost.LIFESPAN, PowerCost.TIME} and user.entity_type is EntityType.MORTAL:
-            shift_stat(user, "age", amount // 2 or 1, 0)
-        elif cost.cost in {PowerCost.REAGENT, PowerCost.MATERIAL, PowerCost.VIS, PowerCost.DEBT}:
-            if await points_of(ctx.session, user) > 0:
-                await shift_points(ctx.session, user, -amount)
-        elif cost.cost in {PowerCost.RENOWN, PowerCost.OATH_STANDING, PowerCost.BELIEF} and user.entity_type is EntityType.MORTAL:
-            await add_renown(ctx.session, user.id, -amount, ctx.epoch, rules=ctx.rules)
-        elif cost.cost is PowerCost.WARPING and not held(user.id):
-            await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
-        elif cost.cost is PowerCost.LUCK and not held(user.id):
-            await shift_fortune(ctx, user.id, -amount)
-        elif cost.cost is PowerCost.NONE:
+        spec = POWER_COSTS[cost.cost]
+        if spec.mortals_only and user.entity_type is not EntityType.MORTAL:
             continue
-        elif cost.cost is PowerCost.SURROUNDINGS and user.location_id is not None:
-            town = await ctx.session.get(EntityRow, user.location_id)
-            if town is not None and town.entity_type is EntityType.SETTLEMENT and not held(town.id):
-                shift_stat(town, "prosperity", -amount, 0)
+        await take_cost(ctx, user, spec.draws, amount)
+
+
+async def take_cost(ctx: TickContext, user: EntityRow, draws: str, amount: int) -> None:
+    if draws == "stress":
+        profile = await ctx.session.get(MortalProfileRow, user.id)
+        if profile is not None and "stress" not in (profile.locked or []):
+            profile.stress = clamp_percent(profile.stress + amount)
+    elif draws == "age":
+        shift_stat(user, "age", amount // 2 or 1, 0)
+    elif draws == "wealth":
+        if await points_of(ctx.session, user) > 0:
+            await shift_points(ctx.session, user, -amount)
+    elif draws == "renown":
+        await add_renown(ctx.session, user.id, -amount, ctx.epoch, rules=ctx.rules)
+    elif draws == "mutation" and not held(user.id):
+        await add_flag(ctx.session, user.id, EntityFlag.MUTATED, ctx.epoch)
+    elif draws == "fortune" and not held(user.id):
+        await shift_fortune(ctx, user.id, -amount)
+    elif draws == "patron":
+        await patron_pays(ctx, user, amount)
+    elif draws == "souls":
+        await draw_souls(ctx, user, amount)
+    elif draws == "surroundings" and user.location_id is not None:
+        town = await ctx.session.get(EntityRow, user.location_id)
+        if town is not None and town.entity_type is EntityType.SETTLEMENT and not held(town.id):
+            shift_stat(town, "prosperity", -amount, 0)
+
+
+async def patron_of_user(ctx: TickContext, user: EntityRow) -> int | None:
+    found = await patron_node(ctx.session, user.id)
+    if found is None and user.location_id is not None:
+        found = await patron_node(ctx.session, user.location_id)
+    return found
+
+
+async def patron_purse(ctx: TickContext, user: EntityRow) -> tuple[SonRow | None, ForeignGodRow | None]:
+    patron = await patron_of_user(ctx, user)
+    if patron is None:
+        return None, None
+    return await ctx.session.get(SonRow, patron), await ctx.session.get(ForeignGodRow, patron)
+
+
+async def patron_can_pay(ctx: TickContext, user: EntityRow, amount: int) -> bool:
+    son, god = await patron_purse(ctx, user)
+    return (son is not None and son.essence >= amount) or (god is not None and god.faith >= amount)
+
+
+async def patron_pays(ctx: TickContext, user: EntityRow, amount: int) -> bool:
+    son, god = await patron_purse(ctx, user)
+    if son is not None and son.essence >= amount and not held(son.id):
+        son.essence -= amount
+        return True
+    if god is not None and god.faith >= amount and not held(god.id):
+        god.faith -= amount
+        return True
+    return False
+
+
+async def patron_short(ctx: TickContext, user: EntityRow, source_id: int, strength: int) -> str | None:
+    for cost in await costs_of(ctx.session, source_id):
+        if POWER_COSTS[cost.cost].draws == "patron" and not await patron_can_pay(ctx, user, max(1, strength * cost.weight // PERCENT)):
+            return "no god stands behind this working with power enough to pay for it"
+    return None
+
+
+async def draw_souls(ctx: TickContext, user: EntityRow, amount: int) -> int:
+    if user.location_id is None:
+        return 0
+    table = ctx.rules.power_sources
+    drawn = list(
+        await ctx.session.scalars(
+            select(EntityRow)
+            .where(await present_among(ctx.session, [user.location_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.id != user.id)
+            .order_by(EntityRow.id)
+            .limit(table.soul_draw_beings)
+        )
+    )
+    beings = [being for being in drawn if not held(being.id)]
+    if not beings:
+        return 0
+    share = max(1, amount * table.soul_draw_pct // PERCENT // len(beings))
+    for being in beings:
+        reason = f"had life drawn out of them by the working of {user.name}"
+        await apply_hits(ctx, being, Harm(share, HarmCause.POWER, reason, damage_type=DamageType.MAGIC), lethal=False)
+    return len(beings)
 
 
 async def drawn_from_land(ctx: TickContext, user: EntityRow, source: PowerSourceRow, strength: int) -> float:

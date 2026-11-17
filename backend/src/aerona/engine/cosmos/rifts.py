@@ -188,7 +188,7 @@ async def tend_rift(ctx: TickContext, rift: RiftRow) -> None:
     if rift.size >= table.wound_size and rift.region_entity_id is not None:
         region = await ctx.session.get(EntityRow, rift.region_entity_id)
         if region is not None:
-            await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, region, PhenomenonCause.RIFT, cause_node_id=rift.dimension_id)
+            await form_phenomenon(ctx, PhenomenonKind.OUTSIDE_OPENING, region, PhenomenonCause.RIFT, cause_node_id=rift.dimension_id)
 
 
 async def leak_peaks(ctx: TickContext, cosmography: Cosmography) -> int:
@@ -209,7 +209,7 @@ async def leak_peaks(ctx: TickContext, cosmography: Cosmography) -> int:
         if world is None or region is None or held(ground.entity_id, ground.world_id):
             continue
         if ground.entity_id not in gated and ctx.rng(f"leak_wound.{ground.entity_id}").chance(ctx.rules.phenomena.leak_peak_chance):
-            await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, region, PhenomenonCause.LEAK_PEAK)
+            await form_phenomenon(ctx, PhenomenonKind.OUTSIDE_OPENING, region, PhenomenonCause.LEAK_PEAK)
         if not ctx.rng(f"leak_peak.{ground.entity_id}").chance(table.peak_chance):
             continue
         home = cosmography.place_world(world).dimension_id

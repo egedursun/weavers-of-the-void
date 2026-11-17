@@ -62,7 +62,7 @@ export const METHODS: Record<Schema['CultivationMethod'], Named> = {
   synthesis: { label: 'Synthesis', icon: FlaskConical, tone: 'info' },
   binding: { label: 'Binding', icon: Link2, tone: 'verdigris' },
   cloning: { label: 'Cloning', icon: Copy, tone: 'info' },
-  chimera: { label: 'Chimera', icon: Orbit, tone: 'warning' },
+  merging: { label: 'Merging species', icon: Orbit, tone: 'warning' },
   induction: { label: 'Induction', icon: Zap, tone: 'gold' },
 }
 

@@ -63,7 +63,7 @@ def role_status(rules: Rules, role: MortalRole) -> int:
         MortalRole.HERO: table.status_hero,
         MortalRole.CHOSEN: table.status_chosen,
         MortalRole.SAINT: table.status_saint,
-        MortalRole.KNIGHT: table.status_knight,
+        MortalRole.SWORN_WARRIOR: table.status_sworn_warrior,
         MortalRole.PRIEST: table.status_priest,
         MortalRole.SEER: table.status_seer,
         MortalRole.CAPTAIN: table.status_captain,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generationsOf } from './api'
-import { ABILITIES, KIN_KINDS, SLOTS, SLOT_TYPES } from './labels'
+import { KIN_KINDS, SLOTS, SLOT_TYPES } from './labels'
 
 describe('mortal kin and gear', () => {
   it('groups a family tree by generation, elders first', () => {
@@ -49,15 +49,7 @@ describe('mortal kin and gear', () => {
     ])
   })
 
-  it('labels every ability, kin bond and slot', () => {
-    expect(Object.keys(ABILITIES)).toEqual([
-      'endurance',
-      'willpower',
-      'perception',
-      'wisdom',
-      'creativity',
-      'beauty',
-    ])
+  it('labels every kin bond and slot', () => {
     expect(Object.keys(KIN_KINDS)).toHaveLength(6)
     expect(Object.keys(SLOTS).sort()).toEqual(Object.keys(SLOT_TYPES).sort())
     expect(SLOT_TYPES.mount).toContain('beast')

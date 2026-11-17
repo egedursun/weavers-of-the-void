@@ -32,7 +32,7 @@ from aerona.domain.enums.urban import (
     MarketPlay,
     Morphology,
     OrderLaw,
-    Preservation,
+    PreservationMethod,
     TransportKind,
     TribunalVerdict,
     UrbanService,
@@ -81,8 +81,10 @@ def test_services_reach_further_in_planned_towns_and_fire_spreads_faster_in_croo
     assert reach_of(rules, Morphology.PLANNED) > reach_of(rules, Morphology.ORGANIC)
     assert spread_of(rules, Morphology.ORGANIC) > spread_of(rules, Morphology.PLANNED)
     assert siege_of(rules, Morphology.CONCENTRIC) > siege_of(rules, Morphology.ORGANIC) == 0
-    assert carriage_factor(rules, CommodityKind.STONE, TradeMode.SEA) < carriage_factor(rules, CommodityKind.STONE, TradeMode.ROAD)
-    assert spoilage(rules, CommodityKind.FISH, TradeMode.ROAD, Preservation.NONE) > spoilage(rules, CommodityKind.FISH, TradeMode.ROAD, Preservation.ICED)
+    stone, fish = cargo_class(CommodityKind.STONE), cargo_class(CommodityKind.FISH)
+    assert carriage_factor(rules, stone, TradeMode.SEA) < carriage_factor(rules, stone, TradeMode.ROAD)
+    assert carriage_factor(rules, stone, TradeMode.ROAD, 2.0) > carriage_factor(rules, stone, TradeMode.ROAD)
+    assert spoilage(rules, fish, TradeMode.ROAD, PreservationMethod.NONE) > spoilage(rules, fish, TradeMode.ROAD, PreservationMethod.CHILLING)
     assert cargo_class(CommodityKind.LIVESTOCK) is CargoClass.LIVESTOCK
     assert swing(rules, MarketPlay.CORNER, 100) > 1 > swing(rules, MarketPlay.DUMP, 100)
 

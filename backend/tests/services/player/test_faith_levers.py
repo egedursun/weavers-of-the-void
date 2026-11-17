@@ -14,11 +14,11 @@ from aerona.db.tables.faith import (
     RelicRow,
     SpiritProfileRow,
 )
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faith import (
     AfterlifeState,
-    ClergyOffice,
-    FuneralRite,
+    ClergyFunction,
     HoldingKind,
     RebirthPath,
     SpiritAlignment,
@@ -99,15 +99,15 @@ async def test_custom_tenets_ride_on_base_effects(scope: PlayerScope, session: A
 async def test_offices_are_appointed_held_vacated_and_struck(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     church = await faithful(session, world)
     priest = await mortal(session, world, church.town, "Abbot")
-    command = faith.SetOffice(cult_id=church.cult.id, kind=ClergyOffice.MONK, holder_id=priest.id)
+    command = faith.SetOffice(cult_id=church.cult.id, kind=ClergyFunction.ASCETIC, holder_id=priest.id)
     await faith.set_office(scope, command)
     row = await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == church.cult.id))
     assert row is not None and row.holder_entity_id == priest.id and row.locked
-    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyOffice.MONK, locked=False))
+    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyFunction.ASCETIC, locked=False))
     assert not row.locked
-    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyOffice.MONK, vacate=True))
+    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyFunction.ASCETIC, vacate=True))
     assert row.holder_entity_id is None and row.locked
-    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyOffice.MONK, remove=True))
+    await faith.set_office(scope, faith.SetOffice(cult_id=church.cult.id, kind=ClergyFunction.ASCETIC, remove=True))
     assert await session.scalar(select(CultOfficeRow).where(CultOfficeRow.cult_entity_id == church.cult.id)) is None
 
 
@@ -160,7 +160,7 @@ async def test_souls_are_raised_rewritten_and_released_from_holds(scope: PlayerS
         "seal_strength": 30,
     }
     await faith.edit_spirit(scope, faith.EditSpirit(spirit_id=profile.spirit_entity_id, values=values))
-    assert profile.deeds["renown"] == 80 and profile.imprint == {"mercy": -40} and profile.rite is FuneralRite.NAMELESS
+    assert profile.deeds["renown"] == 80 and profile.imprint == {"mercy": -40} and profile.rite is FuneralCustom.NAMELESS
     assert profile.patron_son_id == church.god.id and set(values) <= set(profile.locked)
     await faith.edit_spirit(scope, faith.EditSpirit(spirit_id=profile.spirit_entity_id, release=list(values)))
     assert not set(values) & set(profile.locked)

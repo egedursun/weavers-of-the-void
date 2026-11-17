@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS, Part
-from aerona.catalog.medicine import MEDICINE, tier_of
+from aerona.catalog.medicine import MEDICINE, infection_cut, tier_of
 from aerona.catalog.mind import HEALING_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
 from aerona.constants.units import PERCENT
@@ -16,6 +16,7 @@ from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
@@ -55,6 +56,7 @@ from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
 from aerona.engine.dominion.effects import step_here
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.genetics.life import healing_factor
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
@@ -79,7 +81,7 @@ from aerona.rules.registry.body import HealingRules, ProstheticsRules
 HEALER_ROLES = frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.SAINT, MortalRole.PHYSICIAN})
 FESTER_DEATH = "died of a festering wound"
 BLED_OUT = "bled to death from an open wound"
-PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.DRAGONBONE, MaterialKind.SKYSTEEL})
+PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.GREAT_BONE, MaterialKind.SKYSTEEL})
 
 
 async def known_tier(session: AsyncSession, holder_id: int | None, tier: MedicineTier) -> MedicineTier:
@@ -166,12 +168,6 @@ def lasting_chance(rules: HealingRules, kind: InjuryKind, severity: int) -> floa
         rules.permanent_severity_5_pct,
     )[severity - 1]
     return permanent_chance(rules, kind) * by_severity / PERCENT
-
-
-def medicine_cut(rules: HealingRules, tier: MedicineTier) -> int:
-    if tier is MedicineTier.NONE:
-        return 0
-    return rules.herbs_infection_cut_pct if tier is MedicineTier.HERBS else rules.surgery_infection_cut_pct
 
 
 @dataclass(frozen=True)
@@ -405,7 +401,7 @@ def infection_chance(ctx: TickContext, row: InjuryRow, body: BodyRow, care: Care
     table = ctx.rules.healing
     chance = infection_base(table, row.kind) * care.disease / table.disease_reference
     chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
-    chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
+    chance *= (PERCENT - infection_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
     chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
     chance *= 1 - care.physic
     return chance * (1 - ctx.rules.tissues.clean_infection_pct / PERCENT if TreatmentStep.CLEAN.value in row.treatments else 1)
@@ -437,6 +433,7 @@ async def mending_of(ctx: TickContext, bearer: Bearer) -> float:
     mending *= await ctx.hook_factor(bearer.id, DomainHook.HEALING)
     if isinstance(bearer, EntityRow):
         mending *= await step_here(ctx, bearer.id, DivineScale.GROWTH, ctx.rules.dominion.healing_per_step_pct)
+        mending *= healing_factor(ctx.rules, await ctx.session.get(GenomeRow, bearer.id))
     return mending
 
 
@@ -552,7 +549,7 @@ def workability(rules: ProstheticsRules, material: MaterialKind) -> int:
         MaterialKind.CRYSTAL: rules.crystal,
         MaterialKind.STAR_METAL: rules.star_metal,
         MaterialKind.LIVING_WOOD: rules.living_wood,
-        MaterialKind.DRAGONBONE: rules.dragonbone,
+        MaterialKind.GREAT_BONE: rules.great_bone,
         MaterialKind.SKYSTEEL: rules.skysteel,
     }
     return table.get(material, rules.other)

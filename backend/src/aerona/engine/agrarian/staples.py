@@ -7,7 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import BrandRow, KeystoneResourceRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import ItemProfileRow
-from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
@@ -79,8 +79,8 @@ async def candidates(ctx: TickContext) -> list[Candidate]:
     if not rare:
         return []
     rows = await ctx.session.execute(
-        select(SpeciesYieldRow.species_entity_id, SpeciesYieldRow.product, SpeciesYieldRow.commodity).where(
-            SpeciesYieldRow.species_entity_id.in_(list(rare)), SpeciesYieldRow.commodity.is_not(None)
+        select(SpeciesProductRow.species_entity_id, SpeciesProductRow.product, SpeciesProductRow.commodity).where(
+            SpeciesProductRow.species_entity_id.in_(list(rare)), SpeciesProductRow.commodity.is_not(None)
         )
     )
     found = [Candidate(species, product, commodity) for species, product, commodity in rows.all()]

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.resolves import RESOLVES
 from aerona.catalog.operations import AFFLICTIONS, GROUND_LABELS, QUIRK_ORIGINS, VIRTUES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
@@ -29,6 +30,7 @@ from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.sites.rooms import Walk, delve, layout_of, rooms_of
+from aerona.rules.registry.operations import ExpeditionRules
 
 E = ExpeditionEvent
 G = ExpeditionGround
@@ -81,9 +83,6 @@ class Party:
 
     def count(self, role: ExpeditionRole) -> int:
         return sum(1 for member in self.alive if member.role is role or (role is R.SCOUT and self.has(member, Q.KEEN_EYED)))
-
-    def resolve(self, kind: ResolveKind) -> int:
-        return sum(1 for member in self.alive if member.resolve is kind)
 
 
 async def quirks_of(ctx: TickContext, mortal_id: int) -> set[QuirkKind]:
@@ -224,7 +223,7 @@ async def climate_of(ctx: TickContext, party: Party) -> RegionEnvironmentRow | N
 def ration(party: Party, member: ExpeditionMemberRow) -> int:
     if party.has(member, Q.EATS_ANYTHING):
         return 0
-    return 2 if member.resolve in {ResolveKind.SELFISH, ResolveKind.HOPELESS} else 1
+    return RESOLVES[member.resolve].ration
 
 
 def eat(ctx: TickContext, party: Party) -> None:
@@ -254,14 +253,20 @@ def danger_of(ctx: TickContext, party: Party) -> int:
     table = ctx.rules.expeditions
     sighted = any(party.has(member, Q.DARK_SIGHTED) for member in party.alive)
     dark = 0 if sighted else party.row.darkness * table.dark_danger_pct // PERCENT
-    eyes = (party.count(R.SCOUT) + party.count(R.GUIDE) + party.resolve(ResolveKind.FOCUSED)) * table.scout_danger
+    eyes = (party.count(R.SCOUT) + party.count(R.GUIDE) + sum(1 for member in party.alive if RESOLVES[member.resolve].keeps_watch)) * table.scout_danger
     tooled = table.tool_danger if party.row.ground in DARK_GROUNDS and party.row.tools > 0 else 0
     return clamp_int(party.row.danger + dark - eyes - tooled, 0, PERCENT)
 
 
+def others_pressure(table: ExpeditionRules, member: ExpeditionMemberRow) -> int:
+    spec = RESOLVES[member.resolve]
+    return spec.others_sign * int(getattr(table, spec.others_rule)) if spec.others_rule is not None else 0
+
+
 def strain(ctx: TickContext, party: Party) -> None:
     table = ctx.rules.expeditions
-    abusive, brave = party.resolve(ResolveKind.ABUSIVE), party.resolve(ResolveKind.COURAGEOUS)
+    pressure = {member.mortal_entity_id: others_pressure(table, member) for member in party.alive}
+    whole = sum(pressure.values())
     thieves = sum(1 for member in party.alive if party.has(member, Q.LIGHT_FINGERED))
     for member in party.alive:
         amount = table.leg_stress + (table.dark_stress if party.row.darkness >= PERCENT // 2 else 0) * (2 if party.has(member, Q.FEARS_DARK) else 1)
@@ -269,14 +274,12 @@ def strain(ctx: TickContext, party: Party) -> None:
             amount //= 2
         if party.has(member, Q.HOMESICK):
             amount += table.leg_stress // 2
-        if member.resolve is ResolveKind.HOPELESS:
-            amount = amount * 3 // 2
-        others_abusive = abusive - (member.resolve is ResolveKind.ABUSIVE)
-        others_brave = brave - (member.resolve is ResolveKind.COURAGEOUS)
+        spec = RESOLVES[member.resolve]
+        amount = amount * spec.stress_pct // PERCENT
         others_thieving = thieves - party.has(member, Q.LIGHT_FINGERED)
-        amount += others_abusive * table.abusive_stress + others_thieving * table.abusive_stress // 2 - others_brave * table.courage_relief
-        if member.resolve is ResolveKind.STALWART:
-            amount -= table.courage_relief
+        amount += whole - pressure[member.mortal_entity_id] + others_thieving * table.abusive_stress // 2
+        if spec.own_relief_rule is not None:
+            amount -= int(getattr(table, spec.own_relief_rule))
         stress(ctx, party, member, amount)
 
 
@@ -289,8 +292,10 @@ async def expose(ctx: TickContext, party: Party, land: RegionEnvironmentRow | No
         keep(party.row, "medicine", party.row.medicine - 1)
     for member in party.alive:
         scale = PERCENT
-        if party.has(member, Q.HARDY) or member.resolve is ResolveKind.STALWART:
+        if party.has(member, Q.HARDY):
             scale //= 2
+        else:
+            scale = scale * RESOLVES[member.resolve].exposure_pct // PERCENT
         if party.has(member, Q.FRAIL):
             scale = scale * 3 // 2
         relief = table.healer_relief if healer else 0
@@ -328,7 +333,7 @@ async def camp(ctx: TickContext, party: Party, tally: ExpeditionTally, *, force:
     table = ctx.rules.expeditions
     alive = party.alive
     tired = sum(member.fatigue for member in alive) // max(1, len(alive))
-    if not alive or (tired < WEARY and not force) or party.resolve(ResolveKind.PARANOID) or party.row.provisions < len(alive):
+    if not alive or (tired < WEARY and not force) or any(RESOLVES[member.resolve].refuses_rest for member in alive) or party.row.provisions < len(alive):
         return
     keep(party.row, "provisions", party.row.provisions - len(alive))
     keep(party.row, "status", ExpeditionStatus.CAMPED)

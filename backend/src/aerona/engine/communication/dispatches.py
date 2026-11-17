@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import CipherRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -19,7 +20,7 @@ from aerona.domain.enums.communication import DispatchContent, DispatchState, En
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import OUTLAW_KINDS
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin
-from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, PreferenceKind, SkillKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, MemoryKind, PreferenceKind, SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.communication.post import CLAUSES, COMMODITY, FACTS, FORGER, LOCKED_STATE, OVERLAND, SPIED, TREATY, send
@@ -214,11 +215,8 @@ async def receive_envoy(ctx: TickContext, row: MessageRow, tally: DispatchTally)
 
 async def sting(ctx: TickContext, row: MessageRow, recipient: int) -> float:
     model = await honour_of(ctx.session, await culture_id(ctx, recipient))
-    if model is HonourModel.HONOUR:
-        return 2.0
-    if model is HonourModel.FACE:
-        return 2.0 if row.medium is Medium.HERALD else 0.5
-    return 1.0
+    spec = HONOUR_MODELS[model]
+    return (spec.herald_sting_pct if row.medium is Medium.HERALD else spec.message_sting_pct) / PERCENT
 
 
 async def effects(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> None:

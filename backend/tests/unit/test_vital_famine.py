@@ -1,4 +1,6 @@
+from aerona.catalog.reproduction import SEX_SYSTEMS
 from aerona.db.tables.demography import CohortRow
+from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.demography.vital import Pressures, one_year
@@ -15,7 +17,13 @@ def cohorts() -> dict:
 
 
 def deaths_at(hunger: float, disease: float = 0.0) -> int:
-    year = one_year(Rules(), cohorts(), None, Pressures(fertility=1.0, hunger=hunger, crowding=0.0, disease=disease, stress=0.0, mortality=1.0))
+    year = one_year(
+        Rules(),
+        cohorts(),
+        None,
+        Pressures(fertility=1.0, hunger=hunger, crowding=0.0, disease=disease, stress=0.0, mortality=1.0),
+        SEX_SYSTEMS[ReproductiveSystem.TWO_SEX],
+    )
     return sum(year.deaths.values())
 
 

@@ -131,7 +131,7 @@ export type RecordActionSpec = {
 const MORTAL_ROLES_HERO = new Set([
   'hero',
   'warrior',
-  'knight',
+  'sworn_warrior',
   'hunter',
   'chosen',
 ])
@@ -1293,17 +1293,17 @@ export const RECORD_ACTIONS: readonly RecordActionSpec[] = [
     applies: canonOf(is('species')),
   },
   {
-    id: 'species:chimera',
-    route: catalogueRoute('/api/actions/species:chimera'),
+    id: 'species:merge',
+    route: catalogueRoute('/api/actions/species:merge'),
     section: 'creatures',
     self: 'first_id',
     icon: Dna,
     applies: canonOf(is('species')),
     pickers: {
       second_id: { source: 'entity', types: ['species'] },
-      weaver_id: { source: 'entity', types: ['mortal', 'cult', 'faction'] },
+      maker_id: { source: 'entity', types: ['mortal', 'cult', 'faction'] },
     },
-    labels: { second_id: 'With', weaver_id: 'Weaver (optional)' },
+    labels: { second_id: 'With', maker_id: 'Maker (optional)' },
   },
   {
     id: 'species:trail',

@@ -257,6 +257,7 @@ describe('society sections', () => {
     expect(callsTo('POST', '/api/actions/district:edit')[0].body).toEqual({
       district_id: 4,
       clear_design: false,
+      clear_world_material: false,
       condition: 100,
     })
     await screen.getByRole('button', { name: 'Adjust' }).click()
@@ -301,6 +302,7 @@ describe('society sections', () => {
     expect(callsTo('POST', '/api/actions/district:edit')[0].body).toEqual({
       district_id: 4,
       clear_design: false,
+      clear_world_material: false,
       release: ['condition'],
     })
     await screen.getByRole('button', { name: 'Strike' }).click()

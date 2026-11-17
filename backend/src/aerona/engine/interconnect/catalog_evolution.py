@@ -18,6 +18,7 @@ COMMUNITIES = ("people", "settlement")
 EVOLUTION_MECHANICS = (
     Mechanic(
         key="trait_evolution",
+        tools=("shape_trait",),
         spec_item="S3.2/RP3",
         title=(
             "Trait evolution: each range of a species carries its own size, speed, armour, venom, camouflage, "

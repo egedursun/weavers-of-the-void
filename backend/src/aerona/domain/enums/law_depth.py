@@ -21,7 +21,7 @@ class RegistryKind(StrEnum):
     LAND_TITLE = "land_title"
     DEBT = "debt"
     SALE = "sale"
-    DOWRY = "dowry"
+    UNION_PORTION = "union_portion"
     INDENTURE = "indenture"
     PATENT = "patent"
     PATTERN = "pattern"

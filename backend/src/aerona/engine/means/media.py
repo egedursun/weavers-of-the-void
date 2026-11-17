@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.art_modes import WRITTEN_MODES
 from aerona.catalog.lore import KNOWLEDGE_ITEMS
 from aerona.catalog.means import CASUAL_MEDIA, MEDIA
 from aerona.constants.units import PERCENT
@@ -11,7 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.means import WritingCustomRow, WrittenWorkRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.culture import ArtMedium, Technique
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import WritingMedium
@@ -69,7 +70,7 @@ async def seed_customs(ctx: TickContext, tally: MediaTally) -> None:
     await ctx.session.flush()
 
 
-WRITTEN_ARTS = frozenset({ArtMedium.EPIC_POEM, ArtMedium.PLAY, ArtMedium.BOOK})
+WRITTEN_ARTS = WRITTEN_MODES
 
 
 async def writer_of(ctx: TickContext, work: EntityRow) -> EntityRow:

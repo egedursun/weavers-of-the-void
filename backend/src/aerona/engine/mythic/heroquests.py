@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, REALM_STEPS, trial_at
+from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
@@ -34,6 +34,7 @@ from aerona.engine.divine.standing import standing_row
 from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.queries import community_of
 from aerona.engine.history.collections import open_collection
+from aerona.engine.kinds.nature import realm_kind_for, realm_kind_of
 from aerona.engine.lifecycle.wounds import apply_hits, slay
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.names import entitle
@@ -104,7 +105,9 @@ async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfil
     table = ctx.rules.heroquests
     realm = realm_of(legend)
     rng = ctx.rng(f"heroquest.{quester.id}.{ctx.epoch}")
-    steps = rng.integer(table.steps_min, max(table.steps_min, table.steps_max)) + REALM_STEPS[realm]
+    realm_kind = await realm_kind_for(ctx, realm, quester.world_id)
+    _, extra, realm_name = await realm_kind_of(ctx.session, realm_kind, realm)
+    steps = rng.integer(table.steps_min, max(table.steps_min, table.steps_max)) + extra
     collection = await open_collection(
         ctx,
         CollectionKind.HEROQUEST,
@@ -117,6 +120,7 @@ async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfil
         legend_entity_id=legend.legend_entity_id,
         god_node_id=legend.subject_node_id,
         realm=realm,
+        realm_kind_id=realm_kind,
         place_entity_id=legend.fixed_in_entity_id,
         steps=steps,
         step=0,
@@ -131,7 +135,9 @@ async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfil
     ctx.session.add(row)
     await ctx.session.flush()
     ctx.session.add_all(HeroquestMemberRow(heroquest_id=row.id, entity_id=member) for member in members if member != quester.id)
-    await note(ctx, f"{quester.name} set out on a heroquest into {REALM_PHRASES[realm]}.", key="mythic.heroquest_begun", ids=[quester.id, *members])
+    await note(
+        ctx, f"{quester.name} set out on a heroquest into {realm_name or REALM_PHRASES[realm]}.", key="mythic.heroquest_begun", ids=[quester.id, *members]
+    )
     return row
 
 

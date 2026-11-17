@@ -128,7 +128,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> Ent
     stats = species.stats
     if isinstance(stats, SpeciesStats):
         changes = {
-            key: clamp_percent(stat_or(species, key, creatures.chimera_default_stat) + rng.die(creatures.mutation_die) - creatures.mutation_shift)
+            key: clamp_percent(stat_or(species, key, creatures.merged_default_stat) + rng.die(creatures.mutation_die) - creatures.mutation_shift)
             for key in SPECIES_STAT_KEYS
         }
         stats = stats.model_copy(update=changes)
@@ -244,7 +244,7 @@ async def _weaving_candidate(ctx: TickContext, atlas: RegionAtlas) -> tuple[Enti
     knowledge = await KnowledgeMap.load(ctx.session)
     megafauna = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
     species = [item for item in await _species(ctx) if item.id not in megafauna]
-    reach = ctx.rules.creatures.chimera_merge_distance
+    reach = ctx.rules.creatures.species_merge_distance
     for maker in await canon(ctx.session, MAKER_TYPES):
         if not knowledge.knows(maker.id, KnowledgeBranch.BIOMANCY):
             continue
@@ -259,39 +259,41 @@ async def _weaving_candidate(ctx: TickContext, atlas: RegionAtlas) -> tuple[Enti
     return None
 
 
-async def weave_spontaneously(ctx: TickContext) -> EntityRow | None:
+async def merge_spontaneously(ctx: TickContext) -> EntityRow | None:
     candidate = await _weaving_candidate(ctx, await RegionAtlas.load(ctx.session))
-    if candidate is None or not ctx.rng("weave").chance(ctx.rules.creatures.chimera_merge_chance):
+    if candidate is None or not ctx.rng("weave").chance(ctx.rules.creatures.species_merge_chance):
         return None
     maker, first, second = candidate
-    chimera = await merge_species(
-        ctx, first, second, maker=maker, description=f"{maker.name} joined {first.name} and {second.name} with biomancy and made a chimera."
+    merged = await merge_species(
+        ctx, first, second, maker=maker, description=f"{maker.name} joined {first.name} and {second.name} with biomancy into a new species."
     )
-    await BondRepository(ctx.session).connect(BondDraft(maker.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own making"))
-    text = f"{maker.name} merged {first.name} and {second.name} into a chimera: {chimera.name}."
-    await ctx.chronicle(ChronicleKind.CHIMERA, text, template_key="creatures.chimera_woven", entity_ids=[maker.id, chimera.id], feed_category=FeedCategory.LIFE)
-    return chimera
+    await BondRepository(ctx.session).connect(BondDraft(maker.id, merged.id, BondKind.TAMED, ctx.epoch, "its own making"))
+    text = f"{maker.name} merged {first.name} and {second.name} into a merged species: {merged.name}."
+    await ctx.chronicle(
+        ChronicleKind.MERGED_SPECIES, text, template_key="creatures.species_merged", entity_ids=[maker.id, merged.id], feed_category=FeedCategory.LIFE
+    )
+    return merged
 
 
-async def chimera_escapes(ctx: TickContext) -> int:
+async def merged_escapes(ctx: TickContext) -> int:
     creatures = ctx.rules.creatures
     repository = EntityRepository(ctx.session)
     escaped = await flags_by_entity(ctx.session, EntityFlag.ESCAPED)
     rng = ctx.rng("escape")
     count = 0
-    for chimera in await repository.with_flag(EntityFlag.CHIMERA):
-        if chimera.id in escaped:
+    for merged in await repository.with_flag(EntityFlag.MERGED_SPECIES):
+        if merged.id in escaped:
             continue
-        makers = await active_bonds(ctx.session, [BondKind.PRODUCED], targets=[chimera.id])
-        if not makers or not rng.probability(stat_or(chimera, DANGER_KEY, creatures.chimera_default_danger) / creatures.chimera_escape_divisor):
+        makers = await active_bonds(ctx.session, [BondKind.PRODUCED], targets=[merged.id])
+        if not makers or not rng.probability(stat_or(merged, DANGER_KEY, creatures.merged_default_danger) / creatures.merged_escape_divisor):
             continue
-        await repository.add_flag(chimera.id, EntityFlag.ESCAPED, ctx.epoch)
+        await repository.add_flag(merged.id, EntityFlag.ESCAPED, ctx.epoch)
         maker = await ctx.session.get(EntityRow, makers[0].source_node_id)
         if maker is not None and maker.status is EntityStatus.CANON:
-            await BondRepository(ctx.session).connect(BondDraft(chimera.id, maker.id, BondKind.HUNTS, ctx.epoch, "escaped and returned"))
+            await BondRepository(ctx.session).connect(BondDraft(merged.id, maker.id, BondKind.HUNTS, ctx.epoch, "escaped and returned"))
             for key in (POPULATION_KEY, FOLLOWERS_KEY):
-                scale_stat(ctx.rules, maker, key, (PERCENT - creatures.chimera_escape_population_loss_pct) / PERCENT)
-        await note(ctx, f"{chimera.name} got out of control and turned on those who made it.", key="creatures.chimera_escaped", ids=[chimera.id])
+                scale_stat(ctx.rules, maker, key, (PERCENT - creatures.merged_escape_population_loss_pct) / PERCENT)
+        await note(ctx, f"{merged.name} got out of control and turned on those who made it.", key="creatures.merged_escaped", ids=[merged.id])
         count += 1
     return count
 
@@ -440,9 +442,9 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.name_registry",
     "table.nodes",
     "table.region_environment",
+    "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
-    "table.species_yields",
     "table.world_biochemistries",
     "table.world_maps",
 )
@@ -464,9 +466,9 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.incidents",
     "table.name_registry",
     "table.plant_profiles",
+    "table.species_products",
     "table.species_profiles",
     "table.species_uses",
-    "table.species_yields",
 )
 async def creature_phase(ctx: TickContext) -> None:
     for species in await _species(ctx):
@@ -476,8 +478,8 @@ async def creature_phase(ctx: TickContext) -> None:
     await species_mutations(ctx)
     await people_mutation(ctx)
     await hybridize(ctx)
-    await weave_spontaneously(ctx)
-    await chimera_escapes(ctx)
+    await merge_spontaneously(ctx)
+    await merged_escapes(ctx)
     await megafauna(ctx)
     await predator_bonds(ctx)
     await predation_pressure(ctx)
@@ -700,16 +702,16 @@ async def force_people_split(session: AsyncSession, rules: Rules, people_id: int
     return await split_changed_people(ctx, people)
 
 
-async def cross_species(session: AsyncSession, rules: Rules, first_id: int, second_id: int, weaver_id: int | None = None) -> EntityRow:
+async def cross_species(session: AsyncSession, rules: Rules, first_id: int, second_id: int, maker_id: int | None = None) -> EntityRow:
     if first_id == second_id:
-        raise ValidationFailedError("A chimera needs two different species.")
-    ctx = await manual_context(session, "chimera", rules, key=f"{first_id}:{second_id}")
+        raise ValidationFailedError("Merging needs two different species.")
+    ctx = await manual_context(session, "merged_species", rules, key=f"{first_id}:{second_id}")
     first, second = await _require_species(session, first_id), await _require_species(session, second_id)
-    maker = await session.get(EntityRow, weaver_id) if weaver_id is not None else None
-    chimera = await merge_species(ctx, first, second, maker=maker)
+    maker = await session.get(EntityRow, maker_id) if maker_id is not None else None
+    merged = await merge_species(ctx, first, second, maker=maker)
     if maker is not None:
-        await BondRepository(session).connect(BondDraft(maker.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own making"))
-    return chimera
+        await BondRepository(session).connect(BondDraft(maker.id, merged.id, BondKind.TAMED, ctx.epoch, "its own making"))
+    return merged
 
 
 async def place_megafauna_trail(session: AsyncSession, rules: Rules, species_id: int) -> EntityRow | None:
@@ -802,9 +804,9 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.name_registry",
     "table.nodes",
     "table.region_environment",
+    "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
-    "table.species_yields",
     "table.world_maps",
 )
 @writes(
@@ -817,10 +819,10 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_uses",
-    "table.species_yields",
 )
 async def speciation_phase(ctx: TickContext) -> None:
     await speciation(ctx)

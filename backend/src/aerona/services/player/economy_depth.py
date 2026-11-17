@@ -6,7 +6,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.economy import CommodityKind, ExtractionKind, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, ExtractionKind, LoanStatus, MaterialFamily, MaterialSlot, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
@@ -155,10 +155,13 @@ class PriceTarget(Command):
 class CreateCurrency(Command):
     issuer_id: int
     name: str = Field(min_length=1, max_length=NAME_MAX)
-    metal: MaterialKind = MaterialKind.SILVER
+    metal: MaterialKind | None = MaterialKind.SILVER
     purity: int = Field(default=90, ge=0, le=100)
     trust: int = Field(default=70, ge=0, le=100)
     supply: int = Field(default=0, ge=0)
+    form: MoneyForm = MoneyForm.COIN
+    backing: MoneyBacking = MoneyBacking.METAL
+    convertible: bool = True
 
 
 class CurrencyTarget(Command):
@@ -426,7 +429,17 @@ async def release_price(scope: PlayerScope, command: PriceTarget) -> Effect:
 async def create_currency(scope: PlayerScope, command: CreateCurrency) -> Effect:
     row = await control_depth.create_currency(
         await scope.context("currency_create"),
-        NewCoin(issuer_id=command.issuer_id, name=command.name, metal=command.metal, purity=command.purity, trust=command.trust, supply=command.supply),
+        NewCoin(
+            issuer_id=command.issuer_id,
+            name=command.name,
+            metal=command.metal,
+            purity=command.purity,
+            trust=command.trust,
+            supply=command.supply,
+            form=command.form,
+            backing=command.backing,
+            convertible=command.convertible,
+        ),
     )
     created = (row.item_entity_id,) if row.item_entity_id is not None else ()
     return Effect(f"{row.name} is struck.", row.item_entity_id, created_ids=created, values={"currency_id": row.id})

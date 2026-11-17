@@ -1,4 +1,9 @@
 import {
+  Milestone,
+  Tag,
+  Disc,
+  Puzzle,
+  Bot,
   VolumeX,
   Moon,
   MapPin,
@@ -63,7 +68,6 @@ import {
   Hourglass,
   Key,
   Landmark,
-  LayoutGrid,
   Leaf,
   Lightbulb,
   Link,
@@ -198,11 +202,11 @@ export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {
     tone: 'gold',
     hint: 'How the world, or a people, first came to be.',
   },
-  flood: {
-    label: 'Great flood',
+  world_disaster: {
+    label: 'World disaster',
     icon: CloudRain,
     tone: 'info',
-    hint: 'The waters rose and washed an age away.',
+    hint: 'A disaster swept an age away.',
   },
   betrayal: {
     label: 'Betrayal',
@@ -210,11 +214,11 @@ export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {
     tone: 'danger',
     hint: 'Trust given, trust broken, and the price paid.',
   },
-  lost_paradise: {
-    label: 'Lost paradise',
+  lost_golden_age: {
+    label: 'Lost golden age',
     icon: Trees,
     tone: 'success',
-    hint: 'Once there was a better place, and it was lost.',
+    hint: 'Once there was a better time, and it was lost.',
   },
   chosen_one: {
     label: 'Chosen one',
@@ -228,8 +232,8 @@ export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {
     tone: 'danger',
     hint: 'A house carries a doom from one generation to the next; it costs that house prestige.',
   },
-  return_of_the_king: {
-    label: 'Return of the king',
+  return_of_a_ruler: {
+    label: 'Return of a ruler',
     icon: Crown,
     tone: 'gold',
     hint: 'The rightful ruler will come back; a pretender who fits it gains a claim.',
@@ -240,40 +244,117 @@ export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {
     tone: 'verdigris',
     hint: 'A place the dead will not leave; settlers shun it while the tale is believed.',
   },
+  founding: {
+    label: 'Founding',
+    icon: Landmark,
+    tone: 'gold',
+    hint: 'How a people, a town or an order first came to be.',
+  },
+  exile: {
+    label: 'Exile',
+    icon: Footprints,
+    tone: 'muted',
+    hint: 'Someone is driven out and must make a life elsewhere.',
+  },
+  transformation: {
+    label: 'Transformation',
+    icon: RefreshCcw,
+    tone: 'verdigris',
+    hint: 'Someone or something becomes another thing.',
+  },
+  bargain: {
+    label: 'Bargain',
+    icon: Scale,
+    tone: 'warning',
+    hint: 'A deal is struck, and its terms are kept or broken.',
+  },
+  sacrifice: {
+    label: 'Sacrifice',
+    icon: HeartHandshake,
+    tone: 'danger',
+    hint: 'Something dear is given up for the sake of others.',
+  },
+  rivalry: {
+    label: 'Rivalry',
+    icon: Crosshair,
+    tone: 'danger',
+    hint: 'Two sides contend for the same place, prize or name.',
+  },
+  discovery: {
+    label: 'Discovery',
+    icon: Compass,
+    tone: 'info',
+    hint: 'Something unknown is found and changes what people know.',
+  },
+  deception: {
+    label: 'Deception',
+    icon: Drama,
+    tone: 'warning',
+    hint: 'A lie or a disguise turns the course of events.',
+  },
+  union: {
+    label: 'Union',
+    icon: Link,
+    tone: 'success',
+    hint: 'Two people, houses or peoples are joined.',
+  },
+  ascent: {
+    label: 'Ascent',
+    icon: Mountain,
+    tone: 'gold',
+    hint: 'Someone rises from little to great standing.',
+  },
+  fall: {
+    label: 'Fall',
+    icon: CloudLightning,
+    tone: 'muted',
+    hint: 'The great are brought low.',
+  },
 }
 
-export const TRADITION_KINDS: Record<Schemas['TraditionKind'], LoreNamed> = {
-  festival: { label: 'Festival', icon: PartyPopper, tone: 'gold' },
-  fast: { label: 'Fast', icon: UtensilsCrossed, tone: 'info' },
-  funeral_rite: { label: 'Funeral rite', icon: Flower2, tone: 'muted' },
-  initiation: { label: 'Initiation', icon: Flame, tone: 'warning' },
-  marriage_rite: {
-    label: 'Marriage rite',
-    icon: HeartHandshake,
-    tone: 'success',
-  },
+export const RITE_STAGES: Record<Schemas['RiteStage'], LoreNamed> = {
+  birth: { label: 'Birth', icon: Baby, tone: 'success' },
+  naming: { label: 'Naming', icon: Tag, tone: 'info' },
   coming_of_age: { label: 'Coming of age', icon: Sprout, tone: 'success' },
-  taboo: { label: 'Taboo', icon: Ban, tone: 'danger' },
-  offering: { label: 'Offering', icon: Gift, tone: 'gold' },
-  pilgrimage: { label: 'Pilgrimage', icon: Footprints, tone: 'verdigris' },
-  hospitality_law: {
-    label: 'Law of hospitality',
-    icon: DoorOpen,
-    tone: 'success',
-  },
-  duel_custom: { label: 'Duelling custom', icon: Swords, tone: 'danger' },
-  mourning: { label: 'Mourning', icon: CloudRain, tone: 'muted' },
-  harvest_rite: { label: 'Harvest rite', icon: Wheat, tone: 'gold' },
-  war_dance: { label: 'War dance', icon: Drum, tone: 'danger' },
-  scar_rite: { label: 'Scar rite', icon: Droplet, tone: 'danger' },
-  ancestor_feast: {
-    label: 'Feast of ancestors',
-    icon: Utensils,
-    tone: 'verdigris',
-  },
-  siesta: { label: 'Midday rest', icon: Sun, tone: 'gold' },
-  night_vigil: { label: 'Night vigil', icon: Flame, tone: 'info' },
+  union: { label: 'Union', icon: HeartHandshake, tone: 'gold' },
+  elderhood: { label: 'Elderhood', icon: Hourglass, tone: 'verdigris' },
+  death: { label: 'Death', icon: Flower2, tone: 'muted' },
 }
+
+export const TRADITION_KINDS: Record<Schemas['TraditionFunction'], LoreNamed> =
+  {
+    festival: { label: 'Festival', icon: PartyPopper, tone: 'gold' },
+    fast: { label: 'Fast', icon: UtensilsCrossed, tone: 'info' },
+    rite_of_passage: {
+      label: 'Rite of passage',
+      icon: Milestone,
+      tone: 'success',
+    },
+    taboo: { label: 'Taboo', icon: Ban, tone: 'danger' },
+    offering: { label: 'Offering', icon: Gift, tone: 'gold' },
+    pilgrimage: { label: 'Pilgrimage', icon: Footprints, tone: 'verdigris' },
+    hospitality: {
+      label: 'Hospitality',
+      icon: DoorOpen,
+      tone: 'success',
+    },
+    duel_custom: { label: 'Duelling custom', icon: Swords, tone: 'danger' },
+    mourning: { label: 'Mourning', icon: CloudRain, tone: 'muted' },
+    seasonal_rite: { label: 'Seasonal rite', icon: Wheat, tone: 'gold' },
+    martial_display: { label: 'Martial display', icon: Drum, tone: 'danger' },
+    body_marking: { label: 'Body marking', icon: Droplet, tone: 'danger' },
+    ancestral_rite: {
+      label: 'Ancestral rite',
+      icon: Utensils,
+      tone: 'verdigris',
+    },
+    rest_custom: { label: 'Custom of rest', icon: Sun, tone: 'gold' },
+    vigil: { label: 'Vigil', icon: Flame, tone: 'info' },
+    gift_custom: { label: 'Custom of gifts', icon: Gift, tone: 'success' },
+    purification: { label: 'Purification', icon: Droplets, tone: 'verdigris' },
+    commemoration: { label: 'Commemoration', icon: Landmark, tone: 'muted' },
+    competition: { label: 'Competition', icon: Sparkles, tone: 'gold' },
+  }
 
 export const TRADITION_TERMS: Record<string, LoreNamed> = {
   food: { label: 'Food', icon: Wheat, tone: 'warning' },
@@ -556,23 +637,28 @@ export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
   captured: { label: 'Was captured', icon: Flag, tone: 'danger' },
 }
 
-export const MEDIUMS: Record<Schemas['ArtMedium'], LoreNamed> = {
-  song: { label: 'Song', icon: Music, tone: 'info' },
-  epic_poem: { label: 'Epic poem', icon: ScrollText, tone: 'gold' },
-  play: { label: 'Play', icon: Theater, tone: 'verdigris' },
-  statue: { label: 'Statue', icon: PersonStanding, tone: 'muted' },
-  fresco: { label: 'Fresco', icon: Paintbrush, tone: 'info' },
-  tapestry: { label: 'Tapestry', icon: Spool, tone: 'gold' },
-  mosaic: { label: 'Mosaic', icon: LayoutGrid, tone: 'verdigris' },
-  book: { label: 'Book', icon: BookOpen, tone: 'info' },
-  dance: { label: 'Dance', icon: Footprints, tone: 'success' },
-  music: { label: 'Music', icon: Music, tone: 'info' },
-  carving: { label: 'Carving', icon: Hammer, tone: 'muted' },
-  architecture_ornament: {
-    label: 'Ornament in stone',
-    icon: Landmark,
-    tone: 'gold',
+export const MEDIUMS: Record<Schemas['ArtMode'], LoreNamed> = {
+  verbal: { label: 'Verbal art', icon: ScrollText, tone: 'gold' },
+  musical: { label: 'Music', icon: Music, tone: 'info' },
+  movement: { label: 'Movement', icon: Footprints, tone: 'success' },
+  ritual_performance: {
+    label: 'Performance',
+    icon: Theater,
+    tone: 'verdigris',
   },
+  flat_image: { label: 'Flat image', icon: Paintbrush, tone: 'info' },
+  solid_image: { label: 'Solid image', icon: PersonStanding, tone: 'muted' },
+  built: { label: 'Built form', icon: Landmark, tone: 'gold' },
+  textile_image: { label: 'Textile image', icon: Spool, tone: 'gold' },
+  worn: { label: 'Worn art', icon: Shirt, tone: 'verdigris' },
+  culinary: { label: 'Culinary art', icon: Utensils, tone: 'success' },
+  scent: { label: 'Scent art', icon: Wind, tone: 'info' },
+  light: { label: 'Light art', icon: Lightbulb, tone: 'gold' },
+  recorded: { label: 'Recorded art', icon: Disc, tone: 'info' },
+  interactive: { label: 'Interactive art', icon: Puzzle, tone: 'verdigris' },
+  landscape: { label: 'Landscape art', icon: Trees, tone: 'success' },
+  body: { label: 'Body art', icon: Hand, tone: 'warning' },
+  made_mind_art: { label: 'Made-mind art', icon: Bot, tone: 'muted' },
 }
 
 export const SPEAKER_KINDS: Record<Schemas['SpeakerKind'], LoreNamed> = {

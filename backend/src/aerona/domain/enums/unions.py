@@ -40,6 +40,7 @@ class UnionExchange(StrEnum):
     TO_ONE_FAMILY = "to_one_family"
     FROM_ONE_FAMILY = "from_one_family"
     MUTUAL = "mutual"
+    SERVICE = "service"
     NONE = "none"
 
 
@@ -63,3 +64,17 @@ class PartnerScope(StrEnum):
     CASTE = "caste"
     FAITH = "faith"
     HOUSE = "house"
+    LINE = "line"
+    MOIETY = "moiety"
+
+
+class PluralSide(StrEnum):
+    FIRST = "first"
+    SECOND = "second"
+    EITHER = "either"
+
+
+class KinMatch(StrEnum):
+    NONE = "none"
+    CROSS_COUSIN = "cross_cousin"
+    PARALLEL_COUSIN = "parallel_cousin"

@@ -1,9 +1,10 @@
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.catalog.genetics import DWELLINGS, HOUSEHOLD_ROLE_LABELS
+from aerona.catalog.genetics import HOUSEHOLD_ROLE_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, several
+from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import (
     HOUSEHOLD_FIELDS,
@@ -16,9 +17,10 @@ from aerona.db.tables.households import (
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, HouseholdForm, HouseholdRole
+from aerona.domain.enums.genetics import DwellingTenure, HouseholdForm, HouseholdRole
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.households.dwelling_kinds import dwelling_kind_row
 from aerona.engine.households.formation import found_household
 from aerona.engine.primitives.manual import manual_context
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -81,7 +83,7 @@ class MemberTarget(Command):
 
 class SetDwelling(Command):
     household_id: int
-    kind: DwellingKind | None = None
+    dwelling_kind_id: int | None = None
     quality: int | None = Field(default=None, ge=0, le=SPAN)
     rooms: int | None = Field(default=None, ge=1)
     district_id: int | None = None
@@ -107,7 +109,7 @@ class EditAggregate(Command):
     social_class: SocialClass
     households: int | None = Field(default=None, ge=0)
     mean_size: int | None = Field(default=None, ge=0)
-    dwelling_kind: DwellingKind | None = None
+    dwelling_kind_id: int | None = None
     quality: int | None = Field(default=None, ge=0, le=SPAN)
     wealth: int | None = Field(default=None, ge=0)
     hold: bool = True
@@ -243,21 +245,22 @@ async def set_dwelling(scope: PlayerScope, command: SetDwelling) -> Effect:
         district = await scope.session.get(DistrictRow, command.district_id)
         if district is None:
             raise ValidationFailedError("No such district.")
-    kind = command.kind or (row.kind if row is not None else DwellingKind.HUT)
+    if command.dwelling_kind_id is not None and await scope.session.get(DwellingKindRow, command.dwelling_kind_id) is None:
+        raise ValidationFailedError("No such kind of dwelling.")
+    kind = await dwelling_kind_row(scope.session, command.dwelling_kind_id or (row.dwelling_kind_id if row is not None else None))
     if row is None:
-        spec = DWELLINGS[kind]
         row = DwellingRow(
             household_id=home.id,
-            kind=kind,
-            quality=spec.quality,
-            rooms=spec.rooms,
+            dwelling_kind_id=kind.id,
+            quality=kind.quality,
+            rooms=kind.rooms,
             settlement_node_id=home.settlement_node_id,
             built_epoch=await scope.epoch(),
             locked=[],
         )
         scope.session.add(row)
     touched: list[str] = []
-    for name in ("kind", "quality", "rooms", "district_id", "tenure", "heating", "light", "crowding"):
+    for name in ("dwelling_kind_id", "quality", "rooms", "district_id", "tenure", "heating", "light", "crowding"):
         value = getattr(command, name)
         if value is not None:
             setattr(row, name, value)
@@ -267,7 +270,8 @@ async def set_dwelling(scope: PlayerScope, command: SetDwelling) -> Effect:
         touched.append("district_id")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"{home.name} lives in {an(DWELLINGS[row.kind].label.lower())} of quality {row.quality} with {several(row.rooms, 'room', 'rooms')}.")
+    lived = await dwelling_kind_row(scope.session, row.dwelling_kind_id)
+    return Effect(f"{home.name} lives in {an(lived.name)} of quality {row.quality} with {several(row.rooms, 'room', 'rooms')}.")
 
 
 @player_action("dwelling:remove", ActionKind.EDIT_RECORD)
@@ -318,7 +322,9 @@ async def edit_aggregate(scope: PlayerScope, command: EditAggregate) -> Effect:
     if row is None:
         row = HouseholdAggregateRow(community_node_id=community.id, social_class=command.social_class, epoch=await scope.epoch(), locked=[])
         scope.session.add(row)
-    touched = [name for name in ("households", "mean_size", "dwelling_kind", "quality", "wealth") if getattr(command, name) is not None]
+    touched = [name for name in ("households", "mean_size", "dwelling_kind_id", "quality", "wealth") if getattr(command, name) is not None]
+    if command.dwelling_kind_id is not None and await scope.session.get(DwellingKindRow, command.dwelling_kind_id) is None:
+        raise ValidationFailedError("No such kind of dwelling.")
     if not touched:
         raise ValidationFailedError("Set at least one value.")
     for name in touched:

@@ -8,6 +8,18 @@ from aerona.rules.registry import Rules
 PERCENT = 100
 
 
+def unchanged(_: Rules) -> int:
+    return PERCENT
+
+
+def nothing(_: Rules) -> int:
+    return 0
+
+
+def whole(_: Rules) -> int:
+    return 1
+
+
 @dataclass(frozen=True)
 class ClimateSpec:
     era: ClimateEra
@@ -16,6 +28,11 @@ class ClimateSpec:
     temperature_shift: Callable[[Rules], int]
     rain_shift: Callable[[Rules], int]
     weight: Callable[[Rules], int]
+    plague_pct: Callable[[Rules], int] = unchanged
+    population_loss_pct: Callable[[Rules], int] = nothing
+    highland_cooling: Callable[[Rules], int] = nothing
+    coast_rain_divisor: Callable[[Rules], int] = whole
+    coast_rain_bonus: Callable[[Rules], int] = nothing
 
 
 @dataclass(frozen=True)
@@ -48,6 +65,7 @@ CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
                 lambda rules: rules.climate_effects.drought_century_temperature,
                 lambda rules: rules.climate_effects.drought_century_rain,
                 lambda rules: rules.climate_effects.drought_century_weight,
+                coast_rain_divisor=lambda rules: rules.climate_effects.coast_drought_divisor,
             ),
             ClimateSpec(
                 ClimateEra.RAIN,
@@ -56,6 +74,7 @@ CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
                 lambda rules: rules.climate_effects.rain_age_temperature,
                 lambda rules: rules.climate_effects.rain_age_rain,
                 lambda rules: rules.climate_effects.rain_age_weight,
+                coast_rain_bonus=lambda rules: rules.climate_effects.coast_rain_bonus,
             ),
             ClimateSpec(
                 ClimateEra.ICE_AGE,
@@ -64,6 +83,8 @@ CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
                 lambda rules: rules.climate_effects.ice_age_temperature,
                 lambda rules: rules.climate_effects.ice_age_rain,
                 lambda rules: rules.climate_effects.ice_age_weight,
+                population_loss_pct=lambda rules: rules.climate_effects.ice_age_population_loss,
+                highland_cooling=lambda rules: rules.climate_effects.mountain_ice_loss,
             ),
             ClimateSpec(
                 ClimateEra.SCORCHING,
@@ -72,6 +93,7 @@ CLIMATES: Mapping[ClimateEra, ClimateSpec] = total(
                 lambda rules: rules.climate_effects.scorching_age_temperature,
                 lambda rules: rules.climate_effects.scorching_age_rain,
                 lambda rules: rules.climate_effects.scorching_age_weight,
+                plague_pct=lambda rules: rules.climate_effects.scorching_age_plague_freq,
             ),
             ClimateSpec(
                 ClimateEra.HOTHOUSE,

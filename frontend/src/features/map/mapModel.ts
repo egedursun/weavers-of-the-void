@@ -44,6 +44,10 @@ export const LAYER_MODES = [
   'nutrients',
   'networks',
   'hidden',
+  'cuisines',
+  'dress',
+  'organisations',
+  'money',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -80,6 +84,10 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   nutrients: 'Soil nutrients',
   networks: 'Networks',
   hidden: 'Hidden places',
+  cuisines: 'Cuisines',
+  dress: 'Dress',
+  organisations: 'Organisations',
+  money: 'Forms of money',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -109,6 +117,10 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   nutrients: 'map-layer-nutrients',
   networks: 'map-layer-networks',
   hidden: 'map-layer-hidden',
+  cuisines: 'map-layer-cuisines',
+  dress: 'map-layer-dress',
+  organisations: 'map-layer-organisations',
+  money: 'map-layer-money',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

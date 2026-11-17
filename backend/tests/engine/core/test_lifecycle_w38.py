@@ -222,7 +222,7 @@ async def test_a_swollen_giant_swallows_its_nearest_world(session: AsyncSession,
     tally = EndingTally()
     await keep_world_ends(await at(session, tuned_rules().world_ends.giant_epochs), tally)
     row = await session.get(WorldEndRow, world.world.id)
-    assert row is not None and row.state is WorldEnd.SWALLOWED and row.cause is WorldEndCause.STAR_GIANT and tally.ended == 1
+    assert row is not None and row.state is WorldEnd.CONSUMED and row.cause is WorldEndCause.STAR_GIANT and tally.ended == 1
 
 
 async def test_a_world_torn_by_many_rifts_sinks_into_the_void(session: AsyncSession, world: CoreWorld) -> None:

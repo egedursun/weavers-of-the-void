@@ -68,7 +68,11 @@ export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
   land_title: { label: 'Title to land', icon: MapPinned, tone: 'gold' },
   debt: { label: 'Debt', icon: Coins, tone: 'warning' },
   sale: { label: 'Sale', icon: HandCoins, tone: 'info' },
-  dowry: { label: 'Dowry', icon: Heart, tone: 'verdigris' },
+  union_portion: {
+    label: 'Portion given at a union',
+    icon: Heart,
+    tone: 'verdigris',
+  },
   indenture: { label: 'Indenture', icon: Hammer, tone: 'muted' },
   patent: { label: 'Patent', icon: FileBadge, tone: 'gold' },
   pattern: { label: 'Pattern', icon: Shapes, tone: 'gold' },

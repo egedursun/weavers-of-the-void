@@ -3,6 +3,10 @@ from enum import StrEnum
 
 class LocusGroup(StrEnum):
     LOOKS = "looks"
+    BODY = "body"
+    SENSE = "sense"
+    TEMPERAMENT = "temperament"
+    APTITUDE = "aptitude"
     PREDISPOSITION = "predisposition"
     GIFT = "gift"
 
@@ -16,6 +20,35 @@ class Locus(StrEnum):
     EYE_COLOUR = "eye_colour"
     FACE = "face"
     VOICE = "voice"
+    PROPORTIONS = "proportions"
+    MARKINGS = "markings"
+    MUSCLE = "muscle"
+    STAMINA = "stamina"
+    AGILITY = "agility"
+    METABOLISM = "metabolism"
+    COLD_TOLERANCE = "cold_tolerance"
+    HEAT_TOLERANCE = "heat_tolerance"
+    LUNG_CAPACITY = "lung_capacity"
+    BONE_DENSITY = "bone_density"
+    WOUND_HEALING = "wound_healing"
+    AGEING_PACE = "ageing_pace"
+    PAIN_SENSE = "pain_sense"
+    SIGHT = "sight"
+    HEARING = "hearing"
+    SMELL = "smell"
+    TASTE = "taste"
+    NIGHT_VISION = "night_vision"
+    EXCITABILITY = "excitability"
+    SOCIABILITY = "sociability"
+    RISK_APPETITE = "risk_appetite"
+    ATTENTION = "attention"
+    STRESS_RESPONSE = "stress_response"
+    MEMORY = "memory"
+    SPATIAL_SENSE = "spatial_sense"
+    LANGUAGE_EASE = "language_ease"
+    NUMBER_SENSE = "number_sense"
+    MUSICAL_EAR = "musical_ear"
+    COORDINATION = "coordination"
     LONGEVITY = "longevity"
     FERTILITY = "fertility"
     DISEASE_RESISTANCE = "disease_resistance"
@@ -40,6 +73,17 @@ class Locus(StrEnum):
     GIFT_VOID = "gift_void"
 
 
+class GeneticEffect(StrEnum):
+    DISEASE = "disease"
+    FERTILITY = "fertility"
+    MADNESS = "madness"
+    LIFESPAN = "lifespan"
+    HEALING = "healing"
+    STRESS = "stress"
+    COLD = "cold"
+    HEAT = "heat"
+
+
 class GiftStance(StrEnum):
     HONOURED = "honoured"
     FEARED = "feared"
@@ -56,19 +100,6 @@ class HouseholdRole(StrEnum):
     SERVANT = "servant"
     WARD = "ward"
     LODGER = "lodger"
-
-
-class DwellingKind(StrEnum):
-    HUT = "hut"
-    LONGHOUSE = "longhouse"
-    TOWNHOUSE = "townhouse"
-    MANOR = "manor"
-    PALACE = "palace"
-    TENT = "tent"
-    CAVE = "cave"
-    SHIP = "ship"
-    TOWER = "tower"
-    APARTMENT = "apartment"
 
 
 class HouseholdForm(StrEnum):

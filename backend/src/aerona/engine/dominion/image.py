@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS, MANIFESTATION_ORDER
+from aerona.catalog.kinds.belief_stances import BELIEF_STANCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
@@ -14,7 +15,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.dominion import BeliefStance, Manifestation, PerceivedAlignment
+from aerona.domain.enums.dominion import Manifestation, PerceivedAlignment
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import Facet, PressureKind
 from aerona.engine.context import TickContext
@@ -110,16 +111,16 @@ async def pull_facets(ctx: TickContext, god: God, row: GodImageRow, pull: int) -
 async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally) -> None:
     table = ctx.rules.god_images
     pull = row.pull
-    if isinstance(god, SonRow) and row.stance is BeliefStance.RESIST and god.essence >= table.resist_cost:
+    stance = BELIEF_STANCES[row.stance]
+    if isinstance(god, SonRow) and stance.resists and god.essence >= table.resist_cost:
         god.essence -= table.resist_cost
         tally.resisted += 1
         return
-    if isinstance(god, SonRow) and row.stance is BeliefStance.EMBRACE:
-        pull = clamp_int(pull * table.embrace_pull_pct / PERCENT, 0, PERCENT)
-        god.fame = god.fame + table.embrace_fame
+    if isinstance(god, SonRow) and stance.pull_rule is not None:
+        pull = clamp_int(pull * int(getattr(table, stance.pull_rule)) / PERCENT, 0, PERCENT)
+    if isinstance(god, SonRow) and stance.fame_rule is not None:
+        god.fame = god.fame + int(getattr(table, stance.fame_rule))
         tally.embraced += 1
-    if isinstance(god, SonRow) and row.stance is BeliefStance.YIELD:
-        pull = clamp_int(pull * table.yield_pull_pct / PERCENT, 0, PERCENT)
     if pull <= 0:
         return
     tally.pulled += 1

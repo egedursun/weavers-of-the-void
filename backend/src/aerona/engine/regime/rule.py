@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.kinds.selectorates import SELECTORATE_BASES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
@@ -49,7 +50,7 @@ SELECTORATES = total(
         GovernmentKind.HIVE_COUNCIL: SelectorateKind.COUNCIL,
         GovernmentKind.REPUBLIC: SelectorateKind.CITIZENS,
         GovernmentKind.THEOCRACY: SelectorateKind.PRIESTS,
-        GovernmentKind.GOD_KINGDOM: SelectorateKind.PRIESTS,
+        GovernmentKind.GOD_REALM: SelectorateKind.PRIESTS,
         GovernmentKind.OCCUPATION: SelectorateKind.ARMY,
         GovernmentKind.COLONIAL_ADMINISTRATION: SelectorateKind.ARMY,
         GovernmentKind.COMMUNE: SelectorateKind.PARTY,
@@ -58,20 +59,6 @@ SELECTORATES = total(
         GovernmentKind.JUNTA: SelectorateKind.ARMY,
         GovernmentKind.MACHINE_RULE: SelectorateKind.ALGORITHM,
         GovernmentKind.TECHNOCRACY: SelectorateKind.COUNCIL,
-    },
-)
-SELECTING_CLASSES = total(
-    SelectorateKind,
-    {
-        SelectorateKind.TRIBE: (),
-        SelectorateKind.NOBLES: (SocialClass.NOBLE,),
-        SelectorateKind.COUNCIL: (SocialClass.NOBLE, SocialClass.MERCHANT),
-        SelectorateKind.ARMY: (SocialClass.WARRIOR,),
-        SelectorateKind.PRIESTS: (SocialClass.PRIEST,),
-        SelectorateKind.CITIZENS: (),
-        SelectorateKind.ALGORITHM: (SocialClass.PROFESSIONAL, SocialClass.OFFICIAL),
-        SelectorateKind.PARTY: (SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.WORKER),
-        SelectorateKind.SHAREHOLDERS: (SocialClass.MERCHANT, SocialClass.PROFESSIONAL),
     },
 )
 COALITION_RULES = total(
@@ -128,8 +115,8 @@ async def regime_row(ctx: TickContext, realm: Realm, tally: RegimeTally | None =
 
 
 async def selectorate_size(ctx: TickContext, book: RealmBook, realm: Realm, kind: SelectorateKind) -> int:
-    found = await choosers(ctx, book, realm, kind, SELECTING_CLASSES[kind])
-    if found <= 0 and SELECTING_CLASSES[kind]:
+    found = await choosers(ctx, book, realm, kind, SELECTORATE_BASES[kind].classes)
+    if found <= 0 and SELECTORATE_BASES[kind].classes:
         found = await choosers(ctx, book, realm, kind, ELITES)
     return round_half_up(found)
 
@@ -137,17 +124,16 @@ async def selectorate_size(ctx: TickContext, book: RealmBook, realm: Realm, kind
 async def choosers(ctx: TickContext, book: RealmBook, realm: Realm, kind: SelectorateKind, classes: tuple[SocialClass, ...]) -> float:
     table = ctx.rules.selectorate
     found = 0.0
+    basis = SELECTORATE_BASES[kind]
+    portion = int(getattr(table, basis.share_rule)) / PERCENT if basis.share_rule is not None else 1
     for member in book.members(realm):
         people = stat_or(member, "population", 0)
-        if kind is SelectorateKind.TRIBE:
-            found += people * table.adult_pct / PERCENT
-            continue
-        if kind is SelectorateKind.CITIZENS:
-            found += people * table.citizen_pct / PERCENT
+        if not basis.by_class:
+            found += people * portion
             continue
         shares = await class_shares(ctx.session, ctx.rules, member.id)
         share = sum(shares.get(social_class, 0.0) for social_class in classes) / PERCENT
-        found += people * share * (table.council_pct / PERCENT if kind is SelectorateKind.COUNCIL else 1)
+        found += people * share * portion
     return found
 
 
@@ -183,7 +169,7 @@ async def members_of(ctx: TickContext, polity_id: int) -> list[CoalitionMemberRo
 
 async def keep_members(ctx: TickContext, realm: Realm, row: RegimeRow) -> list[CoalitionMemberRow]:
     table = ctx.rules.selectorate
-    classes = SELECTING_CLASSES[row.selectorate]
+    classes = SELECTORATE_BASES[row.selectorate].classes
     subjects_of = await subjects(ctx, realm)
     if classes and not any(mortal.social_class in classes for mortal in subjects_of):
         classes = ELITES

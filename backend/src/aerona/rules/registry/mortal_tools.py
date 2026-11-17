@@ -83,9 +83,7 @@ class MortalToolsRules:
     mercenary_cost: int = rule(
         10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "raise_army: wealth/prosperity cost of a mercenary army for a community with no population or followers"
     )
-    default_stat: int = rule(
-        40, 0, 100, RuleGroup.MORTAL_AGENTS, "Mortal tools: stat assumed for a party with no recorded stat (craft, intellect, strength, defense\u2026)"
-    )
+    default_stat: int = rule(40, 0, 100, RuleGroup.MORTAL_AGENTS, "Mortal tools: stat assumed for a party with no recorded value of the stat in question")
     agent_chosen_bonus: int = rule(4, 0, 1000, RuleGroup.MORTAL_AGENTS, "Agent selection: score bonus of a chosen mortal")
     agent_wait_cap: int = rule(30, 0, 1000, RuleGroup.MORTAL_AGENTS, "Agent selection: maximum score from not having acted for a long time")
     agent_random_die: int = rule(10, 1, 1000, RuleGroup.MORTAL_AGENTS, "Agent selection: faces of the random score die")

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.peoples import STYLE_AXES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import AccountStanceRow, FoundingMythRow
@@ -15,7 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import AccountStance
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LegacyKind
-from aerona.domain.enums.demography import Aesthetic, FuneralCustom, MartialStyle
+from aerona.domain.enums.demography import FuneralCustom, MartialStyle
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.engine.context import TickContext
@@ -26,8 +27,26 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds, connect
 
-CULTURE_FIELDS = {LegacyKind.MARTIAL_STYLE: "martial_style", LegacyKind.AESTHETIC: "aesthetic", LegacyKind.FUNERAL_RITE: "funeral_rite"}
-CULTURE_ENUMS = {LegacyKind.MARTIAL_STYLE: MartialStyle, LegacyKind.AESTHETIC: Aesthetic, LegacyKind.FUNERAL_RITE: FuneralCustom}
+CULTURE_FIELDS = {LegacyKind.MARTIAL_STYLE: "martial_style", LegacyKind.FUNERAL_RITE: "funeral_rite"}
+CULTURE_ENUMS = {LegacyKind.MARTIAL_STYLE: MartialStyle, LegacyKind.FUNERAL_RITE: FuneralCustom}
+STYLE_SEPARATOR = ","
+
+
+def style_key(culture: PeopleCultureRow) -> str:
+    return STYLE_SEPARATOR.join(str(getattr(culture, axis)) for axis in STYLE_AXES)
+
+
+def style_values(key: str) -> list[int]:
+    values = [int(value) for value in key.split(STYLE_SEPARATOR)]
+    if len(values) != len(STYLE_AXES) or any(not 0 <= value <= PERCENT for value in values):
+        raise ValueError(key)
+    return values
+
+
+def keep_style(culture: PeopleCultureRow, key: str) -> None:
+    for axis, value in zip(STYLE_AXES, style_values(key), strict=True):
+        if axis not in culture.locked:
+            setattr(culture, axis, value)
 
 
 @dataclass
@@ -67,6 +86,9 @@ async def legacy_key(ctx: TickContext, kind: LegacyKind, people: EntityRow, pred
     if kind in CULTURE_FIELDS:
         culture = await ctx.session.get(PeopleCultureRow, predecessor.id)
         return str(getattr(culture, CULTURE_FIELDS[kind]).value) if culture is not None else None
+    if kind is LegacyKind.AESTHETIC:
+        culture = await ctx.session.get(PeopleCultureRow, predecessor.id)
+        return style_key(culture) if culture is not None else None
     if kind is LegacyKind.BELIEF:
         patron = await living_patron(ctx.session, predecessor)
         return str(patron.id) if patron is not None else None
@@ -95,6 +117,12 @@ async def apply_legacy(ctx: TickContext, kind: LegacyKind, people: EntityRow, pr
         field = CULTURE_FIELDS[kind]
         if culture is not None and field not in culture.locked:
             setattr(culture, field, custom)
+        return
+    if kind is LegacyKind.AESTHETIC:
+        style_values(key)
+        culture = await ctx.session.get(PeopleCultureRow, people.id)
+        if culture is not None:
+            keep_style(culture, key)
         return
     if kind is LegacyKind.BELIEF:
         god = await divine_of(ctx.session, int(key))

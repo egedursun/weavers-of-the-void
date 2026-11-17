@@ -103,8 +103,8 @@ export const TRANSFORM_KINDS: Record<Schema['TransformKind'], Named> = {
     icon: Zap,
     tone: 'warning',
   },
-  god_corpse: {
-    label: 'A god’s corpse becomes a place',
+  dead_god: {
+    label: 'The body of a dead god becomes a place',
     icon: Skull,
     tone: 'danger',
   },

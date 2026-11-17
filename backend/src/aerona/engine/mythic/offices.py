@@ -2,14 +2,15 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.mythic import OFFICE_DOMAINS, OFFICE_FORMS
 from aerona.constants.units import PERCENT
+from aerona.db.kind_concepts.nature import DUTY_DOMAINS, DUTY_FORMS
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import DomainActivityRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mythic import CosmicOfficeRow
 from aerona.db.tables.routes import RouteRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm
@@ -18,8 +19,10 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import AfterlifeState
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mythic import CosmicOffice, OfficeChoice
+from aerona.domain.enums.nature_kinds import OfficeDuty
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.kinds.nature import office_duty
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
@@ -58,7 +61,8 @@ async def office_power(ctx: TickContext, god_id: int | None, form: SpellForm) ->
     table = ctx.rules.cosmic_offices
     factor = 1.0
     for row in await ctx.session.scalars(select(CosmicOfficeRow)):
-        if form not in OFFICE_FORMS[row.office]:
+        duty, _ = await office_duty(ctx.session, row)
+        if form not in DUTY_FORMS[duty]:
             continue
         factor *= max(0.0, 1 - row.neglect * table.neglect_effect_pct / PERCENT / PERCENT / 2)
         if god_id is not None and row.holder_node_id == god_id:
@@ -78,27 +82,53 @@ async def give_essence(ctx: TickContext, god_id: int, amount: int) -> int:
     return 0
 
 
-async def income_of(ctx: TickContext, office: CosmicOffice) -> int:
+async def income_of(ctx: TickContext, row: CosmicOfficeRow) -> int:
+    duty, share = await office_duty(ctx.session, row)
     total = await ctx.session.scalar(
         select(func.coalesce(func.sum(DomainActivityRow.essence), 0)).where(
-            DomainActivityRow.epoch == ctx.epoch, DomainActivityRow.domain.in_(list(OFFICE_DOMAINS[office]))
+            DomainActivityRow.epoch == ctx.epoch, DomainActivityRow.domain.in_(list(DUTY_DOMAINS[duty]))
         )
     )
-    return round_half_up(int(total or 0) * ctx.rules.cosmic_offices.income_pct / PERCENT)
+    return round_half_up(int(total or 0) * ctx.rules.cosmic_offices.income_pct / PERCENT * share / PERCENT)
+
+
+DUTY_TOWNS = frozenset(
+    {OfficeDuty.THE_SKY, OfficeDuty.OATHS, OfficeDuty.MESSAGES, OfficeDuty.JUDGEMENT, OfficeDuty.MEMORY, OfficeDuty.MAKING, OfficeDuty.HEALING}
+)
+UNREST_DUTIES = frozenset({OfficeDuty.OATHS, OfficeDuty.JUDGEMENT})
+PIETY_DUTIES = frozenset({OfficeDuty.THE_SKY, OfficeDuty.MESSAGES, OfficeDuty.MEMORY})
+
+
+async def neglect_towns(ctx: TickContext, duty: OfficeDuty, weight: float) -> None:
+    table = ctx.rules.office_duties
+    for community in await canon(ctx.session, [EntityType.SETTLEMENT]):
+        if held(community.id):
+            continue
+        if duty in UNREST_DUTIES:
+            town = await ctx.session.get(SettlementProfileRow, community.id)
+            if town is not None and "unrest" not in town.locked:
+                town.unrest = clamp_int(town.unrest + round_half_up(table.unrest * weight), 0, PERCENT)
+        elif duty in PIETY_DUTIES:
+            shift_stat(community, "piety", -round_half_up(table.piety_loss * weight), 0, high=PERCENT)
+        else:
+            shift_stat(community, "prosperity", -round_half_up(table.prosperity_loss * weight), 0, high=PERCENT)
 
 
 async def neglected(ctx: TickContext, row: CosmicOfficeRow) -> None:
     table = ctx.rules.cosmic_offices
     weight = row.neglect / PERCENT * table.neglect_effect_pct / PERCENT
-    if row.office is CosmicOffice.DEAD:
+    duty, _ = await office_duty(ctx.session, row)
+    if duty in DUTY_TOWNS:
+        await neglect_towns(ctx, duty, weight)
+    elif duty is OfficeDuty.THE_DEAD:
         wandering = set(await ctx.session.scalars(select(SpiritProfileRow.spirit_entity_id).where(SpiritProfileRow.state == AfterlifeState.WANDERING)))
         for spirit in await canon(ctx.session, [EntityType.SPIRIT]):
             if spirit.id in wandering and not held(spirit.id) and stat(spirit, "unrest") is not None:
                 shift_stat(spirit, "unrest", round_half_up(table.spirit_unrest * weight), 0, high=PERCENT)
-    elif row.office is CosmicOffice.GATES:
+    elif duty is OfficeDuty.THRESHOLDS:
         for route in await ctx.session.scalars(select(RouteRow)):
             route.danger = clamp_int(route.danger + round_half_up(table.route_danger * weight), 0, PERCENT)
-    elif row.office is CosmicOffice.HUNT:
+    elif duty is OfficeDuty.THE_HUNT:
         for beast in await canon(ctx.session, [EntityType.BEAST]):
             if not held(beast.id) and stat(beast, "strength") is not None:
                 shift_stat(beast, "strength", round_half_up(table.beast_strength * weight), 0, high=PERCENT)
@@ -114,7 +144,7 @@ async def tend_offices(ctx: TickContext, tally: OfficeTally) -> None:
                 row.duty = clamp_int(row.duty + table.duty_gain, 0, PERCENT)
             if "neglect" not in row.locked:
                 row.neglect = clamp_int(row.neglect - table.neglect_gain, 0, PERCENT)
-            tally.income += await give_essence(ctx, row.holder_node_id, await income_of(ctx, row.office))
+            tally.income += await give_essence(ctx, row.holder_node_id, await income_of(ctx, row))
             continue
         tally.neglected += 1
         if "neglect" not in row.locked:

@@ -312,6 +312,7 @@ class DreamLogView(ApiModel):
     partner: NodeRef | None
     world: NodeRef | None
     reading: DreamReading
+    reading_name: str | None
     reader: NodeRef | None
     reading_true: bool | None
     recurring: bool

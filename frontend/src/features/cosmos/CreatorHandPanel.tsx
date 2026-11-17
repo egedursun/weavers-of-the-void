@@ -135,8 +135,8 @@ export function CreatorHandPanel({
         {isHome
           ? 'The first world cannot be buried in oblivion: it is the home the pantheon and the sons return to.'
           : forgotten
-            ? 'This world is already in oblivion; remembering it lifts the mist, its routes stay closed until stitched.'
-            : 'Oblivion wraps the world in mist and closes all its routes.'}
+            ? 'This world is already in oblivion; remembering it brings it back, its routes stay closed until reopened.'
+            : 'Oblivion hides the world and closes all its routes.'}
       </Muted>
       {!forgotten && (
         <div className='flex min-w-0 flex-col gap-2'>

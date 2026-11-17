@@ -10,6 +10,7 @@ from aerona.engine.genetics.genome import genome_of
 from aerona.engine.genetics.life import found_genome, refresh_genome
 from aerona.engine.genetics.lineage import examine_children, seed_looks, stance_effects, tend_resemblance
 from aerona.engine.genetics.pools import members_by_people, seed_pool, tend_pool
+from aerona.engine.genetics.widen import widen_loci
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.phase import Phase
@@ -37,13 +38,15 @@ async def ensure_genome(ctx: TickContext, mortal: EntityRow) -> bool:
     "mortal.willpower",
     "mortal.wisdom",
     "table.allele_pools",
+    "table.applied_fixups",
     "table.bonds",
     "table.entity_flags",
     "table.genomes",
     "table.people_biology",
     "table.preferences",
+    "table.sense_profiles",
 )
-@writes("table.allele_pools", "table.genomes", "table.preferences")
+@writes("table.allele_pools", "table.applied_fixups", "table.genomes", "table.preferences")
 async def genetics_survey(ctx: TickContext) -> None:
     for people in await canon(ctx, EntityType.PEOPLE):
         if held(people.id):
@@ -56,6 +59,9 @@ async def genetics_survey(ctx: TickContext) -> None:
     for mortal in await canon(ctx, EntityType.MORTAL):
         if await ensure_genome(ctx, mortal):
             ctx.count("genomes_founded")
+    pools, genomes = await widen_loci(ctx)
+    ctx.count("pools_widened", pools)
+    ctx.count("genomes_widened", genomes)
 
 
 @reads(

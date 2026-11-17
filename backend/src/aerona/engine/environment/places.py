@@ -89,7 +89,7 @@ class KindClues:
 
 def typed_kind(place: EntityRow, ground: PlaceEnvironmentRow | None, region: RegionEnvironmentRow | None, clues: KindClues) -> PlaceKind:
     signs = (
-        (place.engine_kind is EngineKind.GOD_CORPSE, PlaceKind.GOD_CORPSE),
+        (place.engine_kind is EngineKind.DEAD_GOD, PlaceKind.DEAD_GOD_SITE),
         (place.id in clues.lairs, PlaceKind.LAIR),
         (place.id in clues.ruins, PlaceKind.RUIN),
         (ground is not None and ground.nexus, PlaceKind.NEXUS),

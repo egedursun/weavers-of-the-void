@@ -8,11 +8,13 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ResidenceRule
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.mortal import MarriageEnd, MarriageKind, MortalSex
+from aerona.domain.enums.mortal import MarriageEnd
 from aerona.domain.enums.polity import TreatyKind
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.collective.book import realm_of_town
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.lineage import kinship_of, line_of, sex_value
+from aerona.engine.cycles.lineage import kinship_of, line_of, sex_value, union_of
+from aerona.engine.cycles.sides import first_sex, second_sex
 from aerona.engine.cycles.standing import raise_standing, regard
 from aerona.engine.demography.kinship import may_wed
 from aerona.engine.mortal.kin import parents_of, siblings_of
@@ -21,14 +23,14 @@ from aerona.engine.notes import note
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.unions.customs import sides, union_of
+from aerona.engine.unions.customs import sides
 
 
 @dataclass
 class KinshipTally:
     moved: int = 0
-    levirate: int = 0
-    sororate: int = 0
+    sibling_union_first: int = 0
+    sibling_union_second: int = 0
     alliances: int = 0
     pacts: int = 0
 
@@ -39,21 +41,21 @@ def age_of(mortal: EntityRow) -> int:
 
 async def giver_and_taker(ctx: TickContext, first: EntityRow, second: EntityRow, system: KinshipSystemRow) -> tuple[EntityRow, EntityRow]:
     sexes = (sex_value(first), sex_value(second))
-    if system.residence in {ResidenceRule.PATRILOCAL, ResidenceRule.AVUNCULOCAL} and MortalSex.MALE.value in sexes and sexes[0] != sexes[1]:
-        return (second, first) if sexes[0] == MortalSex.MALE.value else (first, second)
-    if system.residence is ResidenceRule.MATRILOCAL and MortalSex.FEMALE.value in sexes and sexes[0] != sexes[1]:
-        return (second, first) if sexes[0] == MortalSex.FEMALE.value else (first, second)
+    if system.residence in {ResidenceRule.WITH_FIRST_FAMILY, ResidenceRule.WITH_KIN_OF_THE_FIRST_LINE} and first_sex(system) in sexes and sexes[0] != sexes[1]:
+        return (second, first) if sexes[0] == first_sex(system) else (first, second)
+    if system.residence is ResidenceRule.WITH_SECOND_FAMILY and second_sex(system) in sexes and sexes[0] != sexes[1]:
+        return (second, first) if sexes[0] == second_sex(system) else (first, second)
     return (first, second) if (age_of(first), -first.id) <= (age_of(second), -second.id) else (second, first)
 
 
-async def mothers_brother(ctx: TickContext, mortal: EntityRow) -> EntityRow | None:
+async def first_line_kin(ctx: TickContext, mortal: EntityRow, system: KinshipSystemRow) -> EntityRow | None:
     for parent_id in await parents_of(ctx.session, mortal.id):
         parent = await ctx.session.get(EntityRow, parent_id)
-        if sex_value(parent) != MortalSex.FEMALE.value:
+        if sex_value(parent) != second_sex(system):
             continue
         for sibling_id in await siblings_of(ctx.session, parent_id):
             sibling = await living_entity(ctx.session, sibling_id)
-            if sibling is not None and sex_value(sibling) == MortalSex.MALE.value:
+            if sibling is not None and sex_value(sibling) == first_sex(system):
                 return sibling
     return None
 
@@ -74,13 +76,13 @@ async def reside(ctx: TickContext, marriage: MarriageRow, tally: KinshipTally) -
             tally.moved += 1
         return
     system = await kinship_of(ctx.session, first)
-    if system is None or system.residence is ResidenceRule.NEOLOCAL:
+    if system is None or system.residence is ResidenceRule.NEW_HOUSEHOLD:
         return
     leaving, staying = await giver_and_taker(ctx, first, second, system)
     home = staying.location_id
-    if system.residence is ResidenceRule.AVUNCULOCAL:
-        uncle = await mothers_brother(ctx, staying)
-        home = uncle.location_id if uncle is not None and uncle.location_id is not None else home
+    if system.residence is ResidenceRule.WITH_KIN_OF_THE_FIRST_LINE:
+        kin = await first_line_kin(ctx, staying, system)
+        home = kin.location_id if kin is not None and kin.location_id is not None else home
         if staying.location_id != home:
             staying.location_id = home
             tally.moved += 1
@@ -112,22 +114,22 @@ async def remarry(ctx: TickContext, marriage: MarriageRow, tally: KinshipTally) 
     system = await kinship_of(ctx.session, survivor)
     if system is None or dead is None:
         return
-    levirate = system.levirate and sex_value(dead) != MortalSex.FEMALE.value
-    sororate = system.sororate and sex_value(dead) != MortalSex.MALE.value
-    if not levirate and not sororate:
+    sibling_union_first = system.sibling_union_first and sex_value(dead) != second_sex(system)
+    sibling_union_second = system.sibling_union_second and sex_value(dead) != first_sex(system)
+    if not sibling_union_first and not sibling_union_second:
         return
     spouse = await next_spouse(ctx, survivor, dead_id)
     if spouse is None:
         return
-    custom = "levirate" if levirate else "sororate"
-    await marry(ctx.session, survivor, spouse, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description=custom)
-    if levirate:
-        tally.levirate += 1
+    custom = "sibling_union_first" if sibling_union_first else "sibling_union_second"
+    await marry(ctx.session, survivor, spouse, ctx.epoch, purpose=UnionPurpose.KINSHIP, description=custom)
+    if sibling_union_first:
+        tally.sibling_union_first += 1
     else:
-        tally.sororate += 1
+        tally.sibling_union_second += 1
     await note(
         ctx,
-        f"By the custom of {custom}, {survivor.name} wed {spouse.name}, kin of the departed {dead.name}.",
+        f"By the custom of their people, {survivor.name} wed {spouse.name}, kin of the departed {dead.name}.",
         key=f"kinship.{custom}",
         ids=[survivor.id, spouse.id, dead.id],
     )

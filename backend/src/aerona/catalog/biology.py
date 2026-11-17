@@ -4,7 +4,7 @@ from types import MappingProxyType
 
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.demography import FolkDiet, NaturalTrait
+from aerona.domain.enums.demography import NaturalTrait
 from aerona.domain.enums.ecology import Biochemistry, Diet, Sociality, TissueMaterial
 from aerona.domain.enums.folkways import DecisionBias
 
@@ -139,6 +139,6 @@ TRAIT_VARIANTS: MappingProxyType[NaturalTrait, BiologyVariant] = MappingProxyTyp
         NaturalTrait.HIVE_MINDED: V.HIVE,
     }
 )
-FOLK_DIET_VARIANTS: MappingProxyType[FolkDiet, BiologyVariant] = MappingProxyType({FolkDiet.PHOTOTROPH: V.PLANT_LIKE})
+FOLK_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType({Diet.PHOTOSYNTHETIC: V.PLANT_LIKE})
 SPECIES_DIET_VARIANTS: MappingProxyType[Diet, BiologyVariant] = MappingProxyType({Diet.PHOTOSYNTHETIC: V.PLANT_LIKE})
 SOCIALITY_VARIANTS: MappingProxyType[Sociality, BiologyVariant] = MappingProxyType({Sociality.HIVE: V.HIVE})

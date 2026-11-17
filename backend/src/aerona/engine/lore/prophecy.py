@@ -188,13 +188,13 @@ async def met(ctx: TickContext, predicate: ProphecyPredicate, args: Args, since:
 
 
 RESONANT = {
-    P.RULER_OF: frozenset({LegendArchetype.CHOSEN_ONE, LegendArchetype.RETURN_OF_THE_KING}),
-    P.FALLS: frozenset({LegendArchetype.BETRAYAL, LegendArchetype.LOST_PARADISE}),
+    P.RULER_OF: frozenset({LegendArchetype.CHOSEN_ONE, LegendArchetype.RETURN_OF_A_RULER}),
+    P.FALLS: frozenset({LegendArchetype.BETRAYAL, LegendArchetype.LOST_GOLDEN_AGE}),
     P.DIES: frozenset({LegendArchetype.CURSED_LINE, LegendArchetype.HERO_QUEST}),
     P.BORN_IN: frozenset({LegendArchetype.CHOSEN_ONE}),
-    P.SKY_EVENT: frozenset({LegendArchetype.CREATION, LegendArchetype.FLOOD}),
+    P.SKY_EVENT: frozenset({LegendArchetype.CREATION, LegendArchetype.WORLD_DISASTER}),
     P.WAR_BETWEEN: frozenset({LegendArchetype.BETRAYAL, LegendArchetype.MONSTER}),
-    P.WITHIN_EPOCHS: frozenset({LegendArchetype.FLOOD}),
+    P.WITHIN_EPOCHS: frozenset({LegendArchetype.WORLD_DISASTER}),
 }
 
 

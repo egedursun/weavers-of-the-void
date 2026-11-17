@@ -211,9 +211,22 @@ class CargoRules:
     livestock_loss: int = rule(5, 0, 100, M, "Share of livestock lost walking a route (%)")
     spill_loss: int = rule(3, 0, 100, M, "Share of liquids and gases lost to leaks on a route (%)")
     hazard_loss: int = rule(4, 0, 100, M, "Share of dangerous goods lost to accidents on a route (%)")
-    salted_pct: int = rule(60, 0, 100, M, "Spoilage salting spares (%)")
-    iced_pct: int = rule(80, 0, 100, M, "Spoilage ice spares (%)")
-    magic_pct: int = rule(100, 0, 100, M, "Spoilage magical keeping spares (%)")
+
+
+@dataclass(frozen=True)
+class PreservationRules:
+    drying_pct: int = rule(30, 0, 100, M, "Spoilage drying spares (%)")
+    smoking_pct: int = rule(40, 0, 100, M, "Spoilage smoking spares (%)")
+    curing_pct: int = rule(60, 0, 100, M, "Spoilage curing with a mineral spares (%)")
+    pickling_pct: int = rule(50, 0, 100, M, "Spoilage pickling spares (%)")
+    fermenting_pct: int = rule(45, 0, 100, M, "Spoilage fermenting spares (%)")
+    chilling_pct: int = rule(80, 0, 100, M, "Spoilage chilling spares (%)")
+    freezing_pct: int = rule(90, 0, 100, M, "Spoilage freezing spares (%)")
+    sealing_pct: int = rule(70, 0, 100, M, "Spoilage sealing in closed vessels spares (%)")
+    canning_pct: int = rule(90, 0, 100, M, "Spoilage canning spares (%)")
+    irradiating_pct: int = rule(95, 0, 100, M, "Spoilage irradiating spares (%)")
+    by_working_pct: int = rule(100, 0, 100, M, "Spoilage keeping by a working of power spares (%)")
+    living_pct: int = rule(85, 0, 100, M, "Spoilage keeping goods alive or in living vessels spares (%)")
 
 
 @dataclass(frozen=True)

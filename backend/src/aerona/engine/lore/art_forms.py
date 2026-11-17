@@ -14,7 +14,7 @@ from aerona.db.tables.mind import CultureValueRow, InspirationRow, SkillRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import InspirationState, MemoryKind, ValueAxis
@@ -37,7 +37,7 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.tongues.grammar import gap
 
 
-async def best_discipline(session: AsyncSession, mortal_id: int) -> tuple[ArtDiscipline, int] | None:
+async def best_discipline(session: AsyncSession, mortal_id: int) -> tuple[ArtMode, int] | None:
     skills = dict((await session.execute(select(SkillRow.skill, SkillRow.level).where(SkillRow.holder_node_id == mortal_id))).all())
     ranked = sorted(
         ((max((int(skills.get(skill, 0)) for skill in spec.skills), default=0), discipline) for discipline, spec in DISCIPLINES.items()),
@@ -58,7 +58,7 @@ async def practise(ctx: TickContext, form_id: int, who: int, mastery: int) -> Ar
 
 
 async def found_form(
-    ctx: TickContext, home: EntityRow, discipline: ArtDiscipline, name: str, *, founder: EntityRow | None, parents: list[int], structure: dict[str, str | int]
+    ctx: TickContext, home: EntityRow, discipline: ArtMode, name: str, *, founder: EntityRow | None, parents: list[int], structure: dict[str, str | int]
 ) -> EntityRow:
     form = await create_record(
         ctx,
@@ -149,7 +149,7 @@ async def invent(ctx: TickContext) -> int:
 
 async def fuse(ctx: TickContext) -> int:
     table = ctx.rules.art_forms
-    by_home: dict[tuple[int, ArtDiscipline], list[int]] = defaultdict(list)
+    by_home: dict[tuple[int, ArtMode], list[int]] = defaultdict(list)
     profiles = {row.art_form_entity_id: row for row in await ctx.session.scalars(select(ArtFormProfileRow))}
     for row in await ctx.session.scalars(select(ArtFormPractitionerRow).order_by(ArtFormPractitionerRow.art_form_entity_id)):
         profile = profiles.get(row.art_form_entity_id)

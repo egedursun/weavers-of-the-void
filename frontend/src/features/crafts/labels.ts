@@ -8,7 +8,6 @@ import {
   Clock,
   Coins,
   Crown,
-  Dices,
   Droplet,
   Ear,
   Eye,
@@ -35,7 +34,6 @@ import {
   ScanEye,
   Scroll,
   Search,
-  Shield,
   Ship,
   Sparkles,
   Sprout,
@@ -43,7 +41,6 @@ import {
   Swords,
   Tag,
   Telescope,
-  Trophy,
   Waves,
   Wrench,
   Zap,
@@ -140,20 +137,6 @@ export const CLOCKS: Record<Schema['ClockKind'], Named> = {
   candle_clock: { label: 'Candle clock', icon: Flame, tone: 'warning' },
   mechanical: { label: 'Mechanical clock', icon: Clock, tone: 'verdigris' },
   astronomical: { label: 'Astronomical clock', icon: Orbit, tone: 'gold' },
-}
-
-export const GAME_KINDS: Record<Schema['GameKind'], Named> = {
-  board: { label: 'Board game', icon: Grid3x3, tone: 'verdigris' },
-  dice: { label: 'Dice game', icon: Dices, tone: 'warning' },
-  cards: { label: 'Card game', icon: Layers, tone: 'info' },
-  ball: { label: 'Ball game', icon: Trophy, tone: 'success' },
-  wrestling: { label: 'Wrestling', icon: Shield, tone: 'danger' },
-}
-
-export const GAME_RULES: Record<Schema['GameRule'], Named> = {
-  strategy: { label: 'Strategy', icon: Swords, tone: 'verdigris' },
-  chance: { label: 'Chance', icon: Dices, tone: 'warning' },
-  physical: { label: 'Strength and skill', icon: Trophy, tone: 'success' },
 }
 
 export const NOTATIONS: Record<Schema['Notation'], Named> = {

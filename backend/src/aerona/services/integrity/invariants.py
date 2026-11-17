@@ -23,6 +23,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
+from aerona.services.integrity.kind_links import bring_into_range, cut_lineage, drop_holding, kinds_out_of_range, stray_holdings, tangled_lineage
+from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
 
 LOCKED = "locked"
 NODE_ID_LIST = "_node_ids"
@@ -316,6 +319,12 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "seat_god": (stray_seats, unseat),
     "tie_gods": (stray_ties, untie),
     "syncretism_kinds": (stray_syncretisms, part_gods),
+    "money_metal": (metal_paper, clear_metal),
+    "material_source": (stray_sources, clear_source),
+    "holding_kind": (stray_holdings, drop_holding),
+    "kind_lineage": (tangled_lineage, cut_lineage),
+    "kind_ranges": (kinds_out_of_range, bring_into_range),
+    "genome_alleles": (stray_alleles, mend_alleles),
 }
 
 

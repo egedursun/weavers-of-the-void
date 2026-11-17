@@ -114,7 +114,7 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.MAKE_BOND: lambda rules, _state: rules.son_tools.link_per_epoch > 0,
     T.TAKE_LIFE: lambda rules, _state: rules.death.take_life_per_epoch > 0,
     T.RESURRECT_SIBLING: lambda rules, state: rules.death.sibling_intrigues_per_epoch > 0 and state.dead_sibling,
-    T.SCATTER_BONES: lambda rules, state: rules.death.sibling_intrigues_per_epoch > 0 and state.dead_sibling,
+    T.HINDER_RETURN: lambda rules, state: rules.death.sibling_intrigues_per_epoch > 0 and state.dead_sibling,
     T.MOVE_TO_WORLD: lambda _rules, state: state.world_count >= 2 and state.automatic_distribution,
     T.DECLARE_HOLY_WORLD: lambda rules, state: state.world_count >= 2 and rules.son_tools.holy_world_per_epoch > 0,
     T.MAKE_INTERWORLD_TREATY: lambda _rules, state: state.world_count >= 2,

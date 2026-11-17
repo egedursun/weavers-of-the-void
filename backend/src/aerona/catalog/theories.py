@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.catalog.art_modes import ART_MODES
 from aerona.core.total import total
-from aerona.domain.enums.culture import ArtMedium
-from aerona.domain.enums.discovery import AnomalyKind, ArtDiscipline, TheoryDomain
+from aerona.domain.enums.culture import ArtMode
+from aerona.domain.enums.discovery import AnomalyKind, TheoryDomain
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 
@@ -47,36 +48,13 @@ ANOMALIES: MappingProxyType[AnomalyKind, str] = total(
 class DisciplineSpec:
     label: str
     structure: tuple[str, ...]
-    media: tuple[ArtMedium, ...]
+    media: tuple[ArtMode, ...]
     skills: tuple[SkillKind, ...]
     verbal: bool = False
 
 
-DISCIPLINES: MappingProxyType[ArtDiscipline, DisciplineSpec] = total(
-    ArtDiscipline,
-    {
-        ArtDiscipline.MUSIC: DisciplineSpec("Music", ("scale", "rhythm", "voices", "instruments"), (ArtMedium.MUSIC, ArtMedium.SONG), (SkillKind.ORATORY,)),
-        ArtDiscipline.POETRY: DisciplineSpec(
-            "Poetry",
-            ("metre", "rhyme", "stanza", "line_length", "subjects"),
-            (ArtMedium.EPIC_POEM, ArtMedium.SONG),
-            (SkillKind.WRITING, SkillKind.ORATORY),
-            True,
-        ),
-        ArtDiscipline.DANCE: DisciplineSpec("Dance", ("tempo", "group_size", "movement"), (ArtMedium.DANCE,), (SkillKind.ORATORY,)),
-        ArtDiscipline.THEATRE: DisciplineSpec("Theatre", ("form", "cast", "subjects"), (ArtMedium.PLAY,), (SkillKind.ORATORY, SkillKind.WRITING), True),
-        ArtDiscipline.PAINTING: DisciplineSpec("Painting", ("palette", "motifs", "materials"), (ArtMedium.FRESCO, ArtMedium.MOSAIC), (SkillKind.POTTERY,)),
-        ArtDiscipline.SCULPTURE: DisciplineSpec(
-            "Sculpture", ("motifs", "materials", "scale"), (ArtMedium.STATUE, ArtMedium.CARVING), (SkillKind.MASONRY, SkillKind.CARPENTRY)
-        ),
-        ArtDiscipline.ARCHITECTURE_STYLE: DisciplineSpec(
-            "Style of building", ("motifs", "materials", "proportions"), (ArtMedium.ARCHITECTURE_ORNAMENT,), (SkillKind.MASONRY, SkillKind.ENGINEERING)
-        ),
-        ArtDiscipline.TEXTILE: DisciplineSpec("Textile", ("palette", "motifs", "pattern"), (ArtMedium.TAPESTRY,), (SkillKind.WEAVING,)),
-        ArtDiscipline.CALLIGRAPHY: DisciplineSpec("Calligraphy", ("script", "hand", "ornament"), (ArtMedium.BOOK,), (SkillKind.WRITING,), True),
-    },
+DISCIPLINES: MappingProxyType[ArtMode, DisciplineSpec] = MappingProxyType(
+    {mode: DisciplineSpec(spec.label, spec.structure, (mode,), spec.skills, spec.verbal) for mode, spec in ART_MODES.items()}
 )
 
-FORM_OF_MEDIUM: MappingProxyType[ArtMedium, ArtDiscipline] = MappingProxyType(
-    {medium: discipline for discipline, spec in reversed(list(DISCIPLINES.items())) for medium in spec.media}
-)
+FORM_OF_MEDIUM: MappingProxyType[ArtMode, ArtMode] = MappingProxyType({mode: mode for mode in ArtMode})

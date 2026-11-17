@@ -43,6 +43,7 @@ S = Subsystem
 LORE_MECHANICS = (
     Mechanic(
         key="tongue_standing",
+        tools=("set_speech", "teach_tongue"),
         spec_item="S8.1",
         title="Prestige of tongues from power, letters and holiness; standard grammars, lingua francas, liturgy, second tongues and scripts",
         subsystem=S.LANGUAGE,
@@ -91,7 +92,7 @@ LORE_MECHANICS = (
         targets=("legend", "mortal", "house", *COMMUNITIES),
         couplings=(
             Coupling(S.MIND, "a believed legend presses its moral on its tellers", EdgeKind.MODIFIER, "belief.moral_pressure_pct"),
-            Coupling(S.POLITY, "a return-of-the-king tale strengthens a pretender", EdgeKind.MODIFIER, "belief.return_king_claim"),
+            Coupling(S.POLITY, "a return-of-the-king tale strengthens a pretender", EdgeKind.MODIFIER, "belief.return_ruler_claim"),
             Coupling(S.DEMOGRAPHY, "settlers shun a land believed haunted", EdgeKind.MODIFIER, "belief.haunted_avoidance"),
             Coupling(S.MAGIC, "only a believed legend takes shape in the world", EdgeKind.TRIGGER, "belief.manifestation_credence"),
         ),
@@ -105,7 +106,7 @@ LORE_MECHANICS = (
         surface=Surface(drawer=LORE),
         backfill="lore.typed_kinds_backfill: every tradition takes a typed kind, its effects and the incident it remembers",
         templates=("lore.commemoration", "lore.taboo_broken", "lore.guest_killing", "lore.festival_absorbed"),
-        fields=("kind", "cost", "effects", "taboo_target", "taboo_act", "calendar_slot", "participation", "skipped"),
+        fields=("kind", "stage", "cost", "effects", "taboo_target", "taboo_act", "calendar_slot", "participation", "skipped"),
         tables=(TraditionProfileRow.__tablename__, TraditionParticipationRow.__tablename__, TraditionEffectRow.__tablename__),
         targets=("tradition", *COMMUNITIES, "event"),
         couplings=(
@@ -394,22 +395,23 @@ def legend_morals() -> tuple[Raw, ...]:
 TRADITION_EFFECTS = {
     "festival": (S.SOCIAL, "traditions.festival_satisfaction", "satisfaction"),
     "fast": (S.ECONOMY, "traditions.fast_food", "food"),
-    "funeral_rite": (S.FAITH, None, "funeral"),
-    "initiation": (S.BODY, "traditions.scar_rite_chance", "scars"),
-    "marriage_rite": (S.DEMOGRAPHY, "traditions.marriage_fertility_pct", "births"),
-    "coming_of_age": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
+    "rite_of_passage": (S.DEMOGRAPHY, "traditions.marriage_fertility_pct", "births"),
     "taboo": (S.ECONOMY, "traditions.taboo_infamy", "taboo"),
     "offering": (S.ECONOMY, "traditions.offering_cost", "goods"),
     "pilgrimage": (S.FAITH, "traditions.piety", "piety"),
-    "hospitality_law": (S.ENVIRONMENT, "traditions.hospitality_danger", "danger"),
+    "hospitality": (S.ENVIRONMENT, "traditions.hospitality_danger", "danger"),
     "duel_custom": (S.WAR, None, "duels"),
     "mourning": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
-    "harvest_rite": (S.ENVIRONMENT, "traditions.piety", "harvest"),
-    "war_dance": (S.MIND, "traditions.war_dance_martial", "martial"),
-    "scar_rite": (S.BODY, "traditions.scar_rite_chance", "scars"),
-    "ancestor_feast": (S.FAITH, "traditions.ancestor_feast_placation", "spirits"),
-    "siesta": (S.SOCIAL, "seasonal.siesta_unrest", "unrest"),
-    "night_vigil": (S.SOCIAL, "seasonal.vigil_crime", "crime"),
+    "seasonal_rite": (S.ENVIRONMENT, "traditions.piety", "harvest"),
+    "martial_display": (S.MIND, "traditions.martial_display_martial", "martial"),
+    "body_marking": (S.BODY, "traditions.body_marking_chance", "scars"),
+    "ancestral_rite": (S.FAITH, "traditions.ancestral_rite_placation", "spirits"),
+    "rest_custom": (S.SOCIAL, "seasonal.rest_custom_unrest", "unrest"),
+    "vigil": (S.SOCIAL, "seasonal.vigil_crime", "crime"),
+    "gift_custom": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
+    "purification": (S.FAITH, "traditions.piety", "piety"),
+    "commemoration": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
+    "competition": (S.SOCIAL, "traditions.festival_satisfaction", "satisfaction"),
 }
 
 
@@ -1060,7 +1062,7 @@ EXTRA: tuple[Raw, ...] = (
         LORE,
         ("legend", "polity"),
         ("claim",),
-        (S.POLITY, "belief.return_king_claim", "claims"),
+        (S.POLITY, "belief.return_ruler_claim", "claims"),
     ),
     (
         "cursed_house",

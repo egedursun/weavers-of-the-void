@@ -43,7 +43,7 @@ SEED_VALUE = 30
 ANTI_FAITH = {
     IT.ANTI_GOD: frozenset(TenetKind),
     IT.RATIONALISM: frozenset({TenetKind.SANCTIFIED_MAGIC, TenetKind.REINCARNATION}),
-    IT.EGALITARIANISM: frozenset({TenetKind.DIVINE_KINGSHIP}),
+    IT.EGALITARIANISM: frozenset({TenetKind.DIVINE_RULE}),
     IT.DIVINE_RIGHT: frozenset({TenetKind.PACIFISM}),
     IT.MILITARISM: frozenset({TenetKind.PACIFISM}),
     IT.CREATORISM: frozenset({TenetKind.SYNCRETIC_OPENNESS}),
@@ -245,18 +245,29 @@ async def press(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow)
     return pressed
 
 
+async def realm_communities(ctx: TickContext, realm: PolityProfileRow) -> set[int]:
+    members = set(await ctx.session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == realm.polity_entity_id)))
+    return members | ({realm.core_entity_id} if realm.core_entity_id is not None else set())
+
+
 async def adopt(ctx: TickContext, creed: EntityRow) -> int:
     table = ctx.rules.ideologies
     adopted = 0
-    for row in await ctx.session.scalars(select(IdeologyAdherentRow).where(IdeologyAdherentRow.ideology_entity_id == creed.id)):
-        realm = await ctx.session.scalar(select(PolityProfileRow).where(PolityProfileRow.core_entity_id == row.adherent_entity_id).limit(1))
-        if realm is None:
+    held_by = {
+        row.adherent_entity_id: row for row in await ctx.session.scalars(select(IdeologyAdherentRow).where(IdeologyAdherentRow.ideology_entity_id == creed.id))
+    }
+    for realm in list(await ctx.session.scalars(select(PolityProfileRow).order_by(PolityProfileRow.polity_entity_id))):
+        if held(realm.polity_entity_id) or "ideology_entity_id" in realm.locked:
             continue
-        wanted = row.strength >= table.adoption_strength
-        if wanted != row.state:
-            row.state = wanted
-            realm.ideology_entity_id = creed.id if wanted else None
-            adopted += int(wanted)
+        rows = [held_by[community] for community in sorted(await realm_communities(ctx, realm)) if community in held_by]
+        wanted = max((row.strength for row in rows), default=0) >= table.adoption_strength
+        if wanted and realm.ideology_entity_id is None:
+            realm.ideology_entity_id = creed.id
+            adopted += 1
+        elif not wanted and realm.ideology_entity_id == creed.id:
+            realm.ideology_entity_id = None
+        for row in rows:
+            row.state = realm.ideology_entity_id == creed.id
     return adopted
 
 

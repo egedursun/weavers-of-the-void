@@ -85,7 +85,7 @@ ECONOMY_DEPTH_MECHANICS = (
         targets=("item", "people", "settlement"),
         couplings=(
             Coupling(S.ECONOMY, "goods of rare materials fetch more in the market", EdgeKind.MODIFIER, "markets.rarity_price_pct"),
-            Coupling(S.CULTURE, "an heirloom of gold is worth more than one of wood", EdgeKind.MODIFIER, "materials.item_worth_pct"),
+            Coupling(S.CULTURE, "an item of a rarer material is worth more", EdgeKind.MODIFIER, "materials.item_worth_pct"),
             Coupling(S.ENVIRONMENT, "wet lands rust iron and rot wood", EdgeKind.MODIFIER, "materials.rust_decay_pct"),
         ),
     ),
@@ -101,7 +101,7 @@ ECONOMY_DEPTH_MECHANICS = (
         tables=(NodeMaterialRow.__tablename__,),
         targets=("mortal", "army", "spirit", "outer_being", "beast", "species"),
         couplings=(
-            Coupling(S.FAITH, "silver and holy stone cut down the restless dead", EdgeKind.MODIFIER, "materials.sanctity_undead_pct"),
+            Coupling(S.FAITH, "holy materials cut down the restless dead", EdgeKind.MODIFIER, "materials.sanctity_undead_pct"),
             Coupling(S.COSMOS, "a corrupt blade feeds the void it strikes", EdgeKind.MODIFIER, "materials.corruption_void_pct"),
         ),
     ),
@@ -110,9 +110,9 @@ ECONOMY_DEPTH_MECHANICS = (
         spec_item="F3.1",
         title="Wild herds, fish and silk are worked as grounds of their own",
         subsystem=S.ECOLOGY,
-        phases=("species_yields",),
+        phases=("species_products",),
         surface=Surface(drawer="section-resource-profile"),
-        backfill="species_yields: every abundant wild kind opens its herds, fisheries or silk grounds",
+        backfill="species_products: every abundant wild kind opens its herds, fisheries or silk grounds",
         fields=("abundance", "regeneration", "commodity"),
         tables=(ResourceProfileRow.__tablename__,),
         targets=("species", "resource"),
@@ -193,7 +193,7 @@ ECONOMY_DEPTH_MECHANICS = (
         fields=("output_pct", "capacity_pct", "store_pct", "quality_bonus", "design_id"),
         tables=(WorkshopDesignRow.__tablename__, WorkshopRow.__tablename__),
         targets=("people", "settlement"),
-        couplings=(Coupling(S.ECONOMY, "a better forge turns more ore into better weapons", EdgeKind.MODIFIER),),
+        couplings=(Coupling(S.ECONOMY, "a better workshop design turns more input into better output", EdgeKind.MODIFIER),),
     ),
     Mechanic(
         key="economy_holds",

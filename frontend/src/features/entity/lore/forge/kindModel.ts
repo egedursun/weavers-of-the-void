@@ -27,7 +27,7 @@ import {
   legendArchetypeValues,
   riteEffectKindValues,
   techniqueValues,
-  traditionKindValues,
+  traditionFunctionValues,
 } from '@/api/generated/schema'
 import {
   ARCHETYPES,
@@ -221,7 +221,7 @@ export const KIND_CATALOG: Record<Catalog, CatalogSpec> = {
     note: 'A new kind of custom is kept as its base but costs and brings what you set.',
     noun: 'kind of custom',
     baseLabel: 'Kept like',
-    bases: named(traditionKindValues, TRADITION_KINDS),
+    bases: named(traditionFunctionValues, TRADITION_KINDS),
     params: [
       { key: 'cost', label: 'What it costs', kind: 'table', table: COSTS },
       {

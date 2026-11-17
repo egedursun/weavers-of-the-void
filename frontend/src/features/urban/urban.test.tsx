@@ -91,7 +91,7 @@ describe('urban', () => {
           owner: TOWN,
           route: ROAD,
           cargo: { grain: 20 },
-          preservation: 'salted',
+          preservation: 'curing',
           animals: 0,
           vehicles: 2,
           guards: 4,

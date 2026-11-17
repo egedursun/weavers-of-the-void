@@ -3,6 +3,7 @@ from collections import Counter
 from sqlalchemy import select
 
 from aerona.catalog.cosmography import STAR_AGE_LABELS
+from aerona.catalog.kinds.stars import STAR_AGES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow
@@ -52,27 +53,12 @@ def stage_epochs(rules: Rules, star: StarRow, stage: StarAge, physics: StarPhysi
 
 
 def stage_radiation(rules: Rules, stage: StarAge) -> int:
-    table = rules.star_life
-    return {
-        StarAge.YOUNG: table.young_radiation,
-        StarAge.MAIN: table.main_radiation,
-        StarAge.OLD: table.main_radiation,
-        StarAge.DYING: table.dying_radiation,
-        StarAge.DEAD: 0,
-        StarAge.REBORN: table.young_radiation,
-    }[stage]
+    rule_name = STAR_AGES[stage].radiation_rule
+    return int(getattr(rules.star_life, rule_name)) if rule_name is not None else 0
 
 
 def stage_stability(rules: Rules, stage: StarAge) -> int:
-    table = rules.star_life
-    return {
-        StarAge.YOUNG: table.young_stability,
-        StarAge.MAIN: table.main_stability,
-        StarAge.OLD: table.old_stability,
-        StarAge.DYING: table.dying_stability,
-        StarAge.DEAD: table.main_stability,
-        StarAge.REBORN: table.young_stability,
-    }[stage]
+    return int(getattr(rules.star_life, STAR_AGES[stage].stability_rule))
 
 
 async def swell(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -> None:

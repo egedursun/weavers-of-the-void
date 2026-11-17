@@ -112,6 +112,7 @@ SOCIETY_DEPTH_MECHANICS = (
     ),
     Mechanic(
         key="culture_drift_causes",
+        tools=("resist_drift",),
         spec_item="S4.1",
         title="Culture drift from famine, scholars' ideologies and wars lost by cohesion",
         subsystem=Subsystem.CULTURE,

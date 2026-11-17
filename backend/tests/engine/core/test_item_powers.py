@@ -10,7 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
-from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import InheritanceCustom, MartialStyle
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
@@ -45,9 +45,7 @@ async def test_instruments_bind_a_people_and_mirrors_watch_its_foe(session: Asyn
         cohesion=40,
         literacy=0,
         urbanisation=0,
-        aesthetic=next(iter(Aesthetic)),
         martial_style=next(iter(MartialStyle)),
-        marriage=next(iter(MarriageCustom)),
         inheritance=next(iter(InheritanceCustom)),
     )
     session.add(culture)

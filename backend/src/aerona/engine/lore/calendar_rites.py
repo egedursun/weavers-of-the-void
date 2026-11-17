@@ -14,7 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.models.entity_stats import TraditionStats
@@ -26,12 +26,12 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 
-K = TraditionKind
+K = TraditionFunction
 SEASON_HELD = "season_position"
 CALENDAR_HELD = "calendar_entity_id"
 HOLY_DAY_FIXUP = "lore.holy_day_traditions"
 WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
-SLEEP_CUSTOMS = frozenset({K.SIESTA, K.NIGHT_VIGIL})
+SLEEP_CUSTOMS = frozenset({K.REST_CUSTOM, K.VIGIL})
 
 SeasonKey = Callable[[WorldSeasonRow], tuple[int, int]]
 
@@ -60,24 +60,26 @@ def _roads(season: WorldSeasonRow) -> tuple[int, int]:
     return (season.travel, -season.position)
 
 
-SEASON_OF: dict[TraditionKind, SeasonKey] = {
+SEASON_OF: dict[TraditionFunction, SeasonKey] = {
     K.FESTIVAL: _plenty,
-    K.HARVEST_RITE: _plenty,
-    K.MARRIAGE_RITE: _plenty,
-    K.COMING_OF_AGE: _plenty,
+    K.SEASONAL_RITE: _plenty,
+    K.RITE_OF_PASSAGE: _plenty,
     K.FAST: _lean,
     K.MOURNING: _lean,
-    K.ANCESTOR_FEAST: _cold,
-    K.NIGHT_VIGIL: _cold,
-    K.SIESTA: _hot,
-    K.WAR_DANCE: _war,
-    K.INITIATION: _war,
+    K.ANCESTRAL_RITE: _cold,
+    K.VIGIL: _cold,
+    K.REST_CUSTOM: _hot,
+    K.MARTIAL_DISPLAY: _war,
     K.PILGRIMAGE: _roads,
     K.OFFERING: _plenty,
+    K.GIFT_CUSTOM: _plenty,
+    K.PURIFICATION: _lean,
+    K.COMMEMORATION: _cold,
+    K.COMPETITION: _roads,
 }
 
 
-def preferred_season(kind: TraditionKind, seasons: list[WorldSeasonRow]) -> int | None:
+def preferred_season(kind: TraditionFunction, seasons: list[WorldSeasonRow]) -> int | None:
     key = SEASON_OF.get(kind)
     if key is None or len(seasons) < 2:
         return None
@@ -220,10 +222,10 @@ async def sleep_custom_kept(session: AsyncSession, community_id: int) -> bool:
     return found is not None
 
 
-SLEEP_NAMES = {K.SIESTA: "The Midday Rest of {name}", K.NIGHT_VIGIL: "The Long Night Vigil of {name}"}
+SLEEP_NAMES = {K.REST_CUSTOM: "The Midday Rest of {name}", K.VIGIL: "The Long Night Vigil of {name}"}
 SLEEP_BODIES = {
-    K.SIESTA: "Under a day of {hours} hours the work stops in the middle of the day and the folk rest.",
-    K.NIGHT_VIGIL: "Through a night of {hours} hours some keep watch while the rest sleep in turns.",
+    K.REST_CUSTOM: "Under a day of {hours} hours the work stops in the middle of the day and the folk rest.",
+    K.VIGIL: "Through a night of {hours} hours some keep watch while the rest sleep in turns.",
 }
 
 
@@ -244,7 +246,7 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
             continue
         region = atlas.top_region(community.id)
         ground = grounds.get(region) if region is not None else None
-        kind = K.SIESTA if ground is not None and ground.temperature_band in WARM_BANDS else K.NIGHT_VIGIL
+        kind = K.REST_CUSTOM if ground is not None and ground.temperature_band in WARM_BANDS else K.VIGIL
         hours = world.day_length_hours if world is not None and world.day_length_hours is not None else table.long_day_hours
         tradition = await create_record(
             ctx,

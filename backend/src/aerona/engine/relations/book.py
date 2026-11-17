@@ -126,7 +126,7 @@ async def facts_for(session: AsyncSession, holder_id: int, others: Iterable[int]
     facts = Facts(spouses=set(await partners_of(session, holder_id)))
     facts.masters = {bond.target_node_id for bond in await active_bonds(session, [BondKind.APPRENTICE_OF], sources=[holder_id])}
     facts.apprentices = {bond.source_node_id for bond in await active_bonds(session, [BondKind.APPRENTICE_OF], targets=[holder_id])}
-    halls = select(SocialCircleRow.faction_entity_id).where(SocialCircleRow.kind == CircleKind.DRINKING_HALL)
+    halls = select(SocialCircleRow.faction_entity_id).where(SocialCircleRow.kind == CircleKind.DRINKING_CIRCLE)
     mine = select(FactionMembershipRow.faction_entity_id).where(FactionMembershipRow.mortal_entity_id == holder_id)
     facts.drinking = set(
         await session.scalars(

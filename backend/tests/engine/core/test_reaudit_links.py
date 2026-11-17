@@ -5,7 +5,6 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.arts import BetRow, CanonWorkRow, ClubRow, MatchRow
 from aerona.db.tables.belonging import SanctuaryLawRow, SanctuaryRow
-from aerona.db.tables.crafts import GameFollowingRow, GameRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.customs import BorderControlRow
 from aerona.db.tables.entities import EntityRow
@@ -14,9 +13,9 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.arts import CanonPath, ClubKind
 from aerona.domain.enums.belonging import FugitiveKind, SanctuaryKind
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.crafts import GameKind, GameRule
-from aerona.domain.enums.culture import ArtMedium
+from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.war import WarCause, WarSide
@@ -27,6 +26,7 @@ from aerona.engine.arts.sport import SportTally, found_clubs, play_friendlies
 from aerona.engine.belonging.sanctuary import SanctuaryTally, keep_sanctuaries
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
+from aerona.engine.crafts.games import made_by, shaped
 from aerona.engine.customs.civics import CivicsTally, adopt_borders
 from aerona.engine.mind.book import write_values
 from aerona.engine.primitives.folk import towns_of_people
@@ -99,7 +99,7 @@ async def test_a_much_copied_work_enters_the_canon_of_the_people_whose_homeland_
     town = await settlement(session, "Copyhold", world, world.regions[0])
     people = await folk(session, world, "Scribefolk", town)
     piece = await entity(session, "The Long Ledger", EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id, location_id=town.id)
-    session.add(ArtworkProfileRow(artwork_entity_id=piece.id, medium=ArtMedium.FRESCO, quality=40, copies=9, locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=piece.id, medium=ArtMode.FLAT_IMAGE, quality=40, copies=9, locked=[]))
     await session.flush()
     tally = MovementTally()
     await form_canon(await at(session, 2), tally)
@@ -127,10 +127,12 @@ async def test_clubs_outside_any_league_meet_in_friendlies_and_their_towns_wager
 async def test_a_people_that_loves_a_ball_game_raises_a_club_without_an_arena(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Fieldmoor", world, world.regions[0], population=4000)
     people = await folk(session, world, "Fieldfolk", town)
-    game = GameRow(name="Hurl", kind=GameKind.BALL, rule=GameRule.PHYSICAL, origin_entity_id=people.id, created_epoch=1, locked=[])
+    game = shaped("Hurl", GameCategory.BALL, people, 1)
     session.add(game)
     await session.flush()
-    session.add(GameFollowingRow(people_entity_id=people.id, game_id=game.id, popularity=70, adopted_epoch=1, locked=[]))
+    holding = made_by(game, people.id, 1)
+    holding.strength = 70
+    session.add(holding)
     await session.flush()
     tally = SportTally()
     await found_clubs(await at(session, 2, sports={"club_chance": 100, "club_population": 100}), tally)

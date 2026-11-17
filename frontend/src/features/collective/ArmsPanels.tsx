@@ -8,6 +8,7 @@ import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { useKinds } from '@/features/kinds/api'
 import { ArmsShield } from './ArmsShield'
 import {
   type ArmsDesign,
@@ -250,6 +251,16 @@ const EDITOR_FIELDS: Field[] = [
   { key: 'motto', label: 'Motto', kind: 'text' },
 ]
 
+function useEmblemSystems() {
+  const systems = useKinds('emblem_system', null)
+  return {
+    none: 'No system of emblems',
+    ...Object.fromEntries(
+      (systems.data ?? []).map((system) => [String(system.id), system.name])
+    ),
+  }
+}
+
 function useRoll(holderId: number) {
   const [rolling, setRolling] = useState(false)
   const roll = async (apply: (design: ArmsDesign) => void) => {
@@ -293,6 +304,7 @@ export function ArmsCard({
     'The arms are quartered'
   )
   const dice = useRoll(holderId)
+  const systems = useEmblemSystems()
   const busy = why(action.busy, quartering.isPending, dice.rolling)
   const bearer = BEARERS[row.holder_kind]
   return (
@@ -304,7 +316,15 @@ export function ArmsCard({
       removeLabel='Grant them anew'
       editTitle='Set the arms'
       note='Every part of the arms can be set here. A tincture left on automatic contrast is chosen to stand out from what lies beneath it.'
-      fields={EDITOR_FIELDS}
+      fields={[
+        ...EDITOR_FIELDS,
+        {
+          key: 'emblem_system_id',
+          label: 'System of emblems',
+          kind: 'pick',
+          table: systems,
+        },
+      ]}
       locked={row.locked}
       blocked={busy}
       onEdit={action.onEdit}

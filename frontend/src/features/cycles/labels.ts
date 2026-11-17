@@ -19,7 +19,6 @@ import {
   Flame,
   Flower2,
   Footprints,
-  Gem,
   Gift,
   GitBranch,
   GitFork,
@@ -53,7 +52,6 @@ import {
   TrendingDown,
   TrendingUp,
   Undo2,
-  Unlink,
   Users,
   Wallet,
   Wheat,
@@ -206,13 +204,13 @@ export const GIFT_STATES: Record<Schema['GiftState'], Named> = {
 }
 
 export const DESCENTS: Record<Schema['KinshipDescent'], Named> = {
-  patrilineal: {
-    label: 'Patrilineal, through the male line',
+  through_first_line: {
+    label: 'Through the first line',
     icon: GitBranch,
     tone: 'info',
   },
-  matrilineal: {
-    label: 'Matrilineal, through the female line',
+  through_second_line: {
+    label: 'Through the second line',
     icon: GitBranch,
     tone: 'verdigris',
   },
@@ -230,18 +228,26 @@ export const DESCENTS: Record<Schema['KinshipDescent'], Named> = {
 }
 
 export const RESIDENCES: Record<Schema['ResidenceRule'], Named> = {
-  patrilocal: {
-    label: "Patrilocal, with the male spouse's kin",
+  with_first_family: {
+    label: "With the first spouse's family",
     icon: Building,
     tone: 'info',
   },
-  matrilocal: {
-    label: "Matrilocal, with the female spouse's kin",
+  with_second_family: {
+    label: "With the second spouse's family",
     icon: Building,
     tone: 'verdigris',
   },
-  neolocal: { label: 'In a home of their own', icon: Tent, tone: 'success' },
-  avunculocal: { label: 'With a maternal uncle', icon: Users, tone: 'gold' },
+  new_household: {
+    label: 'In a home of their own',
+    icon: Tent,
+    tone: 'success',
+  },
+  with_kin_of_the_first_line: {
+    label: 'With kin of the first line',
+    icon: Users,
+    tone: 'gold',
+  },
 }
 
 export const GROUPS: Record<Schema['DescentGroup'], Named> = {
@@ -251,44 +257,60 @@ export const GROUPS: Record<Schema['DescentGroup'], Named> = {
   house: { label: 'Houses', icon: Landmark, tone: 'success' },
 }
 
-export const COUSINS: Record<Schema['CousinTerms'], Named> = {
-  distinct: { label: 'Cousins are cousins', icon: Users, tone: 'muted' },
-  parallel_as_siblings: {
-    label: 'Parallel cousins are siblings',
+export const KIN_TERMS: Record<Schema['KinTermSystem'], Named> = {
+  generational: {
+    label: 'One term for each generation',
+    icon: Users,
+    tone: 'gold',
+  },
+  lineal: {
+    label: 'Direct kin apart from side kin',
+    icon: Link,
+    tone: 'muted',
+  },
+  bifurcate_merging: {
+    label: "A parent's like sibling is called parent",
     icon: Link,
     tone: 'info',
   },
-  all_as_siblings: {
-    label: 'Every cousin is a sibling',
+  bifurcate_collateral: {
+    label: 'Each side has its own terms',
+    icon: Split,
+    tone: 'verdigris',
+  },
+  cross_parallel: {
+    label: 'Parallel cousins are siblings, cross cousins apart',
     icon: Link,
-    tone: 'gold',
+    tone: 'info',
+  },
+  descriptive: {
+    label: 'Each kinsperson has a term of their own',
+    icon: Users,
+    tone: 'muted',
   },
 }
 
-export const PREFERENCES: Record<Schema['MarriagePreference'], Named> = {
-  none: { label: 'No preferred spouse', icon: Heart, tone: 'muted' },
-  cross_cousin: { label: 'A cross-cousin', icon: HeartHandshake, tone: 'gold' },
-  clan_exogamy: { label: 'Outside the clan', icon: Unlink, tone: 'info' },
-  moiety_exogamy: {
-    label: 'In the other half',
-    icon: Blend,
+export const ADOPTIONS: Record<Schema['AdoptionKind'], Named> = {
+  heir: { label: 'Adopted as heirs', icon: Crown, tone: 'gold' },
+  ward: { label: 'Taken as wards', icon: Shield, tone: 'info' },
+  foster: { label: 'Fostered', icon: Heart, tone: 'success' },
+  sponsor: { label: 'Sponsored', icon: Scale, tone: 'muted' },
+  blood_bond: {
+    label: 'Joined by a bond of blood',
+    icon: HandHeart,
+    tone: 'danger',
+  },
+  chosen_kin: {
+    label: 'Taken as chosen kin',
+    icon: Sparkles,
     tone: 'verdigris',
   },
 }
 
-export const PAYMENTS: Record<Schema['MarriagePayment'], Named> = {
-  none: { label: 'Nothing passes', icon: Heart, tone: 'muted' },
-  bride_price: {
-    label: "Bride price to the bride's kin",
-    icon: Coins,
-    tone: 'gold',
-  },
-  dowry: { label: 'A dowry with the bride', icon: Gem, tone: 'gold' },
-  bride_service: {
-    label: 'Bride service in labour',
-    icon: HardHat,
-    tone: 'info',
-  },
+export const FIRST_SIDES: Record<Schema['Sex'], Named> = {
+  female: { label: 'The female side is first', icon: Users, tone: 'verdigris' },
+  male: { label: 'The male side is first', icon: Users, tone: 'info' },
+  other: { label: 'Neither side by sex', icon: Users, tone: 'muted' },
 }
 
 export const SYSTEMS: Record<Schema['ReproductiveSystem'], Named> = {
@@ -329,7 +351,7 @@ export const MOBILITY: Record<Schema['MobilityMode'], Named> = {
 
 export const LEGACIES: Record<Schema['LegacyKind'], Named> = {
   martial_style: { label: 'Way of war', icon: Swords, tone: 'danger' },
-  aesthetic: { label: 'Aesthetic', icon: Sparkles, tone: 'gold' },
+  aesthetic: { label: 'Style', icon: Sparkles, tone: 'gold' },
   funeral_rite: { label: 'Funeral rite', icon: Bird, tone: 'muted' },
   belief: { label: 'Belief', icon: BookHeart, tone: 'info' },
   value: { label: 'Value', icon: Scale, tone: 'verdigris' },

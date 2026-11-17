@@ -101,7 +101,7 @@ async def leave_remains(ctx: TickContext, being: EntityRow, tally: WoundTally) -
         return
     place = await ctx.session.get(EntityRow, being.location_id) if being.location_id is not None else None
     if place is not None:
-        await new_substance(ctx, MaterialOrigin.GOD_REMAINS, place, source_node_id=being.id)
+        await new_substance(ctx, MaterialOrigin.DEAD_GOD, place, source_node_id=being.id)
         tally.remains += 1
     ctx.session.add(AppliedFixupRow(key=key, result={"remains": place.id if place is not None else None}))
 

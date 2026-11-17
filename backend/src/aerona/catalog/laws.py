@@ -4,10 +4,10 @@ from types import MappingProxyType
 from aerona.catalog.crimes import CRIME_PENALTY_DEFAULTS, CRIMES, PENALTY_WORDS, PUNISHMENTS
 from aerona.core.grammar import fill
 from aerona.core.total import total
-from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
+from aerona.domain.enums.unions import PluralSide, UnionForm
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,8 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
         LawKind.VETERAN_PENSION: {"amount": Param(20)},
         LawKind.RANSOM_CUSTOM: {"allowed": Param(True), "price": Param(30)},
         LawKind.MARRIAGE_LAW: {
-            "custom": pick(*(item.value for item in MarriageCustom)),
+            "form": pick(*(item.value for item in UnionForm), default=UnionForm.PAIR.value),
+            "plural_side": pick(*(item.value for item in PluralSide), default=PluralSide.EITHER.value),
             "endogamy": Param(False),
             "divorce": pick("for_cause", "forbidden", "free"),
         },
@@ -119,7 +120,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = total(
             "engineering": pick("free", "licensed", "banned", default="licensed"),
             "synthesis": pick("free", "licensed", "banned", default="licensed"),
             "cloning": pick("free", "licensed", "banned", default="licensed"),
-            "chimera": pick("free", "licensed", "banned", default="licensed"),
+            "merging": pick("free", "licensed", "banned", default="licensed"),
             "shaping": pick("free", "licensed", "banned", default="free"),
         },
         LawKind.CLONE_LAW: {"level": pick("banned", "licensed", "free", default="licensed")},
@@ -150,7 +151,7 @@ def law_terms_guide() -> str:
 PENALTY_CRUELTY = MappingProxyType({spec.word: spec.harm for spec in PUNISHMENTS.values()})
 LAW_TITLES = MappingProxyType(
     {
-        LawKind.SUCCESSION_RULE: "the Law of the Throne",
+        LawKind.SUCCESSION_RULE: "the Law of Succession",
         LawKind.SLAVERY: "the Law of the Bound",
         LawKind.TAX_RATE: "the Tax Law",
         LawKind.PENAL_CODE: "the Code of Punishments",
@@ -207,7 +208,7 @@ def penal_cruelty(params: dict[str, int | str | bool]) -> int:
 
 LAW_EFFECTS = MappingProxyType(
     {
-        LawKind.SUCCESSION_RULE: "Decides who inherits the throne: {rule}, {gender}{wholeness}.",
+        LawKind.SUCCESSION_RULE: "Decides who succeeds to rule: {rule}, {gender}{wholeness}.",
         LawKind.INHERITANCE_SPLIT: "Property passes {split}.",
         LawKind.LAND_TENURE: "Land is held {tenure}.",
         LawKind.SLAVERY: "Slavery is {status}; captives may be bound where it is allowed.",
@@ -223,7 +224,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.STANDING_ARMY: "{share}% of the people serve in a standing army.",
         LawKind.VETERAN_PENSION: "The maimed are kept from begging; warriors are content.",
         LawKind.RANSOM_CUSTOM: "Captives {allowed} be ransomed.",
-        LawKind.MARRIAGE_LAW: "Marriage is {custom}; divorce is {divorce}.",
+        LawKind.MARRIAGE_LAW: "Unions take the form {form}, the side that may take several partners is {plural_side}; divorce is {divorce}.",
         LawKind.SUMPTUARY: "Nobles may show {noble_luxury} luxury, merchants {merchant_luxury}.",
         LawKind.GUILD_CHARTER: "A guild holds a charter; monopoly: {monopoly}.",
         LawKind.FOREIGNER_RIGHTS: "Foreigners have {level}; citizenship pulls migrants.",
@@ -263,7 +264,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.POWER_LAW: "Those with powers are {level}; powers over minds are {mind_powers}.",
         LawKind.SOURCE_LAW: "Drawing on a source of power is {level} unless a source is named otherwise.",
         LawKind.LIVING_CRAFT_LAW: (
-            "Living craft is {level}; engineering {engineering}, synthesis {synthesis}, cloning {cloning}, chimeras {chimera}, shaping {shaping}."
+            "Living craft is {level}; engineering {engineering}, synthesis {synthesis}, cloning {cloning}, merged species {merging}, shaping {shaping}."
         ),
         LawKind.CLONE_LAW: "Making clones is {level}.",
         LawKind.CLONE_STATUS: "Clones stand as {status}.",

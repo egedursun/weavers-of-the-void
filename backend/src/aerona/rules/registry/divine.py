@@ -201,6 +201,8 @@ class DivineGrammarRules:
     effect_pct: int = rule(20, 0, 300, G, "Share of a divine power's strength that lands on each target each time it acts (%)")
     goods_per_point: int = rule(2, 0, 1000, G, "Goods a divine power over a commodity makes or takes per point of its effect")
     trigger_at: int = rule(40, 0, 100, G, "Insecurity or hunger among its faithful at which a triggered divine power acts")
+    grant_faithful: int = rule(2, 1, 100, G, "Communities that must worship a god before its worship grants it a divine power of its first domain")
+    grant_strength: int = rule(10, 1, 100, G, "Strength of a divine power that worship grants a god")
 
 
 @dataclass(frozen=True)

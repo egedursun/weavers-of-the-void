@@ -5,11 +5,12 @@ from pydantic import Field
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
 from aerona.cartography.model import WorldMap
-from aerona.domain.enums.culture import ArtMedium
+from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.ecology import BeastTemper
-from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
+from aerona.domain.enums.economy import MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.faith import HoldingKind
+from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.military import Stance
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.urban import ConvoyStatus
@@ -151,7 +152,7 @@ class MapLore(ApiModel):
     x: float
     y: float
     detail: str | None = None
-    medium: ArtMedium | None = None
+    medium: ArtMode | None = None
 
 
 class MapLair(ApiModel):
@@ -219,6 +220,17 @@ class MapOutbreak(ApiModel):
     path: list[float]
 
 
+class RegionKind(ApiModel):
+    concept: KindConcept
+    kind_id: int
+    name: str
+    share: int
+
+
+class RegionMoney(ApiModel):
+    form: MoneyForm
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -246,6 +258,8 @@ class MapView(ApiModel):
     holy: list[MapHoly] = Field(default_factory=list)
     lore: list[MapLore] = Field(default_factory=list)
     tongues: dict[int, RegionTongue] = Field(default_factory=dict)
+    kinds: dict[int, list[RegionKind]] = Field(default_factory=dict)
+    money: dict[int, RegionMoney] = Field(default_factory=dict)
     lairs: list[MapLair] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime

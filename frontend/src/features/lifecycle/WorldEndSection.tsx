@@ -89,7 +89,7 @@ export function WorldEndSection({
   return (
     <Section
       id='section-world-end'
-      title='End of the world: shattered, swallowed, frozen, sunk, forgotten or transfigured'
+      title='End of the world: shattered, consumed, frozen, sunk, forgotten or transfigured'
       description='Whether the world this thing stands on has come to its end, how, and what that ended: lives, roads, the homeward ties of peoples abroad and the anchors of gods. Things on no world have no world to end, and the controls say so.'
       icon={WORLD_END_ICON}
       tone='danger'

@@ -9,6 +9,7 @@ from aerona.catalog.mind import SKILLS
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.culture_kinds import AimKindRow, FearKindRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -43,6 +44,7 @@ from aerona.domain.enums.mind import (
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.engine.context import TickContext
+from aerona.engine.kinds.culture_life import aims_held, fears_held
 from aerona.engine.mind.book import Values, is_locked, mind_of, needs_of, stored_values
 from aerona.engine.mind.ethics import at_war
 from aerona.engine.mind.split import facets_of
@@ -65,8 +67,11 @@ FOCUS_FIELD = "focus"
 CONVICTION_FIELD = "conviction"
 MILESTONES = (33, 66, 100)
 FACET_SPAN = 50
+PLAIN_GRIP = 50
 VALUE_SPAN = 100
-FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT})
+FIGHTERS = frozenset(
+    {MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER, MortalRole.OFFICER, MortalRole.PILOT}
+)
 EYES = ("left_eye", "right_eye")
 TRAVEL_SKILLS = frozenset({SkillKind.SAILING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING, SkillKind.RIDING})
 CRAFT_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
@@ -83,6 +88,16 @@ def score_goal(rules: Rules, goal: LifeGoal, values: Values, facets: dict[Facet,
     from_beliefs = sum(values.get(axis, 0) / VALUE_SPAN * weight for axis, weight in spec.beliefs.items()) * table.belief_weight_pct / PERCENT
     from_facets = sum(facets.get(facet, 0) / FACET_SPAN * weight for facet, weight in spec.facets.items()) * table.facet_weight_pct / PERCENT
     return from_beliefs + from_facets
+
+
+def aim_pull(rules: Rules, held_aim: tuple[int, AimKindRow], values: Values, needs: dict[NeedKind, int]) -> float:
+    strength, aim = held_aim
+    pull = aim.pull * strength / PERCENT * rules.kinds.aim_pull_pct / PERCENT
+    if aim.value_axis is not None:
+        pull += values.get(aim.value_axis, 0) / VALUE_SPAN * aim.value_weight * rules.aspirations.belief_weight_pct / PERCENT
+    if aim.need is not None:
+        pull += needs.get(aim.need, 0) / PERCENT * aim.pull
+    return pull
 
 
 async def grudge_target(session: AsyncSession, mortal_id: int) -> int | None:
@@ -104,10 +119,14 @@ async def choose_goal(ctx: TickContext, mortal: EntityRow) -> tuple[LifeGoal, in
     grudge = await grudge_target(ctx.session, mortal.id)
     patron = await living_patron(ctx.session, mortal)
     scored = []
+    aims = await aims_held(ctx.session, mortal)
+    needs = await needs_of(ctx.session, mortal.id)
     for goal in LifeGoal:
         if (goal is LifeGoal.AVENGE_KIN and grudge is None) or (goal is LifeGoal.SERVE_A_GOD and patron is None):
             continue
-        scored.append((score_goal(ctx.rules, goal, values, facets) + rng.integer(-jitter, jitter), goal))
+        held_aim = aims.get(goal)
+        drawn = aim_pull(ctx.rules, held_aim, values, needs) if held_aim is not None else 0.0
+        scored.append((score_goal(ctx.rules, goal, values, facets) + drawn + rng.integer(-jitter, jitter), goal))
     chosen = max(scored, key=lambda item: (item[0], item[1].value))[1]
     target = grudge if chosen is LifeGoal.AVENGE_KIN else patron.id if chosen is LifeGoal.SERVE_A_GOD and patron is not None else None
     return chosen, target
@@ -311,6 +330,8 @@ async def adopt(ctx: TickContext, mortal: EntityRow, existing: LifeDreamRow | No
     else:
         existing.goal, existing.target_node_id, existing.milestones, existing.progress = goal, target, [], 0
         existing.state, existing.started_epoch, existing.ended_epoch = DreamState.PURSUING, ctx.epoch, None
+    held_aim = (await aims_held(ctx.session, mortal)).get(goal)
+    existing.aim_kind_id = held_aim[1].id if held_aim is not None else None
     await ctx.session.flush()
     return existing
 
@@ -527,9 +548,23 @@ async def seed_fears(ctx: TickContext, mortal: EntityRow) -> int:
     }
     if await children_of(ctx.session, mortal.id):
         scores[FearKind.LOSING_A_CHILD] += FACET_SPAN
+    authored: dict[FearKind, int] = {}
+    for holding, row in await fears_held(ctx.session, mortal):
+        if row.facet is not None:
+            scores[row.category] += facets.get(row.facet, 0) * row.facet_weight / FACET_SPAN * holding.strength / PERCENT
+        authored.setdefault(row.category, row.id)
     ranked = [kind for kind, score in sorted(scores.items(), key=lambda item: (-item[1], item[0].value)) if score > 0][: table.fear_count]
     for kind in ranked:
-        ctx.session.add(FearRow(holder_node_id=mortal.id, kind=kind, strength=table.fear_strength, since_epoch=ctx.epoch, locked=[]))
+        ctx.session.add(
+            FearRow(
+                holder_node_id=mortal.id,
+                kind=kind,
+                fear_kind_id=authored.get(kind),
+                strength=table.fear_strength,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
     await ctx.session.flush()
     return len(ranked)
 
@@ -628,7 +663,9 @@ async def feel_fears(ctx: TickContext, mortal: EntityRow, resolved: bool) -> int
     felt = 0
     for row in list(await ctx.session.scalars(select(FearRow).where(FearRow.holder_node_id == mortal.id))):
         if await fear_near(ctx, mortal, row.kind):
-            size = THOUGHTS[ThoughtKind.FEAR_NEAR].intensity * (PERCENT + row.strength) / (2 * PERCENT)
+            kind = await ctx.session.get(FearKindRow, row.fear_kind_id) if row.fear_kind_id is not None else None
+            grip = (kind.grip if kind is not None else PLAIN_GRIP) / PLAIN_GRIP
+            size = THOUGHTS[ThoughtKind.FEAR_NEAR].intensity * (PERCENT + row.strength) / (2 * PERCENT) * grip
             if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.FEAR_NEAR, ctx.epoch, subject_id=row.target_node_id, intensity=size):
                 felt += 1
     return felt

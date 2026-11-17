@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.motifs import MOTIF_SOURCES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -22,12 +23,14 @@ from aerona.domain.enums.creator import (
     CreatorSignKind,
     CreatorStance,
 )
+from aerona.domain.enums.demography import MotifSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import creator_row
 from aerona.engine.gods.worship import creator_worshippers
+from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.mind.book import pressures_of, values_for
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
@@ -212,14 +215,44 @@ async def world_far(ctx: TickContext, world_id: int | None) -> bool:
     return row is not None and row.attention < ctx.rules.creator.far_eye_below
 
 
-async def keep_absence(ctx: TickContext) -> int:
-    absent = 0
+async def unknowing_people_of(ctx: TickContext, world_id: int) -> EntityRow | None:
+    peoples = [people for people in await living_peoples(ctx) if people.world_id == world_id and not held(people.id)]
+    if not peoples:
+        return None
+    unknowing: dict[int, int] = {}
+    for people in peoples:
+        standing = await ctx.session.get(CreatorStandingRow, people.id)
+        unknowing[people.id] = standing.ignorance if standing is not None else PERCENT
+    return max(peoples, key=lambda people: (unknowing[people.id], -people.id))
+
+
+async def bound(ctx: TickContext, people_id: int) -> bool:
+    open_states = [CovenantState.OFFERED, CovenantState.SEALED]
+    found = await ctx.session.scalar(select(CovenantRow.id).where(CovenantRow.people_entity_id == people_id, CovenantRow.state.in_(open_states)).limit(1))
+    return found is not None
+
+
+async def eye_returns(ctx: TickContext, creator: CreatorRow, world_id: int) -> bool:
+    people = await unknowing_people_of(ctx, world_id)
+    if people is None:
+        return False
+    await warning(ctx, creator, people)
+    if not await bound(ctx, people.id):
+        await covenant_offer(ctx, creator, people)
+    return True
+
+
+async def keep_absence(ctx: TickContext, creator: CreatorRow) -> tuple[int, int]:
+    absent = returned = 0
     for row in list(await ctx.session.scalars(select(WorldAttentionRow).order_by(WorldAttentionRow.world_id))):
         if "far_epochs" in row.locked:
             continue
+        was_absent = row.far_epochs >= ctx.rules.creator_bonds.absence_epochs
         row.far_epochs = row.far_epochs + 1 if row.attention < ctx.rules.creator.far_eye_below else 0
         absent += row.far_epochs >= ctx.rules.creator_bonds.absence_epochs
-    return absent
+        if was_absent and row.far_epochs == 0 and await eye_returns(ctx, creator, row.world_id):
+            returned += 1
+    return absent, returned
 
 
 async def keep_standing(ctx: TickContext, creator: CreatorRow) -> int:
@@ -378,7 +411,7 @@ async def keep_chosen(ctx: TickContext) -> int:
     return kept
 
 
-def nature_for(values: Mapping[ValueAxis, int]) -> CreatorNature:
+def nature_for(values: Mapping[ValueAxis, int], motifs: list[MotifSource] | None = None, lean: int = 0) -> CreatorNature:
     leans = {
         CreatorNature.JUDGE: values.get(ValueAxis.LAW, 0),
         CreatorNature.SOURCE: values.get(ValueAxis.NATURE, 0),
@@ -387,6 +420,10 @@ def nature_for(values: Mapping[ValueAxis, int]) -> CreatorNature:
         CreatorNature.UNKNOWABLE: values.get(ValueAxis.KNOWLEDGE, 0),
         CreatorNature.MAKER: values.get(ValueAxis.CRAFTSMANSHIP, 0),
     }
+    for source in motifs or []:
+        nature = MOTIF_SOURCES[source].nature
+        if nature is not None:
+            leans[nature] += lean
     return max(leans, key=lambda nature: (leans[nature], nature.value))
 
 
@@ -398,7 +435,7 @@ async def depict(ctx: TickContext) -> int:
         if held(people.id) or await ctx.session.get(CreatorDepictionRow, people.id) is not None:
             continue
         name = await namer.from_speaker(people.id, f"creator.{people.id}", NameKind.PERSON) or people.name
-        nature = nature_for(await values_for(ctx.session, people.id))
+        nature = nature_for(await values_for(ctx.session, people.id), await people_motifs(ctx.session, people.id), ctx.rules.customs.motif_lean)
         ctx.session.add(CreatorDepictionRow(people_entity_id=people.id, name=name, nature=nature, aspect=None, updated_epoch=ctx.epoch, locked=[]))
         made += 1
     return made
@@ -408,7 +445,9 @@ async def keep_creator_bonds(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     if creator is None:
         return
-    ctx.count("creator_absent_worlds", await keep_absence(ctx))
+    absent, returned = await keep_absence(ctx, creator)
+    ctx.count("creator_absent_worlds", absent)
+    ctx.count("creator_returned_worlds", returned)
     ctx.count("creator_standing_kept", await keep_standing(ctx, creator))
     ctx.count("creator_covenants_moved", await keep_covenants(ctx, creator))
     ctx.count("creator_chosen_kept", await keep_chosen(ctx))

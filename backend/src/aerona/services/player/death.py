@@ -22,7 +22,7 @@ class SiblingScheme(Command):
     kind: SchemeKind
 
 
-class ScatterBones(Command):
+class HinderReturn(Command):
     sibling_id: int
     son_id: int
 
@@ -70,8 +70,8 @@ async def sibling_scheme(scope: PlayerScope, command: SiblingScheme) -> Effect:
     )
 
 
-@player_action("sibling:scatter", ActionKind.SCATTER_BONES)
-async def scatter_bones(scope: PlayerScope, command: ScatterBones) -> Effect:
+@player_action("sibling:hinder_return", ActionKind.HINDER_RETURN)
+async def hinder_return(scope: PlayerScope, command: HinderReturn) -> Effect:
     sibling = await guards.son(scope.session, command.sibling_id)
     son = await guards.son(scope.session, command.son_id)
     result = await death.order_scatter(scope.session, scope.rules, sibling.id, son.id)

@@ -298,6 +298,7 @@ from aerona.rules.registry.goals import GoalsRules
 from aerona.rules.registry.god_actions import GodActionsRules
 from aerona.rules.registry.god_hand import GodHandRules
 from aerona.rules.registry.god_power import GodPowerRules
+from aerona.rules.registry.goods_kinds import GoodsRules
 from aerona.rules.registry.guide import GuideRules
 from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
@@ -323,6 +324,8 @@ from aerona.rules.registry.intervention_effects import InterventionEffectsRules
 from aerona.rules.registry.intrigue import BeliefStateRules
 from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
 from aerona.rules.registry.justice import EnactmentRules, TrialRules
+from aerona.rules.registry.kind_crafts import ColourRules, DressRules, HouseholdGoodsRules, MusicRules, ScentRules, SubstanceRules
+from aerona.rules.registry.kinds import KindsRules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.language import LanguageRules
 from aerona.rules.registry.language_contact import LanguageContactRules
@@ -482,6 +485,7 @@ from aerona.rules.registry.nature import (
     SymbiosisRules,
     ThermoregulationRules,
 )
+from aerona.rules.registry.nature_kinds import BuildingRules, OfficeDutyRules, TraitRules
 from aerona.rules.registry.networks import NetworkRules
 from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.operations import (
@@ -577,6 +581,7 @@ from aerona.rules.registry.sites import ExcavationRules, SiteRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
 from aerona.rules.registry.society_depth import ConsumptionRules, RealmLoyaltyRules
+from aerona.rules.registry.society_kinds import SocietyKindsRules
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
@@ -629,6 +634,7 @@ from aerona.rules.registry.urban_depth import (
     ManipulationRules,
     MorphologyRules,
     PortRules,
+    PreservationRules,
     PreventionRules,
     TradingPostRules,
     TurfRules,
@@ -864,6 +870,7 @@ class Rules:
     convoys: ConvoyRules = field(default_factory=ConvoyRules)
     fleets: FleetRules = field(default_factory=FleetRules)
     cargo: CargoRules = field(default_factory=CargoRules)
+    preservation: PreservationRules = field(default_factory=PreservationRules)
     ports: PortRules = field(default_factory=PortRules)
     manipulation: ManipulationRules = field(default_factory=ManipulationRules)
     legal_systems: LegalSystemRules = field(default_factory=LegalSystemRules)
@@ -1000,6 +1007,18 @@ class Rules:
     divine_grammar: DivineGrammarRules = field(default_factory=DivineGrammarRules)
     creator_bonds: CreatorBondRules = field(default_factory=CreatorBondRules)
     pantheon_life: PantheonLifeRules = field(default_factory=PantheonLifeRules)
+    kinds: KindsRules = field(default_factory=KindsRules)
+    typed_traits: TraitRules = field(default_factory=TraitRules)
+    office_duties: OfficeDutyRules = field(default_factory=OfficeDutyRules)
+    building: BuildingRules = field(default_factory=BuildingRules)
+    society_kinds: SocietyKindsRules = field(default_factory=SocietyKindsRules)
+    goods: GoodsRules = field(default_factory=GoodsRules)
+    dress: DressRules = field(default_factory=DressRules)
+    colours: ColourRules = field(default_factory=ColourRules)
+    scents: ScentRules = field(default_factory=ScentRules)
+    household_goods: HouseholdGoodsRules = field(default_factory=HouseholdGoodsRules)
+    music: MusicRules = field(default_factory=MusicRules)
+    substances: SubstanceRules = field(default_factory=SubstanceRules)
     avatars: AvatarRules = field(default_factory=AvatarRules)
     god_relations: GodRelationRules = field(default_factory=GodRelationRules)
     natural_laws: NaturalLawRules = field(default_factory=NaturalLawRules)

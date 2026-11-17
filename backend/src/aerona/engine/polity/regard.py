@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
@@ -110,7 +111,7 @@ async def on_conquest(ctx: TickContext, conqueror_id: int) -> int:
 
 
 async def on_war(ctx: TickContext, aggressor_id: int, cause: WarCause | None) -> int:
-    if cause in {WarCause.CLAIM, WarCause.INDEPENDENCE, WarCause.SUCCESSION, WarCause.UPRISING, WarCause.TRIBUTE_REVOLT}:
+    if cause is not None and WAR_CAUSES[cause].within_realm:
         return 0
     return await alarm(ctx, aggressor_id, ctx.rules.statecraft.war_threat)
 

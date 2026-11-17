@@ -32,10 +32,10 @@ class PeopleTarget(Command):
     people_id: int
 
 
-class Chimera(Command):
+class MergeSpecies(Command):
     first_id: int
     second_id: int
-    weaver_id: int | None = None
+    maker_id: int | None = None
 
 
 class Cull(Command):
@@ -72,10 +72,10 @@ async def split(scope: PlayerScope, command: PeopleTarget) -> Effect:
     return Effect(f"{offshoot.name} split away.", offshoot.id, created_ids=(offshoot.id,))
 
 
-@player_action("species:chimera", ActionKind.MAKE_CHIMERA)
-async def chimera(scope: PlayerScope, command: Chimera) -> Effect:
-    woven = await cross_species(scope.session, scope.rules, command.first_id, command.second_id, command.weaver_id)
-    return Effect(f"{woven.name} was made.", woven.id, created_ids=(woven.id,))
+@player_action("species:merge", ActionKind.MERGE_SPECIES)
+async def merge_species(scope: PlayerScope, command: MergeSpecies) -> Effect:
+    merged = await cross_species(scope.session, scope.rules, command.first_id, command.second_id, command.maker_id)
+    return Effect(f"{merged.name} was made.", merged.id, created_ids=(merged.id,))
 
 
 @player_action("species:trail", ActionKind.MEGAFAUNA_TRAIL)

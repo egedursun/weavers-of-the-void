@@ -60,6 +60,7 @@ from aerona.engine.interconnect.catalog_gatherings import GATHERING_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
 from aerona.engine.interconnect.catalog_intrigue import INTRIGUE_MECHANICS
 from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
+from aerona.engine.interconnect.catalog_kinds import KIND_MECHANICS
 from aerona.engine.interconnect.catalog_law_depth import LAW_MECHANICS
 from aerona.engine.interconnect.catalog_law_outer import LAW_OUTER_MECHANICS
 from aerona.engine.interconnect.catalog_lifecycle import LIFECYCLE_MECHANICS
@@ -248,7 +249,7 @@ CORE_MECHANICS = (
             Coupling(Subsystem.ECONOMY, "mineral seams feed resources; route ease feeds trade"),
             Coupling(Subsystem.ECOLOGY, "wild land carries wild species"),
             Coupling(Subsystem.MAGIC, "magic density draws magic storms"),
-            Coupling(Subsystem.COSMOS, "the leak tears wounds into the land"),
+            Coupling(Subsystem.COSMOS, "leakage opens the land to what lies outside the cosmos"),
         ),
     ),
     Mechanic(
@@ -323,7 +324,7 @@ CORE_MECHANICS = (
         tools=("sever_ley",),
         targets=("region", "place", "structure"),
         couplings=(
-            Coupling(Subsystem.ENVIRONMENT, "ley convergence raises magic density; salted earth and leak wounds cut lines"),
+            Coupling(Subsystem.ENVIRONMENT, "ley convergence raises magic density; barren ground and openings to the outside cut lines"),
             Coupling(Subsystem.CULTURE, "works standing on ley lines and nexus gain function"),
             Coupling(Subsystem.MAGIC, "magic storms run down the lines; wizards on a line act more often"),
         ),
@@ -362,11 +363,11 @@ CORE_MECHANICS = (
     Mechanic(
         key="geomorphology",
         spec_item="S6.1",
-        title="River courses, desertification, eruptions and salt",
+        title="River courses, desertification, eruptions and saline soils",
         subsystem=Subsystem.ENVIRONMENT,
         phases=("geomorphology", "natural_disasters", "environment_survey", "environment_derive"),
         surface=Surface(drawer="LandShapeSection"),
-        backfill="geomorphology: every region gains a shape row on the first run; volcanic lands and hycean and salted soils are derived from the profile",
+        backfill="geomorphology: every region gains a shape row on the first run; volcanic lands and hycean and saline soils are derived from the profile",
         templates=("land.desertified", "land.desert_retreat", "land.salted", "land.ash_weathered", "land.river_shift", "tools.son.reshape_land"),
         fields=("desertification", "desertified", "river_course", "volcanic", "volcanic_pressure", "soil"),
         tables=(RegionGeomorphRow.__tablename__, RiverShiftRow.__tablename__),
@@ -376,7 +377,7 @@ CORE_MECHANICS = (
         couplings=(
             Coupling(
                 Subsystem.ENVIRONMENT,
-                "deserts lose rain and turn sandy; great floods move rivers; ash weathers into rich soil",
+                "deserts lose rain and turn sandy; great floods move rivers; tephra weathers into rich soil",
                 EdgeKind.FLOW,
                 "geomorphology.desert_rainfall_drop",
             ),
@@ -519,6 +520,7 @@ CORE_MECHANICS = (
     ),
     Mechanic(
         key="maimed_cohorts",
+        tools=("tend_maimed",),
         spec_item="F4.5",
         title="The maimed as a population",
         subsystem=Subsystem.DEMOGRAPHY,
@@ -531,7 +533,7 @@ CORE_MECHANICS = (
         targets=("settlement", "people"),
         couplings=(
             Coupling(Subsystem.ECONOMY, "the maimed lower food and craft output and drain prosperity without a pension"),
-            Coupling(Subsystem.WAR, "a maimed people grows wary of new wars; a martial one holds scar festivals"),
+            Coupling(Subsystem.WAR, "a maimed people grows wary of new wars; a martial one holds festivals for its scarred"),
             Coupling(Subsystem.SOCIAL, "the maimed raise the birth of healers"),
         ),
     ),
@@ -569,7 +571,7 @@ CORE_MECHANICS = (
         exposure=Exposure.CONTEXT,
         targets=("mortal", "son", "foreign_god"),
         couplings=(
-            Coupling(Subsystem.BODY, "brave, craven, scholarly and other traits raise or lower what a body can do"),
+            Coupling(Subsystem.BODY, "traits raise or lower what a body can do"),
             Coupling(Subsystem.WAR, "a wrathful or ambitious ruler wants war; a cruel captor executes its prisoners"),
             Coupling(Subsystem.SOCIAL, "trusting and paranoid temperaments colour every opinion; forgiving and vengeful ones change how long grudges last"),
             Coupling(Subsystem.POLITY, "a just ruler holds back an uprising; a deceitful one betrays allies"),
@@ -721,7 +723,7 @@ CORE_MECHANICS = (
         targets=("resource", "place", "species"),
         couplings=(
             Coupling(Subsystem.GODS, "a dead god's remains become godflesh and a substance of their own"),
-            Coupling(Subsystem.COSMOS, "dead stars and comets drop star metal; leak wounds glaze into void glass"),
+            Coupling(Subsystem.COSMOS, "dead stars and comets drop star metal; rifts glaze the land into void glass"),
             Coupling(Subsystem.KNOWLEDGE, "smiths at the height of metallurgy discover alloys", EdgeKind.TRIGGER, "materials.world_material_research_level"),
         ),
     ),
@@ -811,15 +813,15 @@ CORE_MECHANICS = (
     Mechanic(
         key="hunting_grounds",
         spec_item="F3.1",
-        title="Hides, chitin, ivory and dragonbone from living species",
+        title="Animal materials from living species",
         subsystem=Subsystem.ECOLOGY,
-        phases=("species_yields",),
+        phases=("species_products",),
         surface=Surface(drawer=RESOURCE_SECTION),
-        backfill="species_yields: great beasts and insectoid kinds open hunting grounds",
+        backfill="species_products: great beasts and insectoid kinds open hunting grounds",
         fields=("abundance", "regeneration"),
         tables=(ResourceProfileRow.__tablename__,),
         targets=("species", "resource"),
-        couplings=(Coupling(Subsystem.ECONOMY, "a megafauna hunted to extinction stops feeding the dragonbone armourers", EdgeKind.FLOW),),
+        couplings=(Coupling(Subsystem.ECONOMY, "a great beast hunted to extinction stops feeding those who work its materials", EdgeKind.FLOW),),
     ),
     Mechanic(
         key="typed_resource_mechanics",
@@ -889,7 +891,7 @@ CORE_MECHANICS = (
         fields=("price", "supply", "demand", "price_food", "price_ore", "price_goods"),
         tables=(MarketPriceRow.__tablename__,),
         targets=("people", "settlement"),
-        couplings=(Coupling(Subsystem.SOCIAL, "dear bread and goods weigh on the classes' satisfaction", EdgeKind.FLOW),),
+        couplings=(Coupling(Subsystem.SOCIAL, "dear food and goods weigh on the classes' satisfaction", EdgeKind.FLOW),),
     ),
     Mechanic(
         key="trade_routes",
@@ -1044,6 +1046,7 @@ BUILT_IN = (
     *POWER_MECHANICS,
     *LIVING_MECHANICS,
     *FORTUNE_MECHANICS,
+    *KIND_MECHANICS,
     *TECHNOLOGY_MECHANICS,
     *DIVINE_POWER_MECHANICS,
     *CREATOR_BOND_MECHANICS,
@@ -1463,7 +1466,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         "megafauna_loss",
         "F3.1",
         "Hunting grounds die with their species",
-        ("species_yields",),
+        ("species_products",),
         RESOURCE_SECTION,
         (R, "species"),
         ("regeneration", "abundance"),
@@ -1481,7 +1484,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("reserve",),
         Subsystem.GODS,
         "materials.world_material_god_chance",
-        "a god's corpse becomes a mine",
+        "a dead god's body becomes a mine",
     ),
     (
         "star_metal",
@@ -1498,14 +1501,14 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
     (
         "void_glass",
         "F3.1",
-        "Void glass from leak wounds",
+        "Void glass from rifts",
         ("world_materials",),
         RESOURCE_SECTION,
         (R, "region"),
         ("reserve",),
         Subsystem.COSMOS,
         "materials.world_material_leak_chance",
-        "the leak glazes the land",
+        "a rift glazes the land",
     ),
     (
         "route_formation",
@@ -1606,7 +1609,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
     (
         "famine_purchases",
         "S6.4",
-        "Grain bought dear in a hungry year",
+        "Food bought dear in a hungry year",
         ("trade_flow",),
         ROUTE_SECTION,
         (TR, *COMMUNITIES),
@@ -1793,7 +1796,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("quality", "might"),
         Subsystem.WAR,
         "refining.material_quality_pct",
-        "fine ore makes fine blades",
+        "fine raw stuff makes fine goods",
     ),
     (
         "route_closure",

@@ -133,7 +133,6 @@ function ConstructCard({
           types: MORTAL_TYPES,
         },
         { key: 'decay', label: 'Wear', kind: 'number', min: 0, max: SPAN },
-        { key: 'will', label: 'Will', kind: 'pick', table: table(WILLS) },
         {
           key: 'soul_entity_id',
           label: 'Bound soul',

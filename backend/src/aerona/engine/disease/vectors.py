@@ -98,7 +98,7 @@ class Spot:
 def vector_factor(book: DiseaseBook, profile: DiseaseProfileRow, spot: Spot) -> float:
     readers: dict[DiseaseVector, Callable[[], float]] = {
         DiseaseVector.AIR: lambda: air(book, spot.ground),
-        DiseaseVector.WATER: lambda: water(book, spot.ground),
+        DiseaseVector.WATER: lambda: water(book, spot.ground) * book.drink_guard(spot.target.id),
         DiseaseVector.TOUCH: lambda: touch(book, spot.path),
         DiseaseVector.BITE: lambda: bite(book, profile.disease_entity_id, spot.region_id, spot.ground),
         DiseaseVector.SPIRIT: lambda: spirit(book, spot.target, spot.ground, spot.region_id),

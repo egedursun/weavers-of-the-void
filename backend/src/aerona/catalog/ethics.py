@@ -104,13 +104,44 @@ class HonourSpec:
     guilt_pct: int
     law_pct: int
     oath_pct: int
+    face_loss_pct: int = 100
+    restores: bool = False
+    grievance_kept_pct: int = 50
+    message_sting_pct: int = 100
+    herald_sting_pct: int = 100
+    affairs_end_in_duels: bool = False
 
 
 HONOUR_MODELS: MappingProxyType[HonourModel, HonourSpec] = MappingProxyType(
     {
         HonourModel.DIGNITY: HonourSpec("Dignity: law over insult", 50, 0, 100, 100, 150, 60),
-        HonourModel.HONOUR: HonourSpec("Honour: a shame to one is a shame to the house", 150, 60, 120, 100, 100, 150),
-        HonourModel.FACE: HonourSpec("Face: public shame weighs more than private guilt", 100, 30, 160, 50, 100, 120),
+        HonourModel.HONOUR: HonourSpec(
+            "Honour: a shame to one is a shame to the house",
+            150,
+            60,
+            120,
+            100,
+            100,
+            150,
+            restores=True,
+            message_sting_pct=200,
+            herald_sting_pct=200,
+            affairs_end_in_duels=True,
+        ),
+        HonourModel.FACE: HonourSpec(
+            "Face: public shame weighs more than private guilt",
+            100,
+            30,
+            160,
+            50,
+            100,
+            120,
+            face_loss_pct=200,
+            restores=True,
+            grievance_kept_pct=0,
+            message_sting_pct=50,
+            herald_sting_pct=200,
+        ),
         HonourModel.NONE: HonourSpec("None: neither word nor standing is weighed beyond the act", 0, 0, 0, 100, 150, 0),
     }
 )

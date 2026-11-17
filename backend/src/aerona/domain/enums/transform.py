@@ -20,7 +20,7 @@ class TransformKind(StrEnum):
     LEGEND_FIXED = "legend_fixed"
     ARTWORK_REMEMBERED = "artwork_remembered"
     EVENT_PHENOMENON = "event_phenomenon"
-    GOD_CORPSE = "god_corpse"
+    DEAD_GOD = "dead_god"
     CONSTRUCT = "construct"
     BEAST_PROMOTION = "beast_promotion"
     LANGUAGE_DEATH = "language_death"

@@ -57,10 +57,13 @@ const VIEW = {
     cohesion: 60,
     literacy: 20,
     urbanisation: 40,
-    aesthetic: 'celestial',
+    ornament: 60,
+    geometry: 65,
+    colour: 70,
+    scale: 80,
+    symmetry: 70,
+    motif_sources: ['sky', 'made_things'],
     martial_style: 'skirmisher',
-    marriage: 'polyandry',
-    endogamous: true,
     inheritance: 'ultimogeniture',
     slavery_lawful: false,
     staples: ['fish'],
@@ -148,6 +151,15 @@ describe('folk and customs', () => {
     expect(body.values.body_plan).toBe('avian')
     expect(body.values.funeral_rite).toBe('sky_burial')
   })
+  it('offers what their motifs are drawn from in the style group', async () => {
+    serve()
+    const { screen } = await renderApp(<PeopleProfileSection peopleId={12} />)
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    const set = screen.getByRole('button', { name: 'Set Motifs drawn from' })
+    await expect.element(set).toBeInTheDocument()
+    await expect.element(set).toHaveAttribute('aria-disabled', 'true')
+  })
+
   it('edits the record and releases a hold', async () => {
     serve()
     const { screen } = await renderApp(<PeopleProfileSection peopleId={12} />)

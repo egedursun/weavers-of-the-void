@@ -56,6 +56,6 @@ async def clergy_sway(session: AsyncSession, rules: Rules, polity_id: int) -> in
     cult = await session.get(EntityRow, realm.state_religion_id)
     if doctrine is None or cult is None or cult.status is not EntityStatus.CANON:
         return 0
-    if await session.get(CultTenetRow, (cult.id, TenetKind.DIVINE_KINGSHIP)) is not None:
+    if await session.get(CultTenetRow, (cult.id, TenetKind.DIVINE_RULE)) is not None:
         return 0
     return sway_of(rules, doctrine, stat(cult, "zeal") or 0)

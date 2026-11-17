@@ -402,7 +402,7 @@ async def route_method(ctx: TickContext, entity: EntityRow, knowledge: Knowledge
         if branch in known:
             return method
     if await has_tamed_mount(ctx.session, entity.id):
-        return TravelMethod.COSMIC_MOUNT
+        return TravelMethod.CARRIER_MOUNT
     return TravelMethod.DREAM_JOURNEY if KnowledgeBranch.MAGIC in known else None
 
 

@@ -39,6 +39,7 @@ run duplicate_buttons "$PYTHON" scripts/check_duplicate_buttons.py
 run lever_costs "$PYTHON" scripts/check_lever_costs.py
 run model_enum_text "$PYTHON" scripts/check_model_enum_text.py
 run stat_keys "$PYTHON" scripts/check_stat_keys.py
+run partial_reads "$PYTHON" scripts/check_partial_reads.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
 run raw_ids "$PYTHON" scripts/check_raw_ids.py
@@ -74,6 +75,8 @@ run method_orphans "$PYTHON" scripts/check_method_orphans.py
 run food_energy "$PYTHON" scripts/check_food_energy.py
 run spec_depth "$PYTHON" scripts/check_spec_depth.py
 run integrity_coverage "$PYTHON" scripts/check_integrity_coverage.py
+run kind_layers "$PYTHON" scripts/check_kind_layers.py
+run kind_definitions "$PYTHON" scripts/check_kind_definitions.py
 run raw_enums sh -c 'cd frontend && node scripts/check_raw_enums.mjs'
 run panel_stacks sh -c 'cd frontend && node scripts/check_panel_stacks.mjs'
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check

@@ -266,6 +266,7 @@ class DreamRow(Base):
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
     message_id: Mapped[int | None] = mapped_column(ForeignKey("messages.id", ondelete="SET NULL"))
     reading: Mapped[DreamReading] = mapped_column(enum_type(DreamReading, "reading"), default=DreamReading.UNREAD)
+    reading_kind_id: Mapped[int | None] = mapped_column(ForeignKey("reading_kinds.id", ondelete="SET NULL"))
     reader_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     reading_true: Mapped[bool | None]
     recurring: Mapped[bool] = mapped_column(default=False)
@@ -313,6 +314,7 @@ class LifeDreamRow(Base):
 
     holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     goal: Mapped[LifeGoal] = mapped_column(enum_type(LifeGoal, "goal"))
+    aim_kind_id: Mapped[int | None] = mapped_column(ForeignKey("aim_kinds.id", ondelete="SET NULL"))
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     milestones: Mapped[list[int]] = mapped_column(JSON, default=list)
     progress: Mapped[int] = mapped_column(default=0)
@@ -346,6 +348,7 @@ class FearRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
     kind: Mapped[FearKind] = mapped_column(enum_type(FearKind, "kind"))
+    fear_kind_id: Mapped[int | None] = mapped_column(ForeignKey("fear_kinds.id", ondelete="SET NULL"))
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     strength: Mapped[int]
     since_epoch: Mapped[int]

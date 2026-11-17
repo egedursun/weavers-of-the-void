@@ -3,6 +3,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from aerona.catalog.anatomy import Anatomy, Part
+from aerona.catalog.kinds.harm import HARM_CAUSES
+from aerona.catalog.kinds.strikes import STRIKE_STYLES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
@@ -68,69 +70,8 @@ class Hit:
 
 
 def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
-    mixes: dict[HarmCause, dict[DamageType, int]] = {
-        HarmCause.BATTLE: {
-            DamageType.CUT: rules.battle_cut,
-            DamageType.PIERCE: rules.battle_pierce,
-            DamageType.BLUNT: rules.battle_blunt,
-            DamageType.FIRE: rules.battle_fire,
-        },
-        HarmCause.DUEL: {DamageType.CUT: rules.duel_cut, DamageType.PIERCE: rules.duel_pierce, DamageType.BLUNT: rules.duel_blunt},
-        HarmCause.MONSTER: {
-            DamageType.CUT: rules.monster_claw,
-            DamageType.PIERCE: rules.monster_bite,
-            DamageType.BLUNT: rules.monster_crush,
-            DamageType.VENOM: rules.monster_venom,
-        },
-        HarmCause.QUEST: {
-            DamageType.CUT: rules.quest_cut,
-            DamageType.BLUNT: rules.quest_blunt,
-            DamageType.COLD: rules.quest_cold,
-            DamageType.PIERCE: rules.quest_pierce,
-        },
-        HarmCause.ACCIDENT: {DamageType.BLUNT: rules.accident_blunt, DamageType.CUT: rules.accident_cut, DamageType.FIRE: rules.accident_fire},
-        HarmCause.ESCAPE: {DamageType.BLUNT: rules.escape_blunt, DamageType.CUT: rules.escape_cut},
-        HarmCause.PUNISHMENT: {DamageType.CUT: rules.punishment_cut, DamageType.BLUNT: rules.punishment_blunt, DamageType.FIRE: rules.punishment_fire},
-        HarmCause.TORTURE: {DamageType.CUT: rules.torture_cut, DamageType.BLUNT: rules.torture_blunt, DamageType.FIRE: rules.torture_fire},
-        HarmCause.DISASTER: {
-            DamageType.BLUNT: rules.disaster_blunt,
-            DamageType.FIRE: rules.disaster_fire,
-            DamageType.COLD: rules.disaster_cold,
-            DamageType.CUT: rules.disaster_cut,
-        },
-        HarmCause.CURSE: {DamageType.MAGIC: rules.curse_magic, DamageType.VOID: rules.curse_void},
-        HarmCause.MAGIC_BACKLASH: {DamageType.MAGIC: rules.backlash_magic, DamageType.FIRE: rules.backlash_fire, DamageType.VOID: rules.backlash_void},
-        HarmCause.GOD: {DamageType.HOLY: rules.god_holy, DamageType.FIRE: rules.god_fire, DamageType.BLUNT: rules.god_blunt},
-        HarmCause.POISON: {DamageType.VENOM: rules.poison_venom},
-        HarmCause.SACRIFICE: {DamageType.CUT: rules.sacrifice_cut, DamageType.MAGIC: rules.sacrifice_magic},
-        HarmCause.AGE: {DamageType.BLUNT: rules.age_blunt},
-        HarmCause.PLAYER: {DamageType.CUT: rules.player_cut, DamageType.BLUNT: rules.player_blunt, DamageType.PIERCE: rules.player_pierce},
-        HarmCause.EXPOSURE: {DamageType.COLD: rules.exposure_cold, DamageType.FIRE: rules.exposure_heat},
-        HarmCause.RITUAL: {DamageType.CUT: rules.ritual_cut, DamageType.FIRE: rules.ritual_fire},
-        HarmCause.BOMBARDMENT: {
-            DamageType.EXPLOSIVE: rules.bombardment_explosive,
-            DamageType.BLUNT: rules.bombardment_blunt,
-            DamageType.FIRE: rules.bombardment_fire,
-        },
-        HarmCause.INDUSTRIAL: {
-            DamageType.BLUNT: rules.industrial_blunt,
-            DamageType.CUT: rules.industrial_cut,
-            DamageType.FIRE: rules.industrial_fire,
-            DamageType.CHEMICAL: rules.industrial_chemical,
-            DamageType.ELECTRIC: rules.industrial_electric,
-        },
-        HarmCause.CRASH: {DamageType.BLUNT: rules.crash_blunt, DamageType.CUT: rules.crash_cut, DamageType.FIRE: rules.crash_fire},
-        HarmCause.RADIATION: {DamageType.RADIATION: rules.radiation_radiation},
-        HarmCause.DECOMPRESSION: {DamageType.COLD: rules.decompression_cold, DamageType.BLUNT: rules.decompression_blunt},
-        HarmCause.POWER: {DamageType.PSYCHIC: rules.power_psychic, DamageType.BLUNT: rules.power_blunt},
-        HarmCause.EXPERIMENT: {
-            DamageType.CHEMICAL: rules.experiment_chemical,
-            DamageType.RADIATION: rules.experiment_radiation,
-            DamageType.ELECTRIC: rules.experiment_electric,
-            DamageType.PSYCHIC: rules.experiment_psychic,
-        },
-    }
-    return {kind: weight for kind, weight in mixes[cause].items() if weight > 0}
+    mixed = {kind: int(getattr(rules, rule_name)) for kind, rule_name in HARM_CAUSES[cause].mix}
+    return {kind: weight for kind, weight in mixed.items() if weight > 0}
 
 
 def weighted[K](rng: SeededRandom, weights: dict[K, float]) -> K | None:
@@ -157,19 +98,10 @@ def region_weights(rules: Rules, anatomy: Anatomy, style: StrikeStyle) -> dict[B
         BodyRegion.WINGS: table.region_wings,
         BodyRegion.TAIL: table.region_tail,
     }
-    lean = {
-        StrikeStyle.NORMAL: {},
-        StrikeStyle.WHOLE: {},
-        StrikeStyle.TRAMPLE: {BodyRegion.LEGS: table.trample_legs_pct, BodyRegion.TORSO: table.trample_torso_pct},
-        StrikeStyle.AERIAL: {BodyRegion.HEAD: table.aerial_head_pct, BodyRegion.WINGS: table.aerial_wings_pct},
-        StrikeStyle.LOW: {BodyRegion.LEGS: table.low_legs_pct},
-        StrikeStyle.RANGED: {BodyRegion.TORSO: table.ranged_torso_pct, BodyRegion.HEAD: table.ranged_head_pct},
-        StrikeStyle.BURROWING: {BodyRegion.LEGS: table.burrow_legs_pct, BodyRegion.TAIL: table.burrow_legs_pct},
-        StrikeStyle.ENGULFING: {},
-        StrikeStyle.FROM_HIDING: {BodyRegion.HEAD: table.hidden_head_pct, BodyRegion.TORSO: table.hidden_torso_pct},
-    }[style]
+    spec = STRIKE_STYLES[style]
+    lean = {region: int(getattr(table, rule_name)) for region, rule_name in spec.lean}
     present = {part.region for part in anatomy.parts}
-    if style in {StrikeStyle.WHOLE, StrikeStyle.ENGULFING}:
+    if spec.whole:
         return {region: 1.0 for region in base if region in present}
     return {region: weight * lean.get(region, PERCENT) / PERCENT for region, weight in base.items() if region in present}
 
@@ -211,7 +143,7 @@ def _pierce(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> 
         return InjuryKind.GOUGED
     if part.vital and severity >= rules.pierce_destroy_at:
         return InjuryKind.DESTROYED
-    return InjuryKind.BITE if cause is HarmCause.MONSTER else InjuryKind.PUNCTURE
+    return HARM_CAUSES[cause].pierce
 
 
 def _blunt(rules: InjuryRules, part: Part, severity: int, cause: HarmCause) -> InjuryKind:

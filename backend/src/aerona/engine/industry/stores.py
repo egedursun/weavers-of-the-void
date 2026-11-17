@@ -10,12 +10,13 @@ from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.ecology import Diet, SizeClass, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, Diet, SizeClass, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.industry import EnergyKind, ProcessKind, QualityTier
 from aerona.domain.enums.society import CreatureTrait, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.years import world_years
 from aerona.engine.industry.energy import scale_by_energy
@@ -59,7 +60,7 @@ async def vermin_in(ctx: TickContext, region_id: int | None) -> bool:
 
 async def pest_hunters(ctx: TickContext, community_id: int) -> bool:
     sized = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.diet.in_(HUNTER_DIETS), SpeciesProfileRow.size_class.in_(HUNTER_SIZES))
-    hunters = sized.union(select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == SpeciesUse.PEST_CONTROL))
+    hunters = sized.union(select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == AnimalRole.PEST_CONTROL))
     found = await ctx.session.scalar(
         select(HerdRow.species_entity_id).where(HerdRow.community_entity_id == community_id, HerdRow.head > 0, HerdRow.species_entity_id.in_(hunters)).limit(1)
     )
@@ -124,10 +125,11 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     ledger = goods_of(ctx.session, ctx.epoch)
     years = max(1, len(world_years(ctx.environment, community.world_id or 0, "stores")))
     lost_total = 0
+    goods = await good_book(ctx.session)
     for lot in await perishables(ctx, community.id):
         if lot.held:
             continue
-        rate = 1 - (1 - getattr(table, PERISHABLE[lot.commodity]) / PERCENT * shelter) ** years
+        rate = 1 - (1 - min(PERCENT, getattr(table, PERISHABLE[lot.commodity]) * goods.spoil_scale(lot.commodity)) / PERCENT * shelter) ** years
         if lot.commodity in STORED_GRAINS:
             rate = min(1.0, rate * ((1 + table.vermin_pct / PERCENT) if vermin else 1.0) * ((1 - table.hunters_pct / PERCENT) if hunters else 1.0))
         lost = min(lot.quantity - lot.preserved, round_half_up((lot.quantity - lot.preserved) * rate))

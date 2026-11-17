@@ -16,7 +16,13 @@ import {
   useCosmography,
   useCosmographyAction,
 } from './api'
-import { PHENOMENON_CAUSES } from './labels'
+import {
+  PHENOMENON_CAUSES,
+  PHENOMENON_EFFECTS,
+  PHENOMENON_PERSISTENCES,
+  PHENOMENON_SCOPES,
+  PHENOMENON_TARGETS,
+} from './labels'
 import {
   Chip,
   ForgeCard,
@@ -82,6 +88,9 @@ export function PhenomenonCard({
         </Button>
       }
     >
+      <Muted variant='caption'>
+        {`It ${PHENOMENON_EFFECTS[phenomenon.effect]} ${PHENOMENON_TARGETS[phenomenon.target].toLowerCase()} · ${PHENOMENON_SCOPES[phenomenon.scope]} · ${PHENOMENON_PERSISTENCES[phenomenon.persistence]}`}
+      </Muted>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
         <Meter
           label='Intensity'

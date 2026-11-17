@@ -4,18 +4,18 @@ from aerona.catalog.crimes import CRIMES, PENALTY_WORDS, PUNISHMENTS, TRIALS
 from aerona.catalog.laws import LAW_PARAMS
 from aerona.catalog.taxes import TAXES
 from aerona.db.tables.cycles import KinshipSystemRow
-from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.finance import TradePolicyRow
 from aerona.db.tables.unions import UnionCustomRow
-from aerona.domain.enums.cycles import KinshipDescent, MarriagePayment, ResidenceRule
-from aerona.domain.enums.demography import MarriageCustom
+from aerona.domain.enums.cycles import KinshipDescent, ResidenceRule
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.military import SabotageKind
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import LawArea, LawKind, RevoltKind
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.unions import UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionResidence
+from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionDescent, UnionDissolution, UnionForm, UnionResidence
+from aerona.engine.demography.peoples import spousing_for
 from aerona.engine.finance.policy import PolicyBook
 from aerona.engine.law.offences import OWN_DETECTION, WIDE_OFFENCES
 from aerona.engine.law.sentences import SENTENCES
@@ -23,8 +23,8 @@ from aerona.engine.military.sabotage import WIDER_SABOTAGE
 from aerona.engine.mortal.justice import sentence
 from aerona.engine.polity.revolt_causes import CAUSES
 from aerona.engine.polity.revolts import REVOLTS
+from aerona.engine.unions.axes import fresh_custom
 from aerona.engine.unions.customs import DIVORCE_RULE, sides
-from aerona.engine.unions.keep import legacy_custom
 from tests.engine.core.factories import CoreWorld, mortal
 from tests.engine.core.test_minds_w44 import at
 
@@ -53,14 +53,15 @@ async def test_servitude_binds_the_condemned(session: AsyncSession, world: CoreW
     assert culprit.social_class is SocialClass.SERF_OR_SLAVE
 
 
-def test_old_customs_map_onto_union_axes_without_gender() -> None:
-    culture = PeopleCultureRow(marriage=MarriageCustom.POLYANDRY, endogamous=True)
-    kinship = KinshipSystemRow(descent=KinshipDescent.MATRILINEAL, residence=ResidenceRule.PATRILOCAL, payment=MarriagePayment.DOWRY)
-    custom = legacy_custom(7, culture, kinship, political=False)
-    assert custom.form is UnionForm.PLURAL
+def test_a_people_s_values_set_its_union_axes_without_gender() -> None:
+    kinship = KinshipSystemRow(descent=KinshipDescent.THROUGH_SECOND_LINE, residence=ResidenceRule.WITH_FIRST_FAMILY)
+    spousing = spousing_for({ValueAxis.HIERARCHY: -40, ValueAxis.KINSHIP: 40})
+    custom = fresh_custom(7, spousing, kinship, 10)
+    assert custom.form is UnionForm.PLURAL and custom.plural_side is PluralSide.SECOND
+    assert custom.endogamy is PartnerScope.PEOPLE
     assert custom.descent is UnionDescent.THROUGH_SECOND
     assert custom.residence is UnionResidence.WITH_FIRST_FAMILY
-    assert custom.exchange is UnionExchange.FROM_ONE_FAMILY
+    assert custom.exchange_value == 10
     assert DIVORCE_RULE[UnionDissolution.NONE] == "forbidden"
 
 

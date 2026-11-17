@@ -8,7 +8,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import GiftStance, Locus
-from aerona.domain.enums.mortal import Ability
+from aerona.domain.enums.mind import Attribute
 from aerona.engine.body.customs import people_of
 from aerona.engine.genetics.genome import drawn_genes
 from aerona.engine.genetics.life import found_genome
@@ -41,7 +41,7 @@ class EditGenome(Command):
     beauty: int | None = Field(default=None, ge=0, le=SPAN)
     inbreeding: int | None = Field(default=None, ge=0, le=SPAN)
     recognisability: int | None = Field(default=None, ge=0, le=SPAN)
-    potential: dict[Ability, int] | None = None
+    potential: dict[Attribute, int] | None = None
     divine_son_id: int | None = None
     clear_divine: bool = False
     hold: bool = True
@@ -157,7 +157,7 @@ async def edit(scope: PlayerScope, command: EditGenome) -> Effect:
     if command.potential:
         if any(not 0 <= value <= SPAN for value in command.potential.values()):
             raise ValidationFailedError(f"Potential runs from 0 to {SPAN}.")
-        row.potential = {**row.potential, **{ability.value: value for ability, value in command.potential.items()}}
+        row.potential = {**row.potential, **{member.value: value for member, value in command.potential.items()}}
         touched.append(POTENTIAL)
     if command.divine_son_id is not None:
         if await scope.session.get(SonRow, command.divine_son_id) is None:

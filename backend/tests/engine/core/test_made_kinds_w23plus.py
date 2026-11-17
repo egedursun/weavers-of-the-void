@@ -328,9 +328,9 @@ async def test_every_made_type_is_a_record_of_its_world_like_any_other(session: 
     assert bare.entity_id is not None
 
 
-def test_every_made_table_names_its_entity() -> None:
-    assert set(TABLE_KINDS) == set(MADE_TABLES)
-    assert all("entity_id" in table.__table__.c for table in MADE_TABLES)
+def test_every_embodied_made_table_names_its_entity_and_shares_one_pool_of_names() -> None:
+    assert set(TABLE_KINDS) <= set(MADE_TABLES)
+    assert all("entity_id" in table.__table__.c for table in TABLE_KINDS)
 
 
 def test_a_mount_tries_its_slots_in_one_fixed_order_whatever_order_they_come_in() -> None:

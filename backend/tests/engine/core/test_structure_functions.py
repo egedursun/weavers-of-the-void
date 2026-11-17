@@ -5,7 +5,7 @@ from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, Job, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import InheritanceCustom, Job, MartialStyle
 from aerona.domain.enums.entity import EntityStatus, MortalRole
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -123,9 +123,7 @@ async def test_a_school_raises_literacy_and_trains_resident_scribes(session: Asy
         cohesion=50,
         literacy=0,
         urbanisation=0,
-        aesthetic=next(iter(Aesthetic)),
         martial_style=next(iter(MartialStyle)),
-        marriage=next(iter(MarriageCustom)),
         inheritance=next(iter(InheritanceCustom)),
     )
     session.add(culture)

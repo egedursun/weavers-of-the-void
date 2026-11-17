@@ -14,7 +14,7 @@ import {
   Unlock,
 } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
-import { speciesUseValues } from '@/api/generated/schema'
+import { animalRoleValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -370,7 +370,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
 }
 
 const USE_TABLE = Object.fromEntries(
-  speciesUseValues.map((key) => [key, named(USE, key).label])
+  animalRoleValues.map((key) => [key, named(USE, key).label])
 )
 
 function KindRow({

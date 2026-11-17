@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.harm import HARM_CAUSES
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -89,11 +90,7 @@ def heat_of(rules: Rules, cause: HarmCause, damage_type: DamageType, heat: int |
         return 0
     if heat is not None:
         return heat
-    if cause is HarmCause.MONSTER:
-        return rules.strike.dragon_heat
-    if cause is HarmCause.DISASTER:
-        return rules.strike.magma_heat
-    return rules.strike.fire_heat
+    return int(getattr(rules.strike, HARM_CAUSES[cause].heat_rule))
 
 
 def through_layer(rules: Rules, strike: Strike, layer: Layer) -> Strike:

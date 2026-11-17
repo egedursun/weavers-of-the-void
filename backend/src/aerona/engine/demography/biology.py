@@ -19,7 +19,8 @@ from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.domain.enums.demography import FolkDiet, Job, NaturalTrait
+from aerona.domain.enums.demography import Job, NaturalTrait
+from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind, WeatherKind
 from aerona.domain.enums.military import UnitKind
@@ -49,7 +50,7 @@ def natures(biology: PeopleBiologyRow | None) -> set[NaturalTrait]:
     return {NaturalTrait(item) for item in biology.traits if item in NaturalTrait._value2member_map_}
 
 
-def edible(diet: FolkDiet) -> frozenset[CommodityKind]:
+def edible(diet: Diet) -> frozenset[CommodityKind]:
     return DIETS[diet].edible
 
 
@@ -92,7 +93,7 @@ def source_weights(rules: Rules, region: RegionEnvironmentRow | None) -> dict[Fo
     return {FoodSource.FIELDS: (1 - sea) * farmed / land, FoodSource.PASTURE: (1 - sea) * grazed / land, FoodSource.SEA: sea}
 
 
-def special_food(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | None, magic_level: int) -> float:
+def special_food(rules: Rules, diet: Diet, region: RegionEnvironmentRow | None, magic_level: int) -> float:
     table = rules.biology
     sources = DIETS[diet].sources
     total = 0.0
@@ -109,13 +110,13 @@ def special_food(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | No
     return total
 
 
-def diet_share(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | None) -> float:
+def diet_share(rules: Rules, diet: Diet, region: RegionEnvironmentRow | None) -> float:
     sources = DIETS[diet].sources
     weights = source_weights(rules, region)
     return sum(weights.get(source, 0.0) * sources.get(source, 0) / PERCENT for source in FOOD_SOURCES)
 
 
-def nourishment(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | None, index: int | None, magic_level: int = 0) -> float:
+def nourishment(rules: Rules, diet: Diet, region: RegionEnvironmentRow | None, index: int | None, magic_level: int = 0) -> float:
     fed = (index if index is not None else FED) / FED
     from_food = fed * diet_share(rules, diet, region) if set(DIETS[diet].sources) & FOOD_SOURCES else 0.0
     return from_food + special_food(rules, diet, region, magic_level)
@@ -136,7 +137,7 @@ def hunger_level(
     return max(0.0, min(1.0, 1 - fed / food_need(rules, biology, band)))
 
 
-def staple_for(rules: Rules, diet: FolkDiet, region: RegionEnvironmentRow | None) -> CommodityKind:
+def staple_for(rules: Rules, diet: Diet, region: RegionEnvironmentRow | None) -> CommodityKind:
     sources = DIETS[diet].sources
     weights = source_weights(rules, region)
     food = [(weights.get(source, 0.0) * sources[source], source.value, source) for source in sources if source in FOOD_SOURCES]

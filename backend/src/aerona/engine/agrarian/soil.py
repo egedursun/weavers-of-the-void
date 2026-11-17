@@ -7,7 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import FamineLoreRow, IntensificationRow, SoilNutrientRow
 from aerona.db.tables.collective import GenerationRow
 from aerona.db.tables.culture import HolderTechniqueRow
-from aerona.db.tables.ecology import SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.flora import RegionCropRow
@@ -57,7 +57,7 @@ class FieldWork:
 
 async def sown_shares(ctx: TickContext) -> tuple[dict[int, float], dict[int, float]]:
     yields: dict[int, set[CommodityKind]] = defaultdict(set)
-    for species_id, commodity in await ctx.session.execute(select(SpeciesYieldRow.species_entity_id, SpeciesYieldRow.commodity)):
+    for species_id, commodity in await ctx.session.execute(select(SpeciesProductRow.species_entity_id, SpeciesProductRow.commodity)):
         if commodity is not None:
             yields[species_id].add(commodity)
     fodder: dict[int, float] = defaultdict(float)

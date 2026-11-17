@@ -13,8 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.culture import SpeakerKind
-from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.culture import ArtMode, SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.models.entity_stats import ArtFormStats
@@ -134,7 +133,7 @@ async def found_art(ctx: TickContext, called: str, members: list[int]) -> None:
     if first is None:
         return
     folk = await people_of(ctx.session, first)
-    discipline = ctx.rng(seed_of("road.art", members[0], ctx.epoch)).pick(list(ArtDiscipline))
+    discipline = ctx.rng(seed_of("road.art", members[0], ctx.epoch)).pick(list(ArtMode))
     art = await open_record(
         ctx.session,
         ctx.epoch,

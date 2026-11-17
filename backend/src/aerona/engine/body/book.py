@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
 from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
+from aerona.catalog.body_words import BODY_WORDS
 from aerona.catalog.creature_anatomy import MONSTER_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.catalog.tissues import FULL_COUNTS
@@ -102,7 +103,7 @@ async def species_traits(session: AsyncSession, species_id: int) -> set[Creature
 def legacy_plan_from_words(text: str) -> BodyPlan | None:
     found = set(re.findall(r"[a-z]+", text.lower()))
     for spec in PLANS.values():
-        if any(word in found or f"{word}s" in found for word in spec.words):
+        if any(word in found or f"{word}s" in found for word in BODY_WORDS[spec.plan]):
             return spec.plan
     return None
 

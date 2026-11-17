@@ -3,17 +3,20 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, GiftStance, HouseholdDecision, HouseholdForm, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.genetics import DwellingTenure, GeneticEffect, GiftStance, HouseholdDecision, HouseholdForm, HouseholdRole, Locus, LocusGroup
 from aerona.domain.enums.industry import EnergyKind
+from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.urban import HousingLevel
 
 
 class AlleleView(ApiModel):
     key: str
     label: str
     frequency: int | None = None
+    effects: list[str]
 
 
 class LocusView(ApiModel):
@@ -28,10 +31,35 @@ class GeneView(ApiModel):
     locus: Locus
     label: str
     group: LocusGroup
+    group_label: str
     first: str
     second: str
     shown: str
     shown_label: str
+    effects: list[str]
+
+
+class TiedTraitView(ApiModel):
+    trait: TraitKind
+    trait_label: str
+    locus: Locus
+    locus_label: str
+    held: bool
+
+
+class CarriedAlleleView(ApiModel):
+    locus: Locus
+    locus_label: str
+    allele: str
+    allele_label: str
+    harmful: bool
+
+
+class BloodEffectView(ApiModel):
+    effect: GeneticEffect
+    label: str
+    amount: int
+    per_epoch: bool
 
 
 class GiftView(ApiModel):
@@ -56,6 +84,9 @@ class GenomeView(ApiModel):
     potential: dict[str, int]
     divine_son: NodeRef | None
     likeness: list[LikenessView]
+    tied_traits: list[TiedTraitView]
+    carried: list[CarriedAlleleView]
+    blood_effects: list[BloodEffectView]
     epoch: int
     held: list[str]
 
@@ -108,9 +139,17 @@ class FurnishingView(ApiModel):
     placed_epoch: int
 
 
+class DwellingKindOption(ApiModel):
+    id: int
+    name: str
+    level: HousingLevel
+    built_in: bool
+
+
 class DwellingView(ApiModel):
-    kind: DwellingKind
-    kind_label: str
+    dwelling_kind_id: int | None
+    kind_name: str
+    level: HousingLevel
     quality: int
     effective_quality: int
     expected_quality: int
@@ -161,8 +200,9 @@ class AggregateView(ApiModel):
     social_class_label: str
     households: int
     mean_size: int
-    dwelling_kind: DwellingKind
-    dwelling_label: str
+    dwelling_kind_id: int | None
+    dwelling_name: str
+    dwelling_level: HousingLevel
     quality: int
     wealth: int
     epoch: int
@@ -179,6 +219,6 @@ class HomeView(ApiModel):
     households: list[HouseholdView]
     aggregates: list[AggregateView]
     roles: list[LabelView]
-    dwellings: list[LabelView]
+    dwellings: list[DwellingKindOption]
     classes: list[LabelView]
     neighbours: list[LabelView]

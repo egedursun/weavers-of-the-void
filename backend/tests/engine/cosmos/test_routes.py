@@ -74,7 +74,7 @@ async def test_can_use_route_requirements(ctx: TickContext, cosmos: Cosmos) -> N
     other = await make_world(ctx.session, "Velmor")
     people = await make_entity(ctx.session, "Tarn", EntityType.PEOPLE, PeopleStats(population=5000), world_id=cosmos.home.id)
     gate = await make_route(ctx.session, cosmos.home.id, other.id, TravelMethod.ANCIENT_GATE)
-    river = await make_route(ctx.session, cosmos.home.id, other.id, TravelMethod.RIVER_OF_DEAD)
+    river = await make_route(ctx.session, cosmos.home.id, other.id, TravelMethod.DEATH_CURRENT)
     sail = await make_route(ctx.session, cosmos.home.id, other.id, TravelMethod.LIGHT_SAIL)
     assert "gate lore" in (await can_use_route(ctx.session, ctx.rules, ctx.epoch, people, gate) or "")
     await teach(ctx.session, people, KnowledgeBranch.GATE_LORE)
@@ -138,7 +138,7 @@ async def test_alignment_reveals_and_unseals(ctx: TickContext, cosmos: Cosmos) -
 async def test_connect_world_stitches_isolated_worlds(ctx: TickContext, cosmos: Cosmos) -> None:
     dead = await make_world(ctx.session, "Nethis", WorldType.DEAD)
     route = await connect_world(ctx, dead)
-    assert route is not None and not route.known and route.method is TravelMethod.RIVER_OF_DEAD
+    assert route is not None and not route.known and route.method is TravelMethod.DEATH_CURRENT
     assert await connect_world(ctx, dead) is None
 
 

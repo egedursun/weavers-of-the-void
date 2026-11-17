@@ -10,7 +10,7 @@ from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.communication import OpinionSubject
-from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import InheritanceCustom, MartialStyle
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import BeliefSource
 from aerona.domain.enums.military import UnitKind
@@ -103,9 +103,7 @@ async def test_a_literate_people_keeps_its_beliefs_in_records(realm: Realm) -> N
             cohesion=50,
             literacy=100,
             urbanisation=0,
-            aesthetic=next(iter(Aesthetic)),
             martial_style=next(iter(MartialStyle)),
-            marriage=next(iter(MarriageCustom)),
             inheritance=next(iter(InheritanceCustom)),
         )
     )

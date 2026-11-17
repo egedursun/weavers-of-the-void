@@ -5,10 +5,10 @@ from itertools import combinations
 from sqlalchemy import func, select
 
 from aerona.db.tables.belonging import PeerGroupRow, PeerMemberRow
-from aerona.db.tables.crafts import GameFollowingRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
+from aerona.db.tables.kinds import KindHoldingRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import FACET_MAX, FACET_MIN, FacetRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.mind import Facet, SkillKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import LawKind
@@ -73,7 +74,9 @@ class PeerTally:
 
 async def play_of(ctx: TickContext, town: EntityRow, social_class: SocialClass) -> PlayKind:
     folk = await people_of(ctx.session, town)
-    if folk is not None and await ctx.session.scalar(select(GameFollowingRow.game_id).where(GameFollowingRow.people_entity_id == folk.id).limit(1)):
+    if folk is not None and await ctx.session.scalar(
+        select(KindHoldingRow.id).where(KindHoldingRow.concept == KindConcept.GAME, KindHoldingRow.holder_node_id == folk.id).limit(1)
+    ):
         return PlayKind.GAMES
     if social_class in CLASS_PLAY:
         return CLASS_PLAY[social_class]

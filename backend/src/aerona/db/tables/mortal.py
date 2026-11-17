@@ -6,7 +6,8 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import FocusKind, KindFamily, MoodState, Profession
-from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, MarriageKind, StressBreak
+from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, StressBreak
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 
 PROFILE_PERCENTS = (
     "fertility",
@@ -92,7 +93,8 @@ class MarriageRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     first_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     second_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
-    kind: Mapped[MarriageKind] = mapped_column(enum_type(MarriageKind, "kind"), default=MarriageKind.MONOGAMOUS)
+    form: Mapped[UnionForm] = mapped_column(enum_type(UnionForm, "form"), default=UnionForm.PAIR, server_default=UnionForm.PAIR.value)
+    purpose: Mapped[UnionPurpose] = mapped_column(enum_type(UnionPurpose, "purpose"), default=UnionPurpose.KINSHIP, server_default=UnionPurpose.KINSHIP.value)
     treaty_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     start_epoch: Mapped[int]
     end_epoch: Mapped[int | None]

@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -80,7 +80,7 @@ async def species_nature(session: AsyncSession, species: EntityRow) -> list[str]
         ]
     )
     products = ", ".join(
-        await session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == species.id).order_by(SpeciesYieldRow.product))
+        await session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == species.id).order_by(SpeciesProductRow.product))
     )
     prey = list(
         await session.scalars(

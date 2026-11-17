@@ -6,7 +6,7 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import HookDemand
-from aerona.domain.enums.mortal import MarriageKind
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import call_favour, hook_on, owed_to, use_hook
 from aerona.engine.mortal.kin import partners_of
@@ -26,7 +26,7 @@ async def wed(ctx: TickContext, holder: EntityRow, target: EntityRow) -> str | N
         return None
     if await partners_of(ctx.session, holder.id) or await partners_of(ctx.session, target.id):
         return None
-    await marry(ctx.session, holder, target, ctx.epoch, kind=MarriageKind.POLITICAL, description="a match pressed by leverage")
+    await marry(ctx.session, holder, target, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="a match pressed by leverage")
     return f"{target.name} agreed to wed {holder.name}"
 
 

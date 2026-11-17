@@ -10,7 +10,7 @@ TITLE_MECHANICS: tuple[Mechanic, ...] = (
         key="titles",
         spec_item="S4.11",
         title=(
-            "Titles from lordships to empires rule their de jure lands by right; the ruler of a realm holds its primary title, lands held long "
+            "Titles from local to imperial tiers rule their de jure lands by right; the ruler of a realm holds its primary title, lands held long "
             "under another title drift into it, and realms claim, usurp, create and restore titles"
         ),
         subsystem=S.POLITY,
@@ -40,8 +40,8 @@ TITLE_MECHANICS: tuple[Mechanic, ...] = (
         key="seats",
         spec_item="S4.11",
         title=(
-            "Faiths raise sees, archsees and a world's high seat for their foremost cleric, and free companies and guilds raise "
-            "captaincies and guildmasterships for their leaders, who gain prestige by them"
+            "Faiths raise local, high and foremost seats for their foremost cleric, and free companies and guilds raise "
+            "military commands and guild headships for their leaders, who gain prestige by them"
         ),
         subsystem=S.POLITY,
         phases=("titles",),
@@ -55,9 +55,9 @@ TITLE_MECHANICS: tuple[Mechanic, ...] = (
         couplings=(
             Coupling(
                 S.FAITH,
-                "a faith with enough followers raises a see, then an archsee, and the largest of a world holds the high seat",
+                "a faith with enough followers raises a local seat, then a high seat, and the largest of a world holds the foremost seat",
                 E.TRIGGER,
-                "titles.see_followers",
+                "titles.faith_local_followers",
             ),
             Coupling(S.SOCIAL, "the holder of a seat gains prestige each epoch by its rank", E.FLOW, "titles.seat_prestige"),
         ),

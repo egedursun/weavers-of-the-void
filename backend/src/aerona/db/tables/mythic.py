@@ -23,6 +23,7 @@ HEROQUEST_FIELDS = (
     "legend_entity_id",
     "god_node_id",
     "realm",
+    "realm_kind_id",
     "place_entity_id",
     "steps",
     "step",
@@ -37,7 +38,7 @@ HEROQUEST_FIELDS = (
 MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified")
 SERVITOR_FIELDS = ("god_node_id", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id")
 GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "state", "favour", "laid_epoch", "last_kept_epoch", "broken_epoch")
-OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty")
+OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty", "office_kind_id")
 
 
 class HeroquestRow(Base):
@@ -57,6 +58,7 @@ class HeroquestRow(Base):
     legend_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     god_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     realm: Mapped[MythicRealm] = mapped_column(enum_type(MythicRealm, "realm"), default=MythicRealm.SACRED_SITE)
+    realm_kind_id: Mapped[int | None] = mapped_column(ForeignKey("realm_kinds.id", ondelete="SET NULL"))
     place_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     steps: Mapped[int] = mapped_column(default=3)
     step: Mapped[int] = mapped_column(default=0)
@@ -148,4 +150,5 @@ class CosmicOfficeRow(Base):
     since_epoch: Mapped[int | None]
     neglect: Mapped[int] = mapped_column(default=0)
     duty: Mapped[int] = mapped_column(default=0)
+    office_kind_id: Mapped[int | None] = mapped_column(ForeignKey("divine_office_kinds.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

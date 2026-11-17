@@ -79,6 +79,7 @@ ARMS_FIELDS = (
     "crest",
     "crest_tincture",
     "motto",
+    "emblem_system_id",
 )
 DESIGN_FIELDS = (
     "name",
@@ -492,6 +493,7 @@ class ArmsRow(Base):
     crest: Mapped[HeraldicCharge] = mapped_column(enum_type(HeraldicCharge, "crest"), default=HeraldicCharge.NONE, server_default=HeraldicCharge.NONE.value)
     crest_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "crest_tincture"))
     motto: Mapped[str | None] = mapped_column(String(200))
+    emblem_system_id: Mapped[int | None] = mapped_column(ForeignKey("emblem_systems.id", ondelete="SET NULL"), index=True)
     parent_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     quartered_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)

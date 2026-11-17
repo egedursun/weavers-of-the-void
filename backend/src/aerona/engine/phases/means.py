@@ -29,7 +29,7 @@ async def written_media(ctx: TickContext) -> None:
     count(ctx, "written_media", tally)
 
 
-@reads("table.securities", "table.skills", "table.structure_profiles")
+@reads("table.holder_levels", "table.securities", "table.skills", "table.structure_profiles")
 @writes("table.securities")
 async def vaults(ctx: TickContext) -> None:
     tally = SecurityTally()

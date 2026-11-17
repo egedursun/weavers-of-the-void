@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.flora import PlantProduct, plant_product_of
 from aerona.constants.units import PERCENT
+from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.ecology import SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesHostRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
@@ -18,7 +19,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.ecology import GROWN, SOWN, Biochemistry, Cultivation, Diet, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import GROWN, SOWN, AnimalRole, Biochemistry, Cultivation, Diet, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
@@ -96,7 +97,7 @@ class CropBook:
     crops: dict[int, list[RegionCropRow]] = field(default_factory=lambda: defaultdict(list))
     profiles: dict[int, SpeciesProfileRow] = field(default_factory=dict)
     plants: dict[int, PlantProfileRow] = field(default_factory=dict)
-    yields: dict[int, list[SpeciesYieldRow]] = field(default_factory=lambda: defaultdict(list))
+    yields: dict[int, list[SpeciesProductRow]] = field(default_factory=lambda: defaultdict(list))
     seasons: dict[int, int] = field(default_factory=dict)
     life: dict[int, tuple[Biochemistry, ...]] = field(default_factory=dict)
 
@@ -112,7 +113,7 @@ class CropBook:
             row.species_entity_id: row
             for row in await session.scalars(select(SpeciesProfileRow).where(SpeciesProfileRow.species_entity_id.in_(list(book.plants))))
         }
-        for item in await session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id.in_(list(book.plants)))):
+        for item in await session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id.in_(list(book.plants)))):
             book.yields[item.species_entity_id].append(item)
         floor = rules.flora.growing_season_floor
         for season in await session.scalars(select(WorldSeasonRow)):
@@ -351,7 +352,7 @@ async def breed_cultivar(ctx: TickContext, book: CropBook, row: RegionCropRow, k
         bred.growing_seasons = plant.growing_seasons
         book.plants[child.id] = bred
     rates = {item.product: item.rate for item in book.yields.get(parent.id, [])}
-    for item in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == child.id)):
+    for item in await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == child.id)):
         item.rate = max(rates.get(item.product, item.rate) + 1, round_half_up(rates.get(item.product, item.rate) * (1 + table.cultivar_yield_pct / PERCENT)))
         book.yields[child.id].append(item)
     book.profiles[child.id] = fresh
@@ -486,7 +487,7 @@ def first_biochemistry(profile: SpeciesProfileRow) -> Biochemistry | None:
 
 async def reclass_plant(ctx: TickContext, profile: SpeciesProfileRow) -> None:
     profile.species_class = SpeciesClass.PLANT
-    for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == profile.species_entity_id))):
+    for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == profile.species_entity_id))):
         if plant_product_of(item.product, item.commodity) is None:
             await ctx.session.delete(item)
     nature = Nature(
@@ -501,18 +502,20 @@ async def reclass_plant(ctx: TickContext, profile: SpeciesProfileRow) -> None:
     )
     cycle = cycle_of(SpeciesSpec(), nature, profile.lifespan_years)
     for product in plant_products(nature, cycle, ()):
-        if await ctx.session.get(SpeciesYieldRow, (profile.species_entity_id, product.product)) is None:
+        if await ctx.session.get(SpeciesProductRow, (profile.species_entity_id, product.product)) is None:
             ctx.session.add(
-                SpeciesYieldRow(
+                SpeciesProductRow(
                     species_entity_id=profile.species_entity_id,
                     product=product.product,
                     commodity=product.commodity,
                     material=product.material,
                     rate=product.rate,
+                    part=PRODUCT_PARTS.get(product.product),
+                    locked=[],
                 )
             )
     for use in list(await ctx.session.scalars(select(SpeciesUseRow).where(SpeciesUseRow.species_entity_id == profile.species_entity_id))):
-        if use.use is not SpeciesUse.MAGIC:
+        if use.use is not AnimalRole.REAGENT_SOURCE:
             await ctx.session.delete(use)
 
 
@@ -537,10 +540,10 @@ async def flora_backfill(ctx: TickContext) -> dict[str, int]:
             profile.biochemistry = chosen
             counts["biochemistry"] += 1
         hunter = profile.species_class not in GROWN and profile.diet in PEST_HUNTERS and profile.size_class in SHELLED_SIZES
-        if hunter and await ctx.session.get(SpeciesUseRow, (profile.species_entity_id, SpeciesUse.PEST_CONTROL)) is None:
-            ctx.session.add(SpeciesUseRow(species_entity_id=profile.species_entity_id, use=SpeciesUse.PEST_CONTROL))
+        if hunter and await ctx.session.get(SpeciesUseRow, (profile.species_entity_id, AnimalRole.PEST_CONTROL)) is None:
+            ctx.session.add(SpeciesUseRow(species_entity_id=profile.species_entity_id, use=AnimalRole.PEST_CONTROL))
             counts["pest_hunters"] += 1
-    for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.product.in_(list(HERD_GOODS))))):
+    for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.product.in_(list(HERD_GOODS))))):
         kind = HERD_GOODS[item.product]
         if item.commodity is not kind and not held(item.species_entity_id):
             item.commodity, item.material = kind, None

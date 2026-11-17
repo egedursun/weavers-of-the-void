@@ -32,10 +32,7 @@ const PANES: {
     key: 'learning',
     label: 'Aids, games and numbers',
     count: (data) =>
-      data.aids.length +
-      data.followings.length +
-      (data.clock ? 1 : 0) +
-      (data.numbers ? 1 : 0),
+      data.aids.length + (data.clock ? 1 : 0) + (data.numbers ? 1 : 0),
   },
   {
     key: 'arcane',

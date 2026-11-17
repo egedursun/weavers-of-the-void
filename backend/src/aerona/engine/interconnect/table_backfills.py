@@ -57,7 +57,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("deep_seals", "deep_seals"): "none: seals are set at the next breach",
     ("novelty", "novelty_stocks"): "computed: every art form and dish takes its novelty at the next epoch",
     ("transformations", "transformations"): (
-        "transformations: past deifications, uplifts, god corpses, risen spirits, manifestations and raised beasts are entered at the next start"
+        "transformations: past deifications, uplifts, places where gods died, risen spirits, manifestations and raised beasts are entered at the next start"
     ),
     ("transformations", "transform_prospects"): "none: prospects are watched from the next epoch",
     ("transformations", "star_modifiers"): "none: a star dims from the next death of its god",
@@ -131,7 +131,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("ciphers_and_signals", "signal_links"): "none: signal links are raised from the next epoch",
     ("titles", "title_holders"): "titles: every new title records its first holder",
     ("titles", "de_jure_links"): "titles: every new title takes its realm's lands by right",
-    ("union_customs", "union_customs"): "kinship_systems: every people's customs of union are read from its marriage custom and kinship system",
+    ("union_customs", "union_customs"): "kinship_systems: every people's customs of union are read from its kinship system",
     ("kinship_systems", "marriage_alliances"): "kinship_systems: alliances between lines are counted from the marriages of the first epoch after the upgrade",
     ("reproduction_systems", "mortal_castes"): "reproduction_systems: every mortal of a caste people takes its caste on the first epoch after the upgrade",
     ("art_market", "art_sales"): "none: works change hands from the next epoch; no sale is invented for the past",
@@ -164,7 +164,6 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("aids_clocks", "assistive_aids"): "none: aids are given from the next epoch by the learning aids step",
     ("aids_clocks", "public_clocks"): "none: clocks are set up from the next epoch by the trades step",
     ("games", "games"): "none: games are invented from the next epoch by the learning aids step",
-    ("games", "game_followings"): "none: games are taken up from the next epoch by the learning aids step",
     ("numeracy", "number_systems"): "none: number systems are read from the next epoch by the learning aids step",
     ("sympathy", "material_affinities"): "none: affinities are read from the next epoch by the sympathies step",
     ("sympathy", "sympathetic_links"): "none: links are taken from the next epoch by the sympathies step",
@@ -294,7 +293,7 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
         "technology_families",
         "technology_profiles",
     ): "tech_eras: worlds take their families from their starting era and peoples derive theirs on the first epoch",
-    ("fortune", "fortune_profiles"): "fortune: every thing with a source of fortune is reckoned on the first epoch; others carry only their streak",
+    ("fortune", "fortune_profiles"): "fortune: every living mortal and every thing with a source of fortune is reckoned on the first epoch",
     ("fortune", "fortune_sources"): "fortune.legacy_backfill: every blessing and curse of a god becomes a source of fortune",
     ("fortune", "fortune_laws"): "none: every world runs by the personal law until it is set",
     ("fortune", "cohort_mishap_rates"): "none: towns count their accidents from the next epoch",

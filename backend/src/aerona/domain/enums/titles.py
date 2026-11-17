@@ -1,17 +1,17 @@
 from enum import StrEnum
 
 
-class TitleRank(StrEnum):
-    LORDSHIP = "lordship"
-    COUNTY = "county"
-    DUCHY = "duchy"
-    KINGDOM = "kingdom"
-    EMPIRE = "empire"
-    SEE = "see"
-    ARCHSEE = "archsee"
-    HIGH_SEAT = "high_seat"
-    CAPTAINCY = "captaincy"
-    GUILDMASTERSHIP = "guildmastership"
+class TitleTier(StrEnum):
+    LOCAL = "local"
+    DISTRICT = "district"
+    REGIONAL = "regional"
+    REALM = "realm"
+    IMPERIAL = "imperial"
+    FAITH_LOCAL = "faith_local"
+    FAITH_HIGH = "faith_high"
+    FAITH_SUPREME = "faith_supreme"
+    MILITARY = "military"
+    GUILD = "guild"
 
 
 class TitleTenure(StrEnum):

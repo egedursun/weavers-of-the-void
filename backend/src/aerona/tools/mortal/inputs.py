@@ -18,8 +18,8 @@ from aerona.constants.tool_inputs import (
     SAYING_MIN,
     SUBTYPE_MAX,
 )
-from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionKind
-from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
+from aerona.domain.enums.culture import ArtMode, CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionFunction
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
@@ -115,7 +115,7 @@ class CultureInput(ToolInput):
     image_prompt: ImagePrompt | None = None
     legend_category: LegendCategory | None = None
     archetype: LegendArchetype | None = None
-    tradition_kind: TraditionKind | None = None
+    tradition_kind: TraditionFunction | None = None
     calendar_slot: CalendarSlot | None = None
     taboo_target: CommodityKind | None = None
     taboo_act: ActKind | None = None
@@ -192,7 +192,7 @@ class ProposeTheoryInput(ToolInput):
 
 
 class InventArtFormInput(ToolInput):
-    discipline: ArtDiscipline
+    discipline: ArtMode
     name: Name
     description: Description
     structure: dict[str, Annotated[str, Field(max_length=SUBTYPE_MAX)]] | None = None
@@ -257,7 +257,7 @@ class TrainHerdInput(ToolInput):
     training: HerdTraining
 
 
-class ChimeraInput(ToolInput):
+class MergeSpeciesInput(ToolInput):
     a_id: int
     b_id: int
     name: Name

@@ -4,9 +4,11 @@ from dataclasses import dataclass
 from sqlalchemy import select, update
 
 from aerona.catalog.materials import MATERIALS
+from aerona.catalog.money import MONEY_FORMS, issuer_kind_of, metal_allowed
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import (
     PROPERTY_COLUMNS,
@@ -23,7 +25,18 @@ from aerona.db.tables.economy import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MaterialFamily, MaterialOrigin, MaterialSlot, WorkshopKind
+from aerona.domain.enums.economy import (
+    CommodityKind,
+    CurrencyIssuer,
+    GoodsFlow,
+    LoanStatus,
+    MaterialFamily,
+    MaterialOrigin,
+    MaterialSlot,
+    MoneyBacking,
+    MoneyForm,
+    WorkshopKind,
+)
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -88,7 +101,8 @@ async def create_material(ctx: TickContext, substance: Substance) -> WorldMateri
     values = substance_values(substance.base_kind, substance.values)
     row = WorldMaterialRow(
         world_id=substance.world_id,
-        origin=MaterialOrigin.DIVINE,
+        origin=MaterialOrigin.GOD_GIFT,
+        source_node_id=await NodeRepository(ctx.session).creator_id(),
         base_kind=substance.base_kind,
         name=substance.name.strip(),
         description=(substance.description or "").strip() or describe(values),
@@ -437,23 +451,35 @@ async def issuer(ctx: TickContext, issuer_id: int) -> EntityRow:
 class NewCoin:
     issuer_id: int
     name: str
-    metal: MaterialKind
+    metal: MaterialKind | None
     purity: int
     trust: int
     supply: int
+    form: MoneyForm = MoneyForm.COIN
+    backing: MoneyBacking = MoneyBacking.METAL
+    convertible: bool = True
+
+
+def check_money(form: MoneyForm, metal: MaterialKind | None) -> None:
+    if metal is not None and not metal_allowed(form):
+        raise ValidationFailedError(f"Only coin and commodity money are made of metal, not {MONEY_FORMS[form].label.lower()}.")
+    if metal is None and form is MoneyForm.COIN:
+        raise ValidationFailedError("A coin needs a metal.")
 
 
 async def create_currency(ctx: TickContext, coin: NewCoin) -> CurrencyRow:
     entity = await issuer(ctx, coin.issuer_id)
     if not coin.name.strip():
         raise ValidationFailedError("A coin needs a name.")
+    check_money(coin.form, coin.metal)
+    made_of = f"of {coin.metal.value.replace('_', ' ')}" if coin.metal is not None else f"of {MONEY_FORMS[coin.form].label.lower()}"
     item = await create_record(
         ctx,
         RecordSpec(
             name=coin.name.strip(),
             entity_type=EntityType.ITEM,
             stats=ItemStats(damage=0, protection=0, might=0, curse=0),
-            body=f"The Creator gave {entity.name} a coin of {coin.metal.value.replace('_', ' ')}.",
+            body=f"The Creator gave {entity.name} money {made_of}.",
             power=ctx.rules.trade.currency_power,
             world_id=entity.world_id,
             location_id=entity.id if entity.entity_type is EntityType.SETTLEMENT else entity.location_id,
@@ -473,13 +499,43 @@ async def create_currency(ctx: TickContext, coin: NewCoin) -> CurrencyRow:
         trust=percent("trust", coin.trust),
         supply=max(0, coin.supply),
         minted_epoch=ctx.epoch,
+        form=coin.form,
+        backing=coin.backing,
+        convertible=coin.convertible,
+        issuer_kind=issuer_kind_of(entity.entity_type, entity.engine_kind),
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await set_node_material(ctx.session, item.id, MaterialSlot.BODY, coin.metal, force=True)
+    if coin.metal is not None:
+        await set_node_material(ctx.session, item.id, MaterialSlot.BODY, coin.metal, force=True)
     society = await ctx.session.get(CommunitySocietyRow, entity.id)
     if society is not None and society.currency_id is None:
         society.currency_id = row.id
+    await ctx.session.flush()
+    return row
+
+
+@dataclass(frozen=True)
+class MoneyShape:
+    form: MoneyForm | None = None
+    backing: MoneyBacking | None = None
+    convertible: bool | None = None
+    issuer_kind: CurrencyIssuer | None = None
+
+
+async def reshape_currency(ctx: TickContext, row: CurrencyRow, shape: MoneyShape) -> CurrencyRow:
+    form = shape.form or row.form
+    check_money(form, None if shape.form is not None and not metal_allowed(form) else row.metal)
+    if shape.form is not None:
+        row.form = shape.form
+        if not metal_allowed(shape.form):
+            row.metal = None
+    if shape.backing is not None:
+        row.backing = shape.backing
+    if shape.convertible is not None:
+        row.convertible = shape.convertible
+    if shape.issuer_kind is not None:
+        row.issuer_kind = shape.issuer_kind
     await ctx.session.flush()
     return row
 
@@ -490,6 +546,7 @@ async def rename_currency(ctx: TickContext, row: CurrencyRow, name: str | None, 
             raise ValidationFailedError("A coin needs a name.")
         row.name = name.strip()
     if metal is not None:
+        check_money(row.form, metal)
         row.metal = metal
         if row.item_entity_id is not None:
             await set_node_material(ctx.session, row.item_entity_id, MaterialSlot.BODY, metal, force=True)

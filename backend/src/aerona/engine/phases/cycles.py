@@ -319,6 +319,7 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.community_relations",
     "table.confederations",
     "table.creator_taboos",
+    "table.culture_values",
     "table.epoch_year_cursors",
     "table.geasa",
     "table.held_identities",
@@ -417,7 +418,7 @@ async def labour_regimes(ctx: TickContext) -> None:
 
 
 @reads("table.biology", "table.kinship_systems", "table.people_biology", "table.people_culture", "table.people_reproduction", "table.role_norms")
-@writes("table.kinship_systems", "table.people_reproduction")
+@writes("table.kinship_systems", "table.people_reproduction", "table.union_customs")
 async def people_customs(ctx: TickContext) -> None:
     tally = SeedTally()
     await seed_peoples(ctx, tally)

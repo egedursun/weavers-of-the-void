@@ -31,6 +31,7 @@ from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
+from aerona.engine.cuisine.drinks import drink_safety
 from aerona.engine.eras.effects import channel_by_holder
 from aerona.engine.folkways.shunning import shunned_sick
 from aerona.engine.lifecycle.states import ended_ids
@@ -96,6 +97,11 @@ class DiseaseBook:
     living_sons: set[int] = field(default_factory=set)
     seasonal: dict[int, float] = field(default_factory=dict)
     responses: dict[tuple[int, int], set[PlagueResponse]] = field(default_factory=dict)
+    safe_drink: dict[int, int] = field(default_factory=dict)
+
+    def drink_guard(self, target_id: int) -> float:
+        safety = self.safe_drink.get(target_id, 0)
+        return max(0.0, 1 - safety * self.rules.drink.water_safety_pct / PERCENT / PERCENT)
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules, epoch: int) -> "DiseaseBook":
@@ -145,6 +151,7 @@ class DiseaseBook:
             select(PlagueResponseRow).where(or_(PlagueResponseRow.until_epoch.is_(None), PlagueResponseRow.until_epoch >= epoch))
         ):
             book.responses.setdefault((response.community_entity_id, response.disease_entity_id), set()).add(response.response)
+        book.safe_drink = await drink_safety(session)
         return book
 
     async def load_hosts(self, session: AsyncSession) -> None:

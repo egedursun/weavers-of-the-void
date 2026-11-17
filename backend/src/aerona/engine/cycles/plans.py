@@ -34,7 +34,18 @@ from aerona.engine.sacred.forecasts import steer_forecast
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.construction import Commission, begin
 
-BRED_TRAITS = (HouseTrait.FERTILE, HouseTrait.LONG_LIVED, HouseTrait.GIANT_BLOODED, HouseTrait.SEER_GIFT)
+BRED_TRAITS = (
+    HouseTrait.FERTILE,
+    HouseTrait.LONG_LIVED,
+    HouseTrait.GIANT_BLOODED,
+    HouseTrait.SEER_GIFT,
+    HouseTrait.STRONG_BLOODED,
+    HouseTrait.SWIFT,
+    HouseTrait.QUICK_HEALING,
+    HouseTrait.SHARP_SENSED,
+    HouseTrait.STEADY,
+    HouseTrait.QUICK_MINDED,
+)
 PERCENT_SPAN = 100
 
 

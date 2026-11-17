@@ -5,9 +5,10 @@ from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.unions import PartnerScope, UnionPurpose
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.lineage import union_of
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.relations.book import relation
-from aerona.engine.unions.customs import faith_of, scope_key, union_of
+from aerona.engine.unions.customs import faith_of, scope_key
 
 Pull = Callable[[TickContext, EntityRow, EntityRow, int], Awaitable[float]]
 

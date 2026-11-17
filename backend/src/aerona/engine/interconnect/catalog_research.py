@@ -279,6 +279,7 @@ RESEARCH_MECHANICS = (
     ),
     Mechanic(
         key="eras",
+        tools=("proclaim_age",),
         spec_item="S8.4/RP2",
         title="Deeds give a realm era score: golden, dark and heroic ages follow; a world enters the next era when its leaders know enough of it",
         subsystem=S.POLITY,

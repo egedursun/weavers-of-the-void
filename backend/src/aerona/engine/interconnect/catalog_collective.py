@@ -85,6 +85,7 @@ COLLECTIVE_MECHANICS = (
     ),
     Mechanic(
         key="social_norms",
+        tools=("speak_for_norm",),
         spec_item="F35",
         title="Social norms: what each culture and cult requires, admires, frowns on or forbids in thirteen situations, and how volition weighs it",
         subsystem=S.MIND,
@@ -237,6 +238,7 @@ COLLECTIVE_MECHANICS = (
     ),
     Mechanic(
         key="role_norms",
+        tools=("set_role_custom",),
         spec_item="S4.1/RP3",
         title="Role norms: who each people lets hold office, work a craft, fight, serve the gods and inherit, by sex, age and class",
         subsystem=S.SOCIAL,
@@ -255,6 +257,7 @@ COLLECTIVE_MECHANICS = (
     ),
     Mechanic(
         key="dating_systems",
+        tools=("reckon_years",),
         spec_item="F1/RP3",
         title="Dating systems: realms count by reign, peoples by founding, cults by their era and the learned by celestial cycles, and reform their calendars",
         subsystem=S.CULTURE,
@@ -272,6 +275,7 @@ COLLECTIVE_MECHANICS = (
     ),
     Mechanic(
         key="heraldry",
+        tools=("take_arms",),
         spec_item="S4.7/RP3",
         title="Heraldry: arms for houses, realms, titles, armies and guilds, drawn from their values, differenced for cadets and quartered by marriage",
         subsystem=S.POLITY,

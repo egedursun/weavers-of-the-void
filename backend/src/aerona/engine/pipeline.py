@@ -43,6 +43,7 @@ from aerona.engine.phases import (
     creator_mood,
     creatures,
     culture_exchange,
+    culture_kinds,
     curses,
     customs,
     cycles,
@@ -66,6 +67,7 @@ from aerona.engine.phases import (
     faith,
     finance,
     folkways,
+    foodways,
     fortune,
     fossils,
     gatherings,
@@ -86,6 +88,7 @@ from aerona.engine.phases import (
     interconnect,
     intrigue,
     justice,
+    kinds,
     knowledge_levels,
     language_contact,
     language_death,
@@ -140,6 +143,7 @@ from aerona.engine.phases import (
     sky,
     society,
     society_economy,
+    society_kinds,
     sons,
     spirits,
     statecraft,
@@ -258,6 +262,10 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + crafts.PHASES
     + customs.PHASES
     + made_kinds.PHASES
+    + foodways.PHASES
+    + kinds.PHASES
+    + culture_kinds.PHASES
+    + society_kinds.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -452,7 +460,7 @@ ECONOMY_STAGE = stage(
     "trade_income",
     "curse_decay",
     "world_materials",
-    "species_yields",
+    "species_products",
     "deposit_finding",
     "industry_methods",
     "resource_economy",
@@ -666,6 +674,12 @@ SOCIETY_ENGINE_STAGE = stage(
     "tradition_cycles",
     "people_cycles",
     "kitchens",
+    "foodways",
+    "culture_kinds",
+    "society_kinds",
+    "crafts_of_life",
+    "traits_and_works",
+    "ways_of_life",
     "legacy_traits",
     "remembrance",
     "historiography",

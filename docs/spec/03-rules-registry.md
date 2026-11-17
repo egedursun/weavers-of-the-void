@@ -1087,15 +1087,15 @@ Old namespace `OTESI` · 73 rows · defined in `src/otesi.js` · also read by `s
 | fate_expedition_chance | efsanevi_sefer_sans | 8 | 0 | 100 | The Beyond | Fate opens a legendary expedition (%) |
 | max_concurrent_expeditions | sefer_eszamanli | 1 | 0 | 20 | The Beyond | When open legendary expeditions (including the god's) reach this number, Fate opens no new one |
 | immortality_chance | olumsuzluk_sans | 15 | 0 | 100 | The Beyond | A wise mortal attains immortality (%) |
-| golem_min_power | golem_seviye | 4 | 1 | 12 | The Beyond | Minimum power level of a golem born from a spirit-cloaked structure |
-| golem_hp | golem_can | 400 | 1 | 100,000 | The Beyond | Golem HP |
-| golem_strength_base | golem_guc_taban | 70 | 0 | 100 | The Beyond | Golem base strength |
-| golem_strength_die | golem_guc_zar | 25 | 1 | 100 | The Beyond | Golem strength die (1…n) |
-| golem_agility | golem_ceviklik | 15 | 0 | 100 | The Beyond | Golem agility |
-| golem_intelligence_base | golem_zeka_taban | 20 | 0 | 100 | The Beyond | Golem base intelligence |
-| golem_intelligence_die | golem_zeka_zar | 30 | 1 | 100 | The Beyond | Golem intelligence die (1…n) |
-| golem_danger_base | golem_tehlike_taban | 40 | 0 | 100 | The Beyond | Golem base danger |
-| golem_danger_die | golem_tehlike_zar | 30 | 1 | 100 | The Beyond | Golem danger die (1…n) |
+| animated_work_min_power | golem_seviye | 4 | 1 | 12 | The Beyond | Minimum power level of a work that moves once a spirit is bound into it |
+| animated_work_hp | golem_can | 400 | 1 | 100,000 | The Beyond | Health of an animated work |
+| animated_work_strength_base | golem_guc_taban | 70 | 0 | 100 | The Beyond | Base strength of an animated work |
+| animated_work_strength_die | golem_guc_zar | 25 | 1 | 100 | The Beyond | Strength die of an animated work (1…n) |
+| animated_work_agility | golem_ceviklik | 15 | 0 | 100 | The Beyond | Agility of an animated work |
+| animated_work_intelligence_base | golem_zeka_taban | 20 | 0 | 100 | The Beyond | Base intelligence of an animated work |
+| animated_work_intelligence_die | golem_zeka_zar | 30 | 1 | 100 | The Beyond | Intelligence die of an animated work (1…n) |
+| animated_work_danger_base | golem_tehlike_taban | 40 | 0 | 100 | The Beyond | Base danger of an animated work |
+| animated_work_danger_die | golem_tehlike_zar | 30 | 1 | 100 | The Beyond | Danger die of an animated work (1…n) |
 | spirit_cloak_item_might | ruh_kudret | 30 | 0 | 100 | The Beyond | Might increase of a spirit-cloaked item |
 | spirit_cloak_vessel_strangeness | ruh_tuhaflik | 25 | 0 | 100 | The Beyond | Strangeness increase of a spirit-cloaked vessel |
 | soul_buildup_leak | ruh_birikim_sizinti | 2 | 0 | 100 | The Beyond | Per-epoch leakage of soul buildup into the realm of the dead |
@@ -1681,14 +1681,14 @@ Old namespace `YARATIK` · 66 rows · defined in `src/yaratik.js` · also read b
 | stowaway_chance | kacak_sans | 30 | 0 | 100 | Creatures | A stowaway species is carried by ship (%) |
 | traits_from_description_cap | ozellik_tavan | 2 | 1 | 10 | Creatures | Maximum traits given to a species from its description |
 | hive_mind_intelligence | suru_zeka | 15 | 0 | 100 | Creatures | Intelligence gain of a swarm-minded species |
-| chimera_default_stat | kimera_stat_varsayilan | 40 | 0 | 100 | Creatures | Default value of an unrecorded stat in a chimera |
-| chimera_die | kimera_zar | 21 | 1 | 100 | Creatures | Die of chimera stats (1…n) |
-| chimera_shift | kimera_kayma | 6 | 0 | 100 | Creatures | Subtracted from the chimera stat die |
-| chimera_hp_cap | kimera_can_tavan | 1000 | 1 | 100,000 | Creatures | Maximum HP of a chimera |
-| chimera_trait_cap | kimera_ozellik_tavan | 3 | 0 | 10 | Creatures | Maximum traits a chimera can carry |
-| chimera_danger_bonus | kimera_tehlike | 10 | 0 | 100 | Creatures | Extra danger of a chimera |
-| chimera_merge_chance | kimera_dokuma_sans | 6 | 0 | 100 | Creatures | A community or mortal knowing biomancy weaves a chimera on its own (% per epoch) |
-| chimera_merge_distance | kimera_dokuma_mesafe | 4 | 0 | 99 | Creatures | Farthest distance of the spontaneous chimera weaver to the species (steps) |
+| merged_default_stat | kimera_stat_varsayilan | 40 | 0 | 100 | Creatures | Default value of an unrecorded stat in a chimera |
+| merged_die | kimera_zar | 21 | 1 | 100 | Creatures | Die of chimera stats (1…n) |
+| merged_shift | kimera_kayma | 6 | 0 | 100 | Creatures | Subtracted from the chimera stat die |
+| merged_hp_cap | kimera_can_tavan | 1000 | 1 | 100,000 | Creatures | Maximum HP of a chimera |
+| merged_trait_cap | kimera_ozellik_tavan | 3 | 0 | 10 | Creatures | Maximum traits a chimera can carry |
+| merged_danger_bonus | kimera_tehlike | 10 | 0 | 100 | Creatures | Extra danger of a chimera |
+| species_merge_chance | kimera_dokuma_sans | 6 | 0 | 100 | Creatures | A community or mortal knowing biomancy weaves a chimera on its own (% per epoch) |
+| species_merge_distance | kimera_dokuma_mesafe | 4 | 0 | 99 | Creatures | Farthest distance of the spontaneous chimera weaver to the species (steps) |
 | radiant_danger_drop | isik_tehlike | 2 | 0 | 100 | Creatures | Light-radiating species lowers region danger (per epoch) |
 | radiant_fertility_gain | isik_bereket | 2 | 0 | 100 | Creatures | Light-radiating species raises region fertility (per epoch) |
 | mind_reader_victims | akil_okuyan_tavan | 3 | 0 | 100 | Creatures | Maximum neighbours whose sanity a mind-reading or soul-eating species gnaws |
@@ -1712,9 +1712,9 @@ Old namespace `YARATIK` · 66 rows · defined in `src/yaratik.js` · also read b
 | people_default_martiality | halk_savascilik_varsayilan | 40 | 0 | 100 | Creatures | Default martiality of a people with no recorded martiality |
 | people_default_magic | halk_buyu_varsayilan | 20 | 0 | 100 | Creatures | Default magic of a people with no recorded magic |
 | people_default_population | halk_nufus_varsayilan | 1000 | 1 | 100,000,000 | Creatures | Population assumed when a changed branch splits from a people with no recorded population |
-| chimera_default_danger | kimera_tehlike_varsayilan | 50 | 0 | 100 | Creatures | Danger assumed in the escape chance for a chimera with no recorded danger |
-| chimera_escape_divisor | kimera_kacis_bolen | 500 | 1 | 100,000 | Creatures | Chimera escape chance: danger / this number |
-| chimera_escape_population_loss_pct | kimera_kacis_kayip | 10 | 0 | 100 | Creatures | Population loss to the weavers of an escaped chimera (%) |
+| merged_default_danger | kimera_tehlike_varsayilan | 50 | 0 | 100 | Creatures | Danger assumed in the escape chance for a chimera with no recorded danger |
+| merged_escape_divisor | kimera_kacis_bolen | 500 | 1 | 100,000 | Creatures | Chimera escape chance: danger / this number |
+| merged_escape_population_loss_pct | kimera_kacis_kayip | 10 | 0 | 100 | Creatures | Population loss to the weavers of an escaped chimera (%) |
 | megafauna_min_power | megafauna_seviye | 8 | 1 | 12 | Creatures | Minimum power level of a species counted as megafauna |
 | trace_power | iz_seviye | 5 | 1 | 12 | Creatures | Power level of a megafauna-trace resource |
 | trace_abundance | iz_bolluk | 60 | 0 | 100 | Creatures | Abundance of a megafauna-trace resource |
@@ -1809,10 +1809,10 @@ Old namespace `OLUM` · 53 rows · defined in `src/olum.js` · also read by `src
 | auto_intrigue_min_relation | kardes_oto_iliski | 40 | -100 | 100 | Death and resurrection | Minimum relation with the sibling for a spontaneous resurrection intrigue |
 | auto_intrigue_chance | kardes_oto_sans | 25 | 0 | 100 | Death and resurrection | A sufficiently close sibling with enough essence enters an intrigue on their own (% per epoch) |
 | auto_intrigue_essence_share | kardes_oto_oz_pay | 60 | 0 | 100 | Death and resurrection | In a spontaneous intrigue the sibling spends at most this share of their essence (%) |
-| scatter_bones_cost | dagit_bedel | 30 | 0 | 10,000 | Death and resurrection | Cost of scattering the bones (essence) |
-| scatter_bones_devotion_loss | dagit_adanmislik | 35 | 0 | 1000 | Death and resurrection | Devotion reduced by scattering the bones |
-| auto_scatter_relation | dagit_oto_iliski | 40 | 0 | 100 | Death and resurrection | Relation with the dead for spontaneous bone scattering: below minus this |
-| auto_scatter_chance | dagit_oto_sans | 15 | 0 | 100 | Death and resurrection | A hostile sibling scatters the bones on their own (% per epoch) |
+| hinder_return_cost | dagit_bedel | 30 | 0 | 10,000 | Death and resurrection | Cost of hindering a dead sibling's return (essence) |
+| hinder_return_devotion_loss | dagit_adanmislik | 35 | 0 | 1000 | Death and resurrection | Devotion lost by those awaiting a dead sibling's return when a sibling hinders it |
+| auto_hinder_relation | dagit_oto_iliski | 40 | 0 | 100 | Death and resurrection | Relation with the dead for spontaneous bone scattering: below minus this |
+| auto_hinder_chance | dagit_oto_sans | 15 | 0 | 100 | Death and resurrection | A hostile sibling scatters the bones on their own (% per epoch) |
 | new_cult_followers | yeni_tarikat_murit | 80 | 1 | 1,000,000 | Death and resurrection | Followers of the new resurrection cult born when a rite is held for a dead god with no remaining cult |
 
 ### DEEP_LIFE

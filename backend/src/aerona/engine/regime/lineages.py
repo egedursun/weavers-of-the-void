@@ -19,9 +19,9 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.domain.enums.regime import SegmentLevel
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
@@ -226,7 +226,7 @@ async def steer(ctx: TickContext, plan: BreedingPlanRow, design: LongPlanRow, ta
         spouse = await match_for(ctx, plan, member, ids)
         if spouse is None:
             continue
-        await marry(ctx.session, member, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="a match arranged by a long design")
+        await marry(ctx.session, member, spouse, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="a match arranged by a long design")
         shift(plan, "matches", 1, high=10**6)
         tally.matches += 1
         made += 1

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
@@ -34,7 +35,16 @@ from aerona.engine.primitives.numbers import clamp_int
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
 LIVE = (ProgrammeStage.PLANNING, ProgrammeStage.BUILDING, ProgrammeStage.TESTING)
 SPECIALISMS = (SkillKind.SCIENCE, SkillKind.ENGINEERING, SkillKind.COMPUTING)
-STAGE_WORDS = {ProgrammeStage.BUILDING: "began to build", ProgrammeStage.TESTING: "began to test", ProgrammeStage.COMPLETE: "mastered"}
+STAGE_WORDS = total(
+    ProgrammeStage,
+    {
+        ProgrammeStage.PLANNING: "began to plan",
+        ProgrammeStage.BUILDING: "began to build",
+        ProgrammeStage.TESTING: "began to test",
+        ProgrammeStage.COMPLETE: "mastered",
+        ProgrammeStage.ABANDONED: "gave up on",
+    },
+)
 
 
 @dataclass

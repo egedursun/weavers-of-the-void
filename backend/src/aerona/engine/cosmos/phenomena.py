@@ -2,7 +2,7 @@ from collections import Counter
 
 from sqlalchemy import delete, select
 
-from aerona.catalog.cosmography import PHENOMENON_KINDS, PHENOMENON_REAGENTS, PHENOMENON_WEATHER
+from aerona.catalog.cosmography import PHENOMENON_KINDS, PHENOMENON_MODEL, PHENOMENON_REAGENTS, PHENOMENON_WEATHER, SCOPE_SPREAD
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow
@@ -10,7 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, PhenomenonPersistence
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.models.entity_stats import PhenomenonStats
@@ -97,7 +97,8 @@ async def footprints_of(ctx: TickContext, entity_id: int) -> list[PhenomenonFoot
 
 async def spread(ctx: TickContext, atlas: RegionAtlas, entity: EntityRow, profile: PhenomenonProfileRow, prints: list[PhenomenonFootprintRow]) -> int:
     table = ctx.rules.phenomena
-    if profile.intensity < table.spread_at or len(prints) >= table.spread_cap:
+    cap = table.spread_cap * SCOPE_SPREAD[PHENOMENON_MODEL[profile.kind].scope]
+    if profile.intensity < table.spread_at or len(prints) >= cap:
         return 0
     covered = {row.region_entity_id for row in prints}
     candidates = sorted({other for row in prints for other in atlas.neighbour_regions(row.region_entity_id)} - covered)
@@ -159,11 +160,14 @@ async def phenomena_cycles(ctx: TickContext) -> None:
             profile.containment = clamp_percent(profile.containment + await wards_in(ctx, regions) * table.ward_containment)
         held_back = profile.containment * table.contain_pct / PERCENT / PERCENT
         growth = profile.growth * (1 - held_back) if profile.growth > 0 else profile.growth - profile.containment // 10
+        persistence = PHENOMENON_MODEL[profile.kind].persistence
+        if persistence is PhenomenonPersistence.PASSING:
+            growth -= table.passing_fade
         if "intensity" not in profile.locked:
             profile.intensity = clamp_percent(round(profile.intensity + growth))
         for row in prints:
             row.intensity = clamp_percent(min(profile.intensity, row.intensity + max(0, round(growth))))
-        if profile.intensity <= table.fade_at:
+        if profile.intensity <= table.fade_at and (persistence is not PhenomenonPersistence.PERMANENT or profile.containment >= PERCENT):
             await fade(ctx, entity)
             continue
         ctx.count("phenomena_spread", await spread(ctx, atlas, entity, profile, prints))

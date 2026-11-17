@@ -5,7 +5,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.culture import ArtMedium, ItemClass
+from aerona.domain.enums.culture import ArtMode, ItemClass
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -27,7 +27,7 @@ def legacy_class(entity: EntityRow) -> ItemClass | None:
     return next((item_class for item_class, words in ITEM_WORDS.items() if names_word(text, words)), None)
 
 
-def legacy_medium(entity: EntityRow) -> ArtMedium | None:
+def legacy_medium(entity: EntityRow) -> ArtMode | None:
     text = legacy_text(entity)
     return next((medium for medium, words in ART_WORDS.items() if names_word(text, words)), None)
 

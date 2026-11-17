@@ -218,7 +218,11 @@ export function SetCohort({
   blocked: string | null
 }) {
   const [band, setBand] = useState<AgeBand>('adult')
-  const [sex, setSex] = useState<Sex>('male')
+  const [sex, setSex] = useState<Sex>(
+    () =>
+      [...view.cohorts].sort((left, right) => right.count - left.count)[0]
+        ?.sex ?? 'other'
+  )
   const [socialClass, setSocialClass] = useState<SocialClass>('farmer')
   const [condition, setCondition] = useState<CohortCondition>('none')
   const present =

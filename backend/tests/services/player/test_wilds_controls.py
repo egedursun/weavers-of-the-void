@@ -11,17 +11,17 @@ from aerona.db.tables.ecology import (
     HerdRow,
     SpeciesCustomUseRow,
     SpeciesHostRow,
+    SpeciesProductRow,
     SpeciesProfileRow,
     SpeciesRangeRow,
     SpeciesUseKindRow,
     SpeciesUseRow,
-    SpeciesYieldRow,
 )
 from aerona.db.tables.economy import PROPERTY_COLUMNS, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, FoodLink, SizeClass, Sociality, SpeciesUse, YieldProduct
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper, Diet, DomesticationStage, FoodLink, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -131,11 +131,11 @@ async def test_a_host_immunity_is_held_and_released(scope: PlayerScope, session:
 
 async def test_ways_of_keeping_are_devised_kept_reshaped_and_forgotten(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     hound = await species(scope, world, "Ashhound", Diet.CARNIVORE)
-    effect = await wilds.create_use_kind(scope, wilds.NewUseKind(name="Grave-guarding", base_use=SpeciesUse.GUARD, output_pct=150))
+    effect = await wilds.create_use_kind(scope, wilds.NewUseKind(name="Grave-guarding", base_use=AnimalRole.GUARD, output_pct=150))
     kind_id = int(effect.values["kind_id"] or 0)
     await wilds.set_custom_use(scope, wilds.CustomUse(species_id=hound.id, kind_id=kind_id))
     assert await session.get(SpeciesCustomUseRow, (hound.id, kind_id)) is not None
-    assert await session.get(SpeciesUseRow, (hound.id, SpeciesUse.GUARD)) is not None
+    assert await session.get(SpeciesUseRow, (hound.id, AnimalRole.GUARD)) is not None
     await wilds.edit_use_kind(scope, wilds.EditUseKind(kind_id=kind_id, values={"output_pct": 200}))
     kind = await session.get(SpeciesUseKindRow, kind_id)
     assert kind is not None and kind.output_pct == 200 and kind.locked == ["output_pct"]
@@ -231,5 +231,5 @@ async def test_a_yield_can_name_a_world_material(scope: PlayerScope, session: As
     session.add(stuff)
     await session.flush()
     await wilds.set_yield(scope, wilds.SpeciesYield(species_id=moth.id, product="starsilk", commodity=CommodityKind.CLOTH, world_material_id=stuff.id, rate=2))
-    row = await session.get(SpeciesYieldRow, (moth.id, "starsilk"))
+    row = await session.get(SpeciesProductRow, (moth.id, "starsilk"))
     assert row is not None and row.world_material_id == stuff.id and row.material is MaterialKind.CLOTH

@@ -97,9 +97,9 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         faithful = await bond_exists(ctx.session, ruler.id, realm.profile.state_religion_id, BondKind.WORSHIPS)
         parts["the temples' blessing" if faithful else "the temples' scorn"] = table.sanction if faithful else -table.excommunication
     church = await ctx.session.get(CultDoctrineRow, realm.profile.state_religion_id) if realm.profile.state_religion_id is not None else None
-    sacred = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.DIVINE_KINGSHIP)) is not None
+    sacred = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.DIVINE_RULE)) is not None
     if await has_flag(ctx.session, ruler.id, EntityFlag.CHOSEN) or ruler.creator_son_id is not None or sacred:
-        parts["divine kingship"] = table.divine_kingship
+        parts["divine rule"] = table.divine_rule
     if church is not None and ruler.id in church.excommunicated:
         parts["excommunicated"] = -table.excommunication
     held, lost = await regalia_holder(ctx, realm.entity.id, ruler.id)

@@ -19,7 +19,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.minds import MindOrigin
 from aerona.engine.context import TickContext
-from aerona.engine.law.systems import written_code
+from aerona.engine.law.systems import realm_code
 
 
 @dataclass(frozen=True)
@@ -96,7 +96,7 @@ SOURCES: Mapping[RegistryKind, Find] = total(
         RegistryKind.LAND_TITLE: none_kept,
         RegistryKind.DEBT: none_kept,
         RegistryKind.SALE: none_kept,
-        RegistryKind.DOWRY: none_kept,
+        RegistryKind.UNION_PORTION: none_kept,
         RegistryKind.INDENTURE: none_kept,
         RegistryKind.PATENT: patents,
         RegistryKind.PATTERN: patterns,
@@ -133,7 +133,7 @@ async def record_events(ctx: TickContext) -> int:
     for kind, find in SOURCES.items():
         for found in await find(ctx):
             polity = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == found.place_id).limit(1))
-            if polity is None or held(polity) or not await written_code(ctx.session, [polity]):
+            if polity is None or held(polity) or not await realm_code(ctx.session, polity):
                 continue
             entry = Entry(found.place_id, await entity_or_none(ctx, found.owner_id), await entity_or_none(ctx, found.subject_id), found.number)
             if await kept_already(ctx, kind, entry):

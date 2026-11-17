@@ -94,12 +94,11 @@ class ClockRules:
 @dataclass(frozen=True)
 class GameRules:
     invent_chance: int = rule(15, 0, 100, V, "Chance each epoch a people without a game invents one (%)")
-    spread_chance: int = rule(10, 0, 100, V, "Chance each epoch a game spreads to a people its followers trade or live with (%)")
-    popularity_gain: int = rule(5, 0, 100, V, "Popularity a game gains each epoch among its followers")
-    strategy_xp: int = rule(2, 0, 100, V, "Tactics practice a strategy game gives each noble and officer of its followers each epoch")
-    gamble_loss: int = rule(2, 0, 100, V, "Prosperity a chance game takes from each town of its followers each epoch at full popularity")
-    gamble_crime: int = rule(2, 0, 100, V, "Crime a chance game adds to each town of its followers at full popularity")
-    ball_contentment: int = rule(2, 0, 100, V, "Unrest a ball game eases in each town of its followers each epoch at full popularity")
+    strategy_xp: int = rule(2, 0, 100, V, "Practice of its skill a game gives each noble and officer of its players each epoch, less the part left to chance")
+    gamble_loss: int = rule(2, 0, 100, V, "Prosperity a game of full chance and full betting takes from each town of its players each epoch at full strength")
+    gamble_crime: int = rule(2, 0, 100, V, "Crime a game of full chance and full betting adds to each town of its players each epoch at full strength")
+    ball_contentment: int = rule(2, 0, 100, V, "Unrest a game watched by full crowds eases in each town of its players each epoch at full strength")
+    violence_pct: int = rule(50, 0, 300, V, "Extra chance of an everyday mishap for the players of a game of full violence, at full strength (%)")
 
 
 @dataclass(frozen=True)

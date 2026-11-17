@@ -126,6 +126,6 @@ class ContestRules:
     renown: int = rule(6, 0, 50, G, "Renown a contest's winner gains")
     infamy: int = rule(2, 0, 50, G, "Infamy a contest's loser gains")
     famous_margin: int = rule(2, 1, 9, G, "Round margin that makes a contest between notables famous")
-    bride_romance: int = rule(15, 0, 100, G, "Romance the contested mortal feels for the winner")
+    union_romance: int = rule(15, 0, 100, G, "Romance the contested mortal feels for the winner")
     wager_wealth: int = rule(5, 0, 50, G, "Wealth a wager passes from loser to winner")
     favour_followers_pct: int = rule(5, 0, 100, G, "Followers a god's cult gains when its priest wins a contest for favour (%)")

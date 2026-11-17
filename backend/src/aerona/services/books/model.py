@@ -67,6 +67,7 @@ from aerona.services.books.command import add_command_areas
 from aerona.services.books.deeds import DeedsChapter, deeds_chapter
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
+from aerona.services.books.kinds import add_kind_sections
 from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
@@ -475,6 +476,7 @@ class BookBuilder:
         self.typed = await TypedIndex.load(self.session, self.names)
         self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
+        await add_kind_sections(self.session, self.typed)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []

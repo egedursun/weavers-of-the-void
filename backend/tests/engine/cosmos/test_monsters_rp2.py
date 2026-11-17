@@ -121,7 +121,7 @@ def test_bodies_follow_traits_and_chemistry_and_monsters_grow_strange(rules: Rul
     deliveries = {spec.delivery for spec in attack_specs(sure, 13, set(), monster=True)}
     assert AttackDelivery.GAZE in deliveries and len(deliveries) >= 2
     assert monster.hoards is not None and monster.awakening is not None
-    assert monster.temperament is Temperament.ABDUCTOR and monster.habitat is Habitat.DEEP
+    assert monster.temperament is Temperament.SEIZES_PREY and monster.habitat is Habitat.DEEP
     assert harm_factor(rules, monster, 4, 2) > harm_factor(rules, plain, 4) >= 1.0
     assert armour_of(monster) > 0 and armour_of(None) == 0
 
@@ -192,7 +192,7 @@ async def test_an_abductor_carries_people_off_and_its_death_frees_them(ctx: Tick
     hold = await town(ctx.session, cosmos, region.id)
     victim = await mortal(ctx.session, cosmos, hold.id, "Lio")
     horror, row = await beast(ctx, cosmos, region.id, "Night Taker")
-    ctx.session.add(anatomy(horror.id, temperament=Temperament.ABDUCTOR))
+    ctx.session.add(anatomy(horror.id, temperament=Temperament.SEIZES_PREY))
     await ctx.session.flush()
     eager = tick(ctx.session, tuned(rules, "monsters", abduct_pct=100))
     assert await carry_off(eager, horror, row, [hold]) is not None

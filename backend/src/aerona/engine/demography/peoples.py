@@ -5,7 +5,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK
-from aerona.catalog.peoples import CREATURE_DIETS, CREATURE_NATURES, CREATURE_PLANS, ECOLOGY_DIETS, PLAN_DIETS, PLAN_NATURES
+from aerona.catalog.peoples import CREATURE_DIETS, CREATURE_NATURES, CREATURE_PLANS, PLAN_DIETS, PLAN_NATURES, STYLE_AXES, STYLE_NEUTRAL, VALUE_STYLE
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
@@ -13,16 +13,18 @@ from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow
+from aerona.db.tables.cycles import KinshipSystemRow
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import CultDoctrineRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.demography import Aesthetic, FolkDiet, FuneralCustom, InheritanceCustom, MarriageCustom, MartialStyle, NaturalTrait
+from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, MartialStyle, NaturalTrait
 from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
@@ -30,16 +32,19 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainK
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
+from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionForm
 from aerona.engine.body.customs import culture_of
 from aerona.engine.cosmos.lifeforms import HOMELAND_FIXUP, fit_to_homeland
 from aerona.engine.demography.biology import edible, record_of, staple_for
 from aerona.engine.demography.rites import set_rite
 from aerona.engine.faith.book import patron_node
 from aerona.engine.lore.language import script_factor, tongues_of
+from aerona.engine.lore.motifs import canon_motifs
 from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, spoken_language
+from aerona.engine.unions.axes import Spousing, drift_custom, fresh_custom
 from aerona.rules.registry import Rules
 
 HUMAN_LIFESPAN = 70
@@ -93,7 +98,7 @@ async def species_root(session: AsyncSession, people: EntityRow) -> EntityRow | 
 class Kin:
     plan: BodyPlan
     size: SizeClass
-    diet: FolkDiet
+    diet: Diet
     traits: tuple[NaturalTrait, ...]
 
 
@@ -107,7 +112,7 @@ def kin_from(
         size = size_by_rank(height_rank) if height_rank is not None else SizeClass.MEDIUM
     diet = next((found for trait, found in CREATURE_DIETS if trait in creature), None) or PLAN_DIETS.get(chosen)
     if diet is None:
-        diet = ECOLOGY_DIETS[ecology_diet] if ecology_diet is not None else FolkDiet.OMNIVORE
+        diet = ecology_diet if ecology_diet is not None else Diet.OMNIVORE
     traits = {CREATURE_NATURES[trait] for trait in creature if trait in CREATURE_NATURES} | set(PLAN_NATURES.get(chosen, ()))
     if nocturnal:
         traits.add(NaturalTrait.DARK_SIGHT)
@@ -174,16 +179,16 @@ def refresh_biology(rules: Rules, row: PeopleBiologyRow, fresh: PeopleBiologyRow
         row.staple = staple_for(rules, row.diet, region)
 
 
-def aesthetic_of(values: dict[ValueAxis, int]) -> Aesthetic:
+def leading_value(values: dict[ValueAxis, int]) -> ValueAxis:
     ranked = {
-        Aesthetic.CELESTIAL: values.get(ValueAxis.PIETY, 0),
-        Aesthetic.AUSTERE: values.get(ValueAxis.MARTIAL, 0) - values.get(ValueAxis.WEALTH, 0),
-        Aesthetic.ORNATE: values.get(ValueAxis.WEALTH, 0),
-        Aesthetic.NATURAL: values.get(ValueAxis.NATURE, 0),
-        Aesthetic.MACABRE: values.get(ValueAxis.DEATH, 0),
-        Aesthetic.GEOMETRIC: values.get(ValueAxis.KNOWLEDGE, 0),
+        ValueAxis.PIETY: values.get(ValueAxis.PIETY, 0),
+        ValueAxis.MARTIAL: values.get(ValueAxis.MARTIAL, 0) - values.get(ValueAxis.WEALTH, 0),
+        ValueAxis.WEALTH: values.get(ValueAxis.WEALTH, 0),
+        ValueAxis.NATURE: values.get(ValueAxis.NATURE, 0),
+        ValueAxis.DEATH: values.get(ValueAxis.DEATH, 0),
+        ValueAxis.KNOWLEDGE: values.get(ValueAxis.KNOWLEDGE, 0),
     }
-    return max(ranked, key=lambda kind: (ranked[kind], kind.value))
+    return max(ranked, key=lambda axis: (ranked[axis], axis.value))
 
 
 def fields(levels: dict[KnowledgeBranch, int], kind: UnitKind) -> bool:
@@ -214,26 +219,51 @@ def martial_of(region: RegionEnvironmentRow | None, levels: dict[KnowledgeBranch
     return next((style for matched, style in ladder if matched), MartialStyle.SHIELDWALL)
 
 
-def customs_of(values: dict[ValueAxis, int]) -> tuple[MarriageCustom, bool, InheritanceCustom, bool]:
+def spousing_for(values: dict[ValueAxis, int]) -> Spousing:
     hierarchy = values.get(ValueAxis.HIERARCHY, 0)
     tradition = values.get(ValueAxis.TRADITION, 0)
     kinship = values.get(ValueAxis.KINSHIP, 0)
-    mercy = values.get(ValueAxis.MERCY, 0)
-    marriage = MarriageCustom.POLYGYNY if hierarchy >= LEAN * 2 and tradition >= LEAN else MarriageCustom.MONOGAMY
-    if hierarchy <= -LEAN and kinship >= LEAN:
-        marriage = MarriageCustom.POLYANDRY
+    endogamy = PartnerScope.PEOPLE if kinship >= LEAN else PartnerScope.NONE
     if kinship <= -LEAN * 2:
-        marriage = MarriageCustom.GROUP
+        return Spousing(UnionForm.GROUP, PluralSide.EITHER, endogamy)
+    if hierarchy <= -LEAN and kinship >= LEAN:
+        return Spousing(UnionForm.PLURAL, PluralSide.SECOND, endogamy)
+    if hierarchy >= LEAN * 2 and tradition >= LEAN:
+        return Spousing(UnionForm.PLURAL, PluralSide.FIRST, endogamy)
+    return Spousing(UnionForm.PAIR, PluralSide.EITHER, endogamy)
+
+
+STYLE_LEANS: dict[str, ValueAxis] = {
+    "ornament": ValueAxis.WEALTH,
+    "geometry": ValueAxis.KNOWLEDGE,
+    "scale": ValueAxis.HIERARCHY,
+    "symmetry": ValueAxis.TRADITION,
+}
+
+
+def style_columns(values: dict[ValueAxis, int]) -> dict[str, int]:
+    base = VALUE_STYLE.get(leading_value(values), STYLE_NEUTRAL)
+    found = {axis: getattr(base, axis) for axis in STYLE_AXES}
+    for axis, value_axis in STYLE_LEANS.items():
+        found[axis] = clamp_int(found[axis] + values.get(value_axis, 0) // 4, 0, PERCENT)
+    return found
+
+
+def customs_of(values: dict[ValueAxis, int]) -> tuple[InheritanceCustom, bool]:
+    hierarchy = values.get(ValueAxis.HIERARCHY, 0)
+    kinship = values.get(ValueAxis.KINSHIP, 0)
+    mercy = values.get(ValueAxis.MERCY, 0)
+    second_plural = spousing_for(values).plural_on(PluralSide.SECOND)
     ladder = (
         (hierarchy >= LEAN and kinship >= LEAN and mercy >= LEAN, InheritanceCustom.ULTIMOGENITURE),
         (hierarchy >= LEAN, InheritanceCustom.PRIMOGENITURE),
-        (kinship >= LEAN * 2 or marriage is MarriageCustom.POLYANDRY, InheritanceCustom.MATRILINEAL),
+        (kinship >= LEAN * 2 or second_plural, InheritanceCustom.THROUGH_SECOND_LINE),
         (values.get(ValueAxis.KNOWLEDGE, 0) >= LEAN, InheritanceCustom.BY_MERIT),
         (hierarchy <= -LEAN, InheritanceCustom.ELECTIVE),
     )
-    inheritance = next((custom for matched, custom in ladder if matched), InheritanceCustom.GAVELKIND)
+    inheritance = next((custom for matched, custom in ladder if matched), InheritanceCustom.EQUAL_SHARES)
     slavery = hierarchy >= LEAN and mercy <= -LEAN
-    return marriage, kinship >= LEAN, inheritance, slavery
+    return inheritance, slavery
 
 
 def funeral_of(region: RegionEnvironmentRow | None, levels: dict[KnowledgeBranch, int], values: dict[ValueAxis, int]) -> FuneralCustom:
@@ -323,12 +353,12 @@ async def culture_for(session: AsyncSession, rules: Rules, people: EntityRow, re
     tongues = len(await active_bonds(session, [BondKind.SPEAKS], sources=[people.id]))
     levels = (await known_levels(session, [people.id])).get(people.id, {})
     homes = len(await active_bonds(session, [BondKind.LIVES_IN], sources=[people.id]))
-    marriage, endogamous, inheritance, slavery = customs_of(values)
+    inheritance, slavery = customs_of(values)
     script = await script_factor(session, rules, people.id)
     if await has_technique(session, people.id, Technique.ALPHABET):
         script = max(script, rules.script.alphabet_pct / PERCENT)
     biology = await session.get(PeopleBiologyRow, people.id)
-    diet = biology.diet if biology is not None else FolkDiet.OMNIVORE
+    diet = biology.diet if biology is not None else Diet.OMNIVORE
     return PeopleCultureRow(
         people_entity_id=people.id,
         cohesion=clamp_int(table.cohesion_base - max(0, tongues - 1) * table.cohesion_per_tongue + values.get(ValueAxis.KINSHIP, 0) // 4, 0, PERCENT),
@@ -337,11 +367,10 @@ async def culture_for(session: AsyncSession, rules: Rules, people: EntityRow, re
         liturgical_language_id=await liturgical_of(session, people),
         trade_language_id=await trade_language_of(session, people),
         staples=sorted({staple_for(rules, diet, region).value, *(item.value for item in edible(diet) if item in STAPLE_FOODS)}),
-        aesthetic=aesthetic_of(values),
+        **style_columns(values),
+        motif_sources=[source.value for source in await canon_motifs(session, people)],
         martial_style=martial_of(region, levels, values),
         funeral_rite=funeral_of(region, levels, values),
-        marriage=marriage,
-        endogamous=endogamous,
         inheritance=inheritance,
         slavery_lawful=slavery,
         martial_record={},
@@ -365,8 +394,17 @@ async def ensure_profiles(
     if culture is None:
         culture = await culture_for(session, rules, people, region)
         session.add(culture)
+    if await session.get(UnionCustomRow, people.id) is None:
+        spousing = spousing_for(await culture_of(session, people.id))
+        session.add(fresh_custom(people.id, spousing, await session.get(KinshipSystemRow, people.id), rules.kinship.union_payment))
     await session.flush()
     return biology, culture
+
+
+async def drift_union(session: AsyncSession, people: EntityRow) -> None:
+    row = await session.get(UnionCustomRow, people.id)
+    if row is not None:
+        drift_custom(row, spousing_for(await culture_of(session, people.id)))
 
 
 CULTURE_DRIFT = (
@@ -375,9 +413,12 @@ CULTURE_DRIFT = (
     "liturgical_language_id",
     "trade_language_id",
     "staples",
-    "aesthetic",
-    "marriage",
-    "endogamous",
+    "ornament",
+    "geometry",
+    "colour",
+    "scale",
+    "symmetry",
+    "motif_sources",
     "inheritance",
     "slavery_lawful",
 )

@@ -5,7 +5,7 @@ from aerona.core.grammar import several
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
-from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mind import MemoryRow
@@ -60,7 +60,7 @@ HOARD_GOODS = (CommodityKind.LUXURIES, CommodityKind.LIVESTOCK, CommodityKind.GR
 GREAT = SIZE_ORDER.index(SizeClass.HUGE)
 RIDEABLE = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
 TROPHY_CLASSES = {
-    MaterialKind.DRAGONBONE: ItemClass.BLADE,
+    MaterialKind.GREAT_BONE: ItemClass.BLADE,
     MaterialKind.IVORY: ItemClass.JEWEL,
     MaterialKind.CHITIN: ItemClass.ARMOUR,
     MaterialKind.HIDE: ItemClass.ARMOUR,
@@ -471,7 +471,7 @@ async def slayer_of(ctx: TickContext, beast_id: int) -> EntityRow | None:
     return await ctx.session.get(EntityRow, killer) if killer is not None else None
 
 
-async def trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow, item: SpeciesYieldRow, material: MaterialKind) -> EntityRow:
+async def trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow, item: SpeciesProductRow, material: MaterialKind) -> EntityRow:
     amount = ctx.rules.beasts.corpse_yield * item.rate
     made = await create_record(
         ctx,
@@ -513,7 +513,7 @@ async def corpse(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, slaye
         return 0
     given = 0
     ledger = GoodsLedger(ctx.session, ctx.epoch)
-    for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == row.species_entity_id))):
+    for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == row.species_entity_id))):
         if item.commodity is None or item.material is None:
             continue
         if slayer.entity_type in COMMUNITY_TYPES:

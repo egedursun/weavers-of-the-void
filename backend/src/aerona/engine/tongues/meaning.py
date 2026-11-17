@@ -10,7 +10,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.tongues import MeaningShiftRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import ActorKind
@@ -174,7 +174,7 @@ async def holy(ctx: TickContext) -> list[tuple[int, str, list[int]]]:
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id)):
         folk = [row.id for row in await worshippers_of(ctx.session, son.id)]
         feared = Domain.DEATH in {son.domain_primary, son.domain_secondary}
-        keepers = [community for community in folk if feared or await kept(ctx.session, community, TraditionKind.TABOO)]
+        keepers = [community for community in folk if feared or await kept(ctx.session, community, TraditionFunction.TABOO)]
         if keepers:
             found.append((son.id, son.name, keepers))
     return found
@@ -189,7 +189,7 @@ async def lift_names(ctx: TickContext, tally: DriftTally) -> None:
             language = await spoken_language(ctx.session, community)
             if language is None or held(community) or await veiled(ctx, language.id, node_id):
                 continue
-            boost = 2 if await kept(ctx.session, community, TraditionKind.TABOO) else 1
+            boost = 2 if await kept(ctx.session, community, TraditionFunction.TABOO) else 1
             if ctx.rng(f"taboo.{language.id}.{node_id}.{ctx.epoch}").chance(table.taboo_pct * boost) and await veil(ctx, language, node_id, name) is not None:
                 tally.veiled += 1
 

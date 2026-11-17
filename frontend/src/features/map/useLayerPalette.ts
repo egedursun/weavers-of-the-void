@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
+import { type components } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import {
   type ThemeColorName,
   type ThemeColors,
 } from '@/components/domain/useThemeColors'
+import { MONEY_FORM } from '@/features/entity/economy/labels'
 import { type MapView } from './api'
 import { type CellKey } from './mapEdges'
 import { type LayerMode } from './mapModel'
@@ -38,6 +40,15 @@ const EXTRA_TOKENS: readonly ThemeColorName[] = [
   'rarity-common',
 ]
 const UNKNOWN = 0
+
+type Schemas = components['schemas']
+type KindConcept = Schemas['KindConcept']
+
+const CONCEPT_NOUN: Partial<Record<KindConcept, string>> = {
+  cuisine: 'Cuisine',
+  garment: 'Garment',
+  organisation: 'Organisation',
+}
 
 export type LayerCategory = {
   key: string
@@ -93,6 +104,16 @@ const ALPHA: Record<LayerMode, number> = {
   nutrients: 0.45,
   networks: 0.45,
   hidden: 0.45,
+  cuisines: 0.42,
+  dress: 0.42,
+  organisations: 0.42,
+  money: 0.42,
+}
+
+const KIND_LAYERS: Partial<Record<LayerMode, KindConcept>> = {
+  cuisines: 'cuisine',
+  dress: 'garment',
+  organisations: 'organisation',
 }
 
 export const STOCK_BANDS = [
@@ -137,7 +158,7 @@ const BAND_LABEL: Record<string, string> = {
   poor: 'Poor soil',
   fair: 'Fair soil',
   rich: 'Rich soil',
-  salted: 'Salted fields',
+  salted: 'Saline fields',
 }
 
 export const RAIN_BANDS = [
@@ -427,6 +448,20 @@ function regionKey(
       const band = stocks ? soilBand(stocks.soil ?? 0, stocks.salt ?? 0) : null
       return band ? { key: `nutrients:${band}`, alpha } : null
     }
+    case 'cuisines':
+    case 'dress':
+    case 'organisations': {
+      const concept = KIND_LAYERS[mode]
+      const ways =
+        view.kinds?.[String(regionId)] ?? view.kinds?.[String(topId)] ?? []
+      const top = ways.find((item) => item.concept === concept)
+      return top ? { key: `${mode}:${top.kind_id}`, alpha } : null
+    }
+    case 'money': {
+      const money =
+        view.money?.[String(regionId)] ?? view.money?.[String(topId)]
+      return money ? { key: `money:${money.form}`, alpha } : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -509,6 +544,15 @@ function labelFor(
   )
     return words(raw)
   if (kind === 'range') return rangeLabel(raw)
+  if (kind === 'money')
+    return MONEY_FORM[raw as Schemas['MoneyForm']]?.label ?? words(raw)
+  const concept = KIND_LAYERS[kind as LayerMode]
+  if (concept) {
+    const named = Object.values(view.kinds ?? {})
+      .flat()
+      .find((item) => item.concept === concept && item.kind_id === id)
+    return named?.name ?? `${CONCEPT_NOUN[concept]} ${id}`
+  }
   if (kind === 'god') {
     const rule = Object.values(view.dominion ?? {}).find(
       (item) => item.god_id === id

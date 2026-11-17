@@ -79,7 +79,7 @@ SIZE_ORDER = tuple(VehicleSize)
 
 def largest_size(rules: Rules, tier: int) -> int:
     caps = rules.vehicles
-    return (caps.tribe_size, caps.city_state_size, caps.kingdom_size, caps.empire_size, caps.interstellar_size, caps.cosmic_size)[
+    return (caps.tribe_size, caps.city_state_size, caps.realm_size, caps.empire_size, caps.interstellar_size, caps.cosmic_size)[
         min(max(tier, CivilizationTier.TRIBE), CivilizationTier.COSMIC_POWER)
     ]
 

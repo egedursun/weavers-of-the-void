@@ -1,10 +1,12 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
+from aerona.domain.enums.genetics import GiftStance, HouseholdDecision, HouseholdRole, Locus, LocusGroup
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.urban import HousingLevel
 
 
 @dataclass(frozen=True)
@@ -27,7 +29,11 @@ class LocusSpec:
     noun: str = ""
 
     def allele(self, key: str) -> Allele:
-        return next((allele for allele in self.alleles if allele.key == key), self.alleles[0])
+        return next((allele for allele in self.alleles if allele.key == key), self.common)
+
+    @property
+    def common(self) -> Allele:
+        return max(self.alleles, key=lambda allele: (allele.weight, -self.alleles.index(allele)))
 
     @property
     def keys(self) -> tuple[str, ...]:
@@ -40,6 +46,17 @@ def looks(locus: Locus, label: str, noun: str, alleles: tuple[Allele, ...], *, g
 
 def leaning(locus: Locus, label: str, alleles: tuple[Allele, ...], *, visible: bool = False) -> LocusSpec:
     return LocusSpec(locus, label, LocusGroup.PREDISPOSITION, alleles, visible=visible)
+
+
+def graded(locus: Locus, label: str, group: LocusGroup, words: tuple[str, str, str], *, rare: int = 15) -> LocusSpec:
+    low, common, high = words
+    return LocusSpec(
+        locus,
+        label,
+        group,
+        (Allele("low", low, 1, rare, -1), Allele("common", common, 1, PERCENT - 2 * rare, 0), Allele("high", high, 1, rare, 1)),
+        graded=True,
+    )
 
 
 GIFT_LOCI: Mapping[MagicSchool, Locus] = total(
@@ -158,6 +175,51 @@ LOCI: dict[Locus, LocusSpec] = {
                 Allele("high", "a high voice", 1, 15),
             ),
         ),
+        looks(
+            Locus.PROPORTIONS,
+            "Proportions",
+            "proportions",
+            (Allele("compact", "compact", 1, 25, -1), Allele("even", "evenly proportioned", 1, 50, 0), Allele("long", "long-limbed", 1, 25, 1)),
+            graded=True,
+        ),
+        looks(
+            Locus.MARKINGS,
+            "Markings",
+            "markings",
+            (
+                Allele("plain", "unmarked", 1, 55),
+                Allele("flecked", "flecked", 2, 20),
+                Allele("patterned", "patterned", 3, 15),
+                Allele("banded", "banded", 3, 10),
+            ),
+        ),
+        graded(Locus.MUSCLE, "Muscle", LocusGroup.BODY, ("light of muscle", "of common muscle", "heavily muscled")),
+        graded(Locus.STAMINA, "Stamina", LocusGroup.BODY, ("quick to tire", "of common stamina", "tireless")),
+        graded(Locus.AGILITY, "Agility", LocusGroup.BODY, ("slow of reflex", "of common reflexes", "quick of reflex")),
+        graded(Locus.METABOLISM, "Metabolism", LocusGroup.BODY, ("slow-burning", "of common metabolism", "fast-burning")),
+        graded(Locus.COLD_TOLERANCE, "Cold tolerance", LocusGroup.BODY, ("suffers in the cold", "of common cold tolerance", "at ease in the cold")),
+        graded(Locus.HEAT_TOLERANCE, "Heat tolerance", LocusGroup.BODY, ("suffers in the heat", "of common heat tolerance", "at ease in the heat")),
+        graded(Locus.LUNG_CAPACITY, "Breath", LocusGroup.BODY, ("short of breath", "of common breath", "deep of breath")),
+        graded(Locus.BONE_DENSITY, "Bone", LocusGroup.BODY, ("light of bone", "of common bone", "heavy of bone")),
+        graded(Locus.WOUND_HEALING, "Wound healing", LocusGroup.BODY, ("slow to heal", "heals at a common pace", "quick to heal")),
+        graded(Locus.AGEING_PACE, "Ageing pace", LocusGroup.BODY, ("slow to age", "ages at a common pace", "quick to age")),
+        graded(Locus.PAIN_SENSE, "Pain sense", LocusGroup.BODY, ("dull to pain", "of common pain sense", "keen to pain")),
+        graded(Locus.SIGHT, "Sight", LocusGroup.SENSE, ("dim-sighted", "of common sight", "sharp-sighted")),
+        graded(Locus.HEARING, "Hearing", LocusGroup.SENSE, ("hard of hearing", "of common hearing", "sharp of hearing")),
+        graded(Locus.SMELL, "Smell", LocusGroup.SENSE, ("dull of smell", "of common smell", "keen of smell")),
+        graded(Locus.TASTE, "Taste", LocusGroup.SENSE, ("dull of taste", "of common taste", "fine of taste")),
+        graded(Locus.NIGHT_VISION, "Night vision", LocusGroup.SENSE, ("blind in the dark", "of common night vision", "sees well in the dark")),
+        graded(Locus.EXCITABILITY, "Excitability", LocusGroup.TEMPERAMENT, ("hard to stir", "of common excitability", "easily stirred")),
+        graded(Locus.SOCIABILITY, "Sociability", LocusGroup.TEMPERAMENT, ("drawn to solitude", "of common sociability", "drawn to company")),
+        graded(Locus.RISK_APPETITE, "Risk appetite", LocusGroup.TEMPERAMENT, ("shy of risk", "of common daring", "drawn to risk")),
+        graded(Locus.ATTENTION, "Attention", LocusGroup.TEMPERAMENT, ("easily distracted", "of common attention", "steady of attention")),
+        graded(Locus.STRESS_RESPONSE, "Stress response", LocusGroup.TEMPERAMENT, ("calm under strain", "of common steadiness", "shaken by strain")),
+        graded(Locus.MEMORY, "Memory", LocusGroup.APTITUDE, ("forgetful", "of common memory", "of long memory")),
+        graded(Locus.SPATIAL_SENSE, "Spatial sense", LocusGroup.APTITUDE, ("easily lost", "of common sense of place", "sure of place and shape")),
+        graded(Locus.LANGUAGE_EASE, "Language ease", LocusGroup.APTITUDE, ("slow with tongues", "of common ease with tongues", "quick with tongues")),
+        graded(Locus.NUMBER_SENSE, "Number sense", LocusGroup.APTITUDE, ("slow with numbers", "of common number sense", "quick with numbers")),
+        graded(Locus.MUSICAL_EAR, "Musical ear", LocusGroup.APTITUDE, ("deaf to tune", "of common ear", "fine of ear")),
+        graded(Locus.COORDINATION, "Coordination", LocusGroup.APTITUDE, ("clumsy of hand", "of common coordination", "deft of hand")),
         leaning(
             Locus.LONGEVITY,
             "Longevity",
@@ -179,7 +241,10 @@ LOCI: dict[Locus, LocusSpec] = {
         ),
         leaning(Locus.MADNESS, "Madness", (Allele("sound", "sound of mind", 2, 92, 0), Allele("touched", "prone to madness", 1, 8, 1))),
         leaning(
-            Locus.COLOUR_BLINDNESS, "Colour sight", (Allele("seeing", "full colour sight", 2, 94, 0), Allele("blind", "colour-blind", 1, 6, 1)), visible=True
+            Locus.COLOUR_BLINDNESS,
+            "Colour sight",
+            (Allele("seeing", "full colour sight", 2, 91, 0), Allele("blind", "colour-blind", 1, 6, 1), Allele("keen", "keen colour sight", 1, 3, -1)),
+            visible=True,
         ),
         leaning(Locus.GIANT_BLOOD, "Giant blood", (Allele("none", "no giant blood", 1, 97, 0), Allele("giant", "giant blood", 2, 3, 1)), visible=True),
         leaning(Locus.DIVINE_BLOOD, "Divine blood", (Allele("none", "mortal blood", 1, 100, 0), Allele("divine", "divine blood", 2, 0, 1)), visible=True),
@@ -193,7 +258,18 @@ GIFT_LOCI_ORDER = tuple(locus for locus, spec in LOCI.items() if spec.group is L
 VISIBLE_LOCI = tuple(locus for locus, spec in LOCI.items() if spec.visible)
 HARMFUL: dict[Locus, str] = {Locus.MADNESS: "touched", Locus.COLOUR_BLINDNESS: "blind", Locus.DISEASE_RESISTANCE: "frail", Locus.LONGEVITY: "brief"}
 
-LOCUS_GROUP_LABELS: dict[LocusGroup, str] = {LocusGroup.LOOKS: "Looks", LocusGroup.PREDISPOSITION: "Predispositions", LocusGroup.GIFT: "Magical gift"}
+LOCUS_GROUP_LABELS: Mapping[LocusGroup, str] = total(
+    LocusGroup,
+    {
+        LocusGroup.LOOKS: "Looks",
+        LocusGroup.BODY: "Body and constitution",
+        LocusGroup.SENSE: "Senses",
+        LocusGroup.TEMPERAMENT: "Temperament",
+        LocusGroup.APTITUDE: "Aptitudes",
+        LocusGroup.PREDISPOSITION: "Predispositions",
+        LocusGroup.GIFT: "Magical gift",
+    },
+)
 
 GIFT_STANCE_LABELS: dict[GiftStance, str] = {
     GiftStance.HONOURED: "Honoured",
@@ -247,26 +323,27 @@ CLASS_INCOME_PCT: dict[SocialClass, int] = {
 
 @dataclass(frozen=True)
 class DwellingSpec:
-    kind: DwellingKind
+    key: str
     label: str
+    level: HousingLevel
     rooms: int
     quality: int
     upkeep: int
     mobile: bool = False
 
 
-DWELLINGS: dict[DwellingKind, DwellingSpec] = {
-    spec.kind: spec
+DWELLINGS: dict[str, DwellingSpec] = {
+    spec.key: spec
     for spec in (
-        DwellingSpec(DwellingKind.HUT, "Hut", 1, 25, 1),
-        DwellingSpec(DwellingKind.LONGHOUSE, "Longhouse", 3, 40, 2),
-        DwellingSpec(DwellingKind.TOWNHOUSE, "Townhouse", 4, 55, 4),
-        DwellingSpec(DwellingKind.MANOR, "Manor", 10, 72, 8),
-        DwellingSpec(DwellingKind.PALACE, "Palace", 30, 90, 18),
-        DwellingSpec(DwellingKind.TENT, "Tent", 1, 20, 1, mobile=True),
-        DwellingSpec(DwellingKind.CAVE, "Cave", 2, 15, 0),
-        DwellingSpec(DwellingKind.SHIP, "Ship", 2, 35, 3, mobile=True),
-        DwellingSpec(DwellingKind.TOWER, "Tower", 6, 60, 6),
-        DwellingSpec(DwellingKind.APARTMENT, "Apartment", 2, 50, 3),
+        DwellingSpec("hut", "Hut", HousingLevel.HUT, 1, 25, 1),
+        DwellingSpec("longhouse", "Longhouse", HousingLevel.HOUSE, 3, 40, 2),
+        DwellingSpec("townhouse", "Townhouse", HousingLevel.TOWNHOUSE, 4, 55, 4),
+        DwellingSpec("manor", "Manor", HousingLevel.MANOR, 10, 72, 8),
+        DwellingSpec("palace", "Palace", HousingLevel.MANOR, 30, 90, 18),
+        DwellingSpec("tent", "Tent", HousingLevel.HUT, 1, 20, 1, mobile=True),
+        DwellingSpec("cave", "Cave", HousingLevel.HUT, 2, 15, 0),
+        DwellingSpec("ship", "Ship", HousingLevel.SHIP_BERTH, 2, 35, 3, mobile=True),
+        DwellingSpec("tower", "Tower", HousingLevel.TOWNHOUSE, 6, 60, 6),
+        DwellingSpec("apartment", "Apartment", HousingLevel.APARTMENT, 2, 50, 3),
     )
 }

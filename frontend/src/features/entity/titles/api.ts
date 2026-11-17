@@ -7,7 +7,7 @@ import { loreKeys } from '../api/keys'
 export type Titles = components['schemas']['TitlesView']
 export type TitleDetail = components['schemas']['TitleDetail']
 export type TitleSummary = components['schemas']['TitleSummary']
-export type TitleRank = components['schemas']['TitleRank']
+export type TitleTier = components['schemas']['TitleTier']
 
 export function titlesKey(nodeId: number) {
   return [...loreKeys.entity(nodeId), 'titles'] as const

@@ -295,7 +295,7 @@ async def spread_shame(ctx: TickContext, mortal: EntityRow) -> int:
 async def restore(ctx: TickContext, mortal: EntityRow) -> int:
     culture = await culture_of(ctx.session, mortal.id)
     model = await honour_of(ctx.session, culture.id if culture else None)
-    if model in {HonourModel.DIGNITY, HonourModel.NONE}:
+    if not HONOUR_MODELS[model].restores:
         return 0
     table = ctx.rules.ethics
     grievances = list(
@@ -312,7 +312,7 @@ async def restore(ctx: TickContext, mortal: EntityRow) -> int:
             continue
         await add_wealth(ctx.session, offender.id, -table.compensation_wealth, ctx.epoch)
         await add_wealth(ctx.session, mortal.id, table.compensation_wealth, ctx.epoch)
-        memory.magnitude = 0 if model is HonourModel.FACE else memory.magnitude // 2
+        memory.magnitude = memory.magnitude * HONOUR_MODELS[model].grievance_kept_pct // PERCENT
         await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.SHAME_RESTORED, ctx.epoch, subject_id=offender.id)
         restored += 1
     await ctx.session.flush()

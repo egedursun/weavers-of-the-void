@@ -359,7 +359,7 @@ describe('made kinds', () => {
       'spaceplane',
       'escape_pod',
       'space_tug',
-      'mothership',
+      'carrier_vessel',
       'battle_mech',
       'bioship',
     ] as const

@@ -1,13 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.lore import TRADITIONS
-from aerona.catalog.peoples import FUNERAL_DEEDS, FUNERAL_NAMES, FUNERALS
+from aerona.catalog.lore import tradition_spec
+from aerona.catalog.peoples import CULTURAL_FUNERALS, FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import RiteStage, TraditionFunction
 from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.models.entity_stats import TraditionStats
@@ -70,7 +70,7 @@ def set_rite(culture: PeopleCultureRow, rite: FuneralCustom) -> None:
 
 
 async def rite_tradition(session: AsyncSession, rules: Rules, people: EntityRow, culture: PeopleCultureRow, epoch: int) -> EntityRow | None:
-    if RITE_LINK in culture.locked:
+    if RITE_LINK in culture.locked or culture.funeral_rite not in CULTURAL_FUNERALS:
         return None
     current = await session.get(EntityRow, culture.funeral_rite_id) if culture.funeral_rite_id is not None else None
     if current is not None and current.status is EntityStatus.CANON:
@@ -80,8 +80,8 @@ async def rite_tradition(session: AsyncSession, rules: Rules, people: EntityRow,
         epoch,
         RecordSpec(
             entity_type=EntityType.TRADITION,
-            name=FUNERAL_NAMES[culture.funeral_rite].format(people=people.name),
-            body=f"The {people.name} {FUNERAL_DEEDS[culture.funeral_rite]}.",
+            name=f"{FUNERALS[culture.funeral_rite].label} of the {people.name}",
+            body=f"The {people.name} {FUNERALS[culture.funeral_rite].deed}.",
             stats=TraditionStats(spread=RITE_SPREAD, rigidity=RITE_RIGIDITY),
             power=RITE_POWER,
             world_id=people.world_id,
@@ -89,11 +89,12 @@ async def rite_tradition(session: AsyncSession, rules: Rules, people: EntityRow,
         ),
     )
     await connect(session, people.id, tradition.id, BondKind.CELEBRATES, epoch, description="their funeral rite")
-    spec = TRADITIONS[TraditionKind.FUNERAL_RITE]
+    spec = tradition_spec(TraditionFunction.RITE_OF_PASSAGE, RiteStage.DEATH)
     session.add(
         TraditionProfileRow(
             tradition_entity_id=tradition.id,
-            kind=TraditionKind.FUNERAL_RITE,
+            kind=TraditionFunction.RITE_OF_PASSAGE,
+            stage=RiteStage.DEATH,
             calendar_slot=None,
             cost={"goods": rules.traditions.offering_cost, **spec.cost},
             effects=dict(spec.effects),

@@ -3,6 +3,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan, InjuryKind, InjuryState
 from aerona.domain.enums.ecology import (
+    AnimalRole,
     Aversion,
     AwakeningTrigger,
     BeastTemper,
@@ -19,12 +20,12 @@ from aerona.domain.enums.ecology import (
     SizeClass,
     Sociality,
     SpeciesClass,
-    SpeciesUse,
     Temperament,
     TissueMaterial,
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
 
 
@@ -45,6 +46,9 @@ class YieldView(ApiModel):
     world_material_id: int | None
     world_material: str | None
     rate: int
+    part: ProductPart | None
+    good_kind_id: int | None
+    good_kind_name: str | None
 
 
 class SpeciesHostView(ApiModel):
@@ -56,14 +60,14 @@ class SpeciesHostView(ApiModel):
 class CustomUseView(ApiModel):
     kind_id: int
     name: str
-    base_use: SpeciesUse
+    base_use: AnimalRole
     output_pct: int
 
 
 class UseKindView(ApiModel):
     id: int
     name: str
-    base_use: SpeciesUse
+    base_use: AnimalRole
     output_pct: int
     description: str | None
     locked: list[str]
@@ -165,7 +169,7 @@ class SpeciesCard(ApiModel):
     domesticated_from: NodeRef | None
     sacred_to: NodeRef | None
     traits: list[CreatureTrait]
-    uses: list[SpeciesUse]
+    uses: list[AnimalRole]
     yields: list[YieldView]
     hosts: list[SpeciesHostView]
     ranges: list[RangeView]

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
+import { MIND_SEATS } from '@/features/minds/labels'
 import {
   type CosmicBeingRecord,
   type CosmographyCatalog,
@@ -14,7 +15,12 @@ import {
   useCosmography,
   useCosmographyAction,
 } from './api'
-import { BEING_AGENDAS, BEING_PHASES, BEING_SCALES } from './labels'
+import {
+  BEING_AGENDAS,
+  BEING_PHASES,
+  BEING_SCALES,
+  BEING_SENSES,
+} from './labels'
 import { type Ladder, ladderOf, nameTable } from './ladder'
 import {
   Chip,
@@ -173,6 +179,8 @@ export function BeingCard({
               name={nameOf(being.mirrored_entity_id, 'No one')}
             />,
           ],
+          ['Held in', MIND_SEATS[being.substrate].label],
+          ['Shows itself', BEING_SENSES[being.sense]],
           [
             'Through a rift',
             being.rift_id !== null ? 'Yes, an open rift' : 'No',

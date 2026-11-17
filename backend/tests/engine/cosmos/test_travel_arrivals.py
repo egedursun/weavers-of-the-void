@@ -60,7 +60,7 @@ async def test_a_lost_vehicle_becomes_a_ghost_ship_legend(session: AsyncSession,
     people, _, journey_id, ctx = await voyage(session, cosmos, rules, JourneyIntent.COLONY, duration=3, travel={"lost_chance": 100})
     journey = await session.get(JourneyRow, journey_id)
     assert journey is not None
-    vessel = await make_entity(session, "Salt Gull", EntityType.ITEM, ItemStats(), world_id=cosmos.home.id)
+    vessel = await make_entity(session, "Swift Keel", EntityType.ITEM, ItemStats(), world_id=cosmos.home.id)
     journey.vehicle_entity_id = vessel.id
     route = await session.get(RouteRow, journey.route_id)
     assert route is not None
@@ -69,9 +69,9 @@ async def test_a_lost_vehicle_becomes_a_ghost_ship_legend(session: AsyncSession,
     assert people.id
     assert journey.status is JourneyStatus.LOST
     assert vessel.status is not EntityStatus.CANON
-    ghost = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.LEGEND, EntityRow.name == "Salt Gull Ghost"))
-    assert ghost is not None
-    assert any("ghost-ship legend" in text for text in await chronicle_texts(session))
+    lost = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.LEGEND, EntityRow.name == "Swift Keel, the Lost Vessel"))
+    assert lost is not None
+    assert any("legend of a lost vessel" in text for text in await chronicle_texts(session))
 
 
 async def test_a_stowaway_species_invades_the_landing_region(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

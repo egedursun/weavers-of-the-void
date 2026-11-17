@@ -9,9 +9,9 @@ from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.cycles import ReproductiveSystem
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import KindFamily, MemoryKind, Profession, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, LanguageStats, LegendStats, MortalStats, StructureStats
 from aerona.engine.body.conditions import gain_condition
@@ -158,12 +158,12 @@ async def test_other_sex_is_never_seeded_unless_the_world_allows_it(realm: Realm
     for item in mortals:
         await seed_mortal(ctx, item)
     sexes = {item.stats.sex for item in mortals if isinstance(item.stats, MortalStats)}
-    assert sexes <= {MortalSex.FEMALE.value, MortalSex.MALE.value}
+    assert sexes <= {Sex.FEMALE.value, Sex.MALE.value}
     assert len(sexes) == 2
     rng = SeededRandom.for_epoch(1, 1, "sex")
-    assert {born_sex(RULES, ReproductiveSystem.TWO_SEX, rng) for _ in range(200)} <= {MortalSex.FEMALE, MortalSex.MALE}
+    assert {born_sex(RULES, ReproductiveSystem.TWO_SEX, rng) for _ in range(200)} <= {Sex.FEMALE, Sex.MALE}
     open_world = tuned(fertility={"other_sex_pct": 100.0})
-    assert born_sex(open_world, ReproductiveSystem.TWO_SEX, rng) is MortalSex.OTHER
-    assert born_sex(RULES, ReproductiveSystem.AMBISEXUAL, rng) is MortalSex.OTHER
+    assert born_sex(open_world, ReproductiveSystem.TWO_SEX, rng) is Sex.OTHER
+    assert born_sex(RULES, ReproductiveSystem.AMBISEXUAL, rng) is Sex.OTHER
     profiles = list(await realm.session.scalars(select(MortalProfileRow)))
     assert len(profiles) == len(mortals)

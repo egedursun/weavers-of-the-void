@@ -64,7 +64,7 @@ from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
 from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, DivineScope, DivineVerb, DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
-from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, Diet, DomesticationStage, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
@@ -87,7 +87,7 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.structure import ConstructionStatus, StructureKind
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.urban import ConvoyStatus, OrderLaw
 from aerona.domain.enums.world import StarType
@@ -182,7 +182,7 @@ async def plant(session: AsyncSession, realm: Realm) -> Ids:
 async def pet_herd(session: AsyncSession, realm: Realm) -> Ids:
     mortal = await session.get(EntityRow, realm.mortal_id)
     assert mortal is not None and mortal.location_id is not None
-    session.add(SpeciesUseRow(species_entity_id=realm.species_id, use=SpeciesUse.COMPANION))
+    session.add(SpeciesUseRow(species_entity_id=realm.species_id, use=AnimalRole.COMPANION))
     session.add(
         HerdRow(
             community_entity_id=mortal.location_id, species_entity_id=realm.species_id, head=12, stage=DomesticationStage.HERDED, since_epoch=1, fed_epochs=0
@@ -445,7 +445,7 @@ async def claimable_title(session: AsyncSession, realm: Realm) -> Ids:
     found = await ruler(session, realm)
     session.add(PolityTerritoryRow(polity_entity_id=found["polity"], region_entity_id=realm.cosmos.region_id, control=80, locked=[]))
     title = await make_entity(session, "Old Crown of the Vale", EntityType.TITLE, world_id=realm.cosmos.world_id, stats=TitleStats())
-    session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleRank.DUCHY, regalia=[], drift={}, locked=[]))
+    session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleTier.REGIONAL, regalia=[], drift={}, locked=[]))
     session.add(DeJureLinkRow(title_entity_id=title.id, member_entity_id=realm.cosmos.region_id, since_epoch=EPOCH))
     await session.flush()
     return {**found, "title": title.id}
@@ -580,7 +580,7 @@ async def cosmic_being(session: AsyncSession, realm: Realm) -> Ids:
         location_id=realm.cosmos.region_id,
         stats=CosmicBeingStats(size=50),
     )
-    session.add(CosmicBeingProfileRow(entity_id=being.id, being_kind=BeingKind.VOID_SHEPHERD, scale=BeingScale.GALAXY, might=50, locked=[]))
+    session.add(CosmicBeingProfileRow(entity_id=being.id, being_kind=BeingKind.VOID_KEEPER, scale=BeingScale.GALAXY, might=50, locked=[]))
     await session.flush()
     return {"being": being.id}
 
@@ -590,7 +590,7 @@ async def phenomenon(session: AsyncSession, realm: Realm) -> Ids:
         session, "The Standing Fog", EntityType.PHENOMENON, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=PhenomenonStats(danger=20)
     )
     session.add(
-        PhenomenonProfileRow(entity_id=found.id, kind=PhenomenonKind.LIVING_FOG, intensity=50, cause=PhenomenonCause.DIVINE, formed_epoch=EPOCH, locked=[])
+        PhenomenonProfileRow(entity_id=found.id, kind=PhenomenonKind.MOVING_FOG, intensity=50, cause=PhenomenonCause.DIVINE, formed_epoch=EPOCH, locked=[])
     )
     session.add(PhenomenonFootprintRow(phenomenon_entity_id=found.id, region_entity_id=realm.cosmos.region_id, intensity=50))
     await session.flush()

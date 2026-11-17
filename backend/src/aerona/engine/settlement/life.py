@@ -63,6 +63,7 @@ from aerona.engine.factions.book import robber_ids
 from aerona.engine.factions.estates import armed_share, exempt_share
 from aerona.engine.happenings.emergence import record_fire
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.kinds.nature import burn_factors
 from aerona.engine.lore.research import lacks
 from aerona.engine.means.building import burn_structures
 from aerona.engine.means.media import burn_works
@@ -727,12 +728,13 @@ def flammability(material: BuildMaterial) -> float:
     return max(0, PERCENT - MATERIALS[BUILD_MATERIALS[material]].ignition_point) / PERCENT
 
 
-def flammable_share(town: Town) -> float:
+def flammable_share(town: Town, burns: dict[int, float] | None = None) -> float:
     total = sum(district.level for district in town.districts)
     timber = flammability(BuildMaterial.TIMBER) or 1.0
     if total <= 0:
         return 1.0
-    return sum(district.level * flammability(district.material) for district in town.districts) / total / timber
+    known = burns or {}
+    return sum(district.level * known.get(district.id, flammability(district.material)) for district in town.districts) / total / timber
 
 
 def ambient_heat(rules: Rules, ground: RegionEnvironmentRow | None) -> int:
@@ -755,7 +757,8 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     people = stat(town.entity, "population") or 0
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
     brigade = 1 - town.urban.covered(UrbanService.FIRE) * ctx.rules.prevention.brigade_pct / PERCENT
-    town.profile.fire_risk = clamp_int((flammable_share(town) * table.timber_risk + crowd * table.crowding_risk) * brigade, 0, PERCENT)
+    burns = await burn_factors(ctx.session, ctx.rules, list(town.districts))
+    town.profile.fire_risk = clamp_int((flammable_share(town, burns) * table.timber_risk + crowd * table.crowding_risk) * brigade, 0, PERCENT)
     igniting = self_igniting(ctx.rules, town, ground)
     dry = 1.0 if igniting or ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
     dry *= 1 + table.ambient_ignition_pct / PERCENT if igniting else 1.0

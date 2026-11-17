@@ -1333,8 +1333,8 @@ class PhenomenonMechanics:
 
 PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = MappingProxyType(
     {
-        PhenomenonKind.ETERNAL_STORM: PhenomenonMechanics(
-            PhenomenonKind.ETERNAL_STORM,
+        PhenomenonKind.LASTING_STORM: PhenomenonMechanics(
+            PhenomenonKind.LASTING_STORM,
             magic=lambda rules: rules.phenomenon_kinds.eternal_storm_magic,
             sanity=lambda rules: rules.phenomenon_kinds.eternal_storm_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.eternal_storm_fertility,
@@ -1343,8 +1343,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.eternal_storm_piety,
             growth=lambda rules: rules.phenomenon_kinds.eternal_storm_growth,
         ),
-        PhenomenonKind.TIME_SLIP: PhenomenonMechanics(
-            PhenomenonKind.TIME_SLIP,
+        PhenomenonKind.TIME_DISTORTION: PhenomenonMechanics(
+            PhenomenonKind.TIME_DISTORTION,
             magic=lambda rules: rules.phenomenon_kinds.time_slip_magic,
             sanity=lambda rules: rules.phenomenon_kinds.time_slip_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.time_slip_fertility,
@@ -1353,8 +1353,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.time_slip_piety,
             growth=lambda rules: rules.phenomenon_kinds.time_slip_growth,
         ),
-        PhenomenonKind.LEAK_WOUND: PhenomenonMechanics(
-            PhenomenonKind.LEAK_WOUND,
+        PhenomenonKind.OUTSIDE_OPENING: PhenomenonMechanics(
+            PhenomenonKind.OUTSIDE_OPENING,
             magic=lambda rules: rules.phenomenon_kinds.leak_wound_magic,
             sanity=lambda rules: rules.phenomenon_kinds.leak_wound_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.leak_wound_fertility,
@@ -1363,8 +1363,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.leak_wound_piety,
             growth=lambda rules: rules.phenomenon_kinds.leak_wound_growth,
         ),
-        PhenomenonKind.LEY_NEXUS_FLARE: PhenomenonMechanics(
-            PhenomenonKind.LEY_NEXUS_FLARE,
+        PhenomenonKind.POWER_SURGE: PhenomenonMechanics(
+            PhenomenonKind.POWER_SURGE,
             magic=lambda rules: rules.phenomenon_kinds.ley_nexus_flare_magic,
             sanity=lambda rules: rules.phenomenon_kinds.ley_nexus_flare_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.ley_nexus_flare_fertility,
@@ -1373,8 +1373,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.ley_nexus_flare_piety,
             growth=lambda rules: rules.phenomenon_kinds.ley_nexus_flare_growth,
         ),
-        PhenomenonKind.GOD_CORPSE_AURA: PhenomenonMechanics(
-            PhenomenonKind.GOD_CORPSE_AURA,
+        PhenomenonKind.DIVINE_RESIDUE: PhenomenonMechanics(
+            PhenomenonKind.DIVINE_RESIDUE,
             magic=lambda rules: rules.phenomenon_kinds.god_corpse_aura_magic,
             sanity=lambda rules: rules.phenomenon_kinds.god_corpse_aura_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.god_corpse_aura_fertility,
@@ -1383,8 +1383,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.god_corpse_aura_piety,
             growth=lambda rules: rules.phenomenon_kinds.god_corpse_aura_growth,
         ),
-        PhenomenonKind.LIVING_FOG: PhenomenonMechanics(
-            PhenomenonKind.LIVING_FOG,
+        PhenomenonKind.MOVING_FOG: PhenomenonMechanics(
+            PhenomenonKind.MOVING_FOG,
             magic=lambda rules: rules.phenomenon_kinds.living_fog_magic,
             sanity=lambda rules: rules.phenomenon_kinds.living_fog_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.living_fog_fertility,
@@ -1393,8 +1393,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.living_fog_piety,
             growth=lambda rules: rules.phenomenon_kinds.living_fog_growth,
         ),
-        PhenomenonKind.CRYSTAL_BLOOM: PhenomenonMechanics(
-            PhenomenonKind.CRYSTAL_BLOOM,
+        PhenomenonKind.MINERAL_GROWTH: PhenomenonMechanics(
+            PhenomenonKind.MINERAL_GROWTH,
             magic=lambda rules: rules.phenomenon_kinds.crystal_bloom_magic,
             sanity=lambda rules: rules.phenomenon_kinds.crystal_bloom_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.crystal_bloom_fertility,
@@ -1403,8 +1403,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.crystal_bloom_piety,
             growth=lambda rules: rules.phenomenon_kinds.crystal_bloom_growth,
         ),
-        PhenomenonKind.DEAD_ZONE: PhenomenonMechanics(
-            PhenomenonKind.DEAD_ZONE,
+        PhenomenonKind.BARREN_GROUND: PhenomenonMechanics(
+            PhenomenonKind.BARREN_GROUND,
             magic=lambda rules: rules.phenomenon_kinds.dead_zone_magic,
             sanity=lambda rules: rules.phenomenon_kinds.dead_zone_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.dead_zone_fertility,
@@ -1413,8 +1413,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.dead_zone_piety,
             growth=lambda rules: rules.phenomenon_kinds.dead_zone_growth,
         ),
-        PhenomenonKind.MIRROR_LAKE: PhenomenonMechanics(
-            PhenomenonKind.MIRROR_LAKE,
+        PhenomenonKind.DISTANT_VIEW: PhenomenonMechanics(
+            PhenomenonKind.DISTANT_VIEW,
             magic=lambda rules: rules.phenomenon_kinds.mirror_lake_magic,
             sanity=lambda rules: rules.phenomenon_kinds.mirror_lake_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.mirror_lake_fertility,
@@ -1423,8 +1423,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.mirror_lake_piety,
             growth=lambda rules: rules.phenomenon_kinds.mirror_lake_growth,
         ),
-        PhenomenonKind.GRAVITY_WELL: PhenomenonMechanics(
-            PhenomenonKind.GRAVITY_WELL,
+        PhenomenonKind.GRAVITY_ANOMALY: PhenomenonMechanics(
+            PhenomenonKind.GRAVITY_ANOMALY,
             magic=lambda rules: rules.phenomenon_kinds.gravity_well_magic,
             sanity=lambda rules: rules.phenomenon_kinds.gravity_well_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.gravity_well_fertility,
@@ -1433,8 +1433,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.gravity_well_piety,
             growth=lambda rules: rules.phenomenon_kinds.gravity_well_growth,
         ),
-        PhenomenonKind.SINGING_STONES: PhenomenonMechanics(
-            PhenomenonKind.SINGING_STONES,
+        PhenomenonKind.SOUNDING_GROUND: PhenomenonMechanics(
+            PhenomenonKind.SOUNDING_GROUND,
             magic=lambda rules: rules.phenomenon_kinds.singing_stones_magic,
             sanity=lambda rules: rules.phenomenon_kinds.singing_stones_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.singing_stones_fertility,
@@ -1443,8 +1443,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.singing_stones_piety,
             growth=lambda rules: rules.phenomenon_kinds.singing_stones_growth,
         ),
-        PhenomenonKind.AURORA_PERMANENT: PhenomenonMechanics(
-            PhenomenonKind.AURORA_PERMANENT,
+        PhenomenonKind.LASTING_LIGHTS: PhenomenonMechanics(
+            PhenomenonKind.LASTING_LIGHTS,
             magic=lambda rules: rules.phenomenon_kinds.aurora_permanent_magic,
             sanity=lambda rules: rules.phenomenon_kinds.aurora_permanent_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.aurora_permanent_fertility,
@@ -1453,8 +1453,8 @@ PHENOMENON_MECHANICS: MappingProxyType[PhenomenonKind, PhenomenonMechanics] = Ma
             piety=lambda rules: rules.phenomenon_kinds.aurora_permanent_piety,
             growth=lambda rules: rules.phenomenon_kinds.aurora_permanent_growth,
         ),
-        PhenomenonKind.GHOST_ROAD: PhenomenonMechanics(
-            PhenomenonKind.GHOST_ROAD,
+        PhenomenonKind.PATH_OF_THE_DEAD: PhenomenonMechanics(
+            PhenomenonKind.PATH_OF_THE_DEAD,
             magic=lambda rules: rules.phenomenon_kinds.ghost_road_magic,
             sanity=lambda rules: rules.phenomenon_kinds.ghost_road_sanity,
             fertility=lambda rules: rules.phenomenon_kinds.ghost_road_fertility,
@@ -1493,14 +1493,14 @@ BEING_MECHANICS: MappingProxyType[BeingKind, BeingMechanics] = MappingProxyType(
             veil=lambda rules: rules.being_kinds.planar_native_veil,
             doom=lambda rules: rules.being_kinds.planar_native_doom,
         ),
-        BeingKind.DIMENSION_WALKER: BeingMechanics(
-            BeingKind.DIMENSION_WALKER,
+        BeingKind.DIMENSION_TRAVELLER: BeingMechanics(
+            BeingKind.DIMENSION_TRAVELLER,
             might=lambda rules: rules.being_kinds.dimension_walker_might,
             veil=lambda rules: rules.being_kinds.dimension_walker_veil,
             doom=lambda rules: rules.being_kinds.dimension_walker_doom,
         ),
-        BeingKind.RIFT_SPAWN: BeingMechanics(
-            BeingKind.RIFT_SPAWN,
+        BeingKind.RIFT_BORN: BeingMechanics(
+            BeingKind.RIFT_BORN,
             might=lambda rules: rules.being_kinds.rift_spawn_might,
             veil=lambda rules: rules.being_kinds.rift_spawn_veil,
             doom=lambda rules: rules.being_kinds.rift_spawn_doom,
@@ -1511,56 +1511,56 @@ BEING_MECHANICS: MappingProxyType[BeingKind, BeingMechanics] = MappingProxyType(
             veil=lambda rules: rules.being_kinds.higher_dimensional_veil,
             doom=lambda rules: rules.being_kinds.higher_dimensional_doom,
         ),
-        BeingKind.STAR_EATER: BeingMechanics(
-            BeingKind.STAR_EATER,
+        BeingKind.STAR_FEEDER: BeingMechanics(
+            BeingKind.STAR_FEEDER,
             might=lambda rules: rules.being_kinds.star_eater_might,
             veil=lambda rules: rules.being_kinds.star_eater_veil,
             doom=lambda rules: rules.being_kinds.star_eater_doom,
         ),
-        BeingKind.NEBULA_MIND: BeingMechanics(
-            BeingKind.NEBULA_MIND,
+        BeingKind.CLOUD_MIND: BeingMechanics(
+            BeingKind.CLOUD_MIND,
             might=lambda rules: rules.being_kinds.nebula_mind_might,
             veil=lambda rules: rules.being_kinds.nebula_mind_veil,
             doom=lambda rules: rules.being_kinds.nebula_mind_doom,
         ),
-        BeingKind.GALACTIC_LEVIATHAN: BeingMechanics(
-            BeingKind.GALACTIC_LEVIATHAN,
+        BeingKind.GALAXY_SCALE_BEING: BeingMechanics(
+            BeingKind.GALAXY_SCALE_BEING,
             might=lambda rules: rules.being_kinds.galactic_leviathan_might,
             veil=lambda rules: rules.being_kinds.galactic_leviathan_veil,
             doom=lambda rules: rules.being_kinds.galactic_leviathan_doom,
         ),
-        BeingKind.VOID_SHEPHERD: BeingMechanics(
-            BeingKind.VOID_SHEPHERD,
+        BeingKind.VOID_KEEPER: BeingMechanics(
+            BeingKind.VOID_KEEPER,
             might=lambda rules: rules.being_kinds.void_shepherd_might,
             veil=lambda rules: rules.being_kinds.void_shepherd_veil,
             doom=lambda rules: rules.being_kinds.void_shepherd_doom,
         ),
-        BeingKind.ECHO: BeingMechanics(
-            BeingKind.ECHO,
+        BeingKind.MIRRORED_DOUBLE: BeingMechanics(
+            BeingKind.MIRRORED_DOUBLE,
             might=lambda rules: rules.being_kinds.echo_might,
             veil=lambda rules: rules.being_kinds.echo_veil,
             doom=lambda rules: rules.being_kinds.echo_doom,
         ),
-        BeingKind.TIME_WANDERER: BeingMechanics(
-            BeingKind.TIME_WANDERER,
+        BeingKind.TIME_TRAVELLER: BeingMechanics(
+            BeingKind.TIME_TRAVELLER,
             might=lambda rules: rules.being_kinds.time_wanderer_might,
             veil=lambda rules: rules.being_kinds.time_wanderer_veil,
             doom=lambda rules: rules.being_kinds.time_wanderer_doom,
         ),
-        BeingKind.COSMIC_TITAN: BeingMechanics(
-            BeingKind.COSMIC_TITAN,
+        BeingKind.SYSTEM_SCALE_BEING: BeingMechanics(
+            BeingKind.SYSTEM_SCALE_BEING,
             might=lambda rules: rules.being_kinds.cosmic_titan_might,
             veil=lambda rules: rules.being_kinds.cosmic_titan_veil,
             doom=lambda rules: rules.being_kinds.cosmic_titan_doom,
         ),
-        BeingKind.VEIL_WARDEN: BeingMechanics(
-            BeingKind.VEIL_WARDEN,
+        BeingKind.BOUNDARY_KEEPER: BeingMechanics(
+            BeingKind.BOUNDARY_KEEPER,
             might=lambda rules: rules.being_kinds.veil_warden_might,
             veil=lambda rules: rules.being_kinds.veil_warden_veil,
             doom=lambda rules: rules.being_kinds.veil_warden_doom,
         ),
-        BeingKind.PLANE_SOVEREIGN: BeingMechanics(
-            BeingKind.PLANE_SOVEREIGN,
+        BeingKind.DIMENSION_RULER: BeingMechanics(
+            BeingKind.DIMENSION_RULER,
             might=lambda rules: rules.being_kinds.plane_sovereign_might,
             veil=lambda rules: rules.being_kinds.plane_sovereign_veil,
             doom=lambda rules: rules.being_kinds.plane_sovereign_doom,
@@ -1571,8 +1571,8 @@ BEING_MECHANICS: MappingProxyType[BeingKind, BeingMechanics] = MappingProxyType(
             veil=lambda rules: rules.being_kinds.swarm_intelligence_veil,
             doom=lambda rules: rules.being_kinds.swarm_intelligence_doom,
         ),
-        BeingKind.LIVING_CONSTELLATION: BeingMechanics(
-            BeingKind.LIVING_CONSTELLATION,
+        BeingKind.STAR_PATTERN_MIND: BeingMechanics(
+            BeingKind.STAR_PATTERN_MIND,
             might=lambda rules: rules.being_kinds.living_constellation_might,
             veil=lambda rules: rules.being_kinds.living_constellation_veil,
             doom=lambda rules: rules.being_kinds.living_constellation_doom,

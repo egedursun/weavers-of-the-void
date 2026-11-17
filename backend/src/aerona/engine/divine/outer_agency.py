@@ -24,7 +24,7 @@ from aerona.domain.enums.powers import PowerOrigin, PowerState
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
-from aerona.engine.divine.outer import outer_profile
+from aerona.engine.divine.outer import found_outer_cult, outer_profile
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
@@ -86,7 +86,7 @@ async def choose_goal(ctx: TickContext, being: EntityRow, profile: OuterBeingPro
     if profile.fed < ctx.rules.outer_beings.feed_gain:
         return OuterGoal.FEED, None
     rifts = await ctx.session.scalar(select(RiftRow.id).where(RiftRow.world_id == being.world_id, RiftRow.state.in_(list(OPEN_RIFT_STATES))).limit(1))
-    if rifts is None:
+    if rifts is None and await breach_of(ctx, being) is None:
         return OuterGoal.OPEN_RIFT, being.world_id
     if not await cults_of(ctx, being.id):
         return OuterGoal.BE_WORSHIPPED, being.world_id
@@ -127,11 +127,21 @@ async def fulfil_feed(ctx: TickContext, being: EntityRow, _plan: OuterPlanRow) -
         profile.fed += ctx.rules.outer_beings.feed_gain
 
 
+async def breach_of(ctx: TickContext, being: EntityRow) -> BreachPointRow | None:
+    query = select(BreachPointRow).where(BreachPointRow.outer_entity_id == being.id).order_by(BreachPointRow.id)
+    found: BreachPointRow | None = await ctx.session.scalar(query.limit(1))
+    return found
+
+
 async def fulfil_enter(ctx: TickContext, being: EntityRow, plan: OuterPlanRow) -> None:
     rift = await ctx.session.get(RiftRow, plan.target_node_id) if plan.target_node_id is not None else None
     if rift is None:
         rift = await ctx.session.scalar(select(RiftRow).where(RiftRow.world_id == being.world_id, RiftRow.state.in_(list(OPEN_RIFT_STATES))).limit(1))
-    await open_incursion(ctx, being, rift.id if rift is not None else None, rift.region_entity_id if rift is not None else None)
+    if rift is not None:
+        await open_incursion(ctx, being, rift.id, rift.region_entity_id)
+        return
+    breach = await breach_of(ctx, being)
+    await open_incursion(ctx, being, None, breach.region_entity_id if breach is not None else None)
 
 
 async def fulfil_worship(ctx: TickContext, being: EntityRow, _plan: OuterPlanRow) -> None:
@@ -141,8 +151,17 @@ async def fulfil_worship(ctx: TickContext, being: EntityRow, _plan: OuterPlanRow
         .order_by(EntityRow.id)
         .limit(1)
     )
-    if community is not None and not held(community.id):
-        await connect(ctx.session, community.id, being.id, BondKind.WORSHIPS, ctx.epoch, description="drawn to an outer being")
+    if community is None or held(community.id):
+        return
+    await connect(ctx.session, community.id, being.id, BondKind.WORSHIPS, ctx.epoch, description="drawn to an outer being")
+    born = select(BondRow.source_node_id).where(
+        BondRow.target_node_id == community.id, BondRow.kind == BondKind.DESCENDS_FROM, BondRow.state == BondState.ACTIVE
+    )
+    flagged = select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.OUTER_CULT, EntityFlagRow.entity_id.in_(born))
+    cult_id = await ctx.session.scalar(flagged.order_by(EntityFlagRow.entity_id).limit(1))
+    cult = await ctx.session.get(EntityRow, cult_id) if cult_id is not None else await found_outer_cult(ctx, community)
+    if cult is not None and not held(cult.id):
+        await connect(ctx.session, cult.id, being.id, BondKind.WORSHIPS, ctx.epoch, description="serves an outer being")
 
 
 async def fulfil_unmake(ctx: TickContext, being: EntityRow, plan: OuterPlanRow) -> None:

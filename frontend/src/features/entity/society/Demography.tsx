@@ -60,7 +60,6 @@ import { useDemography } from './api'
 import { DormancyPanel, SetCohort, SickCohorts } from './cohortParts'
 import { ForgeDisease } from './diseaseParts'
 import {
-  AESTHETIC_SPEC,
   AGE_ORDER,
   AGE_SPEC,
   CLASS_ORDER,
@@ -69,7 +68,6 @@ import {
   INHERITANCE_SPEC,
   JOB_ORDER,
   JOB_SPEC,
-  MARRIAGE_SPEC,
   MARTIAL_SPEC,
   PRESSURE_HINT,
   SEX_SPEC,
@@ -1243,6 +1241,20 @@ export function PeopleProfileSection({
           )}
           {culture && (
             <KpiTile
+              label='Decoration'
+              value={culture.ornament}
+              icon={Palette}
+              tone='gold'
+              hint={`Geometric over organic ${culture.geometry}, colour ${culture.colour}, scale ${culture.scale}, symmetry ${culture.symmetry} (of ${PERCENT})`}
+              meter={{
+                value: culture.ornament,
+                max: PERCENT,
+                label: 'Decoration',
+              }}
+            />
+          )}
+          {culture && (
+            <KpiTile
               label='Urbanisation'
               value={culture.urbanisation}
               icon={Building}
@@ -1284,29 +1296,13 @@ export function PeopleProfileSection({
             >
               <div className='grid min-w-0 grid-cols-1 gap-2 @md/folk:grid-cols-2 @xl/folk:grid-cols-3'>
                 {[
-                  { label: 'Art', spec: AESTHETIC_SPEC[culture.aesthetic] },
                   {
                     label: 'Way of war',
                     spec: MARTIAL_SPEC[culture.martial_style],
                   },
-                  { label: 'Marriage', spec: MARRIAGE_SPEC[culture.marriage] },
                   {
                     label: 'Inheritance',
                     spec: INHERITANCE_SPEC[culture.inheritance],
-                  },
-                  {
-                    label: 'Spouses',
-                    spec: culture.endogamous
-                      ? {
-                          label: 'Only their own',
-                          icon: Fingerprint,
-                          tone: 'verdigris' as const,
-                        }
-                      : {
-                          label: 'From any people',
-                          icon: Users2,
-                          tone: 'muted' as const,
-                        },
                   },
                   {
                     label: 'Slavery',

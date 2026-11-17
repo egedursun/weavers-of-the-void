@@ -5,12 +5,12 @@ class TravelMethod(StrEnum):
     ANCIENT_GATE = "ancient_gate"
     SPACE_FOLD = "space_fold"
     LIGHT_SAIL = "light_sail"
-    COSMIC_MOUNT = "cosmic_mount"
+    CARRIER_MOUNT = "carrier_mount"
     DREAM_JOURNEY = "dream_journey"
-    RIVER_OF_DEAD = "river_of_dead"
+    DEATH_CURRENT = "death_current"
     DIVINE_BRIDGE = "divine_bridge"
     SLINGSHOT_ORBIT = "slingshot_orbit"
-    SWALLOWED = "swallowed"
+    CARRIED_WITHIN = "carried_within"
     WORMHOLE = "wormhole"
     VOID_ARK = "void_ark"
     GALACTIC_GATE = "galactic_gate"
@@ -62,7 +62,7 @@ class JourneyEventKind(StrEnum):
     DREAM_NOT_RETURNED = "dream_not_returned"
     SAIL_SNAPPED = "sail_snapped"
     BRIDGE_COLLAPSED = "bridge_collapsed"
-    SWALLOWED = "swallowed"
+    NOT_RELEASED = "not_released"
     STOWAWAY = "stowaway"
     OUTER_TOUCH = "outer_touch"
     DERELICT = "derelict"
@@ -130,3 +130,23 @@ class ArrivalOutcome(StrEnum):
     SETTLERS = "settlers"
     REFUGEES = "refugees"
     INVADERS = "invaders"
+
+
+class TravelMedium(StrEnum):
+    SPACE = "space"
+    DIMENSION = "dimension"
+    DREAM = "dream"
+    DEATH = "death"
+    DIVINE = "divine"
+    BODY = "body"
+
+
+class TravelMechanism(StrEnum):
+    GATE = "gate"
+    FOLD = "fold"
+    SAIL = "sail"
+    MOUNT = "mount"
+    BRIDGE = "bridge"
+    CURRENT = "current"
+    CARRIER_BEING = "carrier_being"
+    ORBIT = "orbit"

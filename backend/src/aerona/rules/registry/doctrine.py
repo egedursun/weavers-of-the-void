@@ -32,6 +32,7 @@ class DoctrineRules:
     liturgy_preaching_pct: int = rule(50, 0, 100, R, "Preaching zeal kept when the liturgy is in a tongue the faithful do not speak (%)")
     saint_threshold: int = rule(60, 0, 100, R, "Piety or charisma at which a dead cleric is named a saint")
     clergy_per_office: int = rule(3, 1, 20, R, "Best clergy whose learning sets the clergy's quality")
+    duty_xp: int = rule(4, 0, 500, R, "Learning a holder of an office of a faith gains each epoch in the skill its duty calls for")
     devotion_per_1000: int = rule(5, 0, 1000, R, "Devotion a thousand followers bring each epoch at full zeal")
     devotion_tribute_pct: int = rule(20, 0, 100, R, "Share of a cult's devotion its living god draws into faith each epoch (%)")
     fanaticism_devotion: int = rule(20, 0, 1000, R, "Devotion a fanatic cult spends on an inquisition, iconoclasm or crusade")
@@ -56,7 +57,18 @@ class ZealRules:
     failed_prophecy: int = rule(10, 0, 100, R, "Zeal a mocked prophecy costs")
     pilgrimage_per_1000: int = rule(1, 0, 100, R, "Zeal each thousand pilgrims bring home")
     fanaticism: int = rule(80, 0, 100, R, "Zeal above which a cult turns fanatic")
-    fanaticism_chance: int = rule(25, 0, 100, R, "A fanatic cult launches an inquisition, iconoclasm or crusade (%)")
+    fanaticism_chance: int = rule(25, 0, 100, R, "A fanatic cult turns to one of its fanaticisms in an epoch (%)")
+    fanatic_reach: int = rule(
+        5, 1, 100, R, "Most people one outbreak of fanaticism reaches: heretics purged, unbelievers converted or harried, followers who fast or flee"
+    )
+    martyr_devotion: int = rule(20, 0, 1000, R, "Devotion a church gains from each of its martyrs")
+    mortification_hp: int = rule(5, 0, 1000, R, "Harm a follower deals to their own body in mortification")
+    mortification_devotion: int = rule(3, 0, 1000, R, "Devotion a church gains from each follower who mortifies the body")
+    book_burning_literacy: int = rule(5, 0, 100, R, "Literacy a town loses when fanatics burn its written works")
+    persecution_hp: int = rule(10, 0, 1000, R, "Harm a persecuted unbeliever suffers")
+    persecution_prosperity: int = rule(5, 0, 100, R, "Prosperity a town loses while fanatics persecute its unbelievers")
+    persecution_unrest: int = rule(10, 0, 100, R, "Unrest a town gains while fanatics persecute its unbelievers")
+    flight_prosperity: int = rule(8, 0, 100, R, "Prosperity a town loses when its followers leave their work to await the end")
 
 
 @dataclass(frozen=True)

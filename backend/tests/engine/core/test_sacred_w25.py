@@ -50,11 +50,11 @@ from aerona.db.tables.society import ArchiveHoldingRow, CommunitySocietyRow
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ProphecyPredicate, Technique
-from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import InheritanceCustom, MartialStyle
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.faith import AfterlifeState, ClergyOffice, HoldingKind, JudgementDoctrine, StratumKind, TenetKind
+from aerona.domain.enums.faith import AfterlifeState, ClergyFunction, HoldingKind, JudgementDoctrine, StratumKind, TenetKind
 from aerona.domain.enums.mind import Emotion, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
@@ -294,7 +294,7 @@ async def test_sacraments_ward_against_possession_ease_routing_and_unrest_and_mi
     town = await settlement(session, "Hearthmere", world, world.regions[0])
     cult = await church(session, world, town)
     priest = await mortal(session, "Aldric", world, town.id)
-    session.add(CultOfficeRow(cult_entity_id=cult.id, kind=ClergyOffice.PRIEST, holder_entity_id=priest.id))
+    session.add(CultOfficeRow(cult_entity_id=cult.id, kind=ClergyFunction.CELEBRANT, holder_entity_id=priest.id))
     child = await mortal(session, "Wren", world, town.id, age=0)
     elder = await mortal(session, "Mabyn", world, town.id, age=60)
     for person in (child, elder):
@@ -358,9 +358,7 @@ async def test_literacy_and_silence_pull_a_town_into_godlessness_and_miracles_br
             cohesion=50,
             literacy=100,
             urbanisation=50,
-            aesthetic=next(iter(Aesthetic)),
             martial_style=next(iter(MartialStyle)),
-            marriage=next(iter(MarriageCustom)),
             inheritance=next(iter(InheritanceCustom)),
             locked=[],
         )
@@ -535,7 +533,7 @@ async def test_a_church_holding_a_town_serves_mortals_living_in_its_land(session
     session.add(CultDoctrineRow(cult_entity_id=cult.id, clergy_count=3, locked=[]))
     session.add(CultHoldingRow(cult_entity_id=cult.id, holding_entity_id=town.id, kind=next(iter(HoldingKind)), since_epoch=0))
     priest = await mortal(session, "Ansel", world, town.id)
-    session.add(CultOfficeRow(cult_entity_id=cult.id, kind=ClergyOffice.PRIEST, holder_entity_id=priest.id))
+    session.add(CultOfficeRow(cult_entity_id=cult.id, kind=ClergyFunction.CELEBRANT, holder_entity_id=priest.id))
     herder = await mortal(session, "Tobin", world, world.regions[3].id)
     session.add(MortalProfileRow(entity_id=herder.id, locked=[]))
     await session.flush()

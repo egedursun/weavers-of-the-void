@@ -1,12 +1,15 @@
 from collections import defaultdict
+from collections.abc import Mapping
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.collective import HERALDIC_NAMES
+from aerona.catalog.genetic_effects import HOUSE_TRAIT_LABELS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -17,22 +20,22 @@ from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.demography import MarriageCustom
+from aerona.domain.enums.collective import Tincture
 from aerona.domain.enums.entity import HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
-from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.unions import UnionArrangement
+from aerona.domain.enums.unions import PluralSide, UnionArrangement, UnionForm, UnionPurpose
 from aerona.domain.enums.war import WarEnding
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.lineage import preference_bonus, sexes_fixed, system_of
+from aerona.engine.cycles.lineage import preference_bonus, sexes_fixed, system_of, union_of
+from aerona.engine.cycles.sides import first_sex, second_sex, system_of_people
 from aerona.engine.demography.kinship import has_room, match_bonus, may_wed, terms_of
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.genetics.genome import consanguinity
@@ -60,7 +63,8 @@ from aerona.engine.primitives.queries import add_flag, connect, has_flag, living
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.transfers import move_amount
-from aerona.engine.unions.customs import CONSENTS_NEEDED, line_house, taken_by, union_of
+from aerona.engine.unions.axes import Spousing, spousing_of
+from aerona.engine.unions.customs import CONSENTS_NEEDED, line_house
 from aerona.engine.unions.purpose import purpose_gain
 from aerona.rules.registry import Rules
 
@@ -121,8 +125,8 @@ async def found_house(ctx: TickContext, book: HouseBook, founder: EntityRow, *, 
         divine_son_id=founder.creator_son_id,
         prestige=20 + (ctx.rules.houses.divine_prestige if traits else 0),
         wealth=0,
-        motto=await motto_for(ctx, founder),
-        emblem={"charge": root.lower(), "field": "or" if house.id % 2 else "sable"},
+        motto=None,
+        emblem={"charge": root.lower(), "field": HERALDIC_NAMES[ctx.rng(f"house.field.{house.id}").pick(list(Tincture))]},
         traits=traits,
         seats=[founder.location_id] if founder.location_id is not None else [],
         founded_epoch=ctx.epoch,
@@ -157,31 +161,6 @@ async def bless(ctx: TickContext, profile: HouseProfileRow | None, mortal: Entit
     if profile is None or mortal.birth_epoch < ctx.epoch or not profile.traits:
         return
     bless_blood(ctx.rules, mortal, await found_genome(ctx, mortal), [HouseTrait(trait) for trait in profile.traits])
-
-
-MOTTOS: dict[ValueAxis, str] = {
-    ValueAxis.HONOUR: "Our word holds",
-    ValueAxis.MARTIAL: "We stand and fight",
-    ValueAxis.PIETY: "The gods before all",
-    ValueAxis.WEALTH: "What we gather, we keep",
-    ValueAxis.KINSHIP: "Kin answers kin",
-    ValueAxis.TRADITION: "As our ancestors did",
-    ValueAxis.KNOWLEDGE: "We remember",
-    ValueAxis.MERCY: "Mercy is strength",
-    ValueAxis.HIERARCHY: "Born to rule",
-    ValueAxis.XENOPHILIA: "The world is open to us",
-    ValueAxis.SUPERSTITION: "The signs are ours to read",
-    ValueAxis.PURITY: "Unbroken and unbowed",
-}
-
-
-async def motto_for(ctx: TickContext, founder: EntityRow) -> str | None:
-    values = await values_of(ctx, founder)
-    known = {axis: value for axis, value in values.items() if axis in MOTTOS}
-    if not known:
-        return None
-    axis = max(known, key=lambda item: (known[item], item.value))
-    return MOTTOS[axis]
 
 
 async def values_of(ctx: TickContext, mortal: EntityRow) -> dict[ValueAxis, int]:
@@ -444,13 +423,23 @@ async def earn(ctx: TickContext, profile: HouseProfileRow, alive: list[EntityRow
     profile.wealth = max(0, profile.wealth + income - round_half_up(profile.wealth * table.wealth_decay_pct / PERCENT))
 
 
-TRAIT_SOURCES: dict[HouseTrait, str] = {
-    HouseTrait.SEER_GIFT: "a seer was born to the line",
-    HouseTrait.GIANT_BLOODED: "the line bore giants",
-    HouseTrait.LONG_LIVED: "its elders lived long",
-    HouseTrait.FERTILE: "its line was fertile",
-    HouseTrait.CURSED: "a curse fell on the line",
-}
+TRAIT_SOURCES: Mapping[HouseTrait, str] = total(
+    HouseTrait,
+    {
+        HouseTrait.SEER_GIFT: "a seer was born to the line",
+        HouseTrait.GIANT_BLOODED: "the line bore giants",
+        HouseTrait.LONG_LIVED: "its elders lived long",
+        HouseTrait.FERTILE: "its line was fertile",
+        HouseTrait.CURSED: "a curse fell on the line",
+        HouseTrait.GOD_BLOODED: "it carries a god's descent",
+        HouseTrait.STRONG_BLOODED: "its members are born strong",
+        HouseTrait.SWIFT: "its members are born quick of reflex",
+        HouseTrait.QUICK_HEALING: "its members heal quickly",
+        HouseTrait.SHARP_SENSED: "its members are born sharp-sighted",
+        HouseTrait.STEADY: "its members stay calm under strain",
+        HouseTrait.QUICK_MINDED: "its members are born with long memories",
+    },
+)
 
 
 async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRow, alive: list[EntityRow]) -> None:
@@ -482,11 +471,11 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
             continue
         profile.traits = [*profile.traits, trait]
         house = book.houses.get(profile.house_entity_id)
-        why = TRAIT_SOURCES.get(trait, "it carries a god's descent")
+        why = TRAIT_SOURCES[trait]
         if house is not None:
             await note(
                 ctx,
-                f"{house.name} became known as {trait.value.replace('_', ' ')}: {why}.",
+                f"{house.name} became known as {HOUSE_TRAIT_LABELS[trait]}: {why}.",
                 key="houses.trait",
                 ids=[house.id],
                 kind=ChronicleKind.CIVILIZATION,
@@ -772,11 +761,11 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         if best is None or not await consents(ctx, union, (mortal, mine), best[1]):
             continue
         spouse = best[1]
-        await marry(ctx.session, mortal, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="arranged marriage")
+        await marry(ctx.session, mortal, spouse, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="arranged marriage")
         await marriage_claims(ctx, mortal, spouse)
-        await dowry(ctx, book, house_id, spouse)
+        await union_portion(ctx, book, house_id, spouse)
         await break_celibacy(ctx, mortal, spouse)
-        taken |= taken_by(union, mortal, spouse) or wed(custom, mortal, spouse)
+        taken |= wed(custom, mortal, spouse, await plural_sex(ctx, mortal, custom))
         made.append((mortal, spouse))
     return made
 
@@ -795,46 +784,53 @@ async def consents(ctx: TickContext, union: UnionCustomRow | None, mine: tuple[E
     return needed < CONSENTS_NEEDED[UnionArrangement.BOTH_CONSENT] or await willing_match(ctx, spouse, await values_of(ctx, spouse), mortal)
 
 
-async def suitable(
-    ctx: TickContext, mine: tuple[int, EntityRow], theirs: tuple[int, EntityRow], custom: MarriageCustom | None, people: EntityRow | None
-) -> bool:
+async def suitable(ctx: TickContext, mine: tuple[int, EntityRow], theirs: tuple[int, EntityRow], custom: Spousing, people: EntityRow | None) -> bool:
     house_id, mortal = mine
     other_house, other = theirs
     fixed = sexes_fixed(await system_of(ctx.session, mortal))
-    if other.world_id != mortal.world_id or (custom is not MarriageCustom.GROUP and fixed and sex_of(other) == sex_of(mortal)):
+    if other.world_id != mortal.world_id or (custom.form is not UnionForm.GROUP and fixed and sex_of(other) == sex_of(mortal)):
         return False
     if people is not None and (await people_of(ctx.session, other)) != people:
         return False
     return not await feuding(ctx.session, house_id, other_house)
 
 
-def wed(custom: MarriageCustom | None, mortal: EntityRow, spouse: EntityRow) -> set[int]:
-    if custom is MarriageCustom.POLYGYNY:
-        return {spouse.id} | ({mortal.id} if sex_of(mortal) == "female" else set())
-    if custom is MarriageCustom.POLYANDRY:
-        return {spouse.id} | ({mortal.id} if sex_of(mortal) == "male" else set())
-    if custom is MarriageCustom.GROUP:
+def wed(custom: Spousing, mortal: EntityRow, spouse: EntityRow, plural: str | None) -> set[int]:
+    if custom.form is UnionForm.GROUP:
         return {spouse.id}
+    if custom.form is UnionForm.PLURAL:
+        return {spouse.id} | ({mortal.id} if plural is not None and sex_of(mortal) != plural else set())
     return {mortal.id, spouse.id}
 
 
-async def custom_of(ctx: TickContext, mortal: EntityRow) -> MarriageCustom | None:
+async def plural_sex(ctx: TickContext, mortal: EntityRow, custom: Spousing) -> str | None:
+    if custom.form is not UnionForm.PLURAL or custom.side is PluralSide.EITHER:
+        return None
     people = await people_of(ctx.session, mortal)
-    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
-    custom = culture.marriage if culture is not None else None
-    law = await law_param(ctx.session, mortal.location_id, LawKind.MARRIAGE_LAW, "custom") if mortal.location_id is not None else None
-    return MarriageCustom(str(law)) if law is not None else custom
+    system = await system_of_people(ctx.session, people.id if people is not None else None)
+    if system is None:
+        return None
+    return first_sex(system) if custom.side is PluralSide.FIRST else second_sex(system)
+
+
+async def custom_of(ctx: TickContext, mortal: EntityRow) -> Spousing:
+    custom = spousing_of(await union_of(ctx.session, mortal))
+    if mortal.location_id is None:
+        return custom
+    form = await law_param(ctx.session, mortal.location_id, LawKind.MARRIAGE_LAW, "form")
+    side = await law_param(ctx.session, mortal.location_id, LawKind.MARRIAGE_LAW, "plural_side")
+    return Spousing(UnionForm(str(form)) if form is not None else custom.form, PluralSide(str(side)) if side is not None else custom.side, custom.endogamy)
 
 
 async def claim_weight(ctx: TickContext, mortal: EntityRow) -> int:
     return sum(await ctx.session.scalars(select(ClaimRow.strength).where(ClaimRow.claimant_entity_id == mortal.id, ClaimRow.ended_epoch.is_(None))))
 
 
-async def dowry(ctx: TickContext, book: HouseBook, house_id: int, spouse: EntityRow) -> None:
+async def union_portion(ctx: TickContext, book: HouseBook, house_id: int, spouse: EntityRow) -> None:
     giver = book.house_of.get(spouse.id)
     if giver is None or giver not in book.profiles or house_id not in book.profiles:
         return
-    amount = round_half_up(book.profiles[giver].wealth * ctx.rules.houses.dowry_pct / PERCENT)
+    amount = round_half_up(book.profiles[giver].wealth * ctx.rules.houses.union_portion_pct / PERCENT)
     if amount:
         move_amount(book.profiles[giver], book.profiles[house_id], "wealth", amount)
 

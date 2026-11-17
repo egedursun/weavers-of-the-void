@@ -191,8 +191,8 @@ export const KIND: Record<string, Named & { hint: string }> = {
     tone: 'gold',
     hint: 'A holy place of worship',
   },
-  god_corpse: {
-    label: 'God corpse',
+  dead_god_site: {
+    label: 'Where a god died',
     icon: Sparkles,
     tone: 'gold',
     hint: 'Where a god fell',

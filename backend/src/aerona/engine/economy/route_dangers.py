@@ -7,9 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_MODES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
-from aerona.core.total import partial, total
+from aerona.core.total import total
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -47,9 +48,11 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
         BeastTemper.COMPANION: lambda rules: rules.route_dangers.beast_tamed_pct,
     },
 )
-EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = partial(
+EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = total(
     WeatherEffect,
     {
+        WeatherEffect.GROWTH: lambda rules: 0,
+        WeatherEffect.MORALE: lambda rules: 0,
         WeatherEffect.FOOTING: lambda rules: rules.route_dangers.weather_footing_pct,
         WeatherEffect.COLD: lambda rules: rules.route_dangers.weather_cold_pct,
         WeatherEffect.HEAT: lambda rules: rules.route_dangers.weather_heat_pct,
@@ -57,27 +60,8 @@ EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = partial(
         WeatherEffect.WIND: lambda rules: rules.route_dangers.weather_wind_pct,
         WeatherEffect.VISIBILITY: lambda rules: rules.route_dangers.weather_visibility_pct,
     },
-    without={WeatherEffect.GROWTH, WeatherEffect.MORALE},
 )
 FALLING_EFFECTS = frozenset({WeatherEffect.FOOTING, WeatherEffect.VISIBILITY})
-MODE_EXPOSURE: MappingProxyType[TradeMode, tuple[WeatherEffect, ...]] = MappingProxyType(
-    {
-        TradeMode.ROAD: (WeatherEffect.FOOTING, WeatherEffect.COLD, WeatherEffect.HEAT, WeatherEffect.WET),
-        TradeMode.CARAVAN: (WeatherEffect.FOOTING, WeatherEffect.HEAT, WeatherEffect.WIND, WeatherEffect.VISIBILITY),
-        TradeMode.RIVER: (WeatherEffect.WET, WeatherEffect.COLD, WeatherEffect.WIND),
-        TradeMode.SKY: (WeatherEffect.WIND, WeatherEffect.VISIBILITY, WeatherEffect.COLD),
-        TradeMode.SEA: (WeatherEffect.WIND, WeatherEffect.VISIBILITY, WeatherEffect.WET),
-    }
-)
-MODE_WEATHER: MappingProxyType[TradeMode, Callable[[Rules], int]] = MappingProxyType(
-    {
-        TradeMode.ROAD: lambda rules: rules.route_dangers.road_weather_pct,
-        TradeMode.CARAVAN: lambda rules: rules.route_dangers.caravan_weather_pct,
-        TradeMode.RIVER: lambda rules: rules.route_dangers.river_weather_pct,
-        TradeMode.SKY: lambda rules: rules.route_dangers.sky_weather_pct,
-        TradeMode.SEA: lambda rules: rules.route_dangers.sea_weather_pct,
-    }
-)
 
 
 @dataclass
@@ -97,7 +81,9 @@ class Dangers:
         return {TradeLoss.BANDITS: self.bandits, TradeLoss.BEASTS: self.beasts, TradeLoss.WEATHER: self.weather, TradeLoss.SEA: self.sea}
 
     def culprit(self, cause: TradeLoss) -> int | None:
-        return self.bandit_id if cause is TradeLoss.BANDITS else self.beast_id if cause is TradeLoss.BEASTS else None
+        attribute = TRADE_LOSS_CULPRITS[cause]
+        found: int | None = getattr(self, attribute) if attribute is not None else None
+        return found
 
 
 @dataclass
@@ -140,7 +126,7 @@ def split(lost: int, parts: dict[TradeLoss, int], mode: TradeMode) -> dict[Trade
     if lost <= 0:
         return {}
     if not weights:
-        return {TradeLoss.SEA if mode is TradeMode.SEA else TradeLoss.BANDITS: lost}
+        return {TradeLoss.SEA if TRADE_MODES[mode].seagoing else TradeLoss.BANDITS: lost}
     total = sum(weights.values())
     shares = {cause: lost * value // total for cause, value in weights.items()}
     rest = lost - sum(shares.values())
@@ -207,15 +193,16 @@ def weather_danger(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: l
     scores: list[float] = []
     for region in regions:
         weather = book.ground.weather(ctx.environment.world_seed, ctx.epoch, region, season, f"route.{route_id}")
-        scores.append(sum(harm(weather, effect) * EFFECT_WEIGHT[effect](ctx.rules) / PERCENT for effect in MODE_EXPOSURE[mode]))
-    return clamp_int(round_half_up(sum(scores) / len(scores) * MODE_WEATHER[mode](ctx.rules) / PERCENT), 0, PERCENT)
+        scores.append(sum(harm(weather, effect) * EFFECT_WEIGHT[effect](ctx.rules) / PERCENT for effect in TRADE_MODES[mode].exposure))
+    weight = getattr(ctx.rules.route_dangers, TRADE_MODES[mode].weather_rule)
+    return clamp_int(round_half_up(sum(scores) / len(scores) * weight / PERCENT), 0, PERCENT)
 
 
 def dangers_of(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[int], lairs: Lairs, *, route_id: int, world_id: int | None) -> Dangers:
     bandits, band = bandit_danger(ctx.rules, book, path, lairs.patrolled)
     beasts, beast = beast_danger(ctx.rules, path, lairs)
     weather = weather_danger(ctx, book, mode, path, route_id=route_id, world_id=world_id)
-    if mode is TradeMode.SEA:
+    if TRADE_MODES[mode].seagoing:
         sea = clamp_int(ctx.rules.route_dangers.sea_danger_base + weather, 0, PERCENT)
         return Dangers(bandits=bandits, beasts=beasts, sea=sea, bandit_id=band, beast_id=beast)
     return Dangers(bandits=bandits, beasts=beasts, weather=weather, bandit_id=band, beast_id=beast)

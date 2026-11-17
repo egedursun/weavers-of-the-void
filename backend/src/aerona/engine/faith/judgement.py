@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.peoples import FAITH_RITES
+from aerona.catalog.kinds.afterlife import STRATUM_VALENCES
+from aerona.catalog.peoples import FUNERALS
 from aerona.catalog.strata import ADMISSION_PRIORITY, STRATUM_AXES, StratumAxes
 from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.constants.units import PERCENT
@@ -17,11 +18,11 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import RiteStage, TraditionFunction
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faith import (
     AfterlifeState,
-    FuneralRite,
     JudgementDoctrine,
     SpiritAlignment,
     StratumActivity,
@@ -52,7 +53,6 @@ VALUE_SPAN = 200
 DEEDS_PARTS = 3
 VIOLENCE_SHARE = 4
 WARLIKE = frozenset({TenetKind.MARTYRDOM_GLORY, TenetKind.HOLY_WAR})
-SEALING_RITES = frozenset({FuneralRite.NAMELESS})
 EXECUTIONS = (HarmCause.PUNISHMENT, HarmCause.SACRIFICE)
 
 
@@ -76,25 +76,29 @@ async def ledger(ctx: TickContext, mortal: EntityRow) -> dict[str, int]:
     }
 
 
-def custom_from_values(table: AfterlifeRules, values: dict[ValueAxis, int]) -> FuneralRite:
+def custom_from_values(table: AfterlifeRules, values: dict[ValueAxis, int]) -> FuneralCustom:
     purity, nature = values.get(ValueAxis.PURITY, 0), values.get(ValueAxis.NATURE, 0)
     if purity >= table.custom_value and purity >= nature:
-        return FuneralRite.BURNING
+        return FuneralCustom.CREMATION
     if nature >= table.custom_value:
-        return FuneralRite.EXPOSURE
-    return FuneralRite.BURIAL
+        return FuneralCustom.SKY_BURIAL
+    return FuneralCustom.BURIAL
 
 
-async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | None:
+async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralCustom | None:
     community = await ctx.session.get(EntityRow, community_id)
     custom = await rite_of(ctx.session, community) if community is not None else None
     if custom is not None:
-        return FAITH_RITES[custom]
+        return custom
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     living = select(EntityRow.id).where(EntityRow.id.in_(kept), EntityRow.status == EntityStatus.CANON)
     profile = await ctx.session.scalar(
         select(TraditionProfileRow)
-        .where(TraditionProfileRow.tradition_entity_id.in_(living), TraditionProfileRow.kind == TraditionKind.FUNERAL_RITE)
+        .where(
+            TraditionProfileRow.tradition_entity_id.in_(living),
+            TraditionProfileRow.kind == TraditionFunction.RITE_OF_PASSAGE,
+            TraditionProfileRow.stage == RiteStage.DEATH,
+        )
         .order_by(TraditionProfileRow.tradition_entity_id)
         .limit(1)
     )
@@ -103,21 +107,21 @@ async def funeral_custom(ctx: TickContext, community_id: int) -> FuneralRite | N
     return profile.funeral_rite or custom_from_values(ctx.rules.afterlife, await values_for(ctx.session, community_id))
 
 
-async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralRite:
+async def rite_for(ctx: TickContext, mortal: EntityRow) -> FuneralCustom:
     table = ctx.rules.afterlife
     causes = set(await ctx.session.scalars(select(InjuryRow.cause_kind).where(InjuryRow.bearer_node_id == mortal.id)))
     if causes & set(EXECUTIONS) and ctx.rng(f"nameless.{mortal.id}").chance(table.nameless_execution_pct):
-        return FuneralRite.NAMELESS
+        return FuneralCustom.NAMELESS
     base = table.battle_no_rite_chance if causes & {HarmCause.BATTLE, HarmCause.DUEL} else table.no_rite_chance
     chance = await rite_chance(ctx, mortal, base * (1 - await rite_keeping(ctx.session, ctx.rules, mortal.location_id)))
     if ctx.rng(f"rite.{mortal.id}").chance(chance):
-        return FuneralRite.NONE
+        return FuneralCustom.NONE
     home = mortal.location_id
     custom = await law_param(ctx.session, home, LawKind.BURIAL_LAW, "rite") if home is not None else None
-    if custom in {rite.value for rite in FuneralRite}:
-        return FuneralRite(str(custom))
+    if custom in {rite.value for rite in FuneralCustom}:
+        return FuneralCustom(str(custom))
     kept = await funeral_custom(ctx, home) if home is not None else None
-    return kept or FuneralRite.BURIAL
+    return kept or FuneralCustom.BURIAL
 
 
 async def judgement_for(ctx: TickContext, mortal: EntityRow) -> tuple[SonRow | None, JudgementDoctrine, set[TenetKind]]:
@@ -134,7 +138,7 @@ async def judgement_for(ctx: TickContext, mortal: EntityRow) -> tuple[SonRow | N
     return son, doctrine.judgement if doctrine is not None else JudgementDoctrine.DEEDS, tenets
 
 
-def score_of(table: AfterlifeRules, deeds: dict[str, int], doctrine: JudgementDoctrine, *, rite: FuneralRite, favoured: bool, tenets: set[TenetKind]) -> int:
+def score_of(table: AfterlifeRules, deeds: dict[str, int], doctrine: JudgementDoctrine, *, rite: FuneralCustom, favoured: bool, tenets: set[TenetKind]) -> int:
     if doctrine is JudgementDoctrine.DEEDS:
         violence = deeds.get("violence", 0) if tenets & WARLIKE else -deeds.get("violence", 0)
         merit = deeds.get("renown", 0) + deeds.get("honour", 0) + (PERCENT - deeds.get("infamy", 0))
@@ -142,20 +146,20 @@ def score_of(table: AfterlifeRules, deeds: dict[str, int], doctrine: JudgementDo
     if doctrine is JudgementDoctrine.FAITH:
         return deeds.get("faith", 0)
     if doctrine is JudgementDoctrine.RITE:
-        return table.rite_score if rite is not FuneralRite.NONE else table.no_rite_score
+        return table.rite_score if FUNERALS[rite].counts_as_rite else table.no_rite_score
     if doctrine is JudgementDoctrine.FAVOUR:
         return table.favoured_score if favoured else table.forsaken_score
     return table.neutral_score
 
 
 def valence_bounds(table: AfterlifeRules, valence: StratumValence) -> dict[str, int]:
-    if valence is StratumValence.REWARD:
-        return {"score_at_least": table.paradise_score}
-    if valence is StratumValence.PUNISHMENT:
-        return {"score_below": table.torment_score}
-    if valence is StratumValence.MIXED:
-        return {"score_at_least": table.torment_score, "score_below": table.paradise_score}
-    return {}
+    spec = STRATUM_VALENCES[valence]
+    bounds: dict[str, int] = {}
+    if spec.floor_rule is not None:
+        bounds["score_at_least"] = int(getattr(table, spec.floor_rule))
+    if spec.ceiling_rule is not None:
+        bounds["score_below"] = int(getattr(table, spec.ceiling_rule))
+    return bounds
 
 
 def admission_bounds(table: AfterlifeRules, axes: StratumAxes) -> dict[str, int | bool]:
@@ -248,13 +252,13 @@ def route(
     score: int,
     deeds: dict[str, int],
     god: SonRow | None,
-    rite: FuneralRite,
+    rite: FuneralCustom,
     tenets: set[TenetKind],
     cults: set[int] | None = None,
 ) -> AfterlifeStratumRow | None:
     chosen = [(StratumCriteria.read(row.criteria), row) for row in strata if admits(row, god, cults or set())]
     for criteria, row in sorted(chosen, key=lambda item: (item[0].priority, item[1].id)):
-        if criteria.matches(score=score, deeds=deeds, has_god=god is not None, rite=rite, tenets=tenets):
+        if criteria.matches(score=score, deeds=deeds, has_god=god is not None, rite=rite, rite_kept=FUNERALS[rite].counts_as_rite, tenets=tenets):
             return row
     return None
 
@@ -289,8 +293,8 @@ async def profile_for(ctx: TickContext, spirit: EntityRow, mortal: EntityRow) ->
         alignment=SpiritAlignment.NEUTRAL,
         state=AfterlifeState.WANDERING,
         rite=rite,
-        sealed=rite in SEALING_RITES,
-        seal_strength=ctx.rules.afterlife.nameless_seal if rite in SEALING_RITES else 0,
+        sealed=FUNERALS[rite].seals,
+        seal_strength=ctx.rules.afterlife.nameless_seal if FUNERALS[rite].seals else 0,
         updated_epoch=ctx.epoch,
         locked=[],
     )
@@ -341,7 +345,7 @@ async def reaches_living(session: AsyncSession, profile: SpiritProfileRow) -> bo
     stratum = await session.get(AfterlifeStratumRow, profile.stratum_id) if profile.stratum_id is not None else None
     if stratum is None or stratum.contact is StratumContact.OPEN:
         return True
-    return stratum.contact is StratumContact.BY_RITE and profile.rite is not FuneralRite.NONE
+    return stratum.contact is StratumContact.BY_RITE and FUNERALS[profile.rite].counts_as_rite
 
 
 async def leave_realm(ctx: TickContext, profile: SpiritProfileRow, state: AfterlifeState) -> None:
@@ -369,7 +373,7 @@ async def judge(ctx: TickContext, spirit: EntityRow, mortal: EntityRow, realm: E
         profile.patron_son_id = son.id if son is not None else None
     if TenetKind.SOULS_REST in tenets:
         seal(profile, PERCENT)
-    if profile.rite is FuneralRite.NONE and doctrine is not JudgementDoctrine.RITE:
+    if not FUNERALS[profile.rite].counts_as_rite and doctrine is not JudgementDoctrine.RITE:
         profile.state = AfterlifeState.WANDERING
         set_stats(spirit, unrest=max(stat(spirit, "unrest") or 0, ctx.rules.afterlife.restless_unrest))
         reason = "no rites were said; the soul wanders restless"

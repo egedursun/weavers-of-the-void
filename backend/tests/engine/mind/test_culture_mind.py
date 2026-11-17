@@ -6,7 +6,7 @@ from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.mind import CultureEthicRow, CultureHonourRow, PreferenceRow, ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, PreferenceKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import DeathCause
@@ -45,7 +45,7 @@ async def test_tastes_move_demand_and_premiums_and_disgust_becomes_a_taboo(realm
     assert material_factor(RULES, loved, "amber") > 1
     await write_pref(realm.session, folk.id, PreferenceKind.FOOD, "livestock", -90)
     assert await make_taboos(ctx, folk) == 1
-    taboo = await realm.session.scalar(select(TraditionProfileRow).where(TraditionProfileRow.kind == TraditionKind.TABOO))
+    taboo = await realm.session.scalar(select(TraditionProfileRow).where(TraditionProfileRow.kind == TraditionFunction.TABOO))
     assert taboo is not None and taboo.taboo_target == "livestock"
     assert await make_taboos(ctx, folk) == 0
 

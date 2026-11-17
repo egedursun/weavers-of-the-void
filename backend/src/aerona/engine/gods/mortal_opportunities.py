@@ -172,7 +172,7 @@ async def _land_lines(scope: MortalScope) -> list[MortalOpportunity]:
         and (
             (
                 other.status is EntityStatus.CANON
-                and (view.has_flag(other.id, EntityFlag.RUIN) or view.has_flag(other.id, EntityFlag.EMPTY_TOMB) or other.engine_kind is EngineKind.GOD_CORPSE)
+                and (view.has_flag(other.id, EntityFlag.RUIN) or view.has_flag(other.id, EntityFlag.EMPTY_TOMB) or other.engine_kind is EngineKind.DEAD_GOD)
             )
             or (other.status is EntityStatus.DEAD and view.has_flag(other.id, EntityFlag.RUIN))
         )

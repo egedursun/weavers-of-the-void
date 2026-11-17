@@ -87,6 +87,7 @@ from tests.tools.every_setup_crafts import people_home, town_insurer
 from tests.tools.every_setup_customs import long_foreigner, town_pool
 from tests.tools.every_setup_eras import skilled_for_programme
 from tests.tools.every_setup_folkways import impure_mortal, neighbour, owned_item
+from tests.tools.every_setup_kinds import kind_at_home, kind_under_rule
 from tests.tools.every_setup_lifecycle import name_keeper
 from tests.tools.every_setup_living import bank_held, bred_line, breeder, founder, hosted, line_of_another, sickness_and_line
 from tests.tools.every_setup_means import money_changer
@@ -107,9 +108,61 @@ from tests.tools.every_setup_minds import (
 )
 from tests.tools.every_setup_nature import town_dweller
 from tests.tools.every_setup_powers import heard_truth, kept_truth, linked_pair, powered, seer, tested_realm
+from tests.tools.every_setup_ways import (
+    aboard,
+    boss_at_home,
+    drifting_town,
+    faction_leader,
+    fearful,
+    noble_born,
+    people_before,
+    pressed,
+    realms_with_hearts,
+    ruler_at_home,
+    sky_body,
+    subject_of_people,
+    town_of_maimed,
+    worn_building,
+)
 from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
+from tests.tools.ways_values import (
+    AGE,
+    ANIMAL_ROLE,
+    BEHAVIOUR,
+    BLUEPRINT,
+    CASTE,
+    CIRCLE,
+    CLAIM,
+    COMMANDER_TRAIT,
+    DATING,
+    DRIFT,
+    ELIGIBILITY,
+    HONOUR,
+    MAIMED,
+    MOVEMENT,
+    NOBLE_WANT,
+    OMEN,
+    POINT_OF_SAIL,
+    PRESSURE,
+    RACKET,
+    REGISTER,
+    RING,
+    ROLE,
+    SHOT,
+    SITUATION,
+    SPEAKER,
+    STANCE,
+    STATION,
+    STRUCTURE_SECTION,
+    SUBJECT,
+    TAX,
+    TECHNIQUE_BASE,
+    TINCTURE,
+    VEHICLE_SECTION,
+    WANT,
+)
 
 REASON = "for the good of the valley roads"
 TECHNIQUE = next(iter(Technique)).value
@@ -397,4 +450,39 @@ MORTAL_CASES: dict[str, Case] = {
     "set_clone_law": named(plain(level="licensed"), ruled_realm),
     "take_care": named(plain(), wealthy),
     "found_faction": named(plain(kind="scholars_academy"), founder),
+    "invent_kind": named(plain(concept="good", category="grain", name="Hearth Cake", description=TEXT[:120]), people_home),
+    "adopt_kind": named(plain(concept="good", kind_id=created("good_kind")), kind_at_home),
+    "forbid_kind": named(plain(concept="good", kind_id=created("good_kind")), kind_under_rule),
+    "take_arms": named(plain(field=TINCTURE, motto="Keep the road"), house_head),
+    "reckon_years": named(plain(kind=DATING, cycle_years=60), ruler),
+    "speak_for_norm": named(plain(situation=SITUATION, behaviour=BEHAVIOUR, stance=STANCE), people_home),
+    "set_role_custom": named(plain(role=ROLE, eligibility=ELIGIBILITY, min_age=18, stance=STANCE), ruler_at_home),
+    "read_the_sky": named(plain(celestial_id=created("celestial"), reading=OMEN), sky_body),
+    "set_speech": named(plain(speech=REGISTER, language_id=language), ruler_at_home),
+    "teach_tongue": named(plain(language_id=language, kind=SPEAKER), people_home),
+    "keep_legacy": named(plain(predecessor_id=created("predecessor"), kind="innovation"), people_before),
+    "assign_caste": named(plain(mortal_id=created("subject"), caste=CASTE), subject_of_people),
+    "proclaim_age": named(plain(age=AGE), ruler),
+    "draw_blueprint": named(plain(kind=BLUEPRINT, subject="the river mill")),
+    "devise_use": named(plain(use=ANIMAL_ROLE, name="Ridge Keeping", description=TEXT[:120]), people_home),
+    "raise_movement": named(plain(cause=MOVEMENT), faction_leader),
+    "claim_courts": named(plain(realm_id=created("rival"), claim=CLAIM), rival_realm),
+    "drill_trait": named(plain(trait=COMMANDER_TRAIT), commanded_brigade),
+    "face_fear": named(plain(fear_id=created("fear")), fearful),
+    "take_up_want": named(plain(kind=WANT)),
+    "ease_pressure": named(plain(pressure=PRESSURE), pressed),
+    "teach_honour": named(plain(model=HONOUR), ruler_at_home),
+    "resist_drift": named(plain(cause=DRIFT), drifting_town),
+    "man_station": named(plain(vessel_id=created("vessel"), station=STATION, count=12), aboard),
+    "trim_sails": named(plain(vessel_id=created("vessel"), point_of_sail=POINT_OF_SAIL, shot=SHOT), aboard),
+    "found_circle": named(plain(kind=CIRCLE), faction_leader),
+    "press_demand": named(plain(want=NOBLE_WANT), noble_born),
+    "swear_fealty": named(plain(overlord_id=created("rival"), kind=SUBJECT), realms_with_hearts),
+    "set_levy": named(plain(kind=TAX, rate=8), ruler),
+    "run_racket": named(plain(kind=RACKET), boss_at_home),
+    "refit_section": named(plain(vessel_id=created("vessel"), section=VEHICLE_SECTION), aboard),
+    "shore_up": named(plain(structure_id=created("structure"), section=STRUCTURE_SECTION), worn_building),
+    "replan_land": named(plain(ring=RING), ruler_at_home),
+    "tend_maimed": named(plain(kind=MAIMED), town_of_maimed),
+    "devise_custom": named(plain(catalog="technique", base=TECHNIQUE_BASE, name="Slow Fire Working", description=TEXT[:120])),
 }

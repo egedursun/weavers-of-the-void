@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import {
   Beef,
+  FlipHorizontal2,
+  Maximize2,
+  Shapes,
+  Sparkles,
   BookOpen,
   Building,
   Check,
@@ -34,6 +38,7 @@ import { EntityLink, Medallion, MiniStat, Paged } from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
+import { UNION_FORMS } from '@/features/cycles/unionLabels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { AIR_NEEDS } from '@/features/physics/labels'
 import { useNames } from '../api/queries'
@@ -57,11 +62,10 @@ import {
   folkLabel,
 } from './folkLabels'
 import {
-  AESTHETIC_SPEC,
   INHERITANCE_SPEC,
   JOB_SPEC,
-  MARRIAGE_SPEC,
   MARTIAL_SPEC,
+  MOTIF_SPEC,
   type Spec,
   fieldLabel,
 } from './labels'
@@ -112,6 +116,13 @@ const GRAVITY_FIELDS = [
     unit: '% of a standard world',
   },
 ] as const
+const STYLE_FIELDS = [
+  { key: 'ornament', icon: Sparkles, min: 0, max: PERCENT },
+  { key: 'geometry', icon: Shapes, min: 0, max: PERCENT },
+  { key: 'colour', icon: Palette, min: 0, max: PERCENT },
+  { key: 'scale', icon: Maximize2, min: 0, max: PERCENT },
+  { key: 'symmetry', icon: FlipHorizontal2, min: 0, max: PERCENT },
+] as const
 const SOCIETY_FIELDS = [
   { key: 'cohesion', icon: Users2, min: 0, max: PERCENT },
   { key: 'literacy', icon: BookOpen, min: 0, max: PERCENT },
@@ -134,6 +145,10 @@ function staplesSpecs(): Record<string, Spec> {
       { label: item.label, icon: item.icon, tone: 'success' as const },
     ])
   )
+}
+
+function motifSpecs(): Record<string, Spec> {
+  return { ...MOTIF_SPEC }
 }
 
 function SpecChip({ spec }: { spec: Spec }) {
@@ -779,16 +794,32 @@ export function FolkControls({
         </EditorGroup>
       )}
       {culture && (
-        <EditorGroup title='Customs' icon={Palette} pairs>
-          <ChoiceEditor
-            label='Art'
-            hint='What they find beautiful; their art moves them more'
-            value={culture.aesthetic}
-            table={AESTHETIC_SPEC}
-            held={held('aesthetic')}
+        <EditorGroup title='Style' icon={Palette}>
+          {STYLE_FIELDS.map((field) =>
+            editor({
+              key: field.key,
+              label: fieldLabel(field.key),
+              icon: field.icon,
+              value: culture[field.key],
+              min: field.min,
+              max: field.max,
+            })
+          )}
+          <MultiEditor
+            key={`motifs-${culture.motif_sources.join()}`}
+            label='Motifs drawn from'
+            hint='What their art, emblems and pictures of the Creator take their figures from'
+            icon={Shapes}
+            values={culture.motif_sources}
+            table={motifSpecs()}
+            held={held('motif_sources')}
             blocked={busy}
-            onPick={set('aesthetic')}
+            onSet={set('motif_sources')}
           />
+        </EditorGroup>
+      )}
+      {culture && (
+        <EditorGroup title='Customs' icon={Palette} pairs>
           <ChoiceEditor
             label='Way of war'
             hint='How their levies fight'
@@ -797,15 +828,6 @@ export function FolkControls({
             held={held('martial_style')}
             blocked={busy}
             onPick={set('martial_style')}
-          />
-          <ChoiceEditor
-            label='Marriage'
-            hint='How many spouses each may take'
-            value={culture.marriage}
-            table={MARRIAGE_SPEC}
-            held={held('marriage')}
-            blocked={busy}
-            onPick={set('marriage')}
           />
           <ChoiceEditor
             label='Inheritance'
@@ -824,16 +846,6 @@ export function FolkControls({
             held={held('funeral_rite')}
             blocked={busy}
             onPick={set('funeral_rite')}
-          />
-          <FlagEditor
-            label='Marry within'
-            hint='Only their own people are taken as spouses; they resist assimilation'
-            icon={Users2}
-            tone='verdigris'
-            checked={culture.endogamous}
-            held={held('endogamous')}
-            blocked={busy}
-            onToggle={set('endogamous')}
           />
           <FlagEditor
             label='Slavery lawful'
@@ -944,14 +956,9 @@ export function FoundPeoplePanel({
   const [rite, setRite] = useState<string>(
     view.culture?.funeral_rite ?? 'burial'
   )
-  const [marriage, setMarriage] = useState<string>(
-    view.culture?.marriage ?? 'monogamy'
-  )
+  const [unionForm, setUnionForm] = useState<string>('pair')
   const [inheritance, setInheritance] = useState<string>(
     view.culture?.inheritance ?? 'primogeniture'
-  )
-  const [aesthetic, setAesthetic] = useState<string>(
-    view.culture?.aesthetic ?? 'austere'
   )
   const regions = useRecordOptions('region')
   const kinds = useRecordOptions('species')
@@ -970,9 +977,8 @@ export function FoundPeoplePanel({
               diet,
               martial_style: style,
               funeral_rite: rite,
-              marriage,
+              union_form: unionForm,
               inheritance,
-              aesthetic,
             },
           },
         })
@@ -1019,22 +1025,16 @@ export function FoundPeoplePanel({
       onPick: setRite,
     },
     {
-      label: 'Marriage',
-      value: marriage,
-      table: MARRIAGE_SPEC,
-      onPick: setMarriage,
+      label: 'Form of a union',
+      value: unionForm,
+      table: UNION_FORMS,
+      onPick: setUnionForm,
     },
     {
       label: 'Inheritance',
       value: inheritance,
       table: INHERITANCE_SPEC,
       onPick: setInheritance,
-    },
-    {
-      label: 'Art',
-      value: aesthetic,
-      table: AESTHETIC_SPEC,
-      onPick: setAesthetic,
     },
   ]
   return (

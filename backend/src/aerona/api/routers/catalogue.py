@@ -68,9 +68,7 @@ async def read_catalogue() -> Catalogue:
         link_groups=[LinkGroupInfo(key=group.value, label=LINK_GROUP_LABELS[group], kinds=sorted(kinds)) for group, kinds in ordered_link_groups()],
         domains=[Labelled(key=domain.value, label=label) for domain, label in DOMAIN_LABELS.items()],
         world_types=[
-            WorldTypeInfo(
-                key=kind.value, label=spec.label, description=spec.description, domains=list(spec.domains), living=spec.living, realm_of_dead=spec.realm_of_dead
-            )
+            WorldTypeInfo(key=kind.value, label=spec.label, description=spec.description, living=spec.living, realm_of_dead=spec.realm_of_dead)
             for kind, spec in WORLD_TYPES.items()
         ],
         chronicle_kinds=[Labelled(key=kind.value, label=spec.label) for kind, spec in CHRONICLE_KINDS.items()],

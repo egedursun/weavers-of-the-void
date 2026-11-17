@@ -1,31 +1,30 @@
 import pytest
 
-from aerona.catalog.peoples import DIETS, FUNERALS, KIN, SIZES, MountFit
+from aerona.catalog.peoples import CULTURAL_FUNERALS, DIETS, FUNERALS, KIN, SIZES, VALUE_STYLE, MountFit
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import BattleRow, WarRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import ArtMedium, TraditionKind
+from aerona.domain.enums.culture import ArtMode, RiteStage, TraditionFunction
 from aerona.domain.enums.demography import (
-    Aesthetic,
-    FolkDiet,
     FuneralCustom,
     InheritanceCustom,
-    MarriageCustom,
     MartialStyle,
     NaturalTrait,
 )
-from aerona.domain.enums.ecology import SizeClass
+from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind, WeatherKind
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
+from aerona.domain.enums.unions import PartnerScope, PluralSide, UnionForm
 from aerona.domain.enums.war import BattleOutcome, WarCause
 from aerona.domain.models.entity_stats import EventStats, LanguageStats, SpeciesStats
 from aerona.engine.demography import biology as kin
@@ -40,11 +39,13 @@ from aerona.engine.demography.peoples import (
     liturgical_of,
     martial_choice,
     refresh_culture,
+    spousing_for,
     tally_battle,
     trade_language_of,
 )
-from aerona.engine.lore.art import aesthetic_fit, taste_message
+from aerona.engine.lore.style import style_fit, style_message
 from aerona.engine.phases.demography import people_cycles
+from aerona.engine.unions.axes import Spousing
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, link, make, mortal, people, settlement
 
@@ -64,7 +65,7 @@ def biology(**values: object) -> PeopleBiologyRow:
         "immunities": [],
         "body_plan": BodyPlan.HUMANOID,
         "size_class": SizeClass.MEDIUM,
-        "diet": FolkDiet.OMNIVORE,
+        "diet": Diet.OMNIVORE,
         "locked": [],
     }
     base.update(values)
@@ -78,11 +79,9 @@ def culture(**values: object) -> PeopleCultureRow:
         "literacy": 10,
         "urbanisation": 30,
         "staples": [],
-        "aesthetic": Aesthetic.AUSTERE,
+        "ornament": 15,
         "martial_style": MartialStyle.SHIELDWALL,
         "funeral_rite": FuneralCustom.BURIAL,
-        "marriage": MarriageCustom.MONOGAMY,
-        "endogamous": False,
         "inheritance": InheritanceCustom.PRIMOGENITURE,
         "slavery_lawful": False,
         "martial_record": {},
@@ -172,15 +171,15 @@ def test_mounts_fleets_and_the_raised_dead_follow_body_and_rite() -> None:
 
 def test_every_diet_feeds_differently_from_the_land() -> None:
     land = ground(coast_kind=next(item for item in CoastKind if item is not CoastKind.NONE))
-    fed = {diet: kin.nourishment(RULES, diet, land, 100, magic_level=1) for diet in FolkDiet}
-    assert len(set(fed.values())) >= len(FolkDiet) - 2
-    assert set(DIETS) == set(FolkDiet)
+    fed = {diet: kin.nourishment(RULES, diet, land, 100, magic_level=1) for diet in Diet}
+    assert len(set(fed.values())) >= len(Diet) - 2
+    assert set(DIETS) == set(Diet)
     inland = ground()
-    assert kin.nourishment(RULES, FolkDiet.PISCIVORE, inland, 100) == 0.0
-    assert kin.hunger_level(RULES, biology(diet=FolkDiet.PISCIVORE), inland, 100) == pytest.approx(1.0)
-    assert kin.hunger_level(RULES, biology(diet=FolkDiet.LITHOVORE), inland, 0) < 0.2
-    assert kin.edible(FolkDiet.HERBIVORE) == frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FODDER})
-    assert kin.staple_for(RULES, FolkDiet.CARNIVORE, inland) is CommodityKind.LIVESTOCK
+    assert kin.nourishment(RULES, Diet.PISCIVORE, inland, 100) == 0.0
+    assert kin.hunger_level(RULES, biology(diet=Diet.PISCIVORE), inland, 100) == pytest.approx(1.0)
+    assert kin.hunger_level(RULES, biology(diet=Diet.MINERAL), inland, 0) < 0.2
+    assert kin.edible(Diet.HERBIVORE) == frozenset({CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FODDER})
+    assert kin.staple_for(RULES, Diet.CARNIVORE, inland) is CommodityKind.LIVESTOCK
 
 
 def test_acclimatisation_and_climate_fit() -> None:
@@ -222,21 +221,26 @@ def test_every_funeral_rite_has_distinct_mechanics() -> None:
 
 def test_customs_produce_every_inheritance_and_marriage() -> None:
     inheritances = {
-        customs_of({ValueAxis.HIERARCHY: 30, ValueAxis.KINSHIP: 30, ValueAxis.MERCY: 30})[2],
-        customs_of({ValueAxis.HIERARCHY: 30})[2],
-        customs_of({ValueAxis.KINSHIP: 60})[2],
-        customs_of({ValueAxis.KNOWLEDGE: 30})[2],
-        customs_of({ValueAxis.HIERARCHY: -30})[2],
-        customs_of({})[2],
+        customs_of({ValueAxis.HIERARCHY: 30, ValueAxis.KINSHIP: 30, ValueAxis.MERCY: 30})[0],
+        customs_of({ValueAxis.HIERARCHY: 30})[0],
+        customs_of({ValueAxis.KINSHIP: 60})[0],
+        customs_of({ValueAxis.KNOWLEDGE: 30})[0],
+        customs_of({ValueAxis.HIERARCHY: -30})[0],
+        customs_of({})[0],
     }
     assert inheritances == set(InheritanceCustom)
-    marriages = {
-        customs_of({})[0],
-        customs_of({ValueAxis.HIERARCHY: 60, ValueAxis.TRADITION: 30})[0],
-        customs_of({ValueAxis.HIERARCHY: -30, ValueAxis.KINSHIP: 30})[0],
-        customs_of({ValueAxis.KINSHIP: -60})[0],
+    spousings = {
+        spousing_for({}),
+        spousing_for({ValueAxis.HIERARCHY: 60, ValueAxis.TRADITION: 30}),
+        spousing_for({ValueAxis.HIERARCHY: -30, ValueAxis.KINSHIP: 30}),
+        spousing_for({ValueAxis.KINSHIP: -60}),
     }
-    assert marriages == set(MarriageCustom)
+    assert {(item.form, item.side) for item in spousings} == {
+        (UnionForm.PAIR, PluralSide.EITHER),
+        (UnionForm.PLURAL, PluralSide.FIRST),
+        (UnionForm.PLURAL, PluralSide.SECOND),
+        (UnionForm.GROUP, PluralSide.EITHER),
+    }
 
 
 def test_funeral_rites_follow_land_knowledge_and_values() -> None:
@@ -251,16 +255,16 @@ def test_funeral_rites_follow_land_knowledge_and_values() -> None:
         funeral_of(None, {}, {ValueAxis.PIETY: 30}),
         funeral_of(None, {}, {}),
     }
-    assert found == set(FuneralCustom)
+    assert found == CULTURAL_FUNERALS
 
 
 def test_fantasy_kin_come_from_creature_traits_and_species() -> None:
     hive = kin_from(None, None, None, {CreatureTrait.HIVE_MIND}, nocturnal=False, height_rank=None)
     assert hive.plan is BodyPlan.INSECTOID and NaturalTrait.HIVE_MINDED in hive.traits and NaturalTrait.COLD_BLOODED in hive.traits
     stone = kin_from(BodyPlan.HUMANOID, SizeClass.LARGE, None, {CreatureTrait.STONESKIN}, nocturnal=True, height_rank=None)
-    assert stone.diet is FolkDiet.LITHOVORE and NaturalTrait.THICK_HIDE in stone.traits and NaturalTrait.DARK_SIGHT in stone.traits
+    assert stone.diet is Diet.MINERAL and NaturalTrait.THICK_HIDE in stone.traits and NaturalTrait.DARK_SIGHT in stone.traits
     giant = kin_from(BodyPlan.COLOSSAL, None, None, set(), nocturnal=False, height_rank=None)
-    assert giant == Kin(BodyPlan.COLOSSAL, SizeClass.COLOSSAL, FolkDiet.OMNIVORE, ())
+    assert giant == Kin(BodyPlan.COLOSSAL, SizeClass.COLOSSAL, Diet.OMNIVORE, ())
 
 
 def test_a_style_that_wins_is_kept_and_one_that_loses_takes_the_victors() -> None:
@@ -278,10 +282,10 @@ def test_a_style_that_wins_is_kept_and_one_that_loses_takes_the_victors() -> Non
 
 
 def test_refresh_honours_every_hold() -> None:
-    row = culture(locked=["aesthetic", "martial_style", "funeral_rite", "trade_language_id"], trade_language_id=5)
-    fresh = culture(aesthetic=Aesthetic.ORNATE, martial_style=MartialStyle.PHALANX, funeral_rite=FuneralCustom.CREMATION, trade_language_id=9, literacy=80)
+    row = culture(locked=["ornament", "martial_style", "funeral_rite", "trade_language_id"], trade_language_id=5)
+    fresh = culture(ornament=90, martial_style=MartialStyle.PHALANX, funeral_rite=FuneralCustom.CREMATION, trade_language_id=9, literacy=80)
     refresh_culture(RULES, row, fresh)
-    assert row.aesthetic is Aesthetic.AUSTERE
+    assert row.ornament == 15
     assert row.martial_style is MartialStyle.SHIELDWALL
     assert row.funeral_rite is FuneralCustom.BURIAL
     assert row.trade_language_id == 5
@@ -289,18 +293,31 @@ def test_refresh_honours_every_hold() -> None:
 
 
 def test_marriage_customs_limit_spouses_and_endogamy_blocks_foreign_matches() -> None:
-    one = kinship.Terms(1, MarriageCustom.POLYGYNY, endogamous=False)
-    assert kinship.may_wed_terms(RULES, (one, "male", 2), (kinship.Terms(1, MarriageCustom.POLYGYNY, endogamous=False), "female", 0))
+    first_plural = Spousing(UnionForm.PLURAL, PluralSide.FIRST)
+    one = kinship.Terms(1, first_plural, first="male", second="female")
+    assert kinship.may_wed_terms(RULES, (one, "male", 2), (one, "female", 0))
     assert not kinship.may_wed_terms(RULES, (one, "female", 1), (one, "male", 0))
-    mono = kinship.Terms(1, MarriageCustom.MONOGAMY, endogamous=False)
+    flipped = kinship.Terms(1, first_plural, first="female", second="male")
+    assert kinship.may_wed_terms(RULES, (flipped, "female", 2), (flipped, "male", 0))
+    mono = kinship.Terms(1, Spousing())
     assert not kinship.may_wed_terms(RULES, (mono, "male", 1), (mono, "female", 0))
-    closed = kinship.Terms(1, MarriageCustom.MONOGAMY, endogamous=True)
-    stranger = kinship.Terms(2, MarriageCustom.MONOGAMY, endogamous=False)
+    closed = kinship.Terms(1, Spousing(endogamy=PartnerScope.PEOPLE))
+    stranger = kinship.Terms(2, Spousing())
     assert not kinship.may_wed_terms(RULES, (closed, "male", 0), (stranger, "female", 0))
     assert kinship.match_bonus(RULES, stranger, mono) == RULES.customs.exogamy_match_bonus
-    limits = {custom: (kinship.spouse_limit(RULES, custom, "male"), kinship.spouse_limit(RULES, custom, "female")) for custom in MarriageCustom}
-    assert len(set(limits.values())) == len(MarriageCustom)
-    assert kinship.assimilation_factor(RULES, culture(endogamous=True)) < kinship.assimilation_factor(RULES, culture(endogamous=False))
+    customs = (
+        Spousing(),
+        first_plural,
+        Spousing(UnionForm.PLURAL, PluralSide.SECOND),
+        Spousing(UnionForm.GROUP),
+        Spousing(UnionForm.PLURAL, PluralSide.EITHER),
+    )
+    sided = [kinship.Terms(1, custom, first="male", second="female") for custom in customs]
+    limits = {(kinship.spouse_limit(RULES, terms, "male"), kinship.spouse_limit(RULES, terms, "female")) for terms in sided}
+    assert len(limits) == len(customs)
+    closed_custom = UnionCustomRow(people_entity_id=1, endogamy=PartnerScope.PEOPLE)
+    open_custom = UnionCustomRow(people_entity_id=1, endogamy=PartnerScope.NONE)
+    assert kinship.assimilation_factor(RULES, closed_custom) < kinship.assimilation_factor(RULES, open_custom)
 
 
 def test_urbanisation_moves_founding_growth_pull_and_classes() -> None:
@@ -321,11 +338,11 @@ def test_shared_trade_tongues_are_found_either_way() -> None:
 
 
 def test_taste_steers_the_pull_of_art() -> None:
-    assert aesthetic_fit(RULES, Aesthetic.MACABRE, ArtMedium.FRESCO) > 1.0
-    assert aesthetic_fit(RULES, Aesthetic.MACABRE, ArtMedium.DANCE) < 1.0
-    assert aesthetic_fit(RULES, None, ArtMedium.DANCE) == 1.0
-    message = taste_message(RULES, Aesthetic.MACABRE, ArtMedium.FRESCO, {})
-    assert message == {ValueAxis.DEATH.value: RULES.customs.aesthetic_message}
+    rich = VALUE_STYLE[ValueAxis.WEALTH]
+    assert style_fit(RULES, rich, ArtMode.FLAT_IMAGE) > 1.0
+    assert style_fit(RULES, VALUE_STYLE[ValueAxis.MARTIAL], ArtMode.MOVEMENT) < 1.0
+    assert style_fit(RULES, None, ArtMode.MOVEMENT) == 1.0
+    assert style_message(RULES, rich, ArtMode.FLAT_IMAGE, {}) == {ValueAxis.WEALTH.value: RULES.customs.aesthetic_message}
 
 
 async def test_heirs_follow_the_custom(realm: Realm) -> None:
@@ -335,10 +352,10 @@ async def test_heirs_follow_the_custom(realm: Realm) -> None:
     children = [middle, youngest, elder]
     assert kinship.heirs_by_custom(InheritanceCustom.PRIMOGENITURE, children) == [elder]
     assert kinship.heirs_by_custom(InheritanceCustom.ULTIMOGENITURE, children) == [youngest]
-    assert kinship.heirs_by_custom(InheritanceCustom.GAVELKIND, children) == [elder, middle, youngest]
+    assert kinship.heirs_by_custom(InheritanceCustom.EQUAL_SHARES, children) == [elder, middle, youngest]
     assert kinship.heirs_by_custom(InheritanceCustom.BY_MERIT, children) == [youngest]
     assert kinship.heirs_by_custom(InheritanceCustom.ELECTIVE, children) == [elder]
-    assert len(kinship.heirs_by_custom(InheritanceCustom.MATRILINEAL, children)) == 1
+    assert len(kinship.heirs_by_custom(InheritanceCustom.THROUGH_SECOND_LINE, children)) == 1
 
 
 async def test_profiles_are_derived_edited_held_and_released(realm: Realm) -> None:
@@ -369,7 +386,7 @@ async def test_profiles_are_derived_edited_held_and_released(realm: Realm) -> No
     assert biology_row.body_plan is BodyPlan.AVIAN and biology_row.traits == ["keen_senses", "winged"]
     assert culture_row.funeral_rite is FuneralCustom.CREMATION and culture_row.funeral_rite_id is not None
     profile = await session.get(TraditionProfileRow, culture_row.funeral_rite_id)
-    assert profile is not None and profile.kind is TraditionKind.FUNERAL_RITE
+    assert profile is not None and profile.kind is TraditionFunction.RITE_OF_PASSAGE and profile.stage is RiteStage.DEATH
     assert culture_row.martial_record[culture_row.martial_style.value] == [4, 1]
     assert {"body_plan", "traits", "diet"} <= set(biology_row.locked)
     assert {"funeral_rite", "martial_record", "urbanisation"} <= set(culture_row.locked)
@@ -390,10 +407,10 @@ async def test_a_people_is_founded_with_its_profile(realm: Realm) -> None:
         population=900,
         species_id=None,
         language_id=None,
-        values={"diet": "lithovore", "martial_style": "phalanx"},
+        values={"diet": "mineral", "martial_style": "phalanx"},
     )
     biology_row, culture_row = await control.profiles(ctx, founded)
-    assert biology_row.diet is FolkDiet.LITHOVORE and "diet" in biology_row.locked
+    assert biology_row.diet is Diet.MINERAL and "diet" in biology_row.locked
     assert culture_row.martial_style is MartialStyle.PHALANX
     assert culture_row.funeral_rite_id is not None
 

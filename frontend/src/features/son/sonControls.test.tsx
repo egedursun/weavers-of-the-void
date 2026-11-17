@@ -23,8 +23,8 @@ const RULES = ruleList({
   'death.sibling_rite_cost': 45,
   'death.sibling_descent_cost': 70,
   'death.sibling_bargain_cost': 60,
-  'death.scatter_bones_cost': 30,
-  'death.scatter_bones_devotion_loss': 35,
+  'death.hinder_return_cost': 30,
+  'death.hinder_return_devotion_loss': 35,
   'son_tools.outer_bargain_per_epoch': 1,
 })
 
@@ -59,7 +59,7 @@ describe('sibling schemes for a dead son', () => {
     expect(call.body).toEqual({ sibling_id: 7, kind: 'descent' })
   })
 
-  it('scatters the bones only after confirmation', async () => {
+  it('hinders the return only after confirmation', async () => {
     const dead = son(10, 'Orveth', { status: 'dead' })
     const { screen, server } = await renderScreen(
       <SiblingSchemes son={dead} />,
@@ -67,26 +67,26 @@ describe('sibling schemes for a dead son', () => {
         'GET /api/state': worldState({ creator: { essence: 100 } }),
         'GET /api/rules': RULES,
         'GET /api/sons': [{ son: son(7, 'Ithren') }, { son: dead }],
-        'POST /api/sons/{son_id}/scatter-bones': DONE,
+        'POST /api/sons/{son_id}/hinder-return': DONE,
       }
     )
     await screen.getByRole('combobox', { name: 'Sibling' }).click()
     await screen.getByRole('option', { name: /Ithren/ }).click()
-    await screen.getByRole('button', { name: 'Scatter their bones' }).click()
+    await screen.getByRole('button', { name: 'Hinder their return' }).click()
     expect(
-      server.callsTo('POST /api/sons/{son_id}/scatter-bones')
+      server.callsTo('POST /api/sons/{son_id}/hinder-return')
     ).toHaveLength(0)
     await screen
       .getByRole('alertdialog')
-      .getByRole('button', { name: 'Scatter them' })
+      .getByRole('button', { name: 'Hinder it' })
       .click()
     await expect
       .poll(
-        () => server.callsTo('POST /api/sons/{son_id}/scatter-bones').length
+        () => server.callsTo('POST /api/sons/{son_id}/hinder-return').length
       )
       .toBe(1)
     expect(
-      server.callsTo('POST /api/sons/{son_id}/scatter-bones')[0].body
+      server.callsTo('POST /api/sons/{son_id}/hinder-return')[0].body
     ).toEqual({ sibling_id: 7 })
   })
 })

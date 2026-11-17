@@ -57,7 +57,16 @@ VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
 BACKFILL_CAUSE = "fell long ago"
 PLAN_FIXUP = "body.species_plans"
 EXPOSED_ROLES = frozenset(
-    {MortalRole.EXPLORER, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CAPTAIN, MortalRole.HERO, MortalRole.OFFICER, MortalRole.PILOT}
+    {
+        MortalRole.EXPLORER,
+        MortalRole.WARRIOR,
+        MortalRole.SWORN_WARRIOR,
+        MortalRole.HUNTER,
+        MortalRole.CAPTAIN,
+        MortalRole.HERO,
+        MortalRole.OFFICER,
+        MortalRole.PILOT,
+    }
 )
 COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 HOT_BANDS = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})

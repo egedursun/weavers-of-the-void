@@ -1,5 +1,5 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 
 
 class HolyDayDetail(ApiModel):
@@ -23,7 +23,7 @@ class CalendarDetail(ApiModel):
 class SeasonTradition(ApiModel):
     id: int
     name: str
-    kind: TraditionKind
+    kind: TraditionFunction
     season_position: int | None
     calendar_id: int | None
     calendar_name: str | None

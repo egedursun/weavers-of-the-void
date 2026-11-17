@@ -99,15 +99,15 @@ class EngineKind(StrEnum):
     CURRENCY = "currency"
     ECLIPSE_PROPHECY = "eclipse_prophecy"
     COSMIC_TRAVEL_RESOURCE = "cosmic_travel_resource"
-    GOLEM = "golem"
+    ANIMATED_WORK = "animated_work"
     DOMESTICATED = "domesticated"
-    CHIMERA = "chimera"
+    MERGED_SPECIES = "merged_species"
     DESCENDED_SOUL = "descended_soul"
     MIRROR_BIRTH = "mirror_birth"
     APPRENTICE = "apprentice"
     COMET = "comet"
     ASCENSION_MYTH = "ascension_myth"
-    GOD_CORPSE = "god_corpse"
+    DEAD_GOD = "dead_god"
     GOD_SHADE = "god_shade"
     RESURRECTION_ORDER = "resurrection_order"
     GHOST_SHIP = "ghost_ship"
@@ -128,7 +128,7 @@ class MortalRole(StrEnum):
     RULER = "ruler"
     HERO = "hero"
     WARRIOR = "warrior"
-    KNIGHT = "knight"
+    SWORN_WARRIOR = "sworn_warrior"
     HUNTER = "hunter"
     CHOSEN = "chosen"
     SEER = "seer"
@@ -155,7 +155,7 @@ class MortalRole(StrEnum):
     EXECUTIVE = "executive"
 
 
-HERO_ROLES = frozenset({MortalRole.HERO, MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HUNTER, MortalRole.CHOSEN})
+HERO_ROLES = frozenset({MortalRole.HERO, MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HUNTER, MortalRole.CHOSEN})
 
 
 class EntityFlag(StrEnum):
@@ -179,7 +179,7 @@ class EntityFlag(StrEnum):
     PIONEER = "pioneer"
     GOLDEN_AGE = "golden_age"
     IMMORTAL = "immortal"
-    CHIMERA = "chimera"
+    MERGED_SPECIES = "merged_species"
     MUTATION = "mutation"
     MUTANT = "mutant"
     MUTATED = "mutated"
@@ -269,7 +269,7 @@ class EntityFlag(StrEnum):
     DISBANDED = "disbanded"
     ASSIMILATED = "assimilated"
     FORGOTTEN = "forgotten"
-    SWALLOWED = "swallowed"
+    LOST_IN_DISASTER = "lost_in_disaster"
 
 
 class ArchiveOverride(StrEnum):

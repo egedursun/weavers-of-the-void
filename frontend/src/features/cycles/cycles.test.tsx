@@ -188,15 +188,14 @@ describe('cycles, gifts, kin and bound labour', () => {
       ...EMPTY,
       node: KIN,
       kinship: {
-        descent: 'matrilineal',
-        residence: 'avunculocal',
+        descent: 'through_second_line',
+        residence: 'with_kin_of_the_first_line',
         descent_group: 'clan',
-        cousin_terms: 'parallel_as_siblings',
-        preference: 'cross_cousin',
-        payment: 'bride_service',
-        payment_value: 20,
-        levirate: true,
-        sororate: false,
+        kin_terms: 'bifurcate_merging',
+        adoption: 'heir',
+        first_side: 'female',
+        sibling_union_first: true,
+        sibling_union_second: false,
         locked: [],
       },
       reproduction: {
@@ -211,23 +210,31 @@ describe('cycles, gifts, kin and bound labour', () => {
     onApi('POST', '/api/actions/kinship:set', ACCEPTED_ACTION)
     const { screen } = await renderApp(<CyclesSection nodeId={60} />)
     await expect
-      .element(screen.getByText('Matrilineal, through the female line'))
+      .element(screen.getByText('Through the second line'))
       .toBeVisible()
     await expect
       .element(
         screen.getByText('Castes of workers, soldiers and breeders').first()
       )
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Set them' }).click()
+    await expect
+      .element(screen.getByText('Adopted as heirs').first())
+      .toBeVisible()
+    const set = screen.getByRole('button', { name: 'Set them' })
+    await expect.element(set).toHaveAttribute('aria-disabled', 'true')
+    await screen.getByRole('combobox', { name: 'Which side is first' }).click()
+    await screen.getByRole('option', { name: 'The male side is first' }).click()
+    await set.click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/kinship:set'))
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/kinship:set')[0].body).toEqual({
       people_id: 60,
       descent: 'bilateral',
-      residence: 'neolocal',
-      preference: 'none',
-      payment: 'none',
+      residence: 'new_household',
+      kin_terms: 'lineal',
+      adoption: 'foster',
+      first_side: 'male',
     })
   })
 
@@ -237,15 +244,18 @@ describe('cycles, gifts, kin and bound labour', () => {
       ...EMPTY,
       node: KIN,
       union: {
-        form: 'pair',
+        form: 'plural',
+        plural_side: 'second',
         purpose: 'alliance',
         residence: 'new_household',
         descent: 'through_first',
-        exchange: 'mutual',
+        exchange: 'service',
+        exchange_value: 15,
         arrangement: 'both_consent',
         dissolution: 'by_court',
         endogamy: 'none',
-        exogamy: 'house',
+        exogamy: 'moiety',
+        kin_match: 'cross_cousin',
         term_epochs: 0,
         locked: [],
       },
@@ -253,7 +263,24 @@ describe('cycles, gifts, kin and bound labour', () => {
     onApi('POST', '/api/actions/union:delete', ACCEPTED_ACTION)
     onApi('POST', '/api/actions/union:set', ACCEPTED_ACTION)
     const { screen } = await renderApp(<CyclesSection nodeId={60} />)
-    await expect.element(screen.getByText('Unions: two partners')).toBeVisible()
+    await expect
+      .element(screen.getByText('Several partners: the second side'))
+      .toBeVisible()
+    await expect
+      .element(
+        screen.getByText(
+          "The joining partner serves the other's family, worth 15"
+        )
+      )
+      .toBeVisible()
+    await expect
+      .element(
+        screen.getByText('Partners come from another half of the people')
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByText("A child of a parent's other-side sibling"))
+      .toBeVisible()
     await screen
       .getByRole('button', { name: 'Read anew from their ways' })
       .click()
@@ -266,6 +293,14 @@ describe('cycles, gifts, kin and bound labour', () => {
     await expect
       .poll(() => callsTo('POST', '/api/actions/union:set'))
       .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/union:set')[0].body).toMatchObject({
+      people_id: 60,
+      form: 'pair',
+      plural_side: 'either',
+      exchange: 'none',
+      exchange_value: 10,
+      kin_match: 'none',
+    })
   })
 
   it('shows the bonds of newcomers and the standing of the freed', async () => {

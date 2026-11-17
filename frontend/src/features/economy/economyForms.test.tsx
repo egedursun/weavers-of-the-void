@@ -23,6 +23,7 @@ const IRON = {
   label: 'Iron',
   family: 'metal',
   origin: 'catalog',
+  source: 'world',
   edited: false,
   hardness: 60,
   toughness: 55,
@@ -305,11 +306,19 @@ describe('economy forms', () => {
         debased_epoch: null,
         users: [32],
         held: false,
+        form: 'ledger',
+        backing: 'trust',
+        convertible: false,
+        issuer_kind: 'community',
       },
     ])
     const { screen } = await renderApp(<CurrencyCards worldId={WORLD} />)
+    await expect.element(screen.getByText(/^Ledger money of/)).toBeVisible()
     await expect
-      .element(screen.getByText(/a ledger with no metal, since epoch 12/))
+      .element(screen.getByText(/, a community, since epoch 12/))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Backed by trust alone'))
       .toBeVisible()
   })
 })

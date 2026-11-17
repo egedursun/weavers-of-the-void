@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -18,18 +19,23 @@ from aerona.engine.economy.resources import BYPRODUCTS, DIFFICULTY, RENEWABLE
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 
-ORIGIN_WORDS: dict[MaterialOrigin, str] = {
-    MaterialOrigin.GOD_REMAINS: "the blood and bones of a dead god",
-    MaterialOrigin.DEAD_STAR: "the fallen core of a dead star",
-    MaterialOrigin.BEAST: "the scales and bone of a slain great beast",
-    MaterialOrigin.LEAK_CRYSTAL: "a crystal grown in a wound of the leak",
-    MaterialOrigin.RESEARCH: "an alloy its smiths found at the height of their art",
-}
+ORIGIN_WORDS = total(
+    MaterialOrigin,
+    {
+        MaterialOrigin.CATALOG: "a known material of the world",
+        MaterialOrigin.DEAD_GOD: "a dead god",
+        MaterialOrigin.STAR: "a star that died",
+        MaterialOrigin.BEAST: "a great beast",
+        MaterialOrigin.RIFT: "a rift",
+        MaterialOrigin.RESEARCH: "a material its makers found through their work",
+        MaterialOrigin.GOD_GIFT: "a gift of a god",
+    },
+)
 ORIGIN_BASE: dict[MaterialOrigin, MaterialKind] = {
-    MaterialOrigin.GOD_REMAINS: MaterialKind.GODFLESH,
-    MaterialOrigin.DEAD_STAR: MaterialKind.STAR_METAL,
-    MaterialOrigin.BEAST: MaterialKind.DRAGONBONE,
-    MaterialOrigin.LEAK_CRYSTAL: MaterialKind.VOID_GLASS,
+    MaterialOrigin.DEAD_GOD: MaterialKind.GODFLESH,
+    MaterialOrigin.STAR: MaterialKind.STAR_METAL,
+    MaterialOrigin.BEAST: MaterialKind.GREAT_BONE,
+    MaterialOrigin.RIFT: MaterialKind.VOID_GLASS,
     MaterialOrigin.RESEARCH: MaterialKind.STEEL,
 }
 
@@ -141,7 +147,7 @@ async def new_substance(
 ) -> WorldMaterialRow:
     spread = ctx.rules.materials.world_material_spread
     rng = ctx.rng(f"substance.{origin.value}.{source_node_id or place.id}")
-    kind = base or ORIGIN_BASE[origin]
+    kind = base or ORIGIN_BASE.get(origin, FAMILY_BASE[MaterialFamily.EXOTIC])
     spec = MATERIALS[kind]
     values = {column: clamp_int(getattr(spec, column) + rng.die(2 * spread + 1) - spread - 1, 0, PERCENT) for column in PROPERTY_COLUMNS}
     row = WorldMaterialRow(

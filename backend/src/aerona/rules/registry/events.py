@@ -8,7 +8,7 @@ G = RuleGroup.FATE_AND_CHRONICLE
 
 @dataclass(frozen=True)
 class EventsRules:
-    event_power: int = rule(3, 1, 10, G, "Power of an event that rises from the life of the world (festival, wedding, riot…)")
+    event_power: int = rule(3, 1, 10, G, "Power of an event that rises from the life of the world")
     emergent_cap: int = rule(12, 0, 200, G, "Most events of one kind that rise from the world's life in one epoch")
     season_match_weight: int = rule(3, 1, 20, G, "How much likelier an event falls in a season that suits it (wet floods, dry fires) (times)")
     severity_neutral: int = rule(50, 1, 100, G, "Event severity at which per-phase harm is applied as written")

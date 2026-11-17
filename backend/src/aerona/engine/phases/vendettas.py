@@ -9,7 +9,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import DuelContext, FeudAction, FeudParty, FeudStatus
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
@@ -238,7 +238,7 @@ async def honour_duels(ctx: TickContext) -> int:
             continue
         if holder.status is not EntityStatus.CANON or frozen(holder_id, subject_id):
             continue
-        customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionKind.DUEL_CUSTOM)
+        customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionFunction.DUEL_CUSTOM)
         wrathful = TraitKind.WRATHFUL in await traits_of(ctx.session, holder.id)
         if not customary and not wrathful and (await values_for(ctx.session, holder.id)).get(ValueAxis.HONOUR, 0) <= 0:
             continue

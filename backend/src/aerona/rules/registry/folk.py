@@ -51,8 +51,8 @@ class BiologyRules:
 
 @dataclass(frozen=True)
 class CustomsRules:
-    polygyny_spouses: int = rule(3, 1, 20, G, "Wives a man may take where polygyny is the custom")
-    polyandry_spouses: int = rule(2, 1, 20, G, "Husbands a woman may take where polyandry is the custom")
+    plural_first_side_spouses: int = rule(3, 1, 20, G, "Spouses one of the first side may take where that side takes several")
+    plural_second_side_spouses: int = rule(2, 1, 20, G, "Spouses one of the second side may take where that side takes several")
     group_spouses: int = rule(4, 1, 20, G, "Spouses each partner may have in a group marriage")
     endogamy_assimilation_pct: int = rule(30, 0, 300, G, "Assimilation chance kept by a people that marries only its own (%)")
     exogamy_assimilation_pct: int = rule(150, 0, 300, G, "Assimilation chance of a people that marries outside itself (%)")
@@ -71,6 +71,9 @@ class CustomsRules:
     funeral_pct: int = rule(100, 0, 300, G, "How strongly a funeral rite changes spirits, mourning and the contagion of corpses (%)")
     aesthetic_fit_pct: int = rule(150, 100, 300, G, "Influence of an artwork whose medium the people's taste loves (%)")
     aesthetic_clash_pct: int = rule(70, 0, 100, G, "Influence of an artwork whose medium the people's taste shuns (%)")
+    style_fit_at: int = rule(15, 1, 100, G, "How far a medium must suit or clash with a people's style axes before its art is loved or shunned (hundredths)")
+    style_modes: int = rule(3, 1, 17, G, "Art forms a people comes to favour from its style axes")
+    motif_lean: int = rule(15, 0, 100, G, "How strongly what a people draws its motifs from leans how it pictures the Creator")
     aesthetic_message: int = rule(2, 0, 20, G, "Value pressure a people's taste adds to every artwork it admires")
     son_shape_essence: int = rule(20, 0, 10000, G, "Essence a son spends for each custom it sets for a people that worships it")
     son_shape_ap: int = rule(1, 1, 10, G, "Actions a son spends to shape a people's customs")

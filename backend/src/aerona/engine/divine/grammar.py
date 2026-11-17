@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from sqlalchemy import select
 
 from aerona.catalog.divine_grammar import FOREIGN_PRESETS, SCOPE_RANK, SON_PRESETS, VERB_SIGN, Grammar
+from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.concealment import HiddenTruthRow
@@ -18,12 +19,12 @@ from aerona.db.tables.powers import PowerSourceRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, DivineScope
+from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, DivineScope, DivineVerb
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis, ValueHolder
 from aerona.engine.context import TickContext
-from aerona.engine.divine.gods import domains_of, faithful_communities
+from aerona.engine.divine.gods import domains_of, faithful_communities, living_gods
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import pressures_of, stored_values, write_pressures, write_values
 from aerona.engine.mind.memories import remember
@@ -265,8 +266,29 @@ def preset_row(
     return row
 
 
+async def grant_by_worship(ctx: TickContext) -> int:
+    table = ctx.rules.divine_grammar
+    holding = set(await ctx.session.scalars(select(DivinePowerRow.holder_node_id)))
+    granted = 0
+    for god in await living_gods(ctx.session):
+        if god.id in holding or held(god.id):
+            continue
+        faithful = await faithful_communities(ctx.session, god.id)
+        if len(faithful) < table.grant_faithful:
+            continue
+        first = domains_of(god)[0]
+        row = DivinePowerRow(holder_node_id=god.id, name=f"{DOMAIN_LABELS[first]} of {god.name}", verb=DivineVerb.INSPIRE, object=DivineObject.VALUE)
+        row.object_key, row.scope, row.mode = ValueAxis.PIETY.value, DivineScope.COMMUNITY, DivineMode.PASSIVE
+        row.cost, row.cost_amount, row.cooldown, row.strength = DivineCost.ESSENCE, 0, 1, table.grant_strength
+        row.domains, row.granted_epoch, row.locked = [first.value], ctx.epoch, []
+        ctx.session.add(row)
+        granted += 1
+    return granted
+
+
 async def keep_powers(ctx: TickContext) -> None:
     ctx.count("divine_presets_carried", await carry_presets(ctx))
+    ctx.count("divine_powers_granted", await grant_by_worship(ctx))
     wielded = 0
     for row in list(await ctx.session.scalars(select(DivinePowerRow).order_by(DivinePowerRow.id))):
         if held(row.holder_node_id) or row.son_preset is not None or row.foreign_preset is not None or row.mode is DivineMode.ACTIVE:

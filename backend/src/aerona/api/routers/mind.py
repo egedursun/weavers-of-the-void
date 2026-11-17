@@ -58,6 +58,7 @@ from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, NEEDS, READING_LABEL
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
+from aerona.db.tables.culture_kinds import AimKindRow, FearKindRow, ReadingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import (
@@ -418,6 +419,8 @@ async def feelings_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Fee
         )
         griefs = list(await session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == node_id).order_by(GriefRow.started_epoch.desc())))
         dreams = list(await session.scalars(select(DreamRow).where(DreamRow.dreamer_node_id == node_id).order_by(DreamRow.epoch.desc(), DreamRow.id.desc())))
+        reading_ids = [row.reading_kind_id for row in dreams if row.reading_kind_id is not None]
+        reading_names = {row.id: row.name for row in await session.scalars(select(ReadingKindRow).where(ReadingKindRow.id.in_(reading_ids)))}
         wanted = [
             *(row.subject_node_id for row in thoughts),
             *(row.subject_node_id for row in formative),
@@ -488,6 +491,7 @@ async def feelings_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Fee
                     partner=refs.get(row.partner_node_id) if row.partner_node_id is not None else None,
                     world=refs.get(row.world_id) if row.world_id is not None else None,
                     reading=row.reading,
+                    reading_name=reading_names.get(row.reading_kind_id) if row.reading_kind_id is not None else None,
                     reader=refs.get(row.reader_node_id) if row.reader_node_id is not None else None,
                     reading_true=row.reading_true,
                     recurring=row.recurring,
@@ -583,6 +587,9 @@ async def aspirations_view(services: ServicesDep, node_id: int = Path(ge=1)) -> 
             list(await session.scalars(select(WantRow).where(WantRow.holder_node_id == node_id).order_by(WantRow.epoch.desc(), WantRow.id))) if applies else []
         )
         fears = list(await session.scalars(select(FearRow).where(FearRow.holder_node_id == node_id).order_by(FearRow.strength.desc()))) if applies else []
+        fear_ids = [row.fear_kind_id for row in fears if row.fear_kind_id is not None]
+        fear_names = {row.id: row.name for row in await session.scalars(select(FearKindRow).where(FearKindRow.id.in_(fear_ids)))}
+        aim = await session.get(AimKindRow, dream.aim_kind_id) if dream is not None and dream.aim_kind_id is not None else None
         sparks = (
             list(await session.scalars(select(InspirationRow).where(InspirationRow.holder_node_id == node_id).order_by(InspirationRow.started_epoch.desc())))
             if applies
@@ -607,7 +614,7 @@ async def aspirations_view(services: ServicesDep, node_id: int = Path(ge=1)) -> 
             locked=mind is not None and "aspirations" in (mind.locked or []),
             dream=LifeDreamView(
                 goal=dream.goal,
-                label=GOALS[dream.goal].label,
+                label=aim.name if aim is not None else GOALS[dream.goal].label,
                 target=refs.get(dream.target_node_id) if dream.target_node_id is not None else None,
                 milestones=[
                     MilestoneView(label=label, at=mark, reached=mark in dream.milestones)
@@ -637,7 +644,7 @@ async def aspirations_view(services: ServicesDep, node_id: int = Path(ge=1)) -> 
                 FearView(
                     id=row.id,
                     kind=row.kind,
-                    label=FEARS[row.kind].label,
+                    label=fear_names.get(row.fear_kind_id, FEARS[row.kind].label) if row.fear_kind_id is not None else FEARS[row.kind].label,
                     strength=row.strength,
                     target=refs.get(row.target_node_id) if row.target_node_id is not None else None,
                     since_epoch=row.since_epoch,

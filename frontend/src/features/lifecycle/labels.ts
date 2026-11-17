@@ -90,7 +90,7 @@ export const LIFE_CAUSES: Record<Schema['LifecycleCause'], Named> = {
 
 export const WORLD_ENDS: Record<Schema['WorldEnd'], Named> = {
   shattered: { label: 'Shattered', icon: Mountain, tone: 'danger' },
-  swallowed: { label: 'Swallowed', icon: Sun, tone: 'danger' },
+  consumed: { label: 'Consumed by its star', icon: Sun, tone: 'danger' },
   frozen_dead: { label: 'Frozen dead', icon: Snowflake, tone: 'info' },
   sunk_into_void: { label: 'Sunk into the void', icon: Orbit, tone: 'muted' },
   forgotten: { label: 'Forgotten', icon: Ghost, tone: 'muted' },

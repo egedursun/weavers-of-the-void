@@ -28,8 +28,7 @@ from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.constructs import CommandToken, ContractStatus, MindWill, OrderCondition, OrderKind
-from aerona.domain.enums.culture import ArtMedium, MagicSource
-from aerona.domain.enums.discovery import ArtDiscipline
+from aerona.domain.enums.culture import ArtMode, MagicSource
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -105,7 +104,7 @@ async def ruled_realm(session: AsyncSession, world: CoreWorld, town: EntityRow, 
 
 async def work(session: AsyncSession, world: CoreWorld, name: str, author: EntityRow, town: EntityRow, *, quality: int = 60) -> EntityRow:
     piece = await entity(session, name, EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id, location_id=town.id)
-    session.add(ArtworkProfileRow(artwork_entity_id=piece.id, medium=ArtMedium.FRESCO, author_entity_id=author.id, quality=quality, locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=piece.id, medium=ArtMode.FLAT_IMAGE, author_entity_id=author.id, quality=quality, locked=[]))
     await session.flush()
     return piece
 
@@ -497,7 +496,7 @@ async def test_works_in_a_canon_lend_their_art_form_prestige_unless_it_is_locked
     folk = await people_of(session, world, town)
     maker = await mortal(session, "Odette", world, town.id)
     form = await entity(session, "Ringing Verse", EntityType.ART_FORM, ArtFormStats(), world_id=world.world.id)
-    form_row = ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtDiscipline.POETRY, prestige=5, locked=[])
+    form_row = ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtMode.VERBAL, prestige=5, locked=[])
     session.add(form_row)
     pieces = [await work(session, world, name, maker, town) for name in ("First Verse", "Second Verse", "Third Verse")]
     for piece in pieces:

@@ -1,5 +1,5 @@
 from aerona.catalog.laws import law_terms_guide
-from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, TraditionKind
+from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, TraditionFunction
 from aerona.domain.enums.mind import ActKind
 from aerona.prompts.tools.ids import MortalToolId
 from aerona.prompts.tools.shared import IMAGE_PROMPT_FIELD, WORD_FIELDS
@@ -33,7 +33,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "workings": "What it does, at most 4 workings",
             "workings.effect": "The working: {{ rite_effects }}",
             "workings.magnitude": "Its strength, 1 to 100",
-            "workings.damage_type": "For destruction: fire, cold, void or another wound",
+            "workings.damage_type": "For destruction: the kind of harm it deals",
             "workings.summon_form": "For a summoning: spirit, beast or undead",
             "technique": "How the rite works: {{ spell_techniques }}; leave it out to use its school's usual technique",
             "form": "What the rite works on: {{ spell_forms }}; leave it out to use its school's usual form",
@@ -54,18 +54,16 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.SOCIALISE: ToolText(
-        "You spend time with another mortal where you are: talk, joke, comfort, flirt, court, argue, gift, ask a favour, confide, threaten and more. "
-        "It moves how each of you feels about the other. 1 action.",
+        "You spend time with another mortal where you are, in the way you choose. It moves how each of you feels about the other. 1 action.",
         {"target_id": "The mortal", "interaction": "What you do with them"},
     ),
     T.CHALLENGE_TO_CONTEST: ToolText(
-        "You challenge another mortal where you are to a contest of wit (riddles, flyting, debate, a game of skill, a trial of wisdom, song or storytelling) "
+        "You challenge another mortal where you are to a contest of wit (riddles, an exchange of insults, debate, a game of skill, a trial of wisdom, song or storytelling) "
         "for a stake. The winner gains renown; a famous contest may be remembered in art. 1 action.",
         {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
     ),
     T.CHOOSE_METHOD: ToolText(
-        "You choose how your community does one kind of work: how it farms, fishes, fells, mines, mills, makes cloth, smelts, tans, brews, distils, "
-        "dresses stone, burns charcoal, keeps food from spoiling, lights its evenings, butchers, makes cheese or presses fruit. A method needs its techniques, knowledge and energy; it changes output, "
+        "You choose how your community does one kind of work. A method needs its techniques, knowledge and energy; it changes output, "
         "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
         {"method": "The method to take up"},
     ),
@@ -291,7 +289,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.ACCUSE: ToolText(
-        "You accuse a mortal of your settlement of a crime (theft, murder, treason, blasphemy, desertion or witchcraft) and stand as a witness against them. "
+        "You accuse a mortal of your settlement of a crime and stand as a witness against them. "
         "The case is tried in a later epoch in the way the realm's penal code sets, and a true charge is easier to prove than a false one. 1 action.",
         {"accused_id": "Whom you accuse", "crime": "The crime you charge them with"},
     ),
@@ -398,9 +396,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         dict(WORD_FIELDS),
     ),
     T.PRODUCE_ITEM: ToolText(
-        "You produce an item from resources you own or that lie on your land: weapon, armour, shield, tool, jewellery, sacred relic. The resources' abundance decreases; "
+        "You produce an item from resources you own or that lie on your land. The resources' abundance decreases; "
         "quality depends on your craft and the resources' might. "
-        "A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
+        "A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }}. 1 action.",
         {
             "name": NAME_FIELD,
             "category": "weapon, armour, shield, tool, jewellery, sacred relic, instrument or book",
@@ -414,7 +412,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.BUILD_STRUCTURE: ToolText(
         "You build a structure of one of your world's structure kinds. It can be dedicated to a god."
-        " A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }} (smithing, carpentry, masonry and the like). 1 action.",
+        " A named mortal needs a craft skill of at least {{ rules.skills.tool_min_craft }}. 1 action.",
         {
             "name": NAME_FIELD,
             "structure_kind": "What it is and what it does: {{ structure_kinds }}",
@@ -442,7 +440,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "image_prompt": 'English image prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
             "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
-            "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionKind),
+            "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionFunction),
             "calendar_slot": "Only for a tradition kept at a set time: " + ", ".join(item.value for item in CalendarSlot),
             "taboo_target": "Only for a taboo: the good its keepers will not touch",
             "taboo_act": "Only for a taboo: the deed its keepers will not do: " + ", ".join(item.value for item in ActKind),
@@ -499,7 +497,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.DEVELOP_KNOWLEDGE: ToolText(
         "Your community develops a new piece of knowledge (a technology, craft, school or method). Branch: {{ knowledge_branches }}. If it is built on knowledge you already "
-        "have it is stronger. A named mortal needs a learned skill of at least {{ rules.skills.tool_min_lore }} (lore, writing, healing and the like). 1 action.",
+        "have it is stronger. A named mortal needs a learned skill of at least {{ rules.skills.tool_min_lore }}. 1 action.",
         {
             "name": NAME_FIELD,
             "branch": "The knowledge's branch",
@@ -614,18 +612,18 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"species_id": "The kind of the herd, from those your people keep", "training": "What you train it for"},
     ),
     T.MERGE_SPECIES: ToolText(
-        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.chimera_merge_distance }} steps), into a single chimera (requires "
-        "biomancy knowledge). The chimera carries the traits of both species; but it may get out of control. 1 action.",
+        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.species_merge_distance }} steps), into a single merged (requires "
+        "biomancy knowledge). The merged species carries the traits of both species; but it may get out of control. 1 action.",
         {"a_id": "The first species", "b_id": "The second species", "name": NAME_FIELD, "goal": "Why you make it"},
     ),
     T.BIND_SPIRIT: ToolText(
         "With magic you bind a free spirit in your own or a neighbouring region to an item, ship or monument there (requires magic knowledge). The item becomes ensouled; "
-        "bound to a monument, a golem is born. 1 action.",
+        "bound to a monument, the monument moves and acts. 1 action.",
         {"spirit_id": "The free spirit's id", "target_id": "The item, vessel or monument"},
     ),
     T.SEARCH_RUINS: ToolText(
         "You search a ruin, a remnant or the remains of a dead god on your land: you may find lost knowledge, an ownerless item, or bring a curse on yourself. 1 action.",
-        {"target_id": "The id of a place that is a ruin, remnant or god's corpse", "how": "How you search"},
+        {"target_id": "The id of a place that is a ruin, a remnant or where a god died", "how": "How you search"},
     ),
     T.SABOTAGE: ToolText(
         "You secretly harm a community: poison (population or life decreases), arson (prosperity, defence, wealth decrease) or discord (you break off one of its allies from "
@@ -710,12 +708,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "target_id": "The community or realm you offer it to",
             "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact or naval_limit",
-            "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "clauses": "Typed clauses with who owes, who gains and their terms by name, as each clause kind requires",
             "epochs": "How many ages it should hold",
             "clauses.kind": "The clause's kind",
             "clauses.obligor_id": "Who owes it",
             "clauses.beneficiary_id": "Who gains by it",
-            "clauses.params": "Its terms by name (amount, commodity, epochs, region_id, mortal_id...)",
+            "clauses.params": "Its terms by name, as the clause kind requires",
         },
     ),
     T.SWEAR_OATH: ToolText(
@@ -1272,10 +1270,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.DESIGN_LINE: ToolText(
-        "You make a living line by a way of living craft from organisms you can reach. Each trait you add makes the line less stable. 1 action.",
+        "You make a living line by a way of living craft from organisms you can reach. Each trait you add makes the line less stable. "
+        "A source with a written genome also carries what its own blood leans toward into the line. 1 action.",
         {
             "name": "Name of the line",
-            "method": "How: selective_breeding, cultivation, shaping, engineering, synthesis, binding, cloning, chimera or induction",
+            "method": "How: selective_breeding, cultivation, shaping, engineering, synthesis, binding, cloning, merging or induction",
             "source_ids": "The organisms it is made from",
             "traits": "Traits you aim for, each with a strength from -100 to 100",
             "traits.trait": "The trait: yield, hardiness, climate_tolerance, disease_resistance, strength, speed, size, regeneration, lifespan, docility, potency, fibre, venom, flight, aquatic, void_hardy, gift, nervous_system or sapience",
@@ -1401,10 +1400,169 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.FOUND_FACTION: ToolText(
         "You gather others in your town into a body of a kind you choose, and you lead it; you need some renown and a little wealth. 1 action.",
-        {"kind": "What kind of body: {{ foundable_factions }}"},
+        {"kind": "What kind of body; your people may found these unless their own ways say otherwise: {{ foundable_factions }}"},
     ),
     T.TAKE_CARE: ToolText(
         "You spend a little to take care this season, so the mishaps of daily life are less likely to befall you. 1 action.",
         {},
+    ),
+    T.INVENT_KIND: ToolText(
+        "You make a new kind of thing for your people, of a category its kind of thing allows, and give it a name and a description; "
+        "your people makes it, and it may pass to neighbours and trading partners. 1 action.",
+        {
+            "concept": "What kind of thing it is",
+            "category": "The category key it belongs to; each kind of thing has categories of its own",
+            "name": "Its name",
+            "description": "What it is, in a sentence or two",
+        },
+    ),
+    T.ADOPT_KIND: ToolText(
+        "Your people takes up a kind of thing that another people made or holds. 1 action.",
+        {"concept": "What kind of thing it is", "kind_id": "The kind to take up"},
+    ),
+    T.FORBID_KIND: ToolText(
+        "As ruler of a realm or head of a cult, you forbid a kind of thing to those you lead. 1 action.",
+        {"concept": "What kind of thing it is", "kind_id": "The kind to forbid"},
+    ),
+    T.TAKE_ARMS: ToolText(
+        "As head of a house, or ruler of a realm if you head no house, you choose the arms it bears: field, division, line, charges, rim, supporters and motto. 1 action.",
+        {
+            "field": "The main colour of the field",
+            "shape": "The shape of the shield",
+            "division": "How the field is divided",
+            "line": "The line of the division",
+            "second": "The second colour of a divided field",
+            "charge": "The figure set on the field",
+            "charge_tincture": "The colour of that figure",
+            "rim": "The border around the field",
+            "arrangement": "How several figures are set out",
+            "supporter": "The figure that holds up the arms",
+            "supporter_pose": "How the supporters stand",
+            "motto": "The words under the arms",
+        },
+    ),
+    T.RECKON_YEARS: ToolText(
+        "As ruler of a realm, you choose how its years are counted from now on. 1 action.",
+        {"kind": "How years are counted", "cycle_years": "Length of a cycle in years, for counts that run in cycles"},
+    ),
+    T.SPEAK_FOR_NORM: ToolText(
+        "You speak among your people for how a deed should be held in a given situation; the custom moves to what you ask. 1 action.",
+        {"situation": "The situation the custom covers", "behaviour": "The deed it judges", "stance": "How the deed should be held"},
+    ),
+    T.SET_ROLE_CUSTOM: ToolText(
+        "As ruler, you set your people's custom for who may hold a role and from what age. 1 action.",
+        {"role": "The role", "eligibility": "Who may hold it", "min_age": "The least age to hold it", "stance": "How taking it up is held"},
+    ),
+    T.READ_THE_SKY: ToolText(
+        "You read a body of your sky for your people; they come to hold that reading of it. 1 action.",
+        {"celestial_id": "The body in the sky", "reading": "What it is taken to mean"},
+    ),
+    T.SET_SPEECH: ToolText(
+        "As ruler, you name the tongue your people use for a register of speech. 1 action.",
+        {"speech": "Where the tongue is used", "language_id": "The tongue"},
+    ),
+    T.TEACH_TONGUE: ToolText(
+        "You teach a tongue in your town for one kind of use; more of the town come to use it so. 1 action.",
+        {"language_id": "The tongue", "kind": "The use it is taught for"},
+    ),
+    T.KEEP_LEGACY: ToolText(
+        "You keep among your people something of a people who came before: a way, a name or a belief they left. 1 action.",
+        {"predecessor_id": "The people who came before", "kind": "What is kept of them"},
+    ),
+    T.ASSIGN_CASTE: ToolText(
+        "As ruler, you set the caste of a mortal of your people. 1 action.",
+        {"mortal_id": "The mortal", "caste": "The caste"},
+    ),
+    T.PROCLAIM_AGE: ToolText(
+        "As ruler, you proclaim what age your realm lives in. 1 action.",
+        {"age": "The age proclaimed"},
+    ),
+    T.DRAW_BLUEPRINT: ToolText(
+        "You draw a design that others of your craft can build from. 1 action.",
+        {"kind": "What sort of design it is", "subject": "What it is a design of"},
+    ),
+    T.DEVISE_USE: ToolText(
+        "You devise a new way of keeping animals for a use, which herders can take up. 1 action.",
+        {"use": "What the animals are kept for", "name": "The name of this way", "description": "What this way is, in a sentence or two"},
+    ),
+    T.RAISE_MOVEMENT: ToolText(
+        "As leader of a faction, you turn it into a movement for a cause, or renew its cause; it gains support. 1 action.",
+        {"cause": "What the movement stands for"},
+    ),
+    T.CLAIM_COURTS: ToolText(
+        "As ruler, you claim a right of judgement over another realm. 1 action.",
+        {"realm_id": "The other realm", "claim": "The right you claim"},
+    ),
+    T.DRILL_TRAIT: ToolText(
+        "As commander of an army, you school yourself in a way of command. 1 action.",
+        {"trait": "The way of command"},
+    ),
+    T.FACE_FEAR: ToolText(
+        "You face one of your fears; it weakens, and may leave you. 1 action.",
+        {"fear_id": "The fear"},
+    ),
+    T.TAKE_UP_WANT: ToolText(
+        "You take up a want of your own, toward something or no one in particular. 1 action.",
+        {"kind": "What you want", "target_id": "What or whom the want is toward, if anything"},
+    ),
+    T.EASE_PRESSURE: ToolText(
+        "You ease one of the weights on your mind. 1 action.",
+        {"pressure": "The weight to ease"},
+    ),
+    T.TEACH_HONOUR: ToolText(
+        "As ruler, you teach your people a way of holding honour. 1 action.",
+        {"model": "The way honour is held"},
+    ),
+    T.RESIST_DRIFT: ToolText(
+        "You hold your town to its ways against one cause that moves them; that pull is halved. 1 action.",
+        {"cause": "The cause you resist"},
+    ),
+    T.MAN_STATION: ToolText(
+        "Aboard a vessel, you set how many hands work a station. 1 action.",
+        {"vessel_id": "The vessel", "station": "The station", "count": "How many hands"},
+    ),
+    T.TRIM_SAILS: ToolText(
+        "Aboard a vessel, you set its point of sail and the shot it loads. 1 action.",
+        {"vessel_id": "The vessel", "point_of_sail": "How it sails to the wind", "shot": "The shot it loads"},
+    ),
+    T.FOUND_CIRCLE: ToolText(
+        "As leader of a faction, you make it a circle of a given kind that meets in your town. 1 action.",
+        {"kind": "The kind of circle"},
+    ),
+    T.PRESS_DEMAND: ToolText(
+        "As one of noble birth, you press a demand on your ruler. 1 action.",
+        {"want": "What you demand"},
+    ),
+    T.SWEAR_FEALTY: ToolText(
+        "As ruler, you bind your realm to another as its subject. 1 action.",
+        {"overlord_id": "The realm you bind yourself to", "kind": "How your realm is bound"},
+    ),
+    T.SET_LEVY: ToolText(
+        "As ruler, you set a tax of your realm and its rate. 1 action.",
+        {"kind": "The tax", "rate": "Its rate, out of 100"},
+    ),
+    T.RUN_RACKET: ToolText(
+        "As leader of a faction, you run a racket in your town for steady income. 1 action.",
+        {"kind": "The racket"},
+    ),
+    T.REFIT_SECTION: ToolText(
+        "Aboard a vessel, you refit one of its sections to sound condition. 1 action.",
+        {"vessel_id": "The vessel", "section": "The section"},
+    ),
+    T.SHORE_UP: ToolText(
+        "You shore up a part of a building where you stand. 1 action.",
+        {"structure_id": "The building", "section": "The part"},
+    ),
+    T.REPLAN_LAND: ToolText(
+        "As ruler, you set what the land around your town is used for. 1 action.",
+        {"ring": "What the land is given over to"},
+    ),
+    T.TEND_MAIMED: ToolText(
+        "You help one person of your town who lives with a lasting harm back to work. 1 action.",
+        {"kind": "The harm"},
+    ),
+    T.DEVISE_CUSTOM: ToolText(
+        "You devise a new kind of technique, tenet, tradition, tale, item or working, built on one your world knows; the result names the bases you can build on if yours is not one. 1 action.",
+        {"catalog": "Which kind of thing it is", "base": "What it is built on", "name": "Its name", "description": "What it is, in a sentence or two"},
     ),
 }

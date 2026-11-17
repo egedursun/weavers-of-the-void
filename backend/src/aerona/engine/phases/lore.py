@@ -2,7 +2,14 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow, LanguageStandingRow, SpeakerCohortRow, TraditionParticipationRow
+from aerona.db.tables.culture import (
+    IdeologyAdherentRow,
+    IdeologyTenetRow,
+    LanguageStandingRow,
+    SpeakerCohortRow,
+    TraditionParticipationRow,
+    TraditionProfileRow,
+)
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -11,7 +18,7 @@ from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
-from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, SpeakerKind, TraditionKind
+from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, RiteStage, SpeakerKind, TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
@@ -51,17 +58,16 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat
 
-K = TraditionKind
+K = TraditionFunction
+STAGE_DEFIED_BY = {RiteStage.DEATH: LawKind.BURIAL_LAW, RiteStage.UNION: LawKind.MARRIAGE_LAW}
 DEFIED_BY = {
-    K.FUNERAL_RITE: LawKind.BURIAL_LAW,
-    K.MARRIAGE_RITE: LawKind.MARRIAGE_LAW,
     K.FESTIVAL: LawKind.SUMPTUARY,
     K.OFFERING: LawKind.WORSHIP_BAN,
     K.PILGRIMAGE: LawKind.WORSHIP_BAN,
-    K.ANCESTOR_FEAST: LawKind.WORSHIP_BAN,
+    K.ANCESTRAL_RITE: LawKind.WORSHIP_BAN,
     K.DUEL_CUSTOM: LawKind.PENAL_CODE,
-    K.SCAR_RITE: LawKind.PENAL_CODE,
-    K.HOSPITALITY_LAW: LawKind.FOREIGNER_RIGHTS,
+    K.BODY_MARKING: LawKind.PENAL_CODE,
+    K.HOSPITALITY: LawKind.FOREIGNER_RIGHTS,
 }
 HARD_SCRIPTS = frozenset({WritingSystem.PICTOGRAPHIC, WritingSystem.LOGOGRAPHIC, WritingSystem.KNOT, WritingSystem.NOTCH})
 SCRIBE_FLOOR = 30
@@ -348,13 +354,13 @@ async def legend_cycles(ctx: TickContext) -> None:
 
 
 CREED_DEFIES = {
-    IdeologyTenet.RATIONALISM: frozenset({K.OFFERING, K.PILGRIMAGE, K.ANCESTOR_FEAST, K.FAST}),
-    IdeologyTenet.ANTI_GOD: frozenset({K.OFFERING, K.PILGRIMAGE, K.FUNERAL_RITE}),
-    IdeologyTenet.EGALITARIANISM: frozenset({K.DUEL_CUSTOM, K.SCAR_RITE}),
-    IdeologyTenet.ASCETICISM: frozenset({K.FESTIVAL, K.ANCESTOR_FEAST}),
-    IdeologyTenet.COSMOPOLITANISM: frozenset({K.TABOO, K.HOSPITALITY_LAW}),
-    IdeologyTenet.CREATORISM: frozenset({K.ANCESTOR_FEAST, K.OFFERING}),
-    IdeologyTenet.RESTRAINT: frozenset({K.WAR_DANCE, K.DUEL_CUSTOM}),
+    IdeologyTenet.RATIONALISM: frozenset({K.OFFERING, K.PILGRIMAGE, K.ANCESTRAL_RITE, K.FAST}),
+    IdeologyTenet.ANTI_GOD: frozenset({K.OFFERING, K.PILGRIMAGE, K.RITE_OF_PASSAGE}),
+    IdeologyTenet.EGALITARIANISM: frozenset({K.DUEL_CUSTOM, K.BODY_MARKING}),
+    IdeologyTenet.ASCETICISM: frozenset({K.FESTIVAL, K.ANCESTRAL_RITE}),
+    IdeologyTenet.COSMOPOLITANISM: frozenset({K.TABOO, K.HOSPITALITY}),
+    IdeologyTenet.CREATORISM: frozenset({K.ANCESTRAL_RITE, K.OFFERING}),
+    IdeologyTenet.RESTRAINT: frozenset({K.MARTIAL_DISPLAY, K.DUEL_CUSTOM}),
 }
 
 
@@ -374,14 +380,16 @@ async def stir(ctx: TickContext, community: EntityRow, step: int) -> bool:
     return True
 
 
-async def defied(ctx: TickContext, laws: LawBook, tradition: EntityRow, kind: TraditionKind, community: EntityRow) -> bool:
-    law = DEFIED_BY.get(kind)
+async def defied(ctx: TickContext, laws: LawBook, tradition: EntityRow, kind: TraditionFunction, community: EntityRow) -> bool:
+    profile = await ctx.session.get(TraditionProfileRow, tradition.id)
+    stage = profile.stage if profile is not None else None
+    law = STAGE_DEFIED_BY.get(stage) if kind is K.RITE_OF_PASSAGE and stage is not None else DEFIED_BY.get(kind)
     if law is None or laws.in_force(community.id, law) is None:
         return False
     return await stir(ctx, community, resistance(ctx, tradition))
 
 
-async def resisted_creeds(ctx: TickContext, tradition: EntityRow, kind: TraditionKind, community: EntityRow) -> int:
+async def resisted_creeds(ctx: TickContext, tradition: EntityRow, kind: TraditionFunction, community: EntityRow) -> int:
     step = resistance(ctx, tradition)
     if not step:
         return 0

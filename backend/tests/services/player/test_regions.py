@@ -152,7 +152,7 @@ async def test_every_land_value_can_be_held_and_seams_take_world_materials(scope
     )
     session.add(material)
     await session.flush()
-    for field, value in (("soil", "salt"), ("farmed", 7), ("erosion", 9), ("temperature_band", "cold"), ("derived_fertility", 44), ("cleared", 3)):
+    for field, value in (("soil", "saline"), ("farmed", 7), ("erosion", 9), ("temperature_band", "cold"), ("derived_fertility", 44), ("cleared", 3)):
         await environment.set_region_environment(scope, environment.SetRegionEnvironment(region_id=world.region.id, field=field, value=value))
         assert field in ground.locked
     await environment.set_region_scar(scope, environment.SetScar(region_id=world.region.id, kind=ScarKind.CRATER, depth=40, lock=True))

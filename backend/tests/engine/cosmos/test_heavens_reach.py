@@ -205,7 +205,7 @@ async def test_a_banished_being_goes_home_and_a_bound_one_serves_its_binder(ctx:
     yonder = await make_world(ctx.session, "Yonder")
     yonder.dimension_id = plane.id
     await ctx.session.flush()
-    being = await control.call_being(ctx, BeingKind.VEIL_WARDEN, cosmos.home.id, region_id=None, home_dimension_id=plane.id, name=None)
+    being = await control.call_being(ctx, BeingKind.BOUNDARY_KEEPER, cosmos.home.id, region_id=None, home_dimension_id=plane.id, name=None)
     profile = await ctx.session.get(CosmicBeingProfileRow, being.id)
     assert profile is not None
     await send_home(ctx, being, profile)
@@ -221,7 +221,7 @@ async def test_armies_answer_an_incursion_and_worship_founds_a_cult(ctx: TickCon
     await ensure_ladder(ctx.session, ctx.rules)
     region = await make_region(ctx.session, "Breach", cosmos.home.id)
     army = await make_entity(ctx.session, "Home Guard", EntityType.ARMY, ArmyStats(size=100000), world_id=cosmos.home.id)
-    being = await control.call_being(ctx, BeingKind.COSMIC_TITAN, cosmos.home.id, region_id=region.id, home_dimension_id=None, name=None)
+    being = await control.call_being(ctx, BeingKind.SYSTEM_SCALE_BEING, cosmos.home.id, region_id=region.id, home_dimension_id=None, name=None)
     profile = await ctx.session.get(CosmicBeingProfileRow, being.id)
     assert profile is not None
     profile.phase = BeingPhase.INCURSION
@@ -241,7 +241,7 @@ async def test_an_echo_befriends_its_mortal_and_a_sovereign_takes_its_plane(sess
     ctx = tick(session, tuned(rules, "cosmic_beings", echo_replace_chance=0, befriend_chance=100, rule_chance=100))
     await ensure_ladder(session, ctx.rules)
     mortal = await make_entity(session, "Ilsa", EntityType.MORTAL, MortalStats(hp=10), world_id=cosmos.home.id)
-    echo = await control.call_being(ctx, BeingKind.ECHO, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
+    echo = await control.call_being(ctx, BeingKind.MIRRORED_DOUBLE, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
     profile = await session.get(CosmicBeingProfileRow, echo.id)
     assert profile is not None
     profile.mirrored_entity_id = mortal.id
@@ -249,7 +249,7 @@ async def test_an_echo_befriends_its_mortal_and_a_sovereign_takes_its_plane(sess
     await mirror(Scene(ctx, cosmography, echo, profile, cosmos.home, cosmography.place_world(cosmos.home), [], ctx.rng("echo")))
     assert await BondRepository(session).exists_between(mortal.id, echo.id, BondKind.COMPANION)
     plane = await create_dimension(session, ctx.rules, DimensionDraft("Throne Plane", DimensionKind.ELEMENTAL, ctx.epoch))
-    sovereign = await control.call_being(ctx, BeingKind.PLANE_SOVEREIGN, cosmos.home.id, region_id=None, home_dimension_id=plane.id, name=None)
+    sovereign = await control.call_being(ctx, BeingKind.DIMENSION_RULER, cosmos.home.id, region_id=None, home_dimension_id=plane.id, name=None)
     crowned = await session.get(CosmicBeingProfileRow, sovereign.id)
     assert crowned is not None
     assert await take_rule(ctx, await Cosmography.load(session), sovereign, crowned)
@@ -345,7 +345,7 @@ async def test_a_void_ark_needs_high_sky_lore_and_a_filament_lane_needs_a_filame
 
 async def test_unmaking_beings_are_a_doom_of_their_own(ctx: TickContext, cosmos: Cosmos) -> None:
     await ensure_ladder(ctx.session, ctx.rules)
-    being = await control.call_being(ctx, BeingKind.STAR_EATER, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
+    being = await control.call_being(ctx, BeingKind.STAR_FEEDER, cosmos.home.id, region_id=None, home_dimension_id=None, name=None)
     profile = await ctx.session.get(CosmicBeingProfileRow, being.id)
     assert profile is not None
     profile.phase, profile.agenda = BeingPhase.MANIFEST, BeingAgenda.UNMAKE

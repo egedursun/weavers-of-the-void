@@ -20,9 +20,9 @@ from aerona.engine.gods.devotion import (
     SchemeKind,
     awake_foreign_gods,
     can_afford_offering,
+    hinder_return,
     resurrection_rite,
     resurrection_state,
-    scatter_bones,
     scheme_cost,
     sibling_scheme,
     worships_node,
@@ -75,10 +75,10 @@ async def _sibling_moves(ctx: TickContext, son: SonRow, active: list[SonRow]) ->
                     kind = next((option for option in options if scheme_cost(ctx.rules, option) <= budget), None)
                     if kind is not None:
                         await sibling_scheme(ctx, sibling, son, kind)
-                elif relation <= -rules.auto_scatter_relation and sibling.essence >= rules.scatter_bones_cost:
+                elif relation <= -rules.auto_hinder_relation and sibling.essence >= rules.hinder_return_cost:
                     state = await resurrection_state(ctx.session, ctx.rules, son, ctx.epoch)
-                    if state is not None and state.devotion > 0 and rng.chance(rules.auto_scatter_chance):
-                        await scatter_bones(ctx, sibling, son)
+                    if state is not None and state.devotion > 0 and rng.chance(rules.auto_hinder_chance):
+                        await hinder_return(ctx, sibling, son)
         except AeronaError as error:
             logger.debug("Sibling move skipped for son %s: %s", sibling.id, error)
 

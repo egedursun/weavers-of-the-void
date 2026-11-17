@@ -12,19 +12,18 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import IdeaKind, IdeaSource, ThoughtKind
-from aerona.domain.enums.mortal import Ability, MarriageKind
+from aerona.domain.enums.mind import Attribute, IdeaKind, IdeaSource, ThoughtKind
 from aerona.domain.enums.relations import PassionKind, PassionSource
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.body.healing import mend
 from aerona.engine.mind.book import ensure_mind_row
 from aerona.engine.mind.ideas import Encounter, take_up
+from aerona.engine.mind.split import attributes_of, store_attributes, stored_attribute
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kinship import betroth, foster, marry
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress
-from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
-from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.relations.passions import kindle
 from aerona.engine.renown.book import acclaim
@@ -100,7 +99,7 @@ class BindInput(ToolInput):
 class TouchInput(ToolInput):
     mortal_id: int
     touch: Touch
-    ability: Ability | None = None
+    attribute: Attribute | None = None
     reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
@@ -122,7 +121,7 @@ async def bind_mortals(call: SonCall, args: BindInput) -> str:
     if args.binding is Binding.BETROTH:
         await betroth(call.session, first, second, call.epoch, description=args.reason)
     elif args.binding is Binding.WED:
-        await marry(call.session, first, second, call.epoch, kind=MarriageKind.POLITICAL, description=args.reason)
+        await marry(call.session, first, second, call.epoch, purpose=UnionPurpose.ALLIANCE, description=args.reason)
     elif args.binding is Binding.FOSTER:
         await foster(call.session, first.id, second.id, call.epoch, description=args.reason)
     else:
@@ -160,10 +159,10 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
     elif args.touch is Touch.HEAL_BODY:
         await mend(call.tick, mortal)
     else:
-        if args.ability is None:
+        if args.attribute is None:
             fail(SonResult.ABILITY_NEEDED)
-        key = args.ability.value
-        set_stats(mortal, **{key: clamp_int((stat_or(mortal, key, FULL // 2)) + tools.touch_amount, 0, FULL)})
+        raised = await stored_attribute(call.session, mortal, args.attribute) + tools.touch_amount
+        await store_attributes(call.session, mortal, {**await attributes_of(call.session, mortal.id), args.attribute: raised})
     call.target(mortal.id)
     await call.chronicle(
         ChronicleKind.INTRIGUE,

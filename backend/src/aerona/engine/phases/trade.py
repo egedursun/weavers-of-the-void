@@ -46,7 +46,7 @@ STRATEGIC_INPUTS: dict[CommodityKind, tuple[CommodityKind, ...]] = {
     CommodityKind.LIVESTOCK: (CommodityKind.MOUNTS,),
     CommodityKind.TIMBER: (CommodityKind.SIEGE_MATERIEL,),
 }
-STRATEGIC_MATERIALS = frozenset({MaterialKind.IRON, MaterialKind.STAR_METAL, MaterialKind.SKYSTEEL, MaterialKind.DRAGONBONE})
+STRATEGIC_MATERIALS = frozenset({MaterialKind.IRON, MaterialKind.STAR_METAL, MaterialKind.SKYSTEEL, MaterialKind.GREAT_BONE})
 
 
 TRADE_MODES = (MovementMode.ON_FOOT, MovementMode.WHEELED, MovementMode.BOAT)
@@ -316,8 +316,8 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
@@ -354,6 +354,7 @@ async def currency(ctx: TickContext) -> None:
     ctx.count("minted", tally.minted)
     ctx.count("adopted", tally.adopted)
     ctx.count("debased", tally.debased)
+    ctx.count("reformed", tally.reformed)
 
 
 async def impose_trade(ctx: TickContext, first_id: int, second_id: int) -> bool:

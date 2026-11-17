@@ -76,7 +76,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             True,
             _percent(("danger", "Danger"), ("fertility", "Fertility"), ("mystery", "Mystery")),
-            frozenset({EngineKind.GOD_CORPSE}),
+            frozenset({EngineKind.DEAD_GOD}),
         ),
         EntityTypeSpec(
             EntityType.RESOURCE,
@@ -122,7 +122,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("danger", "Danger"),
                 StatField("abundance", "Abundance"),
             ),
-            frozenset({EngineKind.GOLEM, EngineKind.CHIMERA, EngineKind.DOMESTICATED}),
+            frozenset({EngineKind.ANIMATED_WORK, EngineKind.MERGED_SPECIES, EngineKind.DOMESTICATED}),
         ),
         EntityTypeSpec(
             EntityType.PEOPLE,

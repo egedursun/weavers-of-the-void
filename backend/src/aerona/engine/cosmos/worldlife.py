@@ -187,7 +187,7 @@ async def regional_leak(ctx: TickContext) -> int:
     wounds = select(PhenomenonFootprintRow.region_entity_id, PhenomenonFootprintRow.intensity).join(
         PhenomenonProfileRow, PhenomenonProfileRow.entity_id == PhenomenonFootprintRow.phenomenon_entity_id
     )
-    for region_id, intensity in await ctx.session.execute(wounds.where(PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)):
+    for region_id, intensity in await ctx.session.execute(wounds.where(PhenomenonProfileRow.kind == PhenomenonKind.OUTSIDE_OPENING)):
         pressure[region_id] += intensity * ctx.rules.rifts.leak_pct // PERCENT
     for region_id, amount in (await programme_pressure(ctx.session, ctx.rules)).items():
         pressure[region_id] += amount

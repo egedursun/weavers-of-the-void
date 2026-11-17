@@ -6,7 +6,7 @@ from pydantic import Field
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import DamageType
-from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, RiteEffectKind, SummonForm
+from aerona.domain.enums.culture import ArtMode, IdeologyTenet, MagicSchool, MagicSource, RiteEffectKind, SummonForm
 from aerona.tools.framework.inputs import ToolInput
 
 Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
@@ -23,7 +23,7 @@ class WorkingInput(ToolInput):
 
 class CommissionInput(ToolInput):
     name: Name
-    medium: ArtMedium
+    medium: ArtMode
     subject_id: int | None = None
     author_id: int | None = None
     patron_id: int | None = None

@@ -3,22 +3,20 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
-from aerona.api.schemas.mortals import AbilityView, FamilyTreeView, KinLink, MarriageView, MortalProfileView, SlotView, TreePerson, VariantView
+from aerona.api.schemas.mortals import FamilyTreeView, KinLink, MarriageView, MortalProfileView, SlotView, TreePerson, VariantView
 from aerona.api.views.common import node_ref, node_refs
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.modifier import ModifierSource
-from aerona.domain.enums.mortal import Ability, EquipmentSlot, LifeStage, MortalSex
+from aerona.domain.enums.mortal import EquipmentSlot, LifeStage
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.mortal.equipment import SLOT_COLUMNS
 from aerona.engine.mortal.kinship import marriages_of
 from aerona.engine.mortal.life import sex_of_stats
-from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["mortals"])
 NO_MORTAL = "No such mortal."
@@ -33,13 +31,8 @@ async def mortal_row(session: AsyncSession, mortal_id: int) -> EntityRow:
     return found
 
 
-def sex_of(mortal: EntityRow) -> MortalSex:
+def sex_of(mortal: EntityRow) -> Sex:
     return sex_of_stats(mortal)
-
-
-async def pinned(session: AsyncSession, mortal_id: int) -> set[str]:
-    rows = await session.scalars(select(ModifierRow.target_key).where(ModifierRow.target_node_id == mortal_id, ModifierRow.source_kind == ModifierSource.PIN))
-    return set(rows)
 
 
 async def kin_links(session: AsyncSession, mortal_id: int) -> list[KinLink]:
@@ -74,7 +67,8 @@ async def marriage_views(session: AsyncSession, mortal_id: int) -> list[Marriage
             MarriageView(
                 id=row.id,
                 spouse=await node_ref(session, spouse_id),
-                kind=row.kind,
+                form=row.form,
+                purpose=row.purpose,
                 treaty=await node_ref(session, row.treaty_id),
                 start_epoch=row.start_epoch,
                 end_epoch=row.end_epoch,
@@ -102,15 +96,12 @@ async def mortal_profile(services: ServicesDep, mortal_id: int = Path(ge=1)) -> 
         rules = await world_rules(services, session)
         mortal = await mortal_row(session, mortal_id)
         profile = await session.get(MortalProfileRow, mortal_id) or MortalProfileRow(entity_id=mortal_id, locked=[], life_stage=LifeStage.ADULT)
-        pins = await pinned(session, mortal_id)
-        abilities = [AbilityView(ability=ability, value=stat(mortal, ability.value) or 0, held=ability.value in pins) for ability in Ability]
         ref = await node_ref(session, mortal_id)
         if ref is None:
             raise NotFoundError(NO_MORTAL)
         return MortalProfileView(
             mortal=ref,
             sex=sex_of(mortal),
-            abilities=abilities,
             life_stage=profile.life_stage or LifeStage.ADULT,
             fertility=profile.fertility or 0,
             health=profile.health if profile.health is not None else 100,

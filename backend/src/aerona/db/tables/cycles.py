@@ -4,26 +4,26 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.cycles import (
+    AdoptionKind,
     ChallengeKind,
     ChallengeResponse,
-    CousinTerms,
     CyclePhase,
     DescentGroup,
     GiftOccasion,
     GiftState,
     KinshipDescent,
+    KinTermSystem,
     LabourRegime,
     LegacyKind,
     LongPlanKind,
     LongPlanStatus,
     ManumissionPath,
-    MarriagePayment,
-    MarriagePreference,
     MobilityMode,
     ReproductiveCaste,
     ReproductiveSystem,
     ResidenceRule,
 )
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 NAME = 200
@@ -37,12 +37,11 @@ KINSHIP_FIELDS = (
     "descent",
     "residence",
     "descent_group",
-    "cousin_terms",
-    "preference",
-    "payment",
-    "payment_value",
-    "levirate",
-    "sororate",
+    "kin_terms",
+    "adoption",
+    "first_side",
+    "sibling_union_first",
+    "sibling_union_second",
 )
 ALLIANCE_FIELDS = ("marriages", "treaty_id")
 REPRODUCTION_FIELDS = ("system", "change_age", "breeder_pct", "soldier_pct", "worker_pct")
@@ -221,18 +220,18 @@ class DivineDebtRow(Base):
 
 class KinshipSystemRow(Base):
     __tablename__ = "kinship_systems"
-    __table_args__ = (at_least("payment_value", 0),)
 
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     descent: Mapped[KinshipDescent] = mapped_column(enum_type(KinshipDescent, "descent"), default=KinshipDescent.BILATERAL)
-    residence: Mapped[ResidenceRule] = mapped_column(enum_type(ResidenceRule, "residence"), default=ResidenceRule.NEOLOCAL)
+    residence: Mapped[ResidenceRule] = mapped_column(enum_type(ResidenceRule, "residence"), default=ResidenceRule.NEW_HOUSEHOLD)
     descent_group: Mapped[DescentGroup] = mapped_column(enum_type(DescentGroup, "descent_group"), default=DescentGroup.LINEAGE)
-    cousin_terms: Mapped[CousinTerms] = mapped_column(enum_type(CousinTerms, "cousin_terms"), default=CousinTerms.DISTINCT)
-    preference: Mapped[MarriagePreference] = mapped_column(enum_type(MarriagePreference, "preference"), default=MarriagePreference.NONE)
-    payment: Mapped[MarriagePayment] = mapped_column(enum_type(MarriagePayment, "payment"), default=MarriagePayment.NONE)
-    payment_value: Mapped[int] = mapped_column(default=10)
-    levirate: Mapped[bool] = mapped_column(default=False)
-    sororate: Mapped[bool] = mapped_column(default=False)
+    kin_terms: Mapped[KinTermSystem] = mapped_column(
+        "cousin_terms", enum_type(KinTermSystem, "cousin_terms"), default=KinTermSystem.LINEAL, server_default=KinTermSystem.LINEAL.value
+    )
+    first_side: Mapped[Sex] = mapped_column(enum_type(Sex, "first_side"), default=Sex.MALE, server_default=Sex.MALE.value)
+    adoption: Mapped[AdoptionKind] = mapped_column(enum_type(AdoptionKind, "adoption"), default=AdoptionKind.FOSTER, server_default=AdoptionKind.FOSTER.value)
+    sibling_union_first: Mapped[bool] = mapped_column(default=False)
+    sibling_union_second: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -4,10 +4,11 @@ from aerona.core.grammar import several
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import EquipmentFamily
+from aerona.domain.enums.kinds import IngredientRole
 from aerona.domain.enums.military import UnitKind
-from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.structure import StructureSection
 from aerona.domain.enums.vehicles import MountKind, VehicleSection
 from aerona.engine.cosmos.being_wounds import FORCE_MAX, strike
@@ -205,11 +206,20 @@ class IngredientDraft(Command):
     dish_id: int
     commodity: CommodityKind
     share: int = Field(default=50, ge=1, le=SPAN)
+    role: IngredientRole = IngredientRole.BASE
+    good_kind_id: int | None = None
 
 
 class IngredientTarget(Command):
     dish_id: int
     commodity: CommodityKind
+
+
+class StepDraft(Command):
+    dish_id: int
+    step: int = Field(default=1, ge=1, le=SPAN)
+    method: CookingMethod
+    duration: int = Field(default=1, ge=0, le=1000)
 
 
 class CookingDraft(Command):
@@ -230,7 +240,7 @@ class CookingEdit(Edited):
 
 class AttractionDraft(Command):
     mortal_id: int
-    drawn_to: list[MortalSex] | None = None
+    drawn_to: list[Sex] | None = None
     attraction: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 
@@ -507,7 +517,8 @@ async def dish_delete(scope: PlayerScope, command: RecordTarget) -> Effect:
 
 @player_action("dish_ingredient:set", ActionKind.EDIT_RECORD)
 async def dish_ingredient_set(scope: PlayerScope, command: IngredientDraft) -> Effect:
-    await cuisine.set_ingredient(await scope.context("dish_ingredient_set"), command.dish_id, command.commodity, command.share)
+    ctx = await scope.context("dish_ingredient_set")
+    await cuisine.set_ingredient(ctx, command.dish_id, command.commodity, command.share, role=command.role, good_kind_id=command.good_kind_id)
     return Effect("The ingredient is set so.")
 
 
@@ -515,6 +526,24 @@ async def dish_ingredient_set(scope: PlayerScope, command: IngredientDraft) -> E
 async def dish_ingredient_delete(scope: PlayerScope, command: IngredientTarget) -> Effect:
     await cuisine.remove_ingredient(await scope.context("dish_ingredient_delete"), command.dish_id, command.commodity)
     return Effect("The ingredient is left out.")
+
+
+@player_action("dish_step:set", ActionKind.EDIT_RECORD)
+async def dish_step_set(scope: PlayerScope, command: StepDraft) -> Effect:
+    row = await cuisine.set_step(await scope.context("dish_step_set"), command.dish_id, command.step, command.method, command.duration)
+    return Effect(f"Step {row.step} of the dish is set so.", created_ids=(row.id,))
+
+
+@player_action("dish_step:edit", ActionKind.EDIT_RECORD)
+async def dish_step_edit(scope: PlayerScope, command: RecordEdit) -> Effect:
+    await cuisine.edit_record(await scope.context("dish_step_edit"), "dish_step", command.record_id, command.values, command.release)
+    return Effect("The step is set so.")
+
+
+@player_action("dish_step:delete", ActionKind.EDIT_RECORD)
+async def dish_step_delete(scope: PlayerScope, command: RecordTarget) -> Effect:
+    await cuisine.remove_step(await scope.context("dish_step_delete"), command.record_id)
+    return Effect("The step is taken out of the dish.")
 
 
 @player_action("community_dish:set", ActionKind.EDIT_RECORD)

@@ -3,6 +3,7 @@ import { Eraser, Plus, RefreshCw, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -10,6 +11,7 @@ import {
   EmptyState,
   EntityLink,
   KpiTile,
+  Medallion,
   Paged,
   PagedList,
   Section,
@@ -19,6 +21,7 @@ import { SCHOOLS } from '@/features/entity/lore/model'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { named } from '../environment/labels'
 import {
   type Gene,
   type Genome,
@@ -30,8 +33,10 @@ import {
   useLineage,
 } from '../lineage/api'
 import {
+  BLOOD_EFFECTS,
   GIFT_ICON,
   GROUP_ICON,
+  HARMFUL_EFFECTS,
   LIKENESS_ICON,
   LINEAGE_ICON,
   LOOKS_ICON,
@@ -39,11 +44,11 @@ import {
   STANCE_TONE,
 } from '../lineage/labels'
 import { ControlPanel, ItemRow, MindCard, MindPicker } from '../mind/parts'
-import { sentence } from '../realm/labels'
+import { ATTRIBUTE_ICONS } from '../mind/splitLabels'
 
 const SPAN = 100
 const POTENTIAL = 'potential.'
-type Ability = components['schemas']['Ability']
+type Attribute = components['schemas']['Attribute']
 const WORKING = 'Working on it.'
 
 function why(blocked: string | null, ...pending: boolean[]): string | null {
@@ -87,6 +92,14 @@ function GeneEditor({
   })
   const busy = why(blocked, save.isPending)
   const table = alleleTable(locus)
+  const outcomes = [first, second]
+    .filter((key, index, keys) => keys.indexOf(key) === index)
+    .flatMap(
+      (key) =>
+        locus?.alleles
+          .find((allele) => allele.key === key)
+          ?.effects.map((effect) => `${table[key] ?? key}: ${effect}`) ?? []
+    )
   return (
     <div className='flex min-w-0 flex-col gap-3'>
       <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
@@ -105,6 +118,11 @@ function GeneEditor({
           onPick={setSecond}
         />
       </div>
+      <Muted variant='caption'>
+        {outcomes.length > 0
+          ? outcomes.join(' · ')
+          : 'Neither allele moves the body or mind on its own.'}
+      </Muted>
       <div className='flex justify-end'>
         <Button
           size='sm'
@@ -215,7 +233,10 @@ function GenomeCard({
           Object.keys(genome.potential).length > 0
             ? `Potential: ${Object.entries(genome.potential)
                 .sort(([first], [second]) => first.localeCompare(second))
-                .map(([ability, value]) => `${ability} ${value}`)
+                .map(
+                  ([key, value]) =>
+                    `${named(ATTRIBUTE_ICONS, key).label} ${value}`
+                )
                 .join(', ')}`
             : 'Held values stop the world from reading them anew'
         }
@@ -255,9 +276,9 @@ function GenomeCard({
                 title: 'Inborn potential',
                 fields: Object.entries(genome.potential)
                   .sort(([first], [second]) => first.localeCompare(second))
-                  .map(([ability, value]) => ({
-                    key: `${POTENTIAL}${ability}`,
-                    label: sentence(ability),
+                  .map(([key, value]) => ({
+                    key: `${POTENTIAL}${key}`,
+                    label: named(ATTRIBUTE_ICONS, key).label,
                     value,
                     min: 0,
                     max: SPAN,
@@ -272,7 +293,7 @@ function GenomeCard({
                         mortal_id: nodeId,
                         potential: {
                           [key.slice(POTENTIAL.length)]: value,
-                        } as Record<Ability, number>,
+                        } as Record<Attribute, number>,
                         clear_divine: false,
                         hold,
                       }
@@ -288,27 +309,48 @@ function GenomeCard({
           />
         }
       />
-      <Paged items={genome.genes} initial={8} noun={['locus', 'loci']}>
-        {(gene) => (
-          <ItemRow
-            key={gene.locus}
-            icon={GROUP_ICON[gene.group] ?? LINEAGE_ICON}
-            tone={gene.group === 'gift' ? 'verdigris' : 'gold'}
-            title={`${gene.label}: ${gene.shown_label}`}
-            meta={`${alleleTable(loci.get(gene.locus))[gene.first] ?? gene.first} and ${alleleTable(loci.get(gene.locus))[gene.second] ?? gene.second}`}
-            editLabel={`${gene.label} alleles`}
-            editor={
-              <GeneEditor
-                mortalId={nodeId}
-                gene={gene}
-                locus={loci.get(gene.locus)}
-                blocked={blocked}
-                hold={hold}
+      {geneGroups(genome.genes).map(({ group, label, genes }) => (
+        <div
+          key={group}
+          role='group'
+          aria-label={label}
+          className='flex min-w-0 flex-col gap-2'
+        >
+          <div className='flex min-w-0 items-center gap-2'>
+            <Medallion icon={GROUP_ICON[group]} tone='gold' size='sm' />
+            <Text variant='caption' weight='semibold'>
+              {label}
+            </Text>
+            <Badge variant='outline'>
+              {plural(genes.length, 'locus', 'loci')}
+            </Badge>
+          </div>
+          <Paged items={genes} initial={4} noun={['locus', 'loci']}>
+            {(gene) => (
+              <ItemRow
+                key={gene.locus}
+                icon={GROUP_ICON[gene.group]}
+                tone={gene.group === 'gift' ? 'verdigris' : 'gold'}
+                title={`${gene.label}: ${gene.shown_label}`}
+                meta={[
+                  `${alleleTable(loci.get(gene.locus))[gene.first] ?? gene.first} and ${alleleTable(loci.get(gene.locus))[gene.second] ?? gene.second}`,
+                  ...gene.effects,
+                ].join(' · ')}
+                editLabel={`${gene.label} alleles`}
+                editor={
+                  <GeneEditor
+                    mortalId={nodeId}
+                    gene={gene}
+                    locus={loci.get(gene.locus)}
+                    blocked={blocked}
+                    hold={hold}
+                  />
+                }
               />
-            }
-          />
-        )}
-      </Paged>
+            )}
+          </Paged>
+        </div>
+      ))}
       <div className='flex min-w-0 flex-wrap justify-end gap-2'>
         <Button
           size='sm'
@@ -330,6 +372,124 @@ function GenomeCard({
           <Eraser />
           Strike the genome
         </Button>
+      </div>
+    </MindCard>
+  )
+}
+
+function geneGroups(genes: Gene[]) {
+  const groups = new Map<
+    Gene['group'],
+    { group: Gene['group']; label: string; genes: Gene[] }
+  >()
+  for (const gene of genes) {
+    const found = groups.get(gene.group) ?? {
+      group: gene.group,
+      label: gene.group_label,
+      genes: [],
+    }
+    found.genes.push(gene)
+    groups.set(gene.group, found)
+  }
+  return [...groups.values()]
+}
+
+function signedAmount(amount: number, perEpoch: boolean) {
+  const sign = amount > 0 ? '+' : ''
+  return perEpoch ? `${sign}${amount} health each epoch` : `${sign}${amount}%`
+}
+
+function BloodCard({ genome }: { genome: Genome }) {
+  return (
+    <MindCard
+      title='What the blood does'
+      icon={LINEAGE_ICON}
+      hint='Loci lean the body, the senses, the temper and the aptitudes of a mortal; the leanings below are what this blood adds up to, what it carries hidden and the traits it tends toward.'
+    >
+      <div className='flex min-w-0 flex-col gap-2'>
+        <Text variant='caption' weight='semibold'>
+          Leanings of the blood
+        </Text>
+        {genome.blood_effects.length === 0 ? (
+          <Muted variant='caption'>
+            This blood leans neither way on health, children, healing, strain or
+            climate.
+          </Muted>
+        ) : (
+          <PagedList
+            items={genome.blood_effects}
+            initial={6}
+            noun={['leaning', 'leanings']}
+            as='div'
+            className='flex min-w-0 flex-col gap-2'
+            itemKey={(item) => item.effect}
+          >
+            {(item) => {
+              const spec = BLOOD_EFFECTS[item.effect]
+              const worse = HARMFUL_EFFECTS.has(item.effect)
+                ? item.amount > 0
+                : item.amount < 0
+              return (
+                <ItemRow
+                  icon={spec.icon}
+                  tone={worse ? 'danger' : 'success'}
+                  title={`${spec.label}: ${signedAmount(item.amount, item.per_epoch)}`}
+                  meta={item.label}
+                />
+              )
+            }}
+          </PagedList>
+        )}
+      </div>
+      <div className='flex min-w-0 flex-col gap-2'>
+        <Text variant='caption' weight='semibold'>
+          Traits the blood tends toward
+        </Text>
+        {genome.tied_traits.length === 0 ? (
+          <Muted variant='caption'>
+            No locus here leans strongly enough to shape a trait.
+          </Muted>
+        ) : (
+          <PagedList
+            items={genome.tied_traits}
+            initial={8}
+            noun={['trait', 'traits']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(item) => `${item.locus}-${item.trait}`}
+          >
+            {(item) => (
+              <Badge variant={item.held ? 'default' : 'outline'}>
+                {`${item.trait_label} · ${item.locus_label}${item.held ? '' : ' · not taken'}`}
+              </Badge>
+            )}
+          </PagedList>
+        )}
+      </div>
+      <div className='flex min-w-0 flex-col gap-2'>
+        <Text variant='caption' weight='semibold'>
+          Carried, unseen, to children
+        </Text>
+        {genome.carried.length === 0 ? (
+          <Muted variant='caption'>
+            Every allele this blood carries also shows.
+          </Muted>
+        ) : (
+          <PagedList
+            items={genome.carried}
+            initial={8}
+            noun={['allele', 'alleles']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(item) => `${item.locus}-${item.allele}`}
+          >
+            {(item) => (
+              <Badge variant={item.harmful ? 'destructive' : 'secondary'}>
+                {`${item.locus_label}: ${item.allele_label}`}
+              </Badge>
+            )}
+          </PagedList>
+        )}
       </div>
     </MindCard>
   )
@@ -781,6 +941,7 @@ export function LineageSection({ nodeId }: { nodeId: number }) {
                   hold={hold}
                 />
                 <GiftsCard genome={view.genome} />
+                <BloodCard genome={view.genome} />
               </>
             ) : (
               <MindCard

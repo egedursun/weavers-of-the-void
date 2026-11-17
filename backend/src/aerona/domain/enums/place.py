@@ -26,7 +26,7 @@ class PlaceKind(StrEnum):
     LAIR = "lair"
     NEXUS = "nexus"
     SHRINE_SITE = "shrine_site"
-    GOD_CORPSE = "god_corpse"
+    DEAD_GOD_SITE = "dead_god_site"
     MINE_SITE = "mine_site"
     HARBOUR_SITE = "harbour_site"
     CROSSROADS = "crossroads"

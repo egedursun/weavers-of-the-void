@@ -37,9 +37,11 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import SayingKind
+from aerona.domain.enums.kinds import KindSpread
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import EntityDepth, Epic, EpicChapter, GodDepth, GodName, Personality, Saying
 from aerona.engine.cosmos.foreign_gods import clean_existence, clean_powers, unwrap_text
+from aerona.engine.kinds.genesis import KIND_MAKERS, KindSeed, found_kinds
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.blocks import FolkBeliefLine
@@ -163,6 +165,9 @@ async def deepen_entity(runtime: AgentRuntime, entity_id: int) -> EntityDepth:
         epoch = (await load_scope(session, rules)).epoch
         depth = normalize_depth(output, epoch, old_name, entity.name)
         entity.depth = depth
+        if entity.entity_type in KIND_MAKERS:
+            seeds = [KindSeed(item.concept, item.category, item.name, item.description) for item in output.kinds]
+            await found_kinds(session, rules, seeds, holder_id=entity.id, world_id=entity.world_id, epoch=epoch, spread=KindSpread.INVENTED)
     runtime.publish(EventKind.ENTITY_DEEPENED, {"entity_id": entity_id, "name": entity.name})
     return depth
 

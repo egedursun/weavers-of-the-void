@@ -9,7 +9,7 @@ from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
-from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
@@ -152,7 +152,7 @@ async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
     )
     planted = {(row.region_entity_id, row.species_entity_id) for row in await ctx.session.scalars(select(PerennialRow))}
     yields: dict[int, set[CommodityKind]] = defaultdict(set)
-    for species_id, commodity in await ctx.session.execute(select(SpeciesYieldRow.species_entity_id, SpeciesYieldRow.commodity)):
+    for species_id, commodity in await ctx.session.execute(select(SpeciesProductRow.species_entity_id, SpeciesProductRow.commodity)):
         if commodity is not None:
             yields[species_id].add(commodity)
     for region_id, plant_id in crops.all():

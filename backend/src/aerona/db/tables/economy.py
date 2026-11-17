@@ -6,12 +6,15 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.economy import (
     CommodityKind,
+    CurrencyIssuer,
     ExtractionKind,
     GoodsFlow,
     LoanStatus,
     MaterialFamily,
     MaterialOrigin,
     MaterialSlot,
+    MoneyBacking,
+    MoneyForm,
     TradeLoss,
     TradeMode,
     TradeRouteStatus,
@@ -372,6 +375,12 @@ class CurrencyRow(Base):
     minted_epoch: Mapped[int]
     debased_epoch: Mapped[int | None]
     held: Mapped[bool] = mapped_column(default=False)
+    form: Mapped[MoneyForm] = mapped_column(enum_type(MoneyForm, "form"), default=MoneyForm.COIN, server_default=MoneyForm.COIN.value)
+    backing: Mapped[MoneyBacking] = mapped_column(enum_type(MoneyBacking, "backing"), default=MoneyBacking.METAL, server_default=MoneyBacking.METAL.value)
+    convertible: Mapped[bool] = mapped_column(default=True, server_default="1")
+    issuer_kind: Mapped[CurrencyIssuer] = mapped_column(
+        enum_type(CurrencyIssuer, "issuer_kind"), default=CurrencyIssuer.COMMUNITY, server_default=CurrencyIssuer.COMMUNITY.value
+    )
 
 
 class LoanRow(Base):

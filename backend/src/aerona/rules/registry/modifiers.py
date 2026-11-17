@@ -78,8 +78,8 @@ class ModifiersRules:
     weather_morale_pct: int = rule(
         50, 0, 200, RuleGroup.INTERCONNECTION, "How strongly the weather over an army moves its morale (% of the weather's morale, cold and heat)"
     )
-    god_corpse_magic: int = rule(10, 0, 100, RuleGroup.INTERCONNECTION, "Magic a god's corpse lends the region it lies in")
-    god_corpse_fertility: int = rule(5, 0, 100, RuleGroup.INTERCONNECTION, "Fertility a god's corpse lends the region it lies in")
+    god_corpse_magic: int = rule(10, 0, 100, RuleGroup.INTERCONNECTION, "Magic a dead god's body lends the region it lies in")
+    god_corpse_fertility: int = rule(5, 0, 100, RuleGroup.INTERCONNECTION, "Fertility a dead god's body lends the region it lies in")
     phenomenon_epochs: int = rule(1, 0, 20, RuleGroup.INTERCONNECTION, "Epochs a magic storm keeps weighing on its region after it broke")
     phenomenon_region_magic: int = rule(6, 0, 100, RuleGroup.INTERCONNECTION, "Magic a recent magic storm leaves in its region")
     phenomenon_prosperity: int = rule(4, 0, 100, RuleGroup.INTERCONNECTION, "Prosperity a recent magic storm takes from communities in its region")

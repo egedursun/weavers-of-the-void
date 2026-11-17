@@ -22,6 +22,7 @@ import { FortuneSection } from '@/features/fortune/FortuneSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { HonoursSection } from '@/features/honours/HonoursSection'
+import { WaysOfLifeSection } from '@/features/kinds/WaysOfLifeSection'
 import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
 import { FossilSection } from '@/features/lifecycle/FossilSection'
 import { GroundsSection } from '@/features/lifecycle/GroundsSection'
@@ -108,6 +109,7 @@ export function ThingSections({
         <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+        <WaysOfLifeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <RecordRowsSection nodeId={nodeId} />
       </>
     )
@@ -134,6 +136,7 @@ export function ThingSections({
       <DivinePowersSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <CreatorBondsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <PantheonSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <WaysOfLifeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <TypedModelsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <SourceTrustSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <GodCouncilSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

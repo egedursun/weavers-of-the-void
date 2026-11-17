@@ -86,8 +86,14 @@ class DomesticationRules:
     labour_head: int = rule(200, 1, 100000, G, "Head of draught beasts that make a full herd")
     guard_pct: int = rule(40, 0, 100, G, "Share of a raid guard beasts fend off (%)")
     companion_calm: int = rule(1, 0, 100, G, "Unrest companion beasts ease in their town each epoch")
-    sacred_per_head: int = rule(1, 0, 100, G, "Sacred goods a sacrificial herd yields for every ten head")
-    reagents_per_head: int = rule(1, 0, 100, G, "Magic reagents a magical herd yields for every ten head")
+    sacred_per_head: int = rule(1, 0, 100, G, "Sacred goods a herd kept for rites yields for every ten head")
+    reagents_per_head: int = rule(1, 0, 100, G, "Reagents a herd kept as a source of reagents yields for every ten head")
+    dairy_per_head: int = rule(1, 0, 100, G, "Milk a herd kept for dairy yields for every ten head")
+    fibre_per_head: int = rule(1, 0, 100, G, "Wool or other fibre a herd kept for fibre yields for every ten head")
+    hunting_per_head: int = rule(1, 0, 100, G, "Meat beasts kept for the hunt bring in for every ten head")
+    messenger_prosperity: int = rule(1, 0, 100, G, "Prosperity a town gains each epoch from beasts that carry its messages")
+    entertainment_calm: int = rule(1, 0, 100, G, "Unrest beasts kept to entertain ease in their town each epoch")
+    sensing_pct: int = rule(20, 0, 100, G, "Share of a raid that beasts kept to sense danger warn of in time (%)")
     size_drift_chance: int = rule(30, 0, 100, G, "A domesticated kind bred for no particular task drifts a size up or down (%)")
 
 

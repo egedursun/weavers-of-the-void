@@ -319,3 +319,13 @@ async def written_code(session: AsyncSession, holder_ids: list[int]) -> bool:
         if await holders_know(session, holder_ids, technique):
             return True
     return False
+
+
+async def realm_holders(session: AsyncSession, polity_id: int) -> list[int]:
+    profile = await session.get(PolityProfileRow, polity_id)
+    seats = [profile.core_entity_id, profile.capital_entity_id] if profile is not None else []
+    return [polity_id, *sorted({seat for seat in seats if seat is not None and seat != polity_id})]
+
+
+async def realm_code(session: AsyncSession, polity_id: int) -> bool:
+    return await written_code(session, await realm_holders(session, polity_id))

@@ -56,12 +56,12 @@ class MaterialFamily(StrEnum):
 
 class MaterialOrigin(StrEnum):
     CATALOG = "catalog"
-    GOD_REMAINS = "god_remains"
-    DEAD_STAR = "dead_star"
+    DEAD_GOD = "dead_god"
+    STAR = "star"
     BEAST = "beast"
-    LEAK_CRYSTAL = "leak_crystal"
+    RIFT = "rift"
     RESEARCH = "research"
-    DIVINE = "divine"
+    GOD_GIFT = "god_gift"
 
 
 class FoeNature(StrEnum):
@@ -191,3 +191,33 @@ class GoodsFlow(StrEnum):
 
 
 GOODS_SOURCES = frozenset({GoodsFlow.EXTRACTION, GoodsFlow.HARVEST, GoodsFlow.PRODUCTION, GoodsFlow.SEED})
+
+
+class MoneyForm(StrEnum):
+    COIN = "coin"
+    COMMODITY = "commodity"
+    TOKEN = "token"
+    PAPER = "paper"
+    LEDGER = "ledger"
+    NETWORK = "network"
+    REPUTATION = "reputation"
+    ENERGY = "energy"
+    ESSENCE_BACKED = "essence_backed"
+    LABOUR_HOURS = "labour_hours"
+    GIFT_TALLY = "gift_tally"
+
+
+class MoneyBacking(StrEnum):
+    METAL = "metal"
+    COMMODITY = "commodity"
+    DECREE = "decree"
+    TRUST = "trust"
+    SOURCE = "source"
+
+
+class CurrencyIssuer(StrEnum):
+    COMMUNITY = "community"
+    POLITY = "polity"
+    BANK = "bank"
+    TEMPLE = "temple"
+    COMPANY = "company"

@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import CONDITION_TRAITS, DIVINE_TRAITS, FAMILY_LIMIT, TRAIT_FAMILY, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis
 from aerona.engine.context import TickContext
+from aerona.engine.genetics.genome import tied_traits
 from aerona.engine.mind.book import add_trait, locked_for, traits_of
 from aerona.engine.mortal.kin import parents_of
 from aerona.rules.registry import Rules
@@ -55,6 +57,15 @@ async def seed_traits(
         return 0
     added = 0
     if not divine:
+        genome = await session.get(GenomeRow, node_id)
+        for _locus, trait in tied_traits(genome.genes) if genome is not None else []:
+            if (
+                added < table.max_traits
+                and rng.chance(rules.genetics.gene_trait_pct)
+                and trait in open_choices([trait], await traits_of(session, node_id))
+                and await add_trait(session, node_id, trait, TraitSource.INHERITED, epoch)
+            ):
+                added += 1
         for parent, trait in await parent_traits(session, node_id):
             if (
                 added < table.max_traits

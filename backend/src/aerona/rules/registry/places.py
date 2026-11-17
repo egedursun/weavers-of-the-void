@@ -8,7 +8,7 @@ G = RuleGroup.EXPLORATION
 
 @dataclass(frozen=True)
 class PlacesRules:
-    sacred_holy_base: int = rule(60, 0, 100, G, "Sacredness a holy kind of place (shrine site, nexus, god corpse, burial ground) tends toward")
+    sacred_holy_base: int = rule(60, 0, 100, G, "Sacredness a holy kind of place (shrine site, nexus, place where a god died, burial ground) tends toward")
     sacred_notable_base: int = rule(25, 0, 100, G, "Sacredness a notable kind of place (spring, grove, peak, well, volcano) tends toward")
     sacred_profane_base: int = rule(0, 0, 100, G, "Sacredness an ordinary kind of place tends toward")
     sacred_per_temple: int = rule(15, 0, 100, G, "Sacredness each standing temple at a place adds")

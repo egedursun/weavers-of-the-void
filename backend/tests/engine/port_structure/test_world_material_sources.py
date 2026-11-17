@@ -27,12 +27,12 @@ async def godflesh_at(session: AsyncSession, place_id: int) -> list[int]:
 
 async def test_a_dead_gods_remains_open_one_godflesh_seam_and_a_substance_of_their_own(session: AsyncSession, world: CoreWorld) -> None:
     corpse = await entity(session, "Fallen Height", EntityType.PLACE, PlaceStats(), world_id=world.world.id, location_id=world.regions[0].id)
-    corpse.engine_kind = EngineKind.GOD_CORPSE
+    corpse.engine_kind = EngineKind.DEAD_GOD
     await session.flush()
     await world_materials(await manual_context(session, "materials", rules=CERTAIN))
     assert len(await godflesh_at(session, corpse.id)) == 1
     origins = list(await session.scalars(select(WorldMaterialRow.origin).where(WorldMaterialRow.world_id == world.world.id)))
-    assert MaterialOrigin.GOD_REMAINS in origins
+    assert MaterialOrigin.DEAD_GOD in origins
     await world_materials(await manual_context(session, "materials", rules=CERTAIN))
     assert len(await godflesh_at(session, corpse.id)) == 1
 
@@ -49,10 +49,10 @@ async def test_a_dead_star_lets_its_core_fall_on_a_region_of_its_world(session: 
     star.star_type = StarType.DEAD_STAR
     await session.flush()
     await world_materials(await manual_context(session, "materials", rules=CERTAIN))
-    fallen = await session.scalar(select(WorldMaterialRow).where(WorldMaterialRow.origin == MaterialOrigin.DEAD_STAR))
+    fallen = await session.scalar(select(WorldMaterialRow).where(WorldMaterialRow.origin == MaterialOrigin.STAR))
     assert fallen is not None and fallen.world_id == world.world.id
 
 
 async def test_a_living_star_drops_nothing(session: AsyncSession, world: CoreWorld) -> None:
     await world_materials(await manual_context(session, "materials", rules=CERTAIN))
-    assert await session.scalar(select(WorldMaterialRow).where(WorldMaterialRow.origin == MaterialOrigin.DEAD_STAR)) is None
+    assert await session.scalar(select(WorldMaterialRow).where(WorldMaterialRow.origin == MaterialOrigin.STAR)) is None

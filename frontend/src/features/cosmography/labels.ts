@@ -158,6 +158,58 @@ export const BEING_AGENDAS: Record<Schema['BeingAgenda'], string> = {
   mend: 'Mend',
 }
 
+export const BEING_SENSES: Record<Schema['BeingSense'], string> = {
+  sight: 'Seen',
+  hearing: 'Heard but not seen',
+  touch: 'Felt but not seen',
+  mind: 'Known in the mind',
+  dream: 'Known in dreams',
+}
+
+export const PHENOMENON_TARGETS: Record<Schema['PhenomenonTarget'], string> = {
+  weather: 'Weather',
+  time: 'Time',
+  boundary: 'The boundary of the cosmos',
+  magic: 'Magic',
+  divinity: 'Divine power',
+  perception: 'What is seen',
+  matter: 'Matter',
+  life: 'Life',
+  gravity: 'Gravity',
+  sound: 'Sound',
+  light: 'Light',
+  the_dead: 'The dead',
+}
+
+export const PHENOMENON_EFFECTS: Record<Schema['PhenomenonEffect'], string> = {
+  intensify: 'strengthens',
+  distort: 'bends',
+  open: 'opens',
+  surge: 'surges',
+  linger: 'lingers in',
+  move: 'moves',
+  grow: 'grows',
+  suppress: 'holds back',
+  reveal: 'reveals',
+  emit: 'gives off',
+  spread: 'spreads through',
+}
+
+export const PHENOMENON_SCOPES: Record<Schema['PhenomenonScope'], string> = {
+  place: 'Bound to one place',
+  region: 'Spreads through regions',
+  world: 'Spreads across the world',
+}
+
+export const PHENOMENON_PERSISTENCES: Record<
+  Schema['PhenomenonPersistence'],
+  string
+> = {
+  passing: 'Passing',
+  lasting: 'Lasting',
+  permanent: 'Fades only when fully warded',
+}
+
 export const PHENOMENON_CAUSES: Record<Schema['PhenomenonCause'], string> = {
   rite_backlash: 'Rite backlash',
   god_death: "A god's death",
@@ -223,7 +275,7 @@ export const STRUCTURES: Record<Schema['GalacticStructureKind'], Named> = {
   gods_forge: { label: "Gods' forge", icon: Flame, tone: 'gold' },
   dead_light_drift: { label: 'Dead light drift', icon: Ghost, tone: 'muted' },
   singing_nebula: {
-    label: 'Singing nebula',
+    label: 'Sounding nebula',
     icon: Sparkles,
     tone: 'verdigris',
   },

@@ -137,7 +137,7 @@ async def test_only_volcanic_disasters_are_stirred(scope: PlayerScope, session: 
         await happenings.stir_land(scope, happenings.StirLand(region_id=world.region.id, disaster=Disaster.FLOOD))
     outcome = await happenings.stir_land(scope, happenings.StirLand(region_id=world.region.id, disaster=Disaster.ERUPTION, severity=70))
     event = await session.get(EntityRow, outcome.created_ids[0])
-    assert event is not None and event.engine_kind is EngineKind.ERUPTION and ground.soil is SoilKind.ASH
+    assert event is not None and event.engine_kind is EngineKind.ERUPTION and ground.soil is SoilKind.TEPHRA
 
 
 async def test_a_river_without_a_neighbour_cannot_move(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

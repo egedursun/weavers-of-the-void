@@ -43,7 +43,7 @@ TRANSFORMS = MappingProxyType(
         K.LEGEND_FIXED: TransformSpec(E.LEGEND, E.ARTWORK, "A legend fixed into an artwork", existing=True),
         K.ARTWORK_REMEMBERED: TransformSpec(E.ARTWORK, E.LEGEND, "A lost artwork remembered as a legend", existing=False),
         K.EVENT_PHENOMENON: TransformSpec(E.EVENT, E.PHENOMENON, "An event becomes a phenomenon", existing=True),
-        K.GOD_CORPSE: TransformSpec(E.SON, E.PLACE, "A god's corpse becomes a place", existing=True),
+        K.DEAD_GOD: TransformSpec(E.SON, E.PLACE, "The body of a dead god becomes a place", existing=True),
         K.CONSTRUCT: TransformSpec(E.MADE_THING, E.BEAST, "A made thing wakes as a construct", existing=True),
         K.BEAST_PROMOTION: TransformSpec(E.SPECIES, E.BEAST, "A creature raised to a beast", existing=True),
         K.LANGUAGE_DEATH: TransformSpec(E.LANGUAGE, E.LANGUAGE, "A language dies", existing=True),
@@ -73,12 +73,12 @@ WARNED_KINDS = frozenset(kind for kind, spec in TRANSFORMS.items() if spec.warne
 
 POCKET_WORLDS = MappingProxyType(
     {
-        PhenomenonKind.LEAK_WOUND: WorldType.VOID_POCKET,
-        PhenomenonKind.DEAD_ZONE: WorldType.VOID_POCKET,
-        PhenomenonKind.GRAVITY_WELL: WorldType.VOID_POCKET,
-        PhenomenonKind.TIME_SLIP: WorldType.VOID_POCKET,
-        PhenomenonKind.LIVING_FOG: WorldType.DREAM,
-        PhenomenonKind.MIRROR_LAKE: WorldType.DREAM,
+        PhenomenonKind.OUTSIDE_OPENING: WorldType.VOID_POCKET,
+        PhenomenonKind.BARREN_GROUND: WorldType.VOID_POCKET,
+        PhenomenonKind.GRAVITY_ANOMALY: WorldType.VOID_POCKET,
+        PhenomenonKind.TIME_DISTORTION: WorldType.VOID_POCKET,
+        PhenomenonKind.MOVING_FOG: WorldType.DREAM,
+        PhenomenonKind.DISTANT_VIEW: WorldType.DREAM,
     }
 )
 

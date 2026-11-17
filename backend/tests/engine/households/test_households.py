@@ -10,11 +10,12 @@ from aerona.db.tables.society_depth import ClassStandingRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.genetics import DwellingKind, HouseholdDecision, HouseholdRole
+from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, EthicalStance, NeedKind
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.demography.basket import fed_index
+from aerona.engine.households.dwelling_kinds import built_in_dwelling
 from aerona.engine.households.formation import found_household, house_everyone
 from aerona.engine.households.homes import home_of, sickness_factor
 from aerona.engine.households.life import HouseholdTally, lend_at_interest, match, members_of, pay_debts, renovate, tend_aggregates, tend_household
@@ -115,7 +116,7 @@ async def test_home_quality_feeds_needs_and_squalor_breeds_sickness(realm: Realm
     home = await found_household(ctx, head)
     dwelling = await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == home.id))
     assert dwelling is not None
-    dwelling.quality, dwelling.rooms, dwelling.kind = 95, 6, DwellingKind.MANOR
+    dwelling.quality, dwelling.rooms, dwelling.dwelling_kind_id = 95, 6, (await built_in_dwelling(realm.session, "manor")).id
     needs = {NeedKind.COMFORT: 10, NeedKind.BEAUTY: 10, NeedKind.STATUS: 10, NeedKind.REST: 50}
     await home_needs(realm.session, RULES, head, needs)
     assert needs[NeedKind.COMFORT] > 10 and needs[NeedKind.REST] > 50

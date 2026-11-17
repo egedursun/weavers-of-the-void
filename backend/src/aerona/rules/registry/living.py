@@ -48,6 +48,7 @@ class LivingMethodRules:
     escape_chance: int = rule(3, 0, 100, C, "Chance each epoch a line held by its makers escapes into the wild")
     drift_per_generation: int = rule(5, 0, 100, C, "Drift a line gains each generation")
     unstable_drift: int = rule(10, 0, 100, C, "Further drift an unstable line gains each generation")
+    unstable_stability: int = rule(30, 0, 100, C, "Stability an unstable line loses when it is made")
     new_line_drift: int = rule(60, 0, 100, C, "Drift at which a line becomes a line of its own")
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 
 from sqlalchemy import func, select
 
+from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.catalog.structures import STRUCTURE_ENGINE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -32,6 +33,7 @@ from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.blueprints import design_factor
+from aerona.engine.lore.style import axis_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -42,7 +44,7 @@ from aerona.engine.primitives.queries import add_flag, connect
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
-from aerona.engine.structures.profiles import aesthetic_for, durability_from, ensure_profile, fire_resistance_from, host_for, material_props, refresh
+from aerona.engine.structures.profiles import durability_from, ensure_profile, fire_resistance_from, host_for, kept_style, material_props, refresh, style_for
 from aerona.engine.structures.spec import build_cost, resolve, scale_index
 from aerona.engine.structures.types import builders_type
 from aerona.engine.structures.workshops import link_workshop
@@ -321,11 +323,18 @@ async def splendor_for(ctx: TickContext, work: EntityRow, profile: StructureProf
         architect = int(level or 0) * table.splendor_architect_per_level
     builder = profile.builder_entity_id if profile.builder_entity_id is not None else site.id if site is not None else None
     craft = knowledge.effect(ctx.rules, builder, KnowledgeBranch.ARCHITECTURE) * ctx.rules.deep_life.structure_architecture_bonus if builder is not None else 0
-    local = await aesthetic_for(ctx.session, await host_for(ctx.session, work))
-    fit = 0 if profile.aesthetic is None or local is None else table.aesthetic_fit if profile.aesthetic is local else -table.aesthetic_clash
+    fit = style_splendour(ctx.rules, kept_style(profile), await style_for(ctx.session, await host_for(ctx.session, work)))
     return clamp_int(
         ctx.rules.deep_life.structure_splendor_base + rng.die(ctx.rules.deep_life.structure_splendor_die) + value + architect + craft + fit, 0, PERCENT
     )
+
+
+def style_splendour(rules: Rules, work: Style | None, onlookers: Style | None) -> int:
+    if work is None or onlookers is None:
+        return 0
+    table = rules.construction
+    gap = sum(abs(axis_of(work, axis) - axis_of(onlookers, axis)) for axis in STYLE_AXES) // len(STYLE_AXES)
+    return table.aesthetic_fit if gap <= table.style_match_gap else -table.aesthetic_clash
 
 
 async def finish(ctx: TickContext, construction: ConstructionRow, *, by_hand: bool = False) -> EntityRow | None:

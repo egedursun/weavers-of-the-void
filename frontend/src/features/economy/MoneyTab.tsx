@@ -55,8 +55,11 @@ import {
   type DebtRemedy,
   LOAN_STATUS,
   type LoanStatus,
+  CURRENCY_ISSUER,
   MATERIAL_LABEL,
   type MaterialKind,
+  MONEY_BACKING,
+  MONEY_FORM,
   type Named,
 } from '@/features/entity/economy/labels'
 import {
@@ -74,10 +77,19 @@ import {
   ReleaseButton,
   TextField,
 } from '@/features/entity/economy/parts'
+import { SwitchField } from '@/features/entity/wilds/parts'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { Opener } from './Opener'
 
 type Currency = components['schemas']['CurrencyView']
+type MoneyForm = components['schemas']['MoneyForm']
+type MoneyBacking = components['schemas']['MoneyBacking']
+type CurrencyIssuer = components['schemas']['CurrencyIssuer']
+const METAL_FORMS: ReadonlySet<string> = new Set(['coin', 'commodity'])
+
+function metalsAllowed(form: string): boolean {
+  return METAL_FORMS.has(form)
+}
 type Loan = components['schemas']['LoanView']
 type Debt = components['schemas']['DebtView']
 type DebtLaw = components['schemas']['DebtLawView']
@@ -137,7 +149,14 @@ function CurrencyCard({
   const [trust, setTrust] = useState(String(currency.trust))
   const [supply, setSupply] = useState(String(currency.supply))
   const [hold, setHold] = useState(currency.held)
+  const [form, setForm] = useState<string>(currency.form)
+  const [backing, setBacking] = useState<string>(currency.backing)
+  const [issuerKind, setIssuerKind] = useState<string>(currency.issuer_kind)
+  const [convertible, setConvertible] = useState(currency.convertible)
   const metals = useKindChoices(worldId)
+  const metalBlocked = metalsAllowed(form)
+    ? null
+    : `${MONEY_FORM[form as MoneyForm].label} is not made of metal.`
   const edit = useGodAction({
     invalidate: ECONOMY_REFRESH,
     run: () =>
@@ -146,10 +165,15 @@ function CurrencyCard({
           body: {
             currency_id: currency.id,
             name: name.trim() || null,
-            metal: metal ? (metal as MaterialKind) : null,
+            metal:
+              metal && metalsAllowed(form) ? (metal as MaterialKind) : null,
             purity: whole(purity, PERCENT),
             trust: whole(trust, PERCENT),
             supply: whole(supply),
+            form: form as MoneyForm,
+            backing: backing as MoneyBacking,
+            issuer_kind: issuerKind as CurrencyIssuer,
+            convertible,
             hold,
           },
         })
@@ -199,14 +223,26 @@ function CurrencyCard({
             {currency.name}
           </Text>
           <Muted variant='caption'>
-            {currency.metal === null ? 'Kept on a network by ' : 'Struck by '}
+            {`${MONEY_FORM[currency.form].label} of `}
             <EntityLink kind='entity' id={String(currency.issuer_id)}>
               {currency.issuer_name}
             </EntityLink>
             {currency.metal === null
-              ? `, a ledger with no metal, since epoch ${currency.minted_epoch}`
+              ? `, ${CURRENCY_ISSUER[currency.issuer_kind].label.toLowerCase()}, since epoch ${currency.minted_epoch}`
               : ` in ${metalWord(currency.metal)}, epoch ${currency.minted_epoch}`}
           </Muted>
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            <Badge variant='outline'>
+              <ShieldCheck />
+              {`Backed by ${MONEY_BACKING[currency.backing].label.toLowerCase()}`}
+            </Badge>
+            <Badge variant={currency.convertible ? 'success' : 'outline'}>
+              <ArrowRight />
+              {currency.convertible
+                ? 'Can be exchanged for its backing'
+                : 'Cannot be exchanged for its backing'}
+            </Badge>
+          </div>
         </div>
         <div className='flex shrink-0 flex-wrap justify-end gap-1.5'>
           <HeldBadge held={currency.held} />
@@ -287,10 +323,38 @@ function CurrencyCard({
             />
             <ChoiceSelect
               label='Metal'
-              value={metal}
+              value={metalsAllowed(form) ? metal : ''}
               table={metals}
-              blocked={busy}
+              blocked={busy ?? metalBlocked}
+              placeholder={metalBlocked ?? undefined}
               onPick={setMetal}
+            />
+            <ChoiceSelect
+              label='Form of money'
+              value={form}
+              table={MONEY_FORM}
+              blocked={busy}
+              onPick={setForm}
+            />
+            <ChoiceSelect
+              label='Backed by'
+              value={backing}
+              table={MONEY_BACKING}
+              blocked={busy}
+              onPick={setBacking}
+            />
+            <ChoiceSelect
+              label='Issued by'
+              value={issuerKind}
+              table={CURRENCY_ISSUER}
+              blocked={busy}
+              onPick={setIssuerKind}
+            />
+            <SwitchField
+              label='Can be exchanged for its backing'
+              checked={convertible}
+              disabled={busy !== null}
+              onChange={setConvertible}
             />
           </div>
           <div className={cn(FIELD_GRID, 'grid-cols-3')}>
@@ -355,7 +419,13 @@ export function CoinForge({
   const [purity, setPurity] = useState('90')
   const [trust, setTrust] = useState('60')
   const [supply, setSupply] = useState('1000')
+  const [form, setForm] = useState<string>('coin')
+  const [backing, setBacking] = useState<string>('metal')
+  const [convertible, setConvertible] = useState(true)
   const metals = useKindChoices(worldId)
+  const metalBlocked = metalsAllowed(form)
+    ? null
+    : `${MONEY_FORM[form as MoneyForm].label} is not made of metal.`
   const strike = useGodAction({
     invalidate: ECONOMY_REFRESH,
     run: () =>
@@ -364,10 +434,13 @@ export function CoinForge({
           body: {
             issuer_id: Number(issuer),
             name: name.trim(),
-            metal: metal as MaterialKind,
+            metal: metalsAllowed(form) ? (metal as MaterialKind) : null,
             purity: whole(purity, PERCENT),
             trust: whole(trust, PERCENT),
             supply: whole(supply),
+            form: form as MoneyForm,
+            backing: backing as MoneyBacking,
+            convertible,
           },
         })
       ),
@@ -407,11 +480,32 @@ export function CoinForge({
           onChange={setName}
         />
         <ChoiceSelect
-          label='Metal'
-          value={metal}
-          table={metals}
+          label='Form of money'
+          value={form}
+          table={MONEY_FORM}
           blocked={gate}
+          onPick={setForm}
+        />
+        <ChoiceSelect
+          label='Metal'
+          value={metalsAllowed(form) ? metal : ''}
+          table={metals}
+          blocked={gate ?? metalBlocked}
+          placeholder={metalBlocked ?? undefined}
           onPick={setMetal}
+        />
+        <ChoiceSelect
+          label='Backed by'
+          value={backing}
+          table={MONEY_BACKING}
+          blocked={gate}
+          onPick={setBacking}
+        />
+        <SwitchField
+          label='Can be exchanged for its backing'
+          checked={convertible}
+          disabled={gate !== null}
+          onChange={setConvertible}
         />
         <NumberField
           label='Purity (0–100)'

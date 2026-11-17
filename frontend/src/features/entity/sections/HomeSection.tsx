@@ -17,10 +17,11 @@ import { Muted, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { HOUSING } from '@/features/urban/labels'
 import {
   type Aggregate,
   type Dwelling,
-  type DwellingKind,
+  type DwellingKindOption,
   type Home,
   type Household,
   type HouseholdRole,
@@ -29,7 +30,6 @@ import {
 } from '../lineage/api'
 import {
   CARE_ICON,
-  DWELLINGS,
   FURNISHING_ICON,
   HOME_ICON,
   PURSE_ICON,
@@ -59,6 +59,15 @@ function table(
   items: { key: string; label: string }[]
 ): Record<string, string> {
   return Object.fromEntries(items.map((item) => [item.key, item.label]))
+}
+
+function dwellingTable(items: DwellingKindOption[]): Record<string, string> {
+  return Object.fromEntries(
+    items.map((item) => [
+      String(item.id),
+      `${item.name} · ${HOUSING[item.level].label.toLowerCase()}${item.built_in ? '' : ' · a kind of its own'}`,
+    ])
+  )
 }
 
 function MemberRow({
@@ -145,12 +154,12 @@ function DwellingCard({
 }) {
   const [item, setItem] = useState<number | null>(null)
   const kind = useGodAction({
-    run: (value: DwellingKind) =>
+    run: (value: number | null) =>
       unwrap(
         api.POST('/api/actions/dwelling:set', {
           body: {
             household_id: household.id,
-            kind: value,
+            dwelling_kind_id: value,
             clear_district: false,
             hold: ctx.hold,
           },
@@ -192,9 +201,7 @@ function DwellingCard({
     unfurnish.isPending,
     strike.isPending
   )
-  const look = dwelling
-    ? (DWELLINGS[dwelling.kind] ?? DWELLINGS.hut)
-    : DWELLINGS.hut
+  const look = dwelling ? HOUSING[dwelling.level] : HOUSING.hut
   return (
     <MindCard
       title='Home'
@@ -210,7 +217,7 @@ function DwellingCard({
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
-            onClick={() => kind.mutate('hut')}
+            onClick={() => kind.mutate(null)}
           >
             <Plus />
             Give it a hut
@@ -221,7 +228,7 @@ function DwellingCard({
           <ItemRow
             icon={look.icon}
             tone={look.tone}
-            title={`${dwelling.kind_label} of ${plural(dwelling.rooms, 'room', 'rooms')}`}
+            title={`${dwelling.kind_name} of ${plural(dwelling.rooms, 'room', 'rooms')}`}
             meta={
               dwelling.district_kind
                 ? `In the ${DISTRICT_SPEC[dwelling.district_kind].label.toLowerCase()} district`
@@ -239,10 +246,10 @@ function DwellingCard({
               <div className='flex min-w-0 flex-col gap-4'>
                 <MindPicker
                   label='Kind of home'
-                  value={dwelling.kind}
-                  table={table(ctx.view.dwellings)}
+                  value={String(dwelling.dwelling_kind_id ?? '')}
+                  table={dwellingTable(ctx.view.dwellings)}
                   blocked={busy}
-                  onPick={(value) => kind.mutate(value as DwellingKind)}
+                  onPick={(value) => kind.mutate(Number(value))}
                 />
                 <AdjustStats
                   id={`dwelling-${household.id}`}
@@ -715,13 +722,13 @@ function AggregateRow({ row, ctx }: { row: Aggregate; ctx: Ctx }) {
       ),
   })
   const busy = why(ctx.blocked, strike.isPending)
-  const look = DWELLINGS[row.dwelling_kind] ?? DWELLINGS.hut
+  const look = HOUSING[row.dwelling_level]
   return (
     <ItemRow
       icon={look.icon}
       tone={look.tone}
       title={`${row.households} ${row.social_class_label.toLowerCase()} households`}
-      meta={`${row.mean_size} to a ${row.dwelling_label.toLowerCase()}, quality ${row.quality}, wealth ${row.wealth}`}
+      meta={`${row.mean_size} to a ${row.dwelling_name}, quality ${row.quality}, wealth ${row.wealth}`}
       badges={
         row.held.length > 0 ? <Badge variant='outline'>Held</Badge> : undefined
       }
@@ -811,7 +818,7 @@ function CommunityCards({ ctx }: { ctx: Ctx }) {
                 icon={PURSE_ICON}
                 tone='gold'
                 title={household.name}
-                meta={`Wealth ${household.wealth}, ${plural(household.members.length, 'member', 'members')}${household.dwelling ? `, a ${household.dwelling.kind_label.toLowerCase()} of quality ${household.dwelling.effective_quality}` : ''}`}
+                meta={`Wealth ${household.wealth}, ${plural(household.members.length, 'member', 'members')}${household.dwelling ? `, a ${household.dwelling.kind_name} of quality ${household.dwelling.effective_quality}` : ''}`}
                 badges={
                   household.head ? (
                     <EntityLink kind='entity' id={String(household.head.id)}>

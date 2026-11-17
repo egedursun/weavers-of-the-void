@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import or_, select
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.kinds.trade_modes import TRADE_MODES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -38,7 +39,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.urban import Preservation
+from aerona.domain.enums.urban import PreservationMethod
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.climes.shifts import sea_navigation
@@ -53,6 +54,7 @@ from aerona.engine.economy.cargo import carriage_factor, spoilage
 from aerona.engine.economy.chokepoints import press_route_aims, weigh_chokepoint
 from aerona.engine.economy.convoys import OPEN, harbour_limit, route_capacity
 from aerona.engine.economy.credit import sell_on_credit
+from aerona.engine.economy.good_kinds import GoodBook, good_book
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, season_pct_of, split, spoil
 from aerona.engine.economy.stocks import goods_of, lots_of
@@ -83,13 +85,6 @@ from aerona.engine.settlement.book import credit
 
 THOUSAND = 1000
 LIVE_STATUSES = frozenset({TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED})
-MODE_WORDS: dict[TradeMode, str] = {
-    TradeMode.ROAD: "Road",
-    TradeMode.RIVER: "River Way",
-    TradeMode.SEA: "Sea Lane",
-    TradeMode.CARAVAN: "Caravan Way",
-    TradeMode.SKY: "Sky Lane",
-}
 
 
 @dataclass
@@ -206,11 +201,10 @@ def choose_mode(book: EconomyBook, first: EntityRow, second: EntityRow, path: li
 def length_of(ctx: TickContext, mode: TradeMode, path: list[int]) -> int:
     table = ctx.rules.trade_routes
     hops = max(1, len(path) - 1)
-    if mode is TradeMode.SEA:
-        return max(1, round_half_up(hops * table.sea_length_pct / PERCENT))
-    if mode is TradeMode.RIVER:
-        return max(1, round_half_up(hops * table.river_length_pct / PERCENT))
-    return hops
+    rule_name = TRADE_MODES[mode].length_rule
+    if rule_name is None:
+        return hops
+    return max(1, round_half_up(hops * getattr(table, rule_name) / PERCENT))
 
 
 def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
@@ -220,10 +214,10 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
         built = region_works(works, region)
         capacity += built.roads * table.capacity_per_road + built.bridges * table.capacity_per_bridge
     first, second = route.ends
-    if route.profile.mode in (TradeMode.SEA, TradeMode.RIVER):
+    if TRADE_MODES[route.profile.mode].waterborne:
         for end in route.path[:1] + route.path[-1:]:
             capacity += region_works(works, end).harbours * table.capacity_per_harbour
-    if route.profile.mode is TradeMode.SEA:
+    if TRADE_MODES[route.profile.mode].seagoing:
         for end in (first, second):
             yard = book.workshop(end, WorkshopKind.SHIPYARD)
             capacity += (yard.fleet if yard is not None else 0) * table.capacity_per_ship
@@ -240,7 +234,7 @@ async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, wor
     known = book.techniques.get(first, set()) | book.techniques.get(second, set())
     if Technique.JOINT_STOCK in known:
         capacity *= 1 + ctx.rules.technique_effects.joint_stock_pct / PERCENT
-    if route.profile.mode is TradeMode.SEA:
+    if TRADE_MODES[route.profile.mode].seagoing:
         table = ctx.rules.technique_effects
         capacity *= max([await theory_factor(ctx.session, ctx.rules, end, TheoryDomain.COSMOLOGY) for end in (first, second)])
         capacity *= (
@@ -297,7 +291,7 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
         ctx,
         RecordSpec(
             entity_type=EntityType.TRADE_ROUTE,
-            name=f"{MODE_WORDS[mode]} of {first.name} and {second.name}",
+            name=f"{TRADE_MODES[mode].words} of {first.name} and {second.name}",
             body=f"Merchants began to carry goods between {first.name} and {second.name} by {mode.value}.",
             stats=TradeRouteStats(capacity=0, danger=danger_of(book, path), renown=0, culture=0),
             power=3,
@@ -486,7 +480,9 @@ def lane_for(
     policies: PolicyBook | None = None,
     covered: frozenset[int] = frozenset(),
     gaps: Mapping[int, float] | None = None,
+    known_goods: GoodBook | None = None,
 ) -> Lane | None:
+    goods = known_goods or GoodBook()
     table = ctx.rules.markets
     flow = ctx.rules.market
     first, second = route.ends
@@ -498,7 +494,10 @@ def lane_for(
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.insurance.moral_hazard_pct) / PERCENT if seller_id in covered else 1)
     carriage = (
         1
-        + table.transport_cost_pct_per_hop * route.profile.length / PERCENT * carriage_factor(ctx.rules, left.commodity, route.profile.mode)
+        + table.transport_cost_pct_per_hop
+        * route.profile.length
+        / PERCENT
+        * carriage_factor(ctx.rules, goods.cargo(left.commodity), route.profile.mode, goods.bulk_scale(left.commodity))
         + table.danger_cost_pct * danger / PERCENT / PERCENT
     )
     landed = (
@@ -526,17 +525,17 @@ async def carried_capacity(ctx: TickContext, route: Route, fallback: int) -> int
     return capacity if harbour is None else min(capacity, harbour)
 
 
-async def kept_by(ctx: TickContext, route: Route) -> Preservation:
+async def kept_by(ctx: TickContext, route: Route) -> PreservationMethod:
     found = await ctx.session.scalar(
         select(ConvoyRow.preservation).where(ConvoyRow.route_entity_id == route.entity.id, ConvoyRow.status.in_(OPEN)).order_by(ConvoyRow.id.desc()).limit(1)
     )
-    return found if found is not None else Preservation.NONE
+    return found if found is not None else PreservationMethod.NONE
 
 
 async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = False) -> Haul:
     ledger = goods_of(ctx.session, ctx.epoch)
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
-    if route.profile.mode is TradeMode.SEA:
+    if TRADE_MODES[route.profile.mode].seagoing:
         danger *= await clock_navigation(ctx.session, ctx.rules, route.ends) * await sea_navigation(ctx.session, ctx.rules, route.ends, ctx.epoch)
         danger *= await instrument_navigation(ctx, route.ends, max(1, len(route.path) - 1))
     danger *= await billed_between(ctx, route.ends)
@@ -544,7 +543,8 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )
     sent = sum(lot.quantity for lot in taken)
-    spoiled = spoilage(ctx.rules, lane.commodity, route.profile.mode, await kept_by(ctx, route))
+    goods = await good_book(ctx.session)
+    spoiled = spoilage(ctx.rules, goods.cargo(lane.commodity), route.profile.mode, await kept_by(ctx, route))
     spoiled *= await tech_relief(ctx.session, ctx.rules, lane.seller_id, EraChannel.SPOILAGE)
     keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT + sent * spoiled))
     delivered = 0
@@ -615,7 +615,7 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
 async def levy_terms(ctx: TickContext, lane: Lane, value: int, tally: RouteTally) -> None:
     terms = lane.terms
     if terms.tariff_pct and terms.buyer_realm is not None:
-        duty = round_half_up(value * terms.tariff_pct / PERCENT)
+        duty = round_half_up(value * terms.tariff_pct / PERCENT * (await good_book(ctx.session)).tariff_scale(ctx.rules, lane.commodity))
         tally.policy.tariffs += await fund_polity(ctx, terms.buyer_realm, duty, "tariff")
     if terms.licence_pct and terms.buyer_realm is not None:
         fee = round_half_up(value * terms.licence_pct / PERCENT)
@@ -693,7 +693,9 @@ async def carry(
     moved = 0
     for commodity in COMMODITIES:
         pair = (left_quotes[commodity], right_quotes[commodity])
-        lane = lane_for(ctx, route, pair, capacity - moved, season, trust=trust, policies=policies, covered=covered, gaps=gaps)
+        lane = lane_for(
+            ctx, route, pair, capacity - moved, season, trust=trust, policies=policies, covered=covered, gaps=gaps, known_goods=await good_book(ctx.session)
+        )
         if policies is not None:
             moved += await run_banned_lots(ctx, book, route, pair, policies, tally=tally)
         if lane is None:
@@ -748,7 +750,7 @@ async def run_contraband(
     cheap, dear = (left, right) if left.price <= right.price else (right, left)
     if not policies.terms(seller, buyer, left.commodity).blocked or dear.price * PERCENT < cheap.price * ctx.rules.trade_policy.smuggle_gap_pct:
         return 0
-    raw = lane_for(ctx, route, pair, room, season)
+    raw = lane_for(ctx, route, pair, room, season, known_goods=await good_book(ctx.session))
     if raw is None:
         return 0
     return await smuggle(ctx, book, policies, seller=seller, buyer=buyer, commodity=left.commodity, volume=raw.volume, landed=raw.landed, tally=tally.policy)

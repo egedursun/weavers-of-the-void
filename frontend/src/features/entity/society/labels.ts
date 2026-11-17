@@ -35,8 +35,6 @@ import {
   Hammer,
   Hand,
   HandHeart,
-  Heart,
-  HeartHandshake,
   HeartPulse,
   Hexagon,
   House,
@@ -45,10 +43,9 @@ import {
   Link,
   Lock,
   Mars,
+  Sparkle,
   Medal,
   Milestone,
-  Minus,
-  Moon,
   Orbit,
   PartyPopper,
   PawPrint,
@@ -76,7 +73,6 @@ import {
   User,
   UserRound,
   Users,
-  UsersRound,
   Venus,
   Vote,
   WandSparkles,
@@ -118,9 +114,8 @@ export type SizeTier = Schemas['SizeTier']
 export type WaterSupply = Schemas['WaterSupply']
 export type BuildMaterial = Schemas['BuildMaterial']
 export type TreasuryEntry = Schemas['TreasuryEntry']
-export type Aesthetic = Schemas['Aesthetic']
+export type MotifSource = Schemas['MotifSource']
 export type MartialStyle = Schemas['MartialStyle']
-export type MarriageCustom = Schemas['MarriageCustom']
 export type InheritanceCustom = Schemas['InheritanceCustom']
 
 export type Spec = {
@@ -173,8 +168,14 @@ export const AGE_SPEC: Record<AgeBand, Spec> = {
 export const AGE_ORDER: AgeBand[] = ['elder', 'adult', 'child']
 
 export const SEX_SPEC: Record<Sex, Spec> = {
-  male: { label: 'Men', icon: Mars, tone: 'info' },
-  female: { label: 'Women', icon: Venus, tone: 'verdigris' },
+  male: { label: 'Male', icon: Mars, tone: 'info' },
+  female: { label: 'Female', icon: Venus, tone: 'verdigris' },
+  other: {
+    label: 'Other',
+    icon: Sparkle,
+    tone: 'gold',
+    hint: 'A sex outside two, or the one sex of a people that has a single one',
+  },
 }
 
 export const CONDITION_SPEC: Record<CohortCondition, Spec> = {
@@ -302,13 +303,16 @@ export const TREASURY_SPEC: Record<TreasuryEntry, Spec> = {
   monopoly: { label: 'Keystone trade', icon: Gem, tone: 'gold' },
 }
 
-export const AESTHETIC_SPEC: Record<Aesthetic, Spec> = {
-  austere: { label: 'Austere', icon: Minus, tone: 'muted' },
-  ornate: { label: 'Ornate', icon: Gem, tone: 'gold' },
-  geometric: { label: 'Geometric', icon: Hexagon, tone: 'info' },
-  natural: { label: 'Natural', icon: Leaf, tone: 'success' },
-  macabre: { label: 'Macabre', icon: Skull, tone: 'danger' },
-  celestial: { label: 'Celestial', icon: Moon, tone: 'verdigris' },
+export const MOTIF_SPEC: Record<MotifSource, Spec> = {
+  living_things: { label: 'Living things', icon: PawPrint, tone: 'success' },
+  land: { label: 'The land', icon: Leaf, tone: 'success' },
+  sky: { label: 'The sky', icon: Sun, tone: 'verdigris' },
+  gods: { label: 'The gods', icon: Sparkles, tone: 'gold' },
+  ancestors: { label: 'The ancestors', icon: Footprints, tone: 'muted' },
+  people: { label: 'Living people', icon: Users, tone: 'info' },
+  made_things: { label: 'Made things', icon: Hammer, tone: 'warning' },
+  writing: { label: 'Signs and writing', icon: ScrollText, tone: 'info' },
+  pattern: { label: 'Pure pattern', icon: Hexagon, tone: 'muted' },
 }
 
 export const MARTIAL_SPEC: Record<MartialStyle, Spec> = {
@@ -330,19 +334,12 @@ export const MARTIAL_SPEC: Record<MartialStyle, Spec> = {
   combined_arms: { label: 'Combined arms', icon: Layers, tone: 'gold' },
 }
 
-export const MARRIAGE_SPEC: Record<MarriageCustom, Spec> = {
-  monogamy: { label: 'One spouse', icon: Heart, tone: 'danger' },
-  polygyny: { label: 'Many wives', icon: Users, tone: 'gold' },
-  polyandry: { label: 'Many husbands', icon: UsersRound, tone: 'gold' },
-  group: { label: 'Group marriage', icon: HeartHandshake, tone: 'verdigris' },
-}
-
 export const INHERITANCE_SPEC: Record<InheritanceCustom, Spec> = {
   primogeniture: { label: 'Eldest child', icon: Crown, tone: 'gold' },
   ultimogeniture: { label: 'Youngest child', icon: Baby, tone: 'success' },
-  gavelkind: { label: 'Split among heirs', icon: Split, tone: 'info' },
-  matrilineal: {
-    label: 'Through the mother',
+  equal_shares: { label: 'Split among heirs', icon: Split, tone: 'info' },
+  through_second_line: {
+    label: 'Through the second line',
     icon: Flower2,
     tone: 'verdigris',
   },
@@ -468,6 +465,7 @@ export const CURE_SPEC: Record<CureSource, Spec> = {
 }
 
 export const FIELD_LABEL: Record<string, string> = {
+  walls_world_material_id: 'Walls of the substance',
   maturity_years: 'Coming of age',
   adult_years: 'Years of adulthood',
   elder_years: 'Years of old age',
@@ -475,7 +473,11 @@ export const FIELD_LABEL: Record<string, string> = {
   cohesion: 'Cohesion',
   literacy: 'Literacy',
   urbanisation: 'Urbanisation',
-  aesthetic: 'Art',
+  ornament: 'Decoration',
+  geometry: 'Geometric over organic',
+  colour: 'Use of colour',
+  scale: 'Scale of works',
+  symmetry: 'Symmetry',
   martial_style: 'Way of war',
   marriage: 'Marriage',
   inheritance: 'Inheritance',

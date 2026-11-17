@@ -1,28 +1,39 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.cycles import (
+    AdoptionKind,
     ChallengeKind,
     ChallengeResponse,
-    CousinTerms,
     CyclePhase,
     DescentGroup,
     GiftOccasion,
     GiftState,
     KinshipDescent,
+    KinTermSystem,
     LabourRegime,
     LegacyKind,
     LongPlanKind,
     LongPlanStatus,
     ManumissionPath,
-    MarriagePayment,
-    MarriagePreference,
     MobilityMode,
     ReproductiveCaste,
     ReproductiveSystem,
     ResidenceRule,
     StressComponent,
 )
-from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
+from aerona.domain.enums.demography import Sex
+from aerona.domain.enums.unions import (
+    KinMatch,
+    PartnerScope,
+    PluralSide,
+    UnionArrangement,
+    UnionDescent,
+    UnionDissolution,
+    UnionExchange,
+    UnionForm,
+    UnionPurpose,
+    UnionResidence,
+)
 
 
 class StressPartView(ApiModel):
@@ -128,25 +139,27 @@ class KinshipView(ApiModel):
     descent: KinshipDescent
     residence: ResidenceRule
     descent_group: DescentGroup
-    cousin_terms: CousinTerms
-    preference: MarriagePreference
-    payment: MarriagePayment
-    payment_value: int
-    levirate: bool
-    sororate: bool
+    kin_terms: KinTermSystem
+    adoption: AdoptionKind
+    first_side: Sex
+    sibling_union_first: bool
+    sibling_union_second: bool
     locked: list[str]
 
 
 class UnionView(ApiModel):
     form: UnionForm
+    plural_side: PluralSide
     purpose: UnionPurpose
     residence: UnionResidence
     descent: UnionDescent
     exchange: UnionExchange
+    exchange_value: int
     arrangement: UnionArrangement
     dissolution: UnionDissolution
     endogamy: PartnerScope
     exogamy: PartnerScope
+    kin_match: KinMatch
     term_epochs: int
     locked: list[str]
 

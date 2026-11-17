@@ -25,8 +25,8 @@ export const CHANNELS: Record<Channel, LoreNamed> = {
     tone: 'verdigris',
   },
   spy: { label: 'Reported by spies', icon: MapIcon, tone: 'warning' },
-  current: { label: 'Washed ashore by the current', icon: Waves, tone: 'info' },
-  planted: { label: 'Whispered by your hand', icon: Sparkles, tone: 'gold' },
+  current: { label: 'Carried by the current', icon: Waves, tone: 'info' },
+  planted: { label: 'Planted by you', icon: Sparkles, tone: 'gold' },
 }
 
 const TRUE = 75

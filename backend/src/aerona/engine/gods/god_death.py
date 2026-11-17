@@ -170,14 +170,14 @@ async def god_death(
             birth_epoch=ctx.epoch,
             world_id=world_id,
             location_id=home.id if home is not None else None,
-            engine_kind=EngineKind.GOD_CORPSE,
+            engine_kind=EngineKind.DEAD_GOD,
             pending_name=True,
             split_title=False,
         ),
     )
     if home is not None:
-        await form_phenomenon(ctx, PhenomenonKind.GOD_CORPSE_AURA, home, PhenomenonCause.GOD_DEATH, cause_node_id=son.id)
-    await record_transformation(ctx, TransformKind.GOD_CORPSE, son.id, corpse.id)
+        await form_phenomenon(ctx, PhenomenonKind.DIVINE_RESIDUE, home, PhenomenonCause.GOD_DEATH, cause_node_id=son.id)
+    await record_transformation(ctx, TransformKind.DEAD_GOD, son.id, corpse.id)
     shade = await _create(
         ctx,
         EntityDraft(

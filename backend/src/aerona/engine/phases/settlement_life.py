@@ -112,6 +112,7 @@ JUSTICE_FULL = 100
     "table.quarantines",
     "table.reconstructions",
     "table.region_environment",
+    "table.role_norms",
     "table.secrets",
     "table.settlement_infrastructure",
     "table.settlement_profiles",

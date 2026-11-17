@@ -408,9 +408,12 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
 
 
 @reads(
+    "mortal.agility",
     "mortal.beauty",
+    "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
+    "mortal.intellect",
     "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
@@ -428,12 +431,15 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.genomes",
     "table.language_profiles",
     "table.lexemes",
+    "table.mind_attributes",
     "table.name_registry",
     "table.nodes",
     "table.storytellers",
     "table.world_maps",
 )
 @writes(
+    "mortal.agility",
+    "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
     "table.bonds",

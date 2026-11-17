@@ -552,14 +552,14 @@ RAW = (
         (S.MAGIC, None, "wizards"),
     ),
     (
-        "tenet_divine_kingship",
+        "tenet_divine_rule",
         "S4.4",
         "God-kings draw legitimacy from the faith",
         ("polity_cycles",),
         DOCTRINE,
         (C, "polity", "mortal"),
-        ("tenet_divine_kingship",),
-        (S.POLITY, "legitimacy.divine_kingship", "legitimacy"),
+        ("tenet_divine_rule",),
+        (S.POLITY, "legitimacy.divine_rule", "legitimacy"),
     ),
     (
         "tenet_excommunication",

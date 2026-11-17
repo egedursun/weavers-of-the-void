@@ -5,13 +5,13 @@ from aerona.catalog.mind import SKILLS
 from aerona.core.total import partial
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.collective import DesignKind
-from aerona.domain.enums.crafts import GameKind
-from aerona.domain.enums.culture import ArtMedium, CalendarSlot
+from aerona.domain.enums.culture import ArtMode, CalendarSlot
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.eras import TechFamily
+from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.living import CultivationMethod
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PreferenceKind, SkillFamily, ValueAxis
@@ -86,7 +86,7 @@ STATIC_TARGETS = partial(
         P.DRINK: tuple(DRINKS),
         P.COLOUR: COLOURS,
         P.SHAPE: SHAPES,
-        P.ART_FORM: tuple(medium.value for medium in ArtMedium),
+        P.ART_FORM: tuple(medium.value for medium in ArtMode),
         P.ARTWORK_SUBJECT: tuple(kind.value for kind in SUBJECTS),
         P.SEASON: tuple(slot.value for slot in CalendarSlot),
         P.WEATHER: tuple(weather.value for weather in WeatherKind),
@@ -105,7 +105,7 @@ STATIC_TARGETS = partial(
         P.SCENT: SCENTS,
         P.TEXTURE: TEXTURES,
         P.STORY_FORM: STORY_FORMS,
-        P.GAME: tuple(game.value for game in GameKind),
+        P.GAME: tuple(game.value for game in GameCategory),
         P.PLACE_KIND: tuple(place.value for place in PlaceKind),
         P.PROFESSION: tuple(role.value for role in MortalRole),
     },

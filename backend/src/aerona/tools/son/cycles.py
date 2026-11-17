@@ -13,18 +13,30 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import (
+    AdoptionKind,
     ChallengeKind,
     GiftOccasion,
     GiftState,
     KinshipDescent,
+    KinTermSystem,
     LongPlanKind,
-    MarriagePayment,
-    MarriagePreference,
     ReproductiveSystem,
     ResidenceRule,
 )
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionPurpose, UnionResidence
+from aerona.domain.enums.unions import (
+    KinMatch,
+    PartnerScope,
+    PluralSide,
+    UnionArrangement,
+    UnionDescent,
+    UnionDissolution,
+    UnionExchange,
+    UnionForm,
+    UnionPurpose,
+    UnionResidence,
+)
 from aerona.engine.cycles import control
 from aerona.engine.cycles.gifts import weigh_debt
 from aerona.engine.primitives.queries import living_entity
@@ -67,14 +79,16 @@ class ShapeKinshipInput(ToolInput):
     people_id: int
     descent: KinshipDescent
     residence: ResidenceRule
-    preference: MarriagePreference
-    payment: MarriagePayment
+    kin_terms: KinTermSystem
+    adoption: AdoptionKind
+    first_side: Sex
     reason: Reason
 
 
 class ShapeUnionsInput(ToolInput):
     people_id: int
     form: UnionForm
+    plural_side: PluralSide = PluralSide.EITHER
     purpose: UnionPurpose
     residence: UnionResidence
     descent: UnionDescent
@@ -83,6 +97,7 @@ class ShapeUnionsInput(ToolInput):
     dissolution: UnionDissolution
     endogamy: PartnerScope
     exogamy: PartnerScope
+    kin_match: KinMatch = KinMatch.NONE
     reason: Reason
 
 
@@ -179,7 +194,13 @@ async def shape_unions(call: SonCall, args: ShapeUnionsInput) -> str:
 
 async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
     people = await reached(call, args.people_id, frozenset({EntityType.PEOPLE}), SonResult.KINSHIP_REFUSED, "there is no such people")
-    values = {"descent": args.descent.value, "residence": args.residence.value, "preference": args.preference.value, "payment": args.payment.value}
+    values = {
+        "descent": args.descent.value,
+        "residence": args.residence.value,
+        "kin_terms": args.kin_terms.value,
+        "adoption": args.adoption.value,
+        "first_side": args.first_side.value,
+    }
     row = await control.set_kinship(call.tick, people.id, values)
     call.target(people.id)
     await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_KINSHIP, entity_ids=[people.id], son=call.son.name, people=people.name, reason=args.reason)
@@ -188,7 +209,6 @@ async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
         name=people.name,
         descent=row.descent.value,
         residence=row.residence.value,
-        preference=row.preference.value.replace("_", " "),
     )
 
 

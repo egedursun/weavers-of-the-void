@@ -410,7 +410,7 @@ async def battlefield_scar(ctx: TickContext, region_id: int | None, fallen: int)
     if region is None or region.entity_type is not EntityType.REGION or fallen < table.battlefield_deaths:
         return
     if ctx.rng(f"ghost_road.{region.id}.{ctx.epoch}").chance(table.battlefield_chance) and not await blocked(ctx, TransformKind.EVENT_PHENOMENON, region.id):
-        road = await form_phenomenon(ctx, PhenomenonKind.GHOST_ROAD, region, PhenomenonCause.BATTLEFIELD)
+        road = await form_phenomenon(ctx, PhenomenonKind.PATH_OF_THE_DEAD, region, PhenomenonCause.BATTLEFIELD)
         if road is not None:
             await record_transformation(ctx, TransformKind.EVENT_PHENOMENON, None, road.id)
 

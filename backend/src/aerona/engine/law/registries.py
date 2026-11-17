@@ -16,7 +16,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.law.records import record_events
-from aerona.engine.law.systems import written_code
+from aerona.engine.law.systems import realm_code, written_code
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.justice import community_ruler
 from aerona.engine.notes import note
@@ -137,7 +137,7 @@ async def enforce(ctx: TickContext, tally: RegistryTally) -> None:
         debtor = await living_entity(ctx.session, row.counterparty_entity_id) if row.counterparty_entity_id is not None else None
         if owner is None or held(row.holder_entity_id, owner.id, row.counterparty_entity_id) or "amount" in row.locked:
             continue
-        paid = await collect(ctx, row, owner, debtor, await written_code(ctx.session, [row.holder_entity_id]))
+        paid = await collect(ctx, row, owner, debtor, await realm_code(ctx.session, row.holder_entity_id))
         if paid <= 0:
             continue
         row.amount = max(0, row.amount - paid)

@@ -47,9 +47,9 @@ class InteractionKind(StrEnum):
 
 
 class CircleKind(StrEnum):
-    DRINKING_HALL = "drinking_hall"
+    DRINKING_CIRCLE = "drinking_circle"
     POETS_CIRCLE = "poets_circle"
-    HUNTING_LODGE = "hunting_lodge"
+    HUNTING_CIRCLE = "hunting_circle"
     SECRET_SOCIETY = "secret_society"
     STUDY_CIRCLE = "study_circle"
     PRAYER_CIRCLE = "prayer_circle"
@@ -111,7 +111,7 @@ class GroupKind(StrEnum):
 
 class ContestKind(StrEnum):
     RIDDLE_GAME = "riddle_game"
-    FLYTING = "flyting"
+    INSULT_CONTEST = "insult_contest"
     DEBATE = "debate"
     GAME_OF_SKILL = "game_of_skill"
     TRIAL_OF_WISDOM = "trial_of_wisdom"
@@ -121,7 +121,7 @@ class ContestKind(StrEnum):
 
 class ContestStake(StrEnum):
     HONOUR = "honour"
-    BRIDE = "bride"
+    UNION = "union"
     WAGER = "wager"
     OFFICE = "office"
     CAPTIVE = "captive"

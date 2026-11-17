@@ -24,7 +24,7 @@ class ArmamentRules:
 class VehicleRules:
     tribe_size: int = rule(2, 0, 4, W, "Largest hull a tribe can build, counted from small (0) to colossal (4); technology alone opens a frame")
     city_state_size: int = rule(3, 0, 4, W, "Largest hull a city-state can build, counted from small (0) to colossal (4)")
-    kingdom_size: int = rule(4, 0, 4, W, "Largest hull a kingdom can build, counted from small (0) to colossal (4)")
+    realm_size: int = rule(4, 0, 4, W, "Largest hull a realm can build, counted from small (0) to colossal (4)")
     empire_size: int = rule(4, 0, 4, W, "Largest hull a world empire can build, counted from small (0) to colossal (4)")
     interstellar_size: int = rule(4, 0, 4, W, "Largest hull an interstellar power can build, counted from small (0) to colossal (4)")
     cosmic_size: int = rule(4, 0, 4, W, "Largest hull a cosmic power can build, counted from small (0) to colossal (4)")
@@ -119,6 +119,18 @@ class CuisineRules:
     ration_days: int = rule(5, 0, 1000, W, "Supply days each epoch of keeping in a realm's best ration adds to its armies")
     spread_pct: int = rule(15, 0, 100, S, "Chance a convoy that arrives teaches its destination one of its origin's dishes (%)")
     son_dish_essence: int = rule(5, 0, 10000, S, "Essence a son spends to give a community a dish of its own")
+    founding_dishes: int = rule(3, 1, 20, S, "Dishes a people must cook before its way of eating is known as a cuisine")
+    fusion_strength: int = rule(60, 1, 100, S, "Strength at which a cuisine taken from another people fuses with a people's own")
+    fusion_pct: int = rule(20, 0, 100, S, "Chance each epoch such a fusion happens (%)")
+    shortage_epochs: int = rule(2, 1, 20, S, "Epochs a dish must go uncooked for want of a good before its cooks make a dish without it")
+    etiquette_prestige_pct: int = rule(
+        5, 0, 100, S, "Prestige a town gains each epoch from strict table manners at its feasts, per point of etiquette (hundredths)"
+    )
+    feasting_unrest_pct: int = rule(6, 0, 100, S, "Unrest feasting calms each epoch, per point of feasting (hundredths)")
+    feasting_cost_pct: int = rule(4, 0, 100, S, "Prosperity feasting costs each epoch, per point of feasting (hundredths)")
+    skill_pct: int = rule(50, 0, 100, S, "Share of a dish's delight a kitchen without the skill to make it still gives (%)")
+    step_prestige_pct: int = rule(15, 0, 100, S, "Prestige a feast dish or delicacy gains for each step beyond its first (%)")
+    signature_pct: int = rule(50, 0, 100, S, "Chance a people cooks a new dish by the signature method of its cuisine when it knows it (%)")
 
 
 @dataclass(frozen=True)

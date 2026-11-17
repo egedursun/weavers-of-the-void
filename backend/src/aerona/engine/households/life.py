@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import inspect, select
 
-from aerona.catalog.genetics import CLASS_INCOME_PCT, DWELLINGS
+from aerona.catalog.genetics import CLASS_INCOME_PCT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -16,20 +16,24 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.genetics import DwellingKind, HouseholdDecision, HouseholdRole
+from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, ThoughtKind, ValueHolder
-from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageKind
+from aerona.domain.enums.mortal import DeathCause, LifeStage
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.unions import UnionPurpose
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import preference_bonus
 from aerona.engine.demography.kinship import has_room, may_wed
 from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.folkways.biases import lean
 from aerona.engine.genetics.genome import body_marks
+from aerona.engine.households.dwelling_kinds import dwelling_kind_row, dwelling_of_people
 from aerona.engine.households.formation import OLD, YOUNG, found_household, join_household
 from aerona.engine.households.forms import inherit, keep_form
 from aerona.engine.households.homes import district_for, dwelling_of, expectation, home_quality, starting_quality
+from aerona.engine.kinds.crafts_life import furnishing_worth
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.hooks import judged
@@ -51,22 +55,22 @@ MEMBERS = "members"
 WEALTH = "wealth"
 PRESTIGE_SWING = 2
 PRESTIGE_MIDPOINT = 5
-CLASS_DWELLING: dict[SocialClass, DwellingKind] = {
-    SocialClass.NOBLE: DwellingKind.MANOR,
-    SocialClass.MERCHANT: DwellingKind.TOWNHOUSE,
-    SocialClass.PRIEST: DwellingKind.TOWNHOUSE,
-    SocialClass.SCRIBE: DwellingKind.TOWNHOUSE,
-    SocialClass.ARTISAN: DwellingKind.TOWNHOUSE,
-    SocialClass.WARRIOR: DwellingKind.LONGHOUSE,
-    SocialClass.FARMER: DwellingKind.LONGHOUSE,
-    SocialClass.MONASTIC: DwellingKind.TOWER,
-    SocialClass.SERF_OR_SLAVE: DwellingKind.HUT,
-    SocialClass.OUTCAST: DwellingKind.HUT,
-    SocialClass.WORKER: DwellingKind.APARTMENT,
-    SocialClass.PROFESSIONAL: DwellingKind.APARTMENT,
-    SocialClass.OFFICIAL: DwellingKind.TOWNHOUSE,
-    SocialClass.CITIZEN: DwellingKind.APARTMENT,
-    SocialClass.UNEMPLOYED: DwellingKind.HUT,
+CLASS_DWELLING: dict[SocialClass, str] = {
+    SocialClass.NOBLE: "manor",
+    SocialClass.MERCHANT: "townhouse",
+    SocialClass.PRIEST: "townhouse",
+    SocialClass.SCRIBE: "townhouse",
+    SocialClass.ARTISAN: "townhouse",
+    SocialClass.WARRIOR: "longhouse",
+    SocialClass.FARMER: "longhouse",
+    SocialClass.MONASTIC: "tower",
+    SocialClass.SERF_OR_SLAVE: "hut",
+    SocialClass.OUTCAST: "hut",
+    SocialClass.WORKER: "apartment",
+    SocialClass.PROFESSIONAL: "apartment",
+    SocialClass.OFFICIAL: "townhouse",
+    SocialClass.CITIZEN: "apartment",
+    SocialClass.UNEMPLOYED: "hut",
 }
 CRAFT_MASTERS = frozenset(
     {MortalRole.ARTISAN, MortalRole.HEALER, MortalRole.SCRIBE, MortalRole.MERCHANT, MortalRole.ENGINEER, MortalRole.PHYSICIAN, MortalRole.EXECUTIVE}
@@ -197,7 +201,7 @@ async def keep_purse(ctx: TickContext, household: HouseholdRow, members: list[Me
         + round_half_up(await holdings(ctx, [member.mortal.id for member in members]) * table.holding_income_pct / PERCENT)
         + lodgers * table.lodger_rent
     )
-    upkeep = round_half_up(DWELLINGS[dwelling.kind].upkeep * table.upkeep_pct / PERCENT) if dwelling is not None else 0
+    upkeep = round_half_up((await dwelling_kind_row(ctx.session, dwelling.dwelling_kind_id)).upkeep * table.upkeep_pct / PERCENT) if dwelling is not None else 0
     head = household.head_node_id
     faithful = bool(await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[head])) if head is not None else False
     place = household.settlement_node_id
@@ -346,6 +350,9 @@ async def migrate(
     if dwelling is not None:
         dwelling.settlement_node_id = target.id
         dwelling.district_id = await district_for(ctx.session, target.id, household.social_class)
+        home = await dwelling_kind_row(ctx.session, dwelling.dwelling_kind_id)
+        if not home.mobile and "quality" not in (dwelling.locked or []):
+            dwelling.quality = starting_quality(home, household.social_class)
     return await decided(ctx, household, HouseholdDecision.MIGRATE, f"{household.name} left in want for {target.name}.", [target.id], tally=tally)
 
 
@@ -357,8 +364,10 @@ async def sell_furnishing(ctx: TickContext, household: HouseholdRow, dwelling: D
     )
     if item is None or held(item.item_node_id):
         return False
+    town = await ctx.session.get(EntityRow, household.settlement_node_id) if household.settlement_node_id is not None else None
+    folk = await people_of(ctx.session, town) if town is not None else None
     await ctx.session.delete(item)
-    household.wealth += ctx.rules.households.renovate_cost // 2
+    household.wealth += max(ctx.rules.households.renovate_cost // 2, await furnishing_worth(ctx, folk.id if folk is not None else None))
     return await decided(ctx, household, HouseholdDecision.SELL_FURNISHING, f"{household.name} sold a furnishing to get by.", [item.item_node_id], tally=tally)
 
 
@@ -396,8 +405,8 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
     if best is None:
         return False
     _, other, candidate = best
-    await marry(ctx.session, single.mortal, candidate.mortal, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description="matched by their households")
-    transfer(other, household, round_half_up(other.wealth * ctx.rules.households.dowry_pct / PERCENT))
+    await marry(ctx.session, single.mortal, candidate.mortal, ctx.epoch, purpose=UnionPurpose.KINSHIP, description="matched by their households")
+    transfer(other, household, round_half_up(other.wealth * ctx.rules.households.union_portion_pct / PERCENT))
     if not candidate.row.locked:
         await join_household(ctx, household, candidate.mortal, HouseholdRole.SPOUSE)
     return await decided(
@@ -457,7 +466,12 @@ async def renovate(ctx: TickContext, household: HouseholdRow, dwelling: Dwelling
     if household.social_class is SocialClass.NOBLE and dwelling.rooms < table.noble_rooms:
         dwelling.rooms += 1
     return await decided(
-        ctx, household, HouseholdDecision.RENOVATE, f"{household.name} improved its {DWELLINGS[dwelling.kind].label.lower()}.", [], tally=tally
+        ctx,
+        household,
+        HouseholdDecision.RENOVATE,
+        f"{household.name} improved its {(await dwelling_kind_row(ctx.session, dwelling.dwelling_kind_id)).name}.",
+        [],
+        tally=tally,
     )
 
 
@@ -625,11 +639,12 @@ async def tend_aggregates(ctx: TickContext, tally: HouseholdTally) -> None:
             ctx.session.add(row)
         locked = set(row.locked or [])
         prosperity = stat_or(community, "prosperity", PERCENT // 2)
-        kind = CLASS_DWELLING.get(social_class, DwellingKind.HUT) if community.entity_type is EntityType.SETTLEMENT else DwellingKind.TENT
+        key = CLASS_DWELLING.get(social_class, "hut") if community.entity_type is EntityType.SETTLEMENT else "tent"
+        kind = await dwelling_of_people(ctx.session, (await people_of(ctx.session, community) or community).id, key)
         values = {
             "households": max(0, people // table.mean_size),
             "mean_size": table.mean_size,
-            "dwelling_kind": kind,
+            "dwelling_kind_id": kind.id,
             "quality": clamp_int(starting_quality(kind, social_class) + (prosperity - PERCENT // 2) // 5, 0, PERCENT),
             "wealth": max(0, round_half_up(prosperity * people / table.mean_size / PERCENT)),
         }

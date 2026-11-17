@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import several
 from aerona.core.total import total
@@ -24,7 +25,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.law_depth import RegistryKind
-from aerona.domain.enums.mind import HonourModel, MemoryKind
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.statecraft import MandateKind, MandateState
@@ -249,7 +250,7 @@ async def refuse_aid(ctx: TickContext, giver: EntityRow, town: EntityRow, receiv
     if ruler_id is not None and not held(ruler_id):
         people = await people_of(ctx.session, town)
         model = await honour_of(ctx.session, people.id if people is not None else None)
-        await add_honour(ctx.session, ruler_id, -table.face_loss * (2 if model is HonourModel.FACE else 1), ctx.epoch)
+        await add_honour(ctx.session, ruler_id, -table.face_loss * HONOUR_MODELS[model].face_loss_pct // PERCENT, ctx.epoch)
     await note(ctx, f"{town.name} turned away the aid of {giver.name}, a rival it would not owe.", key="relief.refused", ids=[town.id, giver.id])
 
 

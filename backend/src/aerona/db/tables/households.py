@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.genetics import DwellingKind, DwellingTenure, HouseholdDecision, HouseholdForm, HouseholdRole
+from aerona.domain.enums.genetics import DwellingTenure, HouseholdDecision, HouseholdForm, HouseholdRole
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.society import SocialClass
@@ -69,7 +69,7 @@ class DwellingRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     household_id: Mapped[int] = mapped_column(ForeignKey("households.id", ondelete="CASCADE"))
-    kind: Mapped[DwellingKind] = mapped_column(enum_type(DwellingKind, "kind"))
+    dwelling_kind_id: Mapped[int | None] = mapped_column(ForeignKey("dwelling_kinds.id", ondelete="SET NULL"), index=True)
     quality: Mapped[int] = mapped_column(default=40)
     rooms: Mapped[int] = mapped_column(default=1)
     settlement_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
@@ -105,7 +105,7 @@ class HouseholdAggregateRow(Base):
     social_class: Mapped[SocialClass] = mapped_column(enum_type(SocialClass, "social_class"), primary_key=True)
     households: Mapped[int] = mapped_column(default=0)
     mean_size: Mapped[int] = mapped_column(default=0)
-    dwelling_kind: Mapped[DwellingKind] = mapped_column(enum_type(DwellingKind, "dwelling_kind"), default=DwellingKind.HUT)
+    dwelling_kind_id: Mapped[int | None] = mapped_column(ForeignKey("dwelling_kinds.id", ondelete="SET NULL"))
     quality: Mapped[int] = mapped_column(default=30)
     wealth: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int] = mapped_column(default=0)

@@ -119,11 +119,20 @@ class CargoClass(StrEnum):
     RELICS = "relics"
 
 
-class Preservation(StrEnum):
+class PreservationMethod(StrEnum):
     NONE = "none"
-    SALTED = "salted"
-    ICED = "iced"
-    MAGIC = "magic"
+    DRYING = "drying"
+    SMOKING = "smoking"
+    CURING = "curing"
+    PICKLING = "pickling"
+    FERMENTING = "fermenting"
+    CHILLING = "chilling"
+    FREEZING = "freezing"
+    SEALING = "sealing"
+    CANNING = "canning"
+    IRRADIATING = "irradiating"
+    BY_WORKING = "by_working"
+    LIVING = "living"
 
 
 class MarketPlay(StrEnum):

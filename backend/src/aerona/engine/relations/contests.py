@@ -19,7 +19,7 @@ from aerona.db.tables.relations import ContestRow, GroupRankRow, RelationshipRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import ArtMedium
+from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import PreferenceKind, SkillKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake, GroupKind, RelationType
@@ -45,7 +45,7 @@ from aerona.engine.services.war import release_captive
 
 LEARNED_AT = 40
 VALUE_SPAN = 100
-NOTED = frozenset({ContestStake.BRIDE, ContestStake.CAPTIVE, ContestStake.OFFICE, ContestStake.DIVINE_FAVOUR})
+NOTED = frozenset({ContestStake.UNION, ContestStake.CAPTIVE, ContestStake.OFFICE, ContestStake.DIVINE_FAVOUR})
 
 
 @dataclass
@@ -105,12 +105,12 @@ async def pass_wealth(session: AsyncSession, loser: int, winner: int, amount: in
     won.wealth = min(PERCENT, won.wealth + moved)
 
 
-async def win_bride(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+async def win_union(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
     if bout.stake_node_id is None:
         return
     view = await ensure_relation(ctx.session, bout.stake_node_id, winner.id, ctx.epoch)
     if view is not None:
-        shift(ctx.rules, view, ctx.epoch, romance=ctx.rules.contests.bride_romance, familiarity=5)
+        shift(ctx.rules, view, ctx.epoch, romance=ctx.rules.contests.union_romance, familiarity=5)
     await think(ctx.session, ctx.rules, loser.id, ThoughtKind.HEARTBROKEN, ctx.epoch, subject_id=bout.stake_node_id)
 
 
@@ -154,7 +154,7 @@ async def win_honour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Ent
 
 STAKES: dict[ContestStake, Callable[[TickContext, Bout, EntityRow, EntityRow], Awaitable[None]]] = {
     ContestStake.HONOUR: win_honour,
-    ContestStake.BRIDE: win_bride,
+    ContestStake.UNION: win_union,
     ContestStake.WAGER: win_wager,
     ContestStake.CAPTIVE: win_freedom,
     ContestStake.OFFICE: win_place,
@@ -197,7 +197,7 @@ async def famed(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRo
     if not notable or margin < ctx.rules.contests.famous_margin:
         return None
     spec = CONTESTS[bout.kind]
-    medium = ArtMedium(spec.work) if spec.work is not None else ArtMedium.EPIC_POEM
+    medium = ArtMode(spec.work) if spec.work is not None else ArtMode.VERBAL
     try:
         work = await commission_work(
             ctx,
@@ -309,7 +309,7 @@ async def suitor_bouts(ctx: TickContext, place_id: int, ids: list[int]) -> list[
         first, second = await living_entity(ctx.session, wooers[0]), await living_entity(ctx.session, wooers[1])
         if first is not None and second is not None:
             kind = await best_kind(ctx, first, second)
-            bouts.append(Bout(kind, ContestStake.BRIDE, first, second, judge_id=wooed, stake_node_id=wooed, place_id=place_id))
+            bouts.append(Bout(kind, ContestStake.UNION, first, second, judge_id=wooed, stake_node_id=wooed, place_id=place_id))
     return bouts
 
 

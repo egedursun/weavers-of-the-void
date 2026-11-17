@@ -13,6 +13,7 @@ from aerona.engine.polity.laws import LawBook
     "settlement.population",
     "table.bonds",
     "table.districts",
+    "table.dwelling_kinds",
     "table.dwellings",
     "table.household_members",
     "table.households",
@@ -20,7 +21,7 @@ from aerona.engine.polity.laws import LawBook
     "table.offices",
     "table.place_profiles",
 )
-@writes("table.dwellings", "table.household_members", "table.households")
+@writes("table.dwelling_kinds", "table.dwellings", "table.household_members", "table.households")
 async def household_survey(ctx: TickContext) -> None:
     ctx.count("households_housed", await house_everyone(ctx))
 
@@ -38,6 +39,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.culture_values",
     "table.districts",
     "table.dwelling_furnishings",
+    "table.dwelling_kinds",
     "table.dwellings",
     "table.epoch_year_cursors",
     "table.geasa",
@@ -78,6 +80,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.dwelling_furnishings",
+    "table.dwelling_kinds",
     "table.dwellings",
     "table.entities",
     "table.epoch_year_cursors",

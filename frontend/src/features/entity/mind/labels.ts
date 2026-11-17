@@ -293,6 +293,12 @@ export const TRAIT_ICONS: Record<components['schemas']['TraitKind'], Named> = {
   ruthless: { label: 'Ruthless', icon: Axe, tone: 'warning' },
   vigilant: { label: 'Vigilant', icon: ScanEye, tone: 'success' },
   complacent: { label: 'Complacent', icon: Bed, tone: 'warning' },
+  hardy: { label: 'Hardy', icon: Shield, tone: 'success' },
+  nimble: { label: 'Nimble', icon: Hand, tone: 'success' },
+  sharp_sighted: { label: 'Sharp-sighted', icon: Eye, tone: 'success' },
+  retentive: { label: 'Retentive', icon: Brain, tone: 'success' },
+  numerate: { label: 'Numerate', icon: Calculator, tone: 'success' },
+  musical: { label: 'Musical', icon: Feather, tone: 'success' },
 }
 
 export const TRAIT_FAMILIES: Record<
@@ -608,7 +614,7 @@ export const ROLE_ICONS: Record<string, Named> = {
   ruler: { label: 'Ruler', icon: Crown, tone: 'gold' },
   hero: { label: 'Hero', icon: Medal, tone: 'gold' },
   warrior: { label: 'Warrior', icon: Swords, tone: 'danger' },
-  knight: { label: 'Knight', icon: Shield, tone: 'gold' },
+  sworn_warrior: { label: 'Sworn warrior', icon: Shield, tone: 'gold' },
   hunter: { label: 'Hunter', icon: Target, tone: 'success' },
   chosen: { label: 'Chosen', icon: Sparkles, tone: 'gold' },
   seer: { label: 'Seer', icon: Eye, tone: 'verdigris' },

@@ -4,11 +4,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ArtMode, Technique
 from aerona.domain.enums.discovery import (
     AgeKind,
     AnomalyKind,
-    ArtDiscipline,
     BlueprintKind,
     BlueprintSource,
     EraDeed,
@@ -198,7 +197,7 @@ class ArtFormProfileRow(Base):
     __table_args__ = (between("difficulty", 0, PERCENT_MAX), between("prestige", 0, PERCENT_MAX))
 
     art_form_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    discipline: Mapped[ArtDiscipline] = mapped_column(enum_type(ArtDiscipline, "discipline"))
+    discipline: Mapped[ArtMode] = mapped_column(enum_type(ArtMode, "discipline"))
     structure: Mapped[dict[str, str | int]] = mapped_column(JSON, default=dict)
     origin_culture_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     founder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

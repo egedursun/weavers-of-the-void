@@ -58,7 +58,7 @@ function WindowCard({
       caption={`Opens every ${plural(row.synodic, 'epoch', 'epochs')} · ${row.open ? 'open now' : wait === 0 ? 'opens this epoch' : `opens in ${plural(wait, 'epoch', 'epochs')}`}`}
       removeLabel='Forget the window'
       editTitle='Set the window'
-      note='Physical ways between these worlds (sails, slingshots, void arks and cosmic mounts) open when the worlds come round to each other. A journey that leaves outside the window takes longer; gates, bridges and other divine ways ignore it.'
+      note='Physical ways between these worlds (sails, slingshots, void arks and ridden crossings) open when the worlds come round to each other. A journey that leaves outside the window takes longer; gates, bridges and other divine ways ignore it.'
       fields={[
         {
           key: 'synodic',

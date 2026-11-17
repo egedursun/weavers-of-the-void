@@ -9,7 +9,7 @@ from aerona.domain.enums.urban import (
     MarketPlay,
     Morphology,
     OrderLaw,
-    Preservation,
+    PreservationMethod,
     RacketKind,
     TransportKind,
     TribunalVerdict,
@@ -120,7 +120,7 @@ class ConvoyView(ApiModel):
     owner: NodeRef | None
     route: NodeRef | None
     cargo: dict[str, int]
-    preservation: Preservation
+    preservation: PreservationMethod
     animals: int
     vehicles: int
     guards: int

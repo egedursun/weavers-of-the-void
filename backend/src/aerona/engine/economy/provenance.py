@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
 from aerona.catalog.means import BUILDING
+from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -31,13 +32,21 @@ MADE_TYPES = frozenset({EntityType.ITEM, EntityType.STRUCTURE, EntityType.VESSEL
 COMMON = frozenset({M.WOOD, M.STONE, M.BONE, M.HIDE, M.CLAY, M.CLOTH, M.MUD_BRICK, M.RUBBLE, M.THATCH})
 HOLY_WORKS = frozenset({EngineKind.TEMPLE, EngineKind.WONDER})
 STONE_WORKS = frozenset({EngineKind.WALL, EngineKind.LIBRARY, EngineKind.SCHOOL, EngineKind.OBSERVATORY, EngineKind.COSMIC_ARCHIVE})
-HULLS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyType(
+HULLS: Mapping[VehicleKind, tuple[MaterialKind, ...]] = total(
+    VehicleKind,
     {
-        VehicleKind.SHIP: (M.SKYSTEEL, M.STEEL, M.IRON, M.BRONZE, M.DRAGONBONE, M.LIVING_WOOD, M.WOOD),
+        VehicleKind.SHIP: (M.SKYSTEEL, M.STEEL, M.IRON, M.BRONZE, M.GREAT_BONE, M.LIVING_WOOD, M.WOOD),
         VehicleKind.GATE: (M.CRYSTAL, M.OBSIDIAN, M.STONE),
         VehicleKind.BRIDGE: (M.CRYSTAL, M.STONE, M.WOOD),
         VehicleKind.MOUNT: (M.CHITIN, M.LEATHER, M.HIDE),
-    }
+        VehicleKind.RAIL: (M.STEEL, M.IRON, M.WOOD),
+        VehicleKind.ROAD_VEHICLE: (M.STEEL, M.IRON, M.WOOD),
+        VehicleKind.AIRCRAFT: (M.SKYSTEEL, M.STEEL, M.WOOD, M.CLOTH),
+        VehicleKind.TELEPORT: (M.CRYSTAL, M.STEEL, M.STONE),
+        VehicleKind.LIVING: (M.LIVING_WOOD, M.CHITIN, M.HIDE),
+        VehicleKind.RIFT: (M.CRYSTAL, M.OBSIDIAN, M.STONE),
+        VehicleKind.ON_FOOT: (M.LEATHER, M.CLOTH, M.HIDE),
+    },
 )
 FABRICS: MappingProxyType[VehicleKind, tuple[MaterialKind, ...]] = MappingProxyType(
     {VehicleKind.SHIP: (M.CLOTH, M.LEATHER, M.HIDE), VehicleKind.MOUNT: (M.LEATHER, M.CLOTH, M.HIDE)}

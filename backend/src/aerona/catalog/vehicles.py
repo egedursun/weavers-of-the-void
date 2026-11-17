@@ -951,7 +951,7 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
             frame((F.ESCAPE_POD, "Escape pod", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.SMALL), (40, 10, 2, 1, 4, 30, 10, 20), (K.VOID_LIVING, 1)),
             frame((F.SPACE_TUG, "Space tug", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.MEDIUM), (40, 60, 400, 3, 0, 70, 20, 70), (K.VOID_LIVING, 1)),
             frame(
-                (F.MOTHERSHIP, "Mothership", D.SPACE, Y.SPACECRAFT, P.FOLD_DRIVE, Z.COLOSSAL),
+                (F.CARRIER_VESSEL, "Carrier vessel", D.SPACE, Y.SPACECRAFT, P.FOLD_DRIVE, Z.COLOSSAL),
                 (35, 200, 1500, 1500, 2000, 95, 70, 320),
                 (K.VOID_LIVING, 5),
                 armament=(V.MISSILES,),

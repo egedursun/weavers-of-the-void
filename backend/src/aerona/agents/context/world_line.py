@@ -17,6 +17,7 @@ from aerona.catalog.cosmography import (
     STAR_AGE_LABELS,
     WORLD_AGE_LABELS,
 )
+from aerona.catalog.kinds.terraform import TERRAFORM_AIMS
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.grammar import an, several, spoken
@@ -29,7 +30,6 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.physics import PERIODIC_BODIES, ImpactOutcome
 from aerona.engine.cosmos.orbits import eclipse_period, next_epoch
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of
-from aerona.engine.cosmos.terraform import AIM_LABELS
 from aerona.engine.phases.world_age import golden_age_status
 from aerona.engine.primitives.queries import canon
 from aerona.prompts import PromptId, render
@@ -111,7 +111,7 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
             + f" at age {impact.due_epoch}"
         )
     for project in await scope.session.scalars(select(TerraformingRow).where(TerraformingRow.world_id == world_id).order_by(TerraformingRow.id)):
-        lines.append(f"a work to {AIM_LABELS[project.aim]}, {several(project.epochs_left, 'age', 'ages')} left")
+        lines.append(f"a work to {TERRAFORM_AIMS[project.aim].words}, {several(project.epochs_left, 'age', 'ages')} left")
     root = scope.worlds.get(world_id)
     star_id = root.star_id if root is not None else None
     returning = select(CosmicFeatureRow).where(

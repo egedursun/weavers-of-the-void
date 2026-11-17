@@ -32,7 +32,7 @@ async def test_a_vengeance_is_done_when_its_target_is_gone(realm: Realm) -> None
 
 async def test_an_office_a_fine_weapon_a_child_and_a_teacher_meet_their_wants(realm: Realm) -> None:
     ctx, town = await scene(realm)
-    knight = await mortal(realm, "Bram", location_id=town, role=MortalRole.KNIGHT)
+    knight = await mortal(realm, "Bram", location_id=town, role=MortalRole.SWORN_WARRIOR)
     probe = await probe_of(ctx, knight, None, 1)
     for want in (WantKind.GAIN_OFFICE, WantKind.FINE_WEAPON, WantKind.HAVE_A_CHILD, WantKind.FIND_A_TEACHER, WantKind.VISIT_A_SHRINE, WantKind.WIN_GLORY):
         assert not await WANT_CHECKS[want](probe), want

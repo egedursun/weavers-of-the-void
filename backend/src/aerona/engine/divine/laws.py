@@ -202,5 +202,8 @@ async def clash_scar(ctx: TickContext, world: WorldRow) -> None:
     regions = sorted(await canon(ctx.session, [EntityType.REGION], world.id), key=lambda row: row.id)
     if regions and rng.chance(ctx.rules.phenomena.law_conflict_chance):
         await form_phenomenon(
-            ctx, rng.pick((PhenomenonKind.TIME_SLIP, PhenomenonKind.GRAVITY_WELL, PhenomenonKind.DEAD_ZONE)), rng.pick(regions), PhenomenonCause.LAW_CONFLICT
+            ctx,
+            rng.pick((PhenomenonKind.TIME_DISTORTION, PhenomenonKind.GRAVITY_ANOMALY, PhenomenonKind.BARREN_GROUND)),
+            rng.pick(regions),
+            PhenomenonCause.LAW_CONFLICT,
         )

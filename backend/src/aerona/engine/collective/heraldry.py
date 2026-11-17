@@ -36,6 +36,7 @@ from aerona.catalog.heraldry import (
     UNLINED,
     VALUE_POOLS,
 )
+from aerona.catalog.kinds.motifs import MOTIF_SOURCES
 from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import ARMS_FIELDS, ArmsRow
@@ -58,19 +59,21 @@ from aerona.domain.enums.collective import (
     SupporterPose,
     Tincture,
 )
+from aerona.domain.enums.demography import MotifSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.armory import Design, against, beneath, contrasting, partners, settled, slots
 from aerona.engine.context import TickContext
+from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 
 H = HeraldryHolderKind
 ORDERS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
 GUILDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.THIEVES_GUILD, FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER})
-DESIGN_FIELDS = tuple(name for name in ARMS_FIELDS if name != "motto")
+DESIGN_FIELDS = tuple(name for name in ARMS_FIELDS if name not in ("motto", "emblem_system_id"))
 STRONGEST = 3
 TRIES = 24
 NUMBERS = ("two", "three")
@@ -195,11 +198,11 @@ def styled_line(rng: SeededRandom, percent: float) -> PartitionLine:
     return rng.pick([line for line in PartitionLine if line is not PartitionLine.STRAIGHT])
 
 
-def chosen_charges(rng: SeededRandom, axes: list[ValueAxis]) -> list[HeraldicCharge]:
+def chosen_charges(rng: SeededRandom, axes: list[ValueAxis], motifs: list[MotifSource] | None = None) -> list[HeraldicCharge]:
     count = rng.weighted(list(COUNT_WEIGHTS), list(COUNT_WEIGHTS.values()))
     if count == 0:
         return []
-    pools = [VALUE_POOLS[axis] for axis in axes] or [EVERY_CHARGE]
+    pools = [MOTIF_SOURCES[source].charges for source in motifs or []] + [VALUE_POOLS[axis] for axis in axes] or [EVERY_CHARGE]
     first = rng.pick(pools[0])
     if rng.chance(REPEAT_PCT):
         return [first] * count
@@ -209,7 +212,7 @@ def chosen_charges(rng: SeededRandom, axes: list[ValueAxis]) -> list[HeraldicCha
     return found
 
 
-def invent(rng: SeededRandom, hint: Tincture | None, axes: list[ValueAxis]) -> dict[str, Any]:
+def invent(rng: SeededRandom, hint: Tincture | None, axes: list[ValueAxis], motifs: list[MotifSource] | None = None) -> dict[str, Any]:
     shapes = list(ShieldShape)
     tinctures = list(Tincture)
     shape = rng.weighted(shapes, [SHAPE_WEIGHTS[shape] for shape in shapes])
@@ -217,7 +220,7 @@ def invent(rng: SeededRandom, hint: Tincture | None, axes: list[ValueAxis]) -> d
     division = rng.pick(list(HeraldicDivision))
     line = PartitionLine.STRAIGHT if division in UNLINED else styled_line(rng, LINED_PCT)
     second = None if division is HeraldicDivision.PLAIN else rng.pick(seconds(field))
-    charges = chosen_charges(rng, axes)
+    charges = chosen_charges(rng, axes, motifs)
     arrangement = rng.pick(PREFERRED_ARRANGEMENTS.get(division, OPEN_ARRANGEMENTS))
     rims = list(ArmsRim)
     draft = Design(
@@ -296,10 +299,12 @@ async def sync_emblem(ctx: TickContext, arms: ArmsRow) -> None:
 
 async def grant(ctx: TickContext, holder: EntityRow, kind: HeraldryHolderKind, legacy: dict[str, str], taken: set[Signature]) -> ArmsRow:
     axes = await strongest(ctx.session, holder)
+    people = await people_of(ctx.session, holder)
+    motifs = await people_motifs(ctx.session, people.id if people is not None else None)
     hint = LEGACY_TINCTURES.get(legacy.get("field", ""))
     values: dict[str, Any] = {}
     for attempt in range(TRIES):
-        values = invent(ctx.rng(f"arms.{holder.id}.{attempt}"), hint if attempt < TRIES // 2 else None, axes)
+        values = invent(ctx.rng(f"arms.{holder.id}.{attempt}"), hint if attempt < TRIES // 2 else None, axes, motifs)
         if signature(values) not in taken:
             break
     taken.add(signature(values))

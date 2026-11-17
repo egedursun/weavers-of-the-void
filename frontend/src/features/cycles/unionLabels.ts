@@ -109,6 +109,11 @@ export const UNION_EXCHANGES: Record<Schema['UnionExchange'], Named> = {
     tone: 'gold',
   },
   mutual: { label: 'Gifts pass both ways', icon: Gift, tone: 'success' },
+  service: {
+    label: "The joining partner serves the other's family",
+    icon: HeartHandshake,
+    tone: 'info',
+  },
   none: { label: 'Nothing passes', icon: Ban, tone: 'muted' },
 }
 
@@ -144,4 +149,26 @@ export const PARTNER_SCOPES: Record<Schema['PartnerScope'], Named> = {
   caste: { label: 'Caste', icon: Landmark, tone: 'warning' },
   faith: { label: 'Faith', icon: Sparkles, tone: 'verdigris' },
   house: { label: 'House', icon: Building, tone: 'info' },
+  line: { label: 'Line of descent', icon: GitBranch, tone: 'info' },
+  moiety: { label: 'Half of the people', icon: GitFork, tone: 'warning' },
+}
+
+export const PLURAL_SIDES: Record<Schema['PluralSide'], Named> = {
+  first: { label: 'The first side', icon: GitBranch, tone: 'info' },
+  second: { label: 'The second side', icon: GitBranch, tone: 'info' },
+  either: { label: 'Either side', icon: GitFork, tone: 'success' },
+}
+
+export const KIN_MATCHES: Record<Schema['KinMatch'], Named> = {
+  none: { label: 'No kin sought', icon: Ban, tone: 'muted' },
+  cross_cousin: {
+    label: "A child of a parent's other-side sibling",
+    icon: Shuffle,
+    tone: 'info',
+  },
+  parallel_cousin: {
+    label: "A child of a parent's same-side sibling",
+    icon: Users,
+    tone: 'info',
+  },
 }

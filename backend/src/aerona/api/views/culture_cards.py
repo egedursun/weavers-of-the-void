@@ -148,6 +148,7 @@ async def tradition_card(session: AsyncSession, entity_id: int) -> TraditionCard
     refs = await node_refs(session, [*(item.community_entity_id for item in keepers), *([row.origin_entity_id] if row.origin_entity_id else [])])
     return TraditionCard(
         kind=row.kind,
+        stage=row.stage,
         calendar_slot=row.calendar_slot,
         season_position=row.season_position,
         calendar_entity_id=row.calendar_entity_id,

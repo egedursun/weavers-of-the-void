@@ -48,7 +48,7 @@ TEXT_STEMS: tuple[tuple[FeedCategory, tuple[str, ...]], ...] = (
     (FeedCategory.WAR, ("war", "battle", "siege", "army", "conquered", "plunder", "raid")),
     (FeedCategory.DISASTER, ("flood", "earthquake", "plague", "epidemic", "drought", "storm", "famine", "disaster")),
     (FeedCategory.SKY, ("eclipse", "comet", "star", "sky", "moon", "alignment", "meteor")),
-    (FeedCategory.LIFE, ("was born", "died", "death", "aged", "heir", "resurrected", "domesticated", "chimera", "mutation")),
+    (FeedCategory.LIFE, ("was born", "died", "death", "aged", "heir", "resurrected", "domesticated", "merged species", "mutation")),
     (FeedCategory.CIVILIZATION, ("tier", "federation", "independent", "empire", "kingdom", "trade")),
 )
 

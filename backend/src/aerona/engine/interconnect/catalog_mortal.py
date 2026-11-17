@@ -230,6 +230,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="circles",
+        tools=("found_circle",),
         spec_item="F18",
         title="Mortals who share a strong taste or belief gather into circles that bond their members, feed faction recruiting and spread a creed",
         subsystem=S.SOCIAL,
@@ -303,7 +304,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
     Mechanic(
         key="contests",
         spec_item="F18/RP6",
-        title="Rivals, suitors, captives, courtiers and priests meet in riddle games, flytings, debates, games, trials, songs and tales for a stake",
+        title="Rivals, suitors, captives, courtiers and priests meet in riddle games, contests of insults, debates, games, trials, songs and tales for a stake",
         subsystem=S.CULTURE,
         phases=("relations_contests",),
         surface=Surface(drawer=BONDS),
@@ -398,6 +399,7 @@ MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
     Mechanic(
         key="honour",
+        tools=("teach_honour",),
         spec_item="F16/RP4",
         title="Honour, face and dignity cultures weigh shame and guilt differently; shame spreads to kin and is set right by restitution",
         subsystem=S.MIND,

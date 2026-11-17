@@ -11,9 +11,9 @@ class CivilizationRules:
     previous_creation_relic_chance: int = rule(35, 0, 100, RuleGroup.CIVILIZATION, "A remnant of a previous creation is found (%)")
     city_state_population: int = rule(3000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population to become a city-state")
     city_state_knowledge: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a city-state")
-    kingdom_population: int = rule(20000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population of a kingdom with no ruled places")
-    kingdom_ruled_places: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum ruled places to become a kingdom")
-    kingdom_knowledge: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a kingdom")
+    realm_population: int = rule(20000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population of a realm with no ruled places")
+    realm_ruled_places: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum ruled places to become a realm")
+    realm_knowledge: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a realm")
     empire_region_pct: int = rule(
         50,
         0,

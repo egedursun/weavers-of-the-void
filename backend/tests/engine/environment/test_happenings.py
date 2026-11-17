@@ -80,7 +80,7 @@ async def test_drought_and_overgrazing_turn_a_land_to_desert_and_rest_brings_it_
         await reshape(context(realm.session, epoch=epoch))
     shape = await realm.session.get(RegionGeomorphRow, realm.region.id)
     assert shape is not None and shape.desertified
-    assert ground.soil in (SoilKind.SAND, SoilKind.SALT)
+    assert ground.soil in (SoilKind.SAND, SoilKind.SALINE)
     ground.locked = []
     await environment_derive(context(realm.session, epoch=12))
     assert ground.dominant_terrain is TerrainKind.DESERT
@@ -88,23 +88,23 @@ async def test_drought_and_overgrazing_turn_a_land_to_desert_and_rest_brings_it_
     ground.rainfall, ground.grazed = 60, 0
     for epoch in range(13, 30):
         await reshape(context(realm.session, epoch=epoch))
-    assert not shape.desertified and ground.soil not in (SoilKind.SAND, SoilKind.SALT)
+    assert not shape.desertified and ground.soil not in (SoilKind.SAND, SoilKind.SALINE)
 
 
 async def test_salted_earth_turns_the_soil_to_salt(realm: Realm) -> None:
     ground = await surveyed(realm)
-    ground.scars = {ScarKind.SALTED_EARTH.value: 80}
+    ground.scars = {ScarKind.MADE_BARREN.value: 80}
     await reshape(context(realm.session))
-    assert ground.soil is SoilKind.SALT
+    assert ground.soil is SoilKind.SALINE
     ground.scars = {}
     await reshape(context(realm.session, epoch=4))
-    assert ground.soil is not SoilKind.SALT
+    assert ground.soil is not SoilKind.SALINE
 
 
 async def test_an_eruption_buries_the_land_in_ash_that_weathers_into_volcanic_soil(realm: Realm) -> None:
     ground = await surveyed(realm)
     event, _ = await strike(context(realm.session), realm.region, Disaster.ERUPTION, 80)
-    assert event.engine_kind is EngineKind.ERUPTION and ground.soil is SoilKind.ASH
+    assert event.engine_kind is EngineKind.ERUPTION and ground.soil is SoilKind.TEPHRA
     assert ground.scars.get(ScarKind.BURNED.value, 0) > 0
     shape = await realm.session.get(RegionGeomorphRow, realm.region.id)
     assert shape is not None and shape.last_eruption_epoch == 3
@@ -146,7 +146,7 @@ def test_plague_kills_more_elders_than_adults() -> None:
         )
         for age in AgeBand
     }
-    split = cohort_split(rows, FlowCategory.PLAGUE, 300)
+    split = cohort_split(rows, FlowCategory.PLAGUE, 300, {})
     assert sum(split.values()) == 300
     elders = split[(AgeBand.ELDER, Sex.MALE, SocialClass.FARMER, CohortCondition.NONE)]
     adults = split[(AgeBand.ADULT, Sex.MALE, SocialClass.FARMER, CohortCondition.NONE)]

@@ -55,7 +55,7 @@ GOALS: MappingProxyType[LifeGoal, GoalSpec] = MappingProxyType(
             "Create a masterwork",
             {"artwork": 40, "craftsmanship": 30},
             {"artistic_inclination": 50, "imagination": 30},
-            ("Find the craft", "Hone the hand", "Make a masterwork"),
+            ("Find the craft", "Practise the craft", "Make a masterwork"),
         ),
         G.BECOME_A_LEGEND: goal(
             "Become a legend", {"honour": 30, "competition": 30}, {"vanity": 40, "excitement_seeking": 30}, ("Be noticed", "Be renowned", "Be a legend")
@@ -151,13 +151,13 @@ class FocusSpec:
 SF = SkillFamily
 FOCUSES: MappingProxyType[FocusKind, FocusSpec] = MappingProxyType(
     {
-        K.DIPLOMACY: FocusSpec("Diplomacy", (SF.SOCIAL,), (P.SILVER_TONGUE, P.PEACEMAKER, P.WELL_CONNECTED, P.ENVOYS_PATIENCE, P.BELOVED)),
-        K.MARTIAL: FocusSpec("Martial", (SF.COMBAT, SF.COMMAND), (P.HARDENED, P.SWIFT_BLADE, P.IRON_NERVE, P.BATTLE_EYE, P.WARLORD)),
-        K.STEWARDSHIP: FocusSpec("Stewardship", (SF.SURVIVAL,), (P.LEDGER_MIND, P.STEADY_HAND, P.PRUDENT, P.BUILDER, P.GRANARY_KEEPER)),
-        K.INTRIGUE: FocusSpec("Intrigue", (SF.SOCIAL,), (P.SHADOW_STEP, P.KEEN_EAR, P.MASK, P.NETWORK_BUILDER, P.COLD_EYE)),
-        K.LEARNING: FocusSpec("Learning", (SF.KNOWLEDGE,), (P.QUICK_STUDY, P.DEEP_MEMORY, P.LUCID, P.SAGES_INSIGHT, P.POLYMATH)),
+        K.DIPLOMACY: FocusSpec("Diplomacy", (SF.SOCIAL,), (P.PERSUASIVE, P.PEACEMAKER, P.WELL_CONNECTED, P.PATIENT_ENVOY, P.BELOVED)),
+        K.MARTIAL: FocusSpec("Martial", (SF.COMBAT, SF.COMMAND), (P.HARDENED, P.FAST_STRIKER, P.STEADY_UNDER_FEAR, P.READS_THE_FIELD, P.COMMANDER)),
+        K.STEWARDSHIP: FocusSpec("Stewardship", (SF.SURVIVAL,), (P.RECKONER, P.STEADY_HAND, P.PRUDENT, P.BUILDER, P.PROVISIONER)),
+        K.INTRIGUE: FocusSpec("Intrigue", (SF.SOCIAL,), (P.UNSEEN, P.KEEN_EAR, P.DISSEMBLER, P.NETWORK_BUILDER, P.UNMOVED)),
+        K.LEARNING: FocusSpec("Learning", (SF.KNOWLEDGE,), (P.QUICK_STUDY, P.DEEP_MEMORY, P.LUCID, P.INSIGHTFUL, P.POLYMATH)),
         K.PIETY: FocusSpec("Piety", (SF.FAITH,), (P.DEVOUT, P.SERENE, P.FAITHFUL_VOICE, P.VISIONARY, P.HALLOWED)),
-        K.CRAFT: FocusSpec("Craft", (SF.CRAFT,), (P.SURE_HANDS, P.INVENTIVE, P.TIRELESS, P.EYE_FOR_BEAUTY, P.MASTERS_TOUCH)),
+        K.CRAFT: FocusSpec("Craft", (SF.CRAFT,), (P.SURE_HANDS, P.INVENTIVE, P.TIRELESS, P.AESTHETE, P.MASTER_CRAFT)),
         K.LEISURE: FocusSpec("Leisure", (), (P.GOOD_COMPANY, P.CAREFREE, P.REVELLER, P.CHARMING, P.JOYFUL_SPIRIT)),
     }
 )
@@ -165,30 +165,30 @@ FOCUSES: MappingProxyType[FocusKind, FocusSpec] = MappingProxyType(
 PERK_LEVELS = (20, 35, 50, 65, 80)
 PERK_STATS: MappingProxyType[PerkKind, tuple[str, str, int]] = MappingProxyType(
     {
-        P.SILVER_TONGUE: ("Silver tongue", "charisma", 4),
+        P.PERSUASIVE: ("Persuasive", "charisma", 4),
         P.PEACEMAKER: ("Peacemaker", "wisdom", 3),
         P.WELL_CONNECTED: ("Well connected", "charisma", 3),
-        P.ENVOYS_PATIENCE: ("Envoy's patience", "willpower", 3),
+        P.PATIENT_ENVOY: ("Patient envoy", "willpower", 3),
         P.BELOVED: ("Beloved", "charisma", 5),
         P.HARDENED: ("Hardened", "endurance", 4),
-        P.SWIFT_BLADE: ("Swift blade", "agility", 4),
-        P.IRON_NERVE: ("Iron nerve", "willpower", 4),
-        P.BATTLE_EYE: ("Battle eye", "perception", 4),
-        P.WARLORD: ("Warlord", "strength", 5),
-        P.LEDGER_MIND: ("Ledger mind", "intellect", 3),
+        P.FAST_STRIKER: ("Fast striker", "agility", 4),
+        P.STEADY_UNDER_FEAR: ("Steady under fear", "willpower", 4),
+        P.READS_THE_FIELD: ("Reads the field", "perception", 4),
+        P.COMMANDER: ("Commander", "strength", 5),
+        P.RECKONER: ("Reckoner", "intellect", 3),
         P.STEADY_HAND: ("Steady hand", "willpower", 3),
         P.PRUDENT: ("Prudent", "wisdom", 4),
         P.BUILDER: ("Builder", "endurance", 3),
-        P.GRANARY_KEEPER: ("Granary keeper", "wisdom", 5),
-        P.SHADOW_STEP: ("Shadow step", "agility", 3),
+        P.PROVISIONER: ("Provisioner", "wisdom", 5),
+        P.UNSEEN: ("Unseen", "agility", 3),
         P.KEEN_EAR: ("Keen ear", "perception", 4),
-        P.MASK: ("Mask", "charisma", 3),
+        P.DISSEMBLER: ("Dissembler", "charisma", 3),
         P.NETWORK_BUILDER: ("Network builder", "intellect", 4),
-        P.COLD_EYE: ("Cold eye", "willpower", 5),
+        P.UNMOVED: ("Unmoved", "willpower", 5),
         P.QUICK_STUDY: ("Quick study", "intellect", 3),
         P.DEEP_MEMORY: ("Deep memory", "intellect", 3),
         P.LUCID: ("Lucid", "wisdom", 4),
-        P.SAGES_INSIGHT: ("Sage's insight", "perception", 4),
+        P.INSIGHTFUL: ("Insightful", "perception", 4),
         P.POLYMATH: ("Polymath", "intellect", 5),
         P.DEVOUT: ("Devout", "willpower", 3),
         P.SERENE: ("Serene", "wisdom", 3),
@@ -198,8 +198,8 @@ PERK_STATS: MappingProxyType[PerkKind, tuple[str, str, int]] = MappingProxyType(
         P.SURE_HANDS: ("Sure hands", "agility", 3),
         P.INVENTIVE: ("Inventive", "creativity", 3),
         P.TIRELESS: ("Tireless", "endurance", 4),
-        P.EYE_FOR_BEAUTY: ("Eye for beauty", "creativity", 4),
-        P.MASTERS_TOUCH: ("Master's touch", "creativity", 5),
+        P.AESTHETE: ("Aesthete", "creativity", 4),
+        P.MASTER_CRAFT: ("Master of a craft", "creativity", 5),
         P.GOOD_COMPANY: ("Good company", "charisma", 3),
         P.CAREFREE: ("Carefree", "willpower", 3),
         P.REVELLER: ("Reveller", "endurance", 3),
@@ -218,7 +218,7 @@ PERKS: MappingProxyType[PerkKind, PerkSpec] = MappingProxyType(
 
 INSPIRATION_LABELS: MappingProxyType[InspirationKind, str] = MappingProxyType(
     {
-        InspirationKind.MASTERWORK_FEVER: "A fever to make a masterwork",
+        InspirationKind.MASTERWORK_FEVER: "An urge to make a masterwork",
         InspirationKind.RESEARCH_INSIGHT: "A flash of insight",
         InspirationKind.HEROIC_RESOLVE: "A heroic resolve",
         InspirationKind.ARTISTIC_VISION: "A vision of a work to make",

@@ -62,7 +62,7 @@ class ChronicleKind(StrEnum):
     ADVENTURE = "adventure"
     INTRIGUE = "intrigue"
     RESCUE = "rescue"
-    CHIMERA = "chimera"
+    MERGED_SPECIES = "merged_species"
     ESCAPE = "escape"
     DOMESTICATION = "domestication"
     AGE_CHANGE = "age_change"

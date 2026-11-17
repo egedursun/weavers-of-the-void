@@ -7,8 +7,6 @@ from aerona.domain.enums.crafts import (
     CatchRight,
     ChemicalProduct,
     ClockKind,
-    GameKind,
-    GameRule,
     Gear,
     InsuranceCover,
     LinkToken,
@@ -141,37 +139,6 @@ class PublicClockTarget(Command):
 
 class PublicClockEdit(Edited):
     settlement_id: int
-
-
-class GameDraft(Command):
-    name: str
-    kind: GameKind = GameKind.BOARD
-    rule: GameRule = GameRule.STRATEGY
-    origin_entity_id: int | None = None
-
-
-class GameTarget(Command):
-    record_id: int
-
-
-class GameEdit(Edited):
-    record_id: int
-
-
-class GameFollowingDraft(Command):
-    people_id: int
-    game_id: int
-    popularity: int = 30
-
-
-class GameFollowingTarget(Command):
-    people_id: int
-    game_id: int
-
-
-class GameFollowingEdit(Edited):
-    people_id: int
-    game_id: int
 
 
 class NumberSystemDraft(Command):
@@ -409,54 +376,6 @@ async def public_clock_edit(scope: PlayerScope, command: PublicClockEdit) -> Eff
 async def public_clock_delete(scope: PlayerScope, command: PublicClockTarget) -> Effect:
     await control.delete_record(await scope.context("public_clock_delete"), "public_clock", command.settlement_id)
     return Effect("The clock is taken down.")
-
-
-@player_action("game:create", ActionKind.EDIT_RECORD)
-async def game_create(scope: PlayerScope, command: GameDraft) -> Effect:
-    row = await control.set_record(
-        await scope.context("game_create"),
-        "game",
-        {},
-        {"name": command.name, "kind": command.kind, "rule": command.rule, "origin_entity_id": command.origin_entity_id},
-    )
-    return Effect("The game is played.", values={"record_id": getattr(row, "id", 0)})
-
-
-@player_action("game:edit", ActionKind.EDIT_RECORD)
-async def game_edit(scope: PlayerScope, command: GameEdit) -> Effect:
-    await control.edit_record(await scope.context("game_edit"), "game", command.record_id, command.values, command.release)
-    return Effect("The game is set so.")
-
-
-@player_action("game:delete", ActionKind.EDIT_RECORD)
-async def game_delete(scope: PlayerScope, command: GameTarget) -> Effect:
-    await control.delete_record(await scope.context("game_delete"), "game", command.record_id)
-    return Effect("The game is forgotten.")
-
-
-@player_action("game_following:set", ActionKind.EDIT_RECORD)
-async def game_following_set(scope: PlayerScope, command: GameFollowingDraft) -> Effect:
-    row = await control.set_record(
-        await scope.context("game_following_set"),
-        "game_following",
-        {"people_entity_id": command.people_id, "game_id": command.game_id},
-        {"popularity": command.popularity},
-    )
-    return Effect("The people take up the game.", values={"record_id": getattr(row, "id", 0)})
-
-
-@player_action("game_following:edit", ActionKind.EDIT_RECORD)
-async def game_following_edit(scope: PlayerScope, command: GameFollowingEdit) -> Effect:
-    await control.edit_record(
-        await scope.context("game_following_edit"), "game_following", (command.people_id, command.game_id), command.values, command.release
-    )
-    return Effect("The following is set so.")
-
-
-@player_action("game_following:delete", ActionKind.EDIT_RECORD)
-async def game_following_delete(scope: PlayerScope, command: GameFollowingTarget) -> Effect:
-    await control.delete_record(await scope.context("game_following_delete"), "game_following", (command.people_id, command.game_id))
-    return Effect("The people leave the game.")
 
 
 @player_action("number_system:set", ActionKind.EDIT_RECORD)

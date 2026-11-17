@@ -7,7 +7,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
+from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProductRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
@@ -15,7 +15,7 @@ from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
-from aerona.domain.enums.ecology import Biochemistry, Cultivation, Diet, DomesticationStage, GrowthCycle, PlantYield, SizeClass, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, Biochemistry, Cultivation, Diet, DomesticationStage, GrowthCycle, PlantYield, SizeClass, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind, WeatherEffect, WeatherKind
@@ -106,7 +106,9 @@ async def test_a_plant_grows_its_own_profile_and_harvest_never_meat(ctx: TickCon
     grows = await ctx.session.get(PlantProfileRow, crop.id)
     assert profile is not None and profile.species_class is SpeciesClass.PLANT and profile.diet is Diet.PHOTOSYNTHETIC
     assert grows is not None and grows.growth_cycle is GrowthCycle.ANNUAL and grows.cultivation is Cultivation.WILD
-    products = {row.product: row.commodity for row in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == crop.id))}
+    products = {
+        row.product: row.commodity for row in await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == crop.id))
+    }
     assert products == {"grain": CommodityKind.GRAIN, "brew_base": CommodityKind.BREW_BASE}
     assert not list(await ctx.session.scalars(select(SpeciesUseRow).where(SpeciesUseRow.species_entity_id == crop.id)))
     tree = await make_entity(ctx.session, "Old Oak", EntityType.SPECIES, SpeciesStats(), world_id=cosmos.home.id, location_id=region.id)
@@ -114,7 +116,7 @@ async def test_a_plant_grows_its_own_profile_and_harvest_never_meat(ctx: TickCon
     assert shaped.species_class is SpeciesClass.PLANT
     oak = await ctx.session.get(PlantProfileRow, tree.id)
     assert oak is not None and oak.growth_cycle is GrowthCycle.TREE
-    made = set(await ctx.session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == tree.id)))
+    made = set(await ctx.session.scalars(select(SpeciesProductRow.product).where(SpeciesProductRow.species_entity_id == tree.id)))
     assert made == {"timber", "fruit"}
 
 
@@ -169,7 +171,7 @@ async def test_farmers_gather_then_sow_a_wild_plant_and_a_master_farmer_breeds_a
     bred = await ctx.session.get(PlantProfileRow, sown[0].plant_entity_id)
     assert bred is not None and bred.cultivation is Cultivation.CULTIVAR and bred.cultivar_of_id == crop.id
     assert bred.soil_need == max(0, rules.flora.soil_need - rules.flora.cultivar_soil)
-    rate = await ctx.session.get(SpeciesYieldRow, (sown[0].plant_entity_id, "grain"))
+    rate = await ctx.session.get(SpeciesProductRow, (sown[0].plant_entity_id, "grain"))
     assert rate is not None and rate.rate > 2
 
 
@@ -283,10 +285,10 @@ async def test_the_backfill_gives_old_kinds_their_class_life_and_herd_goods(ctx:
             SpeciesProfileRow(species_entity_id=tree.id, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC, locked=[]),
             SpeciesProfileRow(species_entity_id=sheep.id, diet=Diet.HERBIVORE, locked=[]),
             SpeciesProfileRow(species_entity_id=mouser.id, diet=Diet.CARNIVORE, size_class=SizeClass.SMALL, locked=[]),
-            SpeciesYieldRow(species_entity_id=tree.id, product="meat", commodity=CommodityKind.LIVESTOCK, rate=2),
-            SpeciesYieldRow(species_entity_id=sheep.id, product="wool", commodity=CommodityKind.CLOTH, rate=1),
-            SpeciesYieldRow(species_entity_id=sheep.id, product="milk", commodity=CommodityKind.LIVESTOCK, rate=1),
-            SpeciesUseRow(species_entity_id=tree.id, use=SpeciesUse.FOOD),
+            SpeciesProductRow(species_entity_id=tree.id, product="meat", commodity=CommodityKind.LIVESTOCK, rate=2),
+            SpeciesProductRow(species_entity_id=sheep.id, product="wool", commodity=CommodityKind.CLOTH, rate=1),
+            SpeciesProductRow(species_entity_id=sheep.id, product="milk", commodity=CommodityKind.LIVESTOCK, rate=1),
+            SpeciesUseRow(species_entity_id=tree.id, use=AnimalRole.MEAT),
         ]
     )
     await ctx.session.flush()
@@ -294,9 +296,9 @@ async def test_the_backfill_gives_old_kinds_their_class_life_and_herd_goods(ctx:
     assert counts["plants"] == 1 and counts["herd_goods"] == 2 and counts["pest_hunters"] == 1
     profile = await ctx.session.get(SpeciesProfileRow, tree.id)
     assert profile is not None and profile.species_class is SpeciesClass.PLANT
-    assert await ctx.session.get(SpeciesYieldRow, (tree.id, "meat")) is None
-    assert await ctx.session.get(SpeciesUseRow, (tree.id, SpeciesUse.FOOD)) is None
-    wool = await ctx.session.get(SpeciesYieldRow, (sheep.id, "wool"))
+    assert await ctx.session.get(SpeciesProductRow, (tree.id, "meat")) is None
+    assert await ctx.session.get(SpeciesUseRow, (tree.id, AnimalRole.MEAT)) is None
+    wool = await ctx.session.get(SpeciesProductRow, (sheep.id, "wool"))
     assert wool is not None and wool.commodity is CommodityKind.WOOL
     assert await ctx.session.get(AppliedFixupRow, "flora.typed_flora") is not None
     assert (await flora_backfill(ctx))["plants"] == 0
@@ -364,10 +366,10 @@ async def test_a_yield_the_god_names_freely_still_fills_the_fields_by_its_goods(
     vale = await make_region(ctx.session, "Barley Vale", cosmos.home.id)
     await land(ctx.session, vale.id, cosmos.home.id)
     crop = await plant(ctx, cosmos, "Vale Barley", vale.id, PlantYield.GRAIN)
-    for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == crop.id))):
+    for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == crop.id))):
         await ctx.session.delete(item)
-    ctx.session.add(SpeciesYieldRow(species_entity_id=crop.id, product="barley", commodity=CommodityKind.GRAIN, rate=2))
-    ctx.session.add(SpeciesYieldRow(species_entity_id=crop.id, product="song", commodity=None, rate=1))
+    ctx.session.add(SpeciesProductRow(species_entity_id=crop.id, product="barley", commodity=CommodityKind.GRAIN, rate=2))
+    ctx.session.add(SpeciesProductRow(species_entity_id=crop.id, product="song", commodity=None, rate=1))
     ctx.session.add(RegionCropRow(region_entity_id=vale.id, plant_entity_id=crop.id, share=100, since_epoch=1, locked=[]))
     await ctx.session.flush()
     book = await CropBook.load(ctx.session, rules)

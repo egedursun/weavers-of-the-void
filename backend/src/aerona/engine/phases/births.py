@@ -14,10 +14,10 @@ from aerona.db.tables.genetics import GenomeRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.demography import MarriageCustom
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
-from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, MortalSex
+from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.transform import TransformKind
@@ -25,13 +25,13 @@ from aerona.domain.models.entity_stats import MortalStats, PeopleStats, Settleme
 from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
-from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.body.customs import culture_of
 from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import rested_fertility
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
-from aerona.engine.cycles.lineage import breeds, system_of
+from aerona.engine.cycles.lineage import breeds, system_of, union_of
 from aerona.engine.demography.urban import founding_factor
 from aerona.engine.folkways.fed import fed_fertility
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
@@ -45,7 +45,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kinship import add_parent
-from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_abilities, refresh_life, sex_of_stats
+from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas
 from aerona.engine.notes import note
@@ -76,6 +76,7 @@ from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
 from aerona.engine.storyteller.pace import recovered
 from aerona.engine.transform.record import blocked, record_transformation
+from aerona.engine.unions.axes import spousing_of
 from aerona.language.generator import NameKind
 from aerona.language.titles import from_among
 from aerona.rules.registry import Rules
@@ -83,7 +84,6 @@ from aerona.rules.registry import Rules
 Bias = Callable[[Rules], int]
 STAT_KEYS = ("strength", "agility", "intellect", "charisma")
 COUPLE_KINDS = (BondKind.SPOUSE_OF, BondKind.CONCUBINE_OF, BondKind.LOVES)
-PLURAL_CUSTOMS = frozenset({MarriageCustom.POLYGYNY, MarriageCustom.POLYANDRY, MarriageCustom.GROUP})
 CLASS_RANK = {
     cls: index
     for index, cls in enumerate(
@@ -228,15 +228,17 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
         ),
     ),
     SocialClass.NOBLE: (
-        NotableRole("lord", "Lord", "landholder", MortalRole.RULER, {"charisma": lambda r: r.deep_life.role_noble_lord_charisma}),
-        NotableRole("knight", "Knight", "knight", MortalRole.KNIGHT, {"strength": lambda r: r.deep_life.role_noble_knight_strength}),
+        NotableRole("landholder", "Landholder", "landholder", MortalRole.RULER, {"charisma": lambda r: r.deep_life.role_noble_landholder_charisma}),
+        NotableRole(
+            "sworn_warrior", "Sworn warrior", "sworn warrior", MortalRole.SWORN_WARRIOR, {"strength": lambda r: r.deep_life.role_noble_sworn_warrior_strength}
+        ),
     ),
     SocialClass.SERF_OR_SLAVE: (NotableRole("bonded", "Bonded", "bonded", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_serf_strength}),),
     SocialClass.OUTCAST: (
         NotableRole("beggar", "Beggar", "beggar", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_outcast_charisma}),
         NotableRole("outlaw", "Outlaw", "outlaw", MortalRole.BANDIT, {"agility": lambda r: r.deep_life.role_outcast_outlaw_agility}),
     ),
-    SocialClass.MONASTIC: (NotableRole("monk", "Monastic", "monk", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
+    SocialClass.MONASTIC: (NotableRole("ascetic", "Ascetic", "ascetic", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
     SocialClass.WORKER: (
         NotableRole("labourer", "Labourer", "labourer", MortalRole.COMMONER, {"strength": lambda r: r.deep_life.role_worker_strength}),
         NotableRole("organiser", "Organiser", "organiser", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_worker_organiser_charisma}),
@@ -730,9 +732,12 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
 
 @reads(
     "cult.followers",
+    "mortal.agility",
     "mortal.beauty",
+    "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
+    "mortal.intellect",
     "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
@@ -753,6 +758,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.language_profiles",
     "table.lexemes",
     "table.maimed_cohorts",
+    "table.mind_attributes",
     "table.name_registry",
     "table.nodes",
     "table.people_biology",
@@ -761,6 +767,9 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.world_maps",
 )
 @writes(
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
     "people.population",
@@ -814,7 +823,6 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, twin)) or await child_namer.person(
         [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, twin)
     )
-    abilities = inherited_abilities(ctx.rules, first, second, rng)
     child = await open_record(
         ctx.session,
         ctx.epoch,
@@ -831,7 +839,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
                 age=0,
                 lifespan=clamp_int(lifespans / 2 + rng.integer(-deviation, deviation), effects.child_min_lifespan, ctx.rules.deep_life.lifespan_cap),
                 sex=born_sex(ctx.rules, await system_of(ctx.session, first), rng).value,
-                **abilities,
+                **inherited_summaries(ctx.rules, first, second, rng),
             ),
             power=max(1, round_half_up((first.power_level + second.power_level) / 2) - 1),
             location_id=first.location_id,
@@ -849,7 +857,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     profile.life_stage = LifeStage.INFANT
     await bloodline_marks(ctx, child, (first, second))
     genome = await found_genome(ctx, child, (first, second))
-    raise_child(ctx.rules, child, genome, await upbringing_pct(ctx, child.id, (first, second)))
+    await raise_child(ctx, child, genome, await upbringing_pct(ctx, child.id, (first, second)))
     language = await spoken_language(ctx.session, first.id) or await spoken_language(ctx.session, second.id)
     if language is not None:
         await connect(ctx.session, child.id, language.id, BondKind.SPEAKS, ctx.epoch)
@@ -906,14 +914,12 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
 
 
 async def concubinage_allowed(ctx: TickContext, mortal: EntityRow) -> bool:
-    people = await people_of(ctx.session, mortal)
-    custom = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
-    return custom is not None and custom.marriage in PLURAL_CUSTOMS
+    return spousing_of(await union_of(ctx.session, mortal)).several
 
 
 def bearer_of(first: EntityRow, second: EntityRow) -> EntityRow:
     for mortal in (first, second):
-        if isinstance(mortal.stats, MortalStats) and mortal.stats.sex == MortalSex.FEMALE.value:
+        if isinstance(mortal.stats, MortalStats) and mortal.stats.sex == Sex.FEMALE.value:
             return mortal
     return first
 

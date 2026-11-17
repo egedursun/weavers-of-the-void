@@ -110,9 +110,8 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 LanguageTexture.GUTTURAL,
                 3,
                 CosmosSize.SINGLE,
-                "A world raised on the bodies of gods who died before time began.",
+                "A dark world where power is cruel and hope is hard to find.",
                 storyteller=StorytellerProfile.RISING,
-                world_type=WorldType.CORPSE_WORLD,
             ),
             WizardTemplate(
                 T.MYTHIC_AGE,
@@ -166,7 +165,7 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 "A cosmos whose peoples look up at the stars and set out to reach them.",
             ),
             WizardTemplate(
-                T.SAND_AND_ASH,
+                T.DESERT_WORLD,
                 "Desert world",
                 "harsh, arid, proud",
                 35,
@@ -193,8 +192,8 @@ TEMPLATES: MappingProxyType[GenesisTemplate, WizardTemplate] = MappingProxyType(
                 world_age=WorldAge.YOUNG,
             ),
             WizardTemplate(
-                T.CROWNS_AND_KNIVES,
-                "Crowns and knives",
+                T.COURT_INTRIGUE,
+                "Court intrigue",
                 "cunning, political, full of intrigue",
                 12,
                 55,

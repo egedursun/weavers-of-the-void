@@ -7,6 +7,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
+    AnimalRole,
     BeastTemper,
     Biochemistry,
     Diet,
@@ -16,13 +17,13 @@ from aerona.domain.enums.ecology import (
     SizeClass,
     Sociality,
     SpeciesClass,
-    SpeciesUse,
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature import Dormancy, Thermoregulation
+from aerona.domain.enums.nature_kinds import ProductPart
 
 
 class SpeciesProfileRow(Base):
@@ -103,8 +104,8 @@ class SpeciesRangeRow(Base):
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
-class SpeciesYieldRow(Base):
-    __tablename__ = "species_yields"
+class SpeciesProductRow(Base):
+    __tablename__ = "species_products"
     __table_args__ = (at_least("rate", 0),)
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -113,13 +114,16 @@ class SpeciesYieldRow(Base):
     material: Mapped[MaterialKind | None] = mapped_column(enum_type(MaterialKind, "material"))
     world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="SET NULL"))
     rate: Mapped[int] = mapped_column(default=1)
+    part: Mapped[ProductPart | None] = mapped_column(enum_type(ProductPart, "part"))
+    good_kind_id: Mapped[int | None] = mapped_column(ForeignKey("good_kinds.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class SpeciesUseRow(Base):
     __tablename__ = "species_uses"
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    use: Mapped[SpeciesUse] = mapped_column(enum_type(SpeciesUse, "use"), primary_key=True)
+    use: Mapped[AnimalRole] = mapped_column(enum_type(AnimalRole, "use"), primary_key=True)
 
 
 class SpeciesUseKindRow(Base):
@@ -128,7 +132,7 @@ class SpeciesUseKindRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
-    base_use: Mapped[SpeciesUse] = mapped_column(enum_type(SpeciesUse, "base_use"))
+    base_use: Mapped[AnimalRole] = mapped_column(enum_type(AnimalRole, "base_use"))
     output_pct: Mapped[int] = mapped_column(default=100)
     description: Mapped[str | None] = mapped_column(String(SHORT_TEXT_MAX_LENGTH))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

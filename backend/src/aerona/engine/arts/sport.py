@@ -6,17 +6,19 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arts import BetRow, ClubRow, LeagueRow, MatchRow
-from aerona.db.tables.crafts import GameFollowingRow, GameRow
+from aerona.db.tables.crafts import GameRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.kinds import KindHoldingRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arts import ClubKind, FandomLine
 from aerona.domain.enums.collective import CollectiveTrigger
-from aerona.domain.enums.crafts import GameKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.kind_crafts import GameCategory
+from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_id_of
@@ -33,7 +35,15 @@ from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
 from aerona.engine.structures.readers import working
 
 ARENAS = (StructureKind.ARENA, StructureKind.STADIUM)
-FIELD_GAMES = MappingProxyType({GameKind.BALL: ClubKind.TEAM_GAME, GameKind.WRESTLING: ClubKind.COMBAT})
+FIELD_GAMES = MappingProxyType(
+    {
+        GameCategory.BALL: ClubKind.TEAM_GAME,
+        GameCategory.TEAM: ClubKind.TEAM_GAME,
+        GameCategory.RACING: ClubKind.RACING,
+        GameCategory.COMBAT_SPORT: ClubKind.COMBAT,
+        GameCategory.ATHLETIC: ClubKind.ATHLETICS,
+    }
+)
 MIDDLING = 50
 PAIR = 2
 
@@ -105,10 +115,11 @@ async def field_game(ctx: TickContext, town: EntityRow) -> ClubKind | None:
     if folk is None:
         return None
     found = await ctx.session.scalar(
-        select(GameRow.kind)
-        .join(GameFollowingRow, GameFollowingRow.game_id == GameRow.id)
-        .where(GameFollowingRow.people_entity_id == folk, GameRow.kind.in_(list(FIELD_GAMES)), GameFollowingRow.popularity >= ctx.rules.sports.field_following)
-        .order_by(GameFollowingRow.popularity.desc(), GameRow.id)
+        select(GameRow.category)
+        .join(KindHoldingRow, KindHoldingRow.kind_id == GameRow.id)
+        .where(KindHoldingRow.concept == KindConcept.GAME, KindHoldingRow.holder_node_id == folk)
+        .where(GameRow.category.in_(list(FIELD_GAMES)), KindHoldingRow.strength >= ctx.rules.sports.field_following)
+        .order_by((KindHoldingRow.strength * GameRow.spectators).desc(), GameRow.id)
         .limit(1)
     )
     return FIELD_GAMES[found] if found is not None else None

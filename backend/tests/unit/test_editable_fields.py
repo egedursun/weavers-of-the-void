@@ -218,10 +218,30 @@ def test_no_drawer_editor_offers_a_value_the_store_keeps_for_itself() -> None:
     assert offered == []
 
 
+MAPPED_KEYS = re.compile(r"const (\w+) = \[([^\]]*)\]")
+
+
+def mapped_keys(text: str) -> set[str]:
+    found: set[str] = set()
+    for name, items in MAPPED_KEYS.findall(text):
+        if re.search(rf"\.\.\.{name}\.map\(\((\w+)\) => \(\{{\s*key: \1", text):
+            found |= set(re.findall(r"'(\w+)'", items))
+    return found
+
+
 def offers(text: str, field: str) -> bool:
     return (
-        f"key: '{field}'" in text or re.search(rf"values: \{{[^}}]*\b{field}\b", text) is not None or re.search(rf"(?m)^\s+{field}: (?!'|\d)", text) is not None
+        f"key: '{field}'" in text
+        or re.search(rf"values: \{{[^}}]*\b{field}\b", text) is not None
+        or re.search(rf"(?m)^\s+{field}: (?!'|\d)", text) is not None
+        or field in mapped_keys(text)
     )
+
+
+def test_keys_mapped_from_a_constant_list_count_as_offered() -> None:
+    text = "const AXES = ['sweet', 'sour'] as const\nfields={[...AXES.map((axis) => ({ key: axis, kind: 'number' }))]}"
+    assert offers(text, "sweet")
+    assert not offers(text, "bitter")
 
 
 def test_every_editable_value_is_offered_by_the_screen_that_edits_it() -> None:

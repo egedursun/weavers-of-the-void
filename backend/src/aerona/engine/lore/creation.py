@@ -3,7 +3,8 @@ from typing import Any
 
 from pydantic import TypeAdapter
 
-from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, ITEM_CLASSES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
+from aerona.catalog.art_modes import PERFORMED_MODES
+from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, ITEM_CLASSES, LEGEND_MORALS, RITE_TEMPLATES, tradition_spec
 from aerona.catalog.theories import DISCIPLINES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -23,8 +24,7 @@ from aerona.db.tables.discovery import ArtFormProfileRow, TheoryProfileRow
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import (
-    PERFORMED_MEDIA,
-    ArtMedium,
+    ArtMode,
     BacklashKind,
     CurseKind,
     IdeologyTenet,
@@ -34,9 +34,10 @@ from aerona.domain.enums.culture import (
     MagicSource,
     ProphecyConsequence,
     ProphecyPredicate,
-    TraditionKind,
+    RiteStage,
+    TraditionFunction,
 )
-from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
@@ -103,9 +104,12 @@ async def seed_legend(ctx: TickContext, entity: EntityRow, values: Values) -> Ba
 
 
 async def seed_tradition(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
-    kind = take(values, "kind", TraditionKind)
-    spec = TRADITIONS[kind]
-    row = TraditionProfileRow(tradition_entity_id=entity.id, kind=kind, cost=dict(spec.cost), effects=dict(spec.effects), updated_epoch=ctx.epoch, locked=[])
+    kind = take(values, "kind", TraditionFunction)
+    stage = optional_kind(values, "stage", RiteStage) if kind is TraditionFunction.RITE_OF_PASSAGE else None
+    spec = tradition_spec(kind, stage)
+    row = TraditionProfileRow(
+        tradition_entity_id=entity.id, kind=kind, stage=stage, cost=dict(spec.cost), effects=dict(spec.effects), updated_epoch=ctx.epoch, locked=[]
+    )
     ctx.session.add(row)
     return row
 
@@ -219,11 +223,11 @@ async def seed_item(ctx: TickContext, entity: EntityRow, values: Values) -> Base
 
 
 async def seed_artwork(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
-    medium = take(values, "medium", ArtMedium)
+    medium = take(values, "medium", ArtMode)
     row = ArtworkProfileRow(
         artwork_entity_id=entity.id,
         medium=medium,
-        performed=medium in PERFORMED_MEDIA,
+        performed=medium in PERFORMED_MODES,
         message={axis.value: value for axis, value in ART_MESSAGES[medium].items()},
         quality=PERCENT // 2,
         copies=1,
@@ -261,7 +265,7 @@ async def seed_theory(ctx: TickContext, entity: EntityRow, values: Values) -> Ba
 
 
 async def seed_art_form(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
-    discipline = take(values, "discipline", ArtDiscipline)
+    discipline = take(values, "discipline", ArtMode)
     raw = values.pop("structure", None) or {}
     allowed = set(DISCIPLINES[discipline].structure)
     structure = {str(key): value for key, value in raw.items() if str(key) in allowed and isinstance(value, str | int)} if isinstance(raw, dict) else {}

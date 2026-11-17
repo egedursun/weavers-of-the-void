@@ -54,6 +54,7 @@ import {
   KPI_GRID,
   LORE_GRID,
   PERCENT,
+  RITE_STAGES,
   TRADITION_KINDS,
   TRADITION_TERMS,
   VALUES,
@@ -262,6 +263,11 @@ export function TraditionPanel({
   return (
     <div data-surface='TraditionCard' className='flex min-w-0 flex-col gap-4'>
       <LoreHero spec={kind} kicker='A custom kept'>
+        {card.stage && (
+          <NamedChip spec={lookup(RITE_STAGES, card.stage)}>
+            {`Marks ${lookup(RITE_STAGES, card.stage).label.toLowerCase()}`}
+          </NamedChip>
+        )}
         {card.calendar_slot && (
           <NamedChip spec={lookup(CALENDAR_SLOTS, card.calendar_slot)}>
             {lookup(CALENDAR_SLOTS, card.calendar_slot).label}
@@ -416,6 +422,7 @@ export function TraditionPanel({
             surface='TraditionForm'
             fields={[
               { key: 'kind', kind: 'enum', table: TRADITION_KINDS },
+              { key: 'stage', kind: 'enum', table: RITE_STAGES },
               {
                 key: 'season_position',
                 kind: 'number',

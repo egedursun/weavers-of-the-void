@@ -6,7 +6,7 @@ from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import ArtMedium, LegendArchetype
+from aerona.domain.enums.culture import ArtMode, LegendArchetype
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
@@ -66,7 +66,7 @@ async def test_bards_tell_and_a_portraying_work_fixes_the_tale(realm: Realm) -> 
     tale = await legend(realm, "The Lost Garden")
     await link(session, home.id, tale.id, BondKind.CELEBRATES)
     work = await make(session, "The Garden Fresco", EntityType.ARTWORK, ArtworkStats(renown=40, influence=30), world_id=realm.world.id)
-    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMedium.FRESCO, subject_node_id=tale.id, message={}, translations=[], locked=[]))
+    session.add(ArtworkProfileRow(artwork_entity_id=work.id, medium=ArtMode.FLAT_IMAGE, subject_node_id=tale.id, message={}, translations=[], locked=[]))
     await session.flush()
     ctx = context(session, epoch=4)
     row = await legends.profile_of(ctx, tale)
@@ -93,12 +93,12 @@ async def test_the_returning_king_strengthens_only_the_claim_of_his_line(realm: 
     await link(session, tale.id, heir.id, BondKind.TELLS_OF)
     await session.flush()
     ctx = context(session, epoch=4)
-    row = await legends.profile_of(ctx, tale, LegendArchetype.RETURN_OF_THE_KING)
+    row = await legends.profile_of(ctx, tale, LegendArchetype.RETURN_OF_A_RULER)
     row.credence = 100
     assert await legends.consequences(ctx, row) is not None
-    assert matching.strength == 40 + Rules().belief.return_king_claim
+    assert matching.strength == 40 + Rules().belief.return_ruler_claim
     assert stranger.strength == 60
-    assert await legends.foretold_return(ctx, heir) == {legends.FORETOLD: Rules().belief.return_king_usurper}
+    assert await legends.foretold_return(ctx, heir) == {legends.FORETOLD: Rules().belief.return_ruler_usurper}
 
 
 async def test_the_typed_backfill_reads_old_names_once_and_never_again(realm: Realm) -> None:
@@ -107,6 +107,6 @@ async def test_the_typed_backfill_reads_old_names_once_and_never_again(realm: Re
     ctx = context(session, epoch=4)
     assert await backfill_typed_kinds(ctx) > 0
     row = await session.get(LegendProfileRow, tale.id)
-    assert row is not None and row.archetype is LegendArchetype.FLOOD
+    assert row is not None and row.archetype is LegendArchetype.WORLD_DISASTER
     assert await session.get(AppliedFixupRow, TYPED_KINDS_FIXUP) is not None
     assert await backfill_typed_kinds(ctx) == 0

@@ -22,7 +22,7 @@ import {
 import { NodeListEditor, RefLink } from '../realm/parts'
 import {
   type TitleDetail,
-  type TitleRank,
+  type TitleTier,
   type Titles,
   type TitleSummary,
   useTitles,
@@ -92,7 +92,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
   const [holder, setHolder] = useState<number | null>(null)
   const [emblem, setEmblem] = useState('')
   const rank = useGodAction({
-    run: (value: TitleRank) =>
+    run: (value: TitleTier) =>
       unwrap(
         api.POST('/api/actions/title:edit', {
           body: {
@@ -295,7 +295,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
               value={detail.rank}
               table={table(ctx.view.ranks)}
               blocked={busy}
-              onPick={(value) => rank.mutate(value as TitleRank)}
+              onPick={(value) => rank.mutate(value as TitleTier)}
             />
             <AdjustStats
               id={`title-${id}`}
@@ -588,7 +588,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
       unwrap(
         api.POST('/api/actions/title:create', {
           body: {
-            rank: rank as TitleRank,
+            rank: rank as TitleTier,
             name: name.trim(),
             holder_id: view.node_id,
             lands: [],

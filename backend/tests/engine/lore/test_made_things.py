@@ -16,7 +16,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import BattleRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import (
-    ArtMedium,
+    ArtMode,
     IdeologyTenet,
     ItemClass,
     ItemDeed,
@@ -99,17 +99,17 @@ async def test_images_are_found_by_their_stored_medium_and_performed_works_fade_
     song = await make(
         realm.session, "The Great Statue", EntityType.ARTWORK, ArtworkStats(renown=50, influence=50), world_id=realm.world.id, location_id=town.id
     )
-    await art.profile_of(ctx, song, ArtMedium.SONG)
+    await art.profile_of(ctx, song, ArtMode.MUSICAL)
     statue = await make(realm.session, "A Little Song", EntityType.ARTWORK, ArtworkStats(renown=50, influence=50), world_id=realm.world.id, location_id=town.id)
-    await art.profile_of(ctx, statue, ArtMedium.STATUE)
+    await art.profile_of(ctx, statue, ArtMode.SOLID_IMAGE)
     await realm.session.flush()
     assert [work.id for work in await art.images_in(ctx, town.id)] == [statue.id]
     lost = await make(realm.session, "Lost Lay", EntityType.ARTWORK, ArtworkStats(renown=50), world_id=realm.world.id, location_id=realm.far_region.id)
-    row = await art.profile_of(ctx, lost, ArtMedium.SONG)
+    row = await art.profile_of(ctx, lost, ArtMode.MUSICAL)
     assert await art.forgotten(ctx, lost, row)
     assert lost.status is EntityStatus.DESTROYED
     kept = await make(realm.session, "Kept Lay", EntityType.ARTWORK, ArtworkStats(renown=50), world_id=realm.world.id, location_id=realm.far_region.id)
-    classic = await art.profile_of(ctx, kept, ArtMedium.SONG)
+    classic = await art.profile_of(ctx, kept, ArtMode.MUSICAL)
     classic.canon = True
     assert not await art.forgotten(ctx, kept, classic)
 

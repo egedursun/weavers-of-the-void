@@ -47,15 +47,16 @@ from aerona.db.tables.ecology import (
     HerdRow,
     SpeciesCustomUseRow,
     SpeciesHostRow,
+    SpeciesProductRow,
     SpeciesProfileRow,
     SpeciesRangeRow,
     SpeciesUseKindRow,
     SpeciesUseRow,
-    SpeciesYieldRow,
 )
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
+from aerona.db.tables.kinds import GoodKindRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -94,7 +95,10 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
         ranges = list(
             await session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == entity_id).order_by(SpeciesRangeRow.abundance.desc()))
         )
-        yields = list(await session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == entity_id).order_by(SpeciesYieldRow.product)))
+        products = select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == entity_id).order_by(SpeciesProductRow.product)
+        yields = list(await session.scalars(products))
+        good_ids = [item.good_kind_id for item in yields if item.good_kind_id is not None]
+        goods = {row.id: row.name for row in await session.scalars(select(GoodKindRow).where(GoodKindRow.id.in_(good_ids)))}
         uses = list(await session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == entity_id).order_by(SpeciesUseRow.use)))
         hosts = list(await session.scalars(select(SpeciesHostRow).where(SpeciesHostRow.species_entity_id == entity_id)))
         herds = list(await session.scalars(select(HerdRow).where(HerdRow.species_entity_id == entity_id).order_by(HerdRow.head.desc())))
@@ -218,6 +222,9 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
                     world_material_id=item.world_material_id,
                     world_material=stuffs.get(item.world_material_id) if item.world_material_id is not None else None,
                     rate=item.rate,
+                    part=item.part,
+                    good_kind_id=item.good_kind_id,
+                    good_kind_name=goods.get(item.good_kind_id) if item.good_kind_id is not None else None,
                 )
                 for item in yields
             ],

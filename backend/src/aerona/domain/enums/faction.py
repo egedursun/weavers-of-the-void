@@ -38,34 +38,6 @@ class FactionKind(StrEnum):
     VETERANS = "veterans"
 
 
-class FoundableFaction(StrEnum):
-    MERCHANT_GUILD = "merchant_guild"
-    CRAFT_GUILD = "craft_guild"
-    PRIESTHOOD = "priesthood"
-    WARRIOR_ORDER = "warrior_order"
-    NOBLE_COUNCIL = "noble_council"
-    PEASANT_LEAGUE = "peasant_league"
-    REBELS = "rebels"
-    BANDITS = "bandits"
-    PIRATES = "pirates"
-    ASSASSINS = "assassins"
-    SCHOLARS_ACADEMY = "scholars_academy"
-    SECRET_SOCIETY = "secret_society"
-    MERCENARY_COMPANY = "mercenary_company"
-    INTERWORLD_FEDERATION = "interworld_federation"
-    WANDERING_MARKET = "wandering_market"
-    ROUTE_RAIDERS = "route_raiders"
-    SOCIAL_CIRCLE = "social_circle"
-    CRIME_FAMILY = "crime_family"
-    THIEVES_GUILD = "thieves_guild"
-    SMUGGLING_RING = "smuggling_ring"
-    PIRATE_CONFEDERACY = "pirate_confederacy"
-    WORKERS_UNION = "workers_union"
-    ENGINEERS_SOCIETY = "engineers_society"
-    FINANCIERS = "financiers"
-    VETERANS = "veterans"
-
-
 class FactionScale(StrEnum):
     BAND = "band"
     COMPANY = "company"

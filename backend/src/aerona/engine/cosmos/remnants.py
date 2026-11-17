@@ -41,4 +41,4 @@ async def after_supernova(ctx: TickContext, star: StarRow) -> None:
         regions = sorted(await canon(ctx.session, [EntityType.REGION], world.id), key=lambda row: row.id)
         rng = ctx.rng(f"supernova_shard.{star.id}.{world.id}")
         if regions and rng.chance(ctx.rules.phenomena.sky_shard_chance):
-            await form_phenomenon(ctx, PhenomenonKind.CRYSTAL_BLOOM, rng.pick(regions), PhenomenonCause.SKY_EVENT, cause_node_id=star.id)
+            await form_phenomenon(ctx, PhenomenonKind.MINERAL_GROWTH, rng.pick(regions), PhenomenonCause.SKY_EVENT, cause_node_id=star.id)

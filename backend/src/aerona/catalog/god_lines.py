@@ -152,9 +152,9 @@ SCHEME_BARGAIN_PRICE = "; the price was {community} passing to {god}"
 SCHEME_BARGAIN_PROMISE = "; a promise given to {god}"
 SCHEME_BARGAIN_VOW = "by {sibling}'s bargain"
 SCHEME_DEVOTION = "; devotion {devotion}"
-SCATTER = Line("gods.death.scatter", "{sibling} scattered {son}'s remains ({cost} essence); resurrection rites lost {loss} devotion.")
-SCATTER_NOTE = "scattered their remains"
-SCATTER_ENEMY = "scattered {son}'s remains"
+HINDERED = Line("gods.death.return_hindered", "{sibling} hindered the return of {son} ({cost} essence); resurrection rites lost {loss} devotion.")
+HINDERED_NOTE = "hindered their return"
+HINDERED_ENEMY = "hindered the return of {son}"
 SCHEME_RELATION_NOTE = "schemed for their return"
 
 ECONOMY_ADDICTED = Line("gods.economy.addicted", "{owner} can no longer do without {resource}.")

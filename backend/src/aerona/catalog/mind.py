@@ -717,6 +717,28 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = total(
             label="Vigilant",
         ),
         T.COMPLACENT: _trait(T.VIGILANT, {V.LEISURE: 10}, capacities={Capacity.COMMAND: -5}, effects={E.TRUST: 10}, label="Complacent"),
+        T.HARDY: _trait(
+            None,
+            {V.PERSEVERANCE: 10},
+            capacities={Capacity.MELEE: 5, Capacity.MOBILITY: 5},
+            effects={E.RESILIENCE: 15},
+            heritable=True,
+            label="Hardy",
+        ),
+        T.NIMBLE: _trait(None, {}, capacities={Capacity.MOBILITY: 10, Capacity.CRAFT: 5}, heritable=True, label="Nimble"),
+        T.SHARP_SIGHTED: _trait(None, {}, capacities={Capacity.MISSILE: 10}, effects={E.EXPLORATION: 10}, heritable=True, label="Sharp-sighted"),
+        T.RETENTIVE: _trait(
+            None,
+            {V.KNOWLEDGE: 5},
+            capacities={Capacity.SCHOLARSHIP: 10},
+            effects={E.LEARNING: 15, E.MEMORY_DECAY: -20},
+            heritable=True,
+            label="Retentive",
+        ),
+        T.NUMERATE: _trait(
+            None, {V.KNOWLEDGE: 5}, capacities={Capacity.SCHOLARSHIP: 5, Capacity.CRAFT: 5}, effects={E.LEARNING: 10}, heritable=True, label="Numerate"
+        ),
+        T.MUSICAL: _trait(None, {V.ARTWORK: 10}, capacities={Capacity.PRESENCE: 5}, effects={E.CHARM: 10}, heritable=True, label="Musical"),
     },
 )
 TF = TraitFamily
@@ -852,6 +874,12 @@ TRAIT_FAMILY: Mapping[TraitKind, TraitFamily] = total(
         T.RUTHLESS: TF.MARTIAL,
         T.VIGILANT: TF.MARTIAL,
         T.COMPLACENT: TF.MARTIAL,
+        T.HARDY: TF.COPING,
+        T.NIMBLE: TF.CONDUCT,
+        T.SHARP_SIGHTED: TF.INTELLECT,
+        T.RETENTIVE: TF.INTELLECT,
+        T.NUMERATE: TF.INTELLECT,
+        T.MUSICAL: TF.FEELING,
     },
 )
 FAMILY_LIMIT: Mapping[TraitFamily, int] = total(
@@ -996,7 +1024,7 @@ ROLE_SKILLS: MappingProxyType[MortalRole, MappingProxyType[SkillKind, int]] = Ma
             MortalRole.RULER: {S.LEADERSHIP: 45, S.STRATEGY: 30, S.LAW: 30, S.ETIQUETTE: 35, S.NEGOTIATION: 30, S.BLADE: 20},
             MortalRole.HERO: {S.BLADE: 50, S.SHIELD: 40, S.UNARMED: 35, S.LEADERSHIP: 25, S.TRACKING: 20},
             MortalRole.WARRIOR: {S.SPEAR: 45, S.SHIELD: 40, S.BLADE: 30, S.AXE: 25, S.UNARMED: 25},
-            MortalRole.KNIGHT: {S.MOUNTED_COMBAT: 50, S.RIDING: 50, S.BLADE: 40, S.SHIELD: 35, S.ETIQUETTE: 25},
+            MortalRole.SWORN_WARRIOR: {S.MOUNTED_COMBAT: 50, S.RIDING: 50, S.BLADE: 40, S.SHIELD: 35, S.ETIQUETTE: 25},
             MortalRole.HUNTER: {S.BOW: 50, S.HUNTING: 50, S.TRACKING: 45, S.FORAGING: 30, S.THROWING: 25},
             MortalRole.CHOSEN: {S.RITUAL: 35, S.BLADE: 30, S.PROPHECY: 25, S.ORATORY: 25},
             MortalRole.SEER: {S.PROPHECY: 50, S.SPIRIT_SPEAKING: 40, S.RITUAL: 30, S.LORE: 25},
@@ -1028,7 +1056,7 @@ ROLE_SKILLS: MappingProxyType[MortalRole, MappingProxyType[SkillKind, int]] = Ma
 CAREER_SKILLS: MappingProxyType[MortalRole, tuple[SkillKind, ...]] = MappingProxyType(
     {
         MortalRole.WARRIOR: (S.SPEAR, S.SHIELD, S.BLADE, S.AXE, S.BLUNT, S.UNARMED),
-        MortalRole.KNIGHT: (S.MOUNTED_COMBAT, S.RIDING),
+        MortalRole.SWORN_WARRIOR: (S.MOUNTED_COMBAT, S.RIDING),
         MortalRole.HUNTER: (S.HUNTING, S.BOW, S.TRACKING),
         MortalRole.SEER: (S.PROPHECY, S.SPIRIT_SPEAKING),
         MortalRole.PRIEST: (S.RITUAL, S.THEOLOGY),
@@ -1059,7 +1087,7 @@ CAREER_VALUES: MappingProxyType[MortalRole, MappingProxyType[ValueAxis, int]] = 
         role: MappingProxyType(values)
         for role, values in {
             MortalRole.WARRIOR: {V.MARTIAL: 30, V.HONOUR: 10, V.COMPETITION: 10},
-            MortalRole.KNIGHT: {V.MARTIAL: 25, V.HONOUR: 20, V.HIERARCHY: 15, V.LOYALTY: 15},
+            MortalRole.SWORN_WARRIOR: {V.MARTIAL: 25, V.HONOUR: 20, V.HIERARCHY: 15, V.LOYALTY: 15},
             MortalRole.HUNTER: {V.NATURE: 25, V.MARTIAL: 10},
             MortalRole.SEER: {V.SUPERSTITION: 30, V.PIETY: 15},
             MortalRole.PRIEST: {V.PIETY: 35, V.TRADITION: 10},
@@ -1341,7 +1369,7 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = total(
     Profession,
     {
         Profession.SOLDIER: ProfessionSpec("Soldier", (S.SPEAR, S.SHIELD, S.BLADE, S.AXE, S.BOW), MortalRole.WARRIOR),
-        Profession.RIDER: ProfessionSpec("Rider", (S.RIDING, S.MOUNTED_COMBAT, S.BEAST_HANDLING), MortalRole.KNIGHT),
+        Profession.RIDER: ProfessionSpec("Rider", (S.RIDING, S.MOUNTED_COMBAT, S.BEAST_HANDLING), MortalRole.SWORN_WARRIOR),
         Profession.SMITH: ProfessionSpec("Smith", (S.SMITHING, S.JEWELLING, S.ENGINEERING), MortalRole.ARTISAN),
         Profession.BUILDER: ProfessionSpec("Builder", (S.MASONRY, S.CARPENTRY, S.ENGINEERING), MortalRole.ARTISAN),
         Profession.WEAVER: ProfessionSpec("Weaver", (S.WEAVING, S.POTTERY), MortalRole.ARTISAN),
@@ -1353,7 +1381,7 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = total(
         Profession.DIPLOMAT: ProfessionSpec("Diplomat", (S.NEGOTIATION, S.ETIQUETTE, S.LANGUAGES, S.ORATORY), MortalRole.SCRIBE),
         Profession.HUNTER: ProfessionSpec("Hunter", (S.HUNTING, S.TRACKING, S.BOW), MortalRole.HUNTER),
         Profession.SAILOR: ProfessionSpec("Sailor", (S.SAILING, S.NAVIGATION, S.SWIMMING), MortalRole.CAPTAIN),
-        Profession.COMMANDER: ProfessionSpec("Commander", (S.TACTICS, S.STRATEGY, S.LEADERSHIP, S.LOGISTICS), MortalRole.KNIGHT),
+        Profession.COMMANDER: ProfessionSpec("Commander", (S.TACTICS, S.STRATEGY, S.LEADERSHIP, S.LOGISTICS), MortalRole.SWORN_WARRIOR),
         Profession.ENGINEER: ProfessionSpec("Engineer", (S.ENGINEERING, S.MECHANICS, S.ELECTRONICS), MortalRole.ENGINEER),
         Profession.SCIENTIST: ProfessionSpec("Scientist", (S.SCIENCE, S.COMPUTING, S.WRITING), MortalRole.SCIENTIST),
         Profession.PILOT: ProfessionSpec("Pilot", (S.PILOTING, S.NAVIGATION, S.ELECTRONICS), MortalRole.PILOT),

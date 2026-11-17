@@ -15,6 +15,7 @@ from aerona.db.tables.mind import CultureValueRow
 from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.tables.tongues import LanguagePolicyRow
+from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.belonging import IdentityLayer, SalienceDriver
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
@@ -22,6 +23,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.tongues import LanguagePolicy
 from aerona.domain.enums.transform import TransformTrigger
+from aerona.domain.enums.unions import PartnerScope
 from aerona.domain.models.entity_stats import PeopleStats, SpeciesStats
 from aerona.engine.body.afflictions import spec_of
 from aerona.engine.context import TickContext
@@ -234,8 +236,8 @@ def peoples_and_towns(members: list[EntityRow]) -> tuple[list[EntityRow], list[E
 
 async def endogamous(ctx: TickContext, peoples: list[EntityRow]) -> bool:
     for people in peoples:
-        culture = await ctx.session.get(PeopleCultureRow, people.id)
-        if culture is not None and culture.endogamous:
+        custom = await ctx.session.get(UnionCustomRow, people.id)
+        if custom is not None and custom.endogamy is PartnerScope.PEOPLE:
             return True
     return False
 

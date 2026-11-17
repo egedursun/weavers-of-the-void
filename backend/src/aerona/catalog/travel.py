@@ -1,9 +1,10 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from aerona.core.total import total
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.enums.travel import JourneyIntent, TravelMethod, VehicleKind
+from aerona.domain.enums.travel import JourneyIntent, TravelMechanism, TravelMedium, TravelMethod, VehicleKind
 from aerona.rules.registry import Rules
 
 M = TravelMethod
@@ -39,7 +40,7 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             "Ancient gate",
             KnowledgeBranch.GATE_LORE,
             VehicleKind.GATE,
-            "Opening it demands a sacrifice or a true name.",
+            "Each opening takes a share of those who pass, by the gate rules of the world.",
             lambda rules: rules.travel_methods.ancient_gate_duration,
             lambda rules: rules.travel_methods.ancient_gate_danger,
         ),
@@ -48,7 +49,7 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             "Space folding",
             KnowledgeBranch.PATHFINDING,
             None,
-            "Consumes the cosmic travel resource and breeds addiction.",
+            "Uses up the cosmic travel resource.",
             lambda rules: rules.travel_methods.space_fold_duration,
             lambda rules: rules.travel_methods.space_fold_danger,
         ),
@@ -62,11 +63,11 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             lambda rules: rules.travel_methods.light_sail_danger,
         ),
         TravelMethodSpec(
-            M.COSMIC_MOUNT,
-            "Cosmic mount",
+            M.CARRIER_MOUNT,
+            "Ridden crossing",
             None,
             VehicleKind.MOUNT,
-            "A void creature must be tamed first.",
+            "A creature able to cross between worlds must be tamed first.",
             lambda rules: rules.travel_methods.cosmic_mount_duration,
             lambda rules: rules.travel_methods.cosmic_mount_danger,
         ),
@@ -75,16 +76,16 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             "Dream journey",
             KnowledgeBranch.MAGIC,
             None,
-            "The body stays and the soul goes; some never return.",
+            "The body stays while the traveller goes; some never return.",
             lambda rules: rules.travel_methods.dream_journey_duration,
             lambda rules: rules.travel_methods.dream_journey_danger,
         ),
         TravelMethodSpec(
-            M.RIVER_OF_DEAD,
-            "River of the dead",
+            M.DEATH_CURRENT,
+            "Crossing of the dead",
             None,
             None,
-            "The living who sail it pay with their memories.",
+            "The living who take it pay with their memories.",
             lambda rules: rules.travel_methods.river_of_dead_duration,
             lambda rules: rules.travel_methods.river_of_dead_danger,
         ),
@@ -107,11 +108,11 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             lambda rules: rules.travel_methods.slingshot_orbit_danger,
         ),
         TravelMethodSpec(
-            M.SWALLOWED,
-            "Being swallowed",
+            M.CARRIED_WITHIN,
+            "Carried within a being",
             None,
             None,
-            "Travellers ride inside a cosmic creature; the way out is not guaranteed.",
+            "Travellers are carried inside a being that crosses between worlds; it may not let them out.",
             lambda rules: rules.travel_methods.swallowed_duration,
             lambda rules: rules.travel_methods.swallowed_danger,
         ),
@@ -129,7 +130,7 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             "Void ark",
             KnowledgeBranch.SKY_NAVIGATION,
             VehicleKind.SHIP,
-            "Takes generations; the ark carries whole communities and their stores across the dark between galaxies.",
+            "Takes generations; the ark carries whole communities and their stores across the space between galaxies.",
             lambda rules: rules.travel_methods.void_ark_duration,
             lambda rules: rules.travel_methods.void_ark_danger,
         ),
@@ -181,16 +182,45 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
     )
 }
 
+D = TravelMedium
+K = TravelMechanism
+TRAVEL_MODEL: Mapping[TravelMethod, tuple[TravelMedium, TravelMechanism]] = total(
+    TravelMethod,
+    {
+        M.ANCIENT_GATE: (D.SPACE, K.GATE),
+        M.SPACE_FOLD: (D.SPACE, K.FOLD),
+        M.LIGHT_SAIL: (D.SPACE, K.SAIL),
+        M.CARRIER_MOUNT: (D.SPACE, K.MOUNT),
+        M.DREAM_JOURNEY: (D.DREAM, K.CURRENT),
+        M.DEATH_CURRENT: (D.DEATH, K.CURRENT),
+        M.DIVINE_BRIDGE: (D.DIVINE, K.BRIDGE),
+        M.SLINGSHOT_ORBIT: (D.SPACE, K.ORBIT),
+        M.CARRIED_WITHIN: (D.BODY, K.CARRIER_BEING),
+        M.WORMHOLE: (D.SPACE, K.FOLD),
+        M.VOID_ARK: (D.SPACE, K.SAIL),
+        M.GALACTIC_GATE: (D.SPACE, K.GATE),
+        M.FILAMENT_LANE: (D.SPACE, K.CURRENT),
+        M.DIMENSIONAL_RIFT: (D.DIMENSION, K.GATE),
+        M.PLANAR_DOOR: (D.DIMENSION, K.GATE),
+        M.ROCKETRY: (D.SPACE, K.SAIL),
+    },
+)
+
+
+def medium_of(method: TravelMethod) -> TravelMedium:
+    return TRAVEL_MODEL[method][0]
+
+
 METHOD_REACH: dict[TravelMethod, RouteScope] = {
     M.ANCIENT_GATE: RouteScope.INTERCLUSTER,
     M.SPACE_FOLD: RouteScope.INTERCLUSTER,
     M.LIGHT_SAIL: RouteScope.STELLAR,
-    M.COSMIC_MOUNT: RouteScope.INTERGALACTIC,
+    M.CARRIER_MOUNT: RouteScope.INTERGALACTIC,
     M.DREAM_JOURNEY: RouteScope.INTERDIMENSIONAL,
-    M.RIVER_OF_DEAD: RouteScope.INTERDIMENSIONAL,
+    M.DEATH_CURRENT: RouteScope.INTERDIMENSIONAL,
     M.DIVINE_BRIDGE: RouteScope.INTERCLUSTER,
     M.SLINGSHOT_ORBIT: RouteScope.STELLAR,
-    M.SWALLOWED: RouteScope.INTERGALACTIC,
+    M.CARRIED_WITHIN: RouteScope.INTERGALACTIC,
     M.WORMHOLE: RouteScope.INTERGALACTIC,
     M.VOID_ARK: RouteScope.INTERCLUSTER,
     M.GALACTIC_GATE: RouteScope.INTERCLUSTER,

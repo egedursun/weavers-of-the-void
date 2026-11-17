@@ -2,7 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
-    ArtMedium,
+    ArtMode,
     BacklashKind,
     BoostTrigger,
     CalendarSlot,
@@ -21,17 +21,17 @@ from aerona.domain.enums.culture import (
     ProphecyState,
     ResearchChooser,
     RiteEffectKind,
+    RiteStage,
     RumourChannel,
     SpeakerKind,
     SummonForm,
     Technique,
     TraditionEffectKind,
-    TraditionKind,
+    TraditionFunction,
 )
 from aerona.domain.enums.discovery import (
     AgeKind,
     AnomalyKind,
-    ArtDiscipline,
     BlueprintKind,
     BlueprintSource,
     EraDeed,
@@ -113,7 +113,8 @@ class TraditionEffectView(ApiModel):
 
 
 class TraditionCard(ApiModel):
-    kind: TraditionKind
+    kind: TraditionFunction
+    stage: RiteStage | None = None
     calendar_slot: CalendarSlot | None
     season_position: int | None = None
     calendar_entity_id: int | None = None
@@ -200,7 +201,7 @@ class PractitionerView(ApiModel):
 
 
 class ArtFormCard(ApiModel):
-    discipline: ArtDiscipline
+    discipline: ArtMode
     discipline_label: str
     structure: dict[str, str | int]
     parts: list[str]
@@ -364,7 +365,7 @@ class ItemCard(ApiModel):
 
 
 class ArtworkCard(ApiModel):
-    medium: ArtMedium
+    medium: ArtMode
     performed: bool
     author: NodeRef | None
     patron: NodeRef | None

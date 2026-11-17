@@ -71,7 +71,7 @@ async def test_severe_earthquake_swallows_a_place(session: AsyncSession, world: 
     grove = await entity(session, "Ash Grove", EntityType.PLACE, PlaceStats(danger=20), world_id=world.world.id, location_id=world.regions[2].id)
     await event(session, world, "Great Quake", EngineKind.EARTHQUAKE, severity=90, birth_epoch=10, location_id=world.regions[2].id)
     assert await swallowed_places(context(session, world, certain(), 10)) == 1
-    assert grove.status is EntityStatus.DESTROYED and EntityFlag.SWALLOWED.value in await flags(session, grove.id)
+    assert grove.status is EntityStatus.DESTROYED and EntityFlag.LOST_IN_DISASTER.value in await flags(session, grove.id)
 
 
 async def test_the_god_orders_a_people_to_melt_into_its_neighbour(session: AsyncSession, world: CoreWorld) -> None:

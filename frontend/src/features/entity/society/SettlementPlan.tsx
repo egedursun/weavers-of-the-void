@@ -38,6 +38,8 @@ import {
   LockOpen,
   Swords,
   Compass,
+  Blocks,
+  Gem,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -60,6 +62,9 @@ import {
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
+import { useWorldMaterials } from '@/features/entity/economy/api'
+import { type Named } from '@/features/entity/economy/labels'
+import { ChoiceSelect } from '@/features/entity/economy/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CityWorkings, DesignEditor, DistrictDesigns } from './CityWorks'
@@ -147,6 +152,21 @@ const STORES = [
   { key: 'harbour_capacity', icon: Ship, max: STORE_MAX, unit: 'ships' },
 ] as const
 
+function useStuffs(worldId: number | null): Record<string, Named> {
+  const materials = useWorldMaterials(worldId)
+  return {
+    '0': { label: 'No substance of the world', icon: Blocks, tone: 'muted' },
+    ...Object.fromEntries(
+      (materials.data?.materials ?? [])
+        .filter((item) => item.world_material_id !== null)
+        .map((item) => [
+          String(item.world_material_id),
+          { label: item.label, icon: Gem, tone: 'gold' as const },
+        ])
+    ),
+  }
+}
+
 function taxLevel(rate: number): string {
   if (rate === 0) return 'Untaxed'
   if (rate <= 10) return 'Light'
@@ -159,12 +179,18 @@ function DistrictTile({
   district,
   design,
   blocked,
+  stuffs,
 }: {
   district: District
   design: string | null
   blocked: string | null
+  stuffs: Record<string, Named>
 }) {
   const spec = DISTRICT_SPEC[district.kind]
+  const stuff =
+    district.world_material_id !== null
+      ? stuffs[String(district.world_material_id)]
+      : undefined
   const material = MATERIAL_SPEC[district.material]
   const raze = useGodAction({
     run: () =>
@@ -175,10 +201,21 @@ function DistrictTile({
       ),
   })
   const edit = useGodAction({
-    run: (change: { level?: number; condition?: number; release?: string[] }) =>
+    run: (change: {
+      level?: number
+      condition?: number
+      release?: string[]
+      world_material_id?: number
+      clear_world_material?: boolean
+    }) =>
       unwrap(
         api.POST('/api/actions/district:edit', {
-          body: { district_id: district.id, clear_design: false, ...change },
+          body: {
+            district_id: district.id,
+            clear_design: false,
+            clear_world_material: false,
+            ...change,
+          },
         })
       ),
   })
@@ -200,7 +237,7 @@ function DistrictTile({
         </div>
         <Badge size='sm' variant='secondary'>
           <material.icon />
-          {material.label}
+          {stuff ? `${material.label} · ${stuff.label}` : material.label}
         </Badge>
       </div>
       <div className='flex min-w-0 items-center justify-between gap-2'>
@@ -262,6 +299,24 @@ function DistrictTile({
           </div>
         </div>
       )}
+      <ChoiceSelect
+        label='Built of the substance'
+        value={String(district.world_material_id ?? 0)}
+        table={stuffs}
+        blocked={
+          busy ??
+          (Object.keys(stuffs).length > 1
+            ? null
+            : 'No substance of this world is known yet')
+        }
+        onPick={(value) =>
+          edit.mutate(
+            value === '0'
+              ? { clear_world_material: true }
+              : { world_material_id: Number(value) }
+          )
+        }
+      />
       <div className='mt-auto grid min-w-0 grid-cols-3 gap-1.5'>
         <Button
           size='sm'
@@ -526,6 +581,7 @@ function PlanControls({
     ),
   }
   const locked = [...plan.locked, ...plan.infrastructure.locked]
+  const stuffs = useStuffs(plan.world_id)
   const edit = useGodAction({
     run: ({ key, value }: Change) =>
       unwrap(
@@ -590,6 +646,7 @@ function PlanControls({
               ? Number(retype.slice(7))
               : null,
             clear_design: false,
+            clear_world_material: false,
           },
         })
       ),
@@ -948,6 +1005,29 @@ function PlanControls({
           blocked={busy}
           onPick={(value) => edit.mutate({ key: 'walls_material', value })}
         />
+        <ChoiceEditor
+          label='Walls of the substance'
+          hint={
+            Object.keys(stuffs).length > 1
+              ? 'A substance of this world whose fire point and strength the walls take on'
+              : 'No substance of this world is known yet'
+          }
+          value={String(plan.infrastructure.walls_world_material_id ?? 0)}
+          table={stuffs}
+          held={locked.includes('walls_world_material_id')}
+          blocked={
+            busy ??
+            (Object.keys(stuffs).length > 1
+              ? null
+              : 'No substance of this world is known yet')
+          }
+          onPick={(value) =>
+            edit.mutate({
+              key: 'walls_world_material_id',
+              value: Number(value),
+            })
+          }
+        />
       </EditorGroup>
       <EditorGroup title='Order and standing' icon={Gavel}>
         {CIVIC.map((item) => editor({ ...item, max: PERCENT }))}
@@ -980,6 +1060,7 @@ export function SettlementPlanSection({
   const blocked = readOnlyReason ?? reason()
   const plan = view.data
   const living = plan?.history[plan.history.length - 1]?.population ?? null
+  const stuffs = useStuffs(plan?.world_id ?? null)
   return (
     <Section
       id='section-settlement-plan'
@@ -1120,6 +1201,7 @@ export function SettlementPlanSection({
                       )?.name ?? null
                     }
                     blocked={blocked}
+                    stuffs={stuffs}
                   />
                 )}
               </Paged>

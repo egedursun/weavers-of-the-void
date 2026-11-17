@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Award, Brush, Landmark } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
-import { artMediumValues } from '@/api/generated/schema'
+import { artModeValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -20,7 +20,7 @@ const PATRONS = [
   'mortal',
 ] as const
 const MEDIUM_TABLE = Object.fromEntries(
-  artMediumValues.map((medium) => [medium, lookup(MEDIUMS, medium)])
+  artModeValues.map((medium) => [medium, lookup(MEDIUMS, medium)])
 )
 
 export function ArtControls({

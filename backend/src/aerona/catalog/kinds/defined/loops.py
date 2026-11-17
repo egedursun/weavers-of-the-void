@@ -1,0 +1,40 @@
+from aerona.catalog.kinds.definition import Defined
+from aerona.core.total import total
+from aerona.domain.enums.loops import BalanceLoop
+
+BALANCE_LOOP = total(
+    BalanceLoop,
+    {
+        BalanceLoop.WAR_WEARINESS: Defined("War weariness", checked_by=(), used_by=("engine.military.support.peace_pressure",)),
+        BalanceLoop.OVEREXTENSION: Defined("Overextension", checked_by=(), used_by=("engine.polity.standing.overreach",)),
+        BalanceLoop.SOIL_EXHAUSTION: Defined("Soil exhaustion", checked_by=(), used_by=("engine.phases.environment.worked_soil",)),
+        BalanceLoop.TOLL_DIVERSION: Defined("Toll diversion", checked_by=(), used_by=("engine.economy.routes.upkeep",)),
+        BalanceLoop.COMFORT_ZEAL: Defined("Comfort zeal", checked_by=(), used_by=("engine.faith.zeal.zeal_parts",)),
+        BalanceLoop.ENDEMIC_IMMUNITY: Defined("Endemic immunity", checked_by=(), used_by=("engine.disease.course.finish",)),
+        BalanceLoop.GOD_NEGLECT: Defined("God neglect", checked_by=(), used_by=("engine.phases.sons.renew_existence",)),
+        BalanceLoop.PREDATOR_PREY: Defined("Predator prey", checked_by=(), used_by=("engine.ecology.ranges.seen_by_hunters",)),
+        BalanceLoop.DEBASEMENT: Defined("Debasement", checked_by=(), used_by=("engine.economy.money.tend_currencies",)),
+        BalanceLoop.WONDER_ENVY: Defined("Wonder envy", checked_by=(), used_by=("engine.phases.wonders.envy",)),
+        BalanceLoop.REGENCY: Defined("Regency", checked_by=(), used_by=("engine.polity.offices.regency",)),
+        BalanceLoop.MILL_RIOTS: Defined("Mill riots", checked_by=(), used_by=("engine.industry.methods.adopt",)),
+        BalanceLoop.TYRANNY_CONCESSIONS: Defined("Tyranny concessions", checked_by=(), used_by=("engine.renown.currencies.restraint",)),
+        BalanceLoop.GLACIAL_THAW: Defined("Glacial thaw", checked_by=(), used_by=("engine.cosmos.planetary.planetary_climate",)),
+        BalanceLoop.COURIER_NETWORKS: Defined("Courier networks", checked_by=(), used_by=("engine.lore.research_depth.courier_need",)),
+        BalanceLoop.STORYTELLER_PACING: Defined("Storyteller pacing", checked_by=(), used_by=("engine.storyteller.pace.measure",)),
+        BalanceLoop.SQUALOR_DISEASE: Defined("Squalor disease", checked_by=(), used_by=("engine.phases.disasters._strike_mortal",)),
+        BalanceLoop.GREAT_PERSON_ENVY: Defined("Great person envy", checked_by=(), used_by=("engine.lore.great_people.great_envy",)),
+        BalanceLoop.IMPACT_PREPARATION: Defined("Impact preparation", checked_by=(), used_by=("engine.cosmos.impacts.foreseers",)),
+        BalanceLoop.HEROQUEST_SCHISM: Defined("Heroquest schism", checked_by=(), used_by=("engine.mythic.heroquests.rewrite",)),
+        BalanceLoop.GENTRIFICATION: Defined("Gentrification", checked_by=(), used_by=("engine.urban.housing.house_town",)),
+        BalanceLoop.PRECEDENT_DRIFT: Defined("Precedent drift", checked_by=(), used_by=("engine.law.appeals.hear_appeal",)),
+        BalanceLoop.KEYSTONE_HUNTING: Defined("Keystone hunting", checked_by=(), used_by=("engine.ecology.ranges.seen_by_hunters",)),
+        BalanceLoop.MALTHUSIAN: Defined("Malthusian", checked_by=(), used_by=("engine.cycles.stress.read_realm",)),
+        BalanceLoop.SALINISATION: Defined("Salinisation", checked_by=(), used_by=("engine.phases.environment.worked_soil",)),
+        BalanceLoop.THEODICY: Defined("Theodicy", checked_by=(), used_by=("engine.sacred.mysteries.test_doctrines",)),
+        BalanceLoop.MONSOON_MIGRATION: Defined("Monsoon migration", checked_by=(), used_by=("engine.phases.migration.famine_migration",)),
+        BalanceLoop.REDISTRIBUTION_COLLAPSE: Defined("Redistribution collapse", checked_by=(), used_by=("engine.orders.economy.afford_centre",)),
+        BalanceLoop.NOVELTY_DRAIN: Defined("Novelty drain", checked_by=(), used_by=("engine.couplings.novelty.novelty",)),
+        BalanceLoop.KIND_PRESTIGE: Defined("Kind prestige", checked_by=(), used_by=("engine.kinds.derive.tend_prestige",)),
+        BalanceLoop.KIND_SUBSTITUTION: Defined("Kind substitution", checked_by=(), used_by=("engine.kinds.derive.substitute",)),
+    },
+)

@@ -3,10 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.cosmography import BEING_AGENDAS, BEING_KINDS, BEING_SCALES
+from aerona.catalog.cosmography import BEING_AGENDAS, BEING_KINDS, BEING_MODEL, BEING_SCALES, EMBODIED, SENSE_REACH
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -20,7 +21,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingAgenda, BeingKind, BeingPhase, BeingScale, DimensionalEventKind, RiftCause
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingAgenda, BeingKind, BeingPhase, BeingScale, BeingSense, DimensionalEventKind, RiftCause
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.intervention import Disaster
@@ -158,6 +159,7 @@ async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: En
     dimension = profile.home_dimension_id or cosmography.place_world_id(being.world_id).dimension_id
     if dimension is None:
         return
+    model = BEING_MODEL[profile.being_kind]
     ctx.session.add(
         DimensionalEventRow(
             kind=DimensionalEventKind.INCURSION,
@@ -167,10 +169,22 @@ async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: En
             subject_entity_id=being.id,
             epoch=ctx.epoch,
             until_epoch=ctx.epoch,
-            intensity=await effective_might(ctx.session, being, profile.might),
-            text=f"{being.name} broke into {region.name}.",
+            intensity=await effective_might(ctx.session, being, profile.might) * SENSE_REACH[model.sense] // PERCENT,
+            text=f"{being.name} broke into {region.name}; {SENSE_WORDS[model.sense]}.",
         )
     )
+
+
+SENSE_WORDS = total(
+    BeingSense,
+    {
+        BeingSense.SIGHT: "it was seen",
+        BeingSense.HEARING: "it was heard but not seen",
+        BeingSense.TOUCH: "it was felt but not seen",
+        BeingSense.MIND: "it was known in the mind",
+        BeingSense.DREAM: "it was known in dreams",
+    },
+)
 
 
 @dataclass
@@ -188,7 +202,7 @@ class Scene:
 async def feed(scene: Scene) -> None:
     table = scene.ctx.rules.cosmic_beings
     star = scene.placement.star
-    if scene.profile.being_kind is BeingKind.STAR_EATER and star is not None and not held(star.id) and "brightness" not in star.locked:
+    if scene.profile.being_kind is BeingKind.STAR_FEEDER and star is not None and not held(star.id) and "brightness" not in star.locked:
         star.brightness = clamp_percent(star.brightness - table.feed_brightness)
         return
     for region in scene.regions:
@@ -219,7 +233,8 @@ async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
     armies = [army for army in await canon(ctx.session, [EntityType.ARMY], scene.world.id) if not held(army.id) and stat_or(army, "size", 0) > 0]
     if not armies:
         return False
-    soldiers = sum(stat_or(army, "size", 0) for army in armies)
+    struck = PERCENT if BEING_MODEL[profile.being_kind].substrate in EMBODIED else table.unbodied_army_pct
+    soldiers = sum(stat_or(army, "size", 0) for army in armies) * struck // PERCENT
     for army in armies:
         scale_stat(ctx.rules, army, "size", (PERCENT - table.army_answer_pct) / PERCENT)
     if "might" not in profile.locked:
@@ -323,7 +338,7 @@ async def wander(scene: Scene) -> None:
     return None
 
 
-TEARING_KINDS = frozenset({BeingKind.DIMENSION_WALKER, BeingKind.RIFT_SPAWN})
+TEARING_KINDS = frozenset({BeingKind.DIMENSION_TRAVELLER, BeingKind.RIFT_BORN})
 AGENDA_ACTS: dict[BeingAgenda, Callable[[Scene], Awaitable[None]]] = {
     BeingAgenda.FEED: feed,
     BeingAgenda.EXPLORE: wander,
@@ -339,13 +354,13 @@ AGENDA_ACTS: dict[BeingAgenda, Callable[[Scene], Awaitable[None]]] = {
 
 async def mirror(scene: Scene) -> None:
     ctx, profile = scene.ctx, scene.profile
-    if profile.being_kind is not BeingKind.ECHO or profile.mirrored_entity_id is None:
+    if profile.being_kind is not BeingKind.MIRRORED_DOUBLE or profile.mirrored_entity_id is None:
         return
     mortal = await ctx.session.get(EntityRow, profile.mirrored_entity_id)
     if mortal is None or mortal.status is not EntityStatus.CANON or held(mortal.id):
         return
     if scene.rng.chance(ctx.rules.cosmic_beings.echo_replace_chance):
-        if await assume(ctx, mortal, IdentityReason.IMPOSTOR, mortal.name, cover_role="its own echo") is not None:
+        if await assume(ctx, mortal, IdentityReason.IMPOSTOR, mortal.name, cover_role="its own double") is not None:
             await note(
                 ctx,
                 f"{scene.being.name} took the place of {mortal.name}.",
@@ -357,7 +372,7 @@ async def mirror(scene: Scene) -> None:
     if scene.rng.chance(ctx.rules.cosmic_beings.befriend_chance) and not await BondRepository(ctx.session).exists_between(
         mortal.id, scene.being.id, BondKind.COMPANION
     ):
-        await connect(ctx.session, mortal.id, scene.being.id, BondKind.COMPANION, ctx.epoch, description="befriended its own echo")
+        await connect(ctx.session, mortal.id, scene.being.id, BondKind.COMPANION, ctx.epoch, description="befriended its own double")
         await note(ctx, f"{mortal.name} befriended {scene.being.name}.", key="being.echo_befriended", ids=[scene.being.id, mortal.id], world_id=mortal.world_id)
 
 
@@ -407,7 +422,7 @@ async def serve(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pr
 
 
 async def take_rule(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow) -> bool:
-    if profile.being_kind is not BeingKind.PLANE_SOVEREIGN or profile.home_dimension_id is None:
+    if profile.being_kind is not BeingKind.DIMENSION_RULER or profile.home_dimension_id is None:
         return False
     home = cosmography.dimensions.get(profile.home_dimension_id)
     if home is None or home.ruler_node_id is not None or held(home.id) or "ruler_node_id" in home.locked:

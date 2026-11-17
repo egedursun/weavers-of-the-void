@@ -282,6 +282,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.augments",
     "table.bonds",
     "table.captives",
     "table.deed_claims",

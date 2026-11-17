@@ -7,7 +7,6 @@ from aerona.constants.units import PERCENT
 from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.core.grammar import an
-from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind, FoundableFaction
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
@@ -46,37 +45,6 @@ from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
 K = FactionKind
-FF = FoundableFaction
-FOUNDED_AS: Mapping[FoundableFaction, FactionKind] = total(
-    FoundableFaction,
-    {
-        FF.MERCHANT_GUILD: K.MERCHANT_GUILD,
-        FF.CRAFT_GUILD: K.CRAFT_GUILD,
-        FF.PRIESTHOOD: K.PRIESTHOOD,
-        FF.WARRIOR_ORDER: K.WARRIOR_ORDER,
-        FF.NOBLE_COUNCIL: K.NOBLE_COUNCIL,
-        FF.PEASANT_LEAGUE: K.PEASANT_LEAGUE,
-        FF.REBELS: K.REBELS,
-        FF.BANDITS: K.BANDITS,
-        FF.PIRATES: K.PIRATES,
-        FF.ASSASSINS: K.ASSASSINS,
-        FF.SCHOLARS_ACADEMY: K.SCHOLARS_ACADEMY,
-        FF.SECRET_SOCIETY: K.SECRET_SOCIETY,
-        FF.MERCENARY_COMPANY: K.MERCENARY_COMPANY,
-        FF.INTERWORLD_FEDERATION: K.INTERWORLD_FEDERATION,
-        FF.WANDERING_MARKET: K.WANDERING_MARKET,
-        FF.ROUTE_RAIDERS: K.ROUTE_RAIDERS,
-        FF.SOCIAL_CIRCLE: K.SOCIAL_CIRCLE,
-        FF.CRIME_FAMILY: K.CRIME_FAMILY,
-        FF.THIEVES_GUILD: K.THIEVES_GUILD,
-        FF.SMUGGLING_RING: K.SMUGGLING_RING,
-        FF.PIRATE_CONFEDERACY: K.PIRATE_CONFEDERACY,
-        FF.WORKERS_UNION: K.WORKERS_UNION,
-        FF.ENGINEERS_SOCIETY: K.ENGINEERS_SOCIETY,
-        FF.FINANCIERS: K.FINANCIERS,
-        FF.VETERANS: K.VETERANS,
-    },
-)
 
 
 @dataclass(frozen=True)

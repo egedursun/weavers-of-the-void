@@ -4,9 +4,9 @@ from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper, Diet, DomesticationStage, SizeClass, Sociality
 from aerona.engine.ecology.extinction import CRAFTS
-from aerona.engine.ecology.profiles import BONE, CHITIN, DRAGONBONE, EGGS, FEATHERS, HIDE, IVORY, MEAT, MILK, REAGENTS, SILK, VENOM, WOOL
+from aerona.engine.ecology.profiles import BONE, CHITIN, EGGS, FEATHERS, GREAT_BONE, HIDE, IVORY, MEAT, MILK, REAGENTS, SILK, VENOM, WOOL
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
 ECOLOGY = "section-ecology"
@@ -251,7 +251,7 @@ WILDS_MECHANICS = (
         targets=LANDS,
         couplings=(
             Coupling(S.ENVIRONMENT, "climate and land shape where a kind can live", EdgeKind.MODIFIER, "habitat.cold_penalty_pct"),
-            Coupling(S.ECONOMY, "hunters bring home meat, hide and bone", EdgeKind.FLOW, "ecology.hunting_cap"),
+            Coupling(S.ECONOMY, "hunters bring home what the kinds they hunt yield", EdgeKind.FLOW, "ecology.hunting_cap"),
             Coupling(S.DEMOGRAPHY, "people press on the kinds of their land", EdgeKind.MODIFIER, "ecology.hunting_population"),
         ),
     ),
@@ -288,6 +288,7 @@ WILDS_MECHANICS = (
     ),
     Mechanic(
         key="domestication",
+        tools=("devise_use",),
         spec_item="S3.2",
         title="Tamed beasts become herds, domesticated kinds and named breeds; herds yield goods and mounts for armies",
         subsystem=S.ECONOMY,
@@ -412,6 +413,8 @@ DIET_TEXT = {
     Diet.MINERAL: "eats stone and ore and cannot be eaten",
     Diet.SOUL: "feeds on souls",
     Diet.VOID: "feeds on the void and cannot be eaten",
+    Diet.PISCIVORE: "lives on the fish of its waters",
+    Diet.SANGUIVORE: "lives on the blood of other creatures",
 }
 
 
@@ -492,15 +495,21 @@ def stages() -> tuple[Raw, ...]:
 
 
 USE_RULES = {
-    SpeciesUse.FOOD: "domestication.livestock_per_head",
-    SpeciesUse.LABOUR: "domestication.labour_pct",
-    SpeciesUse.MOUNT: "domestication.mounts_per_head",
-    SpeciesUse.WAR: "domestication.mounts_per_head",
-    SpeciesUse.GUARD: "domestication.guard_pct",
-    SpeciesUse.COMPANION: "domestication.companion_calm",
-    SpeciesUse.SACRIFICE: "domestication.sacred_per_head",
-    SpeciesUse.MAGIC: "domestication.reagents_per_head",
-    SpeciesUse.PEST_CONTROL: "stores.hunters_pct",
+    AnimalRole.MEAT: "domestication.livestock_per_head",
+    AnimalRole.DRAFT: "domestication.labour_pct",
+    AnimalRole.MOUNT: "domestication.mounts_per_head",
+    AnimalRole.WAR: "domestication.mounts_per_head",
+    AnimalRole.GUARD: "domestication.guard_pct",
+    AnimalRole.COMPANION: "domestication.companion_calm",
+    AnimalRole.SACRED: "domestication.sacred_per_head",
+    AnimalRole.REAGENT_SOURCE: "domestication.reagents_per_head",
+    AnimalRole.PEST_CONTROL: "stores.hunters_pct",
+    AnimalRole.DAIRY: "domestication.dairy_per_head",
+    AnimalRole.FIBRE: "domestication.fibre_per_head",
+    AnimalRole.HUNTING: "domestication.hunting_per_head",
+    AnimalRole.MESSENGER: "domestication.messenger_prosperity",
+    AnimalRole.SENSING: "domestication.sensing_pct",
+    AnimalRole.ENTERTAINMENT: "domestication.entertainment_calm",
 }
 
 
@@ -516,7 +525,7 @@ def uses() -> tuple[Raw, ...]:
             ("uses", f"use_{use.value}"),
             (S.ECONOMY, USE_RULES[use], "herds"),
         )
-        for use in SpeciesUse
+        for use in AnimalRole
     )
 
 
@@ -532,7 +541,7 @@ def products() -> tuple[Raw, ...]:
             ("yields", item.product.replace(" ", "_")),
             (S.ECONOMY, None, "goods"),
         )
-        for item in (MEAT, HIDE, BONE, IVORY, CHITIN, VENOM, SILK, WOOL, MILK, FEATHERS, REAGENTS, DRAGONBONE, EGGS)
+        for item in (MEAT, HIDE, BONE, IVORY, CHITIN, VENOM, SILK, WOOL, MILK, FEATHERS, REAGENTS, GREAT_BONE, EGGS)
     )
 
 
@@ -1109,7 +1118,7 @@ EXTRA: tuple[Raw, ...] = (
     (
         "corpse",
         "S3.3a",
-        "A slain beast's corpse yields bone, ivory or dragonbone to its slayers",
+        "A slain beast's corpse yields the materials of its body to its slayers",
         ("beast_cycles",),
         BEAST,
         ("beast", "settlement"),
@@ -1181,7 +1190,7 @@ EXTRA: tuple[Raw, ...] = (
 
 PLAN_TEXT = {
     BodyPlan.HUMANOID: "stands and grips like the peoples and is wounded as they are",
-    BodyPlan.QUADRUPED: "runs on four legs and yields hide and bone",
+    BodyPlan.QUADRUPED: "runs on four legs and yields what its body gives",
     BodyPlan.AVIAN: "flies, sheds feathers and can carry a rider through the sky",
     BodyPlan.SERPENTINE: "lies in ambush",
     BodyPlan.INSECTOID: "wears chitin and armour",

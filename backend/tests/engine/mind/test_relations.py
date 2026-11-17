@@ -162,11 +162,11 @@ async def test_a_contest_for_a_hand_moves_the_heart_of_the_one_contested(realm: 
     sage, fool, wooed = await grown(realm, "Owain", town), await grown(realm, "Pryd", town), await grown(realm, "Rhian", town)
     realm.session.add(SkillRow(holder_node_id=sage.id, skill=SkillKind.LORE, level=90, peak=90, last_used_epoch=1, source=SkillSource.PLAYER))
     await realm.session.flush()
-    bout = Bout(ContestKind.RIDDLE_GAME, ContestStake.BRIDE, sage, fool, judge_id=wooed.id, stake_node_id=wooed.id, place_id=town.id)
+    bout = Bout(ContestKind.RIDDLE_GAME, ContestStake.UNION, sage, fool, judge_id=wooed.id, stake_node_id=wooed.id, place_id=town.id)
     row = await hold_contest(ctx, bout, ContestTally())
     assert row is not None and row.outcome.value == "challenger" and len(row.rounds) == RULES.contests.rounds
     heart = await relation(realm.session, wooed.id, sage.id)
-    assert heart is not None and heart.romance >= RULES.contests.bride_romance
+    assert heart is not None and heart.romance >= RULES.contests.union_romance
     assert await realm.session.scalar(select(ContestRow.id)) is not None
     await kindle(realm.session, fool.id, PassionKind.HATRED, sage.id, strength=90, source=PassionSource.DIVINE, epoch=ctx.epoch)
     assert await realm.session.scalar(select(PassionRow).where(PassionRow.holder_node_id == fool.id)) is not None
@@ -177,9 +177,9 @@ async def test_a_judge_who_loves_the_art_form_weighs_merit_and_a_challenge_is_fo
     ctx = context(realm.session, tuned(contests={"jitter": 0}, pecking={"challenge_margin": 0, "challenge_pct": 100}))
     town = await settlement(realm, "Rhos")
     poet, rival, judge = await grown(realm, "Siân", town), await grown(realm, "Tudur", town), await grown(realm, "Urien", town)
-    bout = Bout(ContestKind.FLYTING, ContestStake.HONOUR, poet, rival, judge_id=judge.id, place_id=town.id)
+    bout = Bout(ContestKind.INSULT_CONTEST, ContestStake.HONOUR, poet, rival, judge_id=judge.id, place_id=town.id)
     assert await judge_taste(ctx, bout) == 0
-    await write_pref(realm.session, judge.id, PreferenceKind.ART_FORM, "epic_poem", 80)
+    await write_pref(realm.session, judge.id, PreferenceKind.ART_FORM, "verbal", 80)
     assert await judge_taste(ctx, bout) == 80
     upper = GroupRankRow(group_node_id=town.id, member_node_id=rival.id, group_kind=GroupKind.CIRCLE, rank=1, dominance=10, since_epoch=1, locked=[])
     lower = GroupRankRow(group_node_id=town.id, member_node_id=poet.id, group_kind=GroupKind.CIRCLE, rank=2, dominance=90, since_epoch=1, locked=[])

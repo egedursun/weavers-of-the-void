@@ -47,7 +47,7 @@ async def backfill_transformations(session: AsyncSession, rules: Rules, epoch: i
                     continue
             found.append((kind, subject, result, bond.epoch))
     for son in await session.scalars(select(SonRow).where(SonRow.corpse_entity_id.is_not(None)).order_by(SonRow.id)):
-        found.append((K.GOD_CORPSE, son.id, son.corpse_entity_id or 0, son.death_epoch or 0))
+        found.append((K.DEAD_GOD, son.id, son.corpse_entity_id or 0, son.death_epoch or 0))
     names = await names_of(session, {node for _, subject, result, _ in found for node in (subject, result)})
     added = 0
     for kind, subject, result, when in found:

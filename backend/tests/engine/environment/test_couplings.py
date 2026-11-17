@@ -9,7 +9,7 @@ from aerona.db.tables.environment import CalendarRow, NotableYearRow, RegionEnvi
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import BattleRow, WarRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import MagicSchool, TraditionKind
+from aerona.domain.enums.culture import MagicSchool, TraditionFunction
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import NotableYearKind, RiverClass, WeatherKind
@@ -91,7 +91,7 @@ async def test_a_lean_year_lifts_food_and_shakes_other_prices(realm: Realm) -> N
     assert RULES.seasonal.swing_floor_pct / 100 <= tools.factor <= RULES.seasonal.swing_cap_pct / 100
 
 
-async def _tradition(realm: Realm, name: str, kind: TraditionKind) -> tuple:
+async def _tradition(realm: Realm, name: str, kind: TraditionFunction) -> tuple:
     entity = await make(realm.session, name, EntityType.TRADITION, TraditionStats(spread=20, rigidity=20), world_id=realm.world.id)
     row = await profile_of(context(realm.session), entity)
     row.kind = kind
@@ -102,11 +102,11 @@ async def test_festivals_bind_to_their_season_and_a_calendar_fixes_the_date(real
     await surveyed(realm)
     seasons = list(await realm.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == realm.world.id).order_by(WorldSeasonRow.position)))
     folk = await people(realm, "Harvesters")
-    feast, row = await _tradition(realm, "Feast of Sheaves", TraditionKind.HARVEST_RITE)
+    feast, row = await _tradition(realm, "Feast of Sheaves", TraditionFunction.SEASONAL_RITE)
     lore = await knowledge(realm, "Sky Count", KnowledgeBranch.ASTRONOMY)
     rites = await RiteCalendar.load(realm.session)
     rites.bind(row, feast, folk)
-    assert row.season_position == preferred_season(TraditionKind.HARVEST_RITE, seasons)
+    assert row.season_position == preferred_season(TraditionFunction.SEASONAL_RITE, seasons)
     assert row.calendar_entity_id is None
     drifting = rites.keeping(context(realm.session, tuned(seasonal={"drift_chance": 100})), row, feast, folk)
     assert drifting.in_season is False and drifting.weight == RULES.seasonal.off_season_pct / 100
@@ -146,7 +146,7 @@ async def test_a_hungry_holy_day_founds_a_fast_kept_by_the_calendar_folk(realm: 
     assert await hallow_holy_days(context(realm.session), calendar) == 1
     tradition_id = calendar.holy_days[0]["tradition_entity_id"]
     row = await realm.session.get(TraditionProfileRow, tradition_id)
-    assert row is not None and row.kind is TraditionKind.FAST and row.notable_year_id == notable.id and row.calendar_entity_id == lore.id
+    assert row is not None and row.kind is TraditionFunction.FAST and row.notable_year_id == notable.id and row.calendar_entity_id == lore.id
     kept = await realm.session.scalar(
         select(BondRow).where(BondRow.source_node_id == folk.id, BondRow.target_node_id == tradition_id, BondRow.kind == BondKind.CELEBRATES)
     )
@@ -165,12 +165,12 @@ async def test_long_days_bring_a_sleep_custom_that_works(realm: Realm) -> None:
     ctx = context(realm.session, rules)
     founded = await found_sleep_customs(ctx, await RegionAtlas.load(realm.session))
     assert founded >= 1
-    statement = select(TraditionProfileRow).where(TraditionProfileRow.kind.in_([TraditionKind.SIESTA, TraditionKind.NIGHT_VIGIL]))
+    statement = select(TraditionProfileRow).where(TraditionProfileRow.kind.in_([TraditionFunction.REST_CUSTOM, TraditionFunction.VIGIL]))
     customs = list(await realm.session.scalars(statement))
     assert customs
     assert await found_sleep_customs(ctx, await RegionAtlas.load(realm.session)) == 0
     if profile is not None:
-        vigil, _ = await _tradition(realm, "Watch Night", TraditionKind.NIGHT_VIGIL)
+        vigil, _ = await _tradition(realm, "Watch Night", TraditionFunction.VIGIL)
         profile.crime = 50
         await celebrate(ctx, vigil, town, await RegionAtlas.load(realm.session), Keeping())
         assert profile.crime < 50

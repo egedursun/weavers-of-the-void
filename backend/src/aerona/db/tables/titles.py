@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 
 TITLE_FIELDS = ("rank", "de_jure_liege_entity_id", "holder_node_id", "prestige", "capital_entity_id", "emblem")
 
@@ -14,7 +14,7 @@ class TitleProfileRow(Base):
     __table_args__ = (between("prestige", PERCENT_MIN, PERCENT_MAX), at_least("created_epoch", 0), Index("ix_title_profiles_holder", "holder_node_id"))
 
     title_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
-    rank: Mapped[TitleRank] = mapped_column(enum_type(TitleRank, "rank"))
+    rank: Mapped[TitleTier] = mapped_column(enum_type(TitleTier, "rank"))
     de_jure_liege_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     holder_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)

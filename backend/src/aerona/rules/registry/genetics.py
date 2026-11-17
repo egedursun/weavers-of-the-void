@@ -19,7 +19,20 @@ class GeneticsRules:
     fertility_pct: int = rule(25, 0, 100, M, "How much a fruitful or barren blood raises or lowers the chance of children (%)")
     disease_pct: int = rule(25, 0, 100, M, "How much a hardy or frail blood lowers or raises the chance of catching a sickness (%)")
     madness_pct: int = rule(30, 0, 200, M, "How much a blood prone to madness raises the chance a mind breaks under strain (%)")
-    colour_blind_pct: int = rule(30, 0, 100, M, "How much slower a colour-blind mortal learns crafts of colour: weaving, pottery and jewelling (%)")
+    learning_pct: int = rule(
+        100, 0, 400, M, "How strongly the blood speeds or slows the learning of the skills each locus touches, against the shares the catalogue gives (%)"
+    )
+    stat_step_pct: int = rule(
+        100, 0, 400, M, "How strongly each locus moves the strength, agility, endurance, perception, intellect and charisma of a newborn (%)"
+    )
+    attribute_step_pct: int = rule(100, 0, 400, M, "How strongly each locus moves the inborn abilities a child grows into (%)")
+    healing_pct: int = rule(10, 0, 100, M, "How much each step of quick or slow healing blood raises or lowers the chance a wound heals (%)")
+    stress_pct: int = rule(10, 0, 100, M, "How much each step of blood shaken or steadied by strain raises or lowers the stress a mortal gains (%)")
+    climate_health: int = rule(
+        3, 0, 30, M, "Health a mortal living in a cold or hot land gains or loses each epoch for each step of its blood's tolerance of it"
+    )
+    gene_trait_pct: int = rule(60, 0, 100, M, "Chance a newborn whose blood shows a leaning tied to a heritable trait takes that trait (%)")
+    germline_trait: int = rule(10, 0, 100, M, "Strength each step of a source's blood adds to the matching trait of a living line made from it")
     giant_strength: int = rule(15, 0, 50, M, "Strength giant blood adds at birth")
     divine_charisma: int = rule(10, 0, 50, M, "Charisma divine blood adds at birth")
     potential_deviation: int = rule(10, 0, 40, M, "How far a child's inborn potential strays from the mean of its parents'")
@@ -73,7 +86,7 @@ class HouseholdRules:
     upkeep_pct: int = rule(100, 0, 400, S, "How much the upkeep of a dwelling costs its household (%)")
     tithe_pct: int = rule(10, 0, 100, S, "Share of income a household of the faithful gives its faith (%)")
     tax_pct: int = rule(10, 0, 100, S, "Share of income a household pays in tax where no law sets the rate (%)")
-    dowry_pct: int = rule(20, 0, 100, S, "Share of a household's wealth it gives as dowry when a member marries out (%)")
+    union_portion_pct: int = rule(20, 0, 100, S, "Share of a household's wealth it gives as a portion when a member leaves in a union (%)")
     servant_wage: int = rule(2, 0, 50, S, "Wage each servant costs a household each epoch")
     servant_wealth: int = rule(80, 0, 1000, S, "Household wealth from which it hires a servant")
     dependent_burden: int = rule(10, 0, 100, S, "Burden each dependent without a carer lays on a household")

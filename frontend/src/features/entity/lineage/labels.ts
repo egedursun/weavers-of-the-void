@@ -1,26 +1,28 @@
 import {
+  Activity,
   Baby,
-  Castle,
+  Biohazard,
+  Brain,
+  Dumbbell,
+  Ear,
+  HeartPulse,
+  Hourglass,
+  Snowflake,
+  Sun,
   Dna,
   Eye,
   Flame,
   Gem,
   HandHeart,
   Home,
-  House,
-  Landmark,
-  Mountain,
-  Ship,
   Sparkles,
-  Tent,
-  TowerControl,
   User,
   UserCog,
   Users,
   Wallet,
   Warehouse,
-  Building2,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export const LINEAGE_ICON = Dna
@@ -32,19 +34,6 @@ export const HOME_ICON = Home
 export const PURSE_ICON = Wallet
 export const FURNISHING_ICON = Warehouse
 export const CARE_ICON = HandHeart
-
-export const DWELLINGS: Record<string, Named> = {
-  hut: { label: 'Hut', icon: House, tone: 'muted' },
-  longhouse: { label: 'Longhouse', icon: House, tone: 'verdigris' },
-  townhouse: { label: 'Townhouse', icon: Home, tone: 'info' },
-  manor: { label: 'Manor', icon: Landmark, tone: 'gold' },
-  palace: { label: 'Palace', icon: Castle, tone: 'gold' },
-  tent: { label: 'Tent', icon: Tent, tone: 'muted' },
-  cave: { label: 'Cave', icon: Mountain, tone: 'muted' },
-  ship: { label: 'Ship', icon: Ship, tone: 'info' },
-  tower: { label: 'Tower', icon: TowerControl, tone: 'verdigris' },
-  apartment: { label: 'Apartment', icon: Building2, tone: 'info' },
-}
 
 export const ROLES: Record<string, Named> = {
   head: { label: 'Head', icon: UserCog, tone: 'gold' },
@@ -64,8 +53,33 @@ export const STANCE_TONE: Record<string, Named['tone']> = {
   taxed: 'info',
 }
 
-export const GROUP_ICON: Record<string, Named['icon']> = {
+export const GROUP_ICON: Record<
+  components['schemas']['LocusGroup'],
+  Named['icon']
+> = {
   looks: Eye,
+  body: Dumbbell,
+  sense: Ear,
+  temperament: Activity,
+  aptitude: Brain,
   predisposition: Dna,
   gift: Flame,
 }
+
+export const BLOOD_EFFECTS: Record<
+  components['schemas']['GeneticEffect'],
+  Named
+> = {
+  disease: { label: 'Sickness', icon: Biohazard, tone: 'danger' },
+  fertility: { label: 'Children', icon: Baby, tone: 'verdigris' },
+  madness: { label: 'Strain on the mind', icon: Brain, tone: 'warning' },
+  lifespan: { label: 'Lifespan', icon: Hourglass, tone: 'gold' },
+  healing: { label: 'Healing', icon: HeartPulse, tone: 'success' },
+  stress: { label: 'Stress', icon: Activity, tone: 'warning' },
+  cold: { label: 'Cold lands', icon: Snowflake, tone: 'info' },
+  heat: { label: 'Hot lands', icon: Sun, tone: 'gold' },
+}
+
+export const HARMFUL_EFFECTS: ReadonlySet<
+  components['schemas']['GeneticEffect']
+> = new Set(['disease', 'madness', 'stress'])

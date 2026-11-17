@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.models.entity_stats import TraditionStats
@@ -14,7 +14,7 @@ from tests.engine.society.factories import Realm, context, link, make, settlemen
 async def winter_taboo(realm: Realm, keeper_id: int, participation: int) -> int:
     taboo = await make(realm.session, f"Winter Peace {keeper_id}", EntityType.TRADITION, TraditionStats(), world_id=realm.world.id)
     realm.session.add(
-        TraditionProfileRow(tradition_entity_id=taboo.id, kind=TraditionKind.TABOO, taboo_act=ActKind.WINTER_FIGHTING, cost={}, effects={}, locked=[])
+        TraditionProfileRow(tradition_entity_id=taboo.id, kind=TraditionFunction.TABOO, taboo_act=ActKind.WINTER_FIGHTING, cost={}, effects={}, locked=[])
     )
     realm.session.add(TraditionParticipationRow(tradition_entity_id=taboo.id, community_entity_id=keeper_id, participation=participation, locked=[]))
     await link(realm.session, keeper_id, taboo.id, BondKind.CELEBRATES)

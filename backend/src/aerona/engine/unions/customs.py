@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,10 +13,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.unions import PartnerScope, UnionArrangement, UnionDescent, UnionDissolution, UnionExchange, UnionForm, UnionResidence
 from aerona.engine.body.customs import people_of
-from aerona.engine.cycles.lineage import caste_of
+from aerona.engine.cycles.lineage import caste_of, kinship_of, line_of, moiety, union_of
 from aerona.engine.polity.laws import law_param
 
-PLURAL_FORMS = frozenset({UnionForm.PLURAL, UnionForm.GROUP})
 TERM_FORMS = frozenset({UnionForm.CONTRACT, UnionForm.SERIAL})
 DIVORCE_RULE: Mapping[UnionDissolution, str] = total(
     UnionDissolution,
@@ -24,13 +23,14 @@ DIVORCE_RULE: Mapping[UnionDissolution, str] = total(
 )
 PAYS_FIRST: Mapping[UnionExchange, bool | None] = total(
     UnionExchange,
-    {UnionExchange.TO_ONE_FAMILY: True, UnionExchange.FROM_ONE_FAMILY: False, UnionExchange.MUTUAL: None, UnionExchange.NONE: None},
+    {
+        UnionExchange.TO_ONE_FAMILY: True,
+        UnionExchange.FROM_ONE_FAMILY: False,
+        UnionExchange.MUTUAL: None,
+        UnionExchange.SERVICE: None,
+        UnionExchange.NONE: None,
+    },
 )
-
-
-async def union_of(session: AsyncSession, mortal: EntityRow | None) -> UnionCustomRow | None:
-    people = await people_of(session, mortal) if mortal is not None else None
-    return await session.get(UnionCustomRow, people.id) if people is not None else None
 
 
 async def house_id_of(session: AsyncSession, mortal_id: int) -> int | None:
@@ -48,19 +48,58 @@ async def faith_of(session: AsyncSession, mortal_id: int) -> int | None:
     )
 
 
-async def scope_key(session: AsyncSession, mortal: EntityRow, scope: PartnerScope) -> object:
-    if scope is PartnerScope.PEOPLE:
-        people = await people_of(session, mortal)
-        return people.id if people is not None else None
-    if scope is PartnerScope.CLASS:
-        return mortal.social_class
-    if scope is PartnerScope.CASTE:
-        return await caste_of(session, mortal.id)
-    if scope is PartnerScope.FAITH:
-        return await faith_of(session, mortal.id)
-    if scope is PartnerScope.HOUSE:
-        return await house_id_of(session, mortal.id)
+async def people_key(session: AsyncSession, mortal: EntityRow) -> object:
+    people = await people_of(session, mortal)
+    return people.id if people is not None else None
+
+
+async def class_key(session: AsyncSession, mortal: EntityRow) -> object:
+    return mortal.social_class
+
+
+async def caste_key(session: AsyncSession, mortal: EntityRow) -> object:
+    return await caste_of(session, mortal.id)
+
+
+async def faith_key(session: AsyncSession, mortal: EntityRow) -> object:
+    return await faith_of(session, mortal.id)
+
+
+async def house_key(session: AsyncSession, mortal: EntityRow) -> object:
+    return await house_id_of(session, mortal.id)
+
+
+async def line_key(session: AsyncSession, mortal: EntityRow) -> object:
+    system = await kinship_of(session, mortal)
+    return await line_of(session, mortal.id, system.descent_group) if system is not None else await line_of(session, mortal.id)
+
+
+async def moiety_key(session: AsyncSession, mortal: EntityRow) -> object:
+    line = await line_key(session, mortal)
+    return moiety(line) if isinstance(line, int) else None
+
+
+async def no_key(session: AsyncSession, mortal: EntityRow) -> object:
     return None
+
+
+SCOPE_KEYS: Mapping[PartnerScope, Callable[[AsyncSession, EntityRow], Awaitable[object]]] = total(
+    PartnerScope,
+    {
+        PartnerScope.NONE: no_key,
+        PartnerScope.PEOPLE: people_key,
+        PartnerScope.CLASS: class_key,
+        PartnerScope.CASTE: caste_key,
+        PartnerScope.FAITH: faith_key,
+        PartnerScope.HOUSE: house_key,
+        PartnerScope.LINE: line_key,
+        PartnerScope.MOIETY: moiety_key,
+    },
+)
+
+
+async def scope_key(session: AsyncSession, mortal: EntityRow, scope: PartnerScope) -> object:
+    return await SCOPE_KEYS[scope](session, mortal)
 
 
 async def partners_allowed(session: AsyncSession, first: EntityRow, second: EntityRow) -> bool:
@@ -72,12 +111,6 @@ async def partners_allowed(session: AsyncSession, first: EntityRow, second: Enti
     if custom.endogamy is not PartnerScope.NONE and await scope_key(session, first, custom.endogamy) != await scope_key(session, second, custom.endogamy):
         return False
     return custom.exogamy is PartnerScope.NONE or await scope_key(session, first, custom.exogamy) != await scope_key(session, second, custom.exogamy)
-
-
-def taken_by(custom: UnionCustomRow | None, mortal: EntityRow, spouse: EntityRow) -> set[int] | None:
-    if custom is None:
-        return None
-    return {spouse.id} if custom.form in PLURAL_FORMS else {mortal.id, spouse.id}
 
 
 async def divorce_rule(session: AsyncSession, mortal: EntityRow) -> str:

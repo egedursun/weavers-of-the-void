@@ -27,6 +27,7 @@ class WorksMethodView(ApiModel):
     process: ProcessKind
     process_label: str
     method: MethodKind
+    method_kind_id: int | None
     label: str
     summary: str
     chosen: bool

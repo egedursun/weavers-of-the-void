@@ -57,9 +57,7 @@ const DOCTRINE = {
     },
   ],
   holdings: [{ kind: 'land', holding: TOWN, since_epoch: 1 }],
-  clergy: [
-    { kind: 'high_priest', holder: PRIEST, since_epoch: 3, locked: true },
-  ],
+  clergy: [{ kind: 'leader', holder: PRIEST, since_epoch: 3, locked: true }],
   heresies: [
     {
       heresy: SECT,
@@ -184,7 +182,7 @@ describe('faith sections', () => {
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/cult:office')[0].body).toMatchObject({
       cult_id: 5,
-      kind: 'high_priest',
+      kind: 'leader',
       locked: false,
     })
   })
@@ -227,7 +225,7 @@ describe('faith sections', () => {
       .element(screen.getByText('Sealed against rebirth').first())
       .toBeVisible()
     await expect
-      .element(screen.getByText('Buried nameless').first())
+      .element(screen.getByText('Nameless rite').first())
       .toBeVisible()
     await expect.element(screen.getByText('Mercy 20')).toBeVisible()
     await screen.getByRole('button', { name: 'Adjust the possession' }).click()

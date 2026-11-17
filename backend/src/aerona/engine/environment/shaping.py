@@ -22,7 +22,7 @@ from aerona.engine.primitives.queries import canon
 from aerona.rules.registry import Rules
 
 A = LandAct
-FEARED = frozenset({A.CALL_LAVA, A.SINK_COAST, A.PARCH, A.SALT_SOIL})
+FEARED = frozenset({A.CALL_LAVA, A.SINK_COAST, A.PARCH, A.MAKE_SALINE})
 WELCOMED = frozenset({A.RAISE_LAND, A.OPEN_SPRING, A.GREEN, A.ENRICH_SOIL})
 
 
@@ -73,7 +73,7 @@ def lift(ground: RegionEnvironmentRow, act: LandAct, step: int) -> bool:
     return hold_value(ground, "roughness", clamp_int(ground.roughness - step, 0, PERCENT))
 
 
-SOIL_ACTS = frozenset({A.SHIFT_RIVER, A.PARCH, A.GREEN, A.SALT_SOIL, A.ENRICH_SOIL})
+SOIL_ACTS = frozenset({A.SHIFT_RIVER, A.PARCH, A.GREEN, A.MAKE_SALINE, A.ENRICH_SOIL})
 LIFTS = frozenset({A.RAISE_LAND, A.LOWER_LAND, A.CARVE_VALLEY, A.FILL_VALLEY})
 
 
@@ -92,7 +92,7 @@ async def work_soil(
         if act is A.PARCH:
             set_soil(ctx.rules, ground, SoilKind.SAND, base_drop=geomorph.desert_soil_base_drop)
         return LandOutcome.DONE
-    soil = SoilKind.SALT if act is A.SALT_SOIL else SoilKind.VOLCANIC if fiery else SoilKind.LOAM
+    soil = SoilKind.SALINE if act is A.MAKE_SALINE else SoilKind.VOLCANIC if fiery else SoilKind.LOAM
     return LandOutcome.DONE if set_soil(ctx.rules, ground, soil) else LandOutcome.UNCHANGED
 
 

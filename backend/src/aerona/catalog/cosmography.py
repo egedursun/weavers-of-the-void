@@ -1,12 +1,15 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
     BeingAgenda,
     BeingKind,
     BeingPhase,
     BeingScale,
+    BeingSense,
     Causality,
     ClusterKind,
     DimensionalEventKind,
@@ -20,7 +23,11 @@ from aerona.domain.enums.cosmography import (
     GalaxyType,
     OmenReading,
     PhenomenonCause,
+    PhenomenonEffect,
     PhenomenonKind,
+    PhenomenonPersistence,
+    PhenomenonScope,
+    PhenomenonTarget,
     RiftCause,
     RiftState,
     RouteScope,
@@ -29,6 +36,7 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.society import NaturalLaw
 
 
@@ -46,7 +54,7 @@ GALAXY_TYPES: MappingProxyType[GalaxyType, KindSpec] = MappingProxyType(
         GalaxyType.FLOCCULENT_SPIRAL: KindSpec("Flocculent spiral", "A spiral of many short, broken arm pieces."),
         GalaxyType.LENTICULAR: KindSpec("Lenticular galaxy", "A disc without arms, its gas spent; few new stars are born."),
         GalaxyType.ELLIPTICAL: KindSpec("Elliptical galaxy", "A round or oval swarm of old stars with little gas left."),
-        GalaxyType.GIANT_ELLIPTICAL: KindSpec("Giant elliptical galaxy", "A vast old swarm at the heart of a cluster, grown by swallowing others."),
+        GalaxyType.GIANT_ELLIPTICAL: KindSpec("Giant elliptical galaxy", "A vast old swarm at the heart of a cluster, grown by taking in others."),
         GalaxyType.DWARF_ELLIPTICAL: KindSpec("Dwarf elliptical galaxy", "A small oval swarm of old stars."),
         GalaxyType.DWARF_SPHEROIDAL: KindSpec("Dwarf spheroidal galaxy", "A faint, loose ball of old stars, often a satellite of a larger galaxy."),
         GalaxyType.IRREGULAR: KindSpec("Irregular galaxy", "A galaxy with no settled shape, rich in gas and new stars."),
@@ -58,7 +66,7 @@ GALAXY_TYPES: MappingProxyType[GalaxyType, KindSpec] = MappingProxyType(
         GalaxyType.QUASAR_HOST: KindSpec("Quasar host", "A galaxy around a quasar, the brightest kind of feeding black hole."),
         GalaxyType.LOW_SURFACE_BRIGHTNESS: KindSpec("Low surface brightness galaxy", "A wide, dim disc with few stars spread thin."),
         GalaxyType.ULTRA_DIFFUSE: KindSpec("Ultra-diffuse galaxy", "A galaxy as wide as a great spiral with a hundredth of its stars."),
-        GalaxyType.LIVING: KindSpec("Living galaxy", "A galaxy that is one living thing; its stars answer one will."),
+        GalaxyType.LIVING: KindSpec("Living galaxy", "A galaxy that is one living organism."),
         GalaxyType.DEAD: KindSpec("Dead galaxy", "A galaxy whose stars have nearly all gone out."),
         GalaxyType.SHATTERED: KindSpec("Shattered galaxy", "A galaxy broken into drifting pieces."),
         GalaxyType.FORGED: KindSpec("Forged galaxy", "A galaxy built on purpose by a god or a maker."),
@@ -114,13 +122,13 @@ DIMENSION_KINDS: MappingProxyType[DimensionKind, KindSpec] = MappingProxyType(
         DimensionKind.CELESTIAL: KindSpec("Celestial realm", "A realm of order and reward."),
         DimensionKind.INFERNAL: KindSpec("Infernal realm", "A realm of law and punishment."),
         DimensionKind.ABYSSAL: KindSpec("Abyssal realm", "A realm of endless ruin."),
-        DimensionKind.LIMBO: KindSpec("Limbo", "A grey in-between where little happens."),
+        DimensionKind.LIMBO: KindSpec("Limbo", "An in-between where little happens."),
         DimensionKind.FAR_REALM: KindSpec("Far realm", "A realm beyond sense, outside the order of the others."),
         DimensionKind.CLOCKWORK: KindSpec("Clockwork plane", "A plane of perfect order."),
         DimensionKind.CHAOS: KindSpec("Plane of chaos", "A plane that never holds a shape."),
         DimensionKind.UNDERWORLD: KindSpec("Underworld", "A realm of the dead."),
         DimensionKind.DIVINE_DOMAIN: KindSpec("Divine domain", "A plane that belongs to one god."),
-        DimensionKind.VOID_BETWEEN: KindSpec("Void between", "The empty dark between the dimensions."),
+        DimensionKind.VOID_BETWEEN: KindSpec("Void between", "The emptiness between the dimensions."),
         DimensionKind.MADE: KindSpec("Made realm", "A realm made by someone and kept running by what hosts it."),
     }
 )
@@ -148,8 +156,8 @@ STRUCTURE_KINDS: MappingProxyType[GalacticStructureKind, KindSpec] = MappingProx
         GalacticStructureKind.LEY_SPIRAL: KindSpec("Ley spiral", "A lane of magic running along the galaxy."),
         GalacticStructureKind.SEALED_VAULT: KindSpec("Sealed vault", "A region of space shut away on purpose."),
         GalacticStructureKind.GODS_FORGE: KindSpec("Gods' forge", "A place where gods make stars and worlds."),
-        GalacticStructureKind.DEAD_LIGHT_DRIFT: KindSpec("Drift of dead light", "A drift of light from stars long gone."),
-        GalacticStructureKind.SINGING_NEBULA: KindSpec("Singing nebula", "A cloud that carries a sound across space."),
+        GalacticStructureKind.DEAD_LIGHT_DRIFT: KindSpec("Light of dead stars", "A drift of light from stars long gone."),
+        GalacticStructureKind.SINGING_NEBULA: KindSpec("Sounding nebula", "A cloud that carries a sound across space."),
         GalacticStructureKind.RIFT_SCAR: KindSpec("Rift scar", "The healed tear where a dimension once broke through."),
     }
 )
@@ -173,20 +181,20 @@ GALACTIC_ZONES: MappingProxyType[GalacticZone, KindSpec] = MappingProxyType(
 
 PHENOMENON_KINDS: MappingProxyType[PhenomenonKind, KindSpec] = MappingProxyType(
     {
-        PhenomenonKind.ETERNAL_STORM: KindSpec("Eternal storm", "A storm that never ends."),
-        PhenomenonKind.TIME_SLIP: KindSpec("Time slip", "A place where time skips and stalls."),
-        PhenomenonKind.LEAK_WOUND: KindSpec("Leak wound", "A raw opening where the outside leaks in."),
-        PhenomenonKind.LEY_NEXUS_FLARE: KindSpec("Ley nexus flare", "A blaze of magic where ley lines cross."),
-        PhenomenonKind.GOD_CORPSE_AURA: KindSpec("God-corpse aura", "The lingering power around the body of a dead god."),
-        PhenomenonKind.LIVING_FOG: KindSpec("Living fog", "A fog that moves by its own will."),
-        PhenomenonKind.CRYSTAL_BLOOM: KindSpec("Crystal bloom", "Crystal growing out of the ground like a plant."),
-        PhenomenonKind.DEAD_ZONE: KindSpec("Dead zone", "Ground where nothing grows."),
-        PhenomenonKind.MIRROR_LAKE: KindSpec("Mirror lake", "Water that shows another place."),
-        PhenomenonKind.GRAVITY_WELL: KindSpec("Gravity well", "A place where weight itself is wrong."),
-        PhenomenonKind.SINGING_STONES: KindSpec("Singing stones", "Stones that sound on their own."),
-        PhenomenonKind.AURORA_PERMANENT: KindSpec("Lasting aurora", "Lights that never leave the sky."),
-        PhenomenonKind.GHOST_ROAD: KindSpec("Ghost road", "A road the dead still walk."),
-        PhenomenonKind.BLIGHT: KindSpec("Blight", "A spreading rot of the land."),
+        PhenomenonKind.LASTING_STORM: KindSpec("Lasting storm", "A storm that does not end on its own."),
+        PhenomenonKind.TIME_DISTORTION: KindSpec("Time distortion", "A place where time runs faster, slower or out of order."),
+        PhenomenonKind.OUTSIDE_OPENING: KindSpec("Opening to the outside", "An opening through which what lies beyond the cosmos comes in."),
+        PhenomenonKind.POWER_SURGE: KindSpec("Power surge", "A surge of magic where lines of power cross."),
+        PhenomenonKind.DIVINE_RESIDUE: KindSpec("Divine residue", "Power that remains where a god died."),
+        PhenomenonKind.MOVING_FOG: KindSpec("Moving fog", "A fog that moves against the wind."),
+        PhenomenonKind.MINERAL_GROWTH: KindSpec("Mineral growth", "Mineral that grows out of the ground and spreads."),
+        PhenomenonKind.BARREN_GROUND: KindSpec("Barren ground", "Ground where nothing grows."),
+        PhenomenonKind.DISTANT_VIEW: KindSpec("Distant view", "A place that shows another place."),
+        PhenomenonKind.GRAVITY_ANOMALY: KindSpec("Gravity anomaly", "A place where weight does not follow the world's gravity."),
+        PhenomenonKind.SOUNDING_GROUND: KindSpec("Sounding ground", "Ground that makes sound with no one there."),
+        PhenomenonKind.LASTING_LIGHTS: KindSpec("Lasting lights", "Lights that stay in the sky."),
+        PhenomenonKind.PATH_OF_THE_DEAD: KindSpec("Path of the dead", "A way the dead still travel."),
+        PhenomenonKind.BLIGHT: KindSpec("Blight", "A disease of growing things that spreads across the land."),
     }
 )
 
@@ -194,20 +202,20 @@ PHENOMENON_KINDS: MappingProxyType[PhenomenonKind, KindSpec] = MappingProxyType(
 BEING_KINDS: MappingProxyType[BeingKind, KindSpec] = MappingProxyType(
     {
         BeingKind.PLANAR_NATIVE: KindSpec("Planar native", "A being born in another dimension."),
-        BeingKind.DIMENSION_WALKER: KindSpec("Dimension walker", "A being that walks between dimensions."),
-        BeingKind.RIFT_SPAWN: KindSpec("Rift spawn", "A being born where a rift opened."),
+        BeingKind.DIMENSION_TRAVELLER: KindSpec("Dimension traveller", "A being that moves between dimensions."),
+        BeingKind.RIFT_BORN: KindSpec("Rift-born", "A being that came into being where a rift opened."),
         BeingKind.HIGHER_DIMENSIONAL: KindSpec("Higher-dimensional entity", "A being with more directions than the prime has."),
-        BeingKind.STAR_EATER: KindSpec("Star eater", "A being that feeds on the light of stars."),
-        BeingKind.NEBULA_MIND: KindSpec("Nebula mind", "A mind spread through a cloud between the stars."),
-        BeingKind.GALACTIC_LEVIATHAN: KindSpec("Galactic leviathan", "A being that swims between the stars of a galaxy."),
-        BeingKind.VOID_SHEPHERD: KindSpec("Void shepherd", "A being that keeps watch over the dark between galaxies."),
-        BeingKind.ECHO: KindSpec("Echo", "A double of a mortal from a mirror dimension."),
-        BeingKind.TIME_WANDERER: KindSpec("Time wanderer", "A being loose in time."),
-        BeingKind.COSMIC_TITAN: KindSpec("Cosmic titan", "A being as large as a star system."),
-        BeingKind.VEIL_WARDEN: KindSpec("Veil warden", "A being that guards the boundaries between dimensions."),
-        BeingKind.PLANE_SOVEREIGN: KindSpec("Plane sovereign", "A being that rules a whole dimension."),
+        BeingKind.STAR_FEEDER: KindSpec("Star feeder", "A being that feeds on the light of stars."),
+        BeingKind.CLOUD_MIND: KindSpec("Cloud mind", "A mind spread through a cloud of gas between the stars."),
+        BeingKind.GALAXY_SCALE_BEING: KindSpec("Galaxy-scale being", "A being that moves among the stars of a galaxy."),
+        BeingKind.VOID_KEEPER: KindSpec("Void keeper", "A being that keeps watch over the space between galaxies."),
+        BeingKind.MIRRORED_DOUBLE: KindSpec("Mirrored double", "A double of a mortal from a mirror dimension."),
+        BeingKind.TIME_TRAVELLER: KindSpec("Time traveller", "A being that moves through time."),
+        BeingKind.SYSTEM_SCALE_BEING: KindSpec("System-scale being", "A being as large as a star system."),
+        BeingKind.BOUNDARY_KEEPER: KindSpec("Boundary keeper", "A being that guards the boundaries between dimensions."),
+        BeingKind.DIMENSION_RULER: KindSpec("Dimension ruler", "A being that rules a whole dimension."),
         BeingKind.SWARM_INTELLIGENCE: KindSpec("Swarm intelligence", "One mind made of countless small bodies."),
-        BeingKind.LIVING_CONSTELLATION: KindSpec("Living constellation", "A figure of stars that is alive."),
+        BeingKind.STAR_PATTERN_MIND: KindSpec("Star-pattern mind", "A mind held in a pattern of stars."),
     }
 )
 
@@ -257,7 +265,7 @@ GALACTIC_EVENT_LABELS: MappingProxyType[GalacticEventKind, KindSpec] = MappingPr
         GalacticEventKind.STARBURST: KindSpec("Starburst", "The galaxy bears new stars far faster than usual."),
         GalacticEventKind.TIDAL_STRIPPING: KindSpec("Tidal stripping", "A passing pull tears stars into a stream."),
         GalacticEventKind.MERGER_BEGUN: KindSpec("Merger begun", "Two galaxies have begun to fall into each other."),
-        GalacticEventKind.MERGER_COMPLETED: KindSpec("Merger completed", "One galaxy has swallowed another."),
+        GalacticEventKind.MERGER_COMPLETED: KindSpec("Merger completed", "One galaxy has taken in another."),
         GalacticEventKind.HYPERVELOCITY_STAR: KindSpec("Hypervelocity star", "A star is flung out of the galaxy."),
         GalacticEventKind.NEBULA_COLLAPSE: KindSpec("Nebula collapse", "A cloud collapses and a new nursery is born."),
         GalacticEventKind.GALACTIC_DIMMING: KindSpec("Galactic dimming", "Every star of the galaxy loses some light."),
@@ -354,9 +362,9 @@ OMEN_LABELS: MappingProxyType[OmenReading, str] = MappingProxyType(
 APOCALYPSE_LABELS: MappingProxyType[ApocalypseVariant, KindSpec] = MappingProxyType(
     {
         ApocalypseVariant.RUIN: KindSpec("Ruin", "The leakiest world is shaken by disasters."),
-        ApocalypseVariant.WORLD_WAR: KindSpec("World war", "The end becomes the Calling: a war of every people."),
+        ApocalypseVariant.WORLD_WAR: KindSpec("World war", "The end comes as a war of every people."),
         ApocalypseVariant.OUTER_DESCENT: KindSpec("Outer descent", "Outer beings descend on the leakiest world."),
-        ApocalypseVariant.TWILIGHT_OF_GODS: KindSpec("Twilight of the gods", "The sons fade twice as fast."),
+        ApocalypseVariant.END_OF_THE_GODS: KindSpec("End of the gods", "The sons fade twice as fast."),
         ApocalypseVariant.DIMENSIONAL_COLLAPSE: KindSpec("Dimensional collapse", "Every veil gives way and the dimensions run together."),
         ApocalypseVariant.GALACTIC_DEATH: KindSpec("Galactic death", "The stars of the dimmest galaxy go dark."),
     }
@@ -365,39 +373,39 @@ APOCALYPSE_LABELS: MappingProxyType[ApocalypseVariant, KindSpec] = MappingProxyT
 BEING_SCALES: MappingProxyType[BeingKind, BeingScale] = MappingProxyType(
     {
         BeingKind.PLANAR_NATIVE: BeingScale.WORLD,
-        BeingKind.DIMENSION_WALKER: BeingScale.DIMENSION,
-        BeingKind.RIFT_SPAWN: BeingScale.WORLD,
+        BeingKind.DIMENSION_TRAVELLER: BeingScale.DIMENSION,
+        BeingKind.RIFT_BORN: BeingScale.WORLD,
         BeingKind.HIGHER_DIMENSIONAL: BeingScale.DIMENSION,
-        BeingKind.STAR_EATER: BeingScale.GALAXY,
-        BeingKind.NEBULA_MIND: BeingScale.GALAXY,
-        BeingKind.GALACTIC_LEVIATHAN: BeingScale.GALAXY,
-        BeingKind.VOID_SHEPHERD: BeingScale.CLUSTER,
-        BeingKind.ECHO: BeingScale.WORLD,
-        BeingKind.TIME_WANDERER: BeingScale.DIMENSION,
-        BeingKind.COSMIC_TITAN: BeingScale.CLUSTER,
-        BeingKind.VEIL_WARDEN: BeingScale.DIMENSION,
-        BeingKind.PLANE_SOVEREIGN: BeingScale.DIMENSION,
+        BeingKind.STAR_FEEDER: BeingScale.GALAXY,
+        BeingKind.CLOUD_MIND: BeingScale.GALAXY,
+        BeingKind.GALAXY_SCALE_BEING: BeingScale.GALAXY,
+        BeingKind.VOID_KEEPER: BeingScale.CLUSTER,
+        BeingKind.MIRRORED_DOUBLE: BeingScale.WORLD,
+        BeingKind.TIME_TRAVELLER: BeingScale.DIMENSION,
+        BeingKind.SYSTEM_SCALE_BEING: BeingScale.CLUSTER,
+        BeingKind.BOUNDARY_KEEPER: BeingScale.DIMENSION,
+        BeingKind.DIMENSION_RULER: BeingScale.DIMENSION,
         BeingKind.SWARM_INTELLIGENCE: BeingScale.GALAXY,
-        BeingKind.LIVING_CONSTELLATION: BeingScale.GALAXY,
+        BeingKind.STAR_PATTERN_MIND: BeingScale.GALAXY,
     }
 )
 BEING_AGENDAS: MappingProxyType[BeingKind, BeingAgenda] = MappingProxyType(
     {
         BeingKind.PLANAR_NATIVE: BeingAgenda.EXPLORE,
-        BeingKind.DIMENSION_WALKER: BeingAgenda.EXPLORE,
-        BeingKind.RIFT_SPAWN: BeingAgenda.CONQUER,
+        BeingKind.DIMENSION_TRAVELLER: BeingAgenda.EXPLORE,
+        BeingKind.RIFT_BORN: BeingAgenda.CONQUER,
         BeingKind.HIGHER_DIMENSIONAL: BeingAgenda.EXPLORE,
-        BeingKind.STAR_EATER: BeingAgenda.FEED,
-        BeingKind.NEBULA_MIND: BeingAgenda.FEED,
-        BeingKind.GALACTIC_LEVIATHAN: BeingAgenda.EXPLORE,
-        BeingKind.VOID_SHEPHERD: BeingAgenda.GUARD,
-        BeingKind.ECHO: BeingAgenda.SEEK_WORSHIP,
-        BeingKind.TIME_WANDERER: BeingAgenda.EXPLORE,
-        BeingKind.COSMIC_TITAN: BeingAgenda.CONQUER,
-        BeingKind.VEIL_WARDEN: BeingAgenda.GUARD,
-        BeingKind.PLANE_SOVEREIGN: BeingAgenda.CONQUER,
+        BeingKind.STAR_FEEDER: BeingAgenda.FEED,
+        BeingKind.CLOUD_MIND: BeingAgenda.FEED,
+        BeingKind.GALAXY_SCALE_BEING: BeingAgenda.EXPLORE,
+        BeingKind.VOID_KEEPER: BeingAgenda.GUARD,
+        BeingKind.MIRRORED_DOUBLE: BeingAgenda.SEEK_WORSHIP,
+        BeingKind.TIME_TRAVELLER: BeingAgenda.EXPLORE,
+        BeingKind.SYSTEM_SCALE_BEING: BeingAgenda.CONQUER,
+        BeingKind.BOUNDARY_KEEPER: BeingAgenda.GUARD,
+        BeingKind.DIMENSION_RULER: BeingAgenda.CONQUER,
         BeingKind.SWARM_INTELLIGENCE: BeingAgenda.FEED,
-        BeingKind.LIVING_CONSTELLATION: BeingAgenda.MEND,
+        BeingKind.STAR_PATTERN_MIND: BeingAgenda.MEND,
     }
 )
 DIMENSION_LAWS: MappingProxyType[DimensionKind, tuple[NaturalLaw, ...]] = MappingProxyType(
@@ -437,18 +445,22 @@ STRUCTURE_MINERALS: MappingProxyType[GalacticStructureKind, MaterialKind] = Mapp
 )
 PHENOMENON_WEATHER: MappingProxyType[PhenomenonKind, WeatherKind] = MappingProxyType(
     {
-        PhenomenonKind.ETERNAL_STORM: WeatherKind.STORM,
-        PhenomenonKind.LIVING_FOG: WeatherKind.FOG,
-        PhenomenonKind.AURORA_PERMANENT: WeatherKind.AURORA,
-        PhenomenonKind.LEY_NEXUS_FLARE: WeatherKind.MAGIC_STORM,
-        PhenomenonKind.LEAK_WOUND: WeatherKind.VOID_RAIN,
-        PhenomenonKind.DEAD_ZONE: WeatherKind.DROUGHT_WIND,
+        PhenomenonKind.LASTING_STORM: WeatherKind.STORM,
+        PhenomenonKind.MOVING_FOG: WeatherKind.FOG,
+        PhenomenonKind.LASTING_LIGHTS: WeatherKind.AURORA,
+        PhenomenonKind.POWER_SURGE: WeatherKind.MAGIC_STORM,
+        PhenomenonKind.OUTSIDE_OPENING: WeatherKind.VOID_RAIN,
+        PhenomenonKind.BARREN_GROUND: WeatherKind.DROUGHT_WIND,
     }
 )
 PHENOMENON_REAGENTS: MappingProxyType[PhenomenonKind, MaterialKind] = MappingProxyType(
-    {PhenomenonKind.CRYSTAL_BLOOM: MaterialKind.CRYSTAL, PhenomenonKind.GOD_CORPSE_AURA: MaterialKind.GEMS, PhenomenonKind.LEAK_WOUND: MaterialKind.VOID_GLASS}
+    {
+        PhenomenonKind.MINERAL_GROWTH: MaterialKind.CRYSTAL,
+        PhenomenonKind.DIVINE_RESIDUE: MaterialKind.GEMS,
+        PhenomenonKind.OUTSIDE_OPENING: MaterialKind.VOID_GLASS,
+    }
 )
-RIFT_PHENOMENA = frozenset({PhenomenonKind.LEAK_WOUND, PhenomenonKind.MIRROR_LAKE})
+RIFT_PHENOMENA = frozenset({PhenomenonKind.OUTSIDE_OPENING, PhenomenonKind.DISTANT_VIEW})
 MIRROR_DIMENSIONS = frozenset({DimensionKind.MIRROR, DimensionKind.PARALLEL, DimensionKind.QUANTUM_BRANCH})
 FRAGILE_DIMENSIONS = frozenset({DimensionKind.POCKET, DimensionKind.BUBBLE_UNIVERSE, DimensionKind.COMPACTIFIED})
 BARRED_GALAXIES = frozenset({GalaxyType.BARRED_SPIRAL, GalaxyType.FORGED})
@@ -469,3 +481,70 @@ SPIRAL_GALAXIES = frozenset(
         GalaxyType.EMBER,
     }
 )
+
+
+@dataclass(frozen=True)
+class PhenomenonModel:
+    target: PhenomenonTarget
+    effect: PhenomenonEffect
+    scope: PhenomenonScope
+    persistence: PhenomenonPersistence
+
+
+PK = PhenomenonKind
+PT = PhenomenonTarget
+PE = PhenomenonEffect
+PS = PhenomenonScope
+PP = PhenomenonPersistence
+PHENOMENON_MODEL: Mapping[PhenomenonKind, PhenomenonModel] = total(
+    PhenomenonKind,
+    {
+        PK.LASTING_STORM: PhenomenonModel(PT.WEATHER, PE.INTENSIFY, PS.REGION, PP.LASTING),
+        PK.TIME_DISTORTION: PhenomenonModel(PT.TIME, PE.DISTORT, PS.PLACE, PP.LASTING),
+        PK.OUTSIDE_OPENING: PhenomenonModel(PT.BOUNDARY, PE.OPEN, PS.REGION, PP.LASTING),
+        PK.POWER_SURGE: PhenomenonModel(PT.MAGIC, PE.SURGE, PS.REGION, PP.PASSING),
+        PK.DIVINE_RESIDUE: PhenomenonModel(PT.DIVINITY, PE.LINGER, PS.PLACE, PP.PERMANENT),
+        PK.MOVING_FOG: PhenomenonModel(PT.PERCEPTION, PE.MOVE, PS.REGION, PP.PASSING),
+        PK.MINERAL_GROWTH: PhenomenonModel(PT.MATTER, PE.GROW, PS.REGION, PP.LASTING),
+        PK.BARREN_GROUND: PhenomenonModel(PT.LIFE, PE.SUPPRESS, PS.REGION, PP.LASTING),
+        PK.DISTANT_VIEW: PhenomenonModel(PT.PERCEPTION, PE.REVEAL, PS.PLACE, PP.LASTING),
+        PK.GRAVITY_ANOMALY: PhenomenonModel(PT.GRAVITY, PE.DISTORT, PS.PLACE, PP.PERMANENT),
+        PK.SOUNDING_GROUND: PhenomenonModel(PT.SOUND, PE.EMIT, PS.PLACE, PP.PERMANENT),
+        PK.LASTING_LIGHTS: PhenomenonModel(PT.LIGHT, PE.EMIT, PS.WORLD, PP.LASTING),
+        PK.PATH_OF_THE_DEAD: PhenomenonModel(PT.THE_DEAD, PE.OPEN, PS.REGION, PP.LASTING),
+        PK.BLIGHT: PhenomenonModel(PT.LIFE, PE.SPREAD, PS.WORLD, PP.PASSING),
+    },
+)
+SCOPE_SPREAD: Mapping[PhenomenonScope, int] = total(PhenomenonScope, {PS.PLACE: 0, PS.REGION: 1, PS.WORLD: 3})
+
+
+@dataclass(frozen=True)
+class BeingModel:
+    substrate: MindSeat
+    sense: BeingSense
+
+
+BK = BeingKind
+BS = BeingSense
+BEING_MODEL: Mapping[BeingKind, BeingModel] = total(
+    BeingKind,
+    {
+        BK.PLANAR_NATIVE: BeingModel(MindSeat.BODY, BS.SIGHT),
+        BK.DIMENSION_TRAVELLER: BeingModel(MindSeat.BODY, BS.SIGHT),
+        BK.RIFT_BORN: BeingModel(MindSeat.BODY, BS.TOUCH),
+        BK.HIGHER_DIMENSIONAL: BeingModel(MindSeat.MEDIUM, BS.MIND),
+        BK.STAR_FEEDER: BeingModel(MindSeat.BODY, BS.SIGHT),
+        BK.CLOUD_MIND: BeingModel(MindSeat.MEDIUM, BS.MIND),
+        BK.GALAXY_SCALE_BEING: BeingModel(MindSeat.BODY, BS.SIGHT),
+        BK.VOID_KEEPER: BeingModel(MindSeat.NONE, BS.MIND),
+        BK.MIRRORED_DOUBLE: BeingModel(MindSeat.BODY, BS.SIGHT),
+        BK.TIME_TRAVELLER: BeingModel(MindSeat.BODY, BS.DREAM),
+        BK.SYSTEM_SCALE_BEING: BeingModel(MindSeat.BODY, BS.TOUCH),
+        BK.BOUNDARY_KEEPER: BeingModel(MindSeat.PLACE, BS.HEARING),
+        BK.DIMENSION_RULER: BeingModel(MindSeat.REALM, BS.MIND),
+        BK.SWARM_INTELLIGENCE: BeingModel(MindSeat.BODIES, BS.HEARING),
+        BK.STAR_PATTERN_MIND: BeingModel(MindSeat.STRUCTURE, BS.SIGHT),
+    },
+)
+SENSE_REACH: Mapping[BeingSense, int] = total(BeingSense, {BS.SIGHT: 100, BS.HEARING: 80, BS.TOUCH: 60, BS.MIND: 100, BS.DREAM: 50})
+EMBODIED = frozenset({MindSeat.BODY, MindSeat.BODIES})

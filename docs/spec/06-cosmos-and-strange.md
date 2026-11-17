@@ -1859,15 +1859,15 @@ danger mean-reversion, invasive species), taming/mounts' war contribution, stowa
    having a common child (an entity with `descends_from` both): `merge_species(a, b, {name: "{a first word} {b first
    word} Hybrid", description: "[World engine] {a} and {b} mixed over generations in the same lands and bore a
    hybrid."})`; set subtype `hybrid`; note "{a} and {b} hybridized." — at most one per epoch (loops exit).
-6. **Spontaneous chimera weaving** (`chimera_weaving`, no-LLM path): candidate search first — canon
+6. **Spontaneous chimera weaving** (`merged_weaving`, no-LLM path): candidate search first — canon
    people/settlement/faction/cult/mortal knowing `biomancy`; nearby species (same world, distance ≤
-   `chimera_merge_distance`, not megafauna) sorted by distance, id; first pair without a common child. If a candidate
-   and `chance(chimera_merge_chance)`: `merge_species(A, B, {weaver: v, description: "[World engine] {v} joined {A} and
+   `species_merge_distance`, not megafauna) sorted by distance, id; first pair without a common child. If a candidate
+   and `chance(species_merge_chance)`: `merge_species(A, B, {weaver: v, description: "[World engine] {v} joined {A} and
    {B} with biomancy and wove a chimera."})`; bond weaver `tamed` chimera ("its own weaving"); chronicle `chimera
    (kimera)`: "{v} wove a chimera from {A} and {B}: {chimera}."; note.
 7. **Chimera escape**: chimeras (tag chimera, not `escaped`) with an active `produced` bond from a weaver:
-   `chance((danger || chimera_danger_default)/chimera_escape_divisor)` → tag `escaped`; if weaver canon: bond chimera
-   `hunts` weaver ("escaped and returned"), weaver population and followers ×= (100 − chimera_escape_loss)/100 (clamp
+   `chance((danger || merged_danger_default)/merged_escape_divisor)` → tag `escaped`; if weaver canon: bond chimera
+   `hunts` weaver ("escaped and returned"), weaver population and followers ×= (100 − merged_escape_loss)/100 (clamp
    1..cap); note "{chimera} got out of control and turned on those who wove it."
 8. **Megafauna**: canon species with power ≥ megafauna_level or tag megafauna: add tag if missing (note "{m} grew so
    large it is now as old and big as a world itself: a megafauna."). `chance(megafauna_trail_pct)` with a location →
@@ -1891,12 +1891,12 @@ danger mean-reversion, invasive species), taming/mounts' war contribution, stowa
 13. **Invasive species**: each canon species tagged invasive lowers its location's fertility by invasive_fertility.
 
 ### 9.4 Chimera (`merge_species(a, b, {epoch, name, weaver, description})`, old `kimeraDok`) — also used by son tool `kimera_dok` and mortal tools
-- `stat(k) = clamp(round(((a.k || chimera_stat_default) + (b.k || chimera_stat_default))/2 + d(chimera_die) −
-  chimera_shift), 0, k == hp ? chimera_hp_cap : 100)`.
-- Traits = union of both, first `chimera_traits_max`.
+- `stat(k) = clamp(round(((a.k || merged_stat_default) + (b.k || merged_stat_default))/2 + d(merged_die) −
+  merged_shift), 0, k == hp ? merged_hp_cap : 100)`.
+- Traits = union of both, first `merged_traits_max`.
 - `open_record({type: species, subtype: chimera, name: name || "{a first word}-{b first word}", power: max(a.power,
   b.power), location: a.location || b.location, stats: {hp, strength, agility, intelligence, danger: clamp(stat(danger)
-  + chimera_danger)}, tags: ['chimera', ...traits], description: description || "[World engine] A chimera woven by
+  + merged_danger)}, tags: ['chimera', ...traits], description: description || "[World engine] A chimera woven by
   combining {a} and {b}."})`; bonds chimera `descends_from` a and b ("chimera"); weaver `produced` chimera ("wove a chimera").
 
 ### 9.5 Tamed creatures' war power (`tamed_power(v)`, old `evcilGucu`) — read by `sim.askeriGuc`
@@ -1922,14 +1922,14 @@ in ships' holds and became a non-native invader there."})`; bond `descends_from`
 | kacak_sans | stowaway_pct | 30 | 0 | 100 | A species stows away on ships (%) |
 | ozellik_tavan | traits_max_from_text | 2 | 1 | 10 | Max traits given to a species from its description |
 | suru_zeka | swarm_intelligence | 15 | 0 | 100 | Swarm-minded species' intelligence gain |
-| kimera_stat_varsayilan | chimera_stat_default | 40 | 0 | 100 | Default value of an unwritten stat in a chimera |
-| kimera_zar | chimera_die | 21 | 1 | 100 | Chimera stat die (1…n) |
-| kimera_kayma | chimera_shift | 6 | 0 | 100 | Subtracted from the chimera stat die |
-| kimera_can_tavan | chimera_hp_cap | 1000 | 1 | 100000 | Chimera max HP |
-| kimera_ozellik_tavan | chimera_traits_max | 3 | 0 | 10 | Max traits a chimera can carry |
-| kimera_tehlike | chimera_danger | 10 | 0 | 100 | Chimera extra danger |
-| kimera_dokuma_sans | chimera_merge_chance | 6 | 0 | 100 | A biomancy-knowing community/mortal spontaneously weaves a chimera (per epoch %) |
-| kimera_dokuma_mesafe | chimera_merge_distance | 4 | 0 | 99 | Max distance (steps) from the weaver to the species |
+| kimera_stat_varsayilan | merged_stat_default | 40 | 0 | 100 | Default value of an unwritten stat in a chimera |
+| kimera_zar | merged_die | 21 | 1 | 100 | Chimera stat die (1…n) |
+| kimera_kayma | merged_shift | 6 | 0 | 100 | Subtracted from the chimera stat die |
+| kimera_can_tavan | merged_hp_cap | 1000 | 1 | 100000 | Chimera max HP |
+| kimera_ozellik_tavan | merged_traits_max | 3 | 0 | 10 | Max traits a chimera can carry |
+| kimera_tehlike | merged_danger | 10 | 0 | 100 | Chimera extra danger |
+| kimera_dokuma_sans | species_merge_chance | 6 | 0 | 100 | A biomancy-knowing community/mortal spontaneously weaves a chimera (per epoch %) |
+| kimera_dokuma_mesafe | species_merge_distance | 4 | 0 | 99 | Max distance (steps) from the weaver to the species |
 | isik_tehlike | light_danger | 2 | 0 | 100 | Light-emitting species lowers region danger (per epoch) |
 | isik_bereket | light_fertility | 2 | 0 | 100 | Light-emitting species raises region fertility (per epoch) |
 | akil_okuyan_tavan | mind_reader_victims | 3 | 0 | 100 | Max neighbours whose sanity a mind-reader or soul-eater gnaws |
@@ -1953,9 +1953,9 @@ in ships' holds and became a non-native invader there."})`; bond `descends_from`
 | halk_savascilik_varsayilan | people_warlike_default | 40 | 0 | 100 | Default warlikeness |
 | halk_buyu_varsayilan | people_magic_default | 20 | 0 | 100 | Default magic |
 | halk_nufus_varsayilan | people_population_default | 1000 | 1 | 100000000 | Population assumed when splitting a changed branch |
-| kimera_tehlike_varsayilan | chimera_danger_default | 50 | 0 | 100 | Danger assumed for escape chance |
-| kimera_kacis_bolen | chimera_escape_divisor | 500 | 1 | 100000 | Chimera escape chance: danger / this |
-| kimera_kacis_kayip | chimera_escape_loss_pct | 10 | 0 | 100 | Weaver's population loss when its chimera escapes (%) |
+| kimera_tehlike_varsayilan | merged_danger_default | 50 | 0 | 100 | Danger assumed for escape chance |
+| kimera_kacis_bolen | merged_escape_divisor | 500 | 1 | 100000 | Chimera escape chance: danger / this |
+| kimera_kacis_kayip | merged_escape_loss_pct | 10 | 0 | 100 | Weaver's population loss when its chimera escapes (%) |
 | megafauna_seviye | megafauna_level | 8 | 1 | 12 | Min power level counted as megafauna |
 | iz_seviye | trail_level | 5 | 1 | 12 | Megafauna trail resource power level |
 | iz_bolluk | trail_abundance | 60 | 0 | 100 | Trail abundance |

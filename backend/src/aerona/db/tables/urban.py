@@ -10,7 +10,7 @@ from aerona.domain.enums.urban import (
     CrimeStance,
     MarketPlay,
     OrderLaw,
-    Preservation,
+    PreservationMethod,
     RacketKind,
     TransportKind,
     TribunalVerdict,
@@ -137,7 +137,7 @@ class ConvoyRow(Base):
     owner_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     route_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     cargo: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
-    preservation: Mapped[Preservation] = mapped_column(enum_type(Preservation, "preservation"), default=Preservation.NONE)
+    preservation: Mapped[PreservationMethod] = mapped_column(enum_type(PreservationMethod, "preservation"), default=PreservationMethod.NONE)
     animals: Mapped[int] = mapped_column(default=0)
     vehicles: Mapped[int] = mapped_column(default=0)
     guards: Mapped[int] = mapped_column(default=0)

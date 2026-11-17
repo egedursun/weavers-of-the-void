@@ -1,9 +1,9 @@
 {% set d = rules.death %}
 {% set status = "the devotion of those awaiting their return " ~ line.devotion ~ "/" ~ rules.death.resurrection_devotion_required ~ (", at the earliest " ~ line.remaining ~ " ages from now" if line.remaining else "") %}
 {% if line.enemy %}
-{% if offered(available_tools, [("scatter_bones", "scatter_bones")]) %}
-YOUR ENEMY IS DEAD: {{ line.name }} died in Age {{ line.death_age }} ({{ status }}). With scatter_bones ({{ d.scatter_bones_cost }} essence) you can delay their return; their cult becomes your enemy.
+{% if offered(available_tools, [("hinder_return", "hinder_return")]) %}
+YOUR ENEMY IS DEAD: {{ line.name }} died in Age {{ line.death_age }} ({{ status }}). With hinder_return ({{ d.hinder_return_cost }} essence) you can delay their return; their cult becomes your enemy.
 {% endif %}
 {% else %}
-DEAD SIBLING: {{ line.name }} died in Age {{ line.death_age }} ({{ status }}){% if line.corpse_id %}; their remains lie at #{{ line.corpse_id }}{% endif %}{% if line.cult %}; resurrection cult #{{ line.cult.id }} {{ line.cult.name }}, devotion {{ line.cult.value }}/{{ rules.death.resurrection_devotion_required }} (miracles raise devotion){% endif %}.{% if offered(available_tools, [("resurrect_sibling", "resurrect_sibling")]) %} Help their return with resurrect_sibling: rite {{ d.sibling_rite_cost }} essence, descent to the realm of the dead {{ d.sibling_descent_cost }} essence (risky), bargain with a foreign god {{ d.sibling_bargain_cost }} essence and one loyal community.{% else %} You can bring them back, use their remains for your own purpose, or scatter their cult.{% endif %}
+DEAD SIBLING: {{ line.name }} died in Age {{ line.death_age }} ({{ status }}){% if line.corpse_id %}; their remains lie at #{{ line.corpse_id }}{% endif %}{% if line.cult %}; resurrection cult #{{ line.cult.id }} {{ line.cult.name }}, devotion {{ line.cult.value }}/{{ rules.death.resurrection_devotion_required }} (miracles raise devotion){% endif %}.{% if offered(available_tools, [("resurrect_sibling", "resurrect_sibling")]) %} Help their return with resurrect_sibling: rite {{ d.sibling_rite_cost }} essence, descent to the realm of the dead {{ d.sibling_descent_cost }} essence (risky), bargain with a foreign god {{ d.sibling_bargain_cost }} essence and one loyal community.{% else %} You can bring them back, use their remains for your own purpose, or hinder their return.{% endif %}
 {% endif %}

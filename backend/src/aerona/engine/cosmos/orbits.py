@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.world_bodies import WORLD_BODIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, StarSystemRow, WorldPhysicsRow
@@ -19,9 +20,6 @@ from aerona.rules.registry import Rules
 
 FOURTH = 0.25
 GAS_WORLDS = frozenset({WorldType.GAS, WorldType.ICE_GIANT, WorldType.HOT_GIANT, WorldType.RINGED})
-SMALL_WORLDS = frozenset({WorldType.DWARF_PLANET, WorldType.ASTEROID_BELT, WorldType.SHATTERED})
-ICY_WORLDS = frozenset({WorldType.ICE, WorldType.ICE_SHELL, WorldType.ICE_GIANT})
-FIERY_WORLDS = frozenset({WorldType.LAVA, WorldType.FORGE, WorldType.CHTHONIAN})
 LIFELESS_WORLDS = frozenset({WorldType.DEAD, WorldType.CORPSE_WORLD, WorldType.CHTHONIAN})
 SKYLESS_WORLDS = frozenset({WorldType.DREAM, WorldType.MIRROR, WorldType.VOID_POCKET, WorldType.GODS_PALACE, WorldType.GENERATION_SHIP, WorldType.HOLLOW})
 GRAVITY_G: dict[Gravity, float] = {Gravity.LOW: 0.4, Gravity.NORMAL: 1.0, Gravity.HIGH: 1.8}
@@ -227,7 +225,8 @@ def tides(rules: Rules, physics: WorldPhysicsRow, moons: list[Moon]) -> int:
 
 
 def infer(rules: Rules, world: WorldRow, star: StarRow | None) -> WorldPhysicsRow:
-    radius = 10.0 if world.world_type in GAS_WORLDS else 0.3 if world.world_type in SMALL_WORLDS else 1.6 if world.world_type is WorldType.SUPER_EARTH else 1.0
+    body = WORLD_BODIES[world.world_type]
+    radius = body.radius
     if world.parent_world_id is not None and world.world_type not in GAS_WORLDS:
         radius = min(radius, 0.3)
     gravity = GRAVITY_G[world.gravity]
@@ -239,25 +238,25 @@ def infer(rules: Rules, world: WorldRow, star: StarRow | None) -> WorldPhysicsRo
         argument=0.0,
         mass=round(gravity * radius**2, 3),
         radius=radius,
-        iron=70 if world.world_type is WorldType.IRON else 5 if world.world_type in GAS_WORLDS else 30,
-        rock=20 if world.world_type is WorldType.IRON else 5 if world.world_type in GAS_WORLDS else 60,
-        ice=60 if world.world_type in ICY_WORLDS else 5,
-        gas=85 if world.world_type in GAS_WORLDS else 0,
-        exotic=40 if world.world_type in (WorldType.CRYSTAL, WorldType.CARBON) else 0,
+        iron=body.iron,
+        rock=body.rock,
+        ice=body.ice,
+        gas=body.gas,
+        exotic=body.exotic,
         rotation_hours=float(world.day_length_hours or 24),
-        pressure=pressure * (90.0 if world.world_type is WorldType.GREENHOUSE else 1.0),
+        pressure=pressure * body.pressure_factor,
         **mix,
-        albedo=70 if world.world_type in ICY_WORLDS else 30,
-        tectonics=0 if world.world_type in LIFELESS_WORLDS else 50,
-        volcanism=90 if world.world_type in FIERY_WORLDS else 0 if world.world_type in LIFELESS_WORLDS else 20,
+        albedo=body.albedo,
+        tectonics=body.tectonics,
+        volcanism=body.volcanism,
         hydrosphere=clamp_percent(round_half_up(world.terrain_sea * PERCENT)),
-        cryosphere=80 if world.world_type in ICY_WORLDS else 10,
+        cryosphere=body.cryosphere,
         circumbinary=False,
         locked=[],
     )
-    if world.world_type is WorldType.METHANE:
-        physics.methane = 30
-        physics.nitrogen = max(0, physics.nitrogen - 30)
+    if body.methane:
+        physics.methane = body.methane
+        physics.nitrogen = max(0, physics.nitrogen - body.methane)
     return physics
 
 

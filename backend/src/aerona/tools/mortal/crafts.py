@@ -2,14 +2,17 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.crafts_labels import GAME_LABELS
 from aerona.db.tables.crafts import InsurancePolicyRow, InsurerRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.crafts import GameKind, GameRule, InsuranceCover
+from aerona.domain.enums.crafts import InsuranceCover
+from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.engine.body.customs import people_of
 from aerona.engine.crafts import control
-from aerona.engine.crafts.games import RULE_OF
+from aerona.engine.crafts.games import made_by, shaped
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import living_entity
@@ -28,7 +31,7 @@ class BuyInsuranceInput(ToolInput):
 
 
 class InventGameInput(ToolInput):
-    kind: GameKind
+    kind: GameCategory
 
 
 async def buy_insurance(call: MortalCall, args: BuyInsuranceInput) -> str:
@@ -73,19 +76,18 @@ async def invent_game(call: MortalCall, args: InventGameInput) -> str:
     people = await people_of(call.session, call.me)
     if people is None:
         fail(MortalResult.GAME_DECLINED, why="you belong to no people to play it")
+    if held(people.id):
+        fail(MortalResult.GAME_DECLINED, why="your people is held as it is")
     name = await Namer(call.session, call.tick.rules).from_speaker(people.id, seed_of("game.tool", call.me.id, call.tick.epoch), NameKind.GENERAL)
     if name is None:
         fail(MortalResult.GAME_DECLINED, why="your people has no tongue to name it in")
-    rule = RULE_OF.get(args.kind, GameRule.CHANCE if args.kind is GameKind.CARDS else GameRule.STRATEGY)
-    game = await control.set_record(
-        call.tick, "game", {}, {"name": name, "kind": args.kind, "rule": rule, "origin_entity_id": people.id, "created_epoch": call.tick.epoch}
-    )
-    await control.set_record(
-        call.tick, "game_following", {"people_entity_id": people.id, "game_id": getattr(game, "id", 0)}, {"adopted_epoch": call.tick.epoch}
-    )
+    game = shaped(name, args.kind, people, call.tick.epoch)
+    call.session.add(game)
+    await call.session.flush()
+    call.session.add(made_by(game, people.id, call.tick.epoch))
     call.target(people.id)
     await call.chronicle(ChronicleKind.CULTURE, lines.INVENT_GAME, entity_ids=[call.me.id, people.id], me=call.me.name, game=name, people=people.name)
-    return result(MortalResult.GAME_INVENTED, game=name, people=people.name, rule=rule.value)
+    return result(MortalResult.GAME_INVENTED, game=name, people=people.name, sort=GAME_LABELS[args.kind.value].lower())
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

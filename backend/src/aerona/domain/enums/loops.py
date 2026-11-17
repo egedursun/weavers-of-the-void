@@ -31,3 +31,5 @@ class BalanceLoop(StrEnum):
     MONSOON_MIGRATION = "monsoon_migration"
     REDISTRIBUTION_COLLAPSE = "redistribution_collapse"
     NOVELTY_DRAIN = "novelty_drain"
+    KIND_PRESTIGE = "kind_prestige"
+    KIND_SUBSTITUTION = "kind_substitution"

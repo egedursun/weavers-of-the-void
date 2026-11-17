@@ -13,10 +13,11 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import RiteStage, TraditionFunction
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import AGENT_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faith import FuneralRite, TenetKind
+from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.structure import StructureKind
@@ -54,7 +55,7 @@ HOLDER_BONDS = {EntityType.ITEM: BondKind.OWNS, EntityType.TRADITION: BondKind.C
 VESSEL_ROUTES = {
     VehicleKind.GATE: TravelMethod.ANCIENT_GATE,
     VehicleKind.SHIP: TravelMethod.LIGHT_SAIL,
-    VehicleKind.MOUNT: TravelMethod.COSMIC_MOUNT,
+    VehicleKind.MOUNT: TravelMethod.CARRIER_MOUNT,
     VehicleKind.BRIDGE: TravelMethod.DIVINE_BRIDGE,
 }
 NONE_AVAILABLE = "none"
@@ -178,7 +179,7 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
         )
     target_id = args.option("target_world_id")
     target = await call.session.get(WorldRow, target_id) if target_id is not None else None
-    if target is None or target.id == created.world_id:
+    if target is None or target.id == created.world_id or kind not in VESSEL_ROUTES:
         return None
     method = VESSEL_ROUTES[kind]
     spec = RouteSpec(
@@ -230,7 +231,7 @@ async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow
     if created.entity_type is EntityType.LEGEND:
         await legends.profile_of(call.tick, created, args.option("archetype"))
     if created.entity_type is EntityType.TRADITION:
-        row = await traditions.profile_of(call.tick, created, args.option("tradition_kind") or TraditionKind.FESTIVAL)
+        row = await traditions.profile_of(call.tick, created, args.option("tradition_kind") or TraditionFunction.FESTIVAL)
         row.calendar_slot = args.option("calendar_slot")
         taboo_target, taboo_act = args.option("taboo_target"), args.option("taboo_act")
         if taboo_target is not None:
@@ -282,10 +283,10 @@ async def teach_cult(call: SonCall, args: CreationInput, created: EntityRow) -> 
     return [result(SonResult.CULT_TAUGHT, tenets=", ".join(sorted(tenet.value.replace("_", " ") for tenet in church.tenets)) or "none")]
 
 
-async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralRite) -> None:
-    profile = await traditions.profile_of(call.tick, created, TraditionKind.FUNERAL_RITE)
-    reseed = profile.kind is not TraditionKind.FUNERAL_RITE
-    profile.kind, profile.funeral_rite = TraditionKind.FUNERAL_RITE, rite
+async def keep_rite(call: SonCall, created: EntityRow, rite: FuneralCustom) -> None:
+    profile = await traditions.profile_of(call.tick, created, TraditionFunction.RITE_OF_PASSAGE)
+    reseed = profile.kind is not TraditionFunction.RITE_OF_PASSAGE or profile.stage is not RiteStage.DEATH
+    profile.kind, profile.stage, profile.funeral_rite = TraditionFunction.RITE_OF_PASSAGE, RiteStage.DEATH, rite
     if reseed:
         await traditions.seed_effects(call.tick, profile, replace=True)
     profile.locked = [*profile.locked, "funeral_rite"] if "funeral_rite" not in profile.locked else profile.locked

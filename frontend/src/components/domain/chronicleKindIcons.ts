@@ -131,7 +131,7 @@ export const CHRONICLE_KIND_ICON: Record<ChronicleKind, LucideIcon> = {
   adventure: Mountain,
   intrigue: ShieldAlert,
   rescue: Anchor,
-  chimera: Dna,
+  merged_species: Dna,
   escape: DoorOpen,
   domestication: PawPrint,
   age_change: Hourglass,

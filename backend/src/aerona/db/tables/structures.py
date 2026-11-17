@@ -4,7 +4,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
-from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
@@ -70,6 +69,11 @@ class StructureProfileRow(Base):
         between("fire_resistance", PERCENT_MIN, PERCENT_MAX),
         between("effect_pct", PERCENT_MIN, PERCENT_MAX),
         between("staff_pct", PERCENT_MIN, PERCENT_MAX),
+        between("style_ornament", PERCENT_MIN, PERCENT_MAX),
+        between("style_geometry", PERCENT_MIN, PERCENT_MAX),
+        between("style_colour", PERCENT_MIN, PERCENT_MAX),
+        between("style_scale", PERCENT_MIN, PERCENT_MAX),
+        between("style_symmetry", PERCENT_MIN, PERCENT_MAX),
         at_least("capacity", 0),
         at_least("upkeep_coin", 0),
         at_least("upkeep_goods", 0),
@@ -93,7 +97,11 @@ class StructureProfileRow(Base):
     builder_kind: Mapped[BuilderKind | None] = mapped_column(enum_type(BuilderKind, "builder_kind"))
     architect_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     dedicated_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
-    aesthetic: Mapped[Aesthetic | None] = mapped_column(enum_type(Aesthetic, "aesthetic"))
+    style_ornament: Mapped[int | None]
+    style_geometry: Mapped[int | None]
+    style_colour: Mapped[int | None]
+    style_scale: Mapped[int | None]
+    style_symmetry: Mapped[int | None]
     on_ley_line: Mapped[bool] = mapped_column(default=False)
     anchor: Mapped[bool] = mapped_column(default=False)
     effect_pct: Mapped[int] = mapped_column(default=0)

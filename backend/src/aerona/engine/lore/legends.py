@@ -32,26 +32,26 @@ A = LegendArchetype
 CATEGORY_ARCHETYPES = {
     LegendCategory.CREATURE: A.MONSTER,
     LegendCategory.SPIRIT: A.HAUNTED_PLACE,
-    LegendCategory.RESOURCE: A.LOST_PARADISE,
+    LegendCategory.RESOURCE: A.LOST_GOLDEN_AGE,
     LegendCategory.RELIC: A.HERO_QUEST,
 }
 EVENT_ARCHETYPES = {
-    EngineKind.FLOOD: A.FLOOD,
-    EngineKind.STORM: A.FLOOD,
+    EngineKind.FLOOD: A.WORLD_DISASTER,
+    EngineKind.STORM: A.WORLD_DISASTER,
     EngineKind.WAR: A.BETRAYAL,
-    EngineKind.UPRISING: A.RETURN_OF_THE_KING,
+    EngineKind.UPRISING: A.RETURN_OF_A_RULER,
     EngineKind.BATTLE: A.HERO_QUEST,
     EngineKind.SIEGE: A.BETRAYAL,
     EngineKind.PLAGUE: A.CURSED_LINE,
-    EngineKind.FAMINE: A.LOST_PARADISE,
-    EngineKind.DROUGHT: A.LOST_PARADISE,
+    EngineKind.FAMINE: A.LOST_GOLDEN_AGE,
+    EngineKind.DROUGHT: A.LOST_GOLDEN_AGE,
     EngineKind.EARTHQUAKE: A.CREATION,
     EngineKind.MAGIC_STORM: A.HAUNTED_PLACE,
     EngineKind.ECLIPSE_PROPHECY: A.CHOSEN_ONE,
 }
 CONFIRMING = {archetype: frozenset(kind for kind, found in EVENT_ARCHETYPES.items() if found is archetype) for archetype in set(EVENT_ARCHETYPES.values())}
 TELLERS = (BondKind.CELEBRATES, BondKind.TELLS_OF)
-FORETOLD = "the king of legend returned"
+FORETOLD = "the ruler of legend returned"
 BARD_SKILLS = (SkillKind.ORATORY, SkillKind.LORE)
 
 
@@ -277,26 +277,26 @@ async def returning_king(ctx: TickContext, row: LegendProfileRow, subject: Entit
     matching = matching.where((ClaimRow.claimant_entity_id == subject.id) | (ClaimRow.house_entity_id.in_(list(houses))))
     claims = list(await ctx.session.scalars(matching.order_by(ClaimRow.strength.desc(), ClaimRow.id)))
     for claim in claims:
-        claim.strength = clamp_int(claim.strength + round_half_up(table.return_king_claim * row.credence / PERCENT), 0, PERCENT)
+        claim.strength = clamp_int(claim.strength + round_half_up(table.return_ruler_claim * row.credence / PERCENT), 0, PERCENT)
     return "a pretender of the foretold line gains strength" if claims else None
 
 
 async def foretold_return(ctx: TickContext, ruler: EntityRow) -> dict[str, int]:
     houses = await houses_of(ctx, ruler)
     best = 0
-    rows = await ctx.session.scalars(select(LegendProfileRow).where(LegendProfileRow.archetype == A.RETURN_OF_THE_KING))
+    rows = await ctx.session.scalars(select(LegendProfileRow).where(LegendProfileRow.archetype == A.RETURN_OF_A_RULER))
     for row in rows:
         subject = await ctx.session.get(EntityRow, row.subject_node_id) if row.subject_node_id is not None else None
         if subject is None or (subject.id != ruler.id and not houses & await houses_of(ctx, subject)):
             continue
-        best = max(best, round_half_up(ctx.rules.belief.return_king_usurper * row.credence / PERCENT))
+        best = max(best, round_half_up(ctx.rules.belief.return_ruler_usurper * row.credence / PERCENT))
     return {FORETOLD: best} if best else {}
 
 
 async def consequences(ctx: TickContext, row: LegendProfileRow) -> str | None:
     table = ctx.rules.belief
     subject = await ctx.session.get(EntityRow, row.subject_node_id) if row.subject_node_id is not None else None
-    if row.archetype is A.RETURN_OF_THE_KING:
+    if row.archetype is A.RETURN_OF_A_RULER:
         return await returning_king(ctx, row, subject)
     if row.archetype is A.CURSED_LINE and subject is not None:
         house_id = next(iter(sorted(await houses_of(ctx, subject))), None)
@@ -338,7 +338,7 @@ ARCHETYPE_MEMORIES: dict[LegendArchetype, tuple[MemoryKind, int]] = {
     LegendArchetype.TRICKSTER: (MemoryKind.CHEATED_US, -1),
     LegendArchetype.HERO_QUEST: (MemoryKind.SAVED_ME, 1),
     LegendArchetype.CHOSEN_ONE: (MemoryKind.GOODWILL, 1),
-    LegendArchetype.RETURN_OF_THE_KING: (MemoryKind.GOODWILL, 1),
+    LegendArchetype.RETURN_OF_A_RULER: (MemoryKind.GOODWILL, 1),
 }
 LEGEND_NOTE = "as the legend tells it"
 

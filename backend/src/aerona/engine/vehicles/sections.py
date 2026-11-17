@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.sections import SECTION_STATES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -65,16 +66,14 @@ def deflected(ctx: TickContext, rng: SeededRandom, section: DesignSectionRow) ->
 
 
 def tier(row: VehicleGroupSectionRow, state: SectionState) -> int:
-    return {SectionState.DAMAGED: row.damaged, SectionState.DISABLED: row.disabled, SectionState.DESTROYED: row.destroyed}.get(state, 0)
+    column = SECTION_STATES[state].tier
+    return int(getattr(row, column)) if column is not None else 0
 
 
 def shift_tier(row: VehicleGroupSectionRow, state: SectionState, amount: int) -> None:
-    if state is SectionState.DAMAGED:
-        row.damaged = max(0, row.damaged + amount)
-    elif state is SectionState.DISABLED:
-        row.disabled = max(0, row.disabled + amount)
-    elif state is SectionState.DESTROYED:
-        row.destroyed = max(0, row.destroyed + amount)
+    column = SECTION_STATES[state].tier
+    if column is not None:
+        setattr(row, column, max(0, int(getattr(row, column)) + amount))
 
 
 def struck_state(rng: SeededRandom, group: VehicleGroupRow, row: VehicleGroupSectionRow) -> SectionState:

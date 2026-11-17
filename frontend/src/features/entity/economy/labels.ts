@@ -1,7 +1,4 @@
 import {
-  Drill,
-  Droplets,
-  Recycle,
   Anchor,
   Anvil,
   Apple,
@@ -9,10 +6,13 @@ import {
   Beef,
   Beer,
   Bird,
+  BookOpen,
   Box,
   Bug,
+  Building2,
   Carrot,
   Castle,
+  Church,
   CircleCheck,
   CircleDashed,
   CircleX,
@@ -21,17 +21,23 @@ import {
   Construction,
   Croissant,
   Cross,
+  Crown,
   DoorClosed,
+  Drill,
+  Droplets,
   Egg,
   Factory,
   Fish,
   Flame,
   FlaskConical,
   Footprints,
+  Gavel,
   Gem,
   Gift,
   Hammer,
   HandHeart,
+  Handshake,
+  House,
   Hourglass,
   Landmark,
   Leaf,
@@ -40,6 +46,7 @@ import {
   Lock,
   Milk,
   Mountain,
+  Network,
   Orbit,
   Package,
   PackageMinus,
@@ -47,8 +54,10 @@ import {
   PartyPopper,
   PawPrint,
   Pickaxe,
+  Recycle,
   Route,
   Scale,
+  ScrollText,
   Shield,
   ShieldAlert,
   Ship,
@@ -58,12 +67,14 @@ import {
   Sparkles,
   Spline,
   Sprout,
+  Star,
   Store,
   Sun,
   Swords,
   Target,
   Tent,
   Thermometer,
+  Ticket,
   Trash2,
   Trees,
   Utensils,
@@ -358,6 +369,40 @@ export const TRADE_LOSS: Record<TradeLoss, Named> = {
   weather: { label: 'the weather', icon: CloudLightning, tone: 'muted' },
 }
 
+export const MONEY_FORM: Record<Schemas['MoneyForm'], Named> = {
+  coin: { label: 'Coin', icon: Coins, tone: 'gold' },
+  commodity: { label: 'Commodity money', icon: Package, tone: 'gold' },
+  token: { label: 'Tokens', icon: Ticket, tone: 'info' },
+  paper: { label: 'Paper money', icon: ScrollText, tone: 'info' },
+  ledger: { label: 'Ledger money', icon: BookOpen, tone: 'info' },
+  network: { label: 'Network money', icon: Network, tone: 'verdigris' },
+  reputation: { label: 'Reputation', icon: Star, tone: 'gold' },
+  energy: { label: 'Stored energy', icon: Zap, tone: 'warning' },
+  essence_backed: {
+    label: 'Essence-backed money',
+    icon: Sparkles,
+    tone: 'gold',
+  },
+  labour_hours: { label: 'Labour hours', icon: Hourglass, tone: 'muted' },
+  gift_tally: { label: 'Gift tally', icon: Gift, tone: 'success' },
+}
+
+export const MONEY_BACKING: Record<Schemas['MoneyBacking'], Named> = {
+  metal: { label: 'Metal', icon: Gem, tone: 'gold' },
+  commodity: { label: 'A good', icon: Package, tone: 'gold' },
+  decree: { label: "The issuer's decree", icon: Gavel, tone: 'info' },
+  trust: { label: 'Trust alone', icon: Handshake, tone: 'muted' },
+  source: { label: 'A source of power', icon: Sparkles, tone: 'verdigris' },
+}
+
+export const CURRENCY_ISSUER: Record<Schemas['CurrencyIssuer'], Named> = {
+  community: { label: 'A community', icon: House, tone: 'muted' },
+  polity: { label: 'A realm', icon: Crown, tone: 'gold' },
+  bank: { label: 'A bank', icon: Landmark, tone: 'info' },
+  temple: { label: 'A temple', icon: Church, tone: 'gold' },
+  company: { label: 'A company', icon: Building2, tone: 'info' },
+}
+
 export const LOAN_STATUS: Record<
   LoanStatus,
   Named & { variant: BadgeVariant }
@@ -396,14 +441,23 @@ export const MATERIAL_FAMILY: Record<MaterialFamily, Named> = {
   exotic: { label: 'Exotic', icon: Sparkles, tone: 'warning' },
 }
 
+export const MATERIAL_SOURCE: Record<Schemas['MaterialSource'], Named> = {
+  world: { label: 'Comes from the world', icon: Mountain, tone: 'muted' },
+  god: { label: 'Comes from a god', icon: Sparkles, tone: 'gold' },
+  star: { label: 'Comes from a star', icon: Sun, tone: 'warning' },
+  creature: { label: 'Comes from a creature', icon: PawPrint, tone: 'gold' },
+  rift: { label: 'Comes from a rift', icon: Gem, tone: 'verdigris' },
+  makers: { label: 'Made by its makers', icon: FlaskConical, tone: 'info' },
+}
+
 export const MATERIAL_ORIGIN: Record<MaterialOrigin, Named> = {
   catalog: { label: 'Of the world', icon: Mountain, tone: 'muted' },
-  god_remains: { label: 'From a dead god', icon: Skull, tone: 'danger' },
-  dead_star: { label: 'From a dead star', icon: Sun, tone: 'warning' },
+  dead_god: { label: 'From a dead god', icon: Skull, tone: 'danger' },
+  star: { label: 'From a star that died', icon: Sun, tone: 'warning' },
   beast: { label: 'From a great beast', icon: PawPrint, tone: 'gold' },
-  leak_crystal: { label: 'From a leak', icon: Gem, tone: 'verdigris' },
+  rift: { label: 'From a rift', icon: Gem, tone: 'verdigris' },
   research: { label: 'Discovered', icon: FlaskConical, tone: 'info' },
-  divine: { label: 'Forged by a god', icon: Sparkles, tone: 'gold' },
+  god_gift: { label: 'Gift of a god', icon: Sparkles, tone: 'gold' },
 }
 
 export const MATERIAL_LABEL: Record<MaterialKind, string> = {
@@ -426,7 +480,7 @@ export const MATERIAL_LABEL: Record<MaterialKind, string> = {
   crystal: 'Crystal',
   ivory: 'Ivory',
   chitin: 'Chitin',
-  dragonbone: 'Dragonbone',
+  great_bone: 'Great bone',
   star_metal: 'Star metal',
   void_glass: 'Void glass',
   godflesh: 'Godflesh',

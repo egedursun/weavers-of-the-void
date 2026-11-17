@@ -158,7 +158,7 @@ async def incursion(ctx: TickContext, cosmography: Cosmography, dimension: Dimen
         native.target_world_id = world.id
         subject = native.entity_id
     else:
-        being = await create_being(ctx, BeingKind.RIFT_SPAWN, world, home_dimension_id=dimension.id, phase=BeingPhase.MANIFEST)
+        being = await create_being(ctx, BeingKind.RIFT_BORN, world, home_dimension_id=dimension.id, phase=BeingPhase.MANIFEST)
         subject = being.id
     await open_event(ctx, dimension, DimensionalEventKind.INCURSION, PERCENT - dimension.veil, world=world, subject_id=subject)
 
@@ -221,7 +221,7 @@ async def echo(ctx: TickContext, cosmography: Cosmography, dimension: DimensionR
         return
     mortal = ctx.rng(f"echo_pick.{dimension.id}").pick(sorted(mortals, key=lambda row: row.id))
     world = cosmography.worlds[mortal.world_id]
-    being = await create_being(ctx, BeingKind.ECHO, world, home_dimension_id=dimension.id, mirrored=mortal, phase=BeingPhase.MANIFEST)
+    being = await create_being(ctx, BeingKind.MIRRORED_DOUBLE, world, home_dimension_id=dimension.id, mirrored=mortal, phase=BeingPhase.MANIFEST)
     await open_event(ctx, dimension, DimensionalEventKind.ECHO, PERCENT // 2, world=world, subject_id=being.id)
 
 

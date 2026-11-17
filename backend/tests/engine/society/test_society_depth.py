@@ -16,7 +16,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow, DriftCauseRow, LabourReasonRow, MobilityEventRow
-from aerona.domain.enums.demography import Aesthetic, InheritanceCustom, Job, MarriageCustom, MartialStyle
+from aerona.domain.enums.demography import InheritanceCustom, Job, MartialStyle
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityType, MortalRole
 from aerona.domain.enums.environment import TemperatureBand
@@ -408,10 +408,8 @@ async def test_impositions_feed_the_drift_and_staples_come_from_culture(realm: R
             literacy=0,
             urbanisation=0,
             staples=["fish"],
-            aesthetic=Aesthetic.AUSTERE,
             martial_style=MartialStyle.SHIELDWALL,
-            marriage=MarriageCustom.MONOGAMY,
-            inheritance=InheritanceCustom.GAVELKIND,
+            inheritance=InheritanceCustom.EQUAL_SHARES,
             locked=[],
         )
     )

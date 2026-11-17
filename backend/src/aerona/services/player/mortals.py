@@ -1,7 +1,6 @@
 from typing import Literal
 
 from pydantic import Field
-from sqlalchemy import delete
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -10,34 +9,21 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
+from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import MemoryKind, Profession
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
-from aerona.domain.enums.mortal import (
-    Ability,
-    CareerPath,
-    CrimeKind,
-    DeathCause,
-    EquipmentSlot,
-    LifeStage,
-    MarriageEnd,
-    MarriageKind,
-    MortalSex,
-    PunishmentKind,
-)
+from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, EquipmentSlot, LifeStage, MarriageEnd, PunishmentKind
+from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.equipment import SLOT_CLASSES, SLOT_COLUMNS, fits_slot
 from aerona.engine.mortal.justice import sentence
 from aerona.engine.mortal.kinship import betroth, end_marriage, marriage_between, marry
 from aerona.engine.mortal.profile import ensure_equipment, ensure_profile
-from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.queries import connect, remove_flag
-from aerona.engine.primitives.stats import set_stats
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 PERCENT_FIELDS = ("fertility", "health", "stress", "wealth", "renown", "honour", "infamy", "education", "loyalty_liege", "loyalty_community", "loyalty_god")
@@ -49,7 +35,6 @@ CHOICE_FIELDS: dict[str, type[LifeStage] | type[CareerPath] | type[DeathCause] |
     "profession": Profession,
 }
 NODE_FIELDS = ("polity_id", "death_place_id")
-PIN_REASON = "player.pin"
 FORCED_NOTE = "a marriage forced upon them"
 Value = int | str | None
 
@@ -68,18 +53,8 @@ class ReleaseMortal(MortalTarget):
     field: str = Field(pattern=r"^[a-z_]+$")
 
 
-class SetAbility(MortalTarget):
-    ability: Ability
-    value: int = Field(ge=0, le=PERCENT)
-    hold: bool = True
-
-
-class ReleaseAbility(MortalTarget):
-    ability: Ability
-
-
 class SetSex(MortalTarget):
-    sex: MortalSex
+    sex: Sex
 
 
 class PairCommand(Command):
@@ -88,7 +63,8 @@ class PairCommand(Command):
 
 
 class ForceMarriage(PairCommand):
-    kind: MarriageKind = MarriageKind.MONOGAMOUS
+    form: UnionForm = UnionForm.PAIR
+    purpose: UnionPurpose = UnionPurpose.KINSHIP
     forced: bool = True
 
 
@@ -101,7 +77,8 @@ class EndMarriage(MarriageTarget):
 
 
 class EditMarriage(MarriageTarget):
-    kind: MarriageKind | None = None
+    form: UnionForm | None = None
+    purpose: UnionPurpose | None = None
     treaty_id: int | None = None
     start_epoch: int | None = Field(default=None, ge=0)
 
@@ -203,34 +180,6 @@ async def release_mortal(scope: PlayerScope, command: ReleaseMortal) -> Effect:
     return Effect(f"{mortal.name}'s {label(command.field)} follows their life again.", target_node_id=mortal.id)
 
 
-async def clear_pin(scope: PlayerScope, node_id: int, key: str) -> int:
-    result = await scope.session.execute(
-        delete(ModifierRow).where(ModifierRow.target_node_id == node_id, ModifierRow.target_key == key, ModifierRow.source_kind == ModifierSource.PIN)
-    )
-    return int(getattr(result, "rowcount", 0) or 0)
-
-
-@player_action("mortal:ability", ActionKind.OTHER)
-async def set_ability(scope: PlayerScope, command: SetAbility) -> Effect:
-    mortal = await mortal_of(scope, command.mortal_id)
-    key = command.ability.value
-    await clear_pin(scope, mortal.id, key)
-    set_stats(mortal, **{key: command.value})
-    if command.hold:
-        epoch = await scope.epoch()
-        await add_modifier(scope.session, ModifierDraft(mortal.id, key, ModifierOp.ADD, 0, ModifierSource.PIN, PIN_REASON, start_epoch=epoch))
-    held = " and held there" if command.hold else ""
-    return Effect(f"{mortal.name}'s {key} is now {command.value}{held}.", target_node_id=mortal.id)
-
-
-@player_action("mortal:ability_release", ActionKind.OTHER)
-async def release_ability(scope: PlayerScope, command: ReleaseAbility) -> Effect:
-    mortal = await mortal_of(scope, command.mortal_id)
-    if not await clear_pin(scope, mortal.id, command.ability.value):
-        raise ValidationFailedError(f"{mortal.name}'s {command.ability.value} is not held.")
-    return Effect(f"{mortal.name}'s {command.ability.value} follows their life again.", target_node_id=mortal.id)
-
-
 @player_action("mortal:sex", ActionKind.OTHER)
 async def set_sex(scope: PlayerScope, command: SetSex) -> Effect:
     mortal = await mortal_of(scope, command.mortal_id)
@@ -259,7 +208,16 @@ async def force_marriage(scope: PlayerScope, command: ForceMarriage) -> Effect:
     if await marriage_between(scope.session, first.id, second.id) is not None:
         raise ValidationFailedError(f"{first.name} and {second.name} are already wed.")
     epoch = await scope.epoch()
-    row = await marry(scope.session, first, second, epoch, kind=command.kind, forced=command.forced, description=FORCED_NOTE if command.forced else None)
+    row = await marry(
+        scope.session,
+        first,
+        second,
+        epoch,
+        form=command.form,
+        purpose=command.purpose,
+        forced=command.forced,
+        description=FORCED_NOTE if command.forced else None,
+    )
     if command.forced:
         bitterness = -scope.rules.kinship.forced_marriage_magnitude
         for holder, subject in ((first.id, second.id), (second.id, first.id)):
@@ -289,8 +247,10 @@ async def end_marriage_action(scope: PlayerScope, command: EndMarriage) -> Effec
 @player_action("kin:edit_marriage", ActionKind.OTHER)
 async def edit_marriage(scope: PlayerScope, command: EditMarriage) -> Effect:
     row = await marriage_row(scope, command.marriage_id)
-    if command.kind is not None:
-        row.kind = command.kind
+    if command.form is not None:
+        row.form = command.form
+    if command.purpose is not None:
+        row.purpose = command.purpose
     if command.treaty_id is not None:
         row.treaty_id = command.treaty_id or None
     if command.start_epoch is not None:

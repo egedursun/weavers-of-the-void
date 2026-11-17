@@ -13,8 +13,9 @@ import {
 import { GOD_KINDS, why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { useKindTable } from '@/features/kinds/api'
 import { type OfficeView, useArcanaAction, useCosmicOffices } from './api'
-import { OFFICES, OFFICE_CHOICES, table } from './labels'
+import { OFFICES, OFFICE_CHOICES, OFFICE_DUTIES, table } from './labels'
 
 type Values = Record<string, number | string | boolean | null>
 
@@ -48,6 +49,8 @@ function OfficeCard({
   )
   const busy = why(blocked, appoint.isPending, edit.isPending, vacate.isPending)
   const spec = OFFICES[office.office]
+  const duty = OFFICE_DUTIES[office.office_duty]
+  const officeKinds = useKindTable('divine_office', null)
   const choice = OFFICE_CHOICES[office.chosen_by]
   return (
     <RecordRow
@@ -80,6 +83,11 @@ function OfficeCard({
       </div>
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Chip icon={choice.icon}>{choice.label}</Chip>
+        <Chip icon={duty.icon}>
+          {office.office_name
+            ? `${office.office_name} · ${duty.label}`
+            : duty.label}
+        </Chip>
       </div>
       <Facts
         items={[
@@ -124,6 +132,12 @@ function OfficeCard({
             max: 100,
           },
           { key: 'duty', label: 'Duty', kind: 'number', min: 0, max: 100 },
+          {
+            key: 'office_kind_id',
+            label: 'Office it serves',
+            kind: 'pick',
+            table: officeKinds,
+          },
         ]}
         locked={office.locked}
         busy={busy}

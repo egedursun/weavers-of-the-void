@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  artMediumValues,
+  artModeValues,
   backlashKindValues,
   curseKindValues,
   ideologyTenetValues,
@@ -15,7 +15,7 @@ import {
   riteEffectKindValues,
   socialClassValues,
   speakerKindValues,
-  traditionKindValues,
+  traditionFunctionValues,
 } from '@/api/generated/schema'
 import {
   ARCHETYPES,
@@ -41,7 +41,7 @@ import {
 
 const TABLES: [string, readonly string[], Record<string, LoreNamed>][] = [
   ['archetype', legendArchetypeValues, ARCHETYPES],
-  ['tradition kind', traditionKindValues, TRADITION_KINDS],
+  ['tradition kind', traditionFunctionValues, TRADITION_KINDS],
   ['tenet', ideologyTenetValues, TENETS],
   ['social class', socialClassValues, CLASSES],
   ['magic school', magicSchoolValues, SCHOOLS],
@@ -53,7 +53,7 @@ const TABLES: [string, readonly string[], Record<string, LoreNamed>][] = [
   ['item class', itemClassValues, ITEM_CLASSES],
   ['curse', curseKindValues, CURSES],
   ['item deed', itemDeedValues, DEEDS],
-  ['art medium', artMediumValues, MEDIUMS],
+  ['art medium', artModeValues, MEDIUMS],
   ['speaker kind', speakerKindValues, SPEAKER_KINDS],
 ]
 

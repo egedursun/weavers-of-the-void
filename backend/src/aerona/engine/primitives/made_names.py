@@ -6,6 +6,7 @@ from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cuisine import DishRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.equipment import EquipmentModelRow
+from aerona.db.tables.food_kinds import CuisineRow, DrinkKindRow
 from aerona.db.tables.military import UnitDesignRow
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.engine.body.customs import people_of
@@ -13,15 +14,21 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
-MADE_TABLES = (DesignRow, UnitDesignRow, EquipmentModelRow, DishRow, StructureDesignRow)
+MADE_TABLES = (DesignRow, UnitDesignRow, EquipmentModelRow, DishRow, StructureDesignRow, DrinkKindRow, CuisineRow)
 TRIES = 6
 
 
+MADE_NAMES = "made_names"
+
+
 async def made_names_of(session: AsyncSession, world_id: int | None) -> set[str]:
-    found: set[str] = set()
-    for table in MADE_TABLES:
-        found.update(await session.scalars(select(table.name).where(table.world_id == world_id)))
-    return found
+    known: dict[int | None, set[str]] = session.info.setdefault(MADE_NAMES, {})
+    if world_id not in known:
+        found: set[str] = set()
+        for table in MADE_TABLES:
+            found.update(await session.scalars(select(table.name).where(table.world_id == world_id)))
+        known[world_id] = found
+    return known[world_id]
 
 
 async def coin(session: AsyncSession, namer: Namer, origin: EntityRow, key: str) -> str | None:
@@ -44,5 +51,8 @@ async def made_name(session: AsyncSession, rules: Rules, origin: EntityRow | Non
         coined = await coin(session, namer, origin, seed_of("made", origin.id, label, attempt, *seed))
         name = f"{coined} {label.lower()}" if coined else fallback
         if name not in taken and not await registry.is_taken(name):
+            taken.add(name)
             return name
-    return await registry.unique_name(fallback)
+    chosen = await registry.unique_name(fallback)
+    taken.add(chosen)
+    return chosen

@@ -72,8 +72,8 @@ CORRUPT_FROM = PERCENT // 2
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.treaty_parties",
     "table.war_production",
     "table.workshop_designs",
@@ -111,12 +111,13 @@ async def refining(ctx: TickContext) -> None:
 
 
 async def _decay_item(ctx: TickContext, item: EntityRow, loss: int, cap: int, curse: int) -> bool:
-    values = {key: max(0, (stat(item, key) or 0) - loss) for key in ITEM_DECAY_KEYS}
+    before = {key: stat(item, key) or 0 for key in ITEM_DECAY_KEYS}
+    values = {key: max(0, before[key] - loss) for key in ITEM_DECAY_KEYS}
     values["might"] = min(values["might"], cap)
     if curse > 0 and ctx.rng(f"material.curse.{item.id}").chance(curse):
         values["curse"] = clamp_int((stat(item, "curse") or 0) + curse, 0, PERCENT)
     set_stats(item, **values)
-    if loss > 0 and all(values[key] == 0 for key in ITEM_DECAY_KEYS):
+    if loss > 0 and any(before.values()) and all(values[key] == 0 for key in ITEM_DECAY_KEYS):
         await retire_in(ctx, item, "crumbled away", status=EntityStatus.DESTROYED)
         await note(ctx, f"{item.name} crumbled away; its material could not outlast the years.", key="material.crumbled", ids=[item.id])
         return True
@@ -169,8 +170,8 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
@@ -248,7 +249,7 @@ async def _deposit_at(ctx: TickContext, place_id: int, material: MaterialKind) -
 async def _god_remains(ctx: TickContext) -> int:
     made = 0
     for corpse in await canon(ctx.session, [EntityType.PLACE]):
-        if corpse.engine_kind is not EngineKind.GOD_CORPSE or await _deposit_at(ctx, corpse.id, MaterialKind.GODFLESH):
+        if corpse.engine_kind is not EngineKind.DEAD_GOD or await _deposit_at(ctx, corpse.id, MaterialKind.GODFLESH):
             continue
         await open_deposit(
             ctx,
@@ -264,7 +265,7 @@ async def _god_remains(ctx: TickContext) -> int:
         )
         made += 1
         if not await has_substance(ctx, corpse.id) and ctx.rng(f"substance.god.{corpse.id}").chance(ctx.rules.materials.world_material_god_chance):
-            await new_substance(ctx, MaterialOrigin.GOD_REMAINS, corpse, source_node_id=corpse.id)
+            await new_substance(ctx, MaterialOrigin.DEAD_GOD, corpse, source_node_id=corpse.id)
     return made
 
 
@@ -277,7 +278,7 @@ async def _dead_stars(ctx: TickContext) -> int:
         place = await _place_in(ctx, worlds[0].id) if worlds else None
         if place is None or not ctx.rng(f"substance.star.{star.id}").chance(ctx.rules.materials.world_material_star_chance):
             continue
-        await new_substance(ctx, MaterialOrigin.DEAD_STAR, place, source_node_id=star.id)
+        await new_substance(ctx, MaterialOrigin.STAR, place, source_node_id=star.id)
         made += 1
     return made
 
@@ -331,7 +332,7 @@ async def _leak_crystals(ctx: TickContext, book: EconomyBook) -> int:
             ),
         )
         if not await has_substance(ctx, place.id):
-            await new_substance(ctx, MaterialOrigin.LEAK_CRYSTAL, place, source_node_id=place.id)
+            await new_substance(ctx, MaterialOrigin.RIFT, place, source_node_id=place.id)
         made += 1
     return made
 
@@ -391,8 +392,8 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.stars",
     "table.treaty_parties",
     "table.workshop_designs",
@@ -463,7 +464,7 @@ async def _open_ground(ctx: TickContext, species: EntityRow, place: EntityRow, g
 
 @reads("species.abundance", "table.bodies", "table.bonds", "table.entity_flags", "table.herds", "table.name_registry", "table.nodes", "table.resource_profiles")
 @writes("resource.abundance", "table.bonds", "table.entities", "table.name_registry", "table.resource_profiles")
-async def species_yields(ctx: TickContext) -> None:
+async def species_products(ctx: TickContext) -> None:
     extinct = await flags_by_entity(ctx.session, EntityFlag.EXTINCT)
     megafauna = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
     grounds = await _grounds(ctx)
@@ -518,8 +519,8 @@ async def species_yields(ctx: TickContext) -> None:
     "table.resource_workers",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
@@ -603,8 +604,8 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.settlement_infrastructure",
     "table.skills",
     "table.sky_events",
+    "table.species_products",
     "table.species_profiles",
-    "table.species_yields",
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
@@ -649,6 +650,6 @@ PHASES = (
     Phase("refining", refining),
     Phase("material_decay", material_decay),
     Phase("world_materials", world_materials),
-    Phase("species_yields", species_yields),
+    Phase("species_products", species_products),
     Phase("deposit_finding", deposit_finding),
 )

@@ -176,11 +176,11 @@ class CircleSpec:
 
 CIRCLES: MappingProxyType[CircleKind, CircleSpec] = MappingProxyType(
     {
-        CircleKind.DRINKING_HALL: CircleSpec("Drinking hall", frozenset({PreferenceKind.DRINK, PreferenceKind.FOOD}), frozenset({ValueAxis.LEISURE})),
+        CircleKind.DRINKING_CIRCLE: CircleSpec("Drinking hall", frozenset({PreferenceKind.DRINK, PreferenceKind.FOOD}), frozenset({ValueAxis.LEISURE})),
         CircleKind.POETS_CIRCLE: CircleSpec(
             "Poets' circle", frozenset({PreferenceKind.ART_FORM, PreferenceKind.ARTWORK_SUBJECT}), frozenset({ValueAxis.ARTWORK})
         ),
-        CircleKind.HUNTING_LODGE: CircleSpec("Hunting lodge", frozenset({PreferenceKind.CREATURE, PreferenceKind.TERRAIN}), frozenset({ValueAxis.NATURE})),
+        CircleKind.HUNTING_CIRCLE: CircleSpec("Hunting lodge", frozenset({PreferenceKind.CREATURE, PreferenceKind.TERRAIN}), frozenset({ValueAxis.NATURE})),
         CircleKind.SECRET_SOCIETY: CircleSpec("Secret society", frozenset(), frozenset({ValueAxis.TRUTH, ValueAxis.SUPERSTITION}), secret=True),
         CircleKind.STUDY_CIRCLE: CircleSpec("Study circle", frozenset(), frozenset({ValueAxis.KNOWLEDGE})),
         CircleKind.PRAYER_CIRCLE: CircleSpec("Prayer circle", frozenset({PreferenceKind.DEITY_ASPECT}), frozenset({ValueAxis.PIETY})),
@@ -270,20 +270,22 @@ class ContestSpec:
 CONTESTS: MappingProxyType[ContestKind, ContestSpec] = MappingProxyType(
     {
         ContestKind.RIDDLE_GAME: ContestSpec("Riddle game", (SkillKind.LORE,), (Attribute.MEMORY, Attribute.INTUITION)),
-        ContestKind.FLYTING: ContestSpec("Flyting", (SkillKind.ORATORY, SkillKind.WRITING), (Attribute.LINGUISTIC_ABILITY, Attribute.CREATIVITY), "epic_poem"),
+        ContestKind.INSULT_CONTEST: ContestSpec(
+            "Insult contest", (SkillKind.ORATORY, SkillKind.WRITING), (Attribute.LINGUISTIC_ABILITY, Attribute.CREATIVITY), "verbal"
+        ),
         ContestKind.DEBATE: ContestSpec("Debate", (SkillKind.ORATORY, SkillKind.LAW), (Attribute.ANALYTICAL_ABILITY, Attribute.SOCIAL_AWARENESS)),
         ContestKind.GAME_OF_SKILL: ContestSpec("Game of skill", (SkillKind.TACTICS, SkillKind.STRATEGY), (Attribute.SPATIAL_SENSE, Attribute.FOCUS)),
         ContestKind.TRIAL_OF_WISDOM: ContestSpec("Trial of wisdom", (SkillKind.LAW, SkillKind.THEOLOGY), (Attribute.INTUITION, Attribute.EMPATHY)),
-        ContestKind.SONG_CONTEST: ContestSpec("Song contest", (SkillKind.ORATORY, SkillKind.RITUAL), (Attribute.MUSICALITY, Attribute.CREATIVITY), "song"),
+        ContestKind.SONG_CONTEST: ContestSpec("Song contest", (SkillKind.ORATORY, SkillKind.RITUAL), (Attribute.MUSICALITY, Attribute.CREATIVITY), "musical"),
         ContestKind.STORYTELLING: ContestSpec(
-            "Storytelling", (SkillKind.LORE, SkillKind.ORATORY), (Attribute.CREATIVITY, Attribute.LINGUISTIC_ABILITY), "epic_poem"
+            "Storytelling", (SkillKind.LORE, SkillKind.ORATORY), (Attribute.CREATIVITY, Attribute.LINGUISTIC_ABILITY), "verbal"
         ),
     }
 )
 STAKE_LABELS: MappingProxyType[ContestStake, str] = MappingProxyType(
     {
         ContestStake.HONOUR: "Honour",
-        ContestStake.BRIDE: "A hand in marriage",
+        ContestStake.UNION: "A union",
         ContestStake.WAGER: "A wager",
         ContestStake.OFFICE: "A place at court",
         ContestStake.CAPTIVE: "A captive's freedom",

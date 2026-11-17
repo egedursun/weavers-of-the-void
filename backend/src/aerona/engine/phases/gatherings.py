@@ -212,6 +212,7 @@ async def site_rooms(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.%(7ac15f0b009c51ed5b75 anon)s",
     "table.collection_members",
     "table.collection_places",
     "table.epoch_year_cursors",

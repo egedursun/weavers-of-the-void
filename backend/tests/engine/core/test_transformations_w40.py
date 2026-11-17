@@ -31,7 +31,7 @@ from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonDeathCause, SonStatus
-from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.transform import ProspectStance, TransformKind, TransformState, TransformTrigger
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import (
@@ -148,7 +148,9 @@ async def a_house(ctx: TickContext, cosmos: RichCosmos) -> int:
 async def a_phenomenon(ctx: TickContext, cosmos: RichCosmos) -> int:
     phenomenon = await made(ctx, cosmos, "The Open Seam", EntityType.PHENOMENON, PhenomenonStats())
     ctx.session.add(
-        PhenomenonProfileRow(entity_id=phenomenon.id, kind=PhenomenonKind.LEAK_WOUND, intensity=99, cause=PhenomenonCause.DIVINE, formed_epoch=1, locked=[])
+        PhenomenonProfileRow(
+            entity_id=phenomenon.id, kind=PhenomenonKind.OUTSIDE_OPENING, intensity=99, cause=PhenomenonCause.DIVINE, formed_epoch=1, locked=[]
+        )
     )
     await ctx.session.flush()
     return phenomenon.id
@@ -203,7 +205,7 @@ async def a_cursed_beast(ctx: TickContext, cosmos: RichCosmos) -> int:
 
 async def a_held_title(ctx: TickContext, cosmos: RichCosmos) -> int:
     title = await made(ctx, cosmos, "Crown of the Ford", EntityType.TITLE, TitleStats())
-    ctx.session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleRank.COUNTY, holder_node_id=cosmos.home.people.id, locked=[]))
+    ctx.session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleTier.DISTRICT, holder_node_id=cosmos.home.people.id, locked=[]))
     await ctx.session.flush()
     return title.id
 

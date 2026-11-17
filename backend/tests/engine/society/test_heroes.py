@@ -39,7 +39,7 @@ async def lost_lore(realm: Realm) -> EntityRow:
 async def test_hero_test_and_success_chance(realm: Realm) -> None:
     strong = await mortal(realm, "Strong", strength=60, agility=40)
     weak = await mortal(realm, "Weak", strength=10, agility=10, intellect=0)
-    knight = await mortal(realm, "Knight", strength=10, agility=10, role=MortalRole.KNIGHT)
+    knight = await mortal(realm, "Knight", strength=10, agility=10, role=MortalRole.SWORN_WARRIOR)
     assert is_hero(RULES, strong, set(), set())
     assert not is_hero(RULES, weak, set(), set())
     assert is_hero(RULES, weak, {weak.id}, set())

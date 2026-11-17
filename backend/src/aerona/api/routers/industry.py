@@ -41,6 +41,7 @@ from aerona.domain.enums.industry import EnergyKind, OwnerClass, ProcessKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.industry.methods import CELLAR_LEVEL, CELLARS, blocked_by
 from aerona.engine.industry.quality import tier_of
+from aerona.engine.kinds.nature import chosen_method
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import known_levels
@@ -65,7 +66,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
     views: list[WorksMethodView] = []
     for process in ProcessKind:
         row = rows.get(process)
-        spec = METHODS[row.method] if row is not None else default_method(process)
+        spec = await chosen_method(session, row.method_kind_id, METHODS[row.method]) if row is not None else default_method(process)
         options = [
             WorksOptionView(
                 method=option.kind,
@@ -102,6 +103,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
                 process=process,
                 process_label=PROCESS_LABELS[process],
                 method=spec.kind,
+                method_kind_id=row.method_kind_id if row is not None else None,
                 label=spec.label,
                 summary=spec.summary,
                 chosen=row is not None,

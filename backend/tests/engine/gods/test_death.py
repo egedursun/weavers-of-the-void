@@ -18,7 +18,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonDeathCause, SonStatus
 from aerona.domain.models.stats import StatBlock
-from aerona.engine.gods.devotion import RiteKind, SchemeKind, resurrection_rite, resurrection_state, scatter_bones, sibling_scheme
+from aerona.engine.gods.devotion import RiteKind, SchemeKind, hinder_return, resurrection_rite, resurrection_state, sibling_scheme
 from aerona.engine.gods.god_death import epochs_until_resurrection, god_death, gods_fate
 from aerona.engine.gods.mortality import Killer, ProtectorKind, attempt_kill, failed_kill_refund, kill_chance, kill_cost
 from aerona.engine.gods.stats import Trait, trait_or
@@ -77,7 +77,7 @@ async def test_god_death_builds_corpse_shade_order(session: AsyncSession, world:
     before = world.creator.essence
     death = await god_death(make_context(session, tuned, 3), son, "fell", SonDeathCause.OTHER)
     assert son.status is SonStatus.DEAD and son.corpse_entity_id == death.corpse.id if death.corpse else False
-    assert death.corpse is not None and death.corpse.engine_kind is EngineKind.GOD_CORPSE and death.corpse.location_id == world.region.id
+    assert death.corpse is not None and death.corpse.engine_kind is EngineKind.DEAD_GOD and death.corpse.location_id == world.region.id
     assert death.shade is not None and death.shade.location_id == death.corpse.id
     assert death.order is not None and await session.get(ResurrectionOrderRow, death.order.id) is not None
     assert death.loyal == 1 and death.apostates == 0
@@ -106,10 +106,10 @@ async def test_rites_schemes_and_scatter(session: AsyncSession, world: GodsWorld
     assert await SonRepository(session).relation(friend.id, son.id) == rules.death.sibling_scheme_relation_gain
     with pytest.raises(ValidationFailedError):
         await sibling_scheme(ctx, friend, son, SchemeKind.BARGAIN)
-    scattered = await scatter_bones(ctx, friend, son)
+    scattered = await hinder_return(ctx, friend, son)
     state = await resurrection_state(session, tuned, son, 3)
-    assert state is not None and state.devotion == scheme.devotion - rules.death.scatter_bones_devotion_loss
-    assert scattered.contribution == -rules.death.scatter_bones_devotion_loss
+    assert state is not None and state.devotion == scheme.devotion - rules.death.hinder_return_devotion_loss
+    assert scattered.contribution == -rules.death.hinder_return_devotion_loss
 
 
 async def test_life_sacrifice_requires_people(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

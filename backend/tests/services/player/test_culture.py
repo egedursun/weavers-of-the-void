@@ -7,7 +7,7 @@ from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.culture import LanguageIntelligibilityRow, LanguageRegisterRow, SpeakerCohortRow, TraditionEffectRow, TraditionParticipationRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import LanguageRegister, SpeakerKind, TraditionEffectKind, TraditionKind
+from aerona.domain.enums.culture import LanguageRegister, SpeakerKind, TraditionEffectKind, TraditionFunction
 from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.models.entity_stats import LanguageStats, SettlementStats
 from aerona.services.player import canon, culture, lore
@@ -63,7 +63,7 @@ async def test_understanding_and_speakers_are_held_when_set_and_released_on_dema
 async def test_tradition_effects_participation_and_reseeding_are_player_controls(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     town = await entity(session, world, "Ashford", EntityType.SETTLEMENT)
     await lore.create_lore(
-        scope, lore.CreateLore(entity_type=EntityType.TRADITION, name="Lamp Night", world_id=world.world.id, values={"kind": TraditionKind.FESTIVAL.value})
+        scope, lore.CreateLore(entity_type=EntityType.TRADITION, name="Lamp Night", world_id=world.world.id, values={"kind": TraditionFunction.FESTIVAL.value})
     )
     tradition = await session.scalar(select(EntityRow).where(EntityRow.name == "Lamp Night"))
     assert tradition is not None

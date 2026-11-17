@@ -19,7 +19,11 @@ import {
   routeState,
   routeWindows,
 } from './model/cosmosModel'
-import { TRAVEL_METHOD_LABEL } from './model/labels'
+import {
+  TRAVEL_MECHANISM_LABEL,
+  TRAVEL_MEDIUM_LABEL,
+  TRAVEL_METHOD_LABEL,
+} from './model/labels'
 import { type RuleBook } from './model/rules'
 
 type RouteListProps = {
@@ -112,7 +116,7 @@ function RouteRow({
         </Button>
       </div>
       <Muted variant='caption'>
-        {`${plural(route.duration_epochs, 'epoch')} · danger ${route.danger}${routeWindows(route, index.star(route.bound_star_id)?.name)}`}
+        {`${TRAVEL_MEDIUM_LABEL[route.medium]}, ${TRAVEL_MECHANISM_LABEL[route.mechanism]} · ${plural(route.duration_epochs, 'epoch')} · danger ${route.danger}${routeWindows(route, index.star(route.bound_star_id)?.name)}`}
         {controller && route.controller_entity_id !== null && (
           <>
             {' · controlled by '}

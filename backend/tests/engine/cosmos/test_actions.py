@@ -68,8 +68,8 @@ async def test_manual_services(session: AsyncSession, cosmos: Cosmos, rules: Rul
     beast = await make_entity(session, "Graveling", EntityType.SPECIES, SpeciesStats(strength=50, danger=40), world_id=other.id, location_id=region.id)
     deer = await make_entity(session, "Glimdeer", EntityType.SPECIES, SpeciesStats(strength=20, danger=10), world_id=other.id, location_id=region.id)
     mutant = await force_mutation(session, rules, beast.id)
-    chimera = await cross_species(session, rules, beast.id, deer.id)
-    assert mutant.id != chimera.id
+    merged = await cross_species(session, rules, beast.id, deer.id)
+    assert mutant.id != merged.id
     eclipse = await order_sky_event(session, rules, SkyEventKind.ECLIPSE, SkyOrder(world_id=other.id, by="Aeron"))
     assert eclipse.world_id == other.id
     row, eye = await order_horror_event(session, rules, other.id, HORROR_PRESETS["minds_marked"])

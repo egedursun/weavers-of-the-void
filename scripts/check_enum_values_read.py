@@ -28,6 +28,7 @@ READERS = (
     "api/routers",
     "api/views",
     "db/repositories",
+    "db/kind_concepts",
 )
 ITERATING = frozenset(
     {

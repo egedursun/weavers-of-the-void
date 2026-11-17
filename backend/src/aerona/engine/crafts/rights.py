@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.art_modes import ART_MODES
 from aerona.db.tables.crafts import IncorporealRightRow
 from aerona.db.tables.culture import ArtworkProfileRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import RightAcquired, RightKind
-from aerona.domain.enums.culture import ArtMedium
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import CrimeKind
@@ -21,20 +21,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.sacred.places import ruler_of
 from aerona.engine.services.community_relations import change_relation
 
-MEDIUM_RIGHTS = {
-    ArtMedium.SONG: RightKind.SONG,
-    ArtMedium.MUSIC: RightKind.SONG,
-    ArtMedium.DANCE: RightKind.DANCE,
-    ArtMedium.EPIC_POEM: RightKind.STORY,
-    ArtMedium.PLAY: RightKind.STORY,
-    ArtMedium.BOOK: RightKind.STORY,
-    ArtMedium.STATUE: RightKind.DESIGN,
-    ArtMedium.FRESCO: RightKind.DESIGN,
-    ArtMedium.TAPESTRY: RightKind.DESIGN,
-    ArtMedium.MOSAIC: RightKind.DESIGN,
-    ArtMedium.CARVING: RightKind.DESIGN,
-    ArtMedium.ARCHITECTURE_ORNAMENT: RightKind.DESIGN,
-}
+MEDIUM_RIGHTS = {mode: spec.right for mode, spec in ART_MODES.items()}
 COPIED = frozenset({RightKind.DESIGN, RightKind.TRADEMARK, RightKind.MARKET_PRIVILEGE})
 
 

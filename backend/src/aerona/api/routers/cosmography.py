@@ -41,6 +41,7 @@ from aerona.catalog.cosmography import (
     APOCALYPSE_LABELS,
     BARRED_GALAXIES,
     BEING_KINDS,
+    BEING_MODEL,
     CLUSTER_KINDS,
     DIMENSION_KINDS,
     DIMENSIONAL_EVENT_LABELS,
@@ -48,6 +49,7 @@ from aerona.catalog.cosmography import (
     GALACTIC_ZONES,
     GALAXY_TYPES,
     PHENOMENON_KINDS,
+    PHENOMENON_MODEL,
     SPIRAL_GALAXIES,
     STRUCTURE_KINDS,
     KindSpec,
@@ -275,7 +277,14 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
         rifts = list(await session.scalars(select(RiftRow).order_by(RiftRow.id)))
         names = {row.id: (row.name, row.world_id) for row in await session.scalars(select(EntityRow).where(EntityRow.status == EntityStatus.CANON))}
         beings = [
-            CosmicBeingRecord.model_validate(row).model_copy(update={"name": names[row.entity_id][0], "world_id": names[row.entity_id][1]})
+            CosmicBeingRecord.model_validate(row).model_copy(
+                update={
+                    "name": names[row.entity_id][0],
+                    "world_id": names[row.entity_id][1],
+                    "substrate": BEING_MODEL[row.being_kind].substrate,
+                    "sense": BEING_MODEL[row.being_kind].sense,
+                }
+            )
             for row in await session.scalars(select(CosmicBeingProfileRow).order_by(CosmicBeingProfileRow.entity_id))
             if row.entity_id in names
         ]
@@ -284,7 +293,12 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
             prints.setdefault(row.phenomenon_entity_id, []).append(FootprintRecord.model_validate(row))
         phenomena = [
             PhenomenonRecord.model_validate(row).model_copy(
-                update={"name": names[row.entity_id][0], "world_id": names[row.entity_id][1], "footprints": prints.get(row.entity_id, [])}
+                update={
+                    "name": names[row.entity_id][0],
+                    "world_id": names[row.entity_id][1],
+                    "footprints": prints.get(row.entity_id, []),
+                    **vars(PHENOMENON_MODEL[row.kind]),
+                }
             )
             for row in await session.scalars(select(PhenomenonProfileRow).order_by(PhenomenonProfileRow.entity_id))
             if row.entity_id in names

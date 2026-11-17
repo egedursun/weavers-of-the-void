@@ -218,7 +218,7 @@ async def god_death_drafts(ctx: TickContext, atlas: RegionAtlas, by_id: dict[int
     drafts: list[ModifierDraft] = []
     table = ctx.rules.modifiers
     for corpse in await canon(ctx.session, [EntityType.PLACE]):
-        if corpse.engine_kind is not EngineKind.GOD_CORPSE:
+        if corpse.engine_kind is not EngineKind.DEAD_GOD:
             continue
         region = by_id.get(atlas.top_region(corpse.id) or 0)
         if region is None:

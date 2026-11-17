@@ -1,21 +1,6 @@
 from enum import IntEnum, StrEnum
 
 
-class MortalSex(StrEnum):
-    FEMALE = "female"
-    MALE = "male"
-    OTHER = "other"
-
-
-class Ability(StrEnum):
-    ENDURANCE = "endurance"
-    WILLPOWER = "willpower"
-    PERCEPTION = "perception"
-    WISDOM = "wisdom"
-    CREATIVITY = "creativity"
-    BEAUTY = "beauty"
-
-
 class LifeStage(StrEnum):
     INFANT = "infant"
     CHILD = "child"
@@ -53,12 +38,6 @@ class DeathCause(StrEnum):
     DECOMPRESSION = "decompression"
     EXPERIMENT = "experiment"
     BOMBARDMENT = "bombardment"
-
-
-class MarriageKind(StrEnum):
-    MONOGAMOUS = "monogamous"
-    PLURAL = "plural"
-    POLITICAL = "political"
 
 
 class MarriageEnd(StrEnum):

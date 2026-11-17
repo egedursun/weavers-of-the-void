@@ -6,7 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_undo import UndoRun
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, StructureLeyRow, WorldSeasonRow
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import NotableYearKind, WeatherKind
 from aerona.domain.models.entity_stats import KnowledgeStats, StructureStats, TraditionStats
@@ -118,10 +118,10 @@ async def test_holy_days_found_fasts_bind_traditions_and_move_the_anchor(scope: 
     day = keeper.holy_days[0]
     assert day["year"] == 70 and isinstance(day["tradition_entity_id"], int)
     fast = await session.get(TraditionProfileRow, day["tradition_entity_id"])
-    assert fast is not None and fast.kind is TraditionKind.FAST
+    assert fast is not None and fast.kind is TraditionFunction.FAST
     assert fast.notable_year_id == notable.id and fast.calendar_entity_id == record.id
     feast = await make_entity(session, "Feast of Bread", EntityType.TRADITION, world_id=world.world.id, stats=TraditionStats(spread=10, rigidity=10))
-    session.add(TraditionProfileRow(tradition_entity_id=feast.id, kind=TraditionKind.FESTIVAL, cost={}, effects={}, locked=[]))
+    session.add(TraditionProfileRow(tradition_entity_id=feast.id, kind=TraditionFunction.FESTIVAL, cost={}, effects={}, locked=[]))
     await session.flush()
     await calendar.set_holy_day(scope, calendar.SetHolyDay(knowledge_id=record.id, name="Bread Day", season_position=2, tradition_id=feast.id))
     profile = await session.get(TraditionProfileRow, feast.id)

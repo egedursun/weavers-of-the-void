@@ -13,9 +13,6 @@ from aerona.api.schemas.crafts import (
     ChemicalWorksView,
     ClockView,
     CraftsNodeView,
-    FollowingView,
-    GameChoice,
-    GameView,
     GroundView,
     HeldRightView,
     InsurancePolicyView,
@@ -32,8 +29,6 @@ from aerona.db.tables.crafts import (
     CatchGroundRow,
     ChemicalWorksRow,
     EmotionSpiritRow,
-    GameFollowingRow,
-    GameRow,
     IncorporealRightRow,
     InsurancePolicyRow,
     InsurerRow,
@@ -66,12 +61,6 @@ async def refs_of(session: AsyncSession, ids: Iterable[int | None]) -> dict[int,
 
 def material_name(row: WorldMaterialRow) -> str:
     return row.name or (row.base_kind.value.replace("_", " ") if row.base_kind is not None else f"material of world {row.world_id}")
-
-
-def game_view(refs: dict[int, NodeRef], row: GameRow) -> GameView:
-    return GameView(
-        id=row.id, name=row.name, kind=row.kind, rule=row.rule, origin=at(refs, row.origin_entity_id), created_epoch=row.created_epoch, locked=row.locked
-    )
 
 
 @router.get("/crafts/of/{node_id}", response_model=CraftsNodeView)
@@ -115,18 +104,6 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
         )
         aids = list(await session.scalars(select(AssistiveAidRow).where(AssistiveAidRow.holder_node_id == node_id).order_by(AssistiveAidRow.kind)))
         clock = await session.get(PublicClockRow, node_id)
-        followings = (
-            list(
-                await session.execute(
-                    select(GameFollowingRow, GameRow)
-                    .join(GameRow, GameRow.id == GameFollowingRow.game_id)
-                    .where(GameFollowingRow.people_entity_id == folk.id)
-                    .order_by(GameFollowingRow.popularity.desc(), GameRow.id)
-                )
-            )
-            if folk is not None
-            else []
-        )
         numbers = await session.get(NumberSystemRow, folk.id) if folk is not None else None
         profile = await session.get(ResourceProfileRow, node_id)
         world_id = entity.world_id if entity is not None else None
@@ -152,7 +129,6 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
             )
         )
         spirits = list(await session.scalars(select(EmotionSpiritRow).where(EmotionSpiritRow.region_entity_id.in_(near)).order_by(EmotionSpiritRow.id.desc())))
-        games = list(await session.scalars(select(GameRow).order_by(GameRow.name, GameRow.id)))
         refs = await refs_of(
             session,
             [
@@ -163,7 +139,6 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
                 *(row.settlement_entity_id for row in works),
                 *(item for row in policies for item in (row.insurer_entity_id, row.holder_node_id)),
                 *(item for row in rights for item in (row.holder_node_id, row.subject_node_id, row.licensed_to_node_id)),
-                *(game.origin_entity_id for _, game in followings),
                 *(item for row in links for item in (row.holder_node_id, row.target_node_id)),
                 *(item for row in spirits for item in (row.region_entity_id, row.bound_by_node_id)),
             ],
@@ -244,9 +219,6 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
         ],
         aids=[AidView(kind=row.kind, quality=row.quality, since_epoch=row.since_epoch, locked=row.locked) for row in aids],
         clock=ClockView(kind=clock.kind, precision=clock.precision, built_epoch=clock.built_epoch, locked=clock.locked) if clock is not None else None,
-        followings=[
-            FollowingView(game=game_view(refs, game), popularity=row.popularity, adopted_epoch=row.adopted_epoch, locked=row.locked) for row, game in followings
-        ],
         numbers=NumbersView(base=numbers.base, notation=numbers.notation, zero=numbers.zero, numeracy=numbers.numeracy, locked=numbers.locked)
         if numbers is not None
         else None,
@@ -280,5 +252,4 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
             for row in spirits
         ],
         materials=[AffinityMaterialChoice(id=row.id, name=material_name(row)) for row in materials],
-        games=[GameChoice(id=row.id, name=row.name) for row in games],
     )

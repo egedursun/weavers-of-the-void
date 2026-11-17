@@ -64,7 +64,7 @@ async def intruded(ctx: TickContext, actors: set[int], victims: set[int], aims: 
 
 async def copied_soldiers(ctx: TickContext, actors: set[int]) -> bool:
     soldiers = select(EntityRow.id).where(
-        EntityRow.mortal_role.in_([MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.OFFICER]), EntityRow.affiliated_entity_id.in_(actors)
+        EntityRow.mortal_role.in_([MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.OFFICER]), EntityRow.affiliated_entity_id.in_(actors)
     )
     found = await ctx.session.scalar(
         select(BondRow.id).where(BondRow.kind == BondKind.COPY_OF, BondRow.epoch == ctx.epoch, BondRow.target_node_id.in_(soldiers)).limit(1)

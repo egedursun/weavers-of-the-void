@@ -1,11 +1,11 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.faith import (
     AfterlifeState,
     BindingKind,
-    ClergyOffice,
+    ClergyFunction,
     FanaticismKind,
-    FuneralRite,
     HoldingKind,
     JudgementDoctrine,
     RebirthPath,
@@ -46,7 +46,7 @@ class HoldingView(ApiModel):
 
 
 class ClergyView(ApiModel):
-    kind: ClergyOffice
+    kind: ClergyFunction
     holder: NodeRef | None
     since_epoch: int
     locked: bool
@@ -156,7 +156,7 @@ class JudgementView(ApiModel):
     doctrine: JudgementDoctrine
     stratum: str | None
     score: int
-    rite: FuneralRite
+    rite: FuneralCustom
     reason: str
 
 
@@ -168,7 +168,7 @@ class SoulCard(ApiModel):
     alignment: SpiritAlignment
     binding: BindingKind
     bound: NodeRef | None
-    rite: FuneralRite
+    rite: FuneralCustom
     sealed: bool
     memory_strength: int
     veneration: int

@@ -86,6 +86,7 @@ from aerona.services.player import (
     interventions,
     intrigue,
     justice,
+    kinds,
     knowledge,
     language_contact,
     languages,
@@ -466,10 +467,10 @@ DEATH_ACTIONS = (
         ("DTH-015", "DTH-016", "DTH-017", "DTH-018"),
     ),
     _sync(
-        Meta("sibling:scatter", "Order a sibling to scatter a dead son's bones", G.DEATH),
-        death.scatter_bones,
-        death.ScatterBones,
-        lambda rules: f"{rules.death.scatter_bones_cost} essence from the sibling",
+        Meta("sibling:hinder_return", "Order a sibling to hinder a dead son's return", G.DEATH),
+        death.hinder_return,
+        death.HinderReturn,
+        lambda rules: f"{rules.death.hinder_return_cost} essence from the sibling",
         ("DTH-019",),
     ),
     _sync(
@@ -837,7 +838,7 @@ CREATURE_ACTIONS = (
     _sync(Meta("species:feed", "Order a species to feed", G.CREATURES), creatures.feed, creatures.Feeding, free, ()),
     _sync(Meta("species:mutate", "Force a mutation", G.CREATURES), creatures.mutate, creatures.SpeciesTarget, free, ()),
     _sync(Meta("people:split", "Split a changed people", G.CREATURES), creatures.split, creatures.PeopleTarget, free, ()),
-    _sync(Meta("species:chimera", "Merge two species into a chimera", G.CREATURES), creatures.chimera, creatures.Chimera, free, ()),
+    _sync(Meta("species:merge", "Merge two species into one", G.CREATURES), creatures.merge_species, creatures.MergeSpecies, free, ()),
     _sync(Meta("species:trail", "Lay a great beast's trail", G.CREATURES), creatures.trail, creatures.SpeciesTarget, free, ()),
     _sync(Meta("species:cull", "Cull a species", G.CREATURES), creatures.cull, creatures.Cull, free, ()),
     _sync(Meta("species:spare_prey", "Spare a species from its hunters", G.CREATURES), creatures.spare, creatures.SpeciesTarget, free, ()),
@@ -1533,15 +1534,17 @@ MIND_ACTIONS = (
     _sync(
         Meta("mortal:release", "Let a held mortal value follow their life again", G.ENTITIES), mortals.release_mortal, mortals.ReleaseMortal, free, ("S3.1",)
     ),
-    _sync(Meta("mortal:ability", "Set and hold a mortal's ability", G.ENTITIES), mortals.set_ability, mortals.SetAbility, free, ("S3.1",)),
-    _sync(
-        Meta("mortal:ability_release", "Let a held ability change with age again", G.ENTITIES), mortals.release_ability, mortals.ReleaseAbility, free, ("S3.1",)
-    ),
     _sync(Meta("mortal:sex", "Set a mortal's sex", G.ENTITIES), mortals.set_sex, mortals.SetSex, free, ("S3.1",)),
     _sync(Meta("kin:betroth", "Promise two mortals to each other", G.ENTITIES), mortals.set_betrothal, mortals.PairCommand, free, ("S3.1",)),
     _sync(Meta("kin:marry", "Wed two mortals, by choice or by force", G.ENTITIES), mortals.force_marriage, mortals.ForceMarriage, free, ("S3.1",)),
     _sync(Meta("kin:end_marriage", "End a marriage", G.ENTITIES), mortals.end_marriage_action, mortals.EndMarriage, free, ("S3.1",)),
-    _sync(Meta("kin:edit_marriage", "Change a marriage's kind, treaty or start", G.ENTITIES), mortals.edit_marriage, mortals.EditMarriage, free, ("S3.1",)),
+    _sync(
+        Meta("kin:edit_marriage", "Change a marriage's form, purpose, treaty or start", G.ENTITIES),
+        mortals.edit_marriage,
+        mortals.EditMarriage,
+        free,
+        ("S3.1",),
+    ),
     _sync(Meta("kin:delete_marriage", "Strike a marriage from the record", G.ENTITIES), mortals.delete_marriage, mortals.MarriageTarget, free, ("S3.1",)),
     _sync(Meta("kin:bond", "Bind two mortals as kin", G.ENTITIES), mortals.add_kin_bond, mortals.KinBond, free, ("S3.1",)),
     _sync(Meta("kin:unbond", "Undo a kin bond", G.ENTITIES), mortals.remove_kin_bond, mortals.KinBondTarget, free, ("S3.1",)),
@@ -4109,14 +4112,6 @@ CRAFTS_ACTIONS = (
     _sync(Meta("public_clock:set", "Set a public clock", G.SOCIETY), crafts.public_clock_set, crafts.PublicClockDraft, free, ("S7.1/RP5",)),
     _sync(Meta("public_clock:edit", "Edit a public clock", G.SOCIETY), crafts.public_clock_edit, crafts.PublicClockEdit, free, ("S7.1/RP5",)),
     _sync(Meta("public_clock:delete", "Strike a public clock", G.SOCIETY), crafts.public_clock_delete, crafts.PublicClockTarget, free, ("S7.1/RP5",)),
-    _sync(Meta("game:create", "Make a game", G.SOCIETY), crafts.game_create, crafts.GameDraft, free, ("S7.4/RP5",)),
-    _sync(Meta("game:edit", "Edit a game", G.SOCIETY), crafts.game_edit, crafts.GameEdit, free, ("S7.4/RP5",)),
-    _sync(Meta("game:delete", "Strike a game", G.SOCIETY), crafts.game_delete, crafts.GameTarget, free, ("S7.4/RP5",)),
-    _sync(Meta("game_following:set", "Set a following of a game", G.SOCIETY), crafts.game_following_set, crafts.GameFollowingDraft, free, ("S7.4/RP5",)),
-    _sync(Meta("game_following:edit", "Edit a following of a game", G.SOCIETY), crafts.game_following_edit, crafts.GameFollowingEdit, free, ("S7.4/RP5",)),
-    _sync(
-        Meta("game_following:delete", "Strike a following of a game", G.SOCIETY), crafts.game_following_delete, crafts.GameFollowingTarget, free, ("S7.4/RP5",)
-    ),
     _sync(Meta("number_system:set", "Set a number system", G.SOCIETY), crafts.number_system_set, crafts.NumberSystemDraft, free, ("S8.4/RP5",)),
     _sync(Meta("number_system:edit", "Edit a number system", G.SOCIETY), crafts.number_system_edit, crafts.NumberSystemEdit, free, ("S8.4/RP5",)),
     _sync(Meta("number_system:delete", "Strike a number system", G.SOCIETY), crafts.number_system_delete, crafts.NumberSystemTarget, free, ("S8.4/RP5",)),
@@ -4222,9 +4217,9 @@ CUSTOMS_ACTIONS = (
     _sync(Meta("cooperative:set", "Set a cooperative", G.SOCIETY), customs.cooperative_set, customs.CooperativeDraft, free, ("S4.3/RP5",)),
     _sync(Meta("cooperative:edit", "Edit a cooperative", G.SOCIETY), customs.cooperative_edit, customs.CooperativeEdit, free, ("S4.3/RP5",)),
     _sync(Meta("cooperative:delete", "Strike a cooperative", G.SOCIETY), customs.cooperative_delete, customs.CooperativeTarget, free, ("S4.3/RP5",)),
-    _sync(Meta("evidence:create", "Make a evidence", G.SOCIETY), customs.evidence_create, customs.EvidenceDraft, free, ("S4.5/RP5",)),
-    _sync(Meta("evidence:edit", "Edit a evidence", G.SOCIETY), customs.evidence_edit, customs.EvidenceEdit, free, ("S4.5/RP5",)),
-    _sync(Meta("evidence:delete", "Strike a evidence", G.SOCIETY), customs.evidence_delete, customs.EvidenceTarget, free, ("S4.5/RP5",)),
+    _sync(Meta("evidence:create", "Record a piece of evidence", G.SOCIETY), customs.evidence_create, customs.EvidenceDraft, free, ("S4.5/RP5",)),
+    _sync(Meta("evidence:edit", "Edit a piece of evidence", G.SOCIETY), customs.evidence_edit, customs.EvidenceEdit, free, ("S4.5/RP5",)),
+    _sync(Meta("evidence:delete", "Strike a piece of evidence", G.SOCIETY), customs.evidence_delete, customs.EvidenceTarget, free, ("S4.5/RP5",)),
     _sync(
         Meta("membership_category:set", "Set a membership category", G.SOCIETY),
         customs.membership_category_set,
@@ -4469,7 +4464,7 @@ ARTS_ACTIONS = (
     ),
     _sync(Meta("construct:unmake", "Still a construct for good", G.CREATURES), constructs.construct_unmake, constructs.ConstructTarget, free, ("S3.3a/RP4",)),
     _sync(
-        Meta("construct:edit", "Edit a construct, its body, power and will", G.CREATURES),
+        Meta("construct:edit", "Edit a construct, its body and power", G.CREATURES),
         constructs.construct_edit,
         constructs.ConstructEdit,
         free,
@@ -5001,6 +4996,9 @@ MADE_KIND_ACTIONS = (
         free,
         ("S7.12",),
     ),
+    _sync(Meta("dish_step:set", "Set a step of a dish", G.SOCIETY), made_kinds.dish_step_set, made_kinds.StepDraft, free, ("S48.2",)),
+    _sync(Meta("dish_step:edit", "Edit a step of a dish", G.SOCIETY), made_kinds.dish_step_edit, made_kinds.RecordEdit, free, ("S48.2",)),
+    _sync(Meta("dish_step:delete", "Take a step out of a dish", G.SOCIETY), made_kinds.dish_step_delete, made_kinds.RecordTarget, free, ("S48.2",)),
     _sync(Meta("community_dish:set", "Have a community cook a dish", G.SOCIETY), made_kinds.community_dish_set, made_kinds.CookingDraft, free, ("S7.12",)),
     _sync(
         Meta("community_dish:edit", "Edit how a community cooks a dish", G.SOCIETY), made_kinds.community_dish_edit, made_kinds.CookingEdit, free, ("S7.12",)
@@ -5635,6 +5633,12 @@ TYPED_MODEL_ACTIONS = (
 )
 
 PANTHEON_TIE_ACTIONS = (
+    _sync(Meta("authored_kind:create", "Make a new kind of thing", G.SOCIETY), kinds.kind_create, kinds.KindDraft, free, ("S48.0",)),
+    _sync(Meta("authored_kind:edit", "Set a kind of thing", G.SOCIETY), kinds.kind_edit, kinds.KindEdit, free, ("S48.0",)),
+    _sync(Meta("authored_kind:hold", "Hold a kind against the world", G.SOCIETY), kinds.kind_hold, kinds.KindHold, free, ("S48.0",)),
+    _sync(Meta("authored_kind:spread", "Give a kind to a holder", G.SOCIETY), kinds.kind_spread, kinds.KindPass, free, ("S48.0",)),
+    _sync(Meta("authored_kind:retire", "Retire a kind", G.SOCIETY), kinds.kind_retire, kinds.KindRetire, free, ("S48.0",)),
+    _sync(Meta("authored_kind:delete", "Unmake a kind", G.SOCIETY), kinds.kind_delete, kinds.KindTarget, free, ("S48.0",)),
     _sync(Meta("pantheon:edit", "Set a world's pantheon", G.GOD_POWER), pantheon_ties.pantheon_edit, pantheon_ties.PantheonEdit, free, ("S47.5.4",)),
     _sync(Meta("pantheon_tie:set", "Tie two gods", G.GOD_POWER), pantheon_ties.tie_set, pantheon_ties.TieSet, free, ("S47.5.4",)),
     _sync(Meta("pantheon_tie:edit", "Set a tie of gods", G.GOD_POWER), pantheon_ties.tie_edit, pantheon_ties.TieEdit, free, ("S47.5.4",)),

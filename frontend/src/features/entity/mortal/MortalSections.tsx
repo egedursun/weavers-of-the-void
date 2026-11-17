@@ -24,6 +24,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { UNION_FORMS, UNION_PURPOSES } from '@/features/cycles/unionLabels'
 import { CRIMES } from '@/features/entity/justice/crimes'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { type ActionResponse } from '@/features/pantheon/api'
@@ -42,11 +43,11 @@ import {
   Tag,
 } from '../realm/parts'
 import {
-  type Ability,
   type CrimeKind,
   type EquipmentSlot,
   type MarriageEnd,
-  type MarriageKind,
+  type UnionForm,
+  type UnionPurpose,
   type MortalProfile,
   type MortalSex,
   type PunishmentKind,
@@ -57,7 +58,6 @@ import {
   useMortalProfile,
 } from './api'
 import {
-  ABILITIES,
   BREAKS,
   CAREERS,
   DEATHS,
@@ -68,7 +68,6 @@ import {
   LIFE_FIELDS,
   LOYALTY_FIELDS,
   MARRIAGE_ENDS,
-  MARRIAGE_KINDS,
   MORTAL_ICON,
   PROFESSIONS,
   PUNISHMENTS,
@@ -188,47 +187,6 @@ function LifeKpis({ profile }: { profile: MortalProfile }) {
   )
 }
 
-function Abilities({ profile }: { profile: MortalProfile }) {
-  return (
-    <Panel
-      title='Abilities'
-      icon={ABILITIES.endurance.icon}
-      tone='success'
-      hint='Inherited from both parents; age wears and ripens them'
-    >
-      <ul className='flex min-w-0 flex-col gap-2'>
-        <Paged items={profile.abilities} as='li'>
-          {(item) => {
-            const spec = named(ABILITIES, item.ability)
-            return (
-              <li
-                key={item.ability}
-                className='flex min-w-0 items-center gap-2'
-              >
-                <div className='min-w-0 flex-1'>
-                  <StatBar
-                    label={spec.label}
-                    value={item.value}
-                    max={PERCENT}
-                    icon={spec.icon}
-                    showMax={false}
-                  />
-                </div>
-                {item.held && (
-                  <Lock
-                    aria-label='Held'
-                    className='size-icon-sm shrink-0 text-muted-foreground'
-                  />
-                )}
-              </li>
-            )
-          }}
-        </Paged>
-      </ul>
-    </Panel>
-  )
-}
-
 function Standing({ profile }: { profile: MortalProfile }) {
   return (
     <Panel title='Standing' icon={STANDING_FIELDS.honour.icon} tone='gold'>
@@ -312,16 +270,6 @@ function Loyalty({ profile }: { profile: MortalProfile }) {
 function lifeGroups(profile: MortalProfile): AdjustGroup[] {
   return [
     {
-      title: 'Abilities',
-      fields: profile.abilities.map((item) => ({
-        key: `ability:${item.ability}`,
-        label: named(ABILITIES, item.ability).label,
-        value: item.value,
-        min: 0,
-        max: PERCENT,
-      })),
-    },
-    {
       title: 'Life',
       fields: (['health', 'fertility', 'stress'] as const).map((key) => ({
         key,
@@ -374,18 +322,11 @@ function LifeControls({
   const send = (path: string, body: Record<string, unknown>) =>
     action.mutateAsync({ path, body: { mortal_id: mortalId, ...body } })
   const run = ({ key, value }: { key: string; value: number }) =>
-    key.startsWith('ability:')
-      ? send('/api/actions/mortal:ability', {
-          ability: key.slice('ability:'.length) as Ability,
-          value,
-          hold,
-        })
-      : send('/api/actions/mortal:set', { field: key, value, hold })
-  const heldAbilities = profile.abilities.filter((item) => item.held)
+    send('/api/actions/mortal:set', { field: key, value, hold })
   return (
     <AdjustPanel
       title='Shape this life'
-      note='Set abilities, health, stress, standing and loyalty; choose a stage, a sex or a path; sentence or pardon. A held value stops following their life until you release it. Every change goes into the ledger and can be undone.'
+      note='Set health, stress, standing and loyalty; choose a stage, a sex or a path; sentence or pardon. A held value stops following their life until you release it. Every change goes into the ledger and can be undone.'
       hold={hold}
       onHold={setHold}
     >
@@ -441,7 +382,7 @@ function LifeControls({
           }
         />
       </div>
-      {(profile.held.length > 0 || heldAbilities.length > 0) && (
+      {profile.held.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
           <PagedList
             items={profile.held}
@@ -464,32 +405,6 @@ function LifeControls({
               >
                 <Unlock />
                 {`Release ${heldLabel(field)}`}
-              </Button>
-            )}
-          </PagedList>
-          <PagedList
-            items={heldAbilities}
-            initial={12}
-            noun={['entry', 'entries']}
-            as='div'
-            className='flex min-w-0 flex-wrap items-center gap-2'
-            itemKey={(item) => item.ability}
-          >
-            {(item) => (
-              <Button
-                key={item.ability}
-                size='sm'
-                variant='outline'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() =>
-                  void send('/api/actions/mortal:ability_release', {
-                    ability: item.ability,
-                  })
-                }
-              >
-                <Unlock />
-                {`Release ${named(ABILITIES, item.ability).label.toLowerCase()}`}
               </Button>
             )}
           </PagedList>
@@ -556,6 +471,9 @@ function LifeControls({
   )
 }
 
+const UNION_FORM_KEYS = Object.keys(UNION_FORMS) as UnionForm[]
+const UNION_PURPOSE_KEYS = Object.keys(UNION_PURPOSES) as UnionPurpose[]
+
 export function LifeSection({
   mortalId,
   readOnlyReason,
@@ -570,7 +488,7 @@ export function LifeSection({
     <Section
       id='section-life'
       title='Life'
-      description='Abilities, the course of a life, health, stress, standing and loyalty. Each epoch ages, tests and moves them.'
+      description='The course of a life, health, stress, standing and loyalty. Each epoch ages, tests and moves them. Body and mind are set in the mind section.'
       icon={MORTAL_ICON}
     >
       {!profile ? (
@@ -583,8 +501,7 @@ export function LifeSection({
         <div className='@container/life flex min-w-0 flex-col gap-4'>
           <LifeHero profile={profile} />
           <LifeKpis profile={profile} />
-          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/life:grid-cols-3'>
-            <Abilities profile={profile} />
+          <div className='grid min-w-0 grid-cols-1 gap-3 @xl/life:grid-cols-2'>
             <Standing profile={profile} />
             <Loyalty profile={profile} />
           </div>
@@ -607,7 +524,8 @@ function KinControls({
 }) {
   const mortalId = profile.mortal.id
   const [other, setOther] = useState<number | null>(null)
-  const [kind, setKind] = useState('monogamous')
+  const [form, setForm] = useState<UnionForm>('pair')
+  const [purpose, setPurpose] = useState<UnionPurpose>('kinship')
   const [bond, setBond] = useState('parent_of')
   const [forced, setForced] = useState(true)
   const action = useMortalAction(mortalId)
@@ -629,11 +547,18 @@ function KinControls({
       />
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/kin:grid-cols-2'>
         <MindPicker
-          label='Kind of marriage'
-          value={kind}
-          table={table(MARRIAGE_KINDS)}
+          label='Form of the union'
+          value={form}
+          table={table(UNION_FORMS)}
           blocked={busy}
-          onPick={setKind}
+          onPick={(value) => setForm(value as UnionForm)}
+        />
+        <MindPicker
+          label='What it is for'
+          value={purpose}
+          table={table(UNION_PURPOSES)}
+          blocked={busy}
+          onPick={(value) => setPurpose(value as UnionPurpose)}
         />
         <MindPicker
           label='Kin bond'
@@ -675,7 +600,8 @@ function KinControls({
             send('/api/actions/kin:marry', {
               first_id: mortalId,
               second_id: other,
-              kind: kind as MarriageKind,
+              form,
+              purpose,
               forced,
             })
           }
@@ -717,17 +643,29 @@ function KinControls({
                   label='Change it'
                   fixed={{ marriage_id: item.id }}
                   defaults={{
-                    kind: item.kind,
+                    form: item.form,
+                    purpose: item.purpose,
                     treaty_id: item.treaty?.id ?? null,
                     start_epoch: item.start_epoch,
                   }}
                   labels={{
-                    kind: 'Kind of marriage',
+                    form: 'Form of the union',
+                    purpose: 'What it is for',
                     treaty_id: 'Sealing treaty',
                     start_epoch: 'Wed in epoch',
                   }}
                   pickers={{
                     treaty_id: { source: 'entity', types: ['treaty'] },
+                  }}
+                  choices={{
+                    form: UNION_FORM_KEYS.map((key) => ({
+                      value: key,
+                      label: UNION_FORMS[key].label,
+                    })),
+                    purpose: UNION_PURPOSE_KEYS.map((key) => ({
+                      value: key,
+                      label: UNION_PURPOSES[key].label,
+                    })),
                   }}
                 />
                 {(['divorce', 'annulment'] as const).map((cause) => (
@@ -850,7 +788,7 @@ export function KinSection({
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/kin:grid-cols-2'>
             <Panel
               title='Marriages'
-              icon={MARRIAGE_KINDS.monogamous.icon}
+              icon={UNION_FORMS.pair.icon}
               tone='danger'
               count={profile.marriages.length}
             >
@@ -862,7 +800,8 @@ export function KinSection({
                       key={item.id}
                       className='flex min-w-0 flex-wrap items-center gap-2'
                     >
-                      <Tag spec={named(MARRIAGE_KINDS, item.kind)} />
+                      <Tag spec={UNION_FORMS[item.form]} />
+                      <Tag spec={UNION_PURPOSES[item.purpose]} />
                       {item.spouse && <RefLink node={item.spouse} />}
                       <Muted variant='caption'>
                         {item.end_epoch === null

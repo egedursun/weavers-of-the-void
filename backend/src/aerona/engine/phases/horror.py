@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -28,7 +28,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import RouteClosure
 from aerona.domain.enums.world import Discovery
-from aerona.domain.models.entity_stats import CultStats, OuterBeingStats
+from aerona.domain.models.entity_stats import OuterBeingStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.horror_model import HorrorSpec, drawn_spec, horror_event, keep_horrors, raise_horror, unleash
 from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_breakdown
@@ -38,7 +38,7 @@ from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.cosmos.worldlife import hot_regions
-from aerona.engine.divine.outer import breach_pressure, open_breaches, outer_profile, seed_void_tenets
+from aerona.engine.divine.outer import breach_pressure, found_outer_cult, open_breaches, outer_profile
 from aerona.engine.divine.wounds import sanity_ceiling
 from aerona.engine.environment.book import scar_region
 from aerona.engine.interconnect.annotations import reads, writes
@@ -208,31 +208,8 @@ async def _whisperers_born(ctx: TickContext, entity: EntityRow) -> bool:
 
 
 async def birth_whisperers(ctx: TickContext, entity: EntityRow) -> EntityRow:
-    horror = ctx.rules.cosmic_horror
     await EntityRepository(ctx.session).add_flag(entity.id, EntityFlag.WHISPER_SOURCE, ctx.epoch)
-    population = stat_or(entity, POPULATION_KEY, horror.whisperers_default_population)
-    cult = await open_record(
-        ctx.session,
-        ctx.epoch,
-        RecordSpec(
-            name=f"The outer cult of {entity.name}",
-            entity_type=EntityType.CULT,
-            body=f"A cult among {entity.name} that worships a being from outside the cosmos.",
-            stats=CultStats(
-                followers=max(horror.whisperers_min_followers, round(population * horror.whisperers_share_pct / PERCENT)),
-                zeal=horror.whisperers_zealotry,
-                influence=horror.whisperers_influence,
-            ),
-            power=horror.whisperers_power,
-            world_id=entity.world_id,
-            location_id=entity.id if entity.entity_type is EntityType.SETTLEMENT else entity.location_id,
-            subtype="cult of the unspoken",
-            flags=(EntityFlag.OUTER_CULT,),
-            sanity=horror.whisperers_sanity,
-        ),
-    )
-    await BondRepository(ctx.session).connect(BondDraft(cult.id, entity.id, BondKind.DESCENDS_FROM, ctx.epoch, "born from within"))
-    await seed_void_tenets(ctx, cult)
+    cult = await found_outer_cult(ctx, entity)
     await note(
         ctx,
         f"A cult that worships a being from outside the cosmos arose among {entity.name}: {cult.name}.",
@@ -262,6 +239,8 @@ async def update_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> None:
     scene = await _sanity_context(ctx, knowledge)
     outer_cults = await flags_by_entity(ctx.session, EntityFlag.OUTER_CULT)
     for entity in await canon(ctx.session, SANITY_TYPES):
+        if held(entity.id):
+            continue
         before = sanity_of(ctx.rules, entity)
         after = clamp_percent(await sanity_drift(ctx, entity, scene))
         if entity.sanity != after:

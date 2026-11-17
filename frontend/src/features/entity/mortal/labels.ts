@@ -11,7 +11,6 @@ import {
   BookOpen,
   Brain,
   Briefcase,
-  Brush,
   CarFront,
   CircuitBoard,
   Coins,
@@ -74,45 +73,6 @@ export type { Named }
 export const MORTAL_ICON: LucideIcon = User
 export const KIN_ICON: LucideIcon = TreeDeciduous
 export const GEAR_ICON: LucideIcon = Backpack
-
-export const ABILITIES: Record<string, Named & { hint: string }> = {
-  endurance: {
-    label: 'Endurance',
-    icon: HeartPulse,
-    tone: 'success',
-    hint: 'Health held, wounds mended, marches endured',
-  },
-  willpower: {
-    label: 'Willpower',
-    icon: Mountain,
-    tone: 'gold',
-    hint: 'Resists fear, torture, temptation and the strain of life',
-  },
-  perception: {
-    label: 'Perception',
-    icon: Eye,
-    tone: 'info',
-    hint: 'Sees ambushes, plots and what others miss',
-  },
-  wisdom: {
-    label: 'Wisdom',
-    icon: Scroll,
-    tone: 'verdigris',
-    hint: 'Judgement, counsel and the gift of visions',
-  },
-  creativity: {
-    label: 'Creativity',
-    icon: Brush,
-    tone: 'warning',
-    hint: 'Works, rites and new ideas; a patron of the arts',
-  },
-  beauty: {
-    label: 'Beauty',
-    icon: Sparkles,
-    tone: 'gold',
-    hint: 'The presence others feel, as their culture reads it',
-  },
-}
 
 export const STAGES: Record<string, Named> = {
   infant: { label: 'Infant', icon: Baby, tone: 'info' },
@@ -223,12 +183,6 @@ export const KIN_KINDS: Record<string, Named & { out: string; in: string }> = {
     out: 'Sworn kin',
     in: 'Sworn kin',
   },
-}
-
-export const MARRIAGE_KINDS: Record<string, Named> = {
-  monogamous: { label: 'Monogamous', icon: Heart, tone: 'danger' },
-  plural: { label: 'Plural', icon: Users, tone: 'gold' },
-  political: { label: 'Political', icon: Crown, tone: 'info' },
 }
 
 export const MARRIAGE_ENDS: Record<

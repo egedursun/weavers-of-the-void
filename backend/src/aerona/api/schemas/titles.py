@@ -1,7 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
-from aerona.domain.enums.titles import TitleRank, TitleTenure
+from aerona.domain.enums.titles import TitleTenure, TitleTier
 
 
 class TitleHolderView(ApiModel):
@@ -19,7 +19,7 @@ class TitleDriftView(ApiModel):
 
 class TitleSummary(ApiModel):
     title: NodeRef
-    rank: TitleRank
+    rank: TitleTier
     rank_label: str
     holder: NodeRef | None
     lands: int
@@ -27,7 +27,7 @@ class TitleSummary(ApiModel):
 
 
 class TitleDetail(ApiModel):
-    rank: TitleRank
+    rank: TitleTier
     rank_label: str
     liege: NodeRef | None
     holder: NodeRef | None

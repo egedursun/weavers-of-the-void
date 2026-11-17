@@ -83,6 +83,8 @@ function route(id: number, overrides: Partial<RouteRecord> = {}): RouteRecord {
     world_a_id: 1,
     world_b_id: 2,
     method: 'ancient_gate',
+    medium: 'space',
+    mechanism: 'gate',
     duration_epochs: 2,
     danger: 20,
     known: true,

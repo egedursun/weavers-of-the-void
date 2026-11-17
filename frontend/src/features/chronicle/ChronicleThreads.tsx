@@ -100,7 +100,7 @@ function ThreadCard({
       {thread.closing_text && <Muted italic>{thread.closing_text}</Muted>}
       {related.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          <Label>Woven with</Label>
+          <Label>Linked with</Label>
           {related.map((ref) => (
             <Badge key={ref.id} size='sm' variant='outline'>
               <EntityLink kind='entity' id={String(ref.id)}>
@@ -133,7 +133,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
   const [related, setRelated] = useState<number[]>([])
   const create = useLoreMutation({
     run: () => openThread(text.trim(), related),
-    success: 'A new story thread is woven',
+    success: 'A new story thread is opened',
     onDone: () => {
       setText('')
       setRelated([])
@@ -163,7 +163,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
         )}
       </FormRow>
       <FormRow
-        label='Woven with'
+        label='Linked with'
         description='Optional; add records one by one'
       >
         {(id) => (
@@ -215,7 +215,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
         onClick={() => create.mutate()}
       >
         <Spline />
-        Weave the story
+        Start the story
       </Button>
     </div>
   )

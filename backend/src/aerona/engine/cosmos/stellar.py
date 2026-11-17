@@ -3,6 +3,7 @@ import math
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.kinds.stars import STAR_AGES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalaxyRow
@@ -57,15 +58,10 @@ def main_life(rules: Rules, mass: float) -> int:
 def stage_length(rules: Rules, mass: float, stage: StarAge) -> int | None:
     table = rules.stellar_evolution
     life = main_life(rules, mass)
-    share = {
-        StarAge.YOUNG: table.young_pct,
-        StarAge.MAIN: PERCENT,
-        StarAge.OLD: table.old_pct,
-        StarAge.DYING: table.dying_pct,
-        StarAge.REBORN: table.young_pct,
-    }.get(stage)
-    if share is None:
+    spec = STAR_AGES[stage]
+    if not spec.lasts:
         return None
+    share = int(getattr(table, spec.length_rule)) if spec.length_rule is not None else PERCENT
     return clamp_int(round_half_up(life * share / PERCENT), 1, table.life_cap_epochs)
 
 

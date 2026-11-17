@@ -13,13 +13,13 @@ from aerona.domain.models.entity_stats import SpeciesStats, SpiritStats
 from aerona.engine.cosmos.fauna import merge_species
 from aerona.engine.cosmos.sanity import sanity_of
 from aerona.engine.phases.creatures import (
-    chimera_escapes,
     creature_migration,
     hybridize,
     invasive_pressure,
     megafauna,
+    merge_spontaneously,
+    merged_escapes,
     trait_effects,
-    weave_spontaneously,
 )
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
@@ -90,7 +90,7 @@ async def test_species_sharing_a_land_hybridize_but_the_same_pair_never_twice(se
     repository = BondRepository(session)
     assert await repository.exists_between(hybrid.id, world.species.id, BondKind.DESCENDS_FROM)
     assert await repository.exists_between(hybrid.id, other.id, BondKind.DESCENDS_FROM)
-    assert await has_flag(session, hybrid.id, EntityFlag.CHIMERA)
+    assert await has_flag(session, hybrid.id, EntityFlag.MERGED_SPECIES)
     assert "creatures.hybrid" in await keys(session)
     again = await hybridize(ctx)
     assert again is None or not (
@@ -120,48 +120,48 @@ async def biomancer(session: AsyncSession, world: CoreWorld, location_id: int) -
     return maker
 
 
-async def test_biomancer_weaves_a_chimera_on_its_own(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 100}))
+async def test_biomancer_merges_species_on_its_own(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "weave", tuned_rules(creatures={"species_merge_chance": 100}))
     await beast(session, world, "Marshstrider")
     maker = await biomancer(session, world, world.regions[2].id)
-    chimera = await weave_spontaneously(ctx)
-    assert chimera is not None and await has_flag(session, chimera.id, EntityFlag.CHIMERA)
+    merged = await merge_spontaneously(ctx)
+    assert merged is not None and await has_flag(session, merged.id, EntityFlag.MERGED_SPECIES)
     repository = BondRepository(session)
-    assert await repository.exists_between(maker.id, chimera.id, BondKind.PRODUCED)
-    assert await repository.exists_between(maker.id, chimera.id, BondKind.TAMED)
-    kinds = list(await session.scalars(select(ChronicleRow.kind).where(ChronicleRow.template_key == "creatures.chimera_woven")))
-    assert kinds == [ChronicleKind.CHIMERA]
+    assert await repository.exists_between(maker.id, merged.id, BondKind.PRODUCED)
+    assert await repository.exists_between(maker.id, merged.id, BondKind.TAMED)
+    kinds = list(await session.scalars(select(ChronicleRow.kind).where(ChronicleRow.template_key == "creatures.species_merged")))
+    assert kinds == [ChronicleKind.MERGED_SPECIES]
 
 
 async def test_no_spontaneous_weaving_without_biomancy_or_when_chance_is_zero(session: AsyncSession, world: CoreWorld) -> None:
     await beast(session, world, "Marshstrider")
     await mortal(session, "Plain", world, world.regions[2].id)
-    certain = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 100}))
-    assert await weave_spontaneously(certain) is None
+    certain = await manual_context(session, "weave", tuned_rules(creatures={"species_merge_chance": 100}))
+    assert await merge_spontaneously(certain) is None
     await biomancer(session, world, world.regions[2].id)
-    never = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 0}))
-    assert await weave_spontaneously(never) is None
-    assert "creatures.chimera_woven" not in await keys(session)
+    never = await manual_context(session, "weave", tuned_rules(creatures={"species_merge_chance": 0}))
+    assert await merge_spontaneously(never) is None
+    assert "creatures.species_merged" not in await keys(session)
 
 
-async def test_woven_chimera_escapes_and_turns_on_its_weavers(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "escape", tuned_rules(creatures={"chimera_escape_divisor": 1}))
+async def test_a_merged_species_escapes_and_turns_on_its_makers(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "escape", tuned_rules(creatures={"merged_escape_divisor": 1}))
     other = await beast(session, world, "Marshstrider")
     maker = await settlement(session, "Weavers Rest", world, world.regions[0], population=1000)
-    chimera = await merge_species(ctx, world.species, other, maker=maker)
-    assert await chimera_escapes(ctx) == 1
-    assert await has_flag(session, chimera.id, EntityFlag.ESCAPED)
-    assert await BondRepository(session).exists_between(chimera.id, maker.id, BondKind.HUNTS)
-    assert stat(maker, "population") == 1000 * (100 - ctx.rules.creatures.chimera_escape_population_loss_pct) // 100
-    assert "creatures.chimera_escaped" in await keys(session)
-    assert await chimera_escapes(ctx) == 0
+    merged = await merge_species(ctx, world.species, other, maker=maker)
+    assert await merged_escapes(ctx) == 1
+    assert await has_flag(session, merged.id, EntityFlag.ESCAPED)
+    assert await BondRepository(session).exists_between(merged.id, maker.id, BondKind.HUNTS)
+    assert stat(maker, "population") == 1000 * (100 - ctx.rules.creatures.merged_escape_population_loss_pct) // 100
+    assert "creatures.merged_escaped" in await keys(session)
+    assert await merged_escapes(ctx) == 0
 
 
-async def test_chimera_without_a_weaver_never_escapes(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "escape", tuned_rules(creatures={"chimera_escape_divisor": 1}))
+async def test_a_merged_species_without_a_maker_never_escapes(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "escape", tuned_rules(creatures={"merged_escape_divisor": 1}))
     other = await beast(session, world, "Marshstrider")
     await merge_species(ctx, world.species, other)
-    assert await chimera_escapes(ctx) == 0
+    assert await merged_escapes(ctx) == 0
 
 
 async def test_mighty_species_becomes_megafauna_and_leaves_a_trail(session: AsyncSession, world: CoreWorld) -> None:

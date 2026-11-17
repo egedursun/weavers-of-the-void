@@ -156,6 +156,20 @@ class DrinkRules:
     per_1000: int = rule(4, 1, 100, G, "Drink a thousand people want each epoch")
     need_pct: int = rule(60, 0, 100, G, "How strongly a lack of drink weighs on a people that needs it (%)")
     pleasure: int = rule(8, 0, 50, G, "How much plentiful drink lifts the pleasure of a people that only enjoys it")
+    water_safety_pct: int = rule(40, 0, 100, G, "Share of a drink's water safety that lowers waterborne sickness where it is drunk daily (%)")
+    strength_crime_pct: int = rule(4, 0, 100, G, "Disorder a strong drink adds where it is drunk, per point of strength (hundredths)")
+    stimulation_pct: int = rule(5, 0, 100, G, "Prosperity a stimulating drink adds where it is drunk, per point of stimulation (hundredths)")
+    hospitality_regard: int = rule(2, 0, 20, G, "Regard a people gains each epoch with each neighbour that shares its drink of hospitality")
+    derive_strength: int = rule(70, 1, 100, G, "Strength at which a people that has taken a drink from others makes a drink of its own from it")
+    derive_pct: int = rule(25, 0, 100, G, "Chance each epoch such a people makes its own drink (%)")
+    dependence_unrest_pct: int = rule(
+        3, 0, 100, G, "Unrest a habit-forming drink adds where its drinkers have no drink in store, per point of dependence (hundredths)"
+    )
+    feast_calm: int = rule(4, 0, 50, G, "Unrest a drink kept for feasts lowers where it is drunk each epoch, at full strength")
+    rite_piety: int = rule(3, 0, 50, G, "Piety a drink kept for rites adds where it is drunk each epoch, at full strength")
+    medicine_care: int = rule(3, 0, 50, G, "Sanitation a drink kept as medicine adds where it is drunk each epoch, at full strength")
+    trade_prosperity: int = rule(3, 0, 50, G, "Prosperity a drink kept for trade adds where it is made each epoch, at full strength")
+    bond_regard: int = rule(4, 0, 20, G, "Regard a people gains each epoch with each other people that keeps the same drink for making bonds")
 
 
 @dataclass(frozen=True)

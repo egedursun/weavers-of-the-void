@@ -426,7 +426,7 @@ PLANT = (
 )
 HERESY = ("cult:heresy", {"heresy_id": Pick(EntityType.CULT), "parent_id": Pick(EntityType.CULT, 1)})
 DEED = ("deed:record", {"doer_id": Pick(MORTAL), "magnitude": 20})
-ARTWORK = ("art:commission", {"patron_id": Pick(MORTAL), "medium": "song"})
+ARTWORK = ("art:commission", {"patron_id": Pick(MORTAL), "medium": "musical"})
 ITEM_DEED = ("item:deed", {"item_id": Pick(EntityType.ITEM), "deed": "battle"})
 REPUTATION = ("renown:set", {"subject_id": Pick(MORTAL), "community_id": Pick(TOWN), "axis": "heroism", "value": 60})
 CONTEST = ("contest:hold", {"challenger_id": Pick(MORTAL), "defender_id": Pick(MORTAL, 1), "kind": "riddle_game"})
@@ -878,8 +878,8 @@ async def heavens(session: AsyncSession) -> None:
     )
     assert region is not None
     await open_rift(ctx, world, region, plane, RiftCause.CREATOR)
-    await create_being(ctx, BeingKind.VEIL_WARDEN, world, region=region, home_dimension_id=plane.id)
-    await form_phenomenon(ctx, PhenomenonKind.CRYSTAL_BLOOM, region, PhenomenonCause.DIVINE, intensity=40)
+    await create_being(ctx, BeingKind.BOUNDARY_KEEPER, world, region=region, home_dimension_id=plane.id)
+    await form_phenomenon(ctx, PhenomenonKind.MINERAL_GROWTH, region, PhenomenonCause.DIVINE, intensity=40)
     await EntityRepository(session).create(
         EntityDraft(
             name="The Pale Wanderer",
@@ -1279,7 +1279,6 @@ LEVERS: dict[str, Lever] = {
     "modifier:add": given(key="strength", magnitude=5.0),
     "modifier:create": given(key="strength", magnitude=5.0),
     "modifier:release": after(("modifier:hold", {"modifier_id": Pick("modifier")})),
-    "mortal:ability_release": after(("mortal:ability", {"mortal_id": Pick(MORTAL), "ability": "endurance", "value": 60, "hold": True})),
     "mortal:child": given(first_id=Pick(MORTAL), second_id=Pick(MORTAL, 1)),
     "mortal:equip_release": after(("mortal:equip", {"mortal_id": Pick(MORTAL), "slot": "wielded_main", "hold": True})),
     "mortal:pardon": after(("mortal:sentence", {"mortal_id": Pick(MORTAL), "crime": "theft", "punishment": "exile"})),
@@ -1448,8 +1447,8 @@ LEVERS: dict[str, Lever] = {
     "soul:possess": given(host_id=Pick(MORTAL)),
     "soul:possession": after(("soul:possess", {"spirit_id": Pick(EntityType.SPIRIT), "host_id": Pick(MORTAL)}), host_id=Pick(MORTAL)),
     "soul:exorcise": after(("soul:possess", {"spirit_id": Pick(EntityType.SPIRIT), "host_id": Pick(MORTAL)}), host_id=Pick(MORTAL)),
-    "species:chimera": given(first_id=Pick(EntityType.SPECIES), second_id=Pick(EntityType.SPECIES, 1)),
-    "species:custom_use": after(("use_kind:create", {"name": "Lantern Bearer", "base_use": "food"}), kind_id=Newest("species_use_kind")),
+    "species:merge": given(first_id=Pick(EntityType.SPECIES), second_id=Pick(EntityType.SPECIES, 1)),
+    "species:custom_use": after(("use_kind:create", {"name": "Lantern Bearer", "base_use": "meat"}), kind_id=Newest("species_use_kind")),
     "species:host": after(DISEASE, disease_id=Newest(EntityType.DISEASE)),
     "species:drop_range": after(
         ("species:range", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION)}), region_id=Pick(EntityType.REGION)
@@ -1509,7 +1508,7 @@ LEVERS: dict[str, Lever] = {
         for name in ("true_name:delete", "true_name:teach")
     },
     **{
-        name: after(("use_kind:create", {"name": "Lantern Bearer", "base_use": "food"}), kind_id=Newest("species_use_kind"))
+        name: after(("use_kind:create", {"name": "Lantern Bearer", "base_use": "meat"}), kind_id=Newest("species_use_kind"))
         for name in ("use_kind:drop", "use_kind:edit")
     },
     "variant:create": given(family="trait", base="brave"),
@@ -1576,7 +1575,7 @@ LEVERS: dict[str, Lever] = {
         for name in ("year:delete", "year:edit")
     },
     "art_form:practitioner": after(
-        ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "music"}}),
+        ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "musical"}}),
         art_form_id=Newest(EntityType.ART_FORM),
     ),
     "community:crown": given(community_id=Pick(EntityType.PEOPLE, 1)),
@@ -1690,7 +1689,7 @@ LEVERS: dict[str, Lever] = {
     ),
     "resurrect:son": Lever(values={"son_id": Pick("son", 1)}, setup=dead_and_rich),
     "rite": Lever(values={"entity_id": Pick(TOWN), "son_id": Pick("son", 1), "kind": "rite"}, setup=dead_sibling),
-    **{name: Lever(values={"sibling_id": Pick("son"), "son_id": Pick("son", 1)}, setup=dead_sibling) for name in ("sibling:scatter", "sibling:scheme")},
+    **{name: Lever(values={"sibling_id": Pick("son"), "son_id": Pick("son", 1)}, setup=dead_sibling) for name in ("sibling:hinder_return", "sibling:scheme")},
     "son:star": Lever(values={"son_id": Pick("son")}, setup=seasoned_son),
     "son:ascend": Lever(values={"son_id": Pick("son")}, setup=ascended_son),
     "son:protection": Lever(values={"son_id": Pick("son")}, setup=placed_son),
@@ -1843,12 +1842,12 @@ LEVERS: dict[str, Lever] = {
     **{name: setup_then(heavens, event_id=Newest("dimensional_event")) for name in ("dimensional_event:edit", "dimensional_event:delete")},
     "rift:open": Lever(values={"world_id": Pick("world"), "region_id": Pick(EntityType.REGION), "dimension_id": Newest("dimension")}, setup=heavens),
     **{name: setup_then(heavens, rift_id=Newest("rift")) for name in ("rift:edit", "rift:seal", "rift:delete")},
-    "cosmic_being:call": given(kind="nebula_mind", world_id=Pick("world"), region_id=Pick(EntityType.REGION)),
+    "cosmic_being:call": given(kind="cloud_mind", world_id=Pick("world"), region_id=Pick(EntityType.REGION)),
     **{
         name: setup_then(heavens, being_id=Newest(EntityType.COSMIC_BEING))
         for name in ("cosmic_being:edit", "cosmic_being:bind", "cosmic_being:banish", "cosmic_wound:strike")
     },
-    "phenomenon:create": given(kind="singing_stones", region_id=Pick(EntityType.REGION), intensity=40),
+    "phenomenon:create": given(kind="sounding_ground", region_id=Pick(EntityType.REGION), intensity=40),
     **{name: setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON)) for name in ("phenomenon:edit", "phenomenon:contain")},
     "phenomenon:footprint": setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON), region_id=Pick(EntityType.REGION, 1), intensity=30),
     "star_life:edit": setup_then(heavens, star_id=Pick("star")),
@@ -2475,7 +2474,7 @@ PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "wonder", "name": "The
 GIFT = ("gift:give", {"giver_id": Pick(REALM), "receiver_id": Pick(REALM, 1), "value": 10})
 CIRCUIT = ("circuit:create", {"name": "The First Round", "stops": [Pick(TOWN), Pick(TOWN, 1)]})
 DEBT = ("debt:set", {"god_id": Pick("son"), "community_id": Pick(TOWN)})
-KIN = ("kinship:set", {"people_id": Pick(PEOPLE)})
+KIN = ("kinship:set", {"people_id": Pick(PEOPLE), "first_side": "male"})
 ALLIANCE = ("alliance:set", {"giver_id": Pick(EntityType.HOUSE), "taker_id": Pick(EntityType.HOUSE, 1)})
 BIRTHS = ("reproduction:set", {"people_id": Pick(PEOPLE)})
 CASTE = ("caste:set", {"mortal_id": Pick(MORTAL), "caste": "soldier"})
@@ -2516,17 +2515,28 @@ CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
     "gift:edit": {"value": 25, "occasion": "feast", "item_entity_id": Pick(EntityType.ITEM), "state": "returned", "due_epoch": 5},
     "circuit:edit": {"name": "The Second Round", "item_entity_id": Pick(EntityType.ITEM), "position": 1, "passes": 3},
     "debt:edit": {"offered": 50, "answered": 20},
-    "union:edit": {"form": "plural", "purpose": "alliance", "residence": "with_second_family", "dissolution": "none", "endogamy": "faith", "term_epochs": 6},
+    "union:edit": {
+        "form": "plural",
+        "plural_side": "second",
+        "purpose": "alliance",
+        "residence": "with_second_family",
+        "exchange": "service",
+        "exchange_value": 20,
+        "dissolution": "none",
+        "endogamy": "faith",
+        "exogamy": "moiety",
+        "kin_match": "parallel_cousin",
+        "term_epochs": 6,
+    },
     "kinship:edit": {
-        "descent": "matrilineal",
-        "residence": "matrilocal",
+        "descent": "through_second_line",
+        "residence": "with_second_family",
         "descent_group": "clan",
-        "cousin_terms": "parallel_as_siblings",
-        "preference": "clan_exogamy",
-        "payment": "bride_service",
-        "payment_value": 20,
-        "levirate": True,
-        "sororate": True,
+        "kin_terms": "bifurcate_merging",
+        "adoption": "chosen_kin",
+        "first_side": "female",
+        "sibling_union_first": True,
+        "sibling_union_second": True,
     },
     "alliance:edit": {"marriages": 4},
     "reproduction:edit": {"system": "caste", "change_age": 25, "breeder_pct": 15, "soldier_pct": 25, "worker_pct": 60},
@@ -2566,7 +2576,7 @@ LEVERS.update(
         **{name: after(CIRCUIT, circuit_id=Newest("circuit")) for name in ("circuit:edit", "circuit:pass", "circuit:delete")},
         "debt:set": given(god_id=Pick("son"), community_id=Pick(TOWN)),
         **{name: after(DEBT, god_id=Pick("son"), community_id=Pick(TOWN)) for name in ("debt:edit", "debt:delete")},
-        "kinship:set": given(people_id=Pick(PEOPLE)),
+        "kinship:set": given(people_id=Pick(PEOPLE), first_side="female"),
         "union:set": given(people_id=Pick(PEOPLE), form="contract", purpose="love", descent="by_house_rule", exchange="mutual", exogamy="house"),
         **{name: after(("union:set", {"people_id": Pick(PEOPLE)}), people_id=Pick(PEOPLE)) for name in ("union:edit", "union:delete")},
         **{name: after(KIN, people_id=Pick(PEOPLE)) for name in ("kinship:edit", "kinship:delete")},
@@ -2905,8 +2915,20 @@ MADE_KIND_EDITS: Mapping[str, Mapping[str, Any]] = {
     "structure_section:edit": {"condition": 60, "role": "storage", "criticality": "major", "share": 30, "exposure": 40, "flammability": 50},
     "structure_design_section:set": {"criticality": "critical", "share": 25, "material": "stone"},
     "megastructure:edit": {"output": 60, "target_orbit": 2},
-    "dish:edit": {"name": "Second Loaf", "nourishment": 50, "delight": 40, "keeps": 2, "prestige": 20, "course": "side"},
-    "community_dish:edit": {"popularity": 70, "cooked": 3},
+    "dish:edit": {
+        "name": "Second Loaf",
+        "nourishment": 50,
+        "delight": 40,
+        "keeps": 2,
+        "prestige": 20,
+        "course": "side",
+        "category": "feast",
+        "prep_skill": 30,
+        "sweet": 40,
+        "smoky": 10,
+    },
+    "community_dish:edit": {"popularity": 70, "cooked": 3, "short_epochs": 1},
+    "dish_step:edit": {"method": "aged", "duration": 4},
 }
 EDITS = {**EDITS, **MADE_KIND_EDITS}
 LEVERS.update(
@@ -2947,8 +2969,10 @@ LEVERS.update(
         "megastructure:delete": after(MEGA, structure_id=BEACON_WORK),
         "dish:create": given(origin_id=Pick(PEOPLE), method="baked", course="festive", ingredients=["grain", "eggs"]),
         **{name: after(DISH, record_id=DISH_ID) for name in ("dish:edit", "dish:delete")},
-        "dish_ingredient:set": after(DISH, dish_id=DISH_ID, commodity="herbs", share=20),
+        "dish_ingredient:set": after(DISH, dish_id=DISH_ID, commodity="herbs", share=20, role="seasoning"),
         "dish_ingredient:delete": after(DISH, dish_id=DISH_ID, commodity="grain"),
+        "dish_step:set": after(DISH, dish_id=DISH_ID, step=2, method="aged", duration=6),
+        **{name: after(DISH, record_id=Newest("dish_step")) for name in ("dish_step:edit", "dish_step:delete")},
         "community_dish:set": after(DISH, community_id=Pick(TOWN), dish_id=DISH_ID, popularity=70),
         **{name: after(DISH, COOKED, community_id=Pick(TOWN), dish_id=DISH_ID) for name in ("community_dish:edit", "community_dish:delete")},
     }
@@ -2973,7 +2997,7 @@ BRANCH_LEVERS: Mapping[tuple[str, str], Lever] = {
 }
 
 
-ART_FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "music"}})
+ART_FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "musical"}})
 LORE_LEVERS: Mapping[str, Lever] = {
     kind.value: after(step, entity_id=Newest(kind))
     for kind, step in (
@@ -3825,8 +3849,6 @@ RIGHT_UP = (
 )
 AID_UP = ("assistive_aid:set", {"holder_id": Pick(MORTAL), "kind": "spectacles", "quality": 60})
 CLOCK_UP = ("public_clock:set", {"settlement_id": Pick(TOWN), "kind": "water_clock", "precision": 35})
-GAME_UP = ("game:create", {"name": "Fourfold", "kind": "board", "rule": "strategy", "origin_entity_id": Pick(PEOPLE)})
-FOLLOW_UP = ("game_following:set", {"people_id": Pick(PEOPLE), "game_id": Newest("game"), "popularity": 30})
 NUMBERS_UP = ("number_system:set", {"people_id": Pick(PEOPLE), "base": 12, "notation": "additive", "zero": False, "numeracy": 20})
 MATERIAL_UP = ("material:edit", {"world_id": Pick("world"), "material": "iron", "values": {"hardness": 60}})
 AFFINITY_UP = ("material_affinity:set", {"material_id": Newest("world_material"), "school": "earth", "mode": "worn", "power": 30})
@@ -3857,8 +3879,6 @@ CRAFTS_EDITS: Mapping[str, Mapping[str, Any]] = {
     },
     "assistive_aid:edit": {"quality": 80},
     "public_clock:edit": {"kind": "mechanical", "precision": 70, "built_epoch": 1},
-    "game:edit": {"name": "Fivefold", "kind": "cards", "rule": "chance", "origin_entity_id": Pick(PEOPLE)},
-    "game_following:edit": {"popularity": 60, "adopted_epoch": 1},
     "number_system:edit": {"base": 20, "notation": "positional", "zero": True, "numeracy": 40},
     "material_affinity:edit": {"mode": "consumed", "power": 60},
     "sympathetic_link:edit": {"token": "blood", "strength": 70, "obtained_epoch": 1},
@@ -3881,10 +3901,6 @@ LEVERS.update(
         **{name: after(AID_UP, holder_id=Pick(MORTAL), kind="spectacles") for name in ("assistive_aid:edit", "assistive_aid:delete")},
         "public_clock:set": given(**CLOCK_UP[1]),
         **{name: after(CLOCK_UP, settlement_id=Pick(TOWN)) for name in ("public_clock:edit", "public_clock:delete")},
-        "game:create": given(**GAME_UP[1]),
-        **{name: after(GAME_UP, record_id=Newest("game")) for name in ("game:edit", "game:delete")},
-        "game_following:set": after(GAME_UP, **FOLLOW_UP[1]),
-        **{name: after(GAME_UP, FOLLOW_UP, people_id=Pick(PEOPLE), game_id=Newest("game")) for name in ("game_following:edit", "game_following:delete")},
         "number_system:set": given(**NUMBERS_UP[1]),
         **{name: after(NUMBERS_UP, people_id=Pick(PEOPLE)) for name in ("number_system:edit", "number_system:delete")},
         "material_affinity:set": after(MATERIAL_UP, **AFFINITY_UP[1]),
@@ -4416,7 +4432,7 @@ REMEMBERED = ("beast_lore:grant", {"beast_id": Newest(EntityType.BEAST), "collec
 TAUGHT = ("teaching:grant", {"teacher_id": Newest(EntityType.BEAST), "learner_id": Pick(FOLK), "kind": "account"})
 TRUCE = ("field_agreement:force", {"kind": "truce", "place_id": Pick(TOWN)})
 SEALED = ("deep_seal:seal", {"place_id": Pick(TOWN)})
-FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "music"}})
+FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "musical"}})
 FASHION = {"novelty": 40, "adoption": 30, "revivals": 1}
 FASHIONED = ("novelty:set", {"holder_id": Newest(EntityType.ART_FORM), "values": FASHION, "release": []})
 COUPLING_EDITS: Mapping[str, Mapping[str, Any]] = {
@@ -4860,5 +4876,48 @@ LEVERS.update(
             ("cosmic:extinguish_star", {"star_id": Pick("star")}), LEGEND_UP, thread_id=Newest("thread"), values=EDITS["legendary_quest:edit"], release=[]
         ),
         "storyteller:palette": given(world_id=Pick("world"), key="raid", weight_pct=150),
+    }
+)
+KIND_UP = (
+    "authored_kind:create",
+    {
+        "concept": "good",
+        "name": "Ember Loaf",
+        "category": "grain",
+        "world_id": Pick("world"),
+        "origin_node_id": Pick(EntityType.PEOPLE),
+        "values": {"bulk": 30},
+    },
+)
+EDITS = {
+    **EDITS,
+    "authored_kind:edit": {
+        "name": "Ember Cake",
+        "category": "fruit",
+        "perishability": 4,
+        "bulk": 15,
+        "base_value": 40,
+        "nourishment": 50,
+        "prestige": 30,
+        "sacred": 10,
+    },
+}
+LEVERS.update(
+    {
+        "authored_kind:create": given(
+            concept="good",
+            name="Ember Loaf",
+            category="grain",
+            world_id=Pick("world"),
+            origin_node_id=Pick(EntityType.PEOPLE),
+            values={"perishability": 2, "prestige": 40},
+        ),
+        "authored_kind:edit": after(KIND_UP, concept="good", kind_id=Newest("good_kinds"), values=EDITS["authored_kind:edit"], release=[]),
+        "authored_kind:hold": after(KIND_UP, concept="good", kind_id=Newest("good_kinds"), hold=True),
+        "authored_kind:spread": after(
+            KIND_UP, concept="good", kind_id=Newest("good_kinds"), holder_node_id=Pick(EntityType.SETTLEMENT), stance="favours", strength=60
+        ),
+        "authored_kind:retire": after(KIND_UP, concept="good", kind_id=Newest("good_kinds"), retired=True),
+        "authored_kind:delete": after(KIND_UP, concept="good", kind_id=Newest("good_kinds")),
     }
 )

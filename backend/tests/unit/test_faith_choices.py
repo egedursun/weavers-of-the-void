@@ -5,14 +5,15 @@ import pytest
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.faith import CultDoctrineRow, SpiritProfileRow
-from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath, SpiritAlignment
+from aerona.domain.enums.demography import FuneralCustom
+from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath, SpiritAlignment
 from aerona.engine.faith.control import DOCTRINE_SETTERS, SPIRIT_SETTERS
 
 CHOICES = [
     (DOCTRINE_SETTERS, CultDoctrineRow, "judgement", JudgementDoctrine),
     (DOCTRINE_SETTERS, CultDoctrineRow, "rebirth_path", RebirthPath),
     (SPIRIT_SETTERS, SpiritProfileRow, "alignment", SpiritAlignment),
-    (SPIRIT_SETTERS, SpiritProfileRow, "rite", FuneralRite),
+    (SPIRIT_SETTERS, SpiritProfileRow, "rite", FuneralCustom),
 ]
 
 

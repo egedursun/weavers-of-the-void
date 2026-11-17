@@ -126,7 +126,7 @@ class HazardsRules:
 class TerrainRules:
     sacred_temple: int = rule(12, 0, 100, G, "Sacredness each temple, shrine or holy wonder in the region adds")
     sacred_pilgrimage_site: int = rule(20, 0, 100, G, "Sacredness each declared pilgrimage site in the region adds")
-    sacred_god_corpse: int = rule(40, 0, 100, G, "Sacredness a god's corpse lying in the region adds")
+    sacred_god_corpse: int = rule(40, 0, 100, G, "Sacredness a dead god's body lying in the region adds")
     sacred_nexus: int = rule(15, 0, 100, G, "Sacredness a ley nexus in the region adds")
     sacred_memory_pct: int = rule(50, 0, 200, G, "Sacredness from holy memories (% of their holiness)")
     sanctify_default: int = rule(60, 0, 100, G, "Sacredness a sanctified region is set to by default")

@@ -7,9 +7,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultHoldingRow, RelicRow, SpiritProfileRow
 from aerona.db.tables.society import SoulRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import RiteStage, TraditionFunction
+from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faith import FuneralRite, HoldingKind, SpiritAlignment
+from aerona.domain.enums.faith import HoldingKind, SpiritAlignment
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import liturgy_for, rebirth_path_of
@@ -26,7 +27,7 @@ SAINTS_FIXUP = "faith.dead_saints"
 BONES_FIXUP = "faith.relic_bones"
 FUNERAL_FIXUP = "faith.funeral_rites"
 DOCTRINE_FIXUP = "faith.doctrine_liturgy_rebirth"
-FUNERAL_WORDS = ((("burn", "pyre", "fire", "ash"), FuneralRite.BURNING), (("sky", "tower", "vulture", "expos", "wind"), FuneralRite.EXPOSURE))
+FUNERAL_WORDS = ((("burn", "pyre", "fire", "ash"), FuneralCustom.CREMATION), (("sky", "tower", "vulture", "expos", "wind"), FuneralCustom.SKY_BURIAL))
 
 
 async def applied(ctx: TickContext, key: str) -> bool:
@@ -147,13 +148,17 @@ async def relic_bones(ctx: TickContext, book: FaithBook) -> int:
 async def funeral_rites(ctx: TickContext) -> int:
     rows = list(
         await ctx.session.scalars(
-            select(TraditionProfileRow).where(TraditionProfileRow.kind == TraditionKind.FUNERAL_RITE, TraditionProfileRow.funeral_rite.is_(None))
+            select(TraditionProfileRow).where(
+                TraditionProfileRow.kind == TraditionFunction.RITE_OF_PASSAGE,
+                TraditionProfileRow.stage == RiteStage.DEATH,
+                TraditionProfileRow.funeral_rite.is_(None),
+            )
         )
     )
     for row in rows:
         tradition = await ctx.session.get(EntityRow, row.tradition_entity_id)
         text = f"{tradition.name} {tradition.subtype or ''}".lower() if tradition is not None else ""
-        row.funeral_rite = next((rite for words, rite in FUNERAL_WORDS if names_word(text, words)), FuneralRite.BURIAL)
+        row.funeral_rite = next((rite for words, rite in FUNERAL_WORDS if names_word(text, words)), FuneralCustom.BURIAL)
     return len(rows)
 
 

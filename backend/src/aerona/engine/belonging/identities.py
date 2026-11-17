@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import MovementRow
@@ -21,7 +22,7 @@ from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.settlement import DistrictKind
-from aerona.domain.enums.war import WarCause, WarStatus
+from aerona.domain.enums.war import WarStatus
 from aerona.engine.belonging.effects import approach
 from aerona.engine.belonging.values import GUILDS, Value, values_of
 from aerona.engine.body.customs import people_of
@@ -31,7 +32,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
-FAITH_CAUSES = frozenset({WarCause.HOLY_WAR, WarCause.SCHISM, WarCause.DIVINE_GRUDGE})
+FAITH_CAUSES = frozenset(cause for cause, spec in WAR_CAUSES.items() if spec.over_faith)
 Pushes = dict[int, dict[IdentityLayer, tuple[int, SalienceDriver]]]
 
 

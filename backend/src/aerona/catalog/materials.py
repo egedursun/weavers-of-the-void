@@ -99,7 +99,7 @@ PHYSICS: MappingProxyType[MaterialKind, tuple[int, ...]] = MappingProxyType(
         M.AMBER: (20, 30, 40, 18, 15, 15, 15, 15, 5, 8, 20, 5),
         M.IVORY: (100, 50, 100, 35, 35, 40, 32, 38, 15, 15, 36, 35),
         M.CHITIN: (100, 45, 100, 25, 45, 50, 45, 50, 35, 12, 26, 50),
-        M.DRAGONBONE: (100, 95, 100, 40, 80, 90, 78, 88, 40, 20, 42, 75),
+        M.GREAT_BONE: (100, 95, 100, 40, 80, 90, 78, 88, 40, 20, 42, 75),
         M.LIVING_WOOD: (100, 70, 100, 28, 40, 75, 35, 70, 80, 12, 28, 30),
         M.STAR_METAL: (95, 100, 100, 65, 92, 95, 92, 95, 50, 70, 68, 95),
         M.SKYSTEEL: (92, 100, 100, 32, 90, 92, 90, 92, 70, 50, 35, 95),
@@ -150,7 +150,7 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
             spec((M.AMBER, "Amber", F.PRECIOUS), (18, 15, 15, 5), (60, 45, 5), (55, 60, 5)),
             spec((M.IVORY, "Ivory", F.PRECIOUS), (35, 35, 30, 30), (45, 40, 10), (60, 70, 10)),
             spec((M.CHITIN, "Chitin", F.ORGANIC), (45, 45, 20, 45), (20, 0, 20), (40, 35, 15)),
-            spec((M.DRAGONBONE, "Dragonbone", F.EXOTIC), (80, 85, 35, 70), (75, 30, 30), (90, 95, 2)),
+            spec((M.GREAT_BONE, "Great bone", F.EXOTIC), (80, 85, 35, 70), (75, 30, 30), (90, 95, 2)),
             worked(spec((M.LIVING_WOOD, "Living wood", F.EXOTIC), (40, 75, 25, 25), (80, 70, 0), (75, 70, 0)), B.BIOMANCY, 1),
             worked(spec((M.STAR_METAL, "Star metal", F.EXOTIC), (92, 90, 60, 90), (90, 60, 20), (95, 98, 0)), B.METALLURGY, 5, B.GATE_LORE),
             worked(spec((M.SKYSTEEL, "Skysteel", F.EXOTIC), (90, 88, 30, 92), (85, 50, 10), (92, 97, 0)), B.METALLURGY, 6, B.MAGIC),
@@ -170,8 +170,8 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
 
 BUILD_MATERIALS: MappingProxyType[BuildMaterial, MaterialKind] = MappingProxyType({BuildMaterial.TIMBER: M.WOOD, BuildMaterial.STONE: M.STONE})
 METAL_FAMILIES = frozenset({MaterialFamily.METAL, MaterialFamily.PRECIOUS, MaterialFamily.EXOTIC})
-WEAPON_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.DRAGONBONE, M.STEEL, M.IRON, M.BRONZE, M.COPPER, M.OBSIDIAN, M.FLINT, M.BONE, M.WOOD)
-ARMOUR_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.DRAGONBONE, M.STEEL, M.IRON, M.BRONZE, M.CHITIN, M.LEATHER, M.HIDE, M.CLOTH)
+WEAPON_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.GREAT_BONE, M.STEEL, M.IRON, M.BRONZE, M.COPPER, M.OBSIDIAN, M.FLINT, M.BONE, M.WOOD)
+ARMOUR_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.GREAT_BONE, M.STEEL, M.IRON, M.BRONZE, M.CHITIN, M.LEATHER, M.HIDE, M.CLOTH)
 TOOL_MATERIALS = (M.STEEL, M.IRON, M.BRONZE, M.COPPER, M.FLINT, M.STONE, M.BONE, M.WOOD)
 LUXURY_MATERIALS = (M.GEMS, M.GOLD, M.SILVER, M.IVORY, M.AMBER, M.GLASS, M.CRYSTAL)
 COIN_MATERIALS = (M.GOLD, M.SILVER, M.BRONZE, M.COPPER)
@@ -184,7 +184,7 @@ SPECIES_YIELDS: MappingProxyType[BodyPlan, tuple[MaterialKind, ...]] = MappingPr
         BodyPlan.INSECTOID: (M.CHITIN,),
         BodyPlan.AQUATIC: (M.BONE,),
         BodyPlan.ARBOREAL: (M.WOOD,),
-        BodyPlan.COLOSSAL: (M.DRAGONBONE, M.IVORY, M.HIDE),
+        BodyPlan.COLOSSAL: (M.GREAT_BONE, M.IVORY, M.HIDE),
         BodyPlan.HUMANOID: (M.BONE,),
     }
 )

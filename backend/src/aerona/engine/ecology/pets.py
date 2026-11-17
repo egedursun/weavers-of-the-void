@@ -9,7 +9,7 @@ from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import GROWN, KEPT_STAGES, BeastTemper, SpeciesUse
+from aerona.domain.enums.ecology import GROWN, KEPT_STAGES, AnimalRole, BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, ThoughtKind
 from aerona.domain.enums.society import CreatureTrait
@@ -24,8 +24,8 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, livin
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 
-PET_USES = frozenset({SpeciesUse.COMPANION, SpeciesUse.GUARD, SpeciesUse.WAR, SpeciesUse.PEST_CONTROL})
-HUNTING_USES = frozenset({SpeciesUse.GUARD, SpeciesUse.WAR})
+PET_USES = frozenset({AnimalRole.COMPANION, AnimalRole.GUARD, AnimalRole.WAR, AnimalRole.PEST_CONTROL})
+HUNTING_USES = frozenset({AnimalRole.GUARD, AnimalRole.WAR})
 
 
 @dataclass

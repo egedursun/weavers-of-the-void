@@ -89,7 +89,7 @@ class DeathRules:
     )
     sibling_bargain_devotion: int = rule(40, 0, 1000, RuleGroup.DEATH_AND_RESURRECTION, "Bargain with a foreign god: contribution (devotion)")
     sibling_intrigues_per_epoch: int = rule(
-        1, 0, 20, RuleGroup.DEATH_AND_RESURRECTION, "Maximum resurrection intrigues or bone scatterings by one son in one epoch (0 disables the tools)"
+        1, 0, 20, RuleGroup.DEATH_AND_RESURRECTION, "Maximum resurrection plots or hindered returns by one son in one epoch (0 disables the tools)"
     )
     auto_intrigue_min_relation: int = rule(
         40, -100, 100, RuleGroup.DEATH_AND_RESURRECTION, "Minimum relation with the sibling for a spontaneous resurrection intrigue"
@@ -103,10 +103,14 @@ class DeathRules:
     sibling_scheme_relation_gain: int = rule(
         12, 0, 200, RuleGroup.DEATH_AND_RESURRECTION, "Relation gain with the dead sibling of a son whose resurrection scheme adds devotion"
     )
-    scatter_bones_cost: int = rule(30, 0, 10000, RuleGroup.DEATH_AND_RESURRECTION, "Cost of scattering the bones (essence)")
-    scatter_bones_devotion_loss: int = rule(35, 0, 1000, RuleGroup.DEATH_AND_RESURRECTION, "Devotion reduced by scattering the bones")
-    auto_scatter_relation: int = rule(40, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Relation with the dead for spontaneous bone scattering: below minus this")
-    auto_scatter_chance: int = rule(15, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A hostile sibling scatters the bones on their own (% per epoch)")
+    hinder_return_cost: int = rule(30, 0, 10000, RuleGroup.DEATH_AND_RESURRECTION, "Cost of hindering a dead sibling's return (essence)")
+    hinder_return_devotion_loss: int = rule(
+        35, 0, 1000, RuleGroup.DEATH_AND_RESURRECTION, "Devotion lost by those awaiting a dead sibling's return when a sibling hinders it"
+    )
+    auto_hinder_relation: int = rule(
+        40, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Relation with the dead below minus this at which a sibling may hinder their return on its own"
+    )
+    auto_hinder_chance: int = rule(15, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A hostile sibling hinders a dead son's return on its own (% per epoch)")
     new_cult_followers: int = rule(
         80,
         1,
@@ -114,10 +118,10 @@ class DeathRules:
         RuleGroup.DEATH_AND_RESURRECTION,
         "Followers of the new resurrection cult born when a rite is held for a dead god with no remaining cult",
     )
-    god_corpse_power: int = rule(8, 1, 12, RuleGroup.DEATH_AND_RESURRECTION, "Power level of a god's corpse")
-    god_corpse_danger: int = rule(45, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Danger of a god's corpse")
-    god_corpse_fertility: int = rule(30, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Fertility of a god's corpse")
-    god_corpse_mystery: int = rule(95, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Mystery of a god's corpse")
+    god_corpse_power: int = rule(8, 1, 12, RuleGroup.DEATH_AND_RESURRECTION, "Power level of a dead god's body")
+    god_corpse_danger: int = rule(45, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Danger of a dead god's body")
+    god_corpse_fertility: int = rule(30, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Fertility of a dead god's body")
+    god_corpse_mystery: int = rule(95, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Mystery of a dead god's body")
     god_shade_power: int = rule(7, 1, 12, RuleGroup.DEATH_AND_RESURRECTION, "Power level of the dead god's shade")
     god_shade_strength: int = rule(70, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Strength of the dead god's shade")
     god_shade_unrest: int = rule(75, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Unrest of the dead god's shade")

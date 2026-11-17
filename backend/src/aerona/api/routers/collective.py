@@ -550,6 +550,7 @@ async def arms_view(session: AsyncSession, node_id: int) -> ArmsView | None:
         drawing=design.drawing,
         holder_kind=row.holder_kind,
         motto=row.motto,
+        emblem_system_id=row.emblem_system_id,
         parent=at(refs, row.parent_entity_id),
         quartered=at(refs, row.quartered_entity_id),
         since_epoch=row.since_epoch,

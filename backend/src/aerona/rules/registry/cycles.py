@@ -174,24 +174,46 @@ class KinshipSystemRules:
     moiety_at: int = rule(120, -300, 300, H, "Standing of a people's kinship and tradition from which it splits into two halves, in hundredths of the spread")
     house_at: int = rule(60, -300, 300, H, "Standing of a people's hierarchy from which it groups its lines into houses, in hundredths of the spread")
     parallel_siblings_at: int = rule(
-        50, -300, 300, H, "Standing of a people's kinship value from which parallel cousins are called siblings, in hundredths of the spread"
+        50,
+        -300,
+        300,
+        H,
+        "Standing of a people's kinship value from which parallel cousins are called siblings (merging or cross and parallel terms), in hundredths of the spread",
     )
     all_siblings_at: int = rule(
-        130, -300, 300, H, "Standing of a people's kinship value from which every cousin is called a sibling, in hundredths of the spread"
+        130, -300, 300, H, "Standing of a people's kinship value from which every cousin is called a sibling (generational terms), in hundredths of the spread"
     )
+    descriptive_at: int = rule(
+        -100, -300, 300, H, "Standing of a people's kinship value at or below which each kinsperson has a term of its own, in hundredths of the spread"
+    )
+    heir_adoption_at: int = rule(100, -300, 300, H, "Standing of a people's hierarchy value from which its adoptions make heirs, in hundredths of the spread")
+    chosen_kin_at: int = rule(80, -300, 300, H, "Standing of a people's kinship value from which its adoptions make chosen kin, in hundredths of the spread")
+    sponsor_at: int = rule(80, -300, 300, H, "Standing of a people's wealth value from which its adoptions are sponsorships, in hundredths of the spread")
     cross_cousin_at: int = rule(
         30, -300, 300, H, "Standing of a people's kinship value from which it prefers cross-cousin marriage, in hundredths of the spread"
     )
     payment_at: int = rule(50, -300, 300, H, "Standing of a people's wealth or perseverance from which marriages carry a payment, in hundredths of the spread")
     payment_value: int = rule(10, 0, 100000, H, "Coin a marriage payment is worth when a people's kinship system is first read")
-    avunculocal_at: int = rule(
-        100, -300, 300, H, "Standing of a matrilineal people's kinship value from which a couple lives with a maternal uncle, in hundredths of the spread"
+    first_line_kin_at: int = rule(
+        100,
+        -300,
+        300,
+        H,
+        "Standing of the kinship value of a people that counts descent through the second line from which a couple lives with kin of the first line, in hundredths of the spread",
     )
-    levirate_at: int = rule(
-        80, -300, 300, H, "Standing of a people's kinship value from which a widowed spouse weds a sibling of the dead, in hundredths of the spread"
+    first_side_sibling_union_at: int = rule(
+        80,
+        -300,
+        300,
+        H,
+        "Standing of a people's kinship value from which a widowed spouse of the second side weds a sibling of the dead, in hundredths of the spread",
     )
-    sororate_at: int = rule(
-        80, -300, 300, H, "Standing of a people's family value from which a widowed spouse weds a sibling of the dead spouse, in hundredths of the spread"
+    second_side_sibling_union_at: int = rule(
+        80,
+        -300,
+        300,
+        H,
+        "Standing of a people's family value from which a widowed spouse of the first side weds a sibling of the dead spouse, in hundredths of the spread",
     )
 
 

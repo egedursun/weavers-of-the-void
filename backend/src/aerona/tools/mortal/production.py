@@ -14,7 +14,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
-from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
@@ -262,7 +262,7 @@ async def seed_culture(call: MortalCall, args: CultureInput, created: EntityRow)
     if args.kind is CultureKind.LEGEND:
         await legends.profile_of(call.tick, created, args.archetype)
     if args.kind is CultureKind.TRADITION:
-        row = await traditions.profile_of(call.tick, created, args.tradition_kind or TraditionKind.FESTIVAL)
+        row = await traditions.profile_of(call.tick, created, args.tradition_kind or TraditionFunction.FESTIVAL)
         row.calendar_slot, row.taboo_act = args.calendar_slot, args.taboo_act
         if args.taboo_target is not None:
             row.taboo_target = args.taboo_target.value

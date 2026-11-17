@@ -34,6 +34,7 @@ from aerona.api.schemas.cycles import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.catalog.peoples import STYLE_AXES
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cycles import (
@@ -181,6 +182,8 @@ def legacy_label(row: LegacyTraitRow, refs: dict[int, NodeRef]) -> str:
     if row.kind in NAMED_LEGACIES and row.key.isdigit():
         found = refs.get(int(row.key))
         return found.name if found is not None else row.key
+    if row.kind is LegacyKind.AESTHETIC and row.key.count(",") == len(STYLE_AXES) - 1:
+        return ", ".join(f"{axis} {value}" for axis, value in zip(STYLE_AXES, row.key.split(","), strict=True))
     if row.kind is LegacyKind.VALUE and row.key in ValueAxis._value2member_map_:
         return ValueAxis(row.key).value.replace("_", " ")
     return row.key.replace("_", " ")
@@ -311,26 +314,28 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
                 descent=kinship.descent,
                 residence=kinship.residence,
                 descent_group=kinship.descent_group,
-                cousin_terms=kinship.cousin_terms,
-                preference=kinship.preference,
-                payment=kinship.payment,
-                payment_value=kinship.payment_value,
-                levirate=kinship.levirate,
-                sororate=kinship.sororate,
+                kin_terms=kinship.kin_terms,
+                adoption=kinship.adoption,
+                first_side=kinship.first_side,
+                sibling_union_first=kinship.sibling_union_first,
+                sibling_union_second=kinship.sibling_union_second,
                 locked=list(kinship.locked),
             )
             if kinship is not None
             else None,
             union=UnionView(
                 form=union.form,
+                plural_side=union.plural_side,
                 purpose=union.purpose,
                 residence=union.residence,
                 descent=union.descent,
                 exchange=union.exchange,
+                exchange_value=union.exchange_value,
                 arrangement=union.arrangement,
                 dissolution=union.dissolution,
                 endogamy=union.endogamy,
                 exogamy=union.exogamy,
+                kin_match=union.kin_match,
                 term_epochs=union.term_epochs,
                 locked=list(union.locked),
             )

@@ -61,6 +61,8 @@ SUMMARIES: MappingProxyType[str, tuple[Attribute, ...]] = MappingProxyType(
     }
 )
 
+INHERITED_SUMMARIES = tuple(name for name in SUMMARIES if name not in ("strength", "agility", "intellect", "charisma"))
+
 SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = total(
     SkillKind,
     {
@@ -286,7 +288,7 @@ TENET_IDEAS: MappingProxyType[TenetKind, IdeaKind] = MappingProxyType(
         TK.JUDGEMENT_BY_FAITH: IK.MYSTICISM,
         TK.REINCARNATION: IK.MYSTICISM,
         TK.MARTYRDOM_GLORY: IK.HONOUR_CODE,
-        TK.DIVINE_KINGSHIP: IK.DIVINE_ORDER,
+        TK.DIVINE_RULE: IK.DIVINE_ORDER,
         TK.DIETARY_LAW: IK.RULE_OF_LAW,
         TK.SACRED_SPECIES: IK.REVERENCE_FOR_NATURE,
         TK.PILGRIMAGE_DUTY: IK.WANDERLUST,

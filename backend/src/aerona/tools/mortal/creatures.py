@@ -31,7 +31,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, KeepPetInput, RuinsInput, TameInput, TrainHerdInput
+from aerona.tools.mortal.inputs import BindSpiritInput, KeepPetInput, MergeSpeciesInput, RuinsInput, TameInput, TrainHerdInput
 from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_region, wits_of
 
 PERCENT = 100
@@ -89,8 +89,8 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
     return result(MortalResult.NOT_TAMED, name=species.name)
 
 
-async def merge_species(call: MortalCall, args: ChimeraInput) -> str:
-    steps = call.rules.creatures.chimera_merge_distance
+async def merge_species(call: MortalCall, args: MergeSpeciesInput) -> str:
+    steps = call.rules.creatures.species_merge_distance
     if not await i_know(call, KnowledgeBranch.BIOMANCY):
         fail(MortalResult.BIOMANCY_REQUIRED)
     if args.a_id == args.b_id:
@@ -103,16 +103,22 @@ async def merge_species(call: MortalCall, args: ChimeraInput) -> str:
         if atlas.distance(call.me.id, species.id) > steps:
             fail(MortalResult.SPECIES_TOO_FAR, name=species.name, steps=steps)
     await name_free(call, args.name)
-    description = lines.CHIMERA_DESCRIPTION.format(me=call.me.name, first=first.name, second=second.name, goal=args.goal)
-    chimera = await merge(call.tick, first, second, name=args.name, maker=call.me, description=description)
-    await BondRepository(call.session).connect(BondDraft(call.me.id, chimera.id, BondKind.TAMED, call.epoch, lines.WOVEN))
-    call.remember_creation(chimera.id)
-    call.target(chimera.id)
-    traits = sorted(trait.value.replace("_", " ") for trait in await EntityRepository(call.session).traits(chimera.id))
+    description = lines.MERGED_DESCRIPTION.format(me=call.me.name, first=first.name, second=second.name, goal=args.goal)
+    merged = await merge(call.tick, first, second, name=args.name, maker=call.me, description=description)
+    await BondRepository(call.session).connect(BondDraft(call.me.id, merged.id, BondKind.TAMED, call.epoch, lines.SELF_MADE))
+    call.remember_creation(merged.id)
+    call.target(merged.id)
+    traits = sorted(trait.value.replace("_", " ") for trait in await EntityRepository(call.session).traits(merged.id))
     await call.chronicle(
-        ChronicleKind.CHIMERA, lines.CHIMERA, entity_ids=[call.me.id, chimera.id], me=call.me.name, first=first.name, second=second.name, chimera=chimera.name
+        ChronicleKind.MERGED_SPECIES,
+        lines.MERGED,
+        entity_ids=[call.me.id, merged.id],
+        me=call.me.name,
+        first=first.name,
+        second=second.name,
+        merged=merged.name,
     )
-    return result(MortalResult.CHIMERA_BORN, id=chimera.id, name=chimera.name, traits=TRAIT_SEPARATOR.join(traits) or NO_TRAITS)
+    return result(MortalResult.SPECIES_MERGED, id=merged.id, name=merged.name, traits=TRAIT_SEPARATOR.join(traits) or NO_TRAITS)
 
 
 async def bind_spirit(call: MortalCall, args: BindSpiritInput) -> str:
@@ -130,18 +136,18 @@ async def bind_spirit(call: MortalCall, args: BindSpiritInput) -> str:
         if thing.world_id != call.me.world_id or not await near(call, thing):
             fail(MortalResult.BIND_TOO_FAR, name=thing.name)
     bound = await soul_bind(call.tick, spirit.id, target.id, call.me.name, call.me.id)
-    golem = bound.id if bound.id != target.id else None
-    if golem is not None:
-        call.remember_creation(golem)
+    animated = bound.id if bound.id != target.id else None
+    if animated is not None:
+        call.remember_creation(animated)
     call.target(target.id)
-    return result(MortalResult.SPIRIT_BOUND, golem=golem)
+    return result(MortalResult.SPIRIT_BOUND, animated=animated)
 
 
 async def _is_ruin(call: MortalCall, target: EntityRow) -> bool:
     if target.status in GONE:
         return False
     flags = await EntityRepository(call.session).flags(target.id)
-    return bool(flags.intersection(RUIN_FLAGS)) or target.engine_kind is EngineKind.GOD_CORPSE
+    return bool(flags.intersection(RUIN_FLAGS)) or target.engine_kind is EngineKind.DEAD_GOD
 
 
 async def _lost_knowledge(call: MortalCall, world_id: int) -> list[EntityRow]:
@@ -242,7 +248,7 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.TAME_SPECIES, mortal, TameInput, ToolMeta(ActionKind.TAME, standard), tame_species),
         ToolSpec(MortalToolId.KEEP_PET, mortal, KeepPetInput, ToolMeta(ActionKind.TAME, no_cost), keep_pet),
         ToolSpec(MortalToolId.TRAIN_HERD, mortal, TrainHerdInput, ToolMeta(ActionKind.TAME, standard), train_herd),
-        ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.MAKE_CHIMERA, standard), merge_species),
+        ToolSpec(MortalToolId.MERGE_SPECIES, mortal, MergeSpeciesInput, ToolMeta(ActionKind.MERGE_SPECIES, standard), merge_species),
         ToolSpec(MortalToolId.BIND_SPIRIT, mortal, BindSpiritInput, ToolMeta(ActionKind.BIND_SPIRIT, standard), bind_spirit),
         ToolSpec(MortalToolId.SEARCH_RUINS, mortal, RuinsInput, ToolMeta(ActionKind.SEARCH_RUINS, standard), search_ruins),
     ]

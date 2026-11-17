@@ -19,8 +19,8 @@ from aerona.engine.gods.devotion import (
     DevotionResult,
     RiteKind,
     SchemeKind,
+    hinder_return,
     resurrection_rite,
-    scatter_bones,
     sibling_scheme,
 )
 from aerona.engine.gods.essence import spend
@@ -105,8 +105,8 @@ async def order_scatter(session: AsyncSession, rules: Rules, sibling_id: int, so
     ctx = await manual_context(session, "order_scatter", rules)
     sibling = require(await session.get(SonRow, sibling_id), "son")
     son = require(await session.get(SonRow, son_id), "son")
-    result = await scatter_bones(ctx, sibling, son)
-    await record_action(ctx, ActionKind.SCATTER_BONES, sibling_id)
+    result = await hinder_return(ctx, sibling, son)
+    await record_action(ctx, ActionKind.HINDER_RETURN, sibling_id)
     return result
 
 

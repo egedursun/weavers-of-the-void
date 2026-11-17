@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import select
 
 from aerona.catalog.civics import GOVERNMENT_GATES
+from aerona.catalog.collective import HERALDIC_NAMES
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
@@ -12,6 +13,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.collective import Tincture
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, OfficeKind
@@ -43,7 +45,7 @@ RULES_OF = total(
         GovernmentKind.EMPIRE: DecisionRule.AUTOCRATIC,
         GovernmentKind.OCCUPATION: DecisionRule.AUTOCRATIC,
         GovernmentKind.THEOCRACY: DecisionRule.DIVINE,
-        GovernmentKind.GOD_KINGDOM: DecisionRule.DIVINE,
+        GovernmentKind.GOD_REALM: DecisionRule.DIVINE,
         GovernmentKind.OLIGARCHY: DecisionRule.COUNCIL,
         GovernmentKind.TRIBAL_CONFEDERATION: DecisionRule.COUNCIL,
         GovernmentKind.REPUBLIC: DecisionRule.ASSEMBLY,
@@ -65,7 +67,7 @@ TITLES = total(
         GovernmentKind.EMPIRE: "Empire",
         GovernmentKind.OCCUPATION: "Occupied Lands",
         GovernmentKind.THEOCRACY: "Holy Realm",
-        GovernmentKind.GOD_KINGDOM: "Divine Kingdom",
+        GovernmentKind.GOD_REALM: "Divine Kingdom",
         GovernmentKind.OLIGARCHY: "Merchant League",
         GovernmentKind.TRIBAL_CONFEDERATION: "Confederation",
         GovernmentKind.REPUBLIC: "Republic",
@@ -366,7 +368,7 @@ async def shape(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
         chosen = max(cults, key=lambda cult: (stat(cult, "followers") or 0, -cult.id), default=None)
         profile.state_religion_id = chosen.id if chosen is not None else None
     if not profile.emblem:
-        profile.emblem = {"field": "azure" if realm.entity.id % 2 else "gules", "charge": core.name.split()[-1].lower()}
+        profile.emblem = {"field": HERALDIC_NAMES[ctx.rng(f"realm.field.{realm.entity.id}").pick(list(Tincture))], "charge": core.name.split()[-1].lower()}
     await map_territory(ctx, book, realm, members)
     set_stats(
         realm.entity,

@@ -16,6 +16,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import staples_of
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.household import diet_demand
 from aerona.engine.economy.manipulation import plays_at
 from aerona.engine.economy.materials import price_premium
@@ -87,9 +88,11 @@ def income_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind) -> 
     return max(0.0, 1 + lift * ctx.rules.elasticity.income_pct / PERCENT)
 
 
-def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, premium: float = 1.0) -> int:
+def price_of(
+    ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, premium: float = 1.0, base_price: int | None = None
+) -> int:
     table = ctx.rules.markets
-    base = COMMODITIES[commodity].base_price * premium
+    base = (base_price if base_price is not None else COMMODITIES[commodity].base_price) * premium
     pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT * elasticity_of(ctx, commodity))
     low = base * table.price_floor_pct / PERCENT
     high = base * table.price_cap_pct / PERCENT
@@ -164,6 +167,8 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     growth = year_growth(ctx, book, market)
     tastes = await market_fit(ctx.session, market.id)
     plays = await plays_at(ctx.session, ctx.rules, market.id, ctx.epoch)
+    goods = await good_book(ctx.session)
+    prosperity, piety = stat(market, "prosperity"), stat(market, "piety")
     for commodity in COMMODITIES:
         hold = held.get(commodity)
         supply = await holding(ctx.session, market.id, commodity)
@@ -176,13 +181,22 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
             demand = round_half_up(demand * await noble_demand(ctx, book, market))
         demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value) * income_of(ctx, market, commodity))
+        demand = round_half_up(demand * goods.demand_scale(ctx.rules, commodity, prosperity=prosperity, piety=piety))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         premium = await material_premium(ctx, book, market, commodity)
         swing = swing_of(ctx, market, commodity, growth)
         price = (
             hold.price
             if hold is not None and hold.price is not None
-            else price_of(ctx, commodity, supply, demand, factor * swing.factor * monopoly * plays.get(commodity, 1.0), premium=premium)
+            else price_of(
+                ctx,
+                commodity,
+                supply,
+                demand,
+                factor * swing.factor * monopoly * plays.get(commodity, 1.0),
+                premium=premium,
+                base_price=goods.base_price(commodity),
+            )
         )
         quotes[commodity] = Quote(commodity, price, supply, demand, swing.spread)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))

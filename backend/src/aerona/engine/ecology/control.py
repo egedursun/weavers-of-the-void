@@ -7,27 +7,30 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
+from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import (
     BeastProfileRow,
     HerdRow,
     SpeciesCustomUseRow,
     SpeciesHostRow,
+    SpeciesProductRow,
     SpeciesProfileRow,
     SpeciesRangeRow,
     SpeciesUseKindRow,
     SpeciesUseRow,
-    SpeciesYieldRow,
 )
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
+from aerona.db.tables.kinds import GoodKindRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemDeed
-from aerona.domain.enums.ecology import BeastTemper, DomesticationStage, FoodLink, RangeTrend, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import AnimalRole, BeastTemper, DomesticationStage, FoodLink, RangeTrend, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import BeastStats, SpeciesStats
 from aerona.engine.body.book import ensure_species_body
@@ -138,12 +141,14 @@ async def set_yield(
     material: MaterialKind | None,
     rate: int,
     world_material_id: int | None = None,
-) -> SpeciesYieldRow | None:
+    part: ProductPart | None = None,
+    good_kind_id: int | None = None,
+) -> SpeciesProductRow | None:
     await species_of(ctx, species_id)
     stuff = await world_material_of(ctx, world_material_id)
     if stuff is not None and material is None:
         material = stuff.base_kind
-    row = await ctx.session.get(SpeciesYieldRow, (species_id, product))
+    row = await ctx.session.get(SpeciesProductRow, (species_id, product))
     if rate == 0:
         if row is not None:
             await ctx.session.delete(row)
@@ -152,14 +157,22 @@ async def set_yield(
     if rate < 0:
         raise ValidationFailedError("A yield cannot be negative.")
     if row is None:
-        row = SpeciesYieldRow(species_entity_id=species_id, product=product, commodity=commodity, material=material, rate=rate)
+        row = SpeciesProductRow(
+            species_entity_id=species_id, product=product, commodity=commodity, material=material, rate=rate, part=PRODUCT_PARTS.get(product), locked=[]
+        )
         ctx.session.add(row)
     row.commodity, row.material, row.rate, row.world_material_id = commodity, material, rate, world_material_id
+    if part is not None:
+        row.part = part
+    if good_kind_id is not None:
+        if await ctx.session.get(GoodKindRow, good_kind_id) is None:
+            raise ValidationFailedError("No such good.")
+        row.good_kind_id = good_kind_id
     await ctx.session.flush()
     return row
 
 
-async def set_use(ctx: TickContext, species_id: int, use: SpeciesUse, *, held: bool) -> SpeciesUseRow | None:
+async def set_use(ctx: TickContext, species_id: int, use: AnimalRole, *, held: bool) -> SpeciesUseRow | None:
     await species_of(ctx, species_id)
     row = await ctx.session.get(SpeciesUseRow, (species_id, use))
     if not held:
@@ -509,7 +522,7 @@ async def use_kind_of(ctx: TickContext, kind_id: int) -> SpeciesUseKindRow:
     return row
 
 
-async def create_use_kind(ctx: TickContext, name: str, base_use: SpeciesUse, output_pct: int, description: str | None) -> SpeciesUseKindRow:
+async def create_use_kind(ctx: TickContext, name: str, base_use: AnimalRole, output_pct: int, description: str | None) -> SpeciesUseKindRow:
     if not name.strip():
         raise ValidationFailedError("A kind of keeping needs a name.")
     row = SpeciesUseKindRow(name=name.strip(), base_use=base_use, output_pct=output_pct, description=description, locked=[])

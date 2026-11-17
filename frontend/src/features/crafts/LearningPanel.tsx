@@ -1,24 +1,23 @@
 import { useState } from 'react'
-import { Clock, Dices, Hash, Plus, Telescope } from 'lucide-react'
+import { Clock, Hash, Plus, Telescope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
-import { Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
+import { ForgeCard, Meter } from '@/features/cosmography/parts'
 import { YES_NO } from '@/features/cycles/labels'
-import { StepButton, TextField } from '@/features/cycles/parts'
+import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { MindPicker } from '@/features/entity/mind/parts'
-import { Ref } from '@/features/gatherings/parts'
 import { Bars } from '@/features/sacred/parts'
+import { GamesPanel } from './GamesPanel'
 import { type CraftsNodeView, useCraftsAction } from './api'
-import { AIDS, CLOCKS, GAME_KINDS, GAME_RULES, NOTATIONS } from './labels'
-import { MANY, PEOPLE_TYPES, SPAN, useCraftsRow, useCraftsStep } from './model'
+import { AIDS, CLOCKS, NOTATIONS } from './labels'
+import { MANY, SPAN, useCraftsRow, useCraftsStep } from './model'
 
 type View = CraftsNodeView
 type Aid = View['aids'][number]
 type ClockRow = NonNullable<View['clock']>
-type Following = View['followings'][number]
 type Numbers = NonNullable<View['numbers']>
 
 const BASE_MIN = 2
@@ -124,111 +123,6 @@ function ClockCard({
   )
 }
 
-function FollowingCard({
-  people,
-  row,
-  blocked,
-}: {
-  people: number
-  row: Following
-  blocked: string | null
-}) {
-  const following = useCraftsRow(
-    'game_following:edit',
-    'game_following:delete',
-    { people_id: people, game_id: row.game.id },
-    blocked
-  )
-  const game = useCraftsRow(
-    'game:edit',
-    'game:delete',
-    { record_id: row.game.id },
-    blocked
-  )
-  const kind = GAME_KINDS[row.game.kind]
-  return (
-    <Held
-      icon={kind.icon}
-      tone={kind.tone}
-      title={row.game.name}
-      caption={`${kind.label} of ${GAME_RULES[row.game.rule].label.toLowerCase()} · popularity ${row.popularity} · taken up in epoch ${row.adopted_epoch}`}
-      removeLabel='Leave the game'
-      editTitle='Set how much they play it'
-      note='Strategy games train nobles and officers in tactics, games of chance drain prosperity and breed crime, and ball games ease unrest; games spread to neighbouring peoples.'
-      fields={[
-        {
-          key: 'popularity',
-          label: 'Popularity',
-          kind: 'number',
-          min: 0,
-          max: SPAN,
-        },
-        {
-          key: 'adopted_epoch',
-          label: 'Taken up in epoch',
-          kind: 'number',
-          min: 0,
-          max: MANY,
-        },
-      ]}
-      locked={row.locked}
-      blocked={following.busy}
-      onEdit={following.onEdit}
-      onRemove={following.onRemove}
-    >
-      <Meter
-        label={`Popularity (${row.popularity} of ${SPAN})`}
-        value={row.popularity}
-        tone='success'
-        icon={Dices}
-      />
-      <Held
-        icon={kind.icon}
-        tone='muted'
-        title='The game itself'
-        caption={`Made in epoch ${row.game.created_epoch}`}
-        removeLabel='Forget the game everywhere'
-        editTitle='Set the game'
-        note='The game is the same wherever it is played; changing it changes it for every people that plays it.'
-        fields={[
-          { key: 'name', label: 'Game name', kind: 'text' },
-          {
-            key: 'kind',
-            label: 'Game of',
-            kind: 'pick',
-            table: table(GAME_KINDS),
-          },
-          {
-            key: 'rule',
-            label: 'Won by',
-            kind: 'pick',
-            table: table(GAME_RULES),
-          },
-          {
-            key: 'origin_entity_id',
-            label: 'First played by',
-            kind: 'node',
-            types: PEOPLE_TYPES,
-          },
-        ]}
-        locked={row.game.locked}
-        blocked={game.busy}
-        onEdit={game.onEdit}
-        onRemove={game.onRemove}
-      >
-        <Facts
-          items={[
-            [
-              'First played by',
-              <Ref key='origin' node={row.game.origin} empty='no people' />,
-            ],
-          ]}
-        />
-      </Held>
-    </Held>
-  )
-}
-
 function NumbersCard({
   people,
   row,
@@ -307,12 +201,6 @@ export function LearningPanel({
   const people = data.people?.id ?? null
   const [aid, setAid] = useState('spectacles')
   const [clock, setClock] = useState('sundial')
-  const [name, setName] = useState('')
-  const [gameKind, setGameKind] = useState('board')
-  const [rule, setRule] = useState('strategy')
-  const [taken, setTaken] = useState(
-    data.games[0] ? String(data.games[0].id) : ''
-  )
   const giving = useCraftsAction(
     'assistive_aid:set',
     (_: void) => ({ holder_id: nodeId, kind: aid as Aid['kind'] }),
@@ -322,21 +210,6 @@ export function LearningPanel({
     'public_clock:set',
     (_: void) => ({ settlement_id: nodeId, kind: clock as ClockRow['kind'] }),
     'The town keeps its hours'
-  )
-  const making = useCraftsAction(
-    'game:create',
-    (_: void) => ({
-      name: name.trim(),
-      kind: gameKind as Following['game']['kind'],
-      rule: rule as Following['game']['rule'],
-      origin_entity_id: people,
-    }),
-    'The game is played'
-  )
-  const following = useCraftsAction(
-    'game_following:set',
-    (_: void) => ({ people_id: people ?? 0, game_id: Number(taken || '0') }),
-    'The people take up the game'
   )
   const counting = useCraftsAction(
     'number_system:set',
@@ -366,19 +239,6 @@ export function LearningPanel({
           ? 'It keeps a clock already; adjust it above'
           : null),
     timing.isPending
-  )
-  const makeBusy = why(
-    blocked ?? (!name.trim() ? 'Name the game' : null),
-    making.isPending
-  )
-  const followBusy = why(
-    blocked ??
-      (people === null
-        ? 'Only a people takes up a game'
-        : !taken
-          ? 'No game is known yet'
-          : null),
-    following.isPending
   )
   const countBusy = why(
     blocked ??
@@ -475,33 +335,8 @@ export function LearningPanel({
           />
         </ForgeCard>
       </div>
-      <div data-surface='GamesPanel' className='flex min-w-0 flex-col gap-4'>
-        <Bars
-          chart='chart-games'
-          title='Games and how much they are played'
-          legend={[{ text: 'Popularity', variant: 'success' }]}
-          rows={data.followings.map((row) => ({
-            key: String(row.game.id),
-            caption: `${row.game.name}: popularity ${row.popularity}`,
-            segments: [
-              { value: Math.min(SPAN, row.popularity), fill: 'fill-success' },
-            ],
-          }))}
-          max={SPAN}
-          noun={['game', 'games']}
-          empty='Its people play no games yet.'
-        />
-        <Listed
-          title='Games of its people'
-          items={data.followings}
-          empty='Its people play no games yet.'
-          noun={['game', 'games']}
-          itemKey={(item) => item.game.id}
-        >
-          {(item) => (
-            <FollowingCard people={people ?? 0} row={item} blocked={blocked} />
-          )}
-        </Listed>
+      <GamesPanel people={people} blocked={blocked} />
+      <div data-surface='NumbersPanel' className='flex min-w-0 flex-col gap-4'>
         <Bars
           chart='chart-numeracy'
           title='Numeracy of its people'
@@ -534,77 +369,28 @@ export function LearningPanel({
           </Muted>
         )}
         <ForgeCard
-          icon={Dices}
+          icon={Hash}
           tone='warning'
-          title='Games and numbers'
-          note='Make a game, let its people take up a known game, or read how its people count.'
+          title='Numbers'
+          note='Read how its people count.'
           columns={2}
           action={
-            <div className='flex min-w-0 flex-wrap gap-2'>
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={makeBusy !== null}
-                disabledReason={makeBusy ?? undefined}
-                onClick={() => making.mutate()}
-              >
-                <Plus />
-                Make the game
-              </Button>
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={followBusy !== null}
-                disabledReason={followBusy ?? undefined}
-                onClick={() => following.mutate()}
-              >
-                <Dices />
-                Take it up
-              </Button>
-              <Button
-                size='sm'
-                disabled={countBusy !== null}
-                disabledReason={countBusy ?? undefined}
-                onClick={() => counting.mutate()}
-              >
-                <Hash />
-                Read how they count
-              </Button>
-            </div>
+            <Button
+              size='sm'
+              disabled={countBusy !== null}
+              disabledReason={countBusy ?? undefined}
+              onClick={() => counting.mutate()}
+            >
+              <Hash />
+              Read how they count
+            </Button>
           }
         >
-          <TextField
-            label='Game name'
-            value={name}
-            blocked={blocked}
-            onChange={setName}
-          />
-          <MindPicker
-            label='Game of'
-            value={gameKind}
-            table={table(GAME_KINDS)}
-            placeholder='Choose'
-            blocked={blocked}
-            onPick={setGameKind}
-          />
-          <MindPicker
-            label='Won by'
-            value={rule}
-            table={table(GAME_RULES)}
-            placeholder='Choose'
-            blocked={blocked}
-            onPick={setRule}
-          />
-          <MindPicker
-            label='Known game'
-            value={taken}
-            table={Object.fromEntries(
-              data.games.map((row) => [String(row.id), row.name])
-            )}
-            placeholder={data.games.length ? 'Choose' : 'No game is known yet'}
-            blocked={blocked}
-            onPick={setTaken}
-          />
+          <Muted variant='caption'>
+            {data.numbers
+              ? `Its people counts in base ${data.numbers.base}.`
+              : 'Its people keeps no number system yet.'}
+          </Muted>
         </ForgeCard>
       </div>
     </div>

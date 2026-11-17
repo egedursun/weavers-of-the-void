@@ -29,6 +29,7 @@ import {
   LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { NodePicker } from '@/features/dominion/parts'
 import {
   AdjustPanel,
   FIELD_GRID,
@@ -46,6 +47,7 @@ import {
   type KnowledgeBranch,
   MATERIAL_FAMILY,
   MATERIAL_ORIGIN,
+  MATERIAL_SOURCE,
   MATERIAL_PROPERTIES,
   type MaterialFamily,
   type MaterialKind,
@@ -77,6 +79,14 @@ type Material = components['schemas']['MaterialView']
 type PropertyKey = (typeof MATERIAL_PROPERTIES)[number]['key']
 
 const PERCENT = 100
+const SOURCE_KINDS: Record<Material['source'], readonly string[]> = {
+  world: ['world'],
+  god: ['son', 'foreign_god', 'creator'],
+  star: ['star'],
+  creature: ['entity'],
+  rift: ['entity', 'dimension'],
+  makers: ['entity'],
+}
 const BASE = 100
 const MAX_LEVEL = 20
 const ALL = 'all'
@@ -239,6 +249,7 @@ function MaterialCard({
   const [family, setFamily] = useState<string>(material.family)
   const [craft, setCraft] = useState<string>(material.branch ?? NONE)
   const [hold, setHold] = useState(material.held)
+  const [sourceNode, setSourceNode] = useState<number | null>(null)
   const target = {
     world_id: worldId,
     material: material.world_material_id === null ? material.kind : null,
@@ -265,6 +276,7 @@ function MaterialCard({
             branch: craft === NONE ? null : (craft as KnowledgeBranch),
             clear_branch: craft === NONE && material.branch !== null,
             hold,
+            source_node_id: sourceNode,
           },
         })
       ),
@@ -292,6 +304,7 @@ function MaterialCard({
   )
   const look = MATERIAL_FAMILY[material.family]
   const origin = MATERIAL_ORIGIN[material.origin]
+  const source = MATERIAL_SOURCE[material.source]
   const needs = material.branch ? branch(material.branch) : null
   const gate = material.gate ? branch(material.gate) : null
   const substance = material.world_material_id !== null
@@ -317,6 +330,10 @@ function MaterialCard({
                 {origin.label}
               </Badge>
             )}
+            <Badge size='sm' variant='outline'>
+              <source.icon />
+              {source.label}
+            </Badge>
             {needs && (
               <Badge size='sm' variant='info'>
                 <needs.icon />
@@ -466,6 +483,18 @@ function MaterialCard({
             onChange={(key, next) =>
               setValues((current) => ({ ...current, [key]: next }))
             }
+          />
+          <NodePicker
+            label='The thing it comes from'
+            value={sourceNode}
+            onChange={setSourceNode}
+            blocked={
+              busy ??
+              (material.world_material_id === null
+                ? 'Only a substance of this world comes from one thing'
+                : null)
+            }
+            kinds={SOURCE_KINDS[material.source]}
           />
           <NoteField
             label='Description'

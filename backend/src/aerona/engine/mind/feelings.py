@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.art_modes import HEARD_MODES
 from aerona.catalog.preferences import FOODS
 from aerona.catalog.thoughts import EMOTIONS, MEMORY_THOUGHTS, NEEDS, THOUGHTS
 from aerona.constants.units import PERCENT
@@ -13,7 +14,7 @@ from aerona.db.tables.mind import MemoryRow, ThoughtRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import ArtMedium, TraditionKind
+from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, PreferenceKind, ThoughtKind, ValueHolder
 from aerona.domain.models.entity_stats import ArtworkStats
@@ -29,8 +30,8 @@ from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mortal.kin import close_kin_of, spouses_of
 from aerona.engine.primitives.naming import seed_of
 
-FEASTS = frozenset({TraditionKind.FESTIVAL, TraditionKind.ANCESTOR_FEAST, TraditionKind.HARVEST_RITE})
-MUSIC = frozenset({ArtMedium.SONG, ArtMedium.MUSIC, ArtMedium.DANCE, ArtMedium.EPIC_POEM, ArtMedium.PLAY})
+FEASTS = frozenset({TraditionFunction.FESTIVAL, TraditionFunction.ANCESTRAL_RITE, TraditionFunction.SEASONAL_RITE})
+MUSIC = HEARD_MODES
 
 
 @dataclass
