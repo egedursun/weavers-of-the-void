@@ -13,7 +13,7 @@ from aerona.constants.schema import (
     TITLE_MAX_LENGTH,
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import normalize_name
@@ -173,7 +173,7 @@ async def set_canon(scope: PlayerScope, command: SetCanon) -> Effect:
             raise ValidationFailedError(f"{record.name} is already canon.")
         if record.status is not EntityStatus.REJECTED:
             raise ValidationFailedError(
-                f"Only a rejected record can be restored; {record.name} is {record.status.value} (the dead come back only through resurrection)."
+                f"Only a rejected record can be restored; {record.name} is {spoken(record.status)} (the dead come back only through resurrection)."
             )
         await entities.set_status(record, EntityStatus.CANON, epoch, RESTORE_NOTE.format(creator=creator.name))
         reopened = await bonds.reopen_after_restore(record.id)
@@ -396,9 +396,9 @@ async def _bond_end(scope: PlayerScope, node_id: int) -> str:
 @player_action("bond:add", ActionKind.MAKE_BOND)
 async def add_bond(scope: PlayerScope, command: AddBond) -> Effect:
     if command.kind is BondKind.INSIDE:
-        raise ValidationFailedError(f'Invalid bond type: {command.kind.value}. "Inside" is location; it changes by moving.')
+        raise ValidationFailedError(f'Invalid bond type: {spoken(command.kind)}. "Inside" is location; it changes by moving.')
     if command.kind in DERIVED_BOND_KINDS:
-        raise ValidationFailedError(f"{command.kind.value.replace('_', ' ').capitalize()} comes from the record itself; set it on the legend, creed or rite.")
+        raise ValidationFailedError(f"{spoken(command.kind).capitalize()} comes from the record itself; set it on the legend, creed or rite.")
     if command.source_id == command.target_id:
         raise ValidationFailedError("A thing cannot be bonded to itself.")
     first = await _bond_end(scope, command.source_id)
@@ -503,14 +503,14 @@ async def _union_marks(scope: PlayerScope, main: EntityRow, other: EntityRow) ->
 @player_action("record:merge", ActionKind.MERGE_RECORDS)
 async def merge_records(scope: PlayerScope, command: MergeRecords) -> Effect:
     if command.confirm != ConfirmationWord.MERGE:
-        raise ValidationFailedError(f"Type {ConfirmationWord.MERGE.value} to confirm the merge.")
+        raise ValidationFailedError(f"Type '{ConfirmationWord.MERGE.value}' to confirm the merge.")
     main = await guards.entity(scope.session, command.entity_id)
     other = await guards.entity(scope.session, command.other_id)
     if main.id == other.id:
         raise ValidationFailedError("A record cannot be merged into itself.")
     if main.entity_type is not other.entity_type:
         raise ValidationFailedError(
-            f"Only records of the same type merge; {main.name} is {an(main.entity_type.value)}, {other.name} {an(other.entity_type.value)}."
+            f"Only records of the same type merge; {main.name} is {an(spoken(main.entity_type))}, {other.name} {an(spoken(other.entity_type))}."
         )
     epoch = await scope.epoch()
     moved = await _repoint_bonds(scope, main, other, epoch)

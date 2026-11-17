@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import ChemicalWorksRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import RegionPollutionRow
@@ -75,7 +76,7 @@ async def found_works(ctx: TickContext, town: EntityRow, tally: ChemistryTally) 
             continue
         ctx.session.add(ChemicalWorksRow(settlement_entity_id=town.id, product=product, founded_epoch=ctx.epoch, locked=[]))
         tally.founded += 1
-        await note(ctx, f"{town.name} set up works for {product.value.replace('_', ' ')}.", key="chemistry.founded", ids=[town.id])
+        await note(ctx, f"{town.name} set up works for {spoken(product)}.", key="chemistry.founded", ids=[town.id])
         return
 
 
@@ -116,7 +117,7 @@ async def run_works(ctx: TickContext, town: EntityRow, row: ChemicalWorksRow, at
         return
     hurt = rng.pick(workers)
     await apply_hits(
-        ctx, hurt, Harm(damage=table.accident_harm, cause=HarmCause.ACCIDENT, death_cause=f"died in an accident at the works for {row.product.value}")
+        ctx, hurt, Harm(damage=table.accident_harm, cause=HarmCause.ACCIDENT, death_cause=f"died in an accident at the works for {spoken(row.product)}")
     )
     if "accidents" not in row.locked:
         row.accidents += 1

@@ -13,7 +13,7 @@ from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TY
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -128,7 +128,7 @@ COSMIC_TABLES: dict[CosmosSubjectKind, type[CosmicRow]] = {
 
 
 def son_description(son: SonRow) -> str:
-    return f"god of {son.domain_primary.value} and {son.domain_secondary.value}, {son.rarity.value}, {son.status.value}"
+    return f"god of {spoken(son.domain_primary)} and {spoken(son.domain_secondary)}, {spoken(son.rarity)}, {spoken(son.status)}"
 
 
 def creator_description(creator: CreatorRow) -> str:

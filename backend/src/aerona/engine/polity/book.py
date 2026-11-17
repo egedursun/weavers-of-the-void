@@ -5,6 +5,7 @@ from sqlalchemy import event, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
+from aerona.db.attr_history import changed, history_of
 from aerona.db.read_memo import memo_of, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
@@ -27,8 +28,9 @@ def realm_shape(sync: Session) -> int:
 
 def reshapes_realms(row: EntityRow) -> bool:
     state = inspect(row)
-    kinds = {*state.attrs.entity_type.history.added, *state.attrs.entity_type.history.unchanged, *state.attrs.entity_type.history.deleted}
-    return EntityType.POLITY in kinds and any(state.attrs[column].history.has_changes() for column in REALM_COLUMNS)
+    history = history_of(state, "entity_type")
+    kinds = {*history.added, *history.unchanged, *history.deleted}
+    return EntityType.POLITY in kinds and any(changed(state, column) for column in REALM_COLUMNS)
 
 
 def realms_pending(sync: Session) -> bool:

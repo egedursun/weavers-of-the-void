@@ -24,8 +24,15 @@ from aerona.rules.registry import Rules
 
 
 @memoized(HolderTechniqueRow)
+async def techniques_by_holder(session: AsyncSession) -> dict[int, frozenset[Technique]]:
+    found: dict[int, set[Technique]] = defaultdict(set)
+    for holder, technique in await session.execute(select(HolderTechniqueRow.holder_entity_id, HolderTechniqueRow.technique)):
+        found[holder].add(technique)
+    return {holder: frozenset(techniques) for holder, techniques in found.items()}
+
+
 async def held_by(session: AsyncSession, holder_id: int) -> frozenset[Technique]:
-    return frozenset(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
+    return (await techniques_by_holder(session)).get(holder_id, frozenset())
 
 
 COMMUNITIES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})

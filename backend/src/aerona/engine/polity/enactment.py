@@ -7,6 +7,7 @@ from aerona.catalog.civics import LAW_GATES
 from aerona.catalog.kinds.governance import DECISION_RULES
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import CouncilSeatRow
 from aerona.db.tables.entities import EntityRow
@@ -84,7 +85,7 @@ class Hearing:
 
 
 def law_title(kind: LawKind) -> str:
-    return LAW_TITLES.get(kind, f"the {kind.value.replace('_', ' ')} law")
+    return LAW_TITLES.get(kind, f"the {spoken(kind)} law")
 
 
 async def debating(ctx: TickContext, polity_id: int) -> list[LawProposalRow]:

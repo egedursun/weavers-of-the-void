@@ -4,6 +4,7 @@ from aerona.catalog.civics import TENET_GATES
 from aerona.catalog.lore import IDEOLOGY_APPEAL, IDEOLOGY_VALUES, VALUE_IDEOLOGY
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
@@ -76,7 +77,7 @@ async def found_school(ctx: TickContext, founder: EntityRow, tenets: list[Ideolo
     if not tenets:
         needs = ", ".join(sorted({TENET_GATES[tenet].value.replace("_", " ") for tenet in asked if tenet in TENET_GATES}))
         raise ValidationFailedError(f"No one around {founder.name} has yet learned what such a creed needs: {needs}.")
-    name = (name or "").strip() or f"The {tenets[0].value.replace('_', ' ').title()} of {founder.name}"
+    name = (name or "").strip() or f"The {spoken(tenets[0]).title()} of {founder.name}"
     creed = await create_record(
         ctx,
         RecordSpec(

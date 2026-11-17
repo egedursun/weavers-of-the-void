@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
@@ -182,7 +182,7 @@ async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         if plant_entity is not None and region is not None:
             await note(
                 ctx,
-                f"{owner.name} planted {plant_entity.name} in {region.name}; the {kind.value} will bear in {several(epochs, 'epoch', 'epochs')}.",
+                f"{owner.name} planted {plant_entity.name} in {region.name}; the {spoken(kind)} will bear in {several(epochs, 'epoch', 'epochs')}.",
                 key="perennials.planted",
                 ids=[owner.id, region.id],
             )
@@ -232,7 +232,7 @@ async def replant(ctx: TickContext, row: PerennialRow) -> None:
     epochs_counted = several(row.mature_epochs, "epoch", "epochs")
     await note(
         ctx,
-        f"The old {row.kind.value} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {epochs_counted}.",
+        f"The old {spoken(row.kind)} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {epochs_counted}.",
         key="perennials.replanted",
         ids=[row.region_entity_id],
     )
@@ -305,6 +305,8 @@ async def seed_commons(ctx: TickContext, lands: Holdings, rows: list[CommonsRow]
                 row = CommonsRow(region_entity_id=region_id, kind=kind, steward_entity_id=steward.id, since_epoch=ctx.epoch, locked=[])
                 ctx.session.add(row)
                 rows.append(row)
+    if any(row.id is None for row in rows):
+        await ctx.session.flush()
 
 
 async def city_for(ctx: TickContext, lands: Holdings, row: CommonsRow, book: RealmBook) -> EntityRow | None:
@@ -355,14 +357,14 @@ async def enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, encloser: 
         ):
             if "wealth" not in household.locked:
                 household.wealth = max(0, household.wealth - household.wealth * table.household_loss // PERCENT)
-        await judged(ctx, encloser.id, town.id, ActKind.ENCLOSING, note=f"enclosed the common {row.kind.value} of {town.name}")
+        await judged(ctx, encloser.id, town.id, ActKind.ENCLOSING, note=f"enclosed the common {spoken(row.kind)} of {town.name}")
     put(row, "dispossessed", row.dispossessed + driven)
     region = await ctx.session.get(EntityRow, row.region_entity_id)
     went = f" and went to {city.name} for work" if city is not None else " and were left without homes"
     cottagers_counted = several(driven, "cottager", "cottagers")
     await note(
         ctx,
-        f"{encloser.name} enclosed the common {row.kind.value} of {region.name if region else 'the land'}; {cottagers_counted} lost their living{went}.",
+        f"{encloser.name} enclosed the common {spoken(row.kind)} of {region.name if region else 'the land'}; {cottagers_counted} lost their living{went}.",
         key="commons.enclosed",
         ids=[encloser.id, *([city.id] if city is not None else []), *[town.id for town in towns]],
     )
@@ -408,7 +410,7 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
             if steward_town is not None:
                 await note(
                     ctx,
-                    f"The folk of {steward_town.name} formed a council to rule the use of their common {row.kind.value}.",
+                    f"The folk of {steward_town.name} formed a council to rule the use of their common {spoken(row.kind)}.",
                     key="commons.council",
                     ids=[steward_town.id],
                 )

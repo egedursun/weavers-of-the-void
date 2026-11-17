@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import Anatomy
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -86,6 +87,11 @@ async def community_targets(session: AsyncSession, community_id: int, atlas: Reg
     region = places.top_region(community_id)
     if region is None:
         return frozenset()
+    return await region_targets(session, region)
+
+
+@memoized(DiseaseProfileRow, OutbreakRow)
+async def region_targets(session: AsyncSession, region: int) -> frozenset[DiseaseTarget]:
     found: set[DiseaseTarget] = set()
     statement = select(DiseaseProfileRow).join(OutbreakRow, OutbreakRow.disease_entity_id == DiseaseProfileRow.disease_entity_id)
     for profile in await session.scalars(statement.where(OutbreakRow.region_entity_id == region, OutbreakRow.status != OutbreakStatus.ENDED)):

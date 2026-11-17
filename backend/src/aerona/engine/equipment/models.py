@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.equipment import FAMILIES, SLOT_FAMILIES, FamilySpec
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.equipment import EquipmentModelRow
 from aerona.domain.enums.economy import MaterialSlot
@@ -157,11 +158,16 @@ async def draw_model(
     return row
 
 
-async def models_of(session: AsyncSession, holder_id: int, slot: ArmamentSlot | None = None) -> list[EquipmentModelRow]:
+@memoized(EquipmentModelRow)
+async def kept_models(session: AsyncSession, holder_id: int, slot: ArmamentSlot | None) -> tuple[EquipmentModelRow, ...]:
     statement = select(EquipmentModelRow).where(EquipmentModelRow.origin_node_id == holder_id, EquipmentModelRow.retired.is_(False))
     if slot is not None:
         statement = statement.where(EquipmentModelRow.slot == slot)
-    return list(await session.scalars(statement.order_by(EquipmentModelRow.created_epoch.desc(), EquipmentModelRow.id.desc())))
+    return tuple(await session.scalars(statement.order_by(EquipmentModelRow.created_epoch.desc(), EquipmentModelRow.id.desc())))
+
+
+async def models_of(session: AsyncSession, holder_id: int, slot: ArmamentSlot | None = None) -> list[EquipmentModelRow]:
+    return list(await kept_models(session, holder_id, slot))
 
 
 async def current_model(

@@ -134,4 +134,4 @@ OPERATOR_TEXT: Mapping[LawOperator, str] = total(
 def working_text(grammar: Grammar | None, condition: LawCondition) -> str:
     if grammar is None:
         return ""
-    return f"It {OPERATOR_TEXT[grammar.operator]} {grammar.key.replace('_', ' ')} at {grammar.value}, {CONDITION_TEXT[condition]}."
+    return f"It {OPERATOR_TEXT[grammar.operator]} {grammar.key.replace('_', ' ')} at {grammar.value:d}, {CONDITION_TEXT[condition]}."

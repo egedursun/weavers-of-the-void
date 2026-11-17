@@ -8,6 +8,7 @@ from aerona.catalog.peoples import FUNERALS
 from aerona.catalog.strata import ADMISSION_PRIORITY, STRATUM_AXES, StratumAxes
 from aerona.catalog.tenets import STRATUM_NAMES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmography import DimensionRow
@@ -407,7 +408,7 @@ async def judge(ctx: TickContext, spirit: EntityRow, mortal: EntityRow, realm: E
         elif valence is StratumValence.REWARD:
             profile.alignment = SpiritAlignment.GUARDIAN
     where = stratum.name if stratum is not None else "no stratum that would take it"
-    reason = f"judged by {doctrine.value.replace('_', ' ')}: score {score}, sent to {where}"
+    reason = f"judged by {spoken(doctrine)}: score {score}, sent to {where}"
     ctx.session.add(
         SoulJudgementRow(
             spirit_entity_id=spirit.id,

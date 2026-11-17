@@ -1,4 +1,4 @@
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.engine.lifecycle import end_control as control
 from aerona.services.player import guards
@@ -21,13 +21,13 @@ class RunNow(Command):
 @player_action("lifecycle:edit", ActionKind.EDIT_RECORD)
 async def lifecycle_edit(scope: PlayerScope, command: LifecycleEdit) -> Effect:
     row = await control.edit_state(await scope.context("lifecycle_edit"), command.holder_id, command.values, command.release)
-    return Effect(f"It is now {row.state.value.replace('_', ' ')}.", target_node_id=command.holder_id)
+    return Effect(f"It is now {spoken(row.state)}.", target_node_id=command.holder_id)
 
 
 @player_action("lifecycle:reset", ActionKind.EDIT_RECORD)
 async def lifecycle_reset(scope: PlayerScope, command: LifecycleTarget) -> Effect:
     row = await control.reset_state(await scope.context("lifecycle_reset"), command.holder_id)
-    return Effect(f"Its life is read again from the world: {row.state.value.replace('_', ' ')}.", target_node_id=command.holder_id)
+    return Effect(f"Its life is read again from the world: {spoken(row.state)}.", target_node_id=command.holder_id)
 
 
 @player_action("lifecycle:destroy", ActionKind.EDIT_RECORD)

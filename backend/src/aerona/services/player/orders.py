@@ -1,4 +1,4 @@
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.orders import (
@@ -454,7 +454,7 @@ async def tourist_flow_delete(scope: PlayerScope, command: TouristFlowTarget) ->
 @player_action("order_transition:advance", ActionKind.EDIT_RECORD)
 async def order_transition_advance(scope: PlayerScope, command: OrderTransitionTarget) -> Effect:
     row = await control.advance_transition(await scope.context("order_transition_advance"), command.record_id)
-    return Effect(f"The change of order stands at {row.stage.value.replace('_', ' ')}.")
+    return Effect(f"The change of order stands at {spoken(row.stage)}.")
 
 
 @player_action("orders:run", ActionKind.EDIT_RECORD)

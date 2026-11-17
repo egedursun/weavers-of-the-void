@@ -141,6 +141,7 @@ async def test_money_not_made_of_metal_is_issued_counterfeited_and_broken_into(s
     await strain(ctx, paper)
     assert paper.supply == 1000 + ctx.rules.money.issue_units
     network = CurrencyRow(issuer_entity_id=issuer, name="Bits", metal=None, purity=100, supply=1000, trust=50, minted_epoch=0, form=MoneyForm.NETWORK)
+    session.add(network)
     await strain(ctx, network)
     assert network.supply < 1000 + ctx.rules.money.issue_units
     notes = [

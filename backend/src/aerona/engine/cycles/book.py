@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.cycles import AsabiyyaRow, PolityStressRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
@@ -44,6 +45,7 @@ async def polities(session: AsyncSession) -> list[tuple[EntityRow, PolityProfile
     return [(entity, profile) for entity, profile in rows.all()]
 
 
+@memoized(PolityProfileRow, PolityMemberRow)
 async def realm_of(session: AsyncSession, entity_id: int) -> int | None:
     if await session.get(PolityProfileRow, entity_id) is not None:
         return entity_id

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.law_depth import METHOD_HARM, METHOD_SEEMING, METHOD_TEXT
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import CurrencyRow
@@ -151,7 +152,7 @@ async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netwo
             ctx, f"The agents of {spymaster.name} carried off {design.name.lower()} from {target.name}.", "espionage.stole_design", (spymaster.id, target.id)
         )
     if secret is not None:
-        text = f"The agents of {spymaster.name} carried off the secret of {secret.value.replace('_', ' ')} from {target.name}."
+        text = f"The agents of {spymaster.name} carried off the secret of {spoken(secret)} from {target.name}."
         await _note(ctx, text, "espionage.stole_technique", (spymaster.id, target.id))
         return text
     loot = await _stealable(ctx, spymaster, target)

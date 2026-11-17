@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -64,7 +65,7 @@ async def lives_end(ctx: TickContext, world: WorldRow, state: WorldEnd) -> int:
     ):
         if held(mortal.id):
             continue
-        await die(ctx, mortal, cause=f"died when {world.name} was {state.value.replace('_', ' ')}")
+        await die(ctx, mortal, cause=f"died when {world.name} was {spoken(state)}")
         ended += 1
     for life in list(
         await ctx.session.scalars(
@@ -75,7 +76,7 @@ async def lives_end(ctx: TickContext, world: WorldRow, state: WorldEnd) -> int:
             continue
         if state is E.FROZEN_DEAD and life.entity_type is EntityType.SETTLEMENT:
             await EntityRepository(ctx.session).add_flag(life.id, EntityFlag.RUIN, ctx.epoch)
-        await retire_in(ctx, life, f"it ended when {world.name} was {state.value.replace('_', ' ')}", close_bonds=True)
+        await retire_in(ctx, life, f"it ended when {world.name} was {spoken(state)}", close_bonds=True)
         ended += 1
     return ended
 
@@ -150,7 +151,7 @@ async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: W
     told = state.value.replace("_", " ")
     await note(
         ctx,
-        f"{world.name} was {told} ({cause.value.replace('_', ' ')}): {row.lives_ended} lives ended, {row.homeless} homeward ties cut abroad.",
+        f"{world.name} was {told} ({spoken(cause)}): {row.lives_ended} lives ended, {row.homeless} homeward ties cut abroad.",
         key=f"world_end.{state.value}",
         kind=ChronicleKind.COSMIC,
         world_id=world.id,

@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.communication import APPROVAL_MAX, APPROVAL_MIN, PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, IdeologyAdherentRow, RumourRow
 from aerona.db.tables.entities import EntityRow
@@ -47,11 +49,16 @@ async def realm_of_member(ctx: TickContext, community_id: int) -> int | None:
     return found
 
 
-async def ruler_of(ctx: TickContext, realm_id: int) -> int | None:
-    found: int | None = await ctx.session.scalar(
+@memoized(OfficeRow)
+async def realm_ruler(session: AsyncSession, realm_id: int) -> int | None:
+    found: int | None = await session.scalar(
         select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).limit(1)
     )
     return found
+
+
+async def ruler_of(ctx: TickContext, realm_id: int) -> int | None:
+    return await realm_ruler(ctx.session, realm_id)
 
 
 async def has_office(ctx: TickContext, realm_id: int, kind: OfficeKind) -> bool:
@@ -69,18 +76,29 @@ async def renown_tone(ctx: TickContext, subject_id: int) -> int:
     return (gap > 0) - (gap < 0)
 
 
-async def rumours_of(ctx: TickContext, community_id: int, subject_id: int) -> int:
-    heard = await ctx.session.scalar(
-        select(func.count(RumourRow.id))
+@memoized(RumourRow, IncidentParticipantRow)
+async def rumours_heard(session: AsyncSession, epoch: int) -> dict[tuple[int, int], int]:
+    statement = (
+        select(RumourRow.carrier_entity_id, IncidentParticipantRow.node_id, func.count(RumourRow.id))
         .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == RumourRow.incident_id)
-        .where(RumourRow.carrier_entity_id == community_id, RumourRow.epoch == ctx.epoch, IncidentParticipantRow.node_id == subject_id)
+        .where(RumourRow.epoch == epoch)
+        .group_by(RumourRow.carrier_entity_id, IncidentParticipantRow.node_id)
     )
-    return int(heard or 0)
+    return {(carrier, node): count for carrier, node, count in await session.execute(statement)}
+
+
+async def rumours_of(ctx: TickContext, community_id: int, subject_id: int) -> int:
+    return (await rumours_heard(ctx.session, ctx.epoch)).get((community_id, subject_id), 0)
+
+
+@memoized(ArtworkProfileRow)
+async def artworks_about(session: AsyncSession) -> dict[int, int]:
+    statement = select(ArtworkProfileRow.subject_node_id, func.count(ArtworkProfileRow.artwork_entity_id)).group_by(ArtworkProfileRow.subject_node_id)
+    return {subject: count for subject, count in await session.execute(statement) if subject is not None}
 
 
 async def propaganda(ctx: TickContext, subject_id: int) -> int:
-    works = await ctx.session.scalar(select(func.count(ArtworkProfileRow.artwork_entity_id)).where(ArtworkProfileRow.subject_node_id == subject_id))
-    return int(works or 0)
+    return (await artworks_about(ctx.session)).get(subject_id, 0)
 
 
 async def voice(ctx: TickContext, community: EntityRow, subject_id: int, laws: LawBook, realm_id: int | None) -> float:

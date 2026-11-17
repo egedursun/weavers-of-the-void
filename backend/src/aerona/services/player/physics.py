@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.physics import CosmicFeatureKind, SurveyLevel, SystemRole, TerraformAim
 from aerona.engine.cosmos import physics_control as control
@@ -220,7 +221,7 @@ async def stop_terraform(scope: PlayerScope, command: TerraformTarget) -> Effect
 @player_action("survey:set", ActionKind.EDIT_RECORD)
 async def set_survey(scope: PlayerScope, command: SurveySet) -> Effect:
     row = await control.set_survey(await scope.context("survey_set"), command.observer_id, command.world_id, command.level)
-    return Effect(f"They now know the world as {row.level.value}.", command.observer_id)
+    return Effect(f"They now know the world as {spoken(row.level)}.", command.observer_id)
 
 
 @player_action("survey:forget", ActionKind.EDIT_RECORD)

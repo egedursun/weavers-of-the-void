@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
@@ -231,7 +231,7 @@ async def resolve_crisis(scope: PlayerScope, command: ResolveCrisis) -> Effect:
     ctx = await manual_context(scope.session, "crisis.resolve")
     await settle(ctx, await RealmBook.load(scope.session), Verdict(row, command.state), CrisisTally())
     await scope.session.flush()
-    return Effect(f"The crisis ended: {row.state.value.replace('_', ' ')}.", target_node_id=row.demander_entity_id, values={"state": row.state.value})
+    return Effect(f"The crisis ended: {spoken(row.state)}.", target_node_id=row.demander_entity_id, values={"state": row.state.value})
 
 
 @player_action("crisis:delete", ActionKind.EDIT_RECORD)
@@ -255,7 +255,7 @@ async def set_backer(scope: PlayerScope, command: SetBacker) -> Effect:
         scope.session.add(found)
     found.side, found.promised, found.swing, found.locked = command.side, command.promised, command.swing, command.hold
     await scope.session.flush()
-    return Effect(f"{backer.name} backs the {command.side.value} for a share of {command.promised}.", target_node_id=backer.id)
+    return Effect(f"{backer.name} backs the {spoken(command.side)} for a share of {command.promised}.", target_node_id=backer.id)
 
 
 @player_action("backer:remove", ActionKind.EDIT_RECORD)

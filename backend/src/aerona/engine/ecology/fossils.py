@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.discovery import TheoryAdherentRow
@@ -232,7 +233,7 @@ async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, 
     told_as = f", read as {reading}" if bed.reading is not FossilReading.UNREAD else ""
     await note(
         ctx,
-        f"Remains ({bed.source.value.replace('_', ' ')}) came to light in {named}{told_as}.",
+        f"Remains ({spoken(bed.source)}) came to light in {named}{told_as}.",
         key=f"fossil.{bed.reading.value}",
         ids=[item for item in (bed.region_entity_id, finder.id if finder is not None else None) if item is not None],
         world_id=bed.world_id,

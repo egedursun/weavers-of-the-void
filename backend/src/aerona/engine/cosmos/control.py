@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -604,7 +605,7 @@ async def set_sky_worship(ctx: TickContext, community_id: int, sky: SkyObject, w
         return dimension.name
     target = place.star if sky is SkyObject.STAR else place.galaxy
     if target is None:
-        raise ValidationFailedError(f"No {sky.value} shines over {community.name}.")
+        raise ValidationFailedError(f"No {spoken(sky)} shines over {community.name}.")
     flag = EntityFlag.WORSHIPS_STAR if sky is SkyObject.STAR else EntityFlag.WORSHIPS_GALAXY
     entities = EntityRepository(ctx.session)
     if worships:

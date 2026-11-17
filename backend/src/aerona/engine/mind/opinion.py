@@ -31,7 +31,7 @@ from aerona.engine.mind.memories import memories_about, strength_of
 from aerona.engine.mind.opinion_cache import OPINION_CACHE, OpinionCache, opinion_cache
 from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alignment
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language
+from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language, spoken_languages
 from aerona.engine.renown.book import standing_with
 from aerona.rules.registry import Rules
 
@@ -368,7 +368,7 @@ class OpinionContext:
         ids = list(dict.fromkeys([*communities, *(ruler for found in rulers.values() for ruler in found)]))
         bonds = await BondIndex.load(session, (*PAIR_BONDS, *KIN_BONDS))
         patrons = {node: await _patron(session, node) for node in ids}
-        languages = {node: await _language(session, node) for node in ids}
+        languages = await spoken_languages(session, ids)
         feuds = {
             (row.entity_a_id, row.entity_b_id)
             for row in await session.scalars(select(CommunityRelationRow).where(CommunityRelationRow.blood_feud_since_epoch.is_not(None)))

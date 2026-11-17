@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
@@ -168,16 +168,16 @@ async def sell_seat(
     buyer = buyer or await richest_buyer(ctx, realm, taken)
     if buyer is None or not await take_coin(ctx.session, ctx.rules, buyer, price):
         return None
-    spend(ctx, realm, price, TreasuryEntry.OFFICE_SALE, f"the seat of {seat.kind.value.replace('_', ' ')} sold")
+    spend(ctx, realm, price, TreasuryEntry.OFFICE_SALE, f"the seat of {spoken(seat.kind)} sold")
     await appoint(ctx, realm, seat, buyer, by_id=realm.ruler_id, reason="the seat was bought")
     venal = VenalOfficeRow(office_id=seat.id, price=price, buyer_entity_id=buyer.id, sinecure=False, recouped=0, sold_epoch=ctx.epoch, locked=[])
     ctx.session.add(venal)
     tally.sold += 1
     if realm.ruler_id is not None:
-        await judged(ctx, realm.ruler_id, buyer.id, ActKind.SELLING_OFFICES, note=f"sold the seat of {seat.kind.value.replace('_', ' ')}")
+        await judged(ctx, realm.ruler_id, buyer.id, ActKind.SELLING_OFFICES, note=f"sold the seat of {spoken(seat.kind)}")
     await note(
         ctx,
-        f"{buyer.name} bought the seat of {seat.kind.value.replace('_', ' ')} in {realm.entity.name} for {price}.",
+        f"{buyer.name} bought the seat of {spoken(seat.kind)} in {realm.entity.name} for {price}.",
         key="venality.sold",
         ids=[realm.entity.id, buyer.id],
     )
@@ -238,7 +238,7 @@ async def make_sinecure(
     tally.sinecures += 1
     await note(
         ctx,
-        f"{holder.name} was given the seat of {seat.kind.value.replace('_', ' ')} in {realm.entity.name}, with its income and none of its duties.",
+        f"{holder.name} was given the seat of {spoken(seat.kind)} in {realm.entity.name}, with its income and none of its duties.",
         key="venality.sinecure",
         ids=[realm.entity.id, holder.id],
     )

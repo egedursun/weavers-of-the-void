@@ -10,7 +10,7 @@ from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATE
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -266,7 +266,7 @@ async def devise(ctx: TickContext, school: MagicSchool, inventor: EntityRow) -> 
             name=template.name,
             entity_type=EntityType.RITE,
             stats=RiteStats(power=template.power, castings=0),
-            body=f"A rite of the {school.value.replace('_', ' ')} school, first worked by {inventor.name}.",
+            body=f"A rite of the {spoken(school)} school, first worked by {inventor.name}.",
             power=template.power,
             world_id=inventor.world_id,
             location_id=inventor.location_id,
@@ -528,7 +528,7 @@ async def do_damage(ctx: TickContext, work: Working) -> str | None:
         source_node_id=work.caster.id,
     )
     await apply_hits(ctx, victim, harm)
-    return f"struck {victim.name} with {kind.value}"
+    return f"struck {victim.name} with {spoken(kind)}"
 
 
 async def do_heal(ctx: TickContext, work: Working) -> str | None:
@@ -590,14 +590,14 @@ async def do_weather(ctx: TickContext, work: Working) -> str | None:
     if warder is not None:
         return f"the wards of {warder.name} turned the weather aside"
     await force_weather(ctx.session, region, kind, from_epoch=ctx.epoch, epochs=1, season_position=None)
-    return f"called {kind.value.replace('_', ' ')} over {region.name}"
+    return f"called {spoken(kind)} over {region.name}"
 
 
 async def do_curse(ctx: TickContext, work: Working) -> str | None:
     if work.target is None:
         return None
     await add_flag(ctx.session, work.target.id, EntityFlag.CURSED, ctx.epoch)
-    await connect(ctx.session, work.caster.id, work.target.id, BondKind.CURSED, ctx.epoch, description=f"by the rite {work.row.school.value}")
+    await connect(ctx.session, work.caster.id, work.target.id, BondKind.CURSED, ctx.epoch, description=f"by the rite {spoken(work.row.school)}")
     return f"cursed {work.target.name}"
 
 
@@ -681,7 +681,7 @@ async def bind_wandering(ctx: TickContext, work: Working, spirit: SpiritProfileR
     wider = await wider_binding(ctx, work.caster.id) if work.row.power >= ctx.rules.spirits.wide_bind_power else None
     if wider is not None:
         spirit.binding, spirit.bound_entity_id, spirit.alignment = wider[0], wider[1], SpiritAlignment.GUARDIAN
-        return f"bound a wandering spirit to keep {an(wider[0].value.replace('_', ' '))}"
+        return f"bound a wandering spirit to keep {an(spoken(wider[0]))}"
     if keep is not None:
         spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.STRUCTURE, keep, SpiritAlignment.GUARDIAN
         return "bound a wandering spirit to guard a building"
@@ -1129,7 +1129,7 @@ async def cast(
     await expose(ctx, caster.id, round_half_up(ctx.rules.warping.per_cast * row.power / RITE_POWER_MAX))
     if rng.chance(row.backlash_chance * shaping.backlash * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
-        casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
+        casting.effect = f"the rite turned on {caster.name} ({spoken(casting.backlash)})"
     else:
         damp = await dampening(ctx, caster, row)
         works = [await working(ctx, caster, target, effect, row) for effect in effects]
@@ -1174,7 +1174,7 @@ async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[Ent
             name=plan.name.strip() or RITE_TEMPLATES[plan.school].name,
             entity_type=EntityType.RITE,
             stats=RiteStats(power=plan.power, castings=0),
-            body=f"A rite of the {plan.school.value.replace('_', ' ')} school, devised for {holder.name}.",
+            body=f"A rite of the {spoken(plan.school)} school, devised for {holder.name}.",
             power=plan.power,
             world_id=holder.world_id,
             location_id=holder.location_id if holder.entity_type is EntityType.MORTAL else holder.id,
@@ -1213,7 +1213,7 @@ async def beyond_reach(ctx: TickContext, caster: EntityRow, row: RiteProfileRow,
     grammar = await ensure_grammar(ctx.session, ctx.rules, row)
     if reaches(await RegionAtlas.load(ctx.session), grammar, caster, target):
         return None
-    return f"{target.name} lies beyond its range ({grammar.range.value})"
+    return f"{target.name} lies beyond its range ({spoken(grammar.range)})"
 
 
 async def cast_by_son(ctx: TickContext, son: SonRow, rite: EntityRow, row: RiteProfileRow, *, vessel: EntityRow, target: EntityRow | None) -> CastingRow:

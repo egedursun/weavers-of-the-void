@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.technology import TECH_LEVEL_MAX, TechnologyProfileRow
 from aerona.domain.enums.action import ActionKind
@@ -32,7 +33,7 @@ async def technology_set(scope: PlayerScope, command: TechSet) -> Effect:
     row.level, row.updated_epoch = command.level, epoch
     row.locked = ["level"] if command.hold else []
     await scope.session.flush()
-    return Effect(f"Its {command.family.value.replace('_', ' ')} stands at level {command.level}.", command.node_id)
+    return Effect(f"Its {spoken(command.family)} stands at level {command.level}.", command.node_id)
 
 
 @player_action("technology:release", ActionKind.EDIT_RECORD)
@@ -41,7 +42,7 @@ async def technology_release(scope: PlayerScope, command: TechTarget) -> Effect:
     if row is None:
         raise NotFoundError("No level is set for that family.")
     row.locked = []
-    return Effect(f"Its {command.family.value.replace('_', ' ')} follows what it knows again.", command.node_id)
+    return Effect(f"Its {spoken(command.family)} follows what it knows again.", command.node_id)
 
 
 @player_action("technology:delete", ActionKind.EDIT_RECORD)
@@ -50,4 +51,4 @@ async def technology_delete(scope: PlayerScope, command: TechTarget) -> Effect:
     if row is None:
         raise NotFoundError("No level is set for that family.")
     await scope.session.delete(row)
-    return Effect(f"Its own level of {command.family.value.replace('_', ' ')} is struck; it takes that of its people or world.", command.node_id)
+    return Effect(f"Its own level of {spoken(command.family)} is struck; it takes that of its people or world.", command.node_id)

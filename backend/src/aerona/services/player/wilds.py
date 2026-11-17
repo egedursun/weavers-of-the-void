@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
@@ -351,7 +352,7 @@ async def spawn(scope: PlayerScope, command: Spawn) -> Effect:
 async def create_species(scope: PlayerScope, command: CreateSpecies) -> Effect:
     draft = control.NewSpecies(
         name=command.name.strip(),
-        description=command.description.strip() or f"A kind of {command.size_class.value} {command.diet.value} the Creator set loose.",
+        description=command.description.strip() or f"A kind of {spoken(command.size_class)} {spoken(command.diet)} the Creator set loose.",
         region_id=command.region_id,
         spec=SpeciesSpec(
             body_plan=command.body_plan,

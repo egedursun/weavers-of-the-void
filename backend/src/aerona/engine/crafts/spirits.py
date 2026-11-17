@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import EmotionSpiritRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import ThoughtRow
@@ -56,7 +57,7 @@ async def birth(ctx: TickContext, atlas: RegionAtlas, tally: SpiritTally) -> Non
             tally.born += 1
             await note(
                 ctx,
-                f"So much {emotion.value} gathered in {region.name} that it took the shape of spirits, and folk read it as an omen.",
+                f"So much {spoken(emotion)} gathered in {region.name} that it took the shape of spirits, and folk read it as an omen.",
                 key="spirits.born",
                 ids=[region_id],
             )

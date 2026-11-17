@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -26,7 +26,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.living_stats import mock_prophecy
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, remove_flag
+from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, load_entities, remove_flag
 from aerona.engine.primitives.records import RecordSpec, definite, open_record, retire, sentence_case
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.transform.record import blocked, record_transformation
@@ -117,7 +117,9 @@ async def living_tellers(ctx: TickContext, target_id: int) -> list[BondRow]:
 
 async def legend_spread(ctx: TickContext) -> None:
     life = ctx.rules.deep_life
-    for legend in await canon(ctx.session, [EntityType.LEGEND]):
+    legends = await canon(ctx.session, [EntityType.LEGEND])
+    await load_entities(ctx.session, [bond.source_node_id for bond in await active_bonds(ctx.session, TELLER_KINDS, targets=[legend.id for legend in legends])])
+    for legend in legends:
         tellers = len(await living_tellers(ctx, legend.id))
         current = stat(legend, "spread")
         base = current if current is not None else life.legend_default_spread
@@ -143,7 +145,9 @@ def resisted_fade(ctx: TickContext, tradition: EntityRow, amount: int) -> int:
 
 async def traditions(ctx: TickContext) -> None:
     life = ctx.rules.deep_life
-    for tradition in await canon(ctx.session, [EntityType.TRADITION]):
+    kept = await canon(ctx.session, [EntityType.TRADITION])
+    await load_entities(ctx.session, [bond.source_node_id for bond in await active_bonds(ctx.session, list(BondKind), targets=[item.id for item in kept])])
+    for tradition in kept:
         if ctx.epoch - tradition.birth_epoch <= life.tradition_grace_epochs:
             continue
         count = await celebrants(ctx, tradition)
@@ -375,7 +379,10 @@ async def fairy_tales(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     keepers = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.mortal_role in KEEPER_ROLES]
     tales = await flags_by_entity(ctx.session, EntityFlag.FAIRY_TALE)
-    for legend in await canon(ctx.session, [EntityType.LEGEND]):
+    legends = await canon(ctx.session, [EntityType.LEGEND])
+    places = [bond.target_node_id for bond in await active_bonds(ctx.session, PLACE_BOND_KINDS, sources=[legend.id for legend in legends])]
+    await load_entities(ctx.session, [*(legend.location_id for legend in legends), *places])
+    for legend in legends:
         if legend.id in tales or ctx.epoch - legend.birth_epoch < life.tale_min_age or (stat(legend, "spread") or 0) >= life.tale_spread_threshold:
             continue
         place = await legend_place(ctx, legend)
@@ -438,7 +445,7 @@ async def belief_and_memory(ctx: TickContext) -> None:
 async def require_record(ctx: TickContext, entity_id: int, entity_type: EntityType, statuses: frozenset[EntityStatus]) -> EntityRow:
     found = await ctx.session.get(EntityRow, entity_id)
     if found is None or found.entity_type is not entity_type or found.status not in statuses:
-        raise ValidationFailedError(f"No such {entity_type.value} to act on.")
+        raise ValidationFailedError(f"No such {spoken(entity_type)} to act on.")
     return found
 
 

@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.sons import SonPowerRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
@@ -155,7 +155,7 @@ async def deify_mortal(scope: PlayerScope, command: EntityTarget) -> Effect:
     result = await deify(ctx, creator, mortal)
     scope.publish(EventKind.NEW_SON, {"son_id": result.son.id, "name": result.son.name, "rarity": result.son.rarity.value})
     return Effect(
-        f"{mortal.name} joined the pantheon as {an(result.son.rarity.value)} son.",
+        f"{mortal.name} joined the pantheon as {an(spoken(result.son.rarity))} son.",
         mortal.id,
         created_ids=(result.son.id,),
         values={"son_id": result.son.id, "followers": len(result.followers)},
@@ -166,7 +166,7 @@ async def deify_mortal(scope: PlayerScope, command: EntityTarget) -> Effect:
 async def demote_son(scope: PlayerScope, command: SonTarget) -> Effect:
     son = await guards.living_son(scope.session, command.son_id)
     rarity = await god_power.demote_son(scope.session, scope.rules, son.id)
-    return Effect(f"{son.name} fell to the {rarity.value} class.", son.id)
+    return Effect(f"{son.name} fell to the {spoken(rarity)} class.", son.id)
 
 
 @player_action("strip_power", ActionKind.GRANT_POWER)

@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from aerona.catalog.genetics import HOUSEHOLD_ROLE_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import (
@@ -332,7 +332,7 @@ async def edit_aggregate(scope: PlayerScope, command: EditAggregate) -> Effect:
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
     return Effect(
-        f"{community.name}: {several(row.households, 'household', 'households')} of {command.social_class.value.replace('_', ' ')} folk.",
+        f"{community.name}: {several(row.households, 'household', 'households')} of {spoken(command.social_class)} folk.",
         target_node_id=community.id,
     )
 

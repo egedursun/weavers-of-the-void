@@ -196,7 +196,14 @@ async def robber_ids(session: AsyncSession) -> frozenset[int]:
 
 
 @memoized(FactionProfileRow)
+async def monopoly_homes(session: AsyncSession) -> frozenset[int | None]:
+    return frozenset(await session.scalars(select(FactionProfileRow.home_entity_id).where(FactionProfileRow.monopoly.is_not(None)).distinct()))
+
+
+@memoized(FactionProfileRow)
 async def monopolies_at(session: AsyncSession, community_id: int) -> frozenset[str]:
+    if community_id not in await monopoly_homes(session):
+        return frozenset()
     rows = await session.scalars(
         select(FactionProfileRow.monopoly).where(FactionProfileRow.home_entity_id == community_id, FactionProfileRow.monopoly.is_not(None))
     )

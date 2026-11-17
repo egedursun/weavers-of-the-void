@@ -12,6 +12,7 @@ from aerona.catalog.relations import CONTESTS, PASSION_LABELS, RELATION_LABELS
 from aerona.catalog.renown import AXIS_LABELS
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import CultureHonourRow, DreamRow, FearRow, GriefRow, InspirationRow, LifeDreamRow, WantRow
@@ -169,7 +170,7 @@ async def aspiration_lines(session: AsyncSession, node_id: int) -> list[str]:
     dream = await session.get(LifeDreamRow, node_id)
     if dream is not None:
         about = f" ({await name_of(session, dream.target_node_id)})" if dream.target_node_id is not None else ""
-        lines.append(f"Life's dream: {GOALS[dream.goal].label.lower()}{about}, {dream.state.value}, {dream.progress}% of the way")
+        lines.append(f"Life's dream: {GOALS[dream.goal].label.lower()}{about}, {spoken(dream.state)}, {dream.progress}% of the way")
     wants = list(await session.scalars(select(WantRow).where(WantRow.holder_node_id == node_id, WantRow.fulfilled_epoch.is_(None))))
     if wants:
         lines.append("What you want now: " + ", ".join(WANTS[row.kind].label.lower() for row in wants))
@@ -178,7 +179,7 @@ async def aspiration_lines(session: AsyncSession, node_id: int) -> list[str]:
         lines.append("What you fear: " + ", ".join(f"{FEARS[row.kind].label.lower()} ({row.strength})" for row in fears))
     profile = await session.get(MortalProfileRow, node_id)
     if profile is not None:
-        focus = f"; your focus is {profile.focus.value}" if profile.focus is not None else ""
+        focus = f"; your focus is {spoken(profile.focus)}" if profile.focus is not None else ""
         lines.append(f"Conviction {profile.conviction}/{PERCENT}{focus}")
     spark = await session.scalar(
         select(InspirationRow).where(InspirationRow.holder_node_id == node_id, InspirationRow.state == InspirationState.BURNING).limit(1)
@@ -249,7 +250,7 @@ async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch
     lines: list[str] = []
     profile = await session.get(MortalProfileRow, node_id)
     if profile is not None:
-        lines.append(f"Mood: {profile.mood.value} ({profile.mood_score:+d})")
+        lines.append(f"Mood: {spoken(profile.mood)} ({profile.mood_score:+d})")
     totals: dict[Emotion, float] = {}
     for row in await thoughts_of(session, node_id):
         totals[row.emotion] = totals.get(row.emotion, 0.0) + thought_strength(row, epoch)
@@ -258,7 +259,7 @@ async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch
         lines.append("Strongest feelings: " + ", ".join(f"{EMOTIONS[emotion].label.lower()} {round(total)}" for emotion, total in strongest))
     griefs = list(await session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == node_id, GriefRow.stage.in_(OPEN_GRIEF))))
     for grief in griefs:
-        lines.append(f"Grieving {await name_of(session, grief.deceased_node_id)}: {grief.stage.value}")
+        lines.append(f"Grieving {await name_of(session, grief.deceased_node_id)}: {spoken(grief.stage)}")
     dream = await session.scalar(select(DreamRow).where(DreamRow.dreamer_node_id == node_id).order_by(DreamRow.epoch.desc(), DreamRow.id.desc()).limit(1))
     if dream is not None:
         reading = f", read as {READING_LABELS[dream.reading].lower()}" if dream.reading is not DreamReading.UNREAD else ""

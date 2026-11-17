@@ -1,7 +1,7 @@
 from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -291,7 +291,7 @@ async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     except ValueError:
         government = GovernmentKind.REPUBLIC
     realm.profile.government = government
-    text = f"{victor.name} overturned the rule of {loser.name}; the realm is now {an(government.value.replace('_', ' '))}"
+    text = f"{victor.name} overturned the rule of {loser.name}; the realm is now {an(spoken(government))}"
     return text, Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"government": government.value})
 
 
@@ -346,7 +346,7 @@ async def peace_terms(
     for aim in await aims_of(ctx, war.id, victor.id):
         cost = await term_cost(ctx, AIM_TERMS[aim.kind], aim.params, aim.target_entity_id)
         if budget is not None and cost > budget:
-            notes.append(f"{victor.name} gave up its demand for {AIM_TERMS[aim.kind].value.replace('_', ' ')}: the war had not won enough for it.")
+            notes.append(f"{victor.name} gave up its demand for {spoken(AIM_TERMS[aim.kind])}: the war had not won enough for it.")
             continue
         found = await TERMS[aim.kind](ctx, war, aim, (victor, loser), book)
         if found is not None:

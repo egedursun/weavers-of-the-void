@@ -8,7 +8,7 @@ from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
@@ -1241,7 +1241,7 @@ async def fight_battle(
             await _sacked(ctx, besieged, armies, attacker, siege)
     else:
         outcome = _battle_score(war, ctx.rules, result, attacker_id=attacker.id, gap=gap)
-        summary = f"{winner.name} prevailed over {loser.name} ({result.outcome.value}; {result.winner.tactic.value.replace('_', ' ')})"
+        summary = f"{winner.name} prevailed over {loser.name} ({spoken(result.outcome)}; {spoken(result.winner.tactic)})"
     await _honours(ctx, war, result, field, armies, attacker_id=attacker.id)
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")

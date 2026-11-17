@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.base import Base
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -115,7 +116,7 @@ async def set_goal(
 ) -> GodGoalRow:
     god = await require_god(ctx, god_id)
     if kind in SON_ONLY and not isinstance(god, SonRow):
-        raise ValidationFailedError(f"Only a son can aim to {kind.value.replace('_', ' ')}.")
+        raise ValidationFailedError(f"Only a son can aim to {spoken(kind)}.")
     await check_target(ctx, kind, target_id)
     if world_id is not None:
         await require_world(ctx, world_id)

@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.polity import TreatyBreachRow, TreatyClauseRow, TreatyProfileRow
+from aerona.db.tables.polity import TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
@@ -22,7 +22,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.notes import note
-from aerona.engine.polity.accords import parties_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import spoken_language
@@ -227,16 +226,27 @@ async def entitle(ctx: TickContext, mortal: EntityRow, meaning: str, namer: Name
 async def misreadings(ctx: TickContext) -> int:
     table = ctx.rules.name_meanings
     misread = 0
-    for profile in list(
+    treaties = list(
         await ctx.session.scalars(select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE).order_by(TreatyProfileRow.treaty_entity_id))
+    )
+    sworn: dict[int, list[int]] = {profile.treaty_entity_id: [] for profile in treaties}
+    for treaty_id, party_id in await ctx.session.execute(
+        select(TreatyPartyRow.treaty_entity_id, TreatyPartyRow.party_node_id)
+        .where(TreatyPartyRow.treaty_entity_id.in_(list(sworn)))
+        .order_by(TreatyPartyRow.treaty_entity_id, TreatyPartyRow.party_node_id)
     ):
-        parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
+        sworn[treaty_id].append(party_id)
+    readings: dict[tuple[int, int], tuple[float, float]] = {}
+    for profile in treaties:
+        parties = sworn[profile.treaty_entity_id]
         if len(parties) < 2 or held(profile.treaty_entity_id) or any(held(party) for party in parties[:2]):
             continue
         first, second = parties[0], parties[1]
-        understood = await register_barrier(ctx.session, ctx.rules, first, second, ctx.epoch, ours=LanguageRegister.COURT, theirs=LanguageRegister.COURT)
-        tongues = (await register_tongues(ctx.session, first, LanguageRegister.COURT), await register_tongues(ctx.session, second, LanguageRegister.COURT))
-        gap = await misread_factor(ctx.session, ctx.rules, *tongues)
+        if (first, second) not in readings:
+            barrier = await register_barrier(ctx.session, ctx.rules, first, second, ctx.epoch, ours=LanguageRegister.COURT, theirs=LanguageRegister.COURT)
+            tongues = (await register_tongues(ctx.session, first, LanguageRegister.COURT), await register_tongues(ctx.session, second, LanguageRegister.COURT))
+            readings[(first, second)] = (barrier, await misread_factor(ctx.session, ctx.rules, *tongues))
+        understood, gap = readings[(first, second)]
         if not ctx.rng(f"treaty.misread.{profile.treaty_entity_id}.{ctx.epoch}").chance(table.misread_pct * (1 - understood) * gap):
             continue
         clause = await ctx.session.scalar(

@@ -1263,7 +1263,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/player/body.py` | 42 | 2026-11-16 | `c2a0d15abada2abb` |
 | `backend/src/aerona/services/player/bonds.py` | 28 | 2026-11-16 | `87b1dd1a0e9adcd6` |
 | `backend/src/aerona/services/player/calendar.py` | 24 | 2026-11-16 | `ab944641e77d9f8d` |
-| `backend/src/aerona/services/player/canon.py` | 52 | 2026-11-16 | `076b0995da36bd64` |
+| `backend/src/aerona/services/player/canon.py` | 52 | 2026-11-17 | `7028392f6f4f5751` |
 | `backend/src/aerona/services/player/catalog.py` | 2015 | 2026-11-17 | `ad332b35f748b010` |
 | `backend/src/aerona/services/player/celestial_depth.py` | 4 | 2026-11-16 | `46983b7581103653` |
 | `backend/src/aerona/services/player/cheats.py` | 2 | 2026-11-16 | `f676c81ae0dc7ef0` |

@@ -53,10 +53,10 @@ async def realm_shares(ctx: TickContext, realm: Realm) -> dict[SocialClass, floa
     return {social_class: value / len(members) for social_class, value in totals.items()} if members else {}
 
 
-async def estate_of(ctx: TickContext, realm_id: int, social_class: SocialClass) -> EstateProfileRow | None:
-    found: EstateProfileRow | None = await ctx.session.scalar(
-        select(EstateProfileRow).where(EstateProfileRow.polity_entity_id == realm_id, EstateProfileRow.social_class == social_class).limit(1)
-    )
+async def estates_by_class(ctx: TickContext) -> dict[tuple[int, SocialClass], EstateProfileRow]:
+    found: dict[tuple[int, SocialClass], EstateProfileRow] = {}
+    for row in await ctx.session.scalars(select(EstateProfileRow).order_by(EstateProfileRow.faction_entity_id)):
+        found.setdefault((row.polity_entity_id, row.social_class), row)
     return found
 
 
@@ -171,13 +171,14 @@ async def lobby(ctx: TickContext, realm: Realm, row: EstateProfileRow, tally: Es
 async def tend_estates(ctx: TickContext, tally: EstateTally) -> None:
     table = ctx.rules.estates
     book = await RealmBook.load(ctx.session)
+    estates = await estates_by_class(ctx)
     for realm in book.realms.values():
         if held(realm.entity.id) or not realm.members:
             continue
         shares = await realm_shares(ctx, realm)
         for social_class in SocialClass:
             share = shares.get(social_class, 0.0)
-            row = await estate_of(ctx, realm.entity.id, social_class)
+            row = estates.get((realm.entity.id, social_class))
             ready = social_class in ESTATE_CLASSES and row is None and share >= table.found_share and realm.profile.capital_entity_id is not None
             if ready and ctx.rng(seed_of("estate.found", realm.entity.id, social_class.value, ctx.epoch)).chance(table.found_pct):
                 row = await found_estate(ctx, realm, social_class)

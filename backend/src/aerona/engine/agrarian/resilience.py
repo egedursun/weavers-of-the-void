@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
@@ -184,7 +184,7 @@ async def prepare(ctx: TickContext, atlas: RegionAtlas, tally: ResilienceTally) 
         tally.raised += 1
         await note(
             ctx,
-            f"{town.name} raised its {kind.value.replace('_', ' ')}s to level {level} against the disasters it remembers.",
+            f"{town.name} raised its {spoken(kind)}s to level {level} against the disasters it remembers.",
             key="resilience.built",
             ids=[town.id],
         )
@@ -408,7 +408,7 @@ async def aid_from(
     tally.aid += 1
     await note(
         ctx,
-        f"{giver.name} sent {kind.value} to {town.name}{f' after the {event.name}' if event is not None else ''}.",
+        f"{giver.name} sent {spoken(kind)} to {town.name}{f' after the {event.name}' if event is not None else ''}.",
         key="relief.sent",
         ids=[giver.id, town.id, *([event.id] if event is not None else [])],
     )

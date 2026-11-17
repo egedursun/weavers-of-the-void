@@ -1,4 +1,4 @@
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
@@ -18,7 +18,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import canon
-from aerona.engine.services.war import ongoing_wars
+from aerona.engine.services.war import ongoing_war_count
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import (
     administer,
@@ -197,7 +197,7 @@ async def settlement_life(ctx: TickContext) -> None:
         people = await people_of(ctx.session, settlement)
         values = await culture_of(ctx.session, people.id) if people is not None else {}
         society = await ctx.session.get(CommunitySocietyRow, settlement.id)
-        at_war = bool(await ongoing_wars(ctx.session, settlement.id))
+        at_war = bool(await ongoing_war_count(ctx.session, settlement.id))
         await capacities(ctx, town, knowledge)
         ctx.count("invested", await invest(ctx, town))
         await administer(ctx, town, knowledge, await literacy_of(ctx, town))
@@ -229,7 +229,7 @@ async def settlement_life(ctx: TickContext) -> None:
         if tier is not None:
             await note(
                 ctx,
-                f"{settlement.name} is now {an(tier.value)}.",
+                f"{settlement.name} is now {an(spoken(tier))}.",
                 key="settlement.tier",
                 ids=[settlement.id],
                 kind=ChronicleKind.CIVILIZATION,

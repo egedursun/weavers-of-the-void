@@ -16,7 +16,7 @@ from aerona.domain.enums.military import CasualtyFate, UnitKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import cohorts_of, row_for
+from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
 from aerona.engine.environment.book import add_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -126,11 +126,14 @@ async def recover_wounded(ctx: TickContext) -> int:
             select(CohortRow).where(CohortRow.condition == RECOVERING, CohortRow.social_class == SocialClass.WARRIOR, CohortRow.count > 0)
         )
     )
+    known: dict[int, dict[CohortKey, CohortRow]] = {}
     for row in rows:
         if held(row.community_entity_id):
             continue
         healed = max(1, row.count // epochs)
-        cohorts = await cohorts_of(ctx.session, row.community_entity_id)
+        if row.community_entity_id not in known:
+            known[row.community_entity_id] = await cohorts_of(ctx.session, row.community_entity_id)
+        cohorts = known[row.community_entity_id]
         veterans = row_for(ctx.session, cohorts, row.community_entity_id, (row.age_band, row.sex, row.social_class, CohortCondition.VETERAN), ctx.epoch)
         if move_amount(row, veterans, "count", healed):
             recovered += healed

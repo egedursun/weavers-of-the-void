@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.gathering import AttendanceReason, CollectionKind, CollectionRole, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.site import BattlefieldFeature, RoomContentKind, SiteChallenge, SiteRoomKind
@@ -175,13 +175,13 @@ async def convene(scope: PlayerScope, command: Convene) -> Effect:
         hold_now=command.hold_now,
     )
     told = "is held" if command.hold_now else "is planned for this epoch"
-    return Effect(f"The {row.kind.value.replace('_', ' ')} {told}.", row.host_node_id, values={"gathering_id": row.id})
+    return Effect(f"The {spoken(row.kind)} {told}.", row.host_node_id, values={"gathering_id": row.id})
 
 
 @player_action("gathering:hold", ActionKind.EDIT_RECORD)
 async def hold_now(scope: PlayerScope, command: GatheringTarget) -> Effect:
     row = await control.hold_planned(await scope.context("gathering_hold"), command.gathering_id)
-    return Effect(f"The {row.kind.value.replace('_', ' ')} was held.", row.host_node_id)
+    return Effect(f"The {spoken(row.kind)} was held.", row.host_node_id)
 
 
 @player_action("gathering:edit", ActionKind.EDIT_RECORD)
@@ -263,7 +263,7 @@ async def set_place(scope: PlayerScope, command: PlaceSet) -> Effect:
 @player_action("storyteller:set", ActionKind.EDIT_RECORD)
 async def set_storyteller(scope: PlayerScope, command: StorytellerSet) -> Effect:
     row = await control.set_storyteller(await scope.context("storyteller_set"), command.world_id, command.profile, command.values, command.release)
-    return Effect(f"The storyteller of this world is {row.profile.value}.", command.world_id)
+    return Effect(f"The storyteller of this world is {spoken(row.profile)}.", command.world_id)
 
 
 @player_action("site_room:create", ActionKind.EDIT_RECORD)
@@ -276,7 +276,7 @@ async def create_room(scope: PlayerScope, command: RoomDraft) -> Effect:
         difficulty=command.difficulty,
         position=command.position,
     )
-    return Effect(f"{an(row.kind.value, capital=True)} opens in the site.", command.site_id, values={"room_id": row.id})
+    return Effect(f"{an(spoken(row.kind), capital=True)} opens in the site.", command.site_id, values={"room_id": row.id})
 
 
 @player_action("site_room:edit", ActionKind.EDIT_RECORD)
@@ -294,7 +294,7 @@ async def delete_room(scope: PlayerScope, command: RoomTarget) -> Effect:
 @player_action("room_content:add", ActionKind.EDIT_RECORD)
 async def add_content(scope: PlayerScope, command: ContentDraft) -> Effect:
     row = await control.add_content(await scope.context("room_content_add"), command.room_id, command.kind, command.entity_id, command.strength)
-    return Effect(f"{an(row.kind.value, capital=True)} now waits in the room.", values={"content_id": row.id})
+    return Effect(f"{an(spoken(row.kind), capital=True)} now waits in the room.", values={"content_id": row.id})
 
 
 @player_action("room_content:remove", ActionKind.EDIT_RECORD)
@@ -337,7 +337,7 @@ async def edit_dig(scope: PlayerScope, command: DigEdit) -> Effect:
 @player_action("excavation:advance", ActionKind.EDIT_RECORD)
 async def advance_dig(scope: PlayerScope, command: DigTarget) -> Effect:
     row = await control.advance_dig(await scope.context("excavation_advance"), command.dig_id)
-    return Effect(f"The dig reaches its {row.stage.value.replace('_', ' ')}.", row.site_entity_id)
+    return Effect(f"The dig reaches its {spoken(row.stage)}.", row.site_entity_id)
 
 
 @player_action("excavation:delete", ActionKind.EDIT_RECORD)
@@ -355,7 +355,7 @@ async def edit_stage(scope: PlayerScope, command: StageEdit) -> Effect:
 @player_action("battlefield_feature:create", ActionKind.EDIT_RECORD)
 async def create_feature(scope: PlayerScope, command: FeatureDraft) -> Effect:
     row = await control.create_feature(await scope.context("battlefield_feature_create"), command.place_id, command.feature, command.strength)
-    return Effect(f"{an(row.feature.value.replace('_', ' '), capital=True)} marks the battlefield.", command.place_id, values={"feature_id": row.id})
+    return Effect(f"{an(spoken(row.feature), capital=True)} marks the battlefield.", command.place_id, values={"feature_id": row.id})
 
 
 @player_action("battlefield_feature:edit", ActionKind.EDIT_RECORD)

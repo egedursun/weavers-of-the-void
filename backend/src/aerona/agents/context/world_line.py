@@ -106,7 +106,7 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
     for impact in await scope.session.scalars(pending.order_by(ImpactEventRow.due_epoch, ImpactEventRow.id)):
         region = await scope.session.get(EntityRow, impact.region_entity_id) if impact.region_entity_id is not None else None
         lines.append(
-            f"impact#{impact.id}: {an(impact.body.value.replace('_', ' '))} of size {impact.size}/100 strikes"
+            f"impact#{impact.id}: {an(spoken(impact.body))} of size {impact.size}/100 strikes"
             + (f" {region.name}" if region is not None else "")
             + f" at age {impact.due_epoch}"
         )

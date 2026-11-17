@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.customs import BorderControlRow, MeasureStandardRow, MembershipCategoryRow, MembershipRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
@@ -31,6 +32,7 @@ async def unarmed(session: AsyncSession, mortal_id: int) -> frozenset[str]:
     return frozenset() if await has_right(session, mortal_id, MemberRight.ARMS) else ARMED
 
 
+@memoized(PolityMemberRow)
 async def realm_of(session: AsyncSession, town_id: int) -> int | None:
     found = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town_id).limit(1))
     return int(found) if found is not None else None

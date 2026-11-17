@@ -103,9 +103,16 @@ async def faith_tenets(session: AsyncSession, community_id: int) -> set[TenetKin
     return set(await session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id.in_(cults))))
 
 
+@memoized(BondRow, CultTenetRow)
+async def dietary_gods(session: AsyncSession) -> frozenset[int]:
+    cults = select(CultTenetRow.cult_entity_id).where(CultTenetRow.tenet == TenetKind.DIETARY_LAW, CultTenetRow.target.is_not(None), CultTenetRow.target != "")
+    statement = select(BondRow.target_node_id).where(BondRow.source_node_id.in_(cults), BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
+    return frozenset(await session.scalars(statement.distinct()))
+
+
 async def forbidden_foods(session: AsyncSession, community_id: int) -> set[str]:
     god_id = await patron_node(session, community_id)
-    if god_id is None:
+    if god_id is None or god_id not in await dietary_gods(session):
         return set()
     worshippers = select(BondRow.source_node_id).where(BondRow.target_node_id == god_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
     rows = await session.scalars(select(CultTenetRow.target).where(CultTenetRow.cult_entity_id.in_(worshippers), CultTenetRow.tenet == TenetKind.DIETARY_LAW))

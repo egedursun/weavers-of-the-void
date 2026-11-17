@@ -7,6 +7,7 @@ from sqlalchemy.orm.util import identity_key
 
 from aerona.catalog.bonds import EVENT_BOND_KINDS, UNORDERED_PAIR_KINDS, bond_spec, endpoints_valid, should_swap
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.bond_index import bond_lookup
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.nodes import NodeRepository
@@ -125,7 +126,7 @@ class BondRepository(Repository):
             if not endpoints_valid(result.kind, subject_type, object_type):
                 downgrades = BOND_DOWNGRADES.get()
                 if downgrades is not None:
-                    downgrades.append(f"{result.kind.value} from {subject_type.value} to {object_type.value}")
+                    downgrades.append(f"{spoken(result.kind)} from {spoken(subject_type)} to {spoken(object_type)}")
                 label = bond_spec(result.kind).label
                 description = f"{label}: {result.description}" if result.description else label
                 result = replace(result, kind=BondKind.RELATED, description=description)

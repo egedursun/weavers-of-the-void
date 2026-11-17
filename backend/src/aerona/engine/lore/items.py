@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.lore import ITEM_CLASSES, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -864,7 +865,7 @@ async def repair(ctx: TickContext, book: MaterialBook, item: EntityRow, row: Ite
         return False
     was_broken = row.condition < ctx.rules.item_wear.broken
     row.condition = clamp_int(row.condition + ctx.rules.item_wear.repair_gain, 0, PERCENT)
-    record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a smith with {taken} {commodity.value.replace('_', ' ')}")
+    record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a smith with {taken} {spoken(commodity)}")
     if was_broken and row.condition >= ctx.rules.item_wear.broken:
         await note(ctx, f"{item.name} was made whole again.", key="item.reforged", ids=[item.id])
     return True

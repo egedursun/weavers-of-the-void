@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from aerona.constants.media import MediaBackend
 from aerona.constants.migration import LEDGER_HISTORY_NAME, PARTIAL_SUFFIX, SNAPSHOT_NAME
+from aerona.core.grammar import spoken
 from aerona.db.migrations import upgrade_to_head
 from aerona.db.session import Database
 from aerona.media.store import MediaStore
@@ -146,7 +147,7 @@ async def migrate_into(
 
 async def run_migration(options: MigrationOptions) -> MigrationReport:
     vocabulary = load_vocabulary()
-    backend = options.media_backend.value if not options.dry_run else f"{options.media_backend.value} (dry run)"
+    backend = options.media_backend.value if not options.dry_run else f"{spoken(options.media_backend)} (dry run)"
     report = MigrationReport(legacy_path=str(options.legacy_dir), target_path=str(options.target), dry_run=options.dry_run, media_backend=backend)
     if not options.dry_run and options.target.exists() and not options.replace:
         raise TargetExistsError(f"{options.target} already exists; pass --replace to overwrite it.")

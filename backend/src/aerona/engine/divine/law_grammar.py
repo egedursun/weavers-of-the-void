@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.law_grammar import LEGACY_GRAMMAR, PRESET_TARGETS, ROW_TARGETS, Grammar, preset_of
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -451,10 +452,10 @@ def refusal(target: LawTarget, operator: LawOperator, key: str, value: int) -> s
         if preset_of(target, operator, key, value) is not None:
             return None
         fits = sorted({f"{grammar.operator.value} {grammar.key}" for grammar in LEGACY_GRAMMAR.values() if grammar is not None and grammar.target is target})
-        return f"A law over {target.value.replace('_', ' ')} takes one of: {'; '.join(fits)}."
+        return f"A law over {spoken(target)} takes one of: {'; '.join(fits)}."
     spec = ROW_TARGETS[target]
     if spec is not None and key not in spec.fields:
-        return f"A law over {target.value.replace('_', ' ')} works on one of: {', '.join(spec.fields)}."
+        return f"A law over {spoken(target)} works on one of: {', '.join(spec.fields)}."
     return None if key.strip() else "Name the field the law works on."
 
 

@@ -4,7 +4,7 @@ from typing import Any
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.tenets import OPPOSED
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import fill
+from aerona.core.grammar import fill, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -306,7 +306,7 @@ async def polity_extras(call: SonCall, args: CreationInput, created: EntityRow) 
             )
         except ValidationFailedError:
             await attach_profile(call.session, created, law_kind, {}, holder=holder, epoch=call.epoch, by_id=None, basis=LegitimacyBasis.DIVINE)
-            notes.append(f"Its terms were set to the custom of {law_kind.value.replace('_', ' ')}.")
+            notes.append(f"Its terms were set to the custom of {spoken(law_kind)}.")
     return notes
 
 

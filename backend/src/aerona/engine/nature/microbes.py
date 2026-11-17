@@ -123,9 +123,15 @@ async def keepers_in(session: AsyncSession, town_id: int) -> list[int]:
     return [town_id, *inside]
 
 
+@memoized(FermentCultureRow)
+async def culture_keepers(session: AsyncSession) -> frozenset[int]:
+    return frozenset(await session.scalars(select(FermentCultureRow.holder_entity_id).where(FermentCultureRow.lost_epoch.is_(None))))
+
+
 async def culture_lift(session: AsyncSession, rules: Rules, town_id: int, method: CookingMethod, course: DishCourse) -> float:
     best = 0
-    for row in await live_cultures(session, await keepers_in(session, town_id)):
+    keepers = await keepers_in(session, town_id) if await culture_keepers(session) else []
+    for row in await live_cultures(session, keepers):
         if method in CULTURED[row.kind] or (row.kind is F.YEAST and course is DishCourse.DRINK):
             best = max(best, row.quality)
     return 1 + best / PERCENT * rules.fermentation.delight_pct / PERCENT

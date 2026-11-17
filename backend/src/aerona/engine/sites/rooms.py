@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
 from aerona.db.tables.made import MadeRealmRow
@@ -184,7 +184,7 @@ async def contents_of(ctx: TickContext, room_id: int) -> list[RoomContentRow]:
 
 async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, room: SiteRoomRow) -> None:
     await items.profile_of(ctx, relic)
-    await items.give(ctx, relic, delver.id, ItemDeed.CAPTURED, f"a relic carried out of {room.kind.value} by {delver.name}")
+    await items.give(ctx, relic, delver.id, ItemDeed.CAPTURED, f"a relic carried out of {spoken(room.kind)} by {delver.name}")
     shift_stat(delver, "piety", ctx.rules.sites.relic_piety, 0)
 
 
@@ -218,7 +218,7 @@ async def loot(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, walk: Wal
             await ctx.session.delete(content)
         elif content.kind is RoomContentKind.ITEM and target is not None and not held(target.id):
             await items.profile_of(ctx, target)
-            await items.give(ctx, target, delver.id, ItemDeed.CAPTURED, f"carried out of {room.kind.value} by {delver.name}")
+            await items.give(ctx, target, delver.id, ItemDeed.CAPTURED, f"carried out of {spoken(room.kind)} by {delver.name}")
             walk.loot.append(target.id)
             await ctx.session.delete(content)
         elif content.kind is RoomContentKind.BEAST and target is not None and not held(target.id):
@@ -241,7 +241,7 @@ async def walk_room(ctx: TickContext, delver: EntityRow, room: SiteRoomRow, comp
         return True
     beasts = [content for content in await contents_of(ctx, room.id) if content.kind is RoomContentKind.BEAST]
     harm = table.guardian_hp if room.challenge is SiteChallenge.GUARDIAN or beasts else table.delve_hp
-    await apply_hits(ctx, delver, Harm(harm, HarmCause.QUEST, f"fell in the {room.kind.value} of a site it walked"))
+    await apply_hits(ctx, delver, Harm(harm, HarmCause.QUEST, f"fell in the {spoken(room.kind)} of a site it walked"))
     walk.harmed = True
     return False
 

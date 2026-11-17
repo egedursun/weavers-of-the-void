@@ -3,7 +3,7 @@ from pydantic import Field
 from aerona.catalog.ethics import ACT_LABELS, STANCE_LABELS
 from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureHonourRow, PreferenceRow
 from aerona.domain.enums.action import ActionKind
@@ -67,7 +67,7 @@ async def set_preference(scope: PlayerScope, command: SetPreference) -> Effect:
         target = await scope.session.get(EntityRow, int(command.target)) if command.target.isdigit() else None
         wanted = EntityType.SPECIES if command.kind is PreferenceKind.CREATURE else EntityType.RESOURCE
         if target is None or target.entity_type is not wanted:
-            raise ValidationFailedError(f"{an(PREFERENCE_LABELS[command.kind].lower(), capital=True)} must be {an(wanted.value)} of this world.")
+            raise ValidationFailedError(f"{an(PREFERENCE_LABELS[command.kind].lower(), capital=True)} must be {an(spoken(wanted))} of this world.")
         node = target.id
     elif command.target not in STATIC_TARGETS[command.kind]:
         raise ValidationFailedError(f"That is not {an(PREFERENCE_LABELS[command.kind].lower())}.")
@@ -114,4 +114,4 @@ async def set_honour(scope: PlayerScope, command: SetHonour) -> Effect:
     row.model = command.model
     row.locked = held(row.locked, MODEL_FIELD, command.hold)
     await scope.session.flush()
-    return Effect(f"The {holder.name} now live by {command.model.value}.", target_node_id=holder.id)
+    return Effect(f"The {holder.name} now live by {spoken(command.model)}.", target_node_id=holder.id)

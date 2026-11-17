@@ -3,7 +3,7 @@ from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.chokepoints import route_grants
-from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, market_nodes, quote_market, raise_district, store_quotes
+from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, epoch_prices, market_nodes, quote_market, raise_district, store_quotes
 from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
 from aerona.engine.economy.route_backfill import route_backfill
@@ -110,8 +110,9 @@ async def markets(ctx: TickContext) -> None:
         await raise_district(ctx, book, community, tally)
         quotes = await quote_market(ctx, book, community)
         await apply_aggregate_prices(book, community, quotes)
+    prices = await epoch_prices(ctx)
     for market in unheld(market_nodes(book)):
-        await store_quotes(ctx, market, await quote_market(ctx, book, market))
+        await store_quotes(ctx, market, await quote_market(ctx, book, market), prices.get(market.id, {}))
         tally.priced += 1
     ctx.count("districts", tally.districts)
     ctx.count("markets", tally.priced)

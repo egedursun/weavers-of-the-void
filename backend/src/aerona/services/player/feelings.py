@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import DreamRow, GriefRow, ThoughtRow
 from aerona.db.tables.node import NodeRow
@@ -171,7 +172,7 @@ async def set_mood(scope: PlayerScope, command: SetMood) -> Effect:
         locked.discard(MOOD_FIELD)
     profile.locked = sorted(locked)
     await scope.session.flush()
-    return Effect(f"{mortal.name} is now {profile.mood.value}.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name} is now {spoken(profile.mood)}.", target_node_id=mortal.id)
 
 
 async def grief_row(scope: PlayerScope, grief_id: int) -> GriefRow:
@@ -204,7 +205,7 @@ async def edit_grief(scope: PlayerScope, command: EditGrief) -> Effect:
     if command.length_epochs is not None:
         row.length_epochs = command.length_epochs
     await scope.session.flush()
-    return Effect(f"The grief is now {row.stage.value}.", target_node_id=row.mourner_node_id)
+    return Effect(f"The grief is now {spoken(row.stage)}.", target_node_id=row.mourner_node_id)
 
 
 @player_action("grief:remove", ActionKind.OTHER)

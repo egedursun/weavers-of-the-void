@@ -18,7 +18,7 @@ from aerona.db.tables.urban import DistrictServiceRow
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.settlement import DistrictKind, SizeTier
+from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import BuildingForm, ConstructionState, StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology, UrbanService
@@ -28,7 +28,7 @@ from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.settlement.book import town_of
-from aerona.engine.settlement.life import quarter_wants
+from aerona.engine.settlement.life import add_district, quarter_wants
 from aerona.engine.structures.needs import SiteFacts, wanted
 from aerona.engine.structures.readers import Working
 from aerona.engine.structures.settlement import civic_from
@@ -81,6 +81,16 @@ async def test_every_district_is_seated_on_its_own_hex_and_zones_keep_their_ring
         inner_seed, outer_seed = seed_of(inner), seed_of(outer)
         assert inner_seed is not None and outer_seed is not None
         assert distance(inner_seed, (0, 0)) <= distance(outer_seed, (0, 0))
+
+
+async def test_new_districts_are_seated_by_their_own_stored_ids_on_hexes_of_their_own(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town_id, _ = await built_town(session, world, ctx)
+    await plan_town(ctx, town_id)
+    town = await town_of(ctx, await session.get_one(EntityRow, town_id), await KnowledgeMap.load(session))
+    added = [await add_district(ctx, town, kind, material=BuildMaterial.STONE) for kind in (DistrictKind.TEMPLE_QUARTER, DistrictKind.HARBOUR)]
+    assert all(district.id is not None and seed_of(district) is not None for district in added)
+    assert len({seed_of(district) for district in town.districts}) == len(town.districts)
 
 
 async def test_a_service_reaches_less_of_a_district_the_further_it_stands(session: AsyncSession, world: CoreWorld) -> None:

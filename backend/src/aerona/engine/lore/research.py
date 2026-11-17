@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.catalog.techniques import BRANCH_SKILLS, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
+from aerona.db.tables.culture import BookContentRow, CustomKindRow, HolderCustomTechniqueRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -67,9 +68,14 @@ def gate_open(gate: Gate, levels: dict[KnowledgeBranch, int]) -> bool:
     return not gate.any_of or any(levels.get(branch, 0) >= level for branch, level in gate.any_of)
 
 
-async def techniques_of(session: AsyncSession, holder_id: int) -> set[Technique]:
+@memoized(HolderTechniqueRow, CustomKindRow, HolderCustomTechniqueRow)
+async def known_techniques(session: AsyncSession, holder_id: int) -> frozenset[Technique]:
     known = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
-    return known | await custom_bases(session, holder_id)
+    return frozenset(known | await custom_bases(session, holder_id))
+
+
+async def techniques_of(session: AsyncSession, holder_id: int) -> set[Technique]:
+    return set(await known_techniques(session, holder_id))
 
 
 async def has_technique(session: AsyncSession, holder_id: int | None, technique: Technique) -> bool:
@@ -284,21 +290,24 @@ async def diffuse_techniques(ctx: TickContext) -> int:
         )
     )
     pairs = [*links.all(), *await network_pairs(ctx)]
+    hidden: dict[int, set[KnowledgeBranch]] = defaultdict(set)
+    for holder_id, branch in await ctx.session.execute(select(HolderLevelRow.holder_entity_id, HolderLevelRow.branch).where(HolderLevelRow.secret.is_(True))):
+        hidden[holder_id].add(branch)
+    shared: dict[int, set[Technique]] = defaultdict(set)
+    for holder_id, known in await ctx.session.execute(
+        select(HolderTechniqueRow.holder_entity_id, HolderTechniqueRow.technique).where(HolderTechniqueRow.secret.is_(False))
+    ):
+        shared[holder_id].add(known)
+    learned: dict[int, set[Technique]] = {}
     for first, second in pairs:
         for giver, taker in ((first, second), (second, first)):
             if held(taker):
                 continue
-            hidden = set(
-                await ctx.session.scalars(select(HolderLevelRow.branch).where(HolderLevelRow.holder_entity_id == giver, HolderLevelRow.secret.is_(True)))
-            )
-            theirs = {
-                row.technique
-                for row in await ctx.session.scalars(
-                    select(HolderTechniqueRow).where(HolderTechniqueRow.holder_entity_id == giver, HolderTechniqueRow.secret.is_(False))
-                )
-                if TECHNIQUES[row.technique].branch not in hidden
-            }
-            mine = await techniques_of(ctx.session, taker)
+            veiled = hidden.get(giver, set())
+            theirs = {technique for technique in shared.get(giver, set()) if TECHNIQUES[technique].branch not in veiled}
+            mine = learned.get(taker)
+            if mine is None:
+                mine = learned[taker] = await techniques_of(ctx.session, taker)
             term = await law_param(ctx.session, giver, LawKind.INTELLECTUAL_PROPERTY, "term")
             guarded = min(PERCENT, (int(term) if isinstance(term, int) else 0) * ctx.rules.tech_graph.patent_block_pct)
             for technique in sorted(theirs - mine):
@@ -308,6 +317,7 @@ async def diffuse_techniques(ctx: TickContext) -> int:
                 if levels.get(taker, {}).get(spec.branch, 0) >= spec.level:
                     ctx.session.add(HolderTechniqueRow(holder_entity_id=taker, technique=technique, since_epoch=ctx.epoch, secret=False))
                     mine.add(technique)
+                    shared[taker].add(technique)
                     moved += 1
     return moved
 
@@ -368,23 +378,30 @@ async def read_books(ctx: TickContext) -> int:
 
 async def spread_of(ctx: TickContext) -> int:
     measured = 0
+    peoples: dict[int | None, int | None] = {}
+    learners: dict[tuple[int | None, KnowledgeBranch | None], int | None] = {}
     for knowledge in list(
         await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON))
     ):
-        communities = await ctx.session.scalar(
-            select(func.count(EntityRow.id)).where(
-                EntityRow.world_id == knowledge.world_id,
-                EntityRow.status == EntityStatus.CANON,
-                EntityRow.entity_type.in_([EntityType.PEOPLE, EntityType.SETTLEMENT]),
+        if knowledge.world_id not in peoples:
+            peoples[knowledge.world_id] = await ctx.session.scalar(
+                select(func.count(EntityRow.id)).where(
+                    EntityRow.world_id == knowledge.world_id,
+                    EntityRow.status == EntityStatus.CANON,
+                    EntityRow.entity_type.in_([EntityType.PEOPLE, EntityType.SETTLEMENT]),
+                )
             )
-        )
-        holders = await ctx.session.scalar(
-            select(func.count(func.distinct(HolderLevelRow.holder_entity_id))).where(
-                HolderLevelRow.branch == knowledge.knowledge_branch,
-                HolderLevelRow.level >= 1,
-                HolderLevelRow.holder_entity_id.in_(select(EntityRow.id).where(EntityRow.world_id == knowledge.world_id)),
+        communities = peoples[knowledge.world_id]
+        place = (knowledge.world_id, knowledge.knowledge_branch)
+        if place not in learners:
+            learners[place] = await ctx.session.scalar(
+                select(func.count(func.distinct(HolderLevelRow.holder_entity_id))).where(
+                    HolderLevelRow.branch == knowledge.knowledge_branch,
+                    HolderLevelRow.level >= 1,
+                    HolderLevelRow.holder_entity_id.in_(select(EntityRow.id).where(EntityRow.world_id == knowledge.world_id)),
+                )
             )
-        )
+        holders = learners[place]
         if communities:
             set_stats(knowledge, spread=clamp_int(round_half_up(int(holders or 0) * PERCENT / int(communities)), 0, PERCENT))
             measured += 1

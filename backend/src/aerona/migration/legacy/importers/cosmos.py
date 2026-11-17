@@ -87,9 +87,9 @@ def star_type(context: MigrationContext, row: LegacyRow) -> StarType:
     labels = sorted(context.vocabulary.enums["star_type"].items(), key=lambda item: -len(item[0]))
     found = next((StarType(english) for legacy, english in labels if legacy.casefold() in folded), None)
     if found is None:
-        context.report.warn(UNKNOWN_VALUE, f"star:{row.integer('id')}", f"star kind {raw!r} set to {StarType.YELLOW_DWARF.value}")
+        context.report.warn(UNKNOWN_VALUE, f"star:{row.integer('id')}", f"star kind {raw!r} set to {StarType.YELLOW_DWARF.value!r}")
         return StarType.YELLOW_DWARF
-    context.report.warn(DEFAULTED, f"star:{row.integer('id')}", f"star kind {raw!r} read as {found.value}")
+    context.report.warn(DEFAULTED, f"star:{row.integer('id')}", f"star kind {raw!r} read as {found.value!r}")
     return found
 
 
@@ -137,7 +137,7 @@ def _decoded[E: (WorldType, Gravity, Atmosphere, Discovery)](context: MigrationC
     decoded = context.vocabulary.decode_as(enum_name, raw, type(fallback))
     if decoded is None:
         if raw is not None:
-            context.report.warn(UNKNOWN_VALUE, f"world:{row.integer('id')}", f"{column} {raw!r} set to {fallback.value}")
+            context.report.warn(UNKNOWN_VALUE, f"world:{row.integer('id')}", f"{column} {raw!r} set to {fallback.value!r}")
         return fallback
     return decoded
 
@@ -322,7 +322,7 @@ async def import_creator(context: MigrationContext, state: LegacyRow) -> Creator
         legacy = vocabulary.encode("creator_mood_axis", axis.value)
         value = as_int(mood.get(legacy)) if legacy is not None else None
         if value is None:
-            context.report.warn(DEFAULTED, "creator", f"mood {axis.value} set to {MOOD_DEFAULT}")
+            context.report.warn(DEFAULTED, "creator", f"mood {axis.value!r} set to {MOOD_DEFAULT}")
             return MOOD_DEFAULT
         return max(PERCENT_MIN, min(PERCENT_MAX, value))
 

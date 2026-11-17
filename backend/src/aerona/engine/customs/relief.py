@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.customs import CommuteRow, CooperativeRow, PoorReliefRow, TavernRow, WelfareRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
@@ -20,8 +21,14 @@ async def houses_in(session: AsyncSession, town_id: int) -> int:
     )
 
 
+@memoized(PolityMemberRow)
+async def first_realm(session: AsyncSession, town_id: int) -> int | None:
+    found: int | None = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town_id).limit(1))
+    return found
+
+
 async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:
-    realm = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town_id).limit(1))
+    realm = await first_realm(session, town_id)
     row = await session.get(PoorReliefRow, realm) if realm is not None else None
     return row.budget * rules.poor_relief.relief_per_coin * row.reach // TEN // PERCENT if row is not None else 0
 

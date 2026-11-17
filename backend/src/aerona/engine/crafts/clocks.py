@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import PublicClockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -66,7 +67,7 @@ async def keep_clocks(ctx: TickContext, tally: ClockTally) -> None:
             elif "kind" not in row.locked:
                 row.kind, row.precision, row.built_epoch = best, PRECISION[best], ctx.epoch
                 tally.improved += 1
-            await note(ctx, f"{town.name} set up a public {best.value.replace('_', ' ')} to keep its hours.", key="clocks.built", ids=[town.id])
+            await note(ctx, f"{town.name} set up a public {spoken(best)} to keep its hours.", key="clocks.built", ids=[town.id])
         if row is None:
             continue
         profile = await ctx.session.get(SettlementProfileRow, town.id)

@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import DuelContext, PeaceTermKind, VesselArmament, WarAimKind
@@ -190,7 +190,7 @@ async def declare(scope: PlayerScope, command: DeclareWar) -> Effect:
     ctx = await scope.context("war_declare")
     aims = [(aim.kind, dict(aim.params)) for aim in command.aims]
     war = await orders.declare_with_cause(ctx, command.attacker_id, command.defender_id, command.cause, reason=command.reason or "by decree", aims=aims)
-    return Effect(f"War is declared: {command.cause.value.replace('_', ' ')}.", war.event_entity_id, created_ids=(war.event_entity_id,))
+    return Effect(f"War is declared: {spoken(command.cause)}.", war.event_entity_id, created_ids=(war.event_entity_id,))
 
 
 @player_action("war:peace", ActionKind.EDIT_RECORD)
@@ -223,7 +223,7 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
         return Effect("No such vessel afloat.", command.vessel_id)
     order = Commission(frame=command.frame, armament=command.armament, hull_material=command.hull_material, fabric_material=command.fabric_material)
     await commission(ctx.session, ctx.rules, vessel, order)
-    return Effect(f"{vessel.name} is refitted as {an(command.frame.value.replace('_', ' '))}.", vessel.id)
+    return Effect(f"{vessel.name} is refitted as {an(spoken(command.frame))}.", vessel.id)
 
 
 @player_action("vessel:repair", ActionKind.EDIT_RECORD)

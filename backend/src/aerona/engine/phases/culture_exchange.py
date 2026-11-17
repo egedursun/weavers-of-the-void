@@ -2,15 +2,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.tables.culture import HolderLevelRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import BookContentRow, HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.write_guard import held as frozen
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatus, EntityType
@@ -20,7 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.tongues import tongue_link
 from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.research import books_of, has_technique, masters
+from aerona.engine.lore.research import has_technique, masters
 from aerona.engine.lore.traditions import best_fit
 from aerona.engine.mind.hooks import converted
 from aerona.engine.notes import note
@@ -57,8 +59,29 @@ def contact_rates(ctx: TickContext, first_contact: bool) -> ContactRates:
     return ContactRates(culture.trade_loanword_pct, culture.trade_tradition_pct, culture.trade_knowledge_pct, culture.trade_god_pct)
 
 
+@dataclass(frozen=True)
+class Shelves:
+    books: Mapping[int, frozenset[int]]
+    hidden: Mapping[int, frozenset[KnowledgeBranch]]
+
+    @classmethod
+    async def load(cls, session: AsyncSession) -> "Shelves":
+        owned = (
+            select(BondRow.source_node_id, BookContentRow.knowledge_entity_id)
+            .join(BookContentRow, BookContentRow.book_entity_id == BondRow.target_node_id)
+            .where(BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+        )
+        books: dict[int, set[int]] = {}
+        for holder_id, knowledge_id in await session.execute(owned):
+            books.setdefault(holder_id, set()).add(knowledge_id)
+        hidden: dict[int, set[KnowledgeBranch]] = {}
+        for holder_id, branch in await session.execute(select(HolderLevelRow.holder_entity_id, HolderLevelRow.branch).where(HolderLevelRow.secret.is_(True))):
+            hidden.setdefault(holder_id, set()).add(branch)
+        return cls({key: frozenset(value) for key, value in books.items()}, {key: frozenset(value) for key, value in hidden.items()})
+
+
 async def _diffuse_direction(
-    ctx: TickContext, source: EntityRow, target: EntityRow, holdings: KnowledgeHoldings, spread: list[int], *, cap: int, weight: float = 1.0
+    ctx: TickContext, source: EntityRow, target: EntityRow, holdings: KnowledgeHoldings, spread: list[int], *, cap: int, shelves: Shelves, weight: float = 1.0
 ) -> None:
     if target.entity_type not in AGENT_TYPES or frozen(source.id, target.id):
         return
@@ -66,9 +89,9 @@ async def _diffuse_direction(
     rng = ctx.rng(f"diffusion.{source.id}.{target.id}")
     writing = times_of(ctx.rules.knowledge, holdings.branch_level(source.id, KnowledgeBranch.WRITING), settings.writing_diffusion_mult)
     chance = min(100.0, settings.diffusion_chance * writing * weight)
-    written = await books_of(ctx.session, source.id)
+    written = shelves.books.get(source.id, frozenset())
     paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, source.id, Technique.PAPER) else 0
-    hidden = set(await ctx.session.scalars(select(HolderLevelRow.branch).where(HolderLevelRow.holder_entity_id == source.id, HolderLevelRow.secret.is_(True))))
+    hidden = shelves.hidden.get(source.id, frozenset())
     for knowledge in holdings.known_by(source.id):
         if spread[0] >= cap or holdings.knows(target.id, knowledge.id) or knowledge.knowledge_branch in hidden:
             continue
@@ -151,6 +174,7 @@ async def knowledge_diffusion(ctx: TickContext) -> None:
     entities = {entity.id: entity for entity in await canon(session)}
     bonds = await BondIndex.load(session, DIFFUSION_BOND_KINDS)
     holdings = await KnowledgeHoldings.load(session)
+    shelves = await Shelves.load(session)
     laws = await LawBook.load(session)
     spread = [0]
     settings = ctx.rules.knowledge
@@ -164,8 +188,8 @@ async def knowledge_diffusion(ctx: TickContext) -> None:
         if first is None or second is None or frozen(first_id, second_id):
             continue
         linked = weight * await tongue_link(session, ctx.rules, first_id, second_id)
-        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, weight=linked)
-        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap, weight=linked)
+        await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, shelves=shelves, weight=linked)
+        await _diffuse_direction(ctx, second, first, holdings, spread, cap=cap, shelves=shelves, weight=linked)
         await _spread_language(ctx, first, second, laws)
     ctx.count("knowledge_spread", spread[0])
 

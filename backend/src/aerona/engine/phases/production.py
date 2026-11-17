@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.materials import SPECIES_GOODS, SPECIES_GROUNDS, SPECIES_YIELDS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import HerdRow
@@ -469,7 +470,7 @@ async def _open_ground(ctx: TickContext, species: EntityRow, place: EntityRow, g
     commodity, material = ground
     reserve = max(1, round_half_up(ctx.rules.extraction.deposit_reserve * abundance / PERCENT))
     if material is not None:
-        name, body = f"Hunting Grounds of {species.name}", f"Hunters of {place.name} take {material.value.replace('_', ' ')} from the {species.name}."
+        name, body = f"Hunting Grounds of {species.name}", f"Hunters of {place.name} take {spoken(material)} from the {species.name}."
     else:
         word = SPECIES_GROUNDS[commodity]
         name, body = f"{word} of {species.name}", f"The people of {place.name} take {commodity_label(commodity).lower()} from the wild {species.name}."

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.cosmography import (
@@ -569,4 +570,4 @@ async def set_variant(scope: PlayerScope, command: Variant) -> Effect:
 async def turn_climate(scope: PlayerScope, command: ClimateOrder) -> Effect:
     creator = await scope.creator()
     await control.turn_climate(await scope.context("region_climate_turn"), command.region_id, command.turn, creator.name)
-    return Effect(f"The region turns {command.turn.value}.", command.region_id)
+    return Effect(f"The region turns {spoken(command.turn)}.", command.region_id)

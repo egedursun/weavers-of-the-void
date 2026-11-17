@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
@@ -286,7 +287,7 @@ async def commission_work(ctx: TickContext, community_id: int, kind: EngineKind 
     knowledge = await KnowledgeMap.load(ctx.session)
     if kind is not None:
         if kind not in ENGINE_KIND_STRUCTURES:
-            raise ValidationFailedError(f"{kind.value.replace('_', ' ')} is not a kind of work.")
+            raise ValidationFailedError(f"{spoken(kind)} is not a kind of work.")
         work, _ = await begin(ctx, Commission(site=builder, kind=ENGINE_KIND_STRUCTURES[kind], player=True))
         return work
     planned = await plan_work(ctx, builder, knowledge, await RegionAtlas.load(ctx.session))

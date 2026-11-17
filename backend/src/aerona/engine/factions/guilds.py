@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.catalog.techniques import TECHNIQUES
+from aerona.db.read_memo import memoized
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import GuildSecretRow
@@ -86,13 +88,14 @@ async def tend_guilds(ctx: TickContext, tally: GuildTally) -> None:
         await keep_secrets(ctx, guild, profile, tally)
 
 
+@memoized(FactionProfileRow)
+async def guild_homes(session: AsyncSession) -> frozenset[int]:
+    homes = await session.scalars(select(FactionProfileRow.home_entity_id).where(FactionProfileRow.kind == FactionKind.CRAFT_GUILD))
+    return frozenset(home for home in homes if home is not None)
+
+
 async def guild_standard(ctx: TickContext, community_id: int) -> int:
-    found = await ctx.session.scalar(
-        select(FactionProfileRow.faction_entity_id)
-        .where(FactionProfileRow.kind == FactionKind.CRAFT_GUILD, FactionProfileRow.home_entity_id == community_id)
-        .limit(1)
-    )
-    return ctx.rules.guild_ranks.quality_bonus if found is not None else 0
+    return ctx.rules.guild_ranks.quality_bonus if community_id in await guild_homes(ctx.session) else 0
 
 
 async def enrol_apprentice(ctx: TickContext, community_id: int, mortal_id: int) -> bool:

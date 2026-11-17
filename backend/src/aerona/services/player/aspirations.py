@@ -285,4 +285,4 @@ async def set_conviction(scope: PlayerScope, command: SetConviction) -> Effect:
     profile.conviction = command.value
     profile.locked = held_fields(profile.locked, CONVICTION_FIELD, command.hold)
     await scope.session.flush()
-    return Effect(f"{mortal.name}'s conviction is now {command.value}.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name}'s conviction is now {command.value:d}.", target_node_id=mortal.id)

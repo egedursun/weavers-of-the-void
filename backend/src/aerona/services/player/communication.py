@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.communication import CONTENT_LABELS, MEDIUM_LABELS, SIGNAL_LABELS, SUBJECT_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.communication import APPROVAL_MAX, APPROVAL_MIN, CipherRow, PublicOpinionRow, SignalLinkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
@@ -292,7 +293,7 @@ async def edit_signal(scope: PlayerScope, command: EditSignal) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The link is {row.state.value}.", target_node_id=row.owner_node_id)
+    return Effect(f"The link is {spoken(row.state)}.", target_node_id=row.owner_node_id)
 
 
 @player_action("signal:delete", ActionKind.EDIT_RECORD)

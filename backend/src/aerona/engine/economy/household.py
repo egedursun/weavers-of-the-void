@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
 
-from sqlalchemy import func, select
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.economy import ProductionRunRow
 from aerona.db.tables.entities import EntityRow
@@ -243,9 +245,17 @@ async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityR
     return gathered
 
 
+@memoized(MaimedCohortRow)
+async def maimed_counts(session: AsyncSession) -> dict[int, int]:
+    found: dict[int, int] = {}
+    for community_id, count in await session.execute(select(MaimedCohortRow.community_entity_id, MaimedCohortRow.count)):
+        found[community_id] = found.get(community_id, 0) + count
+    return found
+
+
 async def prosthetic_demand(ctx: TickContext, community: EntityRow) -> int:
-    maimed = await ctx.session.scalar(select(func.coalesce(func.sum(MaimedCohortRow.count), 0)).where(MaimedCohortRow.community_entity_id == community.id))
-    return round_half_up(int(maimed or 0) * ctx.rules.economy.prosthetic_tools_per_1000_maimed / THOUSAND)
+    maimed = (await maimed_counts(ctx.session)).get(community.id, 0)
+    return round_half_up(maimed * ctx.rules.economy.prosthetic_tools_per_1000_maimed / THOUSAND)
 
 
 async def wear(ctx: TickContext, community: EntityRow) -> Wear:

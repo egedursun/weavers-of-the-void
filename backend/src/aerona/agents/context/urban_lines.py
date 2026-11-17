@@ -29,7 +29,7 @@ async def town_lines(scope: Scope, town_id: int) -> list[str]:
     for play in await session.scalars(select(MarketPlayRow).where(MarketPlayRow.settlement_entity_id == town_id)):
         holder = await session.get(EntityRow, play.holder_entity_id)
         if holder is not None:
-            found.append(f"{holder.name} {'corners' if play.play.value == 'corner' else 'floods'} the market in {play.commodity.value.replace('_', ' ')}")
+            found.append(f"{holder.name} {'corners' if play.play.value == 'corner' else 'floods'} the market in {spoken(play.commodity)}")
     return found
 
 

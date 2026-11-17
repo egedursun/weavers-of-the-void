@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.catalog.civics import OFFICE_GATES, OFFICE_LEVELS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import partial
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -215,7 +216,7 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
     office.appointed_by_entity_id = by_id
     office.since_epoch = ctx.epoch
     if holder is not None and ctx.rules.oaths.fealty_on_office and realm.ruler_id is not None and holder.id != realm.ruler_id:
-        await swear(ctx, holder, OathKind.FEALTY, recipient_id=realm.ruler_id, note_text=f"as {office.kind.value.replace('_', ' ')} of {realm.entity.name}")
+        await swear(ctx, holder, OathKind.FEALTY, recipient_id=realm.ruler_id, note_text=f"as {spoken(office.kind)} of {realm.entity.name}")
     if holder is not None and ctx.rules.oaths.silence_on_office and OfficePower.SPY in powers_of(office):
         await swear(ctx, holder, OathKind.SILENCE, recipient_id=realm.entity.id, note_text="the secrets of the realm")
 
@@ -271,11 +272,12 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
         recalled = seat.kind is OfficeKind.AMBASSADOR and seat.target_entity_id not in embassies
         if recalled and seat.holder_entity_id is not None and "offices" not in realm.profile.locked and "holder" not in seat.locked:
             await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
+    opened: dict[OfficeKind, bool] = {}
     for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
         office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
-        if office is None and not (
-            await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)) and await realm_reaches(ctx.session, realm, OFFICE_LEVELS.get(kind))
-        ):
+        if office is None and kind not in opened:
+            opened[kind] = await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)) and await realm_reaches(ctx.session, realm, OFFICE_LEVELS.get(kind))
+        if office is None and not opened[kind]:
             continue
         if office is None:
             office = OfficeRow(
@@ -600,7 +602,7 @@ async def house_sides(ctx: TickContext, realm: Realm, war: WarRow, claimant_id: 
             continue
         if not ctx.rng(f"house_side.{war.id}.{house.house_entity_id}").chance(ctx.rules.succession.house_join_chance):
             continue
-        await connect(ctx.session, house.house_entity_id, event.id, BondKind.PARTY_TO, ctx.epoch, description=f"fought for the {side.value}")
+        await connect(ctx.session, house.house_entity_id, event.id, BondKind.PARTY_TO, ctx.epoch, description=f"fought for the {spoken(side)}")
         for seat in house.seats:
             place = await living_entity(ctx.session, seat)
             if place is None or seat in present or place.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE} or seat == host_id:

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import DANGEROUS_BRANCHES
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import BookContentRow, HolderTechniqueRow, IdeologyAdherentRow
+from aerona.db.tables.culture import BookContentRow, IdeologyAdherentRow
 from aerona.db.tables.discovery import BannedWorkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
@@ -15,6 +15,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
+from aerona.engine.eras.effects import held_by
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
@@ -26,10 +27,7 @@ PRINTED = (Technique.PRINTING, Technique.PRINTING_PRESS)
 async def printed(session: AsyncSession, holder_id: int | None) -> bool:
     if holder_id is None:
         return False
-    found = await session.scalar(
-        select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.holder_entity_id == holder_id, HolderTechniqueRow.technique.in_(PRINTED)).limit(1)
-    )
-    return found is not None
+    return not (await held_by(session, holder_id)).isdisjoint(PRINTED)
 
 
 async def scribe_pace(session: AsyncSession, rules: Rules, community_id: int | None) -> float:

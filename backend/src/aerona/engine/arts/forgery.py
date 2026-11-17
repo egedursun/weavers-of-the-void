@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.arts import ArtPriceRow, CollectorRow, ForgeryRow
 from aerona.db.tables.bonds import BondRow
@@ -241,7 +242,7 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
             continue
         row = await forge(ctx, original, maker, brand=brand)
         tally.forged += 1
-        await note(ctx, f"{maker.name} made a forgery of {original.name} ({row.kind.value}).", key="arts.forged", ids=[maker.id, original.id])
+        await note(ctx, f"{maker.name} made a forgery of {original.name} ({spoken(row.kind)}).", key="arts.forged", ids=[maker.id, original.id])
 
 
 async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> None:

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.theories import DOMAINS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.discovery import TheoryAdherentRow, TheoryProfileRow
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.society import KnowledgeBranch
@@ -12,6 +13,8 @@ BRANCH_DOMAINS: dict[KnowledgeBranch, tuple[TheoryDomain, ...]] = {
     branch: tuple(domain for domain, spec in DOMAINS.items() if branch in spec.branches) for spec in DOMAINS.values() for branch in spec.branches
 }
 CONTRARY = frozenset({TheoryDomain.MEDICINE})
+ORTHODOXY = "orthodoxy"
+THEORY_TABLES = table_names((TheoryProfileRow, TheoryAdherentRow))
 
 
 async def ruling(session: AsyncSession, holder_id: int, domain: TheoryDomain) -> TheoryProfileRow | None:
@@ -21,6 +24,24 @@ async def ruling(session: AsyncSession, holder_id: int, domain: TheoryDomain) ->
         .where(TheoryAdherentRow.adherent_entity_id == holder_id, TheoryAdherentRow.orthodox.is_(True), TheoryProfileRow.domain == domain)
         .limit(1)
     )
+
+
+async def holds_orthodoxy(session: AsyncSession, holder_id: int, domain: TheoryDomain) -> bool:
+    memo = memo_of(session, ORTHODOXY, THEORY_TABLES)
+    if memo is None:
+        return await ruling(session, holder_id, domain) is not None
+    pairs: frozenset[tuple[int, TheoryDomain]] | None = memo.get(ORTHODOXY)
+    if pairs is None:
+        statement = (
+            select(TheoryAdherentRow.adherent_entity_id, TheoryProfileRow.domain)
+            .join(TheoryAdherentRow, TheoryAdherentRow.theory_entity_id == TheoryProfileRow.theory_entity_id)
+            .where(TheoryAdherentRow.orthodox.is_(True))
+        )
+        pairs = frozenset((adherent, kind) for adherent, kind in (await session.execute(statement)).all())
+        after = memo_of(session, ORTHODOXY, THEORY_TABLES)
+        if after is not None:
+            after[ORTHODOXY] = pairs
+    return (holder_id, domain) in pairs
 
 
 def truth_factor(rules: Rules, correctness: int) -> float:

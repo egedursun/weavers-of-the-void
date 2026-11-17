@@ -5,7 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.intrigue import SCHEMES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.affairs import CourtPositionRow
 from aerona.db.tables.disease import OutbreakRow
@@ -519,7 +519,7 @@ async def forge_work(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, targ
     if original is None or held(original.id):
         return f"{owner.name} found nothing of {target.name} worth forging"
     row = await forge(ctx, original, owner)
-    return f"{owner.name} made a forgery of {original.name} ({row.kind.value})"
+    return f"{owner.name} made a forgery of {original.name} ({spoken(row.kind)})"
 
 
 STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = {

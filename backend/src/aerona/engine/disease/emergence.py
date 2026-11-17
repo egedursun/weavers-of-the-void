@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.diseases import VECTOR_FUNCTIONS, VECTOR_LABELS, VECTOR_STIGMA
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -112,9 +113,9 @@ ORIGIN_KEYS = {SpreadPath.LOOSED: "disease.loosed"}
 async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: EntityRow, region: EntityRow, *, path: SpreadPath, son_id: int | None) -> None:
     host = await ctx.session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
     carried = f", carried by {host.name}" if host is not None else ""
-    text = f"A new sickness rose in {region.name}: {entity.name}, borne by {profile.vector.value}{carried}."
+    text = f"A new sickness rose in {region.name}: {entity.name}, borne by {spoken(profile.vector)}{carried}."
     if son_id is not None and path is SpreadPath.LOOSED:
-        text = f"A god loosed a new sickness on {region.name}: {entity.name}, borne by {profile.vector.value}{carried}."
+        text = f"A god loosed a new sickness on {region.name}: {entity.name}, borne by {spoken(profile.vector)}{carried}."
     write = await ctx.chronicle(
         ChronicleKind.DISASTER,
         text,
@@ -145,7 +146,7 @@ async def birth_disease(
         RecordSpec(
             entity_type=EntityType.DISEASE,
             name=name,
-            body=f"A sickness that first showed itself in {region.name}, carried by {profile.vector.value}.",
+            body=f"A sickness that first showed itself in {region.name}, carried by {spoken(profile.vector)}.",
             stats=DiseaseStats(virulence=profile.virulence, lethality=profile.lethality, infected=0, dead=0),
             power=max(1, profile.lethality // 10),
             location_id=region.id,

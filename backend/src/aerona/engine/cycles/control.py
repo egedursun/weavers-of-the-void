@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.base import Base
 from aerona.db.tables.cycles import (
     ALLIANCE_FIELDS,
@@ -428,9 +428,7 @@ async def free_bound(ctx: TickContext, community_id: int, share_pct: int, path: 
     sync_bound_share(await ctx.session.get(CommunitySocietyRow, community.id), rows)
     row = await record_manumission(ctx, community, freed, path)
     if freed:
-        await note(
-            ctx, f"In {community.name}, {freed} of the bound were set free by {path.value.replace('_', ' ')}.", key="manumission.freed", ids=[community.id]
-        )
+        await note(ctx, f"In {community.name}, {freed} of the bound were set free by {spoken(path)}.", key="manumission.freed", ids=[community.id])
     await ctx.session.flush()
     return row
 

@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.base import Base
 from aerona.db.tables.culture import (
     CastingRow,
@@ -240,7 +241,7 @@ async def learn_branch(ctx: TickContext, holder_id: int, branch: KnowledgeBranch
     local = await ctx.session.scalar(records.where(EntityRow.world_id == (holder.world_id if holder is not None else None)).order_by(EntityRow.id).limit(1))
     record = local if local is not None else await ctx.session.scalar(records.order_by(EntityRow.id).limit(1))
     if record is None:
-        raise ValidationFailedError(f"No knowledge of {branch.value.replace('_', ' ')} exists yet; make the knowledge first, then set its level.")
+        raise ValidationFailedError(f"No knowledge of {spoken(branch)} exists yet; make the knowledge first, then set its level.")
     await connect(ctx.session, holder_id, record, BondKind.KNOWS, ctx.epoch, description="taught by the Creator")
 
 
@@ -440,7 +441,7 @@ async def set_enchantment(ctx: TickContext, item_id: int, effect: RiteEffectKind
     if row is None:
         row = ItemEnchantmentRow(item_entity_id=item_id, effect=effect, strength=0, rite_entity_id=None, since_epoch=ctx.epoch)
         ctx.session.add(row)
-        record(ctx, item_id, ItemDeed.ENCHANTED, None, f"enchanted with {effect.value.replace('_', ' ')}")
+        record(ctx, item_id, ItemDeed.ENCHANTED, None, f"enchanted with {spoken(effect)}")
     row.strength = share(strength, "Strength")
     await ctx.session.flush()
     return row

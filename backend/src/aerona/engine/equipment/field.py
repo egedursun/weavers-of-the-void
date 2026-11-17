@@ -8,6 +8,7 @@ from aerona.catalog.battle_depth import WeaponProfile
 from aerona.catalog.equipment import FAMILIES, ROLE_ARMS, UNIT_SLOTS
 from aerona.catalog.units import UnitSpec, weapon_of
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.equipment import ArmyUnitEquipmentRow, EquipmentModelRow, EquipmentStoreRow, UnitDesignEquipmentRow
 from aerona.db.tables.military import ArmyUnitRow, UnitDesignRow
@@ -44,11 +45,16 @@ async def carried_by_units(session: AsyncSession, unit_ids: list[int]) -> dict[i
     return found
 
 
+@memoized(UnitDesignEquipmentRow)
+async def design_loadout(session: AsyncSession, design_id: int) -> tuple[tuple[int, int], ...]:
+    rows = await session.scalars(select(UnitDesignEquipmentRow).where(UnitDesignEquipmentRow.design_id == design_id))
+    return tuple((row.model_id, row.count) for row in rows)
+
+
 async def loadout_of(session: AsyncSession, design: UnitDesignRow | None) -> dict[int, int]:
     if design is None:
         return {}
-    rows = await session.scalars(select(UnitDesignEquipmentRow).where(UnitDesignEquipmentRow.design_id == design.id))
-    return {row.model_id: row.count for row in rows}
+    return dict(await design_loadout(session, design.id))
 
 
 async def wanted_models(session: AsyncSession, unit: ArmyUnitRow, spec: UnitSpec, owner_id: int, design: UnitDesignRow | None) -> dict[int, int]:

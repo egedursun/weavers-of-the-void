@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import agree, an, several
+from aerona.core.grammar import agree, an, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
@@ -149,7 +149,7 @@ class OathTarget(Command):
 @player_action("polity:edit", ActionKind.EDIT_RECORD)
 async def edit_polity(scope: PlayerScope, command: EditPolity) -> Effect:
     found = await control.edit_polity(await scope.context("polity_edit"), command.polity_id, command.values, release=command.release)
-    return Effect(f"{found.entity.name}: {an(found.profile.government.value.replace('_', ' '))}, legitimacy {found.profile.legitimacy}.", command.polity_id)
+    return Effect(f"{found.entity.name}: {an(spoken(found.profile.government))}, legitimacy {found.profile.legitimacy}.", command.polity_id)
 
 
 @player_action("polity:appoint", ActionKind.EDIT_RECORD)
@@ -285,13 +285,13 @@ async def edit_treaty(scope: PlayerScope, command: EditTreaty) -> Effect:
         hold=command.hold,
         release=command.release,
     )
-    return Effect(f"The treaty is {profile.status.value.replace('_', ' ')}.", command.treaty_id)
+    return Effect(f"The treaty is {spoken(profile.status)}.", command.treaty_id)
 
 
 @player_action("oath:swear", ActionKind.OTHER)
 async def swear_oath(scope: PlayerScope, command: SwearOath) -> Effect:
     await control.swear_oath(await scope.context("oath_swear"), command.swearer_id, command.kind, command.recipient_id)
-    return Effect(f"The {command.kind.value.replace('_', ' ')} oath is sworn.", command.swearer_id)
+    return Effect(f"The {spoken(command.kind)} oath is sworn.", command.swearer_id)
 
 
 @player_action("oath:break", ActionKind.OTHER)
@@ -548,7 +548,7 @@ async def add_clause(scope: PlayerScope, command: AddClause) -> Effect:
         beneficiary_id=command.beneficiary_id,
         params=command.params,
     )
-    return Effect(f"{an(row.kind.value.replace('_', ' '), capital=True)} clause is written in.", command.treaty_id, values={"clause_id": row.id})
+    return Effect(f"{an(spoken(row.kind), capital=True)} clause is written in.", command.treaty_id, values={"clause_id": row.id})
 
 
 @player_action("treaty:clause_edit", ActionKind.EDIT_RECORD)
@@ -561,19 +561,19 @@ async def edit_clause(scope: PlayerScope, command: EditClause) -> Effect:
         beneficiary_id=command.beneficiary_id,
         release=command.release,
     )
-    return Effect(f"The {row.kind.value.replace('_', ' ')} clause now reads as you set it.", row.treaty_entity_id)
+    return Effect(f"The {spoken(row.kind)} clause now reads as you set it.", row.treaty_entity_id)
 
 
 @player_action("treaty:clause_remove", ActionKind.EDIT_RECORD)
 async def remove_clause(scope: PlayerScope, command: ClauseTarget) -> Effect:
     row = await control.remove_clause(await scope.context("treaty_clause_remove"), command.clause_id)
-    return Effect(f"The {row.kind.value.replace('_', ' ')} clause is struck out.", row.treaty_entity_id)
+    return Effect(f"The {spoken(row.kind)} clause is struck out.", row.treaty_entity_id)
 
 
 @player_action("treaty:party_add", ActionKind.EDIT_RECORD)
 async def add_party(scope: PlayerScope, command: TreatyPartyChange) -> Effect:
     row = await control.add_party(await scope.context("treaty_party_add"), command.treaty_id, command.party_id, command.role)
-    return Effect(f"A new {row.role.value} is bound by the treaty.", command.treaty_id)
+    return Effect(f"A new {spoken(row.role)} is bound by the treaty.", command.treaty_id)
 
 
 @player_action("treaty:party_remove", ActionKind.EDIT_RECORD)
@@ -608,8 +608,7 @@ async def edit_vassalage(scope: PlayerScope, command: EditVassalage) -> Effect:
         ),
     )
     return Effect(
-        f"The {row.kind.value.replace('_', ' ')} pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; "
-        f"loyalty {row.loyalty}, wish for liberty {row.liberty}.",
+        f"The {spoken(row.kind)} pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; loyalty {row.loyalty}, wish for liberty {row.liberty}.",
         command.vassal_id,
     )
 

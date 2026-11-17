@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.kinds.power_hazards import POWER_HAZARDS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -121,7 +122,7 @@ TEACHING: Mapping[Learnability, Check] = total(
 async def access_refused(ctx: TickContext, user: EntityRow, source: PowerSourceRow) -> str | None:
     if await ACCESS[source.access](ctx, user):
         return None
-    return f"{source.name} opens only to the {source.access.value.replace('_', ' ')}"
+    return f"{source.name} opens only to the {spoken(source.access)}"
 
 
 async def licence_refused(ctx: TickContext, user: EntityRow, polity_id: int | None) -> str | None:
@@ -242,7 +243,7 @@ async def suffer(ctx: TickContext, user: EntityRow, power: PowerRow, hazard: Pow
     spec = POWER_HAZARDS[hazard]
     await harm(ctx, user, power, spec.harm)
     if spec.noted:
-        await note(ctx, f"Drawing on power marked {user.name}: {hazard.value.replace('_', ' ')}.", key="power.hazard", ids=[user.id])
+        await note(ctx, f"Drawing on power marked {user.name}: {spoken(hazard)}.", key="power.hazard", ids=[user.id])
     return hazard.value
 
 

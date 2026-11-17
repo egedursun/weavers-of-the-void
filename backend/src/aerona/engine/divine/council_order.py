@@ -7,7 +7,7 @@ from sqlalchemy.orm import aliased
 from aerona.catalog.divine_grammar import VERB_SIGN
 from aerona.catalog.kinds.council import VOTING_RULES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.celestial import WorldRow
@@ -230,7 +230,7 @@ async def enforce_ladder(ctx: TickContext) -> int:
             step = await escalate(ctx, ruling, god_id)
             await note(
                 ctx,
-                f"A god broke the council's ruling and met its {step.value.replace('_', ' ')}.",
+                f"A god broke the council's ruling and met its {spoken(step)}.",
                 key="council.violation",
                 kind=ChronicleKind.COUNCIL,
                 ids=[god_id],
@@ -337,11 +337,11 @@ async def enact_rules(ctx: TickContext, ruling: CouncilRulingRow, _members: list
     if ruling.voting_rule is None or "voting_rule" in procedure.locked:
         return []
     procedure.voting_rule = ruling.voting_rule
-    return [f"the council now decides by {ruling.voting_rule.value.replace('_', ' ')}"]
+    return [f"the council now decides by {spoken(ruling.voting_rule)}"]
 
 
 async def enact_regulation(_ctx: TickContext, ruling: CouncilRulingRow, _members: list[SonRow]) -> list[str]:
-    return [f"the council set a rule: {ruling.motion.value.replace('_', ' ')}"]
+    return [f"the council set a rule: {spoken(ruling.motion)}"]
 
 
 ORDER_ENACTMENTS: Mapping[CouncilMotion, Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]] = {

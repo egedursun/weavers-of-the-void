@@ -4,6 +4,7 @@ from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session, UOWTransaction
 
 from aerona.core.activity import ActivityLog, current_activity
+from aerona.db.attr_history import history_of
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.meta import ImageRow
@@ -33,9 +34,9 @@ def _value(value: Any) -> str:
 
 def _changed(row: Any, attribute: str) -> tuple[Any, Any] | None:
     state = inspect(row)
-    if attribute not in state.attrs:
+    if attribute not in state.manager:
         return None
-    history = state.attrs[attribute].history
+    history = history_of(state, attribute)
     if not history.has_changes():
         return None
     before = history.deleted[0] if history.deleted else None

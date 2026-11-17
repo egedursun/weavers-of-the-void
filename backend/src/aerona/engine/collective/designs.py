@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.vehicles import FAMILY_TECHNIQUES, FRAMES, FUELS, MOUNTS, SIZE_SCALE, FrameSpec, frame_layout
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import ComponentWearRow, DesignComponentRow, DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -447,7 +448,7 @@ async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part:
             wrecked = section.hazard
     await note(
         ctx,
-        f"{vessel.name} {FAILURE_TEXT[part]} when its {part.value.replace('_', ' ')} failed.",
+        f"{vessel.name} {FAILURE_TEXT[part]} when its {spoken(part)} failed.",
         key=f"designs.failure_{part.value}",
         ids=[vessel.id],
     )

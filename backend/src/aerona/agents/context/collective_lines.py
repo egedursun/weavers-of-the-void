@@ -70,11 +70,11 @@ async def custom_lines(scope: Scope, me: EntityRow) -> list[str]:
     norms = await norms_of(session, people.id)
     strict = sorted(((situation, behaviour), stance) for (situation, behaviour), stance in norms.items() if stance in STRICT)
     for (where, behaviour), stance in strict[:NORM_LINES]:
-        found.append(f"{behaviour.value.replace('_', ' ')} at {an(where.value.replace('_', ' '))} is {stance.value.replace('_', ' ')}")
+        found.append(f"{spoken(behaviour)} at {an(spoken(where))} is {spoken(stance)}")
     for row in await session.scalars(select(RoleNormRow).where(RoleNormRow.holder_entity_id == people.id).order_by(RoleNormRow.role)):
         if row.eligibility is not RoleEligibility.ANY or row.classes:
             classes = f", only for {', '.join(row.classes)}" if row.classes else ""
-            found.append(f"the {spoken(row.role)} role is {row.eligibility.value.replace('_', ' ')} from age {row.min_age}{classes}")
+            found.append(f"the {spoken(row.role)} role is {spoken(row.eligibility)} from age {row.min_age}{classes}")
     return found
 
 
@@ -216,7 +216,7 @@ async def son_collective_lines(scope: Scope, son: SonRow) -> list[str]:
     for holder, account in rewritten.all():
         event = await session.get(CollectionRow, account.collection_id) if account.collection_id is not None else None
         about = f" of {event.name}" if event is not None else ""
-        found.append(f"account {account.id}: the {account.kind.value.replace('_', ' ')}{about} kept by {holder.name} hides an older telling")
+        found.append(f"account {account.id}: the {spoken(account.kind)}{about} kept by {holder.name} hides an older telling")
     for run in await session.scalars(
         select(StoryletRunRow)
         .where(StoryletRunRow.world_id == world, StoryletRunRow.status == StoryletStatus.OPEN)

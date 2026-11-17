@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.catalog.law_grammar import Grammar
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.law_grammar import EXCEPTION_FIELDS, THEORY_FIELDS, LawExceptionRow, LawTheoryRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
@@ -74,7 +75,7 @@ async def grammar_set(scope: PlayerScope, command: GrammarSet) -> Effect:
         raise NotFoundError("No such living natural law.")
     grammar = Grammar(command.target, command.operator, command.key.strip(), command.value)
     await set_grammar(ctx, law, grammar, command.condition, command.until_epoch, hold=True)
-    return Effect(f"{law.name} now {command.operator.value.replace('_', ' ')}s {command.key.strip()}.", law.id)
+    return Effect(f"{law.name} now {spoken(command.operator)}s {command.key.strip()}.", law.id)
 
 
 @player_action("law_exception:create", ActionKind.EDIT_RECORD)

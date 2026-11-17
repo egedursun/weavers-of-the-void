@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, RelicRow
 from aerona.db.tables.networks import NetworkProfileRow
-from aerona.db.tables.polity import HouseMemberRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import HouseMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
@@ -42,6 +42,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
 
@@ -63,7 +64,7 @@ def affordable(doctrine: CultDoctrineRow, cost: int) -> bool:
 
 
 async def realm_of(ctx: TickContext, community_id: int) -> PolityProfileRow | None:
-    realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+    realm_id = await realm_of_community(ctx.session, community_id)
     return await ctx.session.get(PolityProfileRow, realm_id) if realm_id is not None else None
 
 

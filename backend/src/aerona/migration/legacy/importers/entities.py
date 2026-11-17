@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aerona.catalog.entity_types import can_contain, engine_kind_owner
 from aerona.constants.schema import KEY_MAX_LENGTH, PRIVATE_NOTE_MAX_LENGTH, SUBTYPE_MAX_LENGTH, TITLE_MAX_LENGTH
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.names import normalize_name
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
 from aerona.db.tables.entities import CreationVerdictRow, EntityFlagRow, EntityRow, EntityTagRow, EntityTraitRow
@@ -288,7 +288,7 @@ class EntityImporter:
             self.report.place_failed(LOCATION_DROPPED, reference, f"location {legacy_location} is missing")
             return
         if not can_contain(location.entity_type, entity.entity_type):
-            self.report.place_failed(LOCATION_DROPPED, reference, f"{an(entity.entity_type.value)} cannot be inside {an(location.entity_type.value)}")
+            self.report.place_failed(LOCATION_DROPPED, reference, f"{an(spoken(entity.entity_type))} cannot be inside {an(spoken(location.entity_type))}")
             return
         if self._cycles(entity.id, location):
             self.report.place_failed(LOCATION_DROPPED, reference, "the location chain loops")

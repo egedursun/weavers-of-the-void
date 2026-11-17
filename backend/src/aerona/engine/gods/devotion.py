@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog import god_lines
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import fill
+from aerona.core.grammar import fill, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -218,7 +218,7 @@ async def sibling_scheme(ctx: TickContext, sibling: SonRow, son: SonRow, kind: S
         raise ValidationFailedError("Only an awake sibling can scheme.")
     cost = scheme_cost(ctx.rules, kind)
     if sibling.essence < cost:
-        raise ValidationFailedError(f"{kind.value} needs {cost} essence; {sibling.name} has {sibling.essence} (world rule death.sibling_{kind.value}_cost).")
+        raise ValidationFailedError(f"{spoken(kind)} needs {cost} essence; {sibling.name} has {sibling.essence} (world rule death.sibling_{kind.value}_cost).")
     contribution = 0
     extra = ""
     slept = False

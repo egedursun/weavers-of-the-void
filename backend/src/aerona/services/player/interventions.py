@@ -12,6 +12,7 @@ from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stats import max_essence, max_hp
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -172,7 +173,7 @@ async def bless(scope: PlayerScope, command: Bless) -> Effect:
             raise ValidationFailedError("Choose the stat to bless.")
         current = int(getattr(son, command.stat.value))
         if current >= STAT_CEILING:
-            raise ValidationFailedError(f"{son.name}'s {command.stat.value} is already at its peak.")
+            raise ValidationFailedError(f"{son.name}'s {spoken(command.stat)} is already at its peak.")
         spent = guards.charge(creator, costs.bless_stat, "costs.bless_stat")
         setattr(son, command.stat.value, min(STAT_CEILING, current + actions.bless_stat_amount))
         gift, kind = f"+{actions.bless_stat_amount} {command.stat.value}", ActionKind.BLESS_STAT

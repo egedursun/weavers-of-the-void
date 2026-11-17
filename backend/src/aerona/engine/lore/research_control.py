@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from aerona.catalog.techniques import INSTITUTIONS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.culture import InstitutionRow, ResearchBoostRow, ResearchFocusRow
 from aerona.domain.enums.culture import BoostTrigger, ResearchChooser, Technique
 from aerona.engine.context import TickContext
@@ -40,7 +41,7 @@ async def set_institution(
 ) -> InstitutionRow | None:
     await holder(ctx, community_id)
     if technique not in INSTITUTIONS:
-        raise ValidationFailedError(f"{technique.value.replace('_', ' ').capitalize()} is a technique, not an institution.")
+        raise ValidationFailedError(f"{spoken(technique).capitalize()} is a technique, not an institution.")
     row = await ctx.session.get(InstitutionRow, (technique, community_id))
     if not present:
         if row is not None:

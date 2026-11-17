@@ -2,9 +2,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import BiasWeightRow
@@ -28,6 +30,8 @@ from aerona.engine.mind.split import culture_mean, facets_of, has_facets
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 MIDDLE = 50
+WEIGHTS_MEMO = "bias_weights"
+WEIGHT_TABLES = table_names((BiasWeightRow,))
 
 SOURCES: Mapping[DecisionBias, tuple[tuple[Facet, int], ...]] = {
     DecisionBias.OVERCONFIDENCE: ((Facet.VANITY, 1), (Facet.AMBITION, 1), (Facet.MODESTY, -1)),
@@ -191,12 +195,18 @@ def derived_weight(facets: Mapping[Facet, int], bias: DecisionBias, stress: int,
 
 
 async def weights_of(ctx: TickContext, node_id: int) -> dict[DecisionBias, BiasWeightRow]:
-    rows = await ctx.session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == node_id))
-    return {row.bias: row for row in rows}
+    memo = memo_of(ctx.session, WEIGHTS_MEMO, WEIGHT_TABLES, live=True)
+    found: dict[DecisionBias, BiasWeightRow] | None = memo.get(node_id) if memo is not None else None
+    if found is None:
+        found = {row.bias: row for row in await ctx.session.scalars(select(BiasWeightRow).where(BiasWeightRow.holder_node_id == node_id))}
+        if memo is not None:
+            memo[node_id] = found
+    return dict(found)
 
 
-async def counter_of(ctx: TickContext, node_id: int) -> int:
-    levels = await ctx.session.scalars(select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(COUNTERS)))
+@memoized(SkillRow)
+async def counter_level(session: AsyncSession, node_id: int) -> int:
+    levels = await session.scalars(select(SkillRow.level).where(SkillRow.holder_node_id == node_id, SkillRow.skill.in_(COUNTERS)))
     return max(levels, default=0)
 
 
@@ -226,24 +236,26 @@ async def derive(ctx: TickContext, node_id: int, tally: BiasTally) -> dict[Decis
     return found
 
 
-async def informed(ctx: TickContext, node_id: int) -> bool:
-    linked = await ctx.session.scalar(select(NetworkNodeRow.id).where(NetworkNodeRow.member_node_id == node_id).limit(1))
-    spies = await ctx.session.scalar(select(SpyNetworkRow.id).where(SpyNetworkRow.owner_entity_id == node_id).limit(1))
+@memoized(NetworkNodeRow, SpyNetworkRow)
+async def informed_node(session: AsyncSession, node_id: int) -> bool:
+    linked = await session.scalar(select(NetworkNodeRow.id).where(NetworkNodeRow.member_node_id == node_id).limit(1))
+    spies = await session.scalar(select(SpyNetworkRow.id).where(SpyNetworkRow.owner_entity_id == node_id).limit(1))
     return linked is not None or spies is not None
 
 
-async def isolated(ctx: TickContext, node_id: int) -> bool:
+@memoized(RelationshipRow)
+async def isolated_node(session: AsyncSession, node_id: int) -> bool:
     close = select(RelationshipRow.id).where(RelationshipRow.holder_node_id == node_id, RelationshipRow.friendship > 0).limit(1)
-    return await ctx.session.scalar(close) is None
+    return await session.scalar(close) is None
 
 
 async def damping(ctx: TickContext, node_id: int) -> float:
     table = ctx.rules.biases
     learned = max(0, (await values_for(ctx.session, node_id)).get(ValueAxis.KNOWLEDGE, 0))
-    damp = 1 - await counter_of(ctx, node_id) * table.skill_damp_pct / PERCENT - learned * table.knowledge_damp_pct / PERCENT / PERCENT
-    if await informed(ctx, node_id):
+    damp = 1 - await counter_level(ctx.session, node_id) * table.skill_damp_pct / PERCENT - learned * table.knowledge_damp_pct / PERCENT / PERCENT
+    if await informed_node(ctx.session, node_id):
         damp -= table.informed_damp_pct / PERCENT
-    if await isolated(ctx, node_id):
+    if await isolated_node(ctx.session, node_id):
         damp += table.isolation_pct / PERCENT
     return max(0.0, damp)
 
@@ -272,15 +284,16 @@ async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) 
     return max(0.0, 1 + total / PERCENT)
 
 
-async def council_of(ctx: TickContext, community_id: int, ruler_id: int) -> list[int]:
-    realm = community_id if await ctx.session.scalar(select(OfficeRow.id).where(OfficeRow.polity_entity_id == community_id).limit(1)) else None
-    realm = realm or await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
+@memoized(OfficeRow, PolityMemberRow)
+async def council_members(session: AsyncSession, community_id: int, ruler_id: int) -> tuple[int, ...]:
+    realm = community_id if await session.scalar(select(OfficeRow.id).where(OfficeRow.polity_entity_id == community_id).limit(1)) else None
+    realm = realm or await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
     if realm is None:
-        return []
-    holders = await ctx.session.scalars(
+        return ()
+    holders = await session.scalars(
         select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm, OfficeRow.holder_entity_id.is_not(None)).order_by(OfficeRow.id)
     )
-    return sorted({int(holder) for holder in holders if holder is not None and holder != ruler_id})
+    return tuple(sorted({int(holder) for holder in holders if holder is not None and holder != ruler_id}))
 
 
 async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDecision) -> float:
@@ -288,7 +301,7 @@ async def lean_community(ctx: TickContext, community_id: int, decision: BiasedDe
     if not rulers:
         return 1.0
     first = await lean(ctx, rulers[0].id, decision)
-    council = [await lean(ctx, member, decision) for member in await council_of(ctx, community_id, rulers[0].id)]
+    council = [await lean(ctx, member, decision) for member in await council_members(ctx.session, community_id, rulers[0].id)]
     if not council:
         return first
     share = ctx.rules.biases.council_pct / PERCENT

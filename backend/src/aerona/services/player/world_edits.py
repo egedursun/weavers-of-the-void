@@ -4,7 +4,7 @@ from aerona.cartography.terrain import default_terrain
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import agree, an, several
+from aerona.core.grammar import agree, an, several, spoken
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -97,10 +97,10 @@ def _physics(scope: PlayerScope, world: WorldRow, command: EditWorld, notes: lis
         mechanics = mechanics_of(command.world_type)
         if mechanics.forced_gravity is not None and command.gravity is None:
             world.gravity = mechanics.forced_gravity
-            notes.append(f"its nature set gravity {mechanics.forced_gravity.value}")
+            notes.append(f"its nature set gravity {spoken(mechanics.forced_gravity)}")
         if mechanics.forced_atmosphere is not None and command.atmosphere is None:
             world.atmosphere = mechanics.forced_atmosphere
-            notes.append(f"its nature set atmosphere {mechanics.forced_atmosphere.value}")
+            notes.append(f"its nature set atmosphere {spoken(mechanics.forced_atmosphere)}")
     _terrain(world, command, notes)
     if command.gravity is not None:
         world.gravity = command.gravity
@@ -160,7 +160,7 @@ async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, 
     remembered = world.discovery is Discovery.FORGOTTEN
     reopened = await WorldRepository(scope.session).set_discovery(world, discovery)
     if not remembered:
-        notes.append(f"it is now {discovery.value}")
+        notes.append(f"it is now {spoken(discovery)}")
         return
     closed = await scope.session.scalars(
         select(RouteRow.id).where(((RouteRow.world_a_id == world.id) | (RouteRow.world_b_id == world.id)) & RouteRow.active.is_(False))

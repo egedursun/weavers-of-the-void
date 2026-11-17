@@ -15,7 +15,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -140,7 +140,7 @@ async def procedure_line(scope: Scope) -> str:
     procedure = await read_procedure(scope.session, scope.rules)
     veto = "may veto a ruling" if procedure.creator_veto else "has no veto"
     return (
-        f"{procedure.quorum_pct}% of the seats must vote; a motion carries by {procedure.voting_rule.value.replace('_', ' ')}; "
+        f"{procedure.quorum_pct}% of the seats must vote; a motion carries by {spoken(procedure.voting_rule)}; "
         f"a lasting ruling holds {procedure.term_epochs} epochs; the Creator {veto}."
     )
 

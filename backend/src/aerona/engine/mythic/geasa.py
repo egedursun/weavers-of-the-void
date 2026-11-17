@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.dominion import DominionRow
 from aerona.db.tables.entities import EntityRow
@@ -94,9 +95,7 @@ async def doom_broken(ctx: TickContext, tally: GeasTally) -> None:
             )
         )
         if doomed is None and await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id) is not None:
-            await note(
-                ctx, f"{bearer.name} broke a geas: {row.act.value.replace('_', ' ')}.", key="mythic.geas_broken", ids=[bearer.id], kind=ChronicleKind.WORLD
-            )
+            await note(ctx, f"{bearer.name} broke a geas: {spoken(row.act)}.", key="mythic.geas_broken", ids=[bearer.id], kind=ChronicleKind.WORLD)
             tally.broken += 1
 
 
@@ -126,7 +125,7 @@ async def tend_geasa(ctx: TickContext, tally: GeasTally) -> None:
         if bearer is None or bearer.status is not EntityStatus.CANON or bearer.entity_type is not EntityType.MORTAL or held(bearer.id):
             continue
         if row.mode is GeasMode.DUTY and ctx.epoch - row.last_kept_epoch > table.duty_epochs:
-            await doom(ctx, row, bearer, f"it left undone {row.act.value.replace('_', ' ')}")
+            await doom(ctx, row, bearer, f"it left undone {spoken(row.act)}")
             tally.broken += 1
             continue
         await favour(ctx, atlas, row, bearer)

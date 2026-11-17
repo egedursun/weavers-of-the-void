@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
@@ -166,7 +167,7 @@ async def set_mood(scope: PlayerScope, command: SetMood) -> Effect:
         temperament=current.temperament,
     )
     view = await creator_mood.set_mood(scope.session, scope.rules, state)
-    return Effect(f"The Creator's mood is now {view.label.value}.", (await scope.creator()).id, values={"label": view.label.value})
+    return Effect(f"The Creator's mood is now {spoken(view.label)}.", (await scope.creator()).id, values={"label": view.label.value})
 
 
 async def creator_profile(scope: PlayerScope) -> CreatorProfile:

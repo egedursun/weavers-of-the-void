@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.titles import CHARGES, RANK_WORDS, SEAT_RANKS, TIER_RANKS, TINCTURES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import ClaimRow, VassalageRow
@@ -64,8 +66,9 @@ def rank_index(rank: TitleTier) -> int:
     return RANK_ORDER.index(rank) if rank in RANK_ORDER else 0
 
 
-async def primary_title(ctx: TickContext, realm_id: int) -> TitleProfileRow | None:
-    found: TitleProfileRow | None = await ctx.session.scalar(
+@memoized(TitleProfileRow)
+async def first_title(session: AsyncSession, realm_id: int) -> TitleProfileRow | None:
+    found: TitleProfileRow | None = await session.scalar(
         select(TitleProfileRow)
         .where(TitleProfileRow.polity_entity_id == realm_id, TitleProfileRow.destroyed_epoch.is_(None))
         .order_by(TitleProfileRow.title_entity_id)
@@ -74,8 +77,20 @@ async def primary_title(ctx: TickContext, realm_id: int) -> TitleProfileRow | No
     return found
 
 
+async def primary_title(ctx: TickContext, realm_id: int) -> TitleProfileRow | None:
+    return await first_title(ctx.session, realm_id)
+
+
+@memoized(DeJureLinkRow)
+async def lands_by_title(session: AsyncSession) -> dict[int, frozenset[int]]:
+    found: dict[int, set[int]] = {}
+    for title_id, member_id in await session.execute(select(DeJureLinkRow.title_entity_id, DeJureLinkRow.member_entity_id)):
+        found.setdefault(title_id, set()).add(member_id)
+    return {title_id: frozenset(members) for title_id, members in found.items()}
+
+
 async def de_jure_lands(ctx: TickContext, title_id: int) -> set[int]:
-    return set(await ctx.session.scalars(select(DeJureLinkRow.member_entity_id).where(DeJureLinkRow.title_entity_id == title_id)))
+    return set((await lands_by_title(ctx.session)).get(title_id, frozenset()))
 
 
 def emblem_of(ctx: TickContext, seed: str) -> str:

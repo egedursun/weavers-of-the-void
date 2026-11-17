@@ -260,8 +260,17 @@ async def ongoing_wars(session: AsyncSession, side_id: int | None = None) -> lis
     return result
 
 
+@memoized(WarRow, WarSideRow, EntityRow)
+async def live_war_sides(session: AsyncSession) -> tuple[tuple[int, int], ...]:
+    return tuple((item.attacker_id, item.defender_id) for item in await ongoing_wars(session))
+
+
 async def ongoing_war_count(session: AsyncSession, side_id: int | None = None) -> int:
-    return len(await ongoing_wars(session, side_id))
+    sides = await live_war_sides(session)
+    if side_id is None or not sides:
+        return len(sides)
+    family = await war_family(session, side_id)
+    return sum(1 for first, second in sides if first in family or second in family)
 
 
 async def current_war(session: AsyncSession, first: int, second: int) -> WarRow | None:

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.methods import HERD_PROCESSES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import (
@@ -357,12 +358,18 @@ async def domestic_head(ctx: TickContext, species_id: int) -> int | None:
     return sum(heads)
 
 
-async def kept_for(ctx: TickContext, community_id: int, use: AnimalRole) -> int:
+@memoized(HerdRow, SpeciesUseRow)
+async def heads_kept_for(session: AsyncSession, use: AnimalRole) -> dict[int, int]:
     uses = select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == use)
-    heads = await ctx.session.scalars(
-        select(HerdRow.head).where(HerdRow.community_entity_id == community_id, HerdRow.species_entity_id.in_(uses), HerdRow.stage.in_(list(KEPT)))
-    )
-    return sum(heads)
+    found: dict[int, int] = {}
+    statement = select(HerdRow.community_entity_id, HerdRow.head).where(HerdRow.species_entity_id.in_(uses), HerdRow.stage.in_(list(KEPT)))
+    for community_id, head in await session.execute(statement):
+        found[community_id] = found.get(community_id, 0) + head
+    return found
+
+
+async def kept_for(ctx: TickContext, community_id: int, use: AnimalRole) -> int:
+    return (await heads_kept_for(ctx.session, use)).get(community_id, 0)
 
 
 async def draught(ctx: TickContext, community_id: int) -> float:

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.customs import RevivalRow
@@ -115,7 +116,7 @@ async def open_revival(ctx: TickContext, people: EntityRow, tally: RevivalTally)
     ctx.session.add(row)
     await ctx.session.flush()
     tally.begun += 1
-    await note(ctx, f"Pressed by others, the {people.name} began a movement to {goal.value.replace('_', ' ')}.", key="revivals.begun", ids=[people.id])
+    await note(ctx, f"Pressed by others, the {people.name} began a movement to {spoken(goal)}.", key="revivals.begun", ids=[people.id])
     return row
 
 

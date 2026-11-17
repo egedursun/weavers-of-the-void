@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.preferences import ACTIVITY_VALUES, DRINKS, SPECIES_KINDS, STATIC_TARGETS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.culture import ArtworkProfileRow, TraditionProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -70,6 +71,35 @@ async def write_pref(
     return row
 
 
+def set_pref(
+    session: AsyncSession,
+    rows: dict[tuple[PreferenceKind, str], PreferenceRow],
+    holder_id: int,
+    kind: PreferenceKind,
+    target: str,
+    *,
+    strength: float,
+    target_node_id: int | None = None,
+) -> None:
+    if write_blocked(holder_id, PREFERENCES_KEY):
+        return
+    value = clamp_int(strength, -STRENGTH_SPAN, STRENGTH_SPAN)
+    row = rows.get((kind, target))
+    if row is None:
+        row = rows[(kind, target)] = PreferenceRow(holder_node_id=holder_id, kind=kind, target=target, target_node_id=target_node_id, strength=value, locked=[])
+        session.add(row)
+    elif STRENGTH_FIELD not in (row.locked or []):
+        row.strength = value
+
+
+async def prefs_by_holder(session: AsyncSession, holder_ids: list[int]) -> dict[int, Prefs]:
+    found: dict[int, Prefs] = {holder: {} for holder in holder_ids}
+    statement = select(PreferenceRow).where(PreferenceRow.holder_node_id.in_(holder_ids)).order_by(PreferenceRow.kind, PreferenceRow.id)
+    for row in await session.scalars(statement):
+        found[row.holder_node_id][(row.kind, row.target)] = row.strength
+    return found
+
+
 def fit(prefs: Prefs, kind: PreferenceKind, target: str | None) -> int:
     return prefs.get((kind, target), 0) if target is not None else 0
 
@@ -123,23 +153,38 @@ async def seed_culture(ctx: TickContext, people: EntityRow) -> int:
     rng = ctx.rng(f"prefs.{people.id}")
     lean = await leanings(ctx.session, ctx.rules, people)
     made = 0
+    rows: dict[tuple[PreferenceKind, str], PreferenceRow] = {}
     for kind in PreferenceKind:
         pool = await species_targets(ctx.session, people.world_id, kind) if kind in SPECIES_KINDS else [(target, None) for target in STATIC_TARGETS[kind]]
         if not pool:
             continue
         ranked = sorted(pool, key=lambda item: (-(lean.get((kind, item[0]), 0.0) + rng.random()), item[0]))
         for target, node in ranked[: table.likes_per_kind]:
-            await write_pref(
-                ctx.session, people.id, kind, target, table.seed_strength + rng.integer(-table.seed_jitter, table.seed_jitter), target_node_id=node
+            set_pref(
+                ctx.session,
+                rows,
+                people.id,
+                kind,
+                target,
+                strength=table.seed_strength + rng.integer(-table.seed_jitter, table.seed_jitter),
+                target_node_id=node,
             )
             made += 1
         for target, node in ranked[::-1][: table.dislikes_per_kind]:
             if (kind, target) in {(kind, item[0]) for item in ranked[: table.likes_per_kind]}:
                 continue
-            await write_pref(
-                ctx.session, people.id, kind, target, -table.seed_strength + rng.integer(-table.seed_jitter, table.seed_jitter), target_node_id=node
+            set_pref(
+                ctx.session,
+                rows,
+                people.id,
+                kind,
+                target,
+                strength=-table.seed_strength + rng.integer(-table.seed_jitter, table.seed_jitter),
+                target_node_id=node,
             )
             made += 1
+    if made:
+        await ctx.session.flush()
     return made
 
 
@@ -169,7 +214,8 @@ async def grow(ctx: TickContext, mortal: EntityRow) -> int:
     if is_locked(await mind_of(ctx.session, mortal.id), PREFERENCE_LOCK):
         return 0
     gain = ctx.rules.preferences.experience_gain
-    prefs = await prefs_of(ctx.session, mortal.id)
+    rows = {(row.kind, row.target): row for row in await rows_of(ctx.session, mortal.id)}
+    prefs = {key: row.strength for key, row in rows.items()}
     touched: list[tuple[PreferenceKind, str]] = []
     terrain = await home_terrain(ctx.session, mortal)
     if terrain is not None:
@@ -183,26 +229,33 @@ async def grow(ctx: TickContext, mortal: EntityRow) -> int:
         if isinstance(domain, Domain):
             touched.append((PreferenceKind.DEITY_ASPECT, domain.value))
     for kind, target in touched:
-        await write_pref(ctx.session, mortal.id, kind, target, prefs.get((kind, target), 0) + gain)
+        set_pref(ctx.session, rows, mortal.id, kind, target, strength=prefs.get((kind, target), 0) + gain)
+    if touched:
+        await ctx.session.flush()
     return len(touched)
 
 
 async def pull_culture(ctx: TickContext, people: EntityRow, members: Iterable[EntityRow]) -> int:
     share = ctx.rules.preferences.culture_pull_pct / PERCENT
     sums: dict[tuple[PreferenceKind, str], list[int]] = defaultdict(list)
-    for member in members:
-        for key, value in (await prefs_of(ctx.session, member.id)).items():
+    listed = list(members)
+    held_prefs = await prefs_by_holder(ctx.session, list(dict.fromkeys(member.id for member in listed)))
+    for member in listed:
+        for key, value in held_prefs[member.id].items():
             sums[key].append(value)
     moved = 0
-    own = await prefs_of(ctx.session, people.id)
+    rows = {(row.kind, row.target): row for row in await rows_of(ctx.session, people.id)}
+    own = {key: row.strength for key, row in rows.items()}
     for (kind, target), values in sums.items():
         if (kind, target) not in own:
             continue
         mean = sum(values) / len(values)
         current = own[(kind, target)]
         if round(current + (mean - current) * share) != current:
-            await write_pref(ctx.session, people.id, kind, target, current + (mean - current) * share)
+            set_pref(ctx.session, rows, people.id, kind, target, strength=current + (mean - current) * share)
             moved += 1
+    if moved:
+        await ctx.session.flush()
     return moved
 
 
@@ -309,10 +362,15 @@ async def art_fit(session: AsyncSession, holder: EntityRow, row: ArtworkProfileR
     return round(sum(parts) / len(parts))
 
 
+@memoized(PreferenceRow)
+async def kept_prefs(session: AsyncSession, holder_id: int) -> Prefs:
+    return await prefs_of(session, holder_id)
+
+
 async def market_fit(session: AsyncSession, market_id: int) -> Prefs:
     market = await session.get(EntityRow, market_id)
     people = await people_of(session, market) if market is not None else None
-    return await prefs_of(session, people.id) if people is not None else {}
+    return dict(await kept_prefs(session, people.id)) if people is not None else {}
 
 
 def demand_factor(rules: Rules, prefs: Prefs, commodity: str) -> float:

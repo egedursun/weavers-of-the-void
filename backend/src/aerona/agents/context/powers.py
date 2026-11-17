@@ -56,7 +56,7 @@ async def divine_power_lines(session: AsyncSession, holder_id: int, epoch: int) 
         ready = row.last_used_epoch is None or epoch - row.last_used_epoch >= row.cooldown
         state = "ready" if ready else f"resting until epoch {(row.last_used_epoch or 0) + row.cooldown}"
         found.append(
-            f"{row.name} (power_id {row.id}): {spoken(row.verb)} {row.object.value.replace('_', ' ')}{key}, reaching {spoken(row.scope)}, "
+            f"{row.name} (power_id {row.id}): {spoken(row.verb)} {spoken(row.object)}{key}, reaching {spoken(row.scope)}, "
             f"acting {spoken(row.mode)}, strength {row.strength}, costing {row.cost_amount} {spoken(row.cost)}; {state}"
         )
     return found

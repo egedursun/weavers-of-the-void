@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
@@ -87,16 +88,16 @@ async def command_factor(session: AsyncSession, rules: Rules, owner_id: int, epo
     return 1 - rules.networks.confusion_pct / PERCENT
 
 
-async def reach_pct(session: AsyncSession, rules: Rules, node_id: int, epoch: int, *, kind: str) -> int:
+@memoized(NetworkProfileRow, NetworkNodeRow, EntityRow)
+async def reaching_capacities(session: AsyncSession, node_id: int, epoch: int, kind: str) -> tuple[int, ...]:
     statement = (
         select(NetworkProfileRow)
         .join(NetworkNodeRow, NetworkNodeRow.network_entity_id == NetworkProfileRow.network_entity_id)
         .where(NetworkNodeRow.member_node_id.in_(await homes(session, node_id)))
     )
-    best = 0
-    for profile in await session.scalars(statement):
-        if not running(profile, epoch) or not getattr(profile, kind):
-            continue
-        weight = rules.networks.rumour_pct if kind == "carries_opinion" else rules.networks.diffusion_pct
-        best = max(best, profile.capacity * weight // PERCENT)
-    return best
+    return tuple(profile.capacity for profile in await session.scalars(statement) if running(profile, epoch) and getattr(profile, kind))
+
+
+async def reach_pct(session: AsyncSession, rules: Rules, node_id: int, epoch: int, *, kind: str) -> int:
+    weight = rules.networks.rumour_pct if kind == "carries_opinion" else rules.networks.diffusion_pct
+    return max([0, *(capacity * weight // PERCENT for capacity in await reaching_capacities(session, node_id, epoch, kind))])

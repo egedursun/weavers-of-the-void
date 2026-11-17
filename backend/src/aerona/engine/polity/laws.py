@@ -11,7 +11,8 @@ from aerona.catalog.law_areas import LAW_AREAS
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for, law_terms, penal_cruelty, term_text
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.read_memo import memoized
+from aerona.core.grammar import spoken
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -28,6 +29,8 @@ from aerona.engine.primitives.stats import set_stats, stat_or
 
 ParamValue = int | str | bool
 KIND_FIXUP = "law_kinds_from_text"
+KEPT_LAWS = "kept_laws"
+LAW_TABLES = table_names((LawProfileRow, LawJurisdictionRow))
 CULT_FIRST = frozenset({LawKind.BURIAL_LAW, LawKind.MARRIAGE_LAW, LawKind.RITE_RESTRICTIONS, LawKind.WORSHIP_BAN, LawKind.MAGIC_BAN, LawKind.TITHE})
 KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.SLAVERY: {ValueAxis.MERCY: -1, ValueAxis.HIERARCHY: 1},
@@ -81,7 +84,7 @@ def validate(kind: LawKind, params: Mapping[str, ParamValue]) -> dict[str, Param
     spec = LAW_PARAMS[kind]
     unknown = set(params) - set(spec)
     if unknown:
-        raise ValidationFailedError(f"{kind.value.replace('_', ' ')} has no {', '.join(sorted(unknown))}; its terms are: {law_terms(kind)}.")
+        raise ValidationFailedError(f"{spoken(kind).capitalize()} has no {', '.join(sorted(unknown))}; its terms are: {law_terms(kind)}.")
     merged = defaults_for(kind)
     for key, value in params.items():
         if not spec[key].valid(value):
@@ -232,11 +235,45 @@ async def faithful_cults(session: AsyncSession) -> dict[int, list[int]]:
 
 
 async def law_param(session: AsyncSession, node_id: int, kind: LawKind, key: str) -> ParamValue | None:
+    row = await ruling_law(session, node_id, kind)
+    return row.params.get(key, LAW_PARAMS[kind][key].default) if row is not None else None
+
+
+async def kept_laws(session: AsyncSession, kind: LawKind) -> dict[int, list[LawProfileRow]] | None:
+    memo = memo_of(session, KEPT_LAWS, LAW_TABLES)
+    if memo is None:
+        return None
+    found: dict[int, list[LawProfileRow]] | None = memo.get(kind)
+    if found is None:
+        statement = (
+            select(LawJurisdictionRow.node_entity_id, LawProfileRow)
+            .join(LawJurisdictionRow, LawJurisdictionRow.law_entity_id == LawProfileRow.law_entity_id)
+            .where(LawProfileRow.kind == kind)
+            .order_by(LawProfileRow.enacted_epoch.desc(), LawProfileRow.law_entity_id.desc())
+        )
+        found = {}
+        for holder, row in (await session.execute(statement)).all():
+            found.setdefault(holder, []).append(row)
+        after = memo_of(session, KEPT_LAWS, LAW_TABLES)
+        if after is not None:
+            after[kind] = found
+    return found
+
+
+@memoized(PolityMemberRow, LawProfileRow, LawJurisdictionRow, EntityRow, BondRow)
+async def ruling_law(session: AsyncSession, node_id: int, kind: LawKind) -> LawProfileRow | None:
     polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == node_id).limit(1))
     cults = (await faithful_cults(session)).get(node_id, [])
     ordered = [node_id, *cults, polity] if kind in CULT_FIRST else [node_id, polity, *cults]
+    kept = await kept_laws(session, kind)
     for holder in ordered:
         if holder is None:
+            continue
+        if kept is not None:
+            for profile in kept.get(holder, ()):
+                law = await session.get(EntityRow, profile.law_entity_id)
+                if law is not None and law.status == EntityStatus.CANON:
+                    return profile
             continue
         statement = (
             select(LawProfileRow)
@@ -248,7 +285,7 @@ async def law_param(session: AsyncSession, node_id: int, kind: LawKind, key: str
         )
         row = await session.scalar(statement)
         if row is not None:
-            return row.params.get(key, LAW_PARAMS[kind][key].default)
+            return row
     return None
 
 
@@ -295,7 +332,7 @@ async def enact(
         RecordSpec(
             entity_type=EntityType.LAW,
             name=title,
-            body=f"{holder.name} laid down {kind.value.replace('_', ' ')}.",
+            body=f"{holder.name} laid down {spoken(kind)}.",
             stats=LawStats(rigidity=30 if basis is LegitimacyBasis.DECREE else 60, justice=50),
             power=2,
             location_id=holder.id,

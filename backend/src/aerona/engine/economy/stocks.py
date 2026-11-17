@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
+from sqlalchemy.orm.attributes import instance_state
 
 from aerona.catalog.commodities import BACKFILL_SPLITS, COMMODITIES
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of, register_index, table_names, touched_rows
+from aerona.db.attr_history import changed
+from aerona.db.read_memo import register_index, touched_rows
 from aerona.db.tables.economy import CommunityStockRow, GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -33,7 +35,6 @@ class Lot:
     quality: int
 
 
-STOCK_TABLES = table_names((CommunityStockRow,))
 FLOW_INDEX = "aerona.economy.goods_flows"
 FlowKey = tuple[CommodityKind, GoodsFlow]
 
@@ -68,14 +69,77 @@ event.listen(Session, "do_orm_execute", drop_flows_on_write)
 register_index(FLOW_INDEX)
 
 
+LOTS_INDEX = "aerona.economy.lots"
+
+
+def lot_index(sync: Session) -> dict[int, list[CommunityStockRow]]:
+    found: dict[int, list[CommunityStockRow]] = sync.info.setdefault(LOTS_INDEX, {})
+    return found
+
+
+def note_lot(sync: Session, instance: object) -> None:
+    if not isinstance(instance, CommunityStockRow) or LOTS_INDEX not in sync.info:
+        return
+    if instance.community_entity_id is None:
+        drop_lots(sync)
+        return
+    known = lot_index(sync).get(instance.community_entity_id)
+    if known is not None and instance not in known:
+        known.append(instance)
+
+
+def unnote_lot(sync: Session, instance: object) -> None:
+    if not isinstance(instance, CommunityStockRow) or LOTS_INDEX not in sync.info:
+        return
+    known = lot_index(sync).get(instance.community_entity_id) if instance.community_entity_id is not None else None
+    if known is not None and instance in known:
+        known.remove(instance)
+
+
+def follow_lots(sync: Session, *_: object) -> None:
+    if LOTS_INDEX not in sync.info:
+        return
+    dirty, deleted = touched_rows(sync, CommunityStockRow)[1:]
+    if any(changed(instance_state(row), "community_entity_id") for row in dirty):
+        drop_lots(sync)
+        return
+    for row in deleted:
+        unnote_lot(sync, row)
+
+
+def drop_lots(sync: Session, *_: object) -> None:
+    sync.info.pop(LOTS_INDEX, None)
+
+
+def drop_lots_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select and getattr(getattr(state.statement, "table", None), "name", CommunityStockRow.__tablename__) == CommunityStockRow.__tablename__:
+        drop_lots(state.session)
+
+
+event.listen(Session, "transient_to_pending", note_lot)
+event.listen(Session, "pending_to_transient", unnote_lot)
+event.listen(Session, "after_flush", follow_lots)
+event.listen(Session, "after_soft_rollback", drop_lots)
+event.listen(Session, "do_orm_execute", drop_lots_on_write)
+register_index(LOTS_INDEX)
+
+
+def unsettled(sync: Session, lots: list[CommunityStockRow]) -> bool:
+    if any(row.id is None for row in lots):
+        return True
+    return bool(sync._deleted) and any(isinstance(item, CommunityStockRow) and item in lots for item in sync.deleted)
+
+
 async def lots_of(session: AsyncSession, community_id: int, commodity: CommodityKind | None = None) -> list[CommunityStockRow]:
-    memo = memo_of(session, "lots", STOCK_TABLES, live=True)
-    lots: list[CommunityStockRow] | None = memo.get(community_id) if memo is not None else None
+    sync = session.sync_session
+    lots = lot_index(sync).get(community_id)
+    if lots is not None and unsettled(sync, lots):
+        await session.flush()
+        lots = lot_index(sync).get(community_id)
     if lots is None:
         statement = select(CommunityStockRow).where(CommunityStockRow.community_entity_id == community_id)
         lots = list(await session.scalars(statement.order_by(CommunityStockRow.id)))
-        if memo is not None:
-            memo[community_id] = lots
+        lot_index(sync)[community_id] = lots
     return [row for row in lots if commodity is None or row.commodity == commodity]
 
 

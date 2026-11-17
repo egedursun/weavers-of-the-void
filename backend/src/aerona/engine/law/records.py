@@ -2,8 +2,10 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.customs import MembershipRow
 from aerona.db.tables.discovery import BlueprintRow
@@ -154,5 +156,11 @@ async def record_events(ctx: TickContext) -> int:
     return kept
 
 
+@memoized(RegistryRow)
+async def records_by_holder(session: AsyncSession) -> dict[int, int]:
+    statement = select(RegistryRow.holder_entity_id, func.count(RegistryRow.id)).group_by(RegistryRow.holder_entity_id)
+    return {holder: int(count) for holder, count in await session.execute(statement)}
+
+
 async def records_of(ctx: TickContext, polity_id: int) -> int:
-    return int(await ctx.session.scalar(select(func.count(RegistryRow.id)).where(RegistryRow.holder_entity_id == polity_id)) or 0)
+    return (await records_by_holder(ctx.session)).get(polity_id, 0)

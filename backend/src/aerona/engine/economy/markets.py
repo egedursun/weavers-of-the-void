@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.finance import LUXURIES as LUXURY_GOODS
 from aerona.catalog.finance import STAPLES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import CurrencyRow, MarketPriceHoldRow, MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -26,7 +28,7 @@ from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.industry.quality import at_least, premium
 from aerona.engine.lore.traditions import resent_taboo, taboos
-from aerona.engine.mind.preferences import demand_factor, market_fit, material_factor
+from aerona.engine.mind.preferences import Prefs, demand_factor, market_fit, material_factor
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
@@ -99,12 +101,11 @@ def price_of(
     return round_half_up(min(high, max(low, base * pressure * factor)))
 
 
-async def material_premium(ctx: TickContext, book: EconomyBook, market: EntityRow, commodity: CommodityKind) -> float:
+async def material_premium(ctx: TickContext, book: EconomyBook, market: EntityRow, commodity: CommodityKind, tastes: Prefs) -> float:
     lots = [row for row in await lots_of(ctx.session, market.id, commodity) if row.quantity > 0]
     weight = sum(row.quantity for row in lots)
     if weight <= 0:
         return 1.0
-    tastes = await market_fit(ctx.session, market.id)
     return (
         sum(
             price_premium(ctx.rules, book.materials.props(market.world_id, row.material, row.world_material_id))
@@ -127,7 +128,14 @@ async def noble_demand(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     return 1 + society.share(SocialClass.NOBLE) / PERCENT * ctx.rules.quality.noble_fine_pct / PERCENT
 
 
+@memoized(MarketPriceHoldRow)
+async def held_markets(session: AsyncSession) -> frozenset[int]:
+    return frozenset(await session.scalars(select(MarketPriceHoldRow.market_entity_id).distinct()))
+
+
 async def price_holds(ctx: TickContext, market_id: int) -> dict[CommodityKind, MarketPriceHoldRow]:
+    if market_id not in await held_markets(ctx.session):
+        return {}
     return {row.commodity: row for row in await ctx.session.scalars(select(MarketPriceHoldRow).where(MarketPriceHoldRow.market_entity_id == market_id))}
 
 
@@ -183,7 +191,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value) * income_of(ctx, market, commodity))
         demand = round_half_up(demand * goods.demand_scale(ctx.rules, commodity, prosperity=prosperity, piety=piety))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
-        premium = await material_premium(ctx, book, market, commodity)
+        premium = await material_premium(ctx, book, market, commodity, tastes)
         swing = swing_of(ctx, market, commodity, growth)
         price = (
             hold.price
@@ -203,11 +211,14 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     return quotes
 
 
-async def store_quotes(ctx: TickContext, market: EntityRow, quotes: dict[CommodityKind, Quote]) -> None:
-    current = {
-        row.commodity: row
-        for row in await ctx.session.scalars(select(MarketPriceRow).where(MarketPriceRow.market_entity_id == market.id, MarketPriceRow.epoch == ctx.epoch))
-    }
+async def epoch_prices(ctx: TickContext) -> dict[int, dict[CommodityKind, MarketPriceRow]]:
+    found: dict[int, dict[CommodityKind, MarketPriceRow]] = {}
+    for row in await ctx.session.scalars(select(MarketPriceRow).where(MarketPriceRow.epoch == ctx.epoch)):
+        found.setdefault(row.market_entity_id, {})[row.commodity] = row
+    return found
+
+
+async def store_quotes(ctx: TickContext, market: EntityRow, quotes: dict[CommodityKind, Quote], current: dict[CommodityKind, MarketPriceRow]) -> None:
     for quote in quotes.values():
         row = current.get(quote.commodity)
         if row is None:

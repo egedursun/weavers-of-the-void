@@ -6,7 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.storylets import STORYLETS
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.collective import StoryletRunRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionRow
@@ -151,7 +151,7 @@ async def design_owner(call: MortalCall) -> EntityRow | None:
 async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
     sizes = frame_sizes(args.frame)
     if args.emphasis not in sizes:
-        fail(MortalResult.DESIGN_REFUSED, why=f"{an(FRAMES[args.frame].label.lower())} has no {args.emphasis.value.replace('_', ' ')}")
+        fail(MortalResult.DESIGN_REFUSED, why=f"{an(FRAMES[args.frame].label.lower())} has no {spoken(args.emphasis)}")
     owner = await design_owner(call)
     if owner is None or held(owner.id):
         fail(MortalResult.DESIGN_REFUSED, why="you build for no town or realm")

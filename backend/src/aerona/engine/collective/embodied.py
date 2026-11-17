@@ -56,12 +56,12 @@ def made_status(row: KindRow) -> EntityStatus:
 async def mark(session: AsyncSession, entity: EntityRow, status: EntityStatus) -> None:
     if entity.status is status:
         return
-    entity.status = status
     if status is EntityStatus.DEAD:
         cosmos = await CosmosRepository(session).require_cosmos()
         entity.end_epoch = max(entity.birth_epoch, cosmos.epoch) if entity.end_epoch is None else entity.end_epoch
     else:
         entity.end_epoch = None
+    entity.status = status
 
 
 async def maker_of(session: AsyncSession, row: KindRow) -> tuple[EntityRow | None, SonRow | None]:
@@ -151,8 +151,10 @@ async def align_made(session: AsyncSession) -> int:
     aligned = 0
     for table in KIND_ROWS:
         rows: list[KindRow] = list(await session.scalars(select(table).order_by(table.id)))
+        ids = [row.entity_id for row in rows if row.entity_id is not None]
+        bodies = {entity.id: entity for entity in await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))} if ids else {}
         for row in rows:
-            entity = await session.get(EntityRow, row.entity_id) if row.entity_id is not None else None
+            entity = bodies.get(row.entity_id) if row.entity_id is not None else None
             if entity is None:
                 await embody(session, row)
                 aligned += 1

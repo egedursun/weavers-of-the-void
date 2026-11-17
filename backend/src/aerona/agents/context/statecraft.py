@@ -73,7 +73,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     found: list[str] = []
     for demand in await session.scalars(select(NobleDemandRow).where(NobleDemandRow.mortal_entity_id == me.id)):
         state = "met" if demand.met else f"unmet since epoch {demand.since_epoch}"
-        found.append(f"you demand {demand.want.value.replace('_', ' ')} of your ruler, {state}")
+        found.append(f"you demand {spoken(demand.want)} of your ruler, {state}")
     realm = await seat_of(session, me)
     if realm is None:
         return found
@@ -82,14 +82,14 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         found.append(f"corruption in your realm stands at {profile.corruption}")
     for office in await session.scalars(select(OfficeRow).where(OfficeRow.polity_entity_id == realm, OfficeRow.task.is_not(None)).order_by(OfficeRow.id)):
         task = office.task.value.replace("_", " ") if office.task else "nothing"
-        found.append(f"office #{office.id} ({office.kind.value.replace('_', ' ')}) works at {task}, diligence {office.diligence}")
+        found.append(f"office #{office.id} ({spoken(office.kind)}) works at {task}, diligence {office.diligence}")
     for tax in await session.scalars(select(TaxPolicyRow).where(TaxPolicyRow.polity_entity_id == realm, TaxPolicyRow.rate > 0).order_by(TaxPolicyRow.kind)):
         farmed = ", farmed out" if tax.farmed else ""
         found.append(f"the {spoken(tax.kind)} tax stands at {tax.rate}{farmed}, bringing {tax.take}")
     for mandate in await session.scalars(
         select(MandateRow).where(MandateRow.polity_entity_id == realm, MandateRow.state == MandateState.ACTIVE).order_by(MandateRow.id)
     ):
-        found.append(f"{an(mandate.kind.value.replace('_', ' '))} mandate stands until epoch {mandate.until_epoch}")
+        found.append(f"{an(spoken(mandate.kind))} mandate stands until epoch {mandate.until_epoch}")
     for seat in await session.scalars(select(CouncilSeatRow).where(CouncilSeatRow.polity_entity_id == realm).order_by(CouncilSeatRow.seats.desc())):
         found.append(f"{await name_of(session, seat.holder_node_id)} holds {several(seat.seats, 'council seat', 'council seats')}")
     court = await session.get(CourtRow, realm)
@@ -98,12 +98,12 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     for position in await session.scalars(
         select(CourtPositionRow).where(CourtPositionRow.polity_entity_id == realm, CourtPositionRow.holder_entity_id.is_not(None))
     ):
-        found.append(f"{await name_of(session, position.holder_entity_id)} serves as {position.position.value.replace('_', ' ')}")
+        found.append(f"{await name_of(session, position.holder_entity_id)} serves as {spoken(position.position)}")
     core = profile.core_entity_id if profile is not None else None
     joined = select(BondRow.target_node_id).where(BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE, BondRow.source_node_id == core)
     for resolution in await session.scalars(
         select(ResolutionRow).where(ResolutionRow.assembly_entity_id.in_(joined), ResolutionRow.state == ResolutionState.PASSED).order_by(ResolutionRow.id)
     ):
         target = f" against {await name_of(session, resolution.target_node_id)}" if resolution.target_node_id is not None else ""
-        found.append(f"your assembly binds you to {an(resolution.kind.value.replace('_', ' '))}{target} until epoch {resolution.until_epoch}")
+        found.append(f"your assembly binds you to {an(spoken(resolution.kind))}{target} until epoch {resolution.until_epoch}")
     return found

@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import InstanceState, ORMExecuteState, Session
 
+from aerona.db.attr_history import changed, history_of
 from aerona.db.read_memo import register_index
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
@@ -69,7 +70,7 @@ def opinion_cache(sync: Session, rules: object, epoch: int) -> OpinionCache:
 
 
 def column_values(state: InstanceState[Any], column: str) -> set[int]:
-    history = state.attrs[column].history
+    history = history_of(state, column)
     found = {value for value in (*history.added, *history.unchanged, *history.deleted) if value is not None}
     if not found and column not in state.dict and not history.deleted:
         raise UnknownChangeError(column)
@@ -78,7 +79,7 @@ def column_values(state: InstanceState[Any], column: str) -> set[int]:
 
 def node_change(state: InstanceState[Any], new: bool) -> set[int]:
     if isinstance(state.obj(), EntityRow):
-        if not new and not any(state.attrs[column].history.has_changes() for column in STRUCTURE):
+        if not new and not any(changed(state, column) for column in STRUCTURE):
             return set()
         if not column_values(state, "entity_type").isdisjoint(SHARED_KINDS):
             raise UnknownChangeError("entity_type")

@@ -3,6 +3,7 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -120,7 +121,7 @@ async def promote(ctx: TickContext, people: EntityRow, sets: list[AgeSetRow], ta
         tally.promoted += 1
         await bond_mates(ctx, row)
         await hold_promotion(ctx, people, row)
-        await note(ctx, f"The {row.name} of the {people.name} rose to the grade of {nxt.value.replace('_', ' ')}.", key="age_sets.promoted", ids=[people.id])
+        await note(ctx, f"The {row.name} of the {people.name} rose to the grade of {spoken(nxt)}.", key="age_sets.promoted", ids=[people.id])
 
 
 async def keep_age_sets(ctx: TickContext, tally: AgeSetTally) -> None:

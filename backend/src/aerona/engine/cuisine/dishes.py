@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.cuisine import DISH_FOODS, STAPLE_FOODS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.cuisine import FLAVOURS, CommunityDishRow, DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.food_kinds import CuisineRow
@@ -314,6 +316,7 @@ async def invent_dish(ctx: TickContext, people: EntityRow, knowledge: KnowledgeM
     return row
 
 
+@memoized(CuisineRow, KindHoldingRow)
 async def cuisine_of(session: AsyncSession, people_id: int) -> CuisineRow | None:
     found = await session.scalars(
         select(CuisineRow)
@@ -368,8 +371,16 @@ async def invent(ctx: TickContext, knowledge: KnowledgeMap, tally: KitchenTally)
                 await note(ctx, f"{people.name} came to cook {dish.name}.", key="cuisine.invented", ids=[people.id])
 
 
+@memoized(DishIngredientRow)
+async def ingredient_index(session: AsyncSession) -> dict[int, tuple[DishIngredientRow, ...]]:
+    found: dict[int, list[DishIngredientRow]] = defaultdict(list)
+    for row in await session.scalars(select(DishIngredientRow).order_by(DishIngredientRow.dish_id, DishIngredientRow.commodity)):
+        found[row.dish_id].append(row)
+    return {dish_id: tuple(rows) for dish_id, rows in found.items()}
+
+
 async def ingredients_of(session: AsyncSession, dish_id: int) -> list[DishIngredientRow]:
-    return list(await session.scalars(select(DishIngredientRow).where(DishIngredientRow.dish_id == dish_id).order_by(DishIngredientRow.commodity)))
+    return list((await ingredient_index(session)).get(dish_id, ()))
 
 
 async def cook_one(ctx: TickContext, town: EntityRow, row: CommunityDishRow, dish: DishRow, *, meals: int = BASE_MEALS) -> bool:
@@ -405,9 +416,12 @@ async def savour(ctx: TickContext, town: EntityRow, dish: DishRow, *, skill: int
         shift_stat(town, "prosperity", round_half_up(dish.nourishment * table.nourish_pct / PERCENT))
 
 
-async def kitchen_skill(ctx: TickContext, town: EntityRow, people: EntityRow | None) -> int:
+async def kitchen_skill(ctx: TickContext, town: EntityRow, people: EntityRow | None, knowledge: KnowledgeMap | None = None) -> int:
     holders = [town.id] + ([people.id] if people is not None else [])
-    levels = [await branch_level(ctx.session, holder, KnowledgeBranch.AGRICULTURE) for holder in holders]
+    if knowledge is not None:
+        levels = [knowledge.level(holder, KnowledgeBranch.AGRICULTURE) for holder in holders]
+    else:
+        levels = [await branch_level(ctx.session, holder, KnowledgeBranch.AGRICULTURE) for holder in holders]
     return min(PERCENT, max(levels) * SKILL_PER_LEVEL)
 
 
@@ -448,13 +462,13 @@ async def substitute(ctx: TickContext, town: EntityRow, row: CommunityDishRow, d
     return made
 
 
-async def cook_dishes(ctx: TickContext, town: EntityRow, tally: KitchenTally) -> None:
+async def cook_dishes(ctx: TickContext, town: EntityRow, tally: KitchenTally, knowledge: KnowledgeMap | None = None) -> None:
     if held(town.id):
         return
     people = await people_of(ctx.session, town)
     cuisine = await cuisine_of(ctx.session, people.id) if people is not None else None
     meals = cuisine.meals_per_day if cuisine is not None else BASE_MEALS
-    skill = await kitchen_skill(ctx, town, people)
+    skill = await kitchen_skill(ctx, town, people, knowledge)
     for row in list(
         await ctx.session.scalars(select(CommunityDishRow).where(CommunityDishRow.community_entity_id == town.id).order_by(CommunityDishRow.dish_id))
     ):
@@ -536,7 +550,10 @@ async def adopt_held(ctx: TickContext, tally: KitchenTally) -> None:
         .where(KindHoldingRow.concept == KindConcept.DISH, EntityRow.entity_type == EntityType.PEOPLE, KindHoldingRow.stance.in_(list(COOKED)))
         .order_by(KindHoldingRow.id)
     )
-    for holding_row, people in rows.all():
+    found = rows.all()
+    pairs = await ctx.session.execute(select(CommunityDishRow.community_entity_id, CommunityDishRow.dish_id)) if found else None
+    cooked: set[tuple[int, int]] = {(home, dish) for home, dish in pairs} if pairs is not None else set()
+    for holding_row, people in found:
         dish = await ctx.session.get(DishRow, holding_row.kind_id)
         if dish is None or dish.retired or held(people.id):
             continue
@@ -544,7 +561,8 @@ async def adopt_held(ctx: TickContext, tally: KitchenTally) -> None:
             place = await living_entity(ctx.session, home)
             if place is None or place.entity_type is not EntityType.SETTLEMENT or held(home):
                 continue
-            if await ctx.session.get(CommunityDishRow, (home, dish.id)) is None:
+            if (home, dish.id) not in cooked:
+                cooked.add((home, dish.id))
                 ctx.session.add(
                     CommunityDishRow(
                         community_entity_id=home, dish_id=dish.id, popularity=holding_row.strength // 2, cooked=0, since_epoch=ctx.epoch, locked=[]

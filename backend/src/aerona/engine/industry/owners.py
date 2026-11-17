@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ownership import GUILD_KINDS, OWNER_CLASS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
@@ -380,10 +381,18 @@ def barred_works(book: EconomyBook, banned: set[int]) -> set[int]:
     return {community_id for community_id in banned if (row := book.industry.get(community_id)) is not None and row.magic > 0}
 
 
+@memoized(WorkshopRow)
+async def outside_owners(session: AsyncSession) -> dict[int, frozenset[int]]:
+    found: dict[int, set[int]] = {}
+    statement = select(WorkshopRow.community_entity_id, WorkshopRow.owner_node_id).where(WorkshopRow.owner_node_id.is_not(None))
+    for community_id, owner in await session.execute(statement):
+        if owner is not None and owner != community_id:
+            found.setdefault(community_id, set()).add(owner)
+    return {community_id: frozenset(owners) for community_id, owners in found.items()}
+
+
 async def owners_starved(session: AsyncSession, community_id: int) -> int:
-    statement = select(WorkshopRow.owner_node_id).where(WorkshopRow.community_entity_id == community_id, WorkshopRow.owner_node_id.is_not(None))
-    rows = await session.scalars(statement)
-    return len({owner for owner in rows if owner is not None and owner != community_id})
+    return len((await outside_owners(session)).get(community_id, frozenset()))
 
 
 async def tend_profits(ctx: TickContext, book: EconomyBook, tally: ProfitTally) -> list[SiteProfitRow]:

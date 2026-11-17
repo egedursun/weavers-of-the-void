@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.core.total import total
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
@@ -61,7 +61,7 @@ async def make_servitor(
             name=name,
             entity_type=EntityType.SPIRIT,
             stats=SpiritStats(strength=PERCENT // 2),
-            body=f"{an(role.value.replace('_', ' '), capital=True)} in the service of its god.",
+            body=f"{an(spoken(role), capital=True)} in the service of its god.",
             power=SERVITOR_POWER,
             world_id=world_id,
             location_id=post_id,

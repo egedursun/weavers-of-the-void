@@ -99,3 +99,11 @@ def test_stable_order_is_seeded() -> None:
     order = stable_order(items, lambda item: item, 1, 2, "words")
     assert order == stable_order(list(reversed(items)), lambda item: item, 1, 2, "words")
     assert order != stable_order(items, lambda item: item, 1, 3, "words")
+
+
+def test_a_stream_keyed_by_a_missing_value_is_refused_while_names_that_hold_the_letters_are_kept() -> None:
+    with pytest.raises(ValueError, match="missing value"):
+        SeededRandom.for_epoch(1, 1, "commons.enclose.None.4")
+    with pytest.raises(ValueError, match="missing value"):
+        SeededRandom.for_epoch(1, 1, "city.plan.3").fork("None")
+    assert SeededRandom.for_epoch(1, 1, "names.Nonewa.3").key.stream == "names.Nonewa.3"

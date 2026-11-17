@@ -68,6 +68,7 @@ async def legislature(ctx: TickContext) -> None:
     "table.jurisdictions",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.memberships",
     "table.nodes",
     "table.polity_members",
     "table.relationships",

@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.taxes import TAXES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import TaxPolicyRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
@@ -100,10 +102,25 @@ async def trade_points(ctx: TickContext, realm: Realm) -> int:
     if not members:
         return 0
     routes = len(await active_bonds(ctx.session, [BondKind.TRADES_WITH], sources=members))
-    markets = len(
-        list(await ctx.session.scalars(select(DistrictRow.id).where(DistrictRow.settlement_entity_id.in_(members), DistrictRow.kind == DistrictKind.MARKET)))
-    )
-    return routes + markets
+    markets = await market_districts(ctx.session)
+    return routes + sum(markets.get(member, 0) for member in set(members))
+
+
+@memoized(DistrictRow)
+async def market_districts(session: AsyncSession) -> dict[int, int]:
+    found: dict[int, int] = {}
+    for settlement in await session.scalars(select(DistrictRow.settlement_entity_id).where(DistrictRow.kind == DistrictKind.MARKET)):
+        found[settlement] = found.get(settlement, 0) + 1
+    return found
+
+
+@memoized(CompanyProfileRow)
+async def companies_by_polity(session: AsyncSession) -> dict[int, int]:
+    found: dict[int, int] = {}
+    for polity in await session.scalars(select(CompanyProfileRow.polity_entity_id)):
+        if polity is not None:
+            found[polity] = found.get(polity, 0) + 1
+    return found
 
 
 async def kept_share(ctx: TickContext, realm: Realm, kind: TaxKind) -> float:
@@ -116,7 +133,7 @@ async def kept_share(ctx: TickContext, realm: Realm, kind: TaxKind) -> float:
 
 
 async def company_points(ctx: TickContext, realm: Realm) -> int:
-    return len(list(await ctx.session.scalars(select(CompanyProfileRow.faction_entity_id).where(CompanyProfileRow.polity_entity_id == realm.entity.id))))
+    return (await companies_by_polity(ctx.session)).get(realm.entity.id, 0)
 
 
 SHARE_TAXES = frozenset({TaxKind.INCOME, TaxKind.PROPERTY, TaxKind.WEALTH, TaxKind.IN_KIND, TaxKind.POLLUTION, TaxKind.EXCISE})

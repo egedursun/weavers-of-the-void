@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -154,7 +154,7 @@ async def linked(ctx: TickContext, key: str, value: Value, kind: EntityType) -> 
         raise ValidationFailedError(f"{label(key)} takes a record.")
     found = await ctx.session.get(EntityRow, value)
     if found is None or found.entity_type is not kind:
-        raise ValidationFailedError(f"{label(key)} must be {an(kind.value)}.")
+        raise ValidationFailedError(f"{label(key)} must be {an(spoken(kind))}.")
     return found.id
 
 

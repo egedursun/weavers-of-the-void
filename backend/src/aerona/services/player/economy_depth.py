@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -243,19 +244,19 @@ async def set_slot(scope: PlayerScope, command: SlotMaterial) -> Effect:
         await scope.context("node_material_set"), command.node_id, command.slot, command.material, command.world_material_id, hold=command.hold
     )
     held = " and held" if command.hold else ""
-    return Effect(f"Its {command.slot.value} is now made of {material_word(command.material)}{held}.", command.node_id)
+    return Effect(f"Its {spoken(command.slot)} is now made of {material_word(command.material)}{held}.", command.node_id)
 
 
 @player_action("node_material:release", ActionKind.EDIT_RECORD)
 async def release_slot(scope: PlayerScope, command: SlotTarget) -> Effect:
     await control_depth.release_slot(await scope.context("node_material_release"), command.node_id, command.slot)
-    return Effect(f"Its {command.slot.value} may change with the world again.", command.node_id)
+    return Effect(f"Its {spoken(command.slot)} may change with the world again.", command.node_id)
 
 
 @player_action("node_material:clear", ActionKind.EDIT_RECORD)
 async def clear_slot(scope: PlayerScope, command: SlotTarget) -> Effect:
     await control_depth.clear_slot(await scope.context("node_material_clear"), command.node_id, command.slot)
-    return Effect(f"Its {command.slot.value} is unmade; its makers will choose anew.", command.node_id)
+    return Effect(f"Its {spoken(command.slot)} is unmade; its makers will choose anew.", command.node_id)
 
 
 @player_action("stock:set", ActionKind.EDIT_RECORD)
@@ -511,9 +512,9 @@ async def set_resource_mechanic(scope: PlayerScope, command: ResourceWorking) ->
         raise NotFoundError("No such resource.")
     row = await scope.session.get(ResourceMechanicRow, (resource.id, command.mechanic))
     if row is None and resource.resource_mechanic is not command.mechanic:
-        raise ValidationFailedError(f"{resource.name} does not work as {command.mechanic.value.replace('_', ' ')}; give it that working first.")
+        raise ValidationFailedError(f"{resource.name} does not work as {spoken(command.mechanic)}; give it that working first.")
     if row is None:
         row = ResourceMechanicRow(entity_id=resource.id, mechanic=command.mechanic)
         scope.session.add(row)
     row.magnitude, row.epochs = command.magnitude, command.epochs
-    return Effect(f"{resource.name}'s {command.mechanic.value.replace('_', ' ')} working is retuned.", resource.id)
+    return Effect(f"{resource.name}'s {spoken(command.mechanic)} working is retuned.", resource.id)

@@ -2,7 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.sites import ExcavationRow, SiteRoomRow
@@ -64,5 +64,5 @@ async def site_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> list
         if dig is None:
             found.append(f"{site.name} (id {site.id}) can be dug by one with lore of {rules.excavations.start_lore}")
         else:
-            found.append(f"a dig at {site.name} is at its {dig.stage.value.replace('_', ' ')}, {dig.progress}% through")
+            found.append(f"a dig at {site.name} is at its {spoken(dig.stage)}, {dig.progress}% through")
     return found

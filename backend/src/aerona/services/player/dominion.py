@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.dominion import CreatureDeed, CreatureLesson, DivineScale, MagicSiteKind
@@ -130,7 +131,7 @@ async def delete_dominion(scope: PlayerScope, command: DominionTarget) -> Effect
 @player_action("god_scale:set", ActionKind.EDIT_RECORD)
 async def set_scale(scope: PlayerScope, command: ScaleSet) -> Effect:
     row = await control.set_scale(await scope.context("god_scale_set"), command.god_id, command.scale, command.value, hold=command.hold)
-    return Effect(f"The {row.scale.value} scale stands at {row.value}.", command.god_id)
+    return Effect(f"The {spoken(row.scale)} scale stands at {row.value:d}.", command.god_id)
 
 
 @player_action("god_scale:delete", ActionKind.EDIT_RECORD)
@@ -237,7 +238,7 @@ async def edit_creature(scope: PlayerScope, command: CreatureEdit) -> Effect:
 async def teach_creature(scope: PlayerScope, command: CreatureLessonOrder) -> Effect:
     await control.teach_creature(await scope.context("divine_creature_teach"), command.creature_id, command.deed, command.lesson)
     told = "rewarded" if command.lesson is CreatureLesson.REWARD else "punished"
-    return Effect(f"The creature was {told} for {command.deed.value.replace('_', ' ')}.", command.creature_id)
+    return Effect(f"The creature was {told} for {spoken(command.deed)}.", command.creature_id)
 
 
 @player_action("divine_creature:weight", ActionKind.EDIT_RECORD)

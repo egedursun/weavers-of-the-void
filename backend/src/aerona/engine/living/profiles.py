@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -111,7 +112,7 @@ async def mutate(ctx: TickContext, line: LivingLineRow) -> None:
     trait = rng.pick(fresh)
     strength = table.mutation_strength if rng.chance(PERCENT // 2) else -table.mutation_strength
     ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=strength < 0, locked=[]))
-    await note(ctx, f"A new trait arose in the line {line.name}: {trait.value.replace('_', ' ')}.", key="living.mutated", ids=[])
+    await note(ctx, f"A new trait arose in the line {line.name}: {spoken(trait)}.", key="living.mutated", ids=[])
 
 
 async def mend_army(ctx: TickContext, row: LivingProfileRow, thing: EntityRow, eating: bool, healed: int) -> None:

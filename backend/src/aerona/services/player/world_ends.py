@@ -1,3 +1,4 @@
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
@@ -30,7 +31,7 @@ async def world_end_declare(scope: PlayerScope, command: WorldEndDeclare) -> Eff
     row = await control.declare_end(
         await scope.context("world_end_declare"), command.world_id, command.state or CAUSE_END[command.cause], command.cause, command.new_type
     )
-    return Effect(f"The world is {row.state.value.replace('_', ' ')}.", target_node_id=command.world_id, essence_spent=scope.rules.world_ends.end_cost)
+    return Effect(f"The world is {spoken(row.state)}.", target_node_id=command.world_id, essence_spent=scope.rules.world_ends.end_cost)
 
 
 @player_action("world_end:edit", ActionKind.EDIT_RECORD)

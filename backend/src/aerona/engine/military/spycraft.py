@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -164,7 +165,7 @@ async def burn_district(ctx: TickContext, target: EntityRow) -> str:
     depth = ctx.rules.espionage.arson_damage
     if district is not None:
         district.condition = clamp_int(district.condition - depth, 0, PERCENT)
-        return f"the {district.kind.value.replace('_', ' ')} quarter burned"
+        return f"the {spoken(district.kind)} quarter burned"
     ground = await region_environment(ctx.session, target.id)
     if ground is not None:
         await scar_region(ctx.session, ctx.rules, ground, ScarKind.BURNED, depth // 2)
@@ -261,7 +262,7 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
         paid = 0 if is_held(record, "wealth") else min(record.wealth, table.blackmail_wealth, room)
         record.wealth -= paid
         shift_stat(owner, "wealth", paid)
-    return f"{owner.name} held the secrets of {holder.name}, {office.kind.value.replace('_', ' ')} of {target.name}, and bent them to its will"
+    return f"{owner.name} held the secrets of {holder.name}, {spoken(office.kind)} of {target.name}, and bent them to its will"
 
 
 async def migrate_bonds(ctx: TickContext) -> int:

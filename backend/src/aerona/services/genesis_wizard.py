@@ -26,7 +26,7 @@ from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.catalog.technology import ERA_LEVEL
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.core.grammar import ordinal_word, several
+from aerona.core.grammar import ordinal_word, several, spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow
@@ -231,7 +231,7 @@ def resolve_first_sons(rules: Rules, requested: tuple[Rarity, ...] | None) -> tu
     allowed = allowed_first_son_rarities(rules)
     for rarity in requested:
         if rarity not in allowed:
-            raise ValidationFailedError(f"A first son cannot be of {rarity.value} rarity.")
+            raise ValidationFailedError(f"A first son cannot be of {spoken(rarity)} rarity.")
     return tuple(sorted(requested, key=lambda item: item.rank))
 
 

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.needs import GATED_JOBS, JOB_GOODS, MOVABLE_JOBS, WORKSHOP_JOBS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
-from aerona.db.tables.bonds import BondRow
+from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -17,7 +17,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
 from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
@@ -42,6 +42,7 @@ from aerona.engine.economy.extraction import KIND_JOBS, extraction_kind
 from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
@@ -168,23 +169,38 @@ class Grounds:
     coastal: bool
 
 
-async def grounds_of(session: AsyncSession, community: EntityRow, region: RegionEnvironmentRow | None) -> Grounds:
-    workshops = {
-        row.kind: row.level for row in await session.scalars(select(WorkshopRow).where(WorkshopRow.community_entity_id == community.id)) if row.level > 0
+@memoized(WorkshopRow)
+async def workshop_levels(session: AsyncSession) -> dict[int, dict[WorkshopKind, int]]:
+    found: dict[int, dict[WorkshopKind, int]] = {}
+    for community_id, kind, level in await session.execute(select(WorkshopRow.community_entity_id, WorkshopRow.kind, WorkshopRow.level)):
+        if level > 0:
+            found.setdefault(community_id, {})[kind] = level
+    return found
+
+
+@memoized(ResourceWorkerRow)
+async def worked_resources(session: AsyncSession) -> dict[int, frozenset[int]]:
+    found: dict[int, set[int]] = {}
+    for community_id, resource_id in await session.execute(select(ResourceWorkerRow.community_entity_id, ResourceWorkerRow.resource_entity_id)):
+        found.setdefault(community_id, set()).add(resource_id)
+    return {community_id: frozenset(ids) for community_id, ids in found.items()}
+
+
+@memoized(ResourceProfileRow)
+async def open_reserves(session: AsyncSession) -> dict[int, tuple[Job, CommodityKind]]:
+    return {
+        profile.resource_entity_id: (KIND_JOBS[extraction_kind(profile)], profile.commodity)
+        for profile in await session.scalars(select(ResourceProfileRow))
+        if profile.revealed and profile.reserve > 0
     }
-    owned = set(
-        await session.scalars(
-            select(BondRow.target_node_id).where(BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE, BondRow.source_node_id == community.id)
-        )
-    )
-    worked = set(await session.scalars(select(ResourceWorkerRow.resource_entity_id).where(ResourceWorkerRow.community_entity_id == community.id)))
-    resources: list[tuple[Job, CommodityKind]] = []
-    ids = sorted(owned | worked)
-    if ids:
-        statement = select(ResourceProfileRow).where(ResourceProfileRow.resource_entity_id.in_(ids)).order_by(ResourceProfileRow.resource_entity_id)
-        for profile in await session.scalars(statement):
-            if profile.revealed and profile.reserve > 0:
-                resources.append((KIND_JOBS[extraction_kind(profile)], profile.commodity))
+
+
+async def grounds_of(session: AsyncSession, community: EntityRow, region: RegionEnvironmentRow | None) -> Grounds:
+    workshops = dict((await workshop_levels(session)).get(community.id, {}))
+    owned = {bond.target_node_id for bond in await active_bonds(session, [BondKind.OWNS], sources=[community.id])}
+    worked = (await worked_resources(session)).get(community.id, frozenset())
+    reserves = await open_reserves(session)
+    resources = [reserves[resource_id] for resource_id in sorted(owned | worked) if resource_id in reserves]
     return Grounds(workshops, resources, region is not None and region.coast_kind is not CoastKind.NONE)
 
 

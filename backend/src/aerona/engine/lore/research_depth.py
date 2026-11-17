@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civics import CAPABILITIES, CAPABILITY_INSTITUTIONS, SOCIAL_CHANGE, TRIGGERS
 from aerona.catalog.techniques import BRANCH_GRAPH, BRANCH_SKILLS, INSTITUTIONS, TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import HolderTechniqueRow, InstitutionRow, ResearchBoostRow, ResearchFocusRow, ResearchProgressRow
@@ -30,6 +31,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, OfficeKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -72,10 +74,15 @@ class DepthTally:
 
 
 async def trade_partners(session: AsyncSession, community_id: int) -> set[int]:
+    return set(await kept_partners(session, community_id))
+
+
+@memoized(BondRow)
+async def kept_partners(session: AsyncSession, community_id: int) -> frozenset[int]:
     rows = await session.scalars(
         select(BondRow.target_node_id).where(BondRow.source_node_id == community_id, BondRow.kind.in_(TRADE_KINDS), BondRow.state == BondState.ACTIVE)
     )
-    return set(rows)
+    return frozenset(rows)
 
 
 def bordering(atlas: RegionAtlas, community_id: int) -> set[int]:
@@ -288,14 +295,21 @@ async def draw_options(ctx: TickContext, holder_id: int, levels: dict[KnowledgeB
     return chosen
 
 
-async def field_skill(session: AsyncSession, community_id: int, branch: KnowledgeBranch) -> int:
+@memoized(SkillRow, EntityRow, BondRow, PolityMemberRow)
+async def skill_peaks(session: AsyncSession, community_id: int) -> dict[SkillKind, int]:
     mortals = select(EntityRow.id).where(
         await present_among(session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
+    rows = await session.execute(select(SkillRow.skill, func.max(SkillRow.level)).where(SkillRow.holder_node_id.in_(mortals)).group_by(SkillRow.skill))
+    return {skill: level for skill, level in rows.all() if level is not None}
+
+
+async def field_skill(session: AsyncSession, community_id: int, branch: KnowledgeBranch) -> int:
     skills = list(BRANCH_SKILLS.get(branch, ()))
     if not skills:
         return FIELD_SKILL_FLOOR
-    best = await session.scalar(select(func.max(SkillRow.level)).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill.in_(skills)))
+    peaks = await skill_peaks(session, community_id)
+    best = max((peaks[skill] for skill in skills if skill in peaks), default=None)
     return int(best or FIELD_SKILL_FLOOR)
 
 
@@ -481,15 +495,18 @@ def agreement_branch(clause: TreatyClauseRow) -> KnowledgeBranch | None:
     return KnowledgeBranch(key) if isinstance(key, str) and key in KnowledgeBranch._value2member_map_ else None
 
 
-async def scholars_at_court(session: AsyncSession, party_id: int) -> bool:
-    realm = party_id if await session.get(PolityProfileRow, party_id) is not None else await realm_of(session, party_id)
-    return realm is not None and await court_scholar(session, realm) is not None
+async def scholars_at_court(session: AsyncSession, party_id: int, courts: dict[int, bool]) -> bool:
+    if party_id not in courts:
+        realm = party_id if await session.get(PolityProfileRow, party_id) is not None else await realm_of(session, party_id)
+        courts[party_id] = realm is not None and await court_scholar(session, realm) is not None
+    return courts[party_id]
 
 
 async def seal_agreements(ctx: TickContext, tally: DepthTally) -> None:
     pacts = await ctx.session.scalars(
         select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE, TreatyProfileRow.kind == TreatyKind.TRADE_PACT)
     )
+    courts: dict[int, bool] = {}
     for profile in list(pacts):
         if held(profile.treaty_entity_id):
             continue
@@ -497,7 +514,7 @@ async def seal_agreements(ctx: TickContext, tally: DepthTally) -> None:
         if ClauseKind.RESEARCH_AGREEMENT in kinds:
             continue
         parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
-        if len(parties) >= 2 and all([await scholars_at_court(ctx.session, party) for party in parties]):
+        if len(parties) >= 2 and all([await scholars_at_court(ctx.session, party, courts) for party in parties]):
             ctx.session.add(TreatyClauseRow(treaty_entity_id=profile.treaty_entity_id, kind=ClauseKind.RESEARCH_AGREEMENT, params={}, locked=[]))
             tally.add("agreements_sealed")
     await ctx.session.flush()

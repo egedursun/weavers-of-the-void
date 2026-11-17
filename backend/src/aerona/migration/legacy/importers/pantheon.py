@@ -29,7 +29,7 @@ def stat_block(context: MigrationContext, reference: str, payload: Any) -> dict[
         legacy = context.vocabulary.encode("son_stat", stat.value)
         raw = as_int(data.get(legacy)) if legacy is not None else None
         if raw is None:
-            context.report.warn(DEFAULTED, reference, f"stat {stat.value} set to {STAT_DEFAULT}")
+            context.report.warn(DEFAULTED, reference, f"stat {stat.value!r} set to {STAT_DEFAULT}")
             raw = STAT_DEFAULT
         values[stat] = required_bounded(context.report, reference, stat.value, raw, (STAT_FLOOR, STAT_CEILING), fallback=STAT_DEFAULT)
     return values

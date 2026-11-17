@@ -197,4 +197,4 @@ async def set_field(scope: PlayerScope, command: SetField) -> Effect:
     if not low <= command.value <= high:
         raise ValidationFailedError(f"{command.key.replace('_', ' ').capitalize()} must lie between {low} and {high}.")
     set_stats(entity, **{command.key: command.value})
-    return Effect(f"{entity.name}'s {command.key.replace('_', ' ')} is now {command.value}.", target_node_id=entity.id)
+    return Effect(f"{entity.name}'s {command.key.replace('_', ' ')} is now {command.value:d}.", target_node_id=entity.id)

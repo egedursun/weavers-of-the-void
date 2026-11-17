@@ -29,7 +29,7 @@ async def mortal_nature_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"your people are cold-blooded; this season the land is {band.value if band is not None else 'of no known warmth'}")
     if me.location_id is not None:
         for row in await live_cultures(session, await keepers_in(session, me.location_id)):
-            found.append(f"{an(row.kind.value)} culture is kept here (record {row.id}, quality {row.quality})")
+            found.append(f"{an(spoken(row.kind))} culture is kept here (record {row.id}, quality {row.quality})")
     return found
 
 

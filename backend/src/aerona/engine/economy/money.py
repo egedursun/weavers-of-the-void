@@ -5,7 +5,9 @@ from sqlalchemy import select
 from aerona.catalog.materials import COIN_MATERIALS
 from aerona.catalog.money import MONEY_FORMS, REFORMS, issuer_kind_of
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.stored import stored_id
 from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -98,7 +100,7 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
                 might=clamp_int(ctx.rules.trade.currency_might_base + ctx.rng(f"coin.{issuer.id}").die(ctx.rules.trade.currency_might_die), 0, PERCENT),
                 curse=0,
             ),
-            body=f"{issuer.name} began to strike coins of {metal.value.replace('_', ' ')}.",
+            body=f"{issuer.name} began to strike coins of {spoken(metal)}.",
             power=ctx.rules.trade.currency_power,
             world_id=issuer.world_id,
             location_id=issuer.id if issuer.entity_type is EntityType.SETTLEMENT else issuer.location_id,
@@ -127,7 +129,7 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
         row.currency_id = currency.id
     await note(
         ctx,
-        f"{issuer.name} began minting its own coin of {metal.value.replace('_', ' ')}.",
+        f"{issuer.name} began minting its own coin of {spoken(metal)}.",
         key="money.minted",
         ids=[issuer.id, coin.id],
         kind=ChronicleKind.TRADE,
@@ -233,7 +235,7 @@ async def reform(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, iss
 async def strain(ctx: TickContext, currency: CurrencyRow) -> None:
     table = ctx.rules.money
     spec = MONEY_FORMS[currency.form]
-    rng = ctx.rng(f"money.strain.{currency.id}.{ctx.epoch}")
+    rng = ctx.rng(f"money.strain.{await stored_id(ctx.session, currency)}.{ctx.epoch}")
     copied = table.counterfeit_chance * spec.counterfeit_pct * (PERCENT - currency.trust) // (PERCENT * PERCENT)
     if rng.chance(copied):
         currency.trust = clamp_int(currency.trust - table.counterfeit_trust_loss, 0, PERCENT)
@@ -288,7 +290,7 @@ async def inject_hoard(ctx: TickContext, community: EntityRow, units: int, metal
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss // 2, 0, PERCENT)
     await ctx.chronicle(
         ChronicleKind.TRADE,
-        f"A hoard of {metal.value.replace('_', ' ')} flooded the market of {community.name}; prices of fine things fell and coin lost its worth.",
+        f"A hoard of {spoken(metal)} flooded the market of {community.name}; prices of fine things fell and coin lost its worth.",
         template_key="money.hoard",
         entity_ids=[community.id],
     )

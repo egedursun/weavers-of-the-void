@@ -5,7 +5,7 @@ from aerona.catalog.body_plans import PLANS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.tissues import digits_phrase
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.core.total import partial
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
@@ -106,7 +106,7 @@ def weakened(body: BodyRow, rules: Rules) -> list[str]:
 
 def frame_line(body: BodyRow) -> str:
     spec = PLANS[body.plan]
-    return f"Body: {body.plan.value.replace('_', ' ')} ({spec.label}), {body.height_class.value} and {body.build.value} of build"
+    return f"Body: {spoken(body.plan)} ({spec.label}), {spoken(body.height_class)} and {spoken(body.build)} of build"
 
 
 def wound_notes(row: InjuryRow) -> str:
@@ -148,21 +148,19 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
         return (found.label if found else key.replace("_", " ")).lower()
 
     def worn(row: InjuryRow) -> str:
-        return f" (wears {an(fitted[row.id].material.value.replace('_', ' '))} one)" if row.id in fitted else ""
+        return f" (wears {an(spoken(fitted[row.id].material))} one)" if row.id in fitted else ""
 
     shown = [row for row in injuries if row.visible or private]
     groups = {
         "Missing": [f"{label(row.part)} {LOST[row.kind]}{worn(row)}" for row in shown if row.kind in LOST and row.state not in OPEN_INJURY_STATES],
-        "Scars": [
-            f"{row.kind.value.replace('_', ' ')} on the {label(row.part)}" for row in shown if row.state in LASTING_INJURY_STATES and row.kind not in LOST
-        ],
-        "Open wounds": [f"{row.kind.value.replace('_', ' ')} on the {label(row.part)}" + wound_notes(row) for row in shown if row.state in OPEN_INJURY_STATES],
+        "Scars": [f"{spoken(row.kind)} on the {label(row.part)}" for row in shown if row.state in LASTING_INJURY_STATES and row.kind not in LOST],
+        "Open wounds": [f"{spoken(row.kind)} on the {label(row.part)}" + wound_notes(row) for row in shown if row.state in OPEN_INJURY_STATES],
     }
     lines = [f"{title}: " + "; ".join(items) for title, items in groups.items() if items]
     if body.lost_digits:
         lines.append(f"Digits lost: {digits_phrase(body.lost_digits)}")
     if body.handedness is not Handedness.RIGHT:
-        lines.append("Leads with both hands alike" if body.handedness is Handedness.BOTH else f"Leads with the {body.handedness.value} hand")
+        lines.append("Leads with both hands alike" if body.handedness is Handedness.BOTH else f"Leads with the {spoken(body.handedness)} hand")
     state = vitals(body, private=private)
     if state:
         lines.append("State: " + "; ".join(state))

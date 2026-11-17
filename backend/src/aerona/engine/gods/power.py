@@ -6,6 +6,7 @@ from aerona.catalog import god_lines
 from aerona.catalog.rarities import build_rarity_table
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.sons import PowerDraft, SonRepository
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.lore import ChronicleRow
@@ -123,7 +124,7 @@ async def demote_son(ctx: TickContext, creator: CreatorRow, son: SonRow) -> Rari
     living(son)
     old = son.rarity
     if old.rank <= 0:
-        raise ValidationFailedError(f"{son.name} is already in the lowest class ({old.value}).")
+        raise ValidationFailedError(f"{son.name} is already in the lowest class ({spoken(old)}).")
     new = Rarity.from_rank(old.rank - 1)
     ceiling = build_rarity_table(ctx.rules)[new].stat_max
     for stat in Stat:

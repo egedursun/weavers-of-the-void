@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from aerona.catalog.renown import AXIS_LABELS, CURRENCY_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
@@ -134,7 +134,7 @@ async def set_reputation(scope: PlayerScope, command: SetReputation) -> Effect:
     row.value, row.heard_epoch = command.value, await scope.epoch()
     row.locked = held(row.locked, ["value"], command.hold)
     await scope.session.flush()
-    return Effect(f"{AXIS_LABELS[command.axis]} is now {command.value} there.", target_node_id=command.subject_id, values={"reputation_id": row.id})
+    return Effect(f"{AXIS_LABELS[command.axis]} is now {command.value:d} there.", target_node_id=command.subject_id, values={"reputation_id": row.id})
 
 
 @player_action("renown:remove", ActionKind.OTHER)
@@ -237,7 +237,7 @@ async def set_claim(scope: PlayerScope, command: SetDeedClaim) -> Effect:
     row.kind, row.status = command.kind, command.status
     row.locked = held(row.locked, ["status"], command.hold)
     await scope.session.flush()
-    return Effect(f"{claimant.name} now holds {an(command.kind.value)} claim to the deed.", target_node_id=claimant.id, values={"claim_id": row.id})
+    return Effect(f"{claimant.name} now holds {an(spoken(command.kind))} claim to the deed.", target_node_id=claimant.id, values={"claim_id": row.id})
 
 
 async def claim_row(scope: PlayerScope, claim_id: int) -> DeedClaimRow:
@@ -284,7 +284,7 @@ async def trade_lore(scope: PlayerScope, command: TradeLore) -> Effect:
     row = await trade(ctx, seller, buyer, item, value=await value_of(ctx, item))
     if row is None:
         raise ValidationFailedError(f"{buyer.name} already holds that lore, or it cannot be given.")
-    return Effect(f"{seller.name} passed lore to {buyer.name} for {row.price.value}.", target_node_id=buyer.id, values={"trade_id": row.id})
+    return Effect(f"{seller.name} passed lore to {buyer.name} for {spoken(row.price)}.", target_node_id=buyer.id, values={"trade_id": row.id})
 
 
 @player_action("lore_trade:remove", ActionKind.OTHER)

@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.son import SonStatus
 
 ACTIVE_ONLY = (BondState.ACTIVE,)
+ENTITY_CHUNK = 500
 CANON_TABLES = table_names((EntityRow,))
 
 
@@ -52,6 +53,14 @@ async def entity(session: AsyncSession, entity_id: int | None) -> EntityRow | No
     if entity_id is None:
         return None
     return await session.get(EntityRow, entity_id)
+
+
+async def load_entities(session: AsyncSession, ids: Iterable[int | None]) -> list[EntityRow]:
+    wanted = sorted({node for node in ids if node is not None})
+    loaded: list[EntityRow] = []
+    for start in range(0, len(wanted), ENTITY_CHUNK):
+        loaded += await session.scalars(select(EntityRow).where(EntityRow.id.in_(wanted[start : start + ENTITY_CHUNK])))
+    return loaded
 
 
 async def living_entity(session: AsyncSession, entity_id: int | None) -> EntityRow | None:
@@ -173,6 +182,29 @@ async def spoken_language(session: AsyncSession, speaker_id: int) -> EntityRow |
         .limit(1)
     )
     found: EntityRow | None = await session.scalar(statement)
+    return found
+
+
+async def spoken_languages(session: AsyncSession, speaker_ids: Iterable[int]) -> dict[int, int | None]:
+    speakers = list(dict.fromkeys(speaker_ids))
+    statement = (
+        select(BondRow.source_node_id, EntityRow.id)
+        .join(BondRow, BondRow.target_node_id == EntityRow.id)
+        .where(
+            BondRow.source_node_id.in_(speakers),
+            BondRow.kind == BondKind.SPEAKS,
+            BondRow.state == BondState.ACTIVE,
+            EntityRow.entity_type == EntityType.LANGUAGE,
+            EntityRow.status.in_([EntityStatus.CANON, EntityStatus.DEAD]),
+        )
+        .order_by(BondRow.id.desc())
+    )
+    found: dict[int, int | None] = dict.fromkeys(speakers)
+    seen: set[int] = set()
+    for speaker, language in await session.execute(statement):
+        if speaker not in seen:
+            seen.add(speaker)
+            found[speaker] = language
     return found
 
 

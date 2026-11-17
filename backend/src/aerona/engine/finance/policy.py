@@ -28,7 +28,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.contraband import BannedMaterials, banned_materials
 from aerona.engine.industry.energy import industry_row
-from aerona.engine.intrigue.beliefs import evidence_trust
+from aerona.engine.intrigue.beliefs import evidence_trusts
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -102,6 +102,7 @@ class PolicyBook:
             if gang.home_entity_id is not None:
                 found.outlaws.setdefault(gang.home_entity_id, gang.faction_entity_id)
         found.banned = await banned_materials(ctx, laws, [community.id for community in book.communities])
+        evidence = await evidence_trusts(ctx.session, [community.id for community in book.communities])
         for community in book.communities:
             banned = {good for law, goods in ILLEGAL_GOODS.items() if laws.in_force(community.id, law) is not None for good in goods}
             if banned:
@@ -110,7 +111,7 @@ class PolicyBook:
             found.access[community.id] = industry.market_access if industry is not None else PERCENT
             society = book.societies.get(community.id)
             merchants = society.share(SocialClass.MERCHANT) if society is not None else 0.0
-            known = await evidence_trust(ctx.session, community.id) / PERCENT * table.belief_pct / PERCENT
+            known = evidence.get(community.id, 0.0) / PERCENT * table.belief_pct / PERCENT
             found.informed[community.id] = (
                 1 + merchants / PERCENT * table.merchant_pct / PERCENT + (table.guild_pct / PERCENT if community.id in guilds else 0) + known
             )

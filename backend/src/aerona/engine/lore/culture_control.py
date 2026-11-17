@@ -1,5 +1,6 @@
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.culture import (
     LanguageIntelligibilityRow,
     LanguageRegisterRow,
@@ -95,7 +96,7 @@ async def set_tradition_effect(ctx: TickContext, tradition_id: int, effect: Trad
     await traditions.seed_effects(ctx, row)
     allowed = TARGETS.get(effect, frozenset({""}))
     if target not in allowed:
-        raise ValidationFailedError(f"{target or 'Nothing'} is not something {effect.value.replace('_', ' ')} can aim at.")
+        raise ValidationFailedError(f"{target or 'Nothing'} is not something {spoken(effect)} can aim at.")
     found = await ctx.session.get(TraditionEffectRow, (tradition_id, effect, target))
     if magnitude == 0:
         if found is not None:

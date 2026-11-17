@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -236,7 +237,7 @@ async def pay_setups(ctx: TickContext, tally: DramaTally) -> None:
         row.paid_epoch = ctx.epoch
         setattr(tally, found[0].value, getattr(tally, found[0].value) + 1)
         if found[0] is not PayoffKind.LAPSED:
-            told = f"What was set up in epoch {row.opened_epoch} ({row.kind.value}) was paid off: {found[1]}."
+            told = f"What was set up in epoch {row.opened_epoch} ({spoken(row.kind)}) was paid off: {found[1]}."
             await note(ctx, told, key="arcs.payoff", ids=[row.subject_node_id] if row.subject_node_id is not None else [])
 
 

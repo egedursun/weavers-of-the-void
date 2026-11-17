@@ -2,7 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.faith import (
     BindingKind,
@@ -172,13 +172,13 @@ class SetStratum(Command):
 @player_action("cult:doctrine", ActionKind.EDIT_RECORD)
 async def edit_doctrine(scope: PlayerScope, command: EditDoctrine) -> Effect:
     row = await control.edit_doctrine(await scope.context("cult_doctrine"), command.cult_id, command.values, release=command.release)
-    return Effect(f"The doctrine stands: orthodoxy {row.orthodoxy}, tithe {row.tithe_rate}%, judgement by {row.judgement.value}.", command.cult_id)
+    return Effect(f"The doctrine stands: orthodoxy {row.orthodoxy}, tithe {row.tithe_rate}%, judgement by {spoken(row.judgement)}.", command.cult_id)
 
 
 @player_action("cult:reset_doctrine", ActionKind.EDIT_RECORD)
 async def reset_doctrine(scope: PlayerScope, command: CultTarget) -> Effect:
     row = await control.reset_doctrine(await scope.context("cult_doctrine"), command.cult_id)
-    return Effect(f"The doctrine is unwritten and taught anew: judgement by {row.judgement.value}.", command.cult_id)
+    return Effect(f"The doctrine is unwritten and taught anew: judgement by {spoken(row.judgement)}.", command.cult_id)
 
 
 @player_action("cult:tenet", ActionKind.EDIT_RECORD)
@@ -202,7 +202,7 @@ async def set_office(scope: PlayerScope, command: SetOffice) -> Effect:
 @player_action("cult:holding", ActionKind.EDIT_RECORD)
 async def set_holding(scope: PlayerScope, command: SetHolding) -> Effect:
     row = await control.set_holding(await scope.context("cult_holding"), command.cult_id, command.entity_id, command.kind, remove=command.remove)
-    return Effect("The holding is given up." if row is None else f"The faith now holds it as {command.kind.value.replace('_', ' ')}.", command.cult_id)
+    return Effect("The holding is given up." if row is None else f"The faith now holds it as {spoken(command.kind)}.", command.cult_id)
 
 
 @player_action("cult:heresy", ActionKind.OTHER)

@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
@@ -63,7 +63,7 @@ async def fulfil_programme(ctx: TickContext, plan: LongPlanRow, _holder: EntityR
     row = TechProgrammeRow(polity_entity_id=realm.polity_entity_id, technique=technique, stage=ProgrammeStage.PLANNING)
     row.progress, row.started_epoch, row.locked = ctx.rules.long_plans.programme_head_start, ctx.epoch, []
     ctx.session.add(row)
-    return f"a programme to master {technique.value.replace('_', ' ')} was opened"
+    return f"a programme to master {spoken(technique)} was opened"
 
 
 async def fulfil_realm(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:

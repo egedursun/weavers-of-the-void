@@ -4,7 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, digit_keys, digit_label
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.body import (
     ARMOUR_COLUMNS,
     CAPACITY_COLUMNS,
@@ -342,7 +342,7 @@ async def set_handedness(scope: PlayerScope, command: SetHandedness) -> Effect:
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
     body.handedness = command.handedness
     await refresh(scope.session, scope.rules, bearer, epoch)
-    lead = "both hands alike" if command.handedness is Handedness.BOTH else f"the {command.handedness.value} hand"
+    lead = "both hands alike" if command.handedness is Handedness.BOTH else f"the {spoken(command.handedness)} hand"
     return Effect(f"{bearer.name} now leads with {lead}.", target_node_id=bearer.id)
 
 
@@ -503,7 +503,7 @@ async def set_frame(scope: PlayerScope, command: SetFrame) -> Effect:
     bearer = await bearer_of(scope, command.bearer_id)
     body = await ensure_body(scope.session, scope.rules, bearer, await scope.epoch())
     body.height_class, body.build = command.height_class, command.build
-    return Effect(f"{bearer.name} is now {command.height_class.value} and {command.build.value} of build.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name} is now {spoken(command.height_class)} and {spoken(command.build)} of build.", target_node_id=bearer.id)
 
 
 @player_action("body:set", ActionKind.OTHER)

@@ -2,7 +2,7 @@ from pydantic import Field
 
 from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRole
@@ -97,7 +97,7 @@ async def edit_quest(scope: PlayerScope, command: QuestEdit) -> Effect:
 @player_action("heroquest:advance", ActionKind.EDIT_RECORD)
 async def advance_quest(scope: PlayerScope, command: QuestTarget) -> Effect:
     row = await control.step_quest(await scope.context("heroquest_advance"), command.quest_id)
-    return Effect(f"The heroquest stands at step {row.step} of {row.steps}: {row.state.value}.", row.quester_entity_id)
+    return Effect(f"The heroquest stands at step {row.step} of {row.steps}: {spoken(row.state)}.", row.quester_entity_id)
 
 
 @player_action("heroquest:party", ActionKind.EDIT_RECORD)
@@ -171,16 +171,16 @@ async def delete_geas(scope: PlayerScope, command: GeasTarget) -> Effect:
 @player_action("cosmic_office:appoint", ActionKind.EDIT_RECORD)
 async def appoint_office(scope: PlayerScope, command: OfficeSeat) -> Effect:
     await control.seat_office(await scope.context("cosmic_office_appoint"), command.office, command.holder_id)
-    return Effect(f"The office of {command.office.value} is given.", command.holder_id)
+    return Effect(f"The office of {spoken(command.office)} is given.", command.holder_id)
 
 
 @player_action("cosmic_office:edit", ActionKind.EDIT_RECORD)
 async def edit_office(scope: PlayerScope, command: OfficeEdit) -> Effect:
     await control.edit_office(await scope.context("cosmic_office_edit"), command.office, command.values, command.release)
-    return Effect(f"The office of {command.office.value} is set so.")
+    return Effect(f"The office of {spoken(command.office)} is set so.")
 
 
 @player_action("cosmic_office:vacate", ActionKind.EDIT_RECORD)
 async def vacate_office(scope: PlayerScope, command: OfficeTarget) -> Effect:
     await control.vacate_office(await scope.context("cosmic_office_vacate"), command.office)
-    return Effect(f"The office of {command.office.value} stands empty.")
+    return Effect(f"The office of {spoken(command.office)} stands empty.")

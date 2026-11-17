@@ -4,15 +4,14 @@ from sqlalchemy import event
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
+from aerona.db.attr_history import changed
 from aerona.db.profile_guard import hold_profile_columns
 from aerona.db.read_memo import KEEP_KEY, DirtyStates
 
 
 def changed_columns(state: Any) -> frozenset[str]:
     columns = state.mapper.column_attrs
-    return frozenset(
-        key for key in state.committed_state if key in columns and state.attrs[key].history.has_changes() and not columns[key].columns[0].primary_key
-    )
+    return frozenset(key for key in state.committed_state if key in columns and changed(state, key) and not columns[key].columns[0].primary_key)
 
 
 def align_updates(sync: Session, *_: object) -> None:

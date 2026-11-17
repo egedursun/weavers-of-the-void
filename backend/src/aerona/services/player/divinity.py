@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHook, GodGoalKind, SonPunishment, VotingRule
@@ -235,13 +236,13 @@ async def withdraw_avatar(scope: PlayerScope, command: AvatarTarget) -> Effect:
 @player_action("taboo:set", ActionKind.EDIT_RECORD)
 async def set_taboo(scope: PlayerScope, command: TabooSetting) -> Effect:
     await control.set_taboo(await scope.context("taboo_set"), command.act, command.severity)
-    return Effect(f"{command.act.value.replace('_', ' ').capitalize()} is taboo to the Creator.")
+    return Effect(f"{spoken(command.act).capitalize()} is taboo to the Creator.")
 
 
 @player_action("taboo:remove", ActionKind.EDIT_RECORD)
 async def remove_taboo(scope: PlayerScope, command: TabooTarget) -> Effect:
     await control.remove_taboo(await scope.context("taboo_remove"), command.act)
-    return Effect(f"{command.act.value.replace('_', ' ').capitalize()} is no longer taboo.")
+    return Effect(f"{spoken(command.act).capitalize()} is no longer taboo.")
 
 
 @player_action("attention:set", ActionKind.EDIT_RECORD)

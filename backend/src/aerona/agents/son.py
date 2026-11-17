@@ -17,6 +17,7 @@ from aerona.agents.turns.state import begin_turn, finish_turn, long_job_notes, t
 from aerona.constants.agents import WORD_CHRONICLE_CHARS
 from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.agent import AgentKind
@@ -63,7 +64,7 @@ def check_preconditions(son: SonRow | None, epoch: int) -> SonRow:
     if son is None:
         raise NotFoundError("No such son.")
     if son.status is not SonStatus.ACTIVE:
-        raise ValidationFailedError(f"{son.name} is {son.status.value}; cannot act.")
+        raise ValidationFailedError(f"{son.name} is {spoken(son.status)}; cannot act.")
     if son.chained:
         raise ValidationFailedError(f"{son.name} is chained this epoch.")
     if son.last_acted_epoch >= epoch:

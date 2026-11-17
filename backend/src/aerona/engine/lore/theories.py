@@ -25,7 +25,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.blueprints import books_of
 from aerona.engine.lore.research_depth import RESEARCHERS, living_researchers, trade_partners
-from aerona.engine.lore.truth import CONTRARY, ruling
+from aerona.engine.lore.truth import CONTRARY, holds_orthodoxy, ruling
 from aerona.engine.mind.ethics import church_of
 from aerona.engine.notes import note
 from aerona.engine.polity.trials import report_crime
@@ -102,7 +102,7 @@ async def found_theories(ctx: TickContext) -> int:
         for domain, spec in DOMAINS.items():
             if max((levels[community.id].get(branch, 0) for branch in spec.branches), default=0) < table.found_level:
                 continue
-            if await ruling(ctx.session, community.id, domain) is not None:
+            if await holds_orthodoxy(ctx.session, community.id, domain):
                 continue
             rng = ctx.rng(f"theory.found.{community.id}.{domain.value}.{ctx.epoch}")
             if not rng.chance(table.found_pct):

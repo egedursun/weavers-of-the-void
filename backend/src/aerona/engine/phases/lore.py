@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken as spoken_word
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
     IdeologyAdherentRow,
@@ -173,12 +174,15 @@ async def cohorts(ctx: TickContext) -> int:
     speech = await ctx.session.execute(
         select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE)
     )
+    seconds_of: dict[int, list[int]] = {}
+    for holder_id, held_share in await ctx.session.execute(
+        select(SpeakerCohortRow.community_entity_id, SpeakerCohortRow.share).where(SpeakerCohortRow.kind == SpeakerKind.SECOND)
+    ):
+        seconds_of.setdefault(holder_id, []).append(held_share)
     for community_id, language_id in speech.all():
         if frozen(community_id, language_id):
             continue
-        seconds = await ctx.session.scalars(
-            select(SpeakerCohortRow.share).where(SpeakerCohortRow.community_entity_id == community_id, SpeakerCohortRow.kind == SpeakerKind.SECOND)
-        )
+        seconds = seconds_of.get(community_id, [])
         await cohort(ctx, community_id, language_id, SpeakerKind.NATIVE, PERCENT - max([0, *seconds]) // 2)
         touched += 1
     for culture in list(await ctx.session.scalars(select(PeopleCultureRow).where(PeopleCultureRow.liturgical_language_id.is_not(None)))):
@@ -342,9 +346,7 @@ async def legend_cycles(ctx: TickContext) -> None:
         row = await legends.profile_of(ctx, legend)
         if await legends.tell(ctx, legend, row):
             ctx.count("legends_drifted")
-            await note(
-                ctx, f"In the retelling, {legend.name} became a tale of {row.archetype.value.replace('_', ' ')}.", key="lore.legend_drift", ids=[legend.id]
-            )
+            await note(ctx, f"In the retelling, {legend.name} became a tale of {spoken_word(row.archetype)}.", key="lore.legend_drift", ids=[legend.id])
         if "credence" not in row.locked and await legends.confirmed(ctx, legend, row):
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)
             ctx.count("legends_confirmed")

@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import (
@@ -292,7 +292,7 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
         RecordSpec(
             entity_type=EntityType.TRADE_ROUTE,
             name=f"{TRADE_MODES[mode].words} of {first.name} and {second.name}",
-            body=f"Merchants began to carry goods between {first.name} and {second.name} by {mode.value}.",
+            body=f"Merchants began to carry goods between {first.name} and {second.name} by {spoken(mode)}.",
             stats=TradeRouteStats(capacity=0, danger=danger_of(book, path), renown=0, culture=0),
             power=3,
             location_id=path[0],

@@ -1,16 +1,19 @@
 from dataclasses import dataclass
 
-from sqlalchemy import event, func, inspect, select
+from sqlalchemy import event, func, inspect, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
+from sqlalchemy.orm.attributes import set_committed_value
 
 from aerona.constants.units import PERCENT
+from aerona.db.attr_history import changed
+from aerona.db.profile_guard import profile_key
 from aerona.db.read_memo import register_index, touched_rows
 from aerona.db.tables.belief_depth import SourceTrustRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.intrigue import BeliefSource
 from aerona.engine.body.customs import people_of
@@ -32,6 +35,9 @@ BELIEF_INDEX_WHOLE = "aerona.belief_index.whole"
 BELIEF_PENDING = "aerona.belief_index.pending"
 TRUST_ABSENT = "source_trust_absent"
 BELIEF_KEYS = ("holder_node_id", "subject_node_id", "attribute")
+KEEP_BELIEFS = "aerona.keep_belief_index"
+FADED = ("confidence", "source")
+FADE_CHUNK = 500
 
 
 def note_pending(sync: Session, instance: object) -> None:
@@ -77,7 +83,7 @@ async def beliefs_of(session: AsyncSession, holder_id: int) -> dict[tuple[int, s
 
 def rekeyed(item: BeliefRow) -> bool:
     state = inspect(item)
-    return any(state.attrs[key].history.has_changes() for key in BELIEF_KEYS)
+    return any(key in state.committed_state and changed(state, key) for key in BELIEF_KEYS)
 
 
 def follow_beliefs(sync: Session, *_: object) -> None:
@@ -106,7 +112,9 @@ def drop_beliefs(sync: Session, *_: object) -> None:
 
 
 def drop_beliefs_on_write(state: ORMExecuteState) -> None:
-    if not state.is_select and getattr(getattr(state.statement, "table", None), "name", BeliefRow.__tablename__) == BeliefRow.__tablename__:
+    if state.is_select or state.execution_options.get(KEEP_BELIEFS):
+        return
+    if getattr(getattr(state.statement, "table", None), "name", BeliefRow.__tablename__) == BeliefRow.__tablename__:
         drop_beliefs(state.session)
 
 
@@ -180,21 +188,56 @@ async def literacy_for(ctx: TickContext, holder_id: int, seen: dict[int, int]) -
     return seen[holder_id]
 
 
+def guarded_fade(holder_id: int, subject_id: int, locked: list[str] | None) -> bool:
+    return bool(locked) or any(write_blocked(owner, profile_key(BeliefRow.__tablename__, column)) for owner in (holder_id, subject_id) for column in FADED)
+
+
+def fade_row(row: BeliefRow, letters: int, decay: float, records_at: int) -> None:
+    if letters >= records_at and row.source is not BeliefSource.RECORDS:
+        row.source = BeliefSource.RECORDS
+    row.confidence = clamp_int(row.confidence - decay, 0, PERCENT)
+
+
 async def fade_beliefs(ctx: TickContext) -> int:
     faded = 0
     table = ctx.rules.belief_state
     literacy: dict[int, int] = {}
-    for row in list(await ctx.session.scalars(select(BeliefRow).where(BeliefRow.as_of_epoch < ctx.epoch))):
-        if LOCK in (row.locked or []) or held(row.holder_node_id):
+    sync = ctx.session.sync_session
+    found = await ctx.session.execute(
+        select(BeliefRow.id, BeliefRow.holder_node_id, BeliefRow.subject_node_id, BeliefRow.confidence, BeliefRow.source, BeliefRow.locked).where(
+            BeliefRow.as_of_epoch < ctx.epoch
+        )
+    )
+    mapped: dict[int, tuple[int, float]] = {}
+    updates: list[dict[str, object]] = []
+    for belief_id, holder_id, subject_id, confidence, source, locked in list(found):
+        if LOCK in (locked or []) or held(holder_id):
             continue
-        letters = await literacy_for(ctx, row.holder_node_id, literacy)
+        letters = await literacy_for(ctx, holder_id, literacy)
         decay = table.decay * (1 - letters / PERCENT * table.records_pct / PERCENT)
-        if letters >= table.records_at and row.source is not BeliefSource.RECORDS:
-            row.source = BeliefSource.RECORDS
-        row.confidence = clamp_int(row.confidence - decay, 0, PERCENT)
-        if row.confidence <= 0:
-            await ctx.session.delete(row)
         faded += 1
+        after = clamp_int(confidence - decay, 0, PERCENT)
+        if after <= 0 or guarded_fade(holder_id, subject_id, locked):
+            mapped[belief_id] = (letters, decay)
+            continue
+        recorded = BeliefSource.RECORDS if letters >= table.records_at else source
+        if after == confidence and recorded is source:
+            continue
+        updates.append({"id": belief_id, "confidence": after, "source": recorded})
+    if updates:
+        await ctx.session.execute(update(BeliefRow).execution_options(**{KEEP_BELIEFS: True}), updates)
+        for change in updates:
+            row = sync.identity_map.get(sync.identity_key(BeliefRow, change["id"]))
+            if row is not None:
+                set_committed_value(row, "confidence", change["confidence"])
+                set_committed_value(row, "source", change["source"])
+    ids = list(mapped)
+    for start in range(0, len(ids), FADE_CHUNK):
+        for row in list(await ctx.session.scalars(select(BeliefRow).where(BeliefRow.id.in_(ids[start : start + FADE_CHUNK])).order_by(BeliefRow.id))):
+            letters, decay = mapped[row.id]
+            fade_row(row, letters, decay, table.records_at)
+            if row.confidence <= 0:
+                await ctx.session.delete(row)
     return faded
 
 
@@ -211,6 +254,19 @@ async def daring(ctx: TickContext, actor_id: int, rival_id: int) -> float:
 async def evidence_trust(session: AsyncSession, holder_id: int) -> float:
     found = await session.scalar(select(func.avg(BeliefRow.confidence)).where(BeliefRow.holder_node_id == holder_id, BeliefRow.false.is_(False)))
     return float(found or 0)
+
+
+async def evidence_trusts(session: AsyncSession, holder_ids: list[int]) -> dict[int, float]:
+    found: dict[int, float] = {}
+    wanted = sorted(set(holder_ids))
+    for start in range(0, len(wanted), FADE_CHUNK):
+        rows = await session.execute(
+            select(BeliefRow.holder_node_id, func.avg(BeliefRow.confidence))
+            .where(BeliefRow.holder_node_id.in_(wanted[start : start + FADE_CHUNK]), BeliefRow.false.is_(False))
+            .group_by(BeliefRow.holder_node_id)
+        )
+        found.update({holder: float(mean or 0) for holder, mean in rows})
+    return found
 
 
 def price_key(commodity: str) -> str:

@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -111,7 +112,7 @@ async def token_item(ctx: TickContext, maker: EntityRow, construct: EntityRow, t
         ctx,
         RecordSpec(
             entity_type=EntityType.ITEM,
-            name=f"Command {item_class.value} of {construct.name}",
+            name=f"Command {spoken(item_class)} of {construct.name}",
             body=f"Whoever holds it commands {construct.name}.",
             stats=ItemStats(),
             power=1,
@@ -139,7 +140,7 @@ async def make_construct(ctx: TickContext, maker: EntityRow, design: Design) -> 
         RecordSpec(
             entity_type=EntityType.BEAST,
             name=design.name or f"{spec.label} construct of {maker.name}",
-            body=f"A body of {spec.label.lower()} made by {maker.name} and moved by {source.value} power.",
+            body=f"A body of {spec.label.lower()} made by {maker.name} and moved by {spoken(source)} power.",
             stats=BeastStats(hp=spec.toughness * 2, danger=spec.hardness, strength=spec.hardness, agility=PERCENT - spec.weight),
             power=max(1, maker.power_level),
             location_id=maker.location_id,

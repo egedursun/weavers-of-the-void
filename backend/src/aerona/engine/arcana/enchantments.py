@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.arcana import LawUpkeepRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import NaturalLawProfileRow
@@ -120,7 +121,7 @@ async def lay_enchantment(
             name=name,
             entity_type=EntityType.NATURAL_LAW,
             stats=NaturalLawStats(),
-            body=f"A global enchantment laid and kept by its caster: {effect.value.replace('_', ' ')}.",
+            body=f"A global enchantment laid and kept by its caster: {spoken(effect)}.",
             power=ENCHANTMENT_POWER,
             world_id=world_id,
             natural_law=effect,

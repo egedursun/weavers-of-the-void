@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -40,7 +41,7 @@ async def entity(session: AsyncSession, entity_id: int) -> EntityRow:
 async def canon_entity(session: AsyncSession, entity_id: int, what: str = "This record") -> EntityRow:
     found = await entity(session, entity_id)
     if found.status is not EntityStatus.CANON:
-        raise ValidationFailedError(f"{what} is not part of the living canon ({found.name} is {found.status.value}).")
+        raise ValidationFailedError(f"{what} is not part of the living canon ({found.name} is {spoken(found.status)}).")
     return found
 
 

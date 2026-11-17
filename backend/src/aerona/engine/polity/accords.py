@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -313,6 +314,7 @@ async def treaty_between(session: AsyncSession, first: int, second: int, kinds: 
     return found
 
 
+@memoized(TreatyProfileRow, TreatyClauseRow, TreatyPartyRow)
 async def clause_pairs(session: AsyncSession, kind: ClauseKind) -> set[frozenset[int]]:
     pairs: set[frozenset[int]] = set()
     treaties = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE)

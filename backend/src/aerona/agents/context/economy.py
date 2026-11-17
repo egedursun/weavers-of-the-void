@@ -5,7 +5,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.finance import CREDIT_LABELS, POLICY_LABELS
 from aerona.catalog.methods import ENERGY_LABELS, METHODS, PROCESS_LABELS, TIER_LABELS
 from aerona.catalog.production import WORKSHOP_LABELS
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -40,7 +40,7 @@ async def job_of(session: AsyncSession, rules: Rules, me: EntityRow, home: Entit
         work = max(shares, key=lambda job: (shares[job], job.value))
         row = await session.get(LabourRow, (home.id, work))
         crew = f", one of {several(row.workers, 'hand', 'hands')} working at {row.output_pct}%" if row is not None and row.workers > 0 else ""
-        parts.append(f"works at {work.value.replace('_', ' ')} like most of the {me.social_class.value.replace('_', ' ')} class{crew}")
+        parts.append(f"works at {spoken(work)} like most of the {spoken(me.social_class)} class{crew}")
     return "; ".join(parts)
 
 

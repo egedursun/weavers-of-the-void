@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.place_terrain import DEEPENS, kind_spec
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -156,7 +157,7 @@ async def unearth_resource(ctx: TickContext, secret: PlaceSecretRow, place: Enti
         RecordSpec(
             entity_type=EntityType.RESOURCE,
             name=f"{spec.label if spec is not None else material.value.title()} of {place.name}",
-            body=f"A seam of {material.value.replace('_', ' ')} that lay hidden in {place.name} until it was found.",
+            body=f"A seam of {spoken(material)} that lay hidden in {place.name} until it was found.",
             stats=ResourceStats(abundance=secret.strength, value=secret.strength, might=secret.strength // 2),
             power=ctx.rules.places.resource_power,
             world_id=place.world_id,

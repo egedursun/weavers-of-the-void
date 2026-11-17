@@ -14,6 +14,7 @@ from aerona.catalog.couplings import (
     VOICE_REPLACED,
 )
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.couplings import CaptiveRestraintRow, RiteComponentRow
@@ -69,14 +70,14 @@ async def component_bar(ctx: TickContext, caster: EntityRow, rite_id: int) -> Ba
     blocked = {component for restraint in await restraints_of(ctx, caster.id) for component in RESTRAINT_BLOCKS[restraint]}
     stopped = sorted(needed & blocked)
     if stopped:
-        return Bar(f"the caster is held so that the rite cannot be {stopped[0].value}", 0.0)
+        return Bar(f"the caster is held so that the rite cannot be {spoken(stopped[0])}", 0.0)
     if caster.entity_type is not EntityType.MORTAL:
         return Bar(None, 1.0)
     nature = await folk_biology(ctx.session, caster)
     allowed = await allowed_components(ctx, caster, nature.variants)
     denied = sorted(needed - allowed)
     if denied:
-        return Bar(f"a body of its nature cannot give the rite its {denied[0].value} part", 0.0)
+        return Bar(f"a body of its nature cannot give the rite its {spoken(denied[0])} part", 0.0)
     least = PERCENT
     replaced = {component for variant in nature.variants for component in VOICE_REPLACED.get(variant, frozenset())}
     bodiless = any(variant in BODILESS_VARIANTS for variant in nature.variants)
@@ -84,7 +85,7 @@ async def component_bar(ctx: TickContext, caster: EntityRow, rite_id: int) -> Ba
         for function in COMPONENT_FUNCTIONS[component]:
             level = await function_unhindered(ctx.session, ctx.rules, caster.id, function)
             if level < ctx.rules.couplings.component_block_pct:
-                return Bar(f"the caster's body cannot give the rite its {component.value} part", 0.0)
+                return Bar(f"the caster's body cannot give the rite its {spoken(component)} part", 0.0)
             least = min(least, level)
     return Bar(None, least / PERCENT * biology_factor(ctx, needed, nature.variants))
 

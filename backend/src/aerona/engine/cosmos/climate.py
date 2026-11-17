@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.climate import climate_profile
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -137,7 +138,7 @@ async def turn_region(ctx: TickContext, region_id: int, turn: ClimateTurn, by: s
         env.rainfall_shift = clamp_int(env.rainfall_shift + (amount if turn is ClimateTurn.WETTER else -amount), -SHIFT_LIMIT, SHIFT_LIMIT)
     await note(
         ctx,
-        f"{by} turned the climate of {region.name} {turn.value}.",
+        f"{by} turned the climate of {region.name} {spoken(turn)}.",
         key="climate.region_turned",
         ids=[region.id],
         kind=ChronicleKind.CLIMATE,

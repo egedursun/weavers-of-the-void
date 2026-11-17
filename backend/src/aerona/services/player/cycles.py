@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.unions import UNION_TERM_MAX
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.cycles import (
@@ -420,7 +420,7 @@ async def asabiyya_delete(scope: PlayerScope, command: HolderTarget) -> Effect:
 @player_action("challenge:strike", ActionKind.EDIT_RECORD)
 async def challenge_strike(scope: PlayerScope, command: ChallengeDraft) -> Effect:
     row = await control.strike_challenge(await scope.context("challenge_strike"), command.polity_id, command.kind, command.severity)
-    return Effect(f"The realm is tried; its answer: {row.response.value}.", command.polity_id, values={"response": row.response.value})
+    return Effect(f"The realm is tried; its answer: {spoken(row.response)}.", command.polity_id, values={"response": row.response.value})
 
 
 @player_action("challenge:edit", ActionKind.EDIT_RECORD)
@@ -479,13 +479,13 @@ async def plan_delete(scope: PlayerScope, command: PlanTarget) -> Effect:
 async def gift_give(scope: PlayerScope, command: GiftDraft) -> Effect:
     ctx = await scope.context("gift_give")
     row = await control.give_gift(ctx, command.giver_id, command.receiver_id, command.value, occasion=command.occasion, item_id=command.item_id)
-    return Effect(f"A gift worth {row.value} is given.", command.receiver_id, values={"gift_id": row.id})
+    return Effect(f"A gift worth {row.value:d} is given.", command.receiver_id, values={"gift_id": row.id})
 
 
 @player_action("gift:return", ActionKind.EDIT_RECORD)
 async def gift_return(scope: PlayerScope, command: GiftAnswer) -> Effect:
     row = await control.answer_gift(await scope.context("gift_return"), command.gift_id, command.value)
-    return Effect(f"The gift is answered with one worth {row.value}.", row.receiver_node_id)
+    return Effect(f"The gift is answered with one worth {row.value:d}.", row.receiver_node_id)
 
 
 @player_action("gift:refuse", ActionKind.EDIT_RECORD)
@@ -648,7 +648,7 @@ async def reproduction_delete(scope: PlayerScope, command: PeopleTarget) -> Effe
 @player_action("caste:set", ActionKind.EDIT_RECORD)
 async def caste_set(scope: PlayerScope, command: CasteDraft) -> Effect:
     await control.set_caste(await scope.context("caste_set"), command.mortal_id, command.caste)
-    return Effect(f"Their caste is {command.caste.value}.", command.mortal_id)
+    return Effect(f"Their caste is {spoken(command.caste)}.", command.mortal_id)
 
 
 @player_action("caste:edit", ActionKind.EDIT_RECORD)

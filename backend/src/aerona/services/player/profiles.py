@@ -184,7 +184,7 @@ async def set_profile_value(scope: PlayerScope, command: SetProfileValue) -> Eff
             await scope.session.flush()
     except IntegrityError as error:
         await scope.session.refresh(row)
-        raise ValidationFailedError(f"{label.capitalize()} cannot take the value {command.value}.") from error
+        raise ValidationFailedError(f"{label.capitalize()} cannot take the value {command.value!s}.") from error
     held = " and held" if command.hold else ""
     if command.hold and not shape.lockable:
         await pin_profile(scope, command.node_id, profile_key(shape.table, command.column))

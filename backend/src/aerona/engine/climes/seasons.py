@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -103,7 +104,7 @@ async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally
         tally.turned += 1
         if turned is not OscillationPhase.NEUTRAL:
             await note(
-                ctx, f"The seas of {world.name} turned to their {turned.value} phase, and the rains shifted with them.", key="oscillations.turned", ids=[]
+                ctx, f"The seas of {world.name} turned to their {spoken(turned)} phase, and the rains shifted with them.", key="oscillations.turned", ids=[]
             )
 
 

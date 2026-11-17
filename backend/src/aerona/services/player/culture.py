@@ -52,7 +52,7 @@ async def set_register(scope: PlayerScope, command: Register) -> Effect:
 @player_action("language:release_understanding", ActionKind.EDIT_RECORD)
 async def release_understanding(scope: PlayerScope, command: PairTarget) -> Effect:
     row = await culture_control.release_intelligibility(await scope.context("language_release_understanding"), command.first_id, command.second_id)
-    return Effect(f"The world measures the two tongues again (now {row.value}%).", command.first_id)
+    return Effect(f"The world measures the two tongues again (now {row.value:d}%).", command.first_id)
 
 
 @player_action("language:release_speakers", ActionKind.EDIT_RECORD)

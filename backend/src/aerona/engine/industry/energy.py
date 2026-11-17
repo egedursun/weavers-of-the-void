@@ -1,10 +1,12 @@
 from collections import Counter
 
 from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.methods import COLD, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.read_memo import memoized
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
@@ -166,27 +168,38 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
 POWER_PLANTS = frozenset({StructureKind.POWER_PLANT, StructureKind.DAM, StructureKind.STAR_COLLECTOR})
 
 
-async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> int:
-    found = await ctx.session.scalar(
-        select(func.coalesce(func.sum(StructureProfileRow.level), 0)).where(
-            StructureProfileRow.host_entity_id == community.id,
-            StructureProfileRow.kind.in_(list(kinds)),
-            StructureProfileRow.construction_state == ConstructionState.COMPLETE,
-        )
+@memoized(StructureProfileRow)
+async def levels_by_host(session: AsyncSession, kinds: frozenset[StructureKind]) -> dict[int, int]:
+    statement = select(StructureProfileRow.host_entity_id, StructureProfileRow.level).where(
+        StructureProfileRow.kind.in_(list(kinds)), StructureProfileRow.construction_state == ConstructionState.COMPLETE
     )
-    return int(found or 0)
+    found: dict[int, int] = {}
+    for host, level in await session.execute(statement):
+        if host is not None:
+            found[host] = found.get(host, 0) + level
+    return found
+
+
+async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> int:
+    return (await levels_by_host(ctx.session, kinds)).get(community.id, 0)
+
+
+@memoized(StructureProfileRow, EntityRow)
+async def collectors_by_world(session: AsyncSession) -> dict[int, int]:
+    statement = (
+        select(EntityRow.world_id, func.count())
+        .select_from(StructureProfileRow)
+        .join(EntityRow, EntityRow.id == StructureProfileRow.host_entity_id)
+        .where(StructureProfileRow.kind == StructureKind.STAR_COLLECTOR, EntityRow.world_id.is_not(None))
+        .group_by(EntityRow.world_id)
+    )
+    return {world_id: int(count) for world_id, count in await session.execute(statement)}
 
 
 async def world_collectors(ctx: TickContext, community: EntityRow) -> int:
     if community.world_id is None:
         return 0
-    hosts = select(EntityRow.id).where(EntityRow.world_id == community.world_id)
-    found = await ctx.session.scalar(
-        select(func.count())
-        .select_from(StructureProfileRow)
-        .where(StructureProfileRow.kind == StructureKind.STAR_COLLECTOR, StructureProfileRow.host_entity_id.in_(hosts))
-    )
-    return int(found or 0)
+    return (await collectors_by_world(ctx.session)).get(community.world_id, 0)
 
 
 def industry_row(ctx: TickContext, book: EconomyBook, community_id: int) -> CommunityIndustryRow:

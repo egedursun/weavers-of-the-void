@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -274,7 +275,7 @@ async def draw_rings(ctx: TickContext, atlas: RegionAtlas, ways: Ways, *, world:
             if region is not None and market is not None:
                 await note(
                     ctx,
-                    f"{region.name} now lies closer to the market of {market.name} and turns from {before.value} to {row.ring.value}.",
+                    f"{region.name} now lies closer to the market of {market.name} and turns from {spoken(before)} to {spoken(row.ring)}.",
                     key="thunen.ring_moved",
                     ids=[region.id, market.id],
                 )

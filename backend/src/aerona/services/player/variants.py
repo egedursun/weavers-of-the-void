@@ -2,7 +2,7 @@ from pydantic import Field
 from sqlalchemy import update
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.mortal import KindVariantRow
@@ -64,7 +64,7 @@ async def variant_row(scope: PlayerScope, variant_id: int) -> KindVariantRow:
 @player_action("variant:create", ActionKind.OTHER)
 async def create_variant(scope: PlayerScope, command: CreateVariant) -> Effect:
     if command.base not in BASES[command.family]:
-        raise ValidationFailedError(f"{command.base} is not {an(command.family.value)}.")
+        raise ValidationFailedError(f"{command.base} is not {an(spoken(command.family))}.")
     row = KindVariantRow(
         family=command.family,
         base=command.base,
@@ -77,7 +77,7 @@ async def create_variant(scope: PlayerScope, command: CreateVariant) -> Effect:
     )
     scope.session.add(row)
     await scope.session.flush()
-    return Effect(f"A new {command.family.value}, {row.name}, now exists in the world.", values={"variant_id": row.id})
+    return Effect(f"A new {spoken(command.family)}, {row.name}, now exists in the world.", values={"variant_id": row.id})
 
 
 @player_action("variant:edit", ActionKind.OTHER)
@@ -124,7 +124,7 @@ async def assign_variant(scope: PlayerScope, command: AssignVariant) -> Effect:
         raise ValidationFailedError("Give a trait its kind with the trait lever.")
     found = await scope.session.get(SkillRow, command.row_id) if command.family is KindFamily.SKILL else await scope.session.get(ConditionRow, command.row_id)
     if found is None:
-        raise NotFoundError(f"No such {command.family.value}.")
+        raise NotFoundError(f"No such {spoken(command.family)}.")
     if command.variant_id is not None:
         variant = await variant_row(scope, command.variant_id)
         base = found.skill.value if isinstance(found, SkillRow) else found.kind.value

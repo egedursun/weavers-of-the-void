@@ -3,9 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, NEED_LABELS, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow
@@ -37,7 +40,7 @@ from aerona.engine.mind.wider_needs import by_activity_and_make, wider_needs
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.museums.reading import gardens_kept
 from aerona.engine.notes import note
-from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.knowledge import BranchLevels, known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import class_shares, stock
@@ -96,6 +99,23 @@ async def sustenance_need(session: AsyncSession, mortal_id: int) -> float:
     return found.value / FULL if found is not None else 1.0
 
 
+LEVEL_MEMO = "needs.known_levels"
+LEVEL_TABLES = table_names((BondRow, EntityRow, HolderLevelRow, "entities.other"))
+
+
+async def levels_among(session: AsyncSession, ids: list[int]) -> dict[int, BranchLevels]:
+    memo = memo_of(session, LEVEL_MEMO, LEVEL_TABLES)
+    if memo is None:
+        return await known_levels(session, ids)
+    every: dict[int, BranchLevels] | None = memo.get(LEVEL_MEMO)
+    if every is None:
+        every = await known_levels(session)
+        after = memo_of(session, LEVEL_MEMO, LEVEL_TABLES)
+        if after is not None:
+            after[LEVEL_MEMO] = every
+    return {holder: every[holder] for holder in ids if holder in every}
+
+
 def pct(value: float) -> int:
     return clamp_int(value, 0, FULL)
 
@@ -144,7 +164,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     shame = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in HUMILIATING_MEMORIES and row.magnitude < 0)
     tribute = len(await active_bonds(session, [BondKind.PAYS_TRIBUTE], sources=[community.id]))
     humiliation = shame * table.humiliation_pct / PERCENT + tribute * table.tribute_humiliation
-    levels = (await known_levels(session, [community.id])).get(community.id)
+    levels = (await levels_among(session, [community.id])).get(community.id)
     known = sum(levels.values()) if levels else 0
     innovation = max(0, -culture.get(ValueAxis.TRADITION, 0))
     stagnation = (
@@ -314,7 +334,7 @@ async def deeper_needs(
     used = {row.skill for row in skills if row.last_used_epoch >= epoch}
     home = [mortal.id, *([community.id] if community is not None else [])]
     grounds = await gardens_kept(session, rules, home)
-    branches = sum(len(found) for found in (await known_levels(session, home)).values())
+    branches = sum(len(found) for found in (await levels_among(session, home)).values())
     works = len(
         list(
             await session.scalars(

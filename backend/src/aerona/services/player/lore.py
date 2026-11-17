@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import BoostTrigger, CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
@@ -214,7 +214,7 @@ async def edit_lore(scope: PlayerScope, command: EditLore) -> Effect:
 @player_action("language:intelligibility", ActionKind.EDIT_RECORD)
 async def set_intelligibility(scope: PlayerScope, command: Intelligibility) -> Effect:
     row = await control.set_intelligibility(await scope.context("language_intelligibility"), command.first_id, command.second_id, command.value)
-    return Effect(f"The two tongues now understand each other {row.value}%.", command.first_id)
+    return Effect(f"The two tongues now understand each other {row.value:d}%.", command.first_id)
 
 
 @player_action("language:speakers", ActionKind.EDIT_RECORD)
@@ -226,7 +226,7 @@ async def set_speakers(scope: PlayerScope, command: Speakers) -> Effect:
 @player_action("research:level", ActionKind.EDIT_RECORD)
 async def set_level(scope: PlayerScope, command: HolderLevel) -> Effect:
     row = await control.set_level(await scope.context("research_level"), command.holder_id, command.branch, command.level)
-    return Effect(f"Their {row.branch.value.replace('_', ' ')} stands at level {row.level}.", command.holder_id)
+    return Effect(f"Their {spoken(row.branch)} stands at level {row.level}.", command.holder_id)
 
 
 @player_action("research:technique", ActionKind.EDIT_RECORD)
@@ -243,7 +243,7 @@ async def set_focus(scope: PlayerScope, command: ResearchFocus) -> Effect:
     row = await research_control.set_focus(ctx, command.holder_id, command.technique, command.options, hold=command.hold)
     if row is None:
         return Effect("Their scholars are free to choose their own work.", command.holder_id)
-    return Effect(f"Their scholars turn to {row.technique.value.replace('_', ' ')}.", command.holder_id)
+    return Effect(f"Their scholars turn to {spoken(row.technique)}.", command.holder_id)
 
 
 @player_action("research:institution", ActionKind.EDIT_RECORD)
@@ -259,7 +259,7 @@ async def set_institution(scope: PlayerScope, command: Institution) -> Effect:
 @player_action("research:boost", ActionKind.EDIT_RECORD)
 async def grant_boost(scope: PlayerScope, command: GrantBoost) -> Effect:
     row = await research_control.grant_boost(await scope.context("research_boost"), command.holder_id, command.technique, command.trigger, command.progress)
-    return Effect(f"A boost pushes their {row.technique.value.replace('_', ' ')} {row.progress}% closer.", command.holder_id)
+    return Effect(f"A boost pushes their {spoken(row.technique)} {row.progress}% closer.", command.holder_id)
 
 
 @player_action("research:boost_edit", ActionKind.EDIT_RECORD)
@@ -354,7 +354,7 @@ async def create_kind(scope: PlayerScope, command: CreateKind) -> Effect:
     row = await kinds.create_kind(
         ctx, command.catalog, command.base, command.name, description=command.description, params=command.params, world_id=command.world_id
     )
-    return Effect(f"A new {command.catalog.value.replace('_', ' ')} is named: {row.name}.", None)
+    return Effect(f"A new {spoken(command.catalog)} is named: {row.name}.", None)
 
 
 @player_action("kind:edit", ActionKind.EDIT_RECORD)
@@ -396,7 +396,7 @@ async def set_rite_requirements(scope: PlayerScope, command: RiteRequirements) -
 @player_action("research:holder", ActionKind.EDIT_RECORD)
 async def edit_holder(scope: PlayerScope, command: EditHolder) -> Effect:
     row = await learning_control.edit_holder(await scope.context("research_holder"), command.holder_id, command.branch, command.values, command.release)
-    return Effect(f"Their {row.branch.value.replace('_', ' ')} stands at level {row.level}, {row.progress}% toward the next.", command.holder_id)
+    return Effect(f"Their {spoken(row.branch)} stands at level {row.level}, {row.progress}% toward the next.", command.holder_id)
 
 
 @player_action("research:custom_technique", ActionKind.EDIT_RECORD)

@@ -294,6 +294,18 @@ async def test_an_overused_common_wears_down_and_its_enclosure_fills_the_city(se
     assert calm.condition > 80 - (150 - ctx.rules.commons.sustainable) * ctx.rules.commons.degrade_pct / 100
 
 
+async def test_a_common_seeded_this_epoch_draws_its_fate_by_its_own_stored_id(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, commons={"enclose_pct": 100, "council_chance": 100, "council_at": 100, "council_order": 0})
+    village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
+    city = await town(session, world, "Hollin", 3, BIG, tier=SizeTier.CITY)
+    await realm(session, world, [city, village], await mortal(session, "Ruler", world, city.id))
+    (await land(session, world, 1)).rainfall = 100
+    await session.flush()
+    await keep_commons(ctx, await holdings(ctx), LandsTally())
+    seeded = list(await session.scalars(select(CommonsRow).where(CommonsRow.region_entity_id == world.regions[1].id)))
+    assert seeded and all(row.id is not None and row.since_epoch == ctx.epoch for row in seeded)
+
+
 async def test_a_reserve_shields_its_game_and_the_hungry_poach_it(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await surveyed(session, game_laws={"drift_pct": 100, "punish_at": 10})
     hollin = await town(session, world, "Hollin", 0, BIG)

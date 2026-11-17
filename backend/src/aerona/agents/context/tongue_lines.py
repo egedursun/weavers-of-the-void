@@ -35,7 +35,7 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     tongue = await own_tongue(session, me)
     profile = await session.get(LanguageProfileRow, tongue.id) if tongue is not None else None
     if tongue is not None and profile is not None:
-        written = f"written in {an(profile.writing_system.value)} script" if profile.writing_system is not None else "unwritten"
+        written = f"written in {an(spoken(profile.writing_system))} script" if profile.writing_system is not None else "unwritten"
         kind = "" if profile.modality is LanguageModality.VOCAL else f" ({spoken(profile.modality)})"
         stage = "" if profile.stage is LanguageStage.NATURAL else f", {an(profile.stage.value)}"
         found.append(f"your people speak {tongue.name}{kind}{stage}, {written}")

@@ -4,7 +4,7 @@ from enum import StrEnum
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -411,7 +411,7 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             choice,
             f"{mortal.name} {'Lament' if choice is MemorialForm.LAMENT else 'Epic'}",
             choice.value,
-            f"After {mortal.name} died, {makers} made {an(choice.value)} for them.",
+            f"After {mortal.name} died, {makers} made {an(spoken(choice))} for them.",
             location_id=seat_of(home),
             world_id=mortal.world_id,
         )

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.prehistory import WORLD_PREHISTORY
 from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -299,7 +300,7 @@ async def keep_needs(ctx: TickContext, tally: ViewTally) -> None:
             continue
         tally.short += 1
         await suffer(ctx, town, await ctx.session.get(SettlementProfileRow, town.id))
-        await note(ctx, f"{town.name} ran short of the {view.need.value} its world binds it to.", key="world_views.short", ids=[town.id])
+        await note(ctx, f"{town.name} ran short of the {spoken(view.need)} its world binds it to.", key="world_views.short", ids=[town.id])
 
 
 async def keep_views(ctx: TickContext, tally: ViewTally) -> None:

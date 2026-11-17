@@ -2,6 +2,7 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
@@ -60,7 +61,9 @@ async def swear(
     if open_oath is not None:
         return open_oath
     table = ctx.rules.oaths
-    if witness is None and ctx.rng(f"oath_witness.{swearer.id}.{kind.value}.{recipient_id}").chance(table.witness_chance):
+    if witness is None and ctx.rng(f"oath_witness.{swearer.id}.{kind.value}.{recipient_id if recipient_id is not None else 'unbound'}").chance(
+        table.witness_chance
+    ):
         witness = await oath_god(ctx, swearer.world_id)
     row = OathRow(
         swearer_entity_id=swearer.id,
@@ -181,7 +184,7 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
         await wrath(ctx, witness, swearer)
     await note(
         ctx,
-        f"{swearer.name} broke the {oath.kind.value.replace('_', ' ')} oath{f' sworn before {witness.name}' if witness else ''}: {reason}.",
+        f"{swearer.name} broke the {spoken(oath.kind)} oath{f' sworn before {witness.name}' if witness else ''}: {reason}.",
         key="oaths.broken",
         ids=[swearer.id],
         son_id=witness.id if witness else None,

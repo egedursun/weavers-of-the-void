@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.engine.settlement import control
@@ -98,7 +99,7 @@ async def build_district(scope: PlayerScope, command: BuildDistrict) -> Effect:
     district = await control.build_district(
         await scope.context("district_build"), command.settlement_id, command.kind, material=command.material, son_id=None, design_id=command.design_id
     )
-    return Effect(f"The {district.kind.value.replace('_', ' ')} stands at level {district.level}.", command.settlement_id)
+    return Effect(f"The {spoken(district.kind)} stands at level {district.level}.", command.settlement_id)
 
 
 @player_action("district:edit", ActionKind.EDIT_RECORD)

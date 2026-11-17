@@ -8,6 +8,7 @@ from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import EventProfileRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -23,7 +24,6 @@ from aerona.engine.happenings.profile import (
     Happening,
     close_profile,
     derive_footprint,
-    first_incident,
     footprint_of,
     happen,
     open_profile,
@@ -205,12 +205,24 @@ async def link_profiles(ctx: TickContext) -> int:
     statement = (
         select(EventProfileRow).where((EventProfileRow.incident_id.is_(None)) | (EventProfileRow.siege_id.is_(None))).order_by(EventProfileRow.entity_id)
     )
-    for profile in list(await ctx.session.scalars(statement)):
-        event = await ctx.session.get(EntityRow, profile.entity_id)
+    profiles = list(await ctx.session.scalars(statement))
+    unlinked = [profile.entity_id for profile in profiles if profile.incident_id is None]
+    firsts: dict[int, IncidentRow] = {}
+    for node_id, found in await ctx.session.execute(
+        select(IncidentParticipantRow.node_id, IncidentRow)
+        .join(IncidentRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+        .join(EntityRow, EntityRow.id == IncidentParticipantRow.node_id)
+        .where(IncidentParticipantRow.node_id.in_(unlinked), IncidentRow.epoch >= EntityRow.birth_epoch)
+        .order_by(IncidentRow.epoch, IncidentRow.id)
+    ):
+        firsts.setdefault(node_id, found)
+    events = {event.id: event for event in await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_([profile.entity_id for profile in profiles])))}
+    for profile in profiles:
+        event = events.get(profile.entity_id)
         if event is None:
             continue
         if profile.incident_id is None:
-            incident = await first_incident(ctx.session, event)
+            incident = firsts.get(profile.entity_id)
             if incident is not None:
                 profile.incident_id = incident.id
                 if incident.year is not None and incident.epoch == profile.start_epoch:

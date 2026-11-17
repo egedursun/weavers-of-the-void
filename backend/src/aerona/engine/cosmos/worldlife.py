@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -172,7 +173,7 @@ async def tend_age(ctx: TickContext, world: WorldRow, grounds: list[RegionEnviro
         aged = grown_age(ctx.rules, world, ctx.epoch)
         if aged is not world.age_stage:
             world.age_stage = aged
-            await note(ctx, f"{world.name} grew {aged.value}.", key=f"world.aged.{aged.value}", world_id=world.id, kind=ChronicleKind.WORLD_AGE)
+            await note(ctx, f"{world.name} grew {spoken(aged)}.", key=f"world.aged.{aged.value}", world_id=world.id, kind=ChronicleKind.WORLD_AGE)
     if world.age_stage not in (WorldAge.OLD, WorldAge.DYING):
         return
     for ground in grounds:

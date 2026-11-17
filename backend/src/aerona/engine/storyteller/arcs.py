@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
@@ -329,7 +330,7 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
     subject = await NodeRepository(ctx.session).name_of(arc.subject_node_id)
     await note(
         ctx,
-        f"The tale of {arc.template.value.replace('_', ' ')} of {subject or 'one'} ended: {outcome.value}.",
+        f"The tale of {spoken(arc.template)} of {subject or 'one'} ended: {spoken(outcome)}.",
         key="arcs.ended",
         ids=[arc.subject_node_id],
     )

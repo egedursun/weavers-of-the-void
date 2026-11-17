@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.culture import RiteEffectKind
@@ -123,7 +123,7 @@ async def delete_text(scope: PlayerScope, command: TextTarget) -> Effect:
 @player_action("vis:set", ActionKind.EDIT_RECORD)
 async def set_vis(scope: PlayerScope, command: VisSet) -> Effect:
     row = await control.set_vis(await scope.context("vis_set"), command.holder_id, command.form, command.amount, hold=command.hold)
-    return Effect(f"{row.amount} {row.form.value} vis is held.", command.holder_id)
+    return Effect(f"{row.amount} {spoken(row.form)} vis is held.", command.holder_id)
 
 
 @player_action("vis:delete", ActionKind.EDIT_RECORD)

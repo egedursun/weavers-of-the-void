@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.foreign_gods import FOREIGN_GOD_POWERS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.keyed_random import keyed_random
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -301,7 +301,7 @@ async def birth_local_god(ctx: TickContext, world: WorldRow, people: EntityRow) 
     language = await _native_language(session, world.id)
     derived = await Namer(session, rules).from_language(language, f"local-god:{world.id}:{ctx.epoch}", NameKind.PERSON) if language else None
     domains = await canon_domains(session, world, ctx.rng(f"local_god_domains:{people.id}"), people)
-    title = f"{SLEEPING_PREFIX}{domains[0].value.replace('_', ' ')} god of the {people.name} people"
+    title = f"{SLEEPING_PREFIX}{spoken(domains[0])} god of the {people.name} people"
     god = await add_foreign_god(
         session,
         rules,

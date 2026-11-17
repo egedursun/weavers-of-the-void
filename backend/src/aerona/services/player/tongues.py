@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.tongues import LanguagePolicy, ScriptChangeCause, SoundChangeCause, SoundChangeKind, SoundEnvironment, WordRegister
@@ -167,7 +168,7 @@ async def edit_profile(scope: PlayerScope, command: LanguageEdit) -> Effect:
 @player_action("word:register", ActionKind.EDIT_RECORD)
 async def set_register(scope: PlayerScope, command: RegisterSet) -> Effect:
     row = await control.set_register(await scope.context("word_register"), command.lexeme_id, command.word_register)
-    return Effect(f"{row.word} now belongs to the {command.word_register.value} register.", row.language_entity_id)
+    return Effect(f"{row.word} now belongs to the {spoken(command.word_register)} register.", row.language_entity_id)
 
 
 @player_action("word:veil", ActionKind.EDIT_RECORD)
@@ -233,7 +234,7 @@ async def delete_work(scope: PlayerScope, command: LanguageTarget) -> Effect:
 @player_action("language_policy:set", ActionKind.EDIT_RECORD)
 async def place_policy(scope: PlayerScope, command: PolicyDraft) -> Effect:
     await control.place_policy(await scope.context("language_policy_set"), command.holder_id, command.language_id, command.policy, command.strength)
-    return Effect(f"The tongue is {command.policy.value} there now.", command.holder_id)
+    return Effect(f"The tongue is {spoken(command.policy)} there now.", command.holder_id)
 
 
 @player_action("language_policy:edit", ActionKind.EDIT_RECORD)

@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.society import SocialClass
@@ -57,7 +58,7 @@ class Dormancy(Command):
 async def edit_people(scope: PlayerScope, command: EditPeople) -> Effect:
     biology, culture = await control.edit_people(await scope.context("people_edit"), command.people_id, command.values, release=command.release)
     return Effect(
-        f"The people come of age at {biology.maturity_years}, fight as {culture.martial_style.value.replace('_', ' ')}, cohesion {culture.cohesion}.",
+        f"The people come of age at {biology.maturity_years}, fight as {spoken(culture.martial_style)}, cohesion {culture.cohesion}.",
         command.people_id,
     )
 
@@ -88,9 +89,7 @@ async def move_cohort(scope: PlayerScope, command: MoveCohort) -> Effect:
         condition=command.condition,
         from_condition=command.from_condition,
     )
-    return Effect(
-        f"{moved} {command.source.value.replace('_', ' ')}s became {command.target.value.replace('_', ' ')}s.", command.community_id, values={"moved": moved}
-    )
+    return Effect(f"{moved} {spoken(command.source)}s became {spoken(command.target)}s.", command.community_id, values={"moved": moved})
 
 
 @player_action("cohort:set", ActionKind.EDIT_RECORD)

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import partial
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -302,7 +302,7 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
             name=f"{stage.find.value.replace('_', ' ').capitalize()} of {site.name}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(might=ctx.rules.excavations.find_power),
-            body=f"Found by {leader.name} in the {stage.stage.value.replace('_', ' ')} of {site.name}.",
+            body=f"Found by {leader.name} in the {spoken(stage.stage)} of {site.name}.",
             power=max(1, ctx.rules.excavations.find_power // 10),
             world_id=site.world_id,
             location_id=site.id,
@@ -365,7 +365,7 @@ async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
             dig.stage = order[order.index(dig.stage) + 1]
     await note(
         ctx,
-        f"The dig at {site.name} passed its {stage.stage.value.replace('_', ' ')}{told}{found}.",
+        f"The dig at {site.name} passed its {spoken(stage.stage)}{told}{found}.",
         key=f"excavation.{stage.stage.value}",
         ids=[leader.id, site.id, *([stage.find_entity_id] if stage.find_entity_id else [])],
         roles={leader.id: IncidentRole.ACTOR, site.id: IncidentRole.PLACE},

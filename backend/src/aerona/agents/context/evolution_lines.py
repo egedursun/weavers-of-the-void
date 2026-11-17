@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow, LineageMarkRow, PlagueResponseRow
 from aerona.db.tables.sons import SonRow
@@ -14,7 +15,7 @@ async def son_evolution_lines(scope: Scope, son: SonRow) -> list[str]:
         species = await session.get(EntityRow, mark.species_entity_id)
         if species is not None:
             word = "blessed" if mark.blessing else "tainted"
-            found.append(f"You {word} the line of {species.name}; its young carry the {mark.package.value.replace('_', ' ')}")
+            found.append(f"You {word} the line of {species.name}; its young carry the {spoken(mark.package)}")
     return found
 
 
@@ -33,7 +34,7 @@ async def mortal_evolution_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         disease = await session.get(EntityRow, response.disease_entity_id)
         if disease is not None:
-            found.append(f"your community answers {disease.name}: {response.response.value.replace('_', ' ')} ({response.strength})")
+            found.append(f"your community answers {disease.name}: {spoken(response.response)} ({response.strength})")
     seats = [row for row in await institutions(session) if row.location_id == home]
     for seat in seats:
         for research in await session.scalars(select(CureResearchRow).where(CureResearchRow.institution_entity_id == seat.id)):

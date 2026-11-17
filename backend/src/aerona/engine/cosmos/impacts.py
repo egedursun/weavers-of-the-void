@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import SpeciesProfileRow
@@ -240,7 +240,7 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
         profile = await ctx.session.get(SpeciesProfileRow, species.id)
         bears = table.hardy_pct / PERCENT if profile is not None and profile.temperature_min <= table.hardy_cold else 1.0
         scale_stat(ctx.rules, species, ABUNDANCE_KEY, 1 - impact.size * table.extinction_pct / PERCENT / PERCENT * (1 - spared) * bears)
-    impact.text = f"{an(impact.body.value.replace('_', ' '), capital=True)} struck {region.name if region is not None else world.name}."
+    impact.text = f"{an(spoken(impact.body), capital=True)} struck {region.name if region is not None else world.name}."
     await note(ctx, impact.text, key="impact.struck", ids=[region.id] if region is not None else [], world_id=world.id, kind=ChronicleKind.SKY)
     if place is not None:
         await legend_of(ctx, impact, world, place)

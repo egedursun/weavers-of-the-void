@@ -24,7 +24,7 @@ async def son_lifecycle_lines(scope: Scope, son: SonRow) -> list[str]:
             .order_by(EntityRow.id)
         )
     ).all()
-    shown = [f"{entity.name} (id {entity.id}, {row.kind.value.replace('_', ' ')}, {spoken(row.state)})" for entity, row in rows]
+    shown = [f"{entity.name} (id {entity.id}, {spoken(row.kind)}, {spoken(row.state)})" for entity, row in rows]
     return [f"Lore and powers of the world you walk that have come to an end or lie dormant: {', '.join(shown)}."] if shown else []
 
 
@@ -59,9 +59,9 @@ async def mortal_grounds_lines(scope: Scope, me: EntityRow) -> list[str]:
     found: list[str] = []
     kept = select(MuseumCollectionRow).where(MuseumCollectionRow.keeper_entity_id == town.id).order_by(MuseumCollectionRow.id)
     for hoard in await scope.session.scalars(kept):
-        found.append(f"{town.name} keeps a collection ({hoard.kind.value.replace('_', ' ')}, prestige {hoard.prestige})")
+        found.append(f"{town.name} keeps a collection ({spoken(hoard.kind)}, prestige {hoard.prestige})")
     for garden in await scope.session.scalars(select(GardenRow).where(GardenRow.settlement_entity_id == town.id).order_by(GardenRow.id)):
-        found.append(f"a garden ({garden.kind.value.replace('_', ' ')}, condition {garden.condition})")
+        found.append(f"a garden ({spoken(garden.kind)}, condition {garden.condition})")
     for bed in await scope.session.scalars(select(FossilBedRow).where(FossilBedRow.finder_entity_id == town.id).order_by(FossilBedRow.id)):
-        found.append(f"remains found there ({bed.source.value.replace('_', ' ')}, read as {bed.reading.value.replace('_', ' ')})")
+        found.append(f"remains found there ({spoken(bed.source)}, read as {spoken(bed.reading)})")
     return found

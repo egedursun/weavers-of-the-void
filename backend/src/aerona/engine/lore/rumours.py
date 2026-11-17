@@ -42,7 +42,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import connect, living_entity, spoken_language
+from aerona.engine.primitives.queries import connect, living_entity, load_entities, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.services.community_relations import change_relation
@@ -57,6 +57,7 @@ PLANTED_ATROCITY = "rumour.planted_atrocity"
 FRESH_EPOCHS = 1
 LEGEND_POWER = 2
 UNKNOWN_FAR = 20
+LOAD_CHUNK = 500
 
 
 @dataclass
@@ -108,9 +109,19 @@ async def fresh_incidents(ctx: TickContext, since: int | None = None) -> list[In
     return [row for row in rows if not is_quiet(row.kind)]
 
 
-async def witnesses(ctx: TickContext, incident: IncidentRow, atlas: RegionAtlas) -> list[int]:
+async def casts_of(session: AsyncSession, incidents: list[IncidentRow]) -> dict[int, list[IncidentParticipantRow]]:
+    found: dict[int, list[IncidentParticipantRow]] = {incident.id: [] for incident in incidents}
+    for start in range(0, len(incidents), LOAD_CHUNK):
+        chunk = [incident.id for incident in incidents[start : start + LOAD_CHUNK]]
+        statement = select(IncidentParticipantRow).where(IncidentParticipantRow.incident_id.in_(chunk))
+        for row in await session.scalars(statement.order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position)):
+            found[row.incident_id].append(row)
+    return found
+
+
+async def witnesses(ctx: TickContext, incident: IncidentRow, atlas: RegionAtlas, cast: list[IncidentParticipantRow] | None = None) -> list[int]:
     found: set[int] = set()
-    for row in await participants(ctx.session, incident.id):
+    for row in cast if cast is not None else await participants(ctx.session, incident.id):
         entity = await living_entity(ctx.session, row.node_id)
         if entity is None:
             continue
@@ -138,10 +149,13 @@ async def known_pairs(session: AsyncSession, incident_ids: list[int]) -> set[tup
 async def seed(ctx: TickContext, atlas: RegionAtlas, since: int | None = None) -> int:
     incidents = await fresh_incidents(ctx, since)
     known = await known_pairs(ctx.session, [row.id for row in incidents])
+    casts = await casts_of(ctx.session, incidents)
+    cast = await load_entities(ctx.session, [*(row.node_id for rows in casts.values() for row in rows), *(incident.place_entity_id for incident in incidents)])
+    await load_entities(ctx.session, [entity.location_id for entity in cast])
     made = 0
     for incident in incidents:
         age = max(0, ctx.epoch - incident.epoch)
-        for carrier in await witnesses(ctx, incident, atlas):
+        for carrier in await witnesses(ctx, incident, atlas, casts[incident.id]):
             if (incident.id, carrier) in known or held(carrier) or await is_carrier(ctx.session, carrier) is None:
                 continue
             ctx.session.add(

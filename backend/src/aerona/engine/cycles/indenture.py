@@ -2,6 +2,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
+from aerona.db.read_memo import memoized
 from aerona.db.tables.cycles import IndentureRow, ManumissionRow, SlaveMarketRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow
@@ -29,12 +31,20 @@ async def indentured_in(session: AsyncSession, community_id: int) -> int:
     return int(await session.scalar(select(func.coalesce(func.sum(IndentureRow.count), 0)).where(IndentureRow.community_entity_id == community_id)) or 0)
 
 
+@memoized(IndentureRow)
+async def bondage_loads(session: AsyncSession) -> dict[int, int]:
+    found: dict[int, int] = {}
+    for community_id, count, exploitation in await session.execute(select(IndentureRow.community_entity_id, IndentureRow.count, IndentureRow.exploitation)):
+        found[community_id] = found.get(community_id, 0) + count * exploitation
+    return found
+
+
 async def bondage_weight(session: AsyncSession, community: EntityRow) -> int:
-    rows = list(await session.scalars(select(IndentureRow).where(IndentureRow.community_entity_id == community.id)))
+    load = (await bondage_loads(session)).get(community.id)
     people = stat_or(community, "population", 0)
-    if not rows or people <= 0:
+    if load is None or people <= 0:
         return 0
-    return clamp_int(sum(row.count * row.exploitation for row in rows) / people, 0, PERCENT)
+    return clamp_int(load / people, 0, PERCENT)
 
 
 async def indentured_share(session: AsyncSession, community_id: int) -> int:
@@ -121,7 +131,7 @@ async def free_mortals(ctx: TickContext, community: EntityRow, count: int, path:
             kind=MemoryKind.FREED_US,
             magnitude=ctx.rules.mobility.freed_memory,
             epoch=ctx.epoch,
-            note=f"freed by {path.value.replace('_', ' ')}",
+            note=f"freed by {spoken(path)}",
             decay_pct=0,
         )
         freed += 1
@@ -148,12 +158,21 @@ async def record_manumission(ctx: TickContext, community: EntityRow, count: int,
     return row
 
 
+@memoized(ManumissionRow)
+async def stigma_loads(session: AsyncSession) -> dict[int, int]:
+    found: dict[int, int] = {}
+    statement = select(ManumissionRow.community_entity_id, ManumissionRow.count, ManumissionRow.standing).where(ManumissionRow.standing < PERCENT)
+    for community_id, count, standing in await session.execute(statement):
+        found[community_id] = found.get(community_id, 0) + count * (PERCENT - standing)
+    return found
+
+
 async def freed_stigma(session: AsyncSession, community: EntityRow) -> int:
-    rows = list(await session.scalars(select(ManumissionRow).where(ManumissionRow.community_entity_id == community.id, ManumissionRow.standing < PERCENT)))
+    load = (await stigma_loads(session)).get(community.id)
     people = stat_or(community, "population", 0)
-    if not rows or people <= 0:
+    if load is None or people <= 0:
         return 0
-    return clamp_int(sum(row.count * (PERCENT - row.standing) for row in rows) / people, 0, PERCENT)
+    return clamp_int(load / people, 0, PERCENT)
 
 
 async def revolts_in(session: AsyncSession, town_ids: list[int], since: int) -> int:

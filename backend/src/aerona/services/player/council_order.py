@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.council_order import (
     PROCEDURE_FIELDS,
     SEAT_FIELDS,
@@ -126,7 +127,7 @@ async def violation_create(scope: PlayerScope, command: ViolationMake) -> Effect
     ctx.session.add(row)
     await PENALTIES[command.step](ctx, command.violator_id)
     await ctx.session.flush()
-    return Effect(f"The god answers for breaking the ruling: {command.step.value.replace('_', ' ')}.", command.violator_id, values={"violation_id": row.id})
+    return Effect(f"The god answers for breaking the ruling: {spoken(command.step)}.", command.violator_id, values={"violation_id": row.id})
 
 
 async def violation_of(scope: PlayerScope, violation_id: int) -> CouncilViolationRow:

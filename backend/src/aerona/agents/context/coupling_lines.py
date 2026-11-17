@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.couplings import SignOriginRow, SociolectRow
 from aerona.db.tables.entities import EntityRow
@@ -18,7 +18,7 @@ async def register_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         .order_by(SociolectRow.id)
     ):
         secret = ", kept secret from outsiders" if row.secret else ""
-        lines.append(f"{an(row.kind.value)} way of speaking {language}, prestige {row.prestige}{secret}")
+        lines.append(f"{an(spoken(row.kind))} way of speaking {language}, prestige {row.prestige}{secret}")
     for name in await session.scalars(
         select(EntityRow.name).join(SignOriginRow, SignOriginRow.language_entity_id == EntityRow.id).where(SignOriginRow.community_entity_id.in_(circle))
     ):

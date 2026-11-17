@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import MERCHANT_HOUSES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
+from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -60,8 +62,16 @@ async def countered(session: AsyncSession, rules: Rules, laws: LawBook, market_i
     return kept
 
 
+@memoized(MarketPlayRow)
+async def played_markets(session: AsyncSession, epoch: int) -> frozenset[int]:
+    statement = select(MarketPlayRow.settlement_entity_id).where(or_(MarketPlayRow.until_epoch.is_(None), MarketPlayRow.until_epoch >= epoch))
+    return frozenset(await session.scalars(statement.distinct()))
+
+
 async def plays_at(session: AsyncSession, rules: Rules, market_id: int, epoch: int) -> dict[CommodityKind, float]:
     found: dict[CommodityKind, float] = {}
+    if market_id not in await played_markets(session, epoch):
+        return found
     statement = select(MarketPlayRow).where(
         MarketPlayRow.settlement_entity_id == market_id, or_(MarketPlayRow.until_epoch.is_(None), MarketPlayRow.until_epoch >= epoch)
     )
@@ -121,7 +131,5 @@ async def play_markets(ctx: TickContext, tally: PlayTally) -> None:
         tally.played += 1
         town = await ctx.session.get(EntityRow, market)
         if town is not None:
-            await note(
-                ctx, f"{house.name} {PLAY_WORDS[play]} {commodity.value.replace('_', ' ')} at {town.name}.", key="trade.market_play", ids=[house.id, town.id]
-            )
+            await note(ctx, f"{house.name} {PLAY_WORDS[play]} {spoken(commodity)} at {town.name}.", key="trade.market_play", ids=[house.id, town.id])
     await ctx.session.flush()

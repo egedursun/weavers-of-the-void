@@ -95,6 +95,11 @@ def attack(node_id: int, delivery: AttackDelivery, effect: AttackEffect, reach: 
     return row
 
 
+def stored(ctx: TickContext, row: CreatureAttackRow) -> CreatureAttackRow:
+    ctx.session.add(row)
+    return row
+
+
 def anatomy(node_id: int, **values: object) -> CreatureAnatomyRow:
     row = CreatureAnatomyRow(node_id=node_id, generated_epoch=1, locked=[])
     for key, value in values.items():
@@ -308,12 +313,12 @@ async def test_each_gaze_strikes_a_raided_town_its_own_way(ctx: TickContext, cos
     assert await sight_scale(ctx, horror, hold, []) == 1.0
     sleep = attack(horror.id, AttackDelivery.GAZE, AttackEffect.SLEEP, AttackRange.SIGHT)
     assert await sight_scale(ctx, horror, hold, [sleep]) == 1 + rules.creature_anatomy.sleep_raid_pct / 100
-    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.GAZE, AttackEffect.FEAR, AttackRange.SIGHT))
+    await strike(ctx, horror, lair, hold, stored(ctx, attack(horror.id, AttackDelivery.GAZE, AttackEffect.FEAR, AttackRange.SIGHT)))
     for person in folk:
         profile = await ctx.session.get(MortalProfileRow, person.id)
         assert profile is not None and profile.stress > 0
-    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.GAZE, AttackEffect.STILLNESS, AttackRange.SIGHT))
-    await strike(ctx, horror, lair, hold, attack(horror.id, AttackDelivery.VOICE, AttackEffect.CONFUSION, AttackRange.FAR))
+    await strike(ctx, horror, lair, hold, stored(ctx, attack(horror.id, AttackDelivery.GAZE, AttackEffect.STILLNESS, AttackRange.SIGHT)))
+    await strike(ctx, horror, lair, hold, stored(ctx, attack(horror.id, AttackDelivery.VOICE, AttackEffect.CONFUSION, AttackRange.FAR)))
     kinds = set(await ctx.session.scalars(select(ConditionRow.kind).where(ConditionRow.bearer_node_id.in_([person.id for person in folk]))))
     assert ConditionKind.WITHERED_LIMB in kinds and kinds & set(MADNESS_CONDITIONS)
 

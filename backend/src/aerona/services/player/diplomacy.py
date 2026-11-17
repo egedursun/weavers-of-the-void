@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.player import FEDERATION_MIN_MEMBERS
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -123,7 +123,7 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
     if command.kind is DecreeKind.WAR:
         block = await can_open_war(scope.session, scope.rules, first.id, second.id, ctx.epoch)
         if block is not None and block is not WarBlock.ALREADY_ENEMIES:
-            raise ConflictError(f"No war can be commanded between {first.name} and {second.name}: {block.value.replace('_', ' ')}.")
+            raise ConflictError(f"No war can be commanded between {first.name} and {second.name}: {spoken(block)}.")
         await declare_war(ctx, first.id, second.id, DECREE_REASON, cause=WarCause.DECLARED)
         await change_relation(ctx, first.id, second.id, -hand_rules.decree_war_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
         kind = ActionKind.DECLARE_WAR

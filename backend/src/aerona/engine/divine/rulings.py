@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -174,7 +175,7 @@ async def enact_truce(ctx: TickContext, ruling: CouncilRulingRow, members: list[
 
 
 async def enact_outlaw(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
-    return [f"{ruling.school.value.replace('_', ' ')} rites were outlawed among the gods"] if ruling.school is not None else []
+    return [f"{spoken(ruling.school)} rites were outlawed among the gods"] if ruling.school is not None else []
 
 
 async def enact_appointment(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
@@ -182,7 +183,7 @@ async def enact_appointment(ctx: TickContext, ruling: CouncilRulingRow, members:
     if vacant is None or ruling.target_node_id is None:
         return []
     await appoint(ctx, vacant, ruling.target_node_id, OfficeChoice.COUNCIL)
-    return [f"the office of {vacant.value} was given to a son"]
+    return [f"the office of {spoken(vacant)} was given to a son"]
 
 
 Enactment = Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]

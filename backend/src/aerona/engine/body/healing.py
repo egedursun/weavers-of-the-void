@@ -9,7 +9,7 @@ from aerona.catalog.medicine import MEDICINE, infection_cut, tier_of
 from aerona.catalog.mind import HEALING_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -629,7 +629,7 @@ async def fit_prosthesis(
     maker_text = f" made by {maker.name}" if maker is not None else ""
     await note(
         ctx,
-        f"{bearer.name} was fitted with {an(material.value.replace('_', ' '))} {part.label.lower()}{maker_text}.",
+        f"{bearer.name} was fitted with {an(spoken(material))} {part.label.lower()}{maker_text}.",
         key="healing.prosthesis",
         ids=[bearer.id, *([item.id] if item else [])],
     )

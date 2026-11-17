@@ -1,5 +1,5 @@
 from aerona.catalog.place_terrain import PLACE_KINDS
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.place import SacredClass, SecretKind
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
@@ -92,9 +92,9 @@ def kind_behaviours() -> tuple[Mechanic, ...]:
         Mechanic(
             key=f"place_kind_{kind.value}",
             spec_item="S6.2",
-            title=f"{spec.label}: {spec.cover.value} cover, {spec.water.value} water, {spec.height.value} ground"
+            title=f"{spec.label}: {spoken(spec.cover)} cover, {spoken(spec.water)} water, {spoken(spec.height)} ground"
             + (", a chokepoint" if spec.chokepoint else "")
-            + f", {spec.sacred.value} sanctity"
+            + f", {spoken(spec.sacred)} sanctity"
             + (", deep enough for miners" if spec.deep else ""),
             subsystem=S.ENVIRONMENT,
             phases=("environment_survey", "place_profiles", "place_secrets"),

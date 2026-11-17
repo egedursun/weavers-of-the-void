@@ -7,7 +7,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteTollRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import OathRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.polity import OathRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, TributeRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
@@ -125,6 +125,14 @@ async def clauses_of(ctx: TickContext, treaty_id: int) -> list[TreatyClauseRow]:
     return list(await ctx.session.scalars(select(TreatyClauseRow).where(TreatyClauseRow.treaty_entity_id == treaty_id).order_by(TreatyClauseRow.id)))
 
 
+async def clauses_by_treaty(ctx: TickContext, treaty_ids: list[int]) -> dict[int, list[TreatyClauseRow]]:
+    found: dict[int, list[TreatyClauseRow]] = {treaty_id: [] for treaty_id in treaty_ids}
+    statement = select(TreatyClauseRow).where(TreatyClauseRow.treaty_entity_id.in_(treaty_ids)).order_by(TreatyClauseRow.treaty_entity_id, TreatyClauseRow.id)
+    for clause in await ctx.session.scalars(statement):
+        found[clause.treaty_entity_id].append(clause)
+    return found
+
+
 async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *, clause: TreatyClauseRow | None, reason: str) -> None:
     table = ctx.rules.treaties
     row = TreatyBreachRow(
@@ -190,8 +198,14 @@ async def hostilities(ctx: TickContext) -> int:
     )
     if not fresh:
         return 0
-    for profile in await in_force(ctx):
-        parties = {party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)}
+    treaties = await in_force(ctx)
+    sworn: dict[int, set[int]] = {profile.treaty_entity_id: set() for profile in treaties}
+    for treaty_id, party_id in await ctx.session.execute(
+        select(TreatyPartyRow.treaty_entity_id, TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id.in_(list(sworn)))
+    ):
+        sworn[treaty_id].add(party_id)
+    for profile in treaties:
+        parties = sworn[profile.treaty_entity_id]
         bond = next((item for item in fresh if {item.source_node_id, item.target_node_id} <= parties), None)
         if bond is None:
             continue
@@ -205,14 +219,23 @@ async def hostilities(ctx: TickContext) -> int:
 
 async def allies_called(ctx: TickContext, party_id: int, side: WarSide | None = None) -> list[int]:
     found: list[int] = []
-    for profile in await in_force(ctx):
-        if side is WarSide.ATTACKER and profile.kind in DEFENSIVE:
+    statement = (
+        select(TreatyProfileRow.kind, TreatyClauseRow.obligor_node_id)
+        .join(TreatyClauseRow, TreatyClauseRow.treaty_entity_id == TreatyProfileRow.treaty_entity_id)
+        .where(
+            TreatyProfileRow.status == TreatyStatus.IN_FORCE,
+            TreatyClauseRow.kind == ClauseKind.CALL_TO_ARMS,
+            TreatyClauseRow.beneficiary_node_id == party_id,
+            TreatyClauseRow.obligor_node_id.is_not(None),
+        )
+        .order_by(TreatyProfileRow.treaty_entity_id, TreatyClauseRow.id)
+    )
+    for kind, obligor_id in (await ctx.session.execute(statement)).all():
+        if side is WarSide.ATTACKER and kind in DEFENSIVE:
             continue
-        if side is WarSide.DEFENDER and profile.kind in OFFENSIVE:
+        if (side is WarSide.DEFENDER and kind in OFFENSIVE) or obligor_id is None:
             continue
-        for clause in await clauses_of(ctx, profile.treaty_entity_id):
-            if clause.kind is ClauseKind.CALL_TO_ARMS and clause.beneficiary_node_id == party_id and clause.obligor_node_id is not None:
-                found.append(clause.obligor_node_id)
+        found.append(obligor_id)
     return found
 
 
@@ -239,7 +262,9 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     table = ctx.rules.treaties
     counts = {"expired": 0, "renewed": 0, "broken": 0, "kept": 0, "guarded": 0}
     strength = await MilitaryStrength.load(ctx.session, ctx.rules)
-    for profile in await in_force(ctx):
+    treaties = await in_force(ctx)
+    terms = await clauses_by_treaty(ctx, [profile.treaty_entity_id for profile in treaties])
+    for profile in treaties:
         bond = await ctx.session.get(BondRow, profile.source_bond_id) if profile.source_bond_id is not None else None
         if bond is not None and bond.state is not BondState.ACTIVE and "status" not in profile.locked:
             await end_treaty(ctx, profile, TreatyStatus.EXPIRED, "the bond it made lapsed")
@@ -262,7 +287,7 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
             counts["guarded"] += await guard(ctx, profile)
         if profile.kind is TreatyKind.INTERWORLD:
             await bridge_worlds(ctx, profile)
-        for clause in await clauses_of(ctx, profile.treaty_entity_id):
+        for clause in terms[profile.treaty_entity_id]:
             if await keep_clause(ctx, profile, clause, strength):
                 counts["kept"] += 1
             elif profile.status is TreatyStatus.BROKEN:

@@ -281,7 +281,7 @@ async def potlatch(ctx: TickContext, tally: GiftTally) -> None:
         verb = "burned" if destroyed else "heaped"
         await note(
             ctx,
-            f"At the feast {host.name} {verb} wealth of {gift.value} before {await name_of(ctx, rival)} to claim the higher rank.",
+            f"At the feast {host.name} {verb} wealth of {gift.value:d} before {await name_of(ctx, rival)} to claim the higher rank.",
             key="potlatch.claimed",
             ids=[host.id, rival],
         )

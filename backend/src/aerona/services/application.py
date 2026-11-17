@@ -13,6 +13,7 @@ from aerona.agents.metrics import TelemetrySink
 from aerona.agents.ports import LanguageModel, bus_publisher
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.tool_ports import attach_toolkits
+from aerona.db.attr_history import history_of
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.telemetry.setup import TelemetryDatabase, setup_telemetry, telemetry_url
@@ -108,7 +109,8 @@ class ApplicationServices:
 def meaningful_update(instance: object) -> bool:
     if getattr(instance, "__tablename__", None) not in VOLATILE_TABLES:
         return True
-    changed = {attribute.key for attribute in instance_state(instance).attrs if attribute.history.has_changes()}
+    state = instance_state(instance)
+    changed = {prop.key for prop in state.mapper.column_attrs if history_of(state, prop.key).has_changes()}
     return bool(changed - VOLATILE_COSMOS_COLUMNS)
 
 

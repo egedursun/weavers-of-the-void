@@ -7,6 +7,7 @@ from sqlalchemy import delete, select
 from aerona.catalog.tenets import DOMAIN_TENETS, OPPOSED, VALUE_TENETS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import (
@@ -212,9 +213,9 @@ async def set_tenet(
         return None
     for other in await ctx.session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == cult_id)):
         if frozenset({tenet, other}) in OPPOSED:
-            raise ConflictError(f"{tenet.value.replace('_', ' ')} cannot stand beside {other.value.replace('_', ' ')}.")
+            raise ConflictError(f"{spoken(tenet)} cannot stand beside {spoken(other)}.")
     if son_id is not None and await revelation_fit(ctx, cult_id, tenet) < ctx.rules.doctrine.reveal_fit:
-        raise ConflictError(f"The faithful will not accept {tenet.value.replace('_', ' ')}; it is too far from what they believe.")
+        raise ConflictError(f"The faithful will not accept {spoken(tenet)}; it is too far from what they believe.")
     if row is None:
         row = CultTenetRow(cult_entity_id=cult_id, tenet=tenet, since_epoch=ctx.epoch, revealed_by_son_id=son_id)
         ctx.session.add(row)

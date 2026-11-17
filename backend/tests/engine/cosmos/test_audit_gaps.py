@@ -250,6 +250,7 @@ async def test_each_breath_strikes_in_its_own_way(ctx: TickContext, cosmos: Cosm
     ):
         attack = CreatureAttackRow(node_id=beast.id, delivery=delivery, effect=effect, range=AttackRange.NEAR, recharge=0, permanent=False)
         attack.locked = []
+        ctx.session.add(attack)
         await beast_acts.strike(ctx, beast, lair, town, attack)
     assert struck == [DamageType.FIRE, DamageType.COLD, Transmission.INHALATION, "taken by the spray of " + beast.name]
 

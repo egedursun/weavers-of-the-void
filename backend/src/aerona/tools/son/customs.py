@@ -75,7 +75,7 @@ async def proclaim_right(call: SonCall, args: ProclaimRightInput) -> str:
         fail(SonResult.RIGHT_REFUSED, why="a stronger hand holds it")
     await control.grant_right(call.tick, realm.id, args.category, args.right, granted=args.granted)
     call.target(realm.id)
-    told = f"{spoken(args.right)} for {args.category.value.replace('_', ' ')}s"
+    told = f"{spoken(args.right)} for {spoken(args.category)}s"
     await call.chronicle(
         ChronicleKind.CIVILIZATION, lines.PROCLAIM_RIGHT, entity_ids=[realm.id], son=call.son.name, realm=realm.name, right=told, reason=args.reason
     )

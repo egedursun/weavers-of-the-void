@@ -155,15 +155,22 @@ async def record_casualties(ctx: TickContext, event_id: int, community: EntityRo
     rows = await cohorts_of(ctx.session, community.id)
     combat = await combat_weights(ctx.session, community)
     split = cohort_split(rows, category, dead, combat) or even_split(dead, pyramid(ctx.rules), sexes(ctx.rules, await sex_spec(ctx.session, community)))
+    counted = {
+        (row.event_entity_id, row.community_entity_id, row.age_band, row.sex, row.social_class, row.phase): row
+        for row in await ctx.session.scalars(
+            select(EventCasualtyRow).where(
+                EventCasualtyRow.event_entity_id == event_id, EventCasualtyRow.community_entity_id == community.id, EventCasualtyRow.phase == phase
+            )
+        )
+    }
     for (age, sex, social_class, _), count in sorted(split.items(), key=lambda item: tuple(part.value for part in item[0])):
         key = (event_id, community.id, age, sex, social_class, phase)
-        row = await ctx.session.get(EventCasualtyRow, key)
+        row = counted.get(key)
         if row is None:
-            ctx.session.add(
-                EventCasualtyRow(
-                    event_entity_id=event_id, community_entity_id=community.id, age_band=age, sex=sex, social_class=social_class, phase=phase, count=count
-                )
+            counted[key] = EventCasualtyRow(
+                event_entity_id=event_id, community_entity_id=community.id, age_band=age, sex=sex, social_class=social_class, phase=phase, count=count
             )
+            ctx.session.add(counted[key])
         else:
             row.count += count
     await ctx.session.flush()

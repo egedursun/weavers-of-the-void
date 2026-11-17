@@ -1,4 +1,4 @@
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.creator import CreatorSignKind
 from aerona.engine.transition import pour_essence
@@ -54,7 +54,7 @@ async def sign(scope: PlayerScope, command: Sign) -> Effect:
     reached = await creator_mood.trigger_sign(scope.session, scope.rules, command.kind, command.target_id, scope.publish)
     if reached is None:
         return Effect("The Creator fell silent.")
-    return Effect(f"A sign of {command.kind.value.replace('_', ' ')} reached {reached.name}.", reached.id)
+    return Effect(f"A sign of {spoken(command.kind)} reached {reached.name}.", reached.id)
 
 
 @player_action("mortal:protect", ActionKind.EDIT_RECORD)
@@ -74,7 +74,7 @@ async def foreign_strike(scope: PlayerScope, command: ForeignStrike) -> Effect:
 async def drift(scope: PlayerScope, command: SonTarget) -> Effect:
     view = await reputation.apply_drift_now(scope.session, scope.rules, command.son_id)
     values: dict[str, int | float | str | bool | None] = {"love": view.love, "fear": view.fear, "forgotten": view.forgotten, "label": view.label.value}
-    return Effect(f"The son's view of the Creator settled: {view.label.value.replace('_', ' ')}.", command.son_id, values=values)
+    return Effect(f"The son's view of the Creator settled: {spoken(view.label)}.", command.son_id, values=values)
 
 
 @player_action("goals:evaluate", ActionKind.EVALUATE_GOALS)

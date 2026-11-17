@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkProfileRow
@@ -57,7 +58,7 @@ async def cut(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, 
         profile.down_until_epoch = ctx.epoch + epochs
     ctx.session.add(NetworkOutageRow(network_entity_id=network.id, cause=cause, epoch=ctx.epoch, epochs=epochs, severity=severity))
     await shake_ledger(ctx.session, ctx.rules, network.id)
-    await note(ctx, f"{network.name} went down: {cause.value.replace('_', ' ')}.", key="network.outage", ids=[network.id])
+    await note(ctx, f"{network.name} went down: {spoken(cause)}.", key="network.outage", ids=[network.id])
 
 
 async def outage_cause(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> OutageCause | None:

@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import Field
 
 from aerona.catalog.flora import BIOCHEMISTRY_LABELS
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.engine.ecology import flora_control
@@ -46,7 +47,7 @@ class WorldLife(Command):
 @player_action("plant:edit", ActionKind.EDIT_RECORD)
 async def edit_plant(scope: PlayerScope, command: EditPlant) -> Effect:
     row = await flora_control.edit_plant(await scope.context("plant_edit"), command.species_id, command.values, release=command.release)
-    return Effect(f"The plant is reshaped; it is {row.cultivation.value} now.", command.species_id)
+    return Effect(f"The plant is reshaped; it is {spoken(row.cultivation)} now.", command.species_id)
 
 
 @player_action("crop:set", ActionKind.EDIT_RECORD)

@@ -1012,7 +1012,12 @@ TRADITION_FUNCTION = total(
         ),
         TraditionFunction.TABOO: Defined(
             "Taboo",
-            checked_by=("engine.lore.traditions._taboos", "engine.lore.traditions.profile_of", "engine.mind.preferences.kept_taboo"),
+            checked_by=(
+                "engine.lore.traditions._taboos",
+                "engine.lore.traditions.profile_of",
+                "engine.lore.traditions.taboo_keepers",
+                "engine.mind.preferences.kept_taboo",
+            ),
             used_by=(
                 "catalog.lore.TRADITIONS",
                 "engine.lore.backfill.TRADITION_WORDS",

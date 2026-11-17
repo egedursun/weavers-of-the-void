@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, Stance, UnitKind, WarAimKind
 from aerona.engine.military import control
@@ -110,7 +110,7 @@ class EditNetwork(Command):
 @player_action("army:edit", ActionKind.EDIT_RECORD)
 async def edit_army(scope: PlayerScope, command: EditArmy) -> Effect:
     profile = await control.edit_army(await scope.context("army_edit"), command.army_id, command.values, release=command.release)
-    return Effect(f"The army now stands at {profile.stance.value} with {several(profile.supply_days, 'day', 'days')} of food.", command.army_id)
+    return Effect(f"The army now stands at {spoken(profile.stance)} with {several(profile.supply_days, 'day', 'days')} of food.", command.army_id)
 
 
 @player_action("army:command", ActionKind.EDIT_RECORD)
@@ -123,19 +123,19 @@ async def command_army(scope: PlayerScope, command: CommandArmy) -> Effect:
     if command.forced_march is not None:
         values["forced_march"] = command.forced_march
     profile = await control.edit_army(await scope.context("army_command"), command.army_id, values, release=[])
-    return Effect(f"The army obeys: {profile.stance.value}" + (", by forced marches." if profile.forced_march else "."), command.army_id)
+    return Effect(f"The army obeys: {spoken(profile.stance)}" + (", by forced marches." if profile.forced_march else "."), command.army_id)
 
 
 @player_action("army:edit_stack", ActionKind.EDIT_RECORD)
 async def edit_stack(scope: PlayerScope, command: EditStack) -> Effect:
     row = await control.edit_stack(await scope.context("army_stack"), command.unit_id, command.values, release=command.release)
-    return Effect(f"The {row.kind.value.replace('_', ' ')} now number {row.count}.", row.army_entity_id)
+    return Effect(f"The {spoken(row.kind)} now number {row.count}.", row.army_entity_id)
 
 
 @player_action("army:add_stack", ActionKind.EDIT_RECORD)
 async def add_stack(scope: PlayerScope, command: AddStack) -> Effect:
     row = await control.add_stack(await scope.context("army_stack"), command.army_id, command.kind, command.count)
-    return Effect(f"{row.count} {row.kind.value.replace('_', ' ')} join the army.", command.army_id)
+    return Effect(f"{row.count} {spoken(row.kind)} join the army.", command.army_id)
 
 
 @player_action("army:remove_stack", ActionKind.EDIT_RECORD)
@@ -147,14 +147,16 @@ async def remove_stack(scope: PlayerScope, command: StackTarget) -> Effect:
 @player_action("siege:edit", ActionKind.EDIT_RECORD)
 async def edit_siege(scope: PlayerScope, command: EditSiege) -> Effect:
     row = await control.edit_siege(await scope.context("siege_edit"), command.siege_id, command.values)
-    return Effect(f"The siege stands {row.status.value}: {several(row.supplies, 'day', 'days')} of food, {row.water} of water inside.", row.besieged_entity_id)
+    return Effect(
+        f"The siege stands {spoken(row.status)}: {several(row.supplies, 'day', 'days')} of food, {row.water} of water inside.", row.besieged_entity_id
+    )
 
 
 @player_action("war:aim", ActionKind.EDIT_RECORD)
 async def set_aim(scope: PlayerScope, command: SetAim) -> Effect:
     ctx = await scope.context("war_aim")
     row = await control.set_aim(ctx, command.war_id, command.side_id, command.kind, target_id=command.target_id, achieved=command.achieved)
-    return Effect(f"War aim {row.kind.value.replace('_', ' ')} at {row.achieved}.", command.side_id)
+    return Effect(f"War aim {spoken(row.kind)} at {row.achieved}.", command.side_id)
 
 
 @player_action("war:drop_aim", ActionKind.EDIT_RECORD)
@@ -206,7 +208,7 @@ async def edit_occupation(scope: PlayerScope, command: EditOccupation) -> Effect
 @player_action("captives:settle", ActionKind.OTHER)
 async def settle_captives(scope: PlayerScope, command: SettleCaptives) -> Effect:
     row = await control.settle_cohort(await scope.context("captives"), command.cohort_id, command.fate, command.count)
-    return Effect(f"{several(row.count, 'captive', 'captives')}: {row.fate.value}.", row.captor_entity_id)
+    return Effect(f"{several(row.count, 'captive', 'captives')}: {spoken(row.fate)}.", row.captor_entity_id)
 
 
 @player_action("commander:trait", ActionKind.EDIT_RECORD)

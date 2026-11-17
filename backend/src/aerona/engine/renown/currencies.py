@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.renown import GLORIOUS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.justice import CrimeCaseRow
@@ -47,6 +48,7 @@ async def ruler_of_realm(session: AsyncSession, polity_id: int) -> int | None:
     return int(found) if found is not None else None
 
 
+@memoized(PolityMemberRow)
 async def realm_of_community(session: AsyncSession, community_id: int) -> int | None:
     found = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == community_id).limit(1))
     return int(found) if found is not None else None

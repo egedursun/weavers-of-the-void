@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse
@@ -134,7 +134,7 @@ async def set_trait(scope: PlayerScope, command: TraitDraft) -> Effect:
     await control.set_trait(
         await scope.context("species_trait_set"), command.species_id, command.region_id, command.trait, mean=command.mean, variance=command.variance
     )
-    return Effect(f"The {command.trait.value.replace('_', ' ')} of that stock is set so.", command.species_id)
+    return Effect(f"The {spoken(command.trait)} of that stock is set so.", command.species_id)
 
 
 @player_action("species_trait:edit", ActionKind.EDIT_RECORD)
@@ -180,7 +180,7 @@ async def edit_ecology(scope: PlayerScope, command: SpeciesEdit) -> Effect:
 @player_action("ecosystem_service:set", ActionKind.EDIT_RECORD)
 async def set_service(scope: PlayerScope, command: ServiceDraft) -> Effect:
     await control.set_service(await scope.context("ecosystem_service_set"), command.region_id, command.role, command.strength, command.species_id)
-    return Effect(f"The land's {command.role.value.replace('_', ' ')} service is set so.", command.region_id)
+    return Effect(f"The land's {spoken(command.role)} service is set so.", command.region_id)
 
 
 @player_action("ecosystem_service:edit", ActionKind.EDIT_RECORD)
@@ -222,7 +222,7 @@ async def delete_carrier(scope: PlayerScope, command: CarrierTarget) -> Effect:
 @player_action("plague_response:set", ActionKind.EDIT_RECORD)
 async def set_response(scope: PlayerScope, command: ResponseDraft) -> Effect:
     await control.set_response(await scope.context("plague_response_set"), command.community_id, command.disease_id, command.response, command.strength)
-    return Effect(f"The community answers the sickness: {command.response.value.replace('_', ' ')}.", command.community_id)
+    return Effect(f"The community answers the sickness: {spoken(command.response)}.", command.community_id)
 
 
 @player_action("plague_response:edit", ActionKind.EDIT_RECORD)
@@ -272,4 +272,4 @@ async def reset_cycle(scope: PlayerScope, command: CycleTarget) -> Effect:
 @player_action("land:reshape", ActionKind.EDIT_RECORD)
 async def reshape_land(scope: PlayerScope, command: LandDraft) -> Effect:
     region = await control.shape_land(await scope.context("land_reshape"), command.region_id, command.act, command.target_region_id, fiery=command.fiery)
-    return Effect(f"{region.name} is reshaped: {command.act.value.replace('_', ' ')}.", region.id)
+    return Effect(f"{region.name} is reshaped: {spoken(command.act)}.", region.id)

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
@@ -91,6 +92,7 @@ async def defaults(ctx: TickContext) -> list[Grievance]:
 
 async def liberations(ctx: TickContext, book: RealmBook) -> list[Grievance]:
     found: list[Grievance] = []
+    folks: dict[int, int | None] = {}
     for realm in book.realms.values():
         core = realm.profile.core_entity_id
         if core is None:
@@ -100,9 +102,11 @@ async def liberations(ctx: TickContext, book: RealmBook) -> list[Grievance]:
                 continue
             kin = 0
             for member in other.members:
-                entity = await ctx.session.get(EntityRow, member)
-                folk = await people_of(ctx.session, entity) if entity is not None else None
-                kin += int(folk is not None and folk.id == core)
+                if member not in folks:
+                    entity = await ctx.session.get(EntityRow, member)
+                    folk = await people_of(ctx.session, entity) if entity is not None else None
+                    folks[member] = folk.id if folk is not None else None
+                kin += int(folks[member] == core)
             if kin >= max(1, ctx.rules.war_conduct.liberation_share):
                 found.append((realm.entity.id, other.entity.id, CasusBelliKind.LIBERATION, core))
     return found
@@ -122,6 +126,7 @@ async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grieva
     communities = list(
         await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type.in_(list(COMMUNITY_TYPES)), EntityRow.status == EntityStatus.CANON))
     )
+    patrons: dict[int, int | None] = {}
     for community in communities:
         zealous = TenetKind.HOLY_WAR in await faith_tenets(ctx.session, community.id)
         society = await ctx.session.get(CommunitySocietyRow, community.id)
@@ -130,7 +135,9 @@ async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grieva
             continue
         patron = await patron_node(ctx.session, community.id) if zealous else None
         for other in await neighbours_of(ctx, book, community):
-            if zealous and patron is not None and await patron_node(ctx.session, other) not in {patron, None}:
+            if zealous and patron is not None and other not in patrons:
+                patrons[other] = await patron_node(ctx.session, other)
+            if zealous and patron is not None and patrons[other] not in {patron, None}:
                 found.append((community.id, other, CasusBelliKind.HOLY_WAR, patron))
             neighbour = await ctx.session.get(CommunitySocietyRow, other) if hungry else None
             if neighbour is not None and neighbour.stock_food >= table.hunger_food * 3:
@@ -176,16 +183,28 @@ async def open_casus_belli(ctx: TickContext, holder_id: int, target_id: int) -> 
     return list(rows)
 
 
+async def open_kinds(ctx: TickContext) -> dict[tuple[int, int], set[CasusBelliKind]]:
+    found: dict[tuple[int, int], set[CasusBelliKind]] = defaultdict(set)
+    rows = await ctx.session.execute(
+        select(CasusBelliRow.holder_entity_id, CasusBelliRow.target_entity_id, CasusBelliRow.kind).where(CasusBelliRow.used_war_id.is_(None))
+    )
+    for holder, target, kind in rows:
+        found[(holder, target)].add(kind)
+    return found
+
+
 async def record(ctx: TickContext, found: Iterable[Grievance], tally: CasusBelliTally) -> None:
     seen: set[tuple[int, int, CasusBelliKind]] = set()
+    opened = await open_kinds(ctx)
     for holder, target, kind, source in found:
         if holder == target or (holder, target, kind) in seen or held(holder):
             continue
         seen.add((holder, target, kind))
         if not await warring(ctx, holder) or not await warring(ctx, target):
             continue
-        if any(row.kind is kind for row in await open_casus_belli(ctx, holder, target)):
+        if kind in opened[(holder, target)]:
             continue
+        opened[(holder, target)].add(kind)
         ctx.session.add(
             CasusBelliRow(
                 holder_entity_id=holder,

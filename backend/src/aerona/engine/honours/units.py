@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow
@@ -125,7 +126,7 @@ async def bear_on_standard(ctx: TickContext, named: NamedUnitRow, kind: UnitHono
     profile = await ctx.session.get(ItemProfileRow, item_id)
     if profile is not None and "renown" not in profile.locked:
         profile.renown = clamp_int(profile.renown + ctx.rules.unit_honours.standard_renown, 0, PERCENT)
-    record(ctx, item_id, ItemDeed.BATTLE, named.owner_entity_id, f"{named.name}: {kind.value} at {place}")
+    record(ctx, item_id, ItemDeed.BATTLE, named.owner_entity_id, f"{named.name}: {spoken(kind)} at {place}")
     tally.borne += 1
 
 

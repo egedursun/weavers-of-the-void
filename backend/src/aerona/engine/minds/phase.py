@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.kinds.minds import MIND_PURPOSES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -181,7 +182,7 @@ async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: in
     if not will_allowed(law, grown):
         return
     change_will(ctx, row, grown, cause)
-    await note(ctx, f"The will of {await name_of(ctx, row.node_id)} grew to {grown.value.replace('_', ' ')}.", key="mind.will_grew", ids=[row.node_id])
+    await note(ctx, f"The will of {await name_of(ctx, row.node_id)} grew to {spoken(grown)}.", key="mind.will_grew", ids=[row.node_id])
 
 
 async def lose_will(ctx: TickContext, row: MindProfileRow) -> None:

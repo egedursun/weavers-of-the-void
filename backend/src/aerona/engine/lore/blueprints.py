@@ -48,6 +48,10 @@ async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
 
 async def designs_for(session: AsyncSession, holder_id: int, kind: BlueprintKind, subject: str) -> list[BlueprintRow]:
     rows = list(await session.scalars(select(BlueprintRow).where(BlueprintRow.kind == kind, BlueprintRow.subject == subject)))
+    return await held_designs(session, holder_id, rows)
+
+
+async def held_designs(session: AsyncSession, holder_id: int, rows: list[BlueprintRow]) -> list[BlueprintRow]:
     shelves = await books_of(session, holder_id) if any(row.book_entity_id is not None for row in rows) else set()
     return [row for row in rows if row.holder_node_id == holder_id or holder_id in (row.licensed_to or []) or row.book_entity_id in shelves]
 
@@ -170,6 +174,7 @@ def pay(payer: EntityRow, payee: EntityRow, amount: int) -> bool:
 async def trade_designs(ctx: TickContext) -> dict[str, int]:
     table = ctx.rules.discovery
     sold = licensed = 0
+    pools: dict[tuple[BlueprintKind, str], list[BlueprintRow]] = {}
     for row in list(await ctx.session.scalars(select(BlueprintRow).where(BlueprintRow.source != BlueprintSource.LICENSED).order_by(BlueprintRow.id))):
         holder = await community(ctx.session, row.holder_node_id)
         if holder is None or "licensed_to" in row.locked:
@@ -177,7 +182,14 @@ async def trade_designs(ctx: TickContext) -> dict[str, int]:
         guild = await has_technique(ctx.session, holder.id, Technique.GUILDS)
         for partner_id in sorted(await trade_partners(ctx.session, holder.id)):
             partner = await community(ctx.session, partner_id)
-            if partner is None or partner.id == holder.id or await designs_for(ctx.session, partner.id, row.kind, row.subject):
+            if partner is None or partner.id == holder.id:
+                continue
+            pool = pools.get((row.kind, row.subject))
+            if pool is None:
+                pool = pools[(row.kind, row.subject)] = list(
+                    await ctx.session.scalars(select(BlueprintRow).where(BlueprintRow.kind == row.kind, BlueprintRow.subject == row.subject))
+                )
+            if await held_designs(ctx.session, partner.id, pool):
                 continue
             if not ctx.rng(f"design.trade.{row.id}.{partner.id}.{ctx.epoch}").chance(table.blueprint_trade_pct):
                 continue
@@ -185,7 +197,7 @@ async def trade_designs(ctx: TickContext) -> dict[str, int]:
                 row.licensed_to = [*(row.licensed_to or []), partner.id]
                 licensed += 1
             elif pay(partner, holder, table.blueprint_price):
-                await copy_design(ctx, row, partner.id, BlueprintSource.TRADED)
+                pool.append(await copy_design(ctx, row, partner.id, BlueprintSource.TRADED))
                 sold += 1
     await ctx.session.flush()
     return {"designs_sold": sold, "designs_licensed": licensed}

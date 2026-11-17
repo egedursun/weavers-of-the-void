@@ -6,6 +6,7 @@ from aerona.catalog.lore import ART_MESSAGES
 from aerona.catalog.peoples import Style
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken as spoken_word
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -354,7 +355,7 @@ async def commission_work(
     work = await create_record(
         ctx,
         RecordSpec(
-            name=name.strip() or f"The {medium.value.replace('_', ' ').title()} of {patron.name}",
+            name=name.strip() or f"The {spoken_word(medium).title()} of {patron.name}",
             entity_type=EntityType.ARTWORK,
             stats=ArtworkStats(renown=PERCENT // HALF, influence=PERCENT // HALF),
             body=f"Made at the bidding of {patron.name}{f' to honour {subject.name}' if subject is not None else ''}.",

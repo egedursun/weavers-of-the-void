@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_MODES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -277,7 +277,7 @@ async def spoil(ctx: TickContext, route: EntityRow, commodity: CommodityKind, *,
         return
     await ctx.chronicle(
         ChronicleKind.DISASTER,
-        f"Foul weather on {route.name} ruined {several(units, 'load', 'loads')} of {COMMODITIES[commodity].label.lower()} carried by {mode.value}.",
+        f"Foul weather on {route.name} ruined {several(units, 'load', 'loads')} of {COMMODITIES[commodity].label.lower()} carried by {spoken(mode)}.",
         template_key="trade_route.weather_loss",
         entity_ids=[route.id],
     )

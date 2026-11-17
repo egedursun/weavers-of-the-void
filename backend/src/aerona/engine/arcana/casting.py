@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from aerona.catalog.arcana import DRY_SPREAD, LEAK_EMPOWERED, RAIN_HELPED, RAIN_HINDERED, WET_CONDUCTED
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
@@ -121,7 +122,7 @@ async def shape_casting(
     await environment(ctx, caster, target, shaping)
     if await burn_for(ctx, caster, grammar.form, row.power * ctx.rules.vis.per_power):
         shaping.strength *= 1 + ctx.rules.vis.power_pct / PERCENT
-        shaping.notes.append(f"it burned {grammar.form.value} vis")
+        shaping.notes.append(f"it burned {spoken(grammar.form)} vis")
     if target is not None and target.id != caster.id and set(effects) & HOSTILE_EFFECTS:
         resist = await resistance_of(ctx, target, caster_god=caster_god, form_disrupted=disrupted(grammar), warded=warded)
         if penetration_of(ctx, row, mastery) < resist:

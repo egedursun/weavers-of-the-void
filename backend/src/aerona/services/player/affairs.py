@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, an, several
+from aerona.core.grammar import agree, an, several, spoken
 from aerona.db.tables.affairs import (
     RATE_MAX,
     CouncilSeatRow,
@@ -164,7 +164,7 @@ async def set_task(scope: PlayerScope, command: SetTask) -> Effect:
     office.locked = held(office.locked, touched, command.hold)
     await scope.session.flush()
     task = office.task.value.replace("_", " ") if office.task is not None else "no task"
-    return Effect(f"The {office.kind.value.replace('_', ' ')} works at {task}, diligence {office.diligence}.", target_node_id=office.polity_entity_id)
+    return Effect(f"The {spoken(office.kind)} works at {task}, diligence {office.diligence}.", target_node_id=office.polity_entity_id)
 
 
 @player_action("election:call", ActionKind.EDIT_RECORD)
@@ -248,7 +248,7 @@ async def set_tax(scope: PlayerScope, command: SetTax) -> Effect:
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
     farmed = ", farmed out" if row.farmed else ""
-    return Effect(f"The {command.kind.value} tax of {found.name} stands at {row.rate}{farmed}.", target_node_id=found.id)
+    return Effect(f"The {spoken(command.kind)} tax of {found.name} stands at {row.rate}{farmed}.", target_node_id=found.id)
 
 
 @player_action("tax:remove", ActionKind.EDIT_RECORD)
@@ -278,7 +278,7 @@ async def issue_mandate(scope: PlayerScope, command: IssueMandate) -> Effect:
     if row is None:
         raise ValidationFailedError("Such a mandate already stands, or a god holds the realm.")
     await scope.session.flush()
-    return Effect(f"{found.name} issued {an(command.kind.value.replace('_', ' '))} mandate.", target_node_id=found.id, values={"mandate_id": row.id})
+    return Effect(f"{found.name} issued {an(spoken(command.kind))} mandate.", target_node_id=found.id, values={"mandate_id": row.id})
 
 
 @player_action("mandate:edit", ActionKind.EDIT_RECORD)
@@ -296,7 +296,7 @@ async def edit_mandate(scope: PlayerScope, command: EditMandate) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The mandate stands {row.state.value} until epoch {row.until_epoch}.", target_node_id=row.polity_entity_id)
+    return Effect(f"The mandate stands {spoken(row.state)} until epoch {row.until_epoch}.", target_node_id=row.polity_entity_id)
 
 
 @player_action("mandate:delete", ActionKind.EDIT_RECORD)
@@ -322,7 +322,7 @@ async def set_demand(scope: PlayerScope, command: SetDemand) -> Effect:
     row.met, row.locked = command.met, command.hold
     await scope.session.flush()
     state = "met" if command.met else "unmet"
-    return Effect(f"{noble.name}'s demand for {command.want.value.replace('_', ' ')} stands {state}.", target_node_id=noble.id)
+    return Effect(f"{noble.name}'s demand for {spoken(command.want)} stands {state}.", target_node_id=noble.id)
 
 
 @player_action("demand:remove", ActionKind.EDIT_RECORD)
@@ -345,7 +345,7 @@ async def set_approval(scope: PlayerScope, command: SetApproval) -> Effect:
     row.approval = command.approval
     row.locked = held(row.locked, ["approval"], command.hold)
     await scope.session.flush()
-    return Effect(f"The {command.social_class.value.replace('_', ' ')} class approves of the realm's ways at {command.approval}.", target_node_id=found.id)
+    return Effect(f"The {spoken(command.social_class)} class approves of the realm's ways at {command.approval}.", target_node_id=found.id)
 
 
 @player_action("approval:remove", ActionKind.EDIT_RECORD)
@@ -450,7 +450,7 @@ async def edit_resolution(scope: PlayerScope, command: EditResolution) -> Effect
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The resolution stands {row.state.value}, {row.votes_for} for and {row.votes_against} against.", target_node_id=row.assembly_entity_id)
+    return Effect(f"The resolution stands {spoken(row.state)}, {row.votes_for} for and {row.votes_against} against.", target_node_id=row.assembly_entity_id)
 
 
 @player_action("resolution:hold", ActionKind.EDIT_RECORD)
@@ -527,7 +527,7 @@ async def set_position(scope: PlayerScope, command: SetPosition) -> Effect:
     row.holder_entity_id, row.locked = command.holder_id, command.hold
     await scope.session.flush()
     who = holder.name if holder is not None else "no one"
-    return Effect(f"The {command.position.value.replace('_', ' ')} of {found.name} is {who}.", target_node_id=found.id)
+    return Effect(f"The {spoken(command.position)} of {found.name} is {who}.", target_node_id=found.id)
 
 
 @player_action("position:remove", ActionKind.EDIT_RECORD)

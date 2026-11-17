@@ -1,6 +1,6 @@
 from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH, style_label
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -44,7 +44,7 @@ async def update_settings(scope: PlayerScope, command: WorldSettings) -> Effect:
         fields.append(f"Fate {command.fate_mode.value}")
     if command.son_distribution is not None:
         cosmos.son_distribution = command.son_distribution
-        fields.append(f"sons distributed {command.son_distribution.value}")
+        fields.append(f"sons distributed {spoken(command.son_distribution)}")
     if command.automatic_mortal_agents:
         cosmos.mortal_agents_per_epoch = None
         fields.append("mortal agents chosen automatically")

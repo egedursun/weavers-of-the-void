@@ -4,7 +4,7 @@ from pydantic import Field
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -186,7 +186,7 @@ async def set_sex(scope: PlayerScope, command: SetSex) -> Effect:
     if not isinstance(mortal.stats, MortalStats):
         raise ValidationFailedError("Only mortals have a sex.")
     mortal.stats = mortal.stats.model_copy(update={"sex": command.sex.value})
-    return Effect(f"{mortal.name} is now {command.sex.value}.", target_node_id=mortal.id)
+    return Effect(f"{mortal.name} is now {spoken(command.sex)}.", target_node_id=mortal.id)
 
 
 async def pair(scope: PlayerScope, command: PairCommand) -> tuple[EntityRow, EntityRow]:

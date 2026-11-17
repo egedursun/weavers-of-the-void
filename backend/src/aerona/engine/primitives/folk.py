@@ -3,6 +3,8 @@ from collections.abc import Iterable
 from sqlalchemy import ColumnElement, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.read_memo import memoized
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.bond import BondKind, BondRole
@@ -27,14 +29,17 @@ async def homes_of(session: AsyncSession, community: EntityRow) -> set[int]:
     return places
 
 
-async def homes_for(session: AsyncSession, ids: Iterable[int | None]) -> set[int]:
+@memoized(EntityRow, BondRow, PolityMemberRow)
+async def homes_of_ids(session: AsyncSession, ids: tuple[int, ...]) -> frozenset[int]:
     places: set[int] = set()
     for place_id in ids:
-        if place_id is None:
-            continue
         found = await session.get(EntityRow, place_id)
         places |= await homes_of(session, found) if found is not None else {place_id}
-    return places
+    return frozenset(places)
+
+
+async def homes_for(session: AsyncSession, ids: Iterable[int | None]) -> set[int]:
+    return set(await homes_of_ids(session, tuple(place_id for place_id in ids if place_id is not None)))
 
 
 async def present_among(session: AsyncSession, ids: Iterable[int | None]) -> ColumnElement[bool]:

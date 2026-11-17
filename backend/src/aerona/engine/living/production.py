@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.methods import METHODS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import PerennialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
@@ -56,7 +57,7 @@ async def keep_living_works(ctx: TickContext) -> int:
         town = await ctx.session.get(EntityRow, row.community_node_id)
         await note(
             ctx,
-            f"The living works of {town.name if town else 'a town'} sickened; {old.value.replace('_', ' ')} gave way to the older way.",
+            f"The living works of {town.name if town else 'a town'} sickened; {spoken(old)} gave way to the older way.",
             key="living.works_lapsed",
             ids=[row.community_node_id],
         )

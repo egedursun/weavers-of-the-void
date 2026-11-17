@@ -7,6 +7,7 @@ from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
 from aerona.catalog.zones import CIVIC_QUARTERED, CIVIC_SERVICE_OF
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
@@ -393,8 +394,9 @@ async def add_district(
         design_id=design_id,
         locked=[],
     )
-    seat(ctx, district, [*town.districts, district], town.profile.morphology, town.infrastructure.walls_level)
     ctx.session.add(district)
+    await ctx.session.flush()
+    seat(ctx, district, [*town.districts, district], town.profile.morphology, town.infrastructure.walls_level)
     town.districts.append(district)
     if design_id is not None and design_id not in town.designs:
         town.designs.update(await designs_for(ctx.session, [district]))
@@ -454,7 +456,7 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
             district_kind = DistrictKind(detail)
             if used >= slots_of(ctx.rules, town) and not any(item.kind is district_kind and item.level < 5 for item in town.districts):
                 continue
-            if spend(ctx, town, table.district_cost, table.district_labour, f"{district_kind.value} district"):
+            if spend(ctx, town, table.district_cost, table.district_labour, f"{spoken(district_kind)} district"):
                 await add_district(ctx, town, district_kind, material=material, builder_id=town.entity.id)
                 built += 1
             continue
@@ -797,7 +799,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         driven = " Driven by the wind, it spread fast." if year.wind >= PERCENT // HALF else ""
         await note(
             ctx,
-            f"A great fire swept through the {district.kind.value.replace('_', ' ')} of {town.entity.name}; {dead} died in the flames.{driven}",
+            f"A great fire swept through the {spoken(district.kind)} of {town.entity.name}; {dead} died in the flames.{driven}",
             key="settlement.fire_wind" if driven else "settlement.fire",
             ids=[town.entity.id],
             feed=FeedCategory.DISASTER,

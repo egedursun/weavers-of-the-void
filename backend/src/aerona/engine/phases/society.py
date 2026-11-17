@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -76,7 +77,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     rebels = await create_record(
         ctx,
         RecordSpec(
-            name=f"{settlement.name} Rebels" if kind is RevoltKind.PEASANT else f"the {kind.value} revolt of {settlement.name}",
+            name=f"{settlement.name} Rebels" if kind is RevoltKind.PEASANT else f"the {spoken(kind)} revolt of {settlement.name}",
             entity_type=EntityType.FACTION,
             stats=FactionStats(
                 strength=clamp_int(settings.rebel_strength_base + rng.die(settings.rebel_strength_die) + risen // 100, 0, PERCENT),

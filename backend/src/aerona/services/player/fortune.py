@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import MishapRow
@@ -114,7 +115,7 @@ async def law_set(scope: PlayerScope, command: LawSet) -> Effect:
         ctx.session.add(row)
     row.law = command.law
     await ctx.session.flush()
-    return Effect(f"Fortune in this world now runs by {command.law.value.replace('_', ' ')}.", command.world_id)
+    return Effect(f"Fortune in this world now runs by {spoken(command.law)}.", command.world_id)
 
 
 @player_action("mishap:trigger", ActionKind.EDIT_RECORD)

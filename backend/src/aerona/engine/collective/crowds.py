@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.collective import ACT_COLLECTION, ACT_TEXT, ANGER, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.collective import CascadeRow, CrowdMoodRow, MobRow, MovementRow
@@ -403,7 +404,7 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     tally.cascades += 1
     if outcome is CascadeOutcome.FIZZLED and not forced:
         return row
-    where = f"the {district.kind.value.replace('_', ' ')} of {town.name}" if district is not None else town.name
+    where = f"the {spoken(district.kind)} of {town.name}" if district is not None else town.name
     if outcome is CascadeOutcome.PANIC:
         await flee(ctx, town, row, tally, district_people=district_people)
         tally.panics += 1

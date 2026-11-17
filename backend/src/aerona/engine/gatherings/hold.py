@@ -7,7 +7,7 @@ from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
 from aerona.catalog.kinds.gathering_outcomes import GATHERING_RESULTS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an, several, spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
@@ -164,9 +164,9 @@ async def candidates(ctx: TickContext, row: GatheringRow) -> list[Guest]:
 
 async def invite(ctx: TickContext, row: GatheringRow, chosen: list[Guest]) -> int:
     limit = ctx.rules.gatherings.guests_max
-    present = set(await ctx.session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == row.id)))
-    present.add(row.host_node_id)
-    if row.host_node_id not in set(await ctx.session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == row.id))):
+    invited = set(await ctx.session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == row.id)))
+    present = {*invited, row.host_node_id}
+    if row.host_node_id not in invited:
         ctx.session.add(GatheringGuestRow(gathering_id=row.id, node_id=row.host_node_id, role=GuestRole.HOST, reason=AttendanceReason.HOST, attended=None))
     added = 0
     for guest in [*chosen, *await candidates(ctx, row)]:
@@ -235,6 +235,11 @@ async def mingle(ctx: TickContext, holding: Holding, tally: GatheringTally) -> N
     if len(mortals) < 2:
         return
     draw = rng(ctx, row, "mingle")
+    kept: dict[int, SecretRow] = {}
+    for unexposed in await ctx.session.scalars(
+        select(SecretRow).where(SecretRow.holder_node_id.in_(mortals), SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id)
+    ):
+        kept.setdefault(unexposed.holder_node_id, unexposed)
     for index in range(table.mingle_pairs):
         first = draw.pick(mortals)
         second = draw.pick([node for node in mortals if node != first])
@@ -260,9 +265,7 @@ async def mingle(ctx: TickContext, holding: Holding, tally: GatheringTally) -> N
                     await note(
                         ctx, f"{one.name} and {other.name} met at a gathering and were promised to each other.", key="kin.betrothal", ids=[one.id, other.id]
                     )
-        secret = await ctx.session.scalar(
-            select(SecretRow).where(SecretRow.holder_node_id == second, SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id).limit(1)
-        )
+        secret = kept.get(second)
         if secret is not None and rng(ctx, row, f"secret.{index}").chance(table.secret_pct) and await learn(ctx, secret, first):
             tally.secrets += 1
     await plots(ctx, holding)
@@ -323,7 +326,7 @@ async def massacre(ctx: TickContext, holding: Holding, tally: GatheringTally) ->
     if not hated:
         return
     for guest in hated:
-        await apply_hits(ctx, guest, Harm(table.massacre_hp, HarmCause.BATTLE, f"was cut down at {host.name}'s {holding.row.kind.value}", killer_id=host.id))
+        await apply_hits(ctx, guest, Harm(table.massacre_hp, HarmCause.BATTLE, f"was cut down at {host.name}'s {spoken(holding.row.kind)}", killer_id=host.id))
         holding.harmed.append(guest.id)
     await add_infamy(ctx.session, host.id, table.massacre_hp, ctx.epoch, rules=ctx.rules)
     await conscience(ctx, host.id, ActKind.GUEST_KILLING, hated[0].id)
@@ -331,7 +334,7 @@ async def massacre(ctx: TickContext, holding: Holding, tally: GatheringTally) ->
     tally.massacres += 1
     await note(
         ctx,
-        f"{host.name} turned on the guests at the {holding.row.kind.value}: {', '.join(guest.name for guest in hated)} fell there.",
+        f"{host.name} turned on the guests at the {spoken(holding.row.kind)}: {', '.join(guest.name for guest in hated)} fell there.",
         key="gathering.massacre",
         ids=[host.id, *[guest.id for guest in hated]],
         roles={host.id: IncidentRole.ACTOR, **{guest.id: IncidentRole.TARGET for guest in hated}},
@@ -634,7 +637,7 @@ async def remember(ctx: TickContext, holding: Holding) -> None:
                 kind=MemoryKind.FORMATIVE,
                 magnitude=ctx.rules.gatherings.milestone_memory,
                 epoch=ctx.epoch,
-                note=f"the {holding.row.milestone.value.replace('_', ' ')} kept in epoch {ctx.epoch}",
+                note=f"the {spoken(holding.row.milestone)} kept in epoch {ctx.epoch}",
             )
 
 
@@ -655,7 +658,7 @@ async def chronicle(ctx: TickContext, holding: Holding, extra: str) -> None:
     at = f" at {where.name}" if where is not None and where.id != row.host_node_id else ""
     await note(
         ctx,
-        f"{host} held {an(row.kind.value.replace('_', ' '))}{at}; {max(0, len(holding.attendees) - 1)} came{extra}.",
+        f"{host} held {an(spoken(row.kind))}{at}; {max(0, len(holding.attendees) - 1)} came{extra}.",
         key=f"gathering.{row.kind.value}",
         ids=[row.host_node_id, *[node for node in holding.attendees if node != row.host_node_id][:6]],
         roles={row.host_node_id: IncidentRole.ACTOR},

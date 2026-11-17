@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.kind_concepts.nature import DUTY_DOMAINS, DUTY_FORMS
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import DomainActivityRow
@@ -175,6 +176,6 @@ async def conquer_offices(ctx: TickContext, winner_id: int, loser_id: int, strea
     row = held_by_loser[0]
     row.holder_node_id, row.chosen_by, row.since_epoch = winner_id, OfficeChoice.CONQUEST, ctx.epoch
     await note(
-        ctx, f"The office of {row.office.value} passed by conquest.", key="mythic.office_conquered", ids=[winner_id, loser_id], kind=ChronicleKind.CHALLENGE
+        ctx, f"The office of {spoken(row.office)} passed by conquest.", key="mythic.office_conquered", ids=[winner_id, loser_id], kind=ChronicleKind.CHALLENGE
     )
     return row.office

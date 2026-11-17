@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -50,7 +51,7 @@ async def demote_son(session: AsyncSession, rules: Rules, son_id: int) -> Rarity
     creator = await require_creator(session)
     son = await _son(session, son_id)
     if son.rarity.rank <= 0:
-        raise ValidationFailedError(f"{son.name} is already in the lowest class ({son.rarity.value}).")
+        raise ValidationFailedError(f"{son.name} is already in the lowest class ({spoken(son.rarity)}).")
     spend(creator, rules.god_power.demote_cost, "god_power.demote_cost")
     result = await power.demote_son(ctx, creator, son)
     await record_action(ctx, ActionKind.DEMOTE, son_id, rules.god_power.demote_cost)

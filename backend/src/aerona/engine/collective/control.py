@@ -3,7 +3,7 @@ from typing import Any
 
 from aerona.catalog.storylets import STORYLETS
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.base import Base
 from aerona.db.tables.collective import (
     ACCOUNT_FIELDS,
@@ -414,7 +414,7 @@ async def set_arms(ctx: TickContext, holder_id: int, holder_kind: HeraldryHolder
     holder = await entity(ctx, holder_id, "holder")
     wanted = ARMS_TYPES.get(holder_kind)
     if wanted is not None and holder.entity_type is not wanted:
-        raise ValidationFailedError(f"{holder.name} is not {an(holder_kind.value)}.")
+        raise ValidationFailedError(f"{holder.name} is not {an(spoken(holder_kind))}.")
     row = await ctx.session.get(ArmsRow, holder_id)
     if row is None:
         row = await saved(ctx, ArmsRow(holder_entity_id=holder_id, holder_kind=holder_kind, field=values["field"], since_epoch=ctx.epoch, locked=[]))

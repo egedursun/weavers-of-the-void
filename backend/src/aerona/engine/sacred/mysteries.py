@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -542,7 +543,7 @@ async def resolve_crisis(ctx: TickContext, row: TheodicyCrisisRow, miracles: dic
         outcome = await seek_another_way(ctx, row, town, cult, tally)
     row.resolution = outcome
     row.resolved_epoch = ctx.epoch
-    await note(ctx, f"The crisis of faith in {town.name} ended: {outcome.value.replace('_', ' ')}.", key="sacred.theodicy_resolved", ids=[town.id, cult.id])
+    await note(ctx, f"The crisis of faith in {town.name} ended: {spoken(outcome)}.", key="sacred.theodicy_resolved", ids=[town.id, cult.id])
 
 
 async def keep_theodicy(ctx: TickContext, tally: MysteryTally) -> None:

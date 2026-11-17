@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import BodyPart
 from aerona.domain.enums.constructs import MindWill
@@ -379,7 +380,7 @@ async def realm_make(scope: PlayerScope, command: RealmDraft) -> Effect:
 async def intrusion_make(scope: PlayerScope, command: IntrusionDraft) -> Effect:
     attempt = Attempt(command.actor_id, command.target, command.target_id, command.approach, command.aim, command.blamed_id)
     row = await intrude(await scope.context("intrusion_make"), attempt)
-    return Effect(f"The intrusion {row.outcome.value.replace('_', ' ')}.", command.target_id, values={"intrusion_id": row.id})
+    return Effect(f"The intrusion {spoken(row.outcome)}.", command.target_id, values={"intrusion_id": row.id})
 
 
 @player_action("data_store:open", ActionKind.EDIT_RECORD)

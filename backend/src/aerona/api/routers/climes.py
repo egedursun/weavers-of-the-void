@@ -21,6 +21,7 @@ from aerona.api.schemas.climes import (
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import (
     ClimateOscillationRow,
@@ -54,7 +55,7 @@ async def refs_of(session: AsyncSession, ids: Iterable[int | None]) -> dict[int,
 
 
 def route_name(route: RouteRow, refs: dict[int, NodeRef]) -> str:
-    return f"{ref(refs, route.world_a_id).name} to {ref(refs, route.world_b_id).name} by {route.method.value.replace('_', ' ')}"
+    return f"{ref(refs, route.world_a_id).name} to {ref(refs, route.world_b_id).name} by {spoken(route.method)}"
 
 
 async def world_of(session: AsyncSession, node_id: int) -> int | None:

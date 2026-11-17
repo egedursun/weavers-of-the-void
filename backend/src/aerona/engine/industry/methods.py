@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.methods import (
@@ -18,7 +19,8 @@ from aerona.catalog.methods import (
     default_method,
 )
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
+from aerona.db.read_memo import memoized
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -80,12 +82,15 @@ async def feed(ctx: TickContext, community_id: int, spec: MethodSpec, units: int
     return share
 
 
+@memoized(IdeologyAdherentRow, IdeologyTenetRow)
+async def nature_revering(session: AsyncSession) -> frozenset[int]:
+    creeds = select(IdeologyTenetRow.ideology_entity_id).where(IdeologyTenetRow.tenet == IdeologyTenet.NATURE_HARMONY)
+    statement = select(IdeologyAdherentRow.adherent_entity_id).where(IdeologyAdherentRow.state.is_(True), IdeologyAdherentRow.ideology_entity_id.in_(creeds))
+    return frozenset(await session.scalars(statement))
+
+
 async def reveres_nature(ctx: TickContext, community_id: int) -> bool:
-    creeds = select(IdeologyAdherentRow.ideology_entity_id).where(IdeologyAdherentRow.adherent_entity_id == community_id, IdeologyAdherentRow.state.is_(True))
-    found = await ctx.session.scalar(
-        select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id.in_(creeds), IdeologyTenetRow.tenet == IdeologyTenet.NATURE_HARMONY).limit(1)
-    )
-    return found is not None
+    return community_id in await nature_revering(ctx.session)
 
 
 def process_of_step(step_key: str) -> ProcessKind | None:
@@ -151,7 +156,7 @@ def blocked_by(
         (spec.branch is not None and levels.get(spec.branch, 0) < spec.level, f"needs {(spec.branch or '').replace('_', ' ')} at level {spec.level}"),
         (spec.climate is not None and band not in spec.climate and not (cellar and spec.kind in CELLAR_METHODS), "the climate does not allow it"),
         (spec.coast and not coastal, "needs a coast"),
-        (spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need, f"too little {spec.energy.value} energy"),
+        (spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need, f"too little {spoken(spec.energy)} energy"),
     )
     return next((reason for failed, reason in checks if failed), None)
 

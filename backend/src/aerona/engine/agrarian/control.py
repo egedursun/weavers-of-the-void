@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.base import Base
 from aerona.db.tables.agrarian import (
     AID_FIELDS,
@@ -126,7 +127,7 @@ async def plant(
             locked=[],
         ),
     )
-    await note(ctx, f"A new {kind.value} was planted in {region.name}.", key="perennials.planted", ids=[region.id])
+    await note(ctx, f"A new {spoken(kind)} was planted in {region.name}.", key="perennials.planted", ids=[region.id])
     return row
 
 
@@ -187,7 +188,7 @@ async def build_work(ctx: TickContext, settlement_id: int, kind: PreparednessKin
     )
     row = await put_values(ctx, row, {"level": level, "condition": PERCENT}, PREPAREDNESS_FIELDS, "disaster work")
     row.built_epoch = ctx.epoch
-    await note(ctx, f"{town.name} raised its {kind.value}s to level {level}.", key="resilience.built", ids=[town.id])
+    await note(ctx, f"{town.name} raised its {spoken(kind)}s to level {level}.", key="resilience.built", ids=[town.id])
     return row
 
 

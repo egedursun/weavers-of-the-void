@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
@@ -177,7 +177,7 @@ async def befall(ctx: TickContext, mortal: EntityRow, exposure: Exposure = UNEXP
         wounded = await apply_hits(ctx, mortal, Harm(float(damage), HarmCause.ACCIDENT, an(words), damage_type=HARMED[kind]))
         died = mortal.status is not EntityStatus.CANON
         level = max(level, max((row.severity for row in wounded.injuries), default=0) // 2)
-    return Mishap(kind, mortal.id, level, died, f"{kind.value.replace('_', ' ')} in daily life")
+    return Mishap(kind, mortal.id, level, died, f"{spoken(kind)} in daily life")
 
 
 async def everyday(ctx: TickContext, folk: list[int]) -> list[Mishap]:

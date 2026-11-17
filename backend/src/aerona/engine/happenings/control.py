@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow
@@ -79,12 +80,12 @@ def hold(profile: EventProfileRow | RegionGeomorphRow, field: str, held: bool) -
 
 async def create_event(ctx: TickContext, draft: EventDraft) -> tuple[EntityRow, EventProfileRow]:
     if draft.kind not in EVENT_KINDS:
-        raise ValidationFailedError(f"{draft.kind.value.replace('_', ' ')} is not a kind of event.")
+        raise ValidationFailedError(f"{spoken(draft.kind)} is not a kind of event.")
     where = await ctx.session.get(EntityRow, draft.where_id)
     if where is None or where.status is not EntityStatus.CANON:
         raise NotFoundError("No such place for the event.")
     atlas = await RegionAtlas.load(ctx.session)
-    name = draft.name.strip() or f"the {draft.kind.value.replace('_', ' ').title()} of {where.name}"
+    name = draft.name.strip() or f"the {spoken(draft.kind).title()} of {where.name}"
     event = await create_record(
         ctx,
         RecordSpec(

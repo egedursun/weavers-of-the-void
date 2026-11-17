@@ -204,9 +204,14 @@ async def blessing_drafts(ctx: TickContext, by_id: dict[int, EntityRow]) -> list
 async def god_power_drafts(ctx: TickContext, communities: Sequence[EntityRow]) -> list[ModifierDraft]:
     drafts: list[ModifierDraft] = []
     growth = float(ctx.rules.world_epoch_transition.bounty_power_growth_mult)
+    bountiful: dict[int, bool] = {}
     for community in communities:
         patron = await living_patron(ctx.session, community)
-        if patron is None or not await has_unlocked_power(ctx.session, ctx.rules, patron, PowerEffect.BOUNTY_GIVER):
+        if patron is None:
+            continue
+        if patron.id not in bountiful:
+            bountiful[patron.id] = await has_unlocked_power(ctx.session, ctx.rules, patron, PowerEffect.BOUNTY_GIVER)
+        if not bountiful[patron.id]:
             continue
         origin = Origin(S.GOD_POWER, "modifier.god_power.bounty_giver", ctx.epoch, patron.id, "god_power.bounty_giver")
         if (draft := shaped_draft(community, GROWTH_KEY, ModifierOp.MULTIPLY, growth, origin)) is not None:

@@ -11,7 +11,7 @@ from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, medium_of, trave
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, several
+from aerona.core.grammar import agree, several, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
@@ -520,7 +520,7 @@ async def _vehicle_problem(session: AsyncSession, traveller: EntityRow, route: R
         return None if open_rift is not None else "This way opens only through a rift, and none is open on your world."
     technique = VEHICLE_TECHNIQUES[vehicle] if vehicle is not None else None
     if technique is not None and not await has_technique(session, traveller.id, technique):
-        return f"This way needs the technique of {technique.value.replace('_', ' ')}."
+        return f"This way needs the technique of {spoken(technique)}."
     return None
 
 

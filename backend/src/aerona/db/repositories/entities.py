@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.catalog.entity_types import can_contain, engine_kind_owner
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -166,6 +166,8 @@ class EntityRepository(Repository):
         previous = entity.status
         if previous is status:
             return entity
+        if status in (EntityStatus.DEAD, EntityStatus.DESTROYED) and entity.end_epoch is None:
+            entity.end_epoch = epoch
         names = NameRepository(self.session)
         bonds = BondRepository(self.session)
         if status is EntityStatus.REJECTED:
@@ -181,8 +183,6 @@ class EntityRepository(Repository):
             await bonds.reopen_after_restore(entity.id)
         else:
             entity.status = status
-        if status in (EntityStatus.DEAD, EntityStatus.DESTROYED) and entity.end_epoch is None:
-            entity.end_epoch = epoch
         if fate_note is not None:
             entity.fate_note = fate_note
         await self.flush()
@@ -253,9 +253,9 @@ class EntityRepository(Repository):
     @staticmethod
     def _validate_shape(draft: EntityDraft) -> None:
         if draft.stats.kind != draft.entity_type.value:
-            raise ValidationFailedError(f"Stats of {an(draft.stats.kind)} cannot describe {an(draft.entity_type.value)}.")
+            raise ValidationFailedError(f"Stats of {an(spoken(draft.stats.kind))} cannot describe {an(spoken(draft.entity_type))}.")
         if draft.engine_kind is not None and engine_kind_owner(draft.engine_kind) is not draft.entity_type:
-            raise ValidationFailedError(f"{draft.engine_kind.value} does not belong to {an(draft.entity_type.value)}.")
+            raise ValidationFailedError(f"{spoken(draft.engine_kind).capitalize()} does not belong to {an(spoken(draft.entity_type))}.")
         if not draft.description.strip():
             raise ValidationFailedError("A record needs a description.")
 
@@ -279,7 +279,7 @@ class EntityRepository(Repository):
         if location is None:
             raise NotFoundError("No such location.")
         if not can_contain(location.entity_type, entity_type):
-            raise ValidationFailedError(f"{an(entity_type.value, capital=True)} cannot be placed inside {an(location.entity_type.value)}.")
+            raise ValidationFailedError(f"{an(spoken(entity_type), capital=True)} cannot be placed inside {an(spoken(location.entity_type))}.")
         return location
 
     async def _resolve_world(self, draft: EntityDraft, location: EntityRow | None) -> int:

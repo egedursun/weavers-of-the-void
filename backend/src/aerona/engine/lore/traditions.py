@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.lore import TRADITIONS, tradition_spec
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import TraditionEffectRow, TraditionParticipationRow, TraditionProfileRow
@@ -446,7 +447,16 @@ async def taboos(ctx: TickContext, community_id: int) -> set[str]:
     return set(known)
 
 
+@memoized(BondRow, TraditionProfileRow)
+async def taboo_keepers(session: AsyncSession) -> frozenset[int]:
+    taboo = select(TraditionProfileRow.tradition_entity_id).where(TraditionProfileRow.kind == K.TABOO, TraditionProfileRow.taboo_target.is_not(None))
+    statement = select(BondRow.source_node_id).where(BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE, BondRow.target_node_id.in_(taboo))
+    return frozenset(await session.scalars(statement.distinct()))
+
+
 async def _taboos(ctx: TickContext, community_id: int) -> set[str]:
+    if community_id not in await taboo_keepers(ctx.session):
+        return set()
     traditions = select(BondRow.target_node_id).where(
         BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )

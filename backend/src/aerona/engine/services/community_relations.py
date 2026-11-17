@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 
 from sqlalchemy import or_, select
@@ -175,10 +176,18 @@ async def party_of(session: AsyncSession, first: int, second: int) -> FeudParty:
     return FeudParty.PEOPLE if kinds == {EntityType.PEOPLE} else FeudParty.COMMUNITY
 
 
+@memoized(RelationComponentRow)
+async def held_components(session: AsyncSession) -> dict[tuple[int, int], int]:
+    totals: dict[tuple[int, int], int] = defaultdict(int)
+    columns = (RelationComponentRow.entity_a_id, RelationComponentRow.entity_b_id, RelationComponentRow.value, RelationComponentRow.locked)
+    for low, high, value, locked in await session.execute(select(*columns)):
+        if "value" in locked:
+            totals[(low, high)] += value
+    return dict(totals)
+
+
 async def held_offset(session: AsyncSession, rules: Rules, first: int, second: int) -> int:
-    low, high = pair_key(first, second)
-    rows = await session.scalars(select(RelationComponentRow).where(RelationComponentRow.entity_a_id == low, RelationComponentRow.entity_b_id == high))
-    return sum(row.value for row in rows if "value" in row.locked) * rules.community_relations.held_pct // PERCENT
+    return (await held_components(session)).get(pair_key(first, second), 0) * rules.community_relations.held_pct // PERCENT
 
 
 async def start_blood_feud(ctx: TickContext, first: int, second: int, reason: str) -> int:
@@ -310,11 +319,12 @@ async def refresh_relations(session: AsyncSession, rules: Rules, epoch: int) -> 
     values = await ValueIndex.load(session)
     await lend_settlement_values(session, values, {node for row in rows for node in (row.entity_a_id, row.entity_b_id)})
     context = await OpinionContext.load(session, rules, epoch, [node for row in rows for node in (row.entity_a_id, row.entity_b_id)], values)
+    locked_parts = await held_components(session)
+    share = rules.community_relations.held_pct
     changed = 0
     for row in rows:
-        value = clamp_int(
-            context.relation(row.entity_a_id, row.entity_b_id) + await held_offset(session, rules, row.entity_a_id, row.entity_b_id), RELATION_MIN, RELATION_MAX
-        )
+        offset = locked_parts.get((row.entity_a_id, row.entity_b_id), 0) * share // PERCENT
+        value = clamp_int(context.relation(row.entity_a_id, row.entity_b_id) + offset, RELATION_MIN, RELATION_MAX)
         if value != row.value:
             row.value = value
             changed += 1

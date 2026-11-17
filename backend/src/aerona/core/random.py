@@ -1,4 +1,5 @@
 import hashlib
+import re
 from collections.abc import Callable, Hashable, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass
 from typing import TypeVar
@@ -11,6 +12,7 @@ _WORD_BYTES = 8
 _FLOAT_BITS = 53
 _PERCENT = 100.0
 _SEPARATOR = "|"
+MISSING_PART = re.compile(r"(?:^|[^A-Za-z0-9])None(?:$|[^A-Za-z0-9])")
 
 
 def _rotate_left(value: int, shift: int) -> int:
@@ -27,6 +29,10 @@ class RandomKey:
     world_seed: int
     epoch: int
     stream: str
+
+    def __post_init__(self) -> None:
+        if "None" in self.stream and MISSING_PART.search(self.stream):
+            raise ValueError(f"The random stream {self.stream!r} is keyed by a missing value, so its draws would depend on when rows are flushed.")
 
     def child(self, name: str) -> "RandomKey":
         return RandomKey(self.world_seed, self.epoch, f"{self.stream}/{name}")

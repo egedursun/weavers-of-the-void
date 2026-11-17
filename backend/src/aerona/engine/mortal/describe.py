@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind_split import SUMMARIES
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalEquipmentRow, MortalProfileRow
 from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
@@ -20,12 +21,12 @@ async def life_lines(session: AsyncSession, rules: Rules, mortal: EntityRow, *, 
     profile = await session.get(MortalProfileRow, mortal.id)
     if profile is None:
         return []
-    lines = [f"Life: {profile.life_stage.value}, {sex_of_stats(mortal).value}; health {profile.health}/{FULL}"]
+    lines = [f"Life: {spoken(profile.life_stage)}, {spoken(sex_of_stats(mortal))}; health {profile.health}/{FULL}"]
     body_and_mind = ", ".join(f"{name} {stat(mortal, name) or 0}" for name in SUMMARIES)
     lines.append(f"Body and mind: {body_and_mind}")
     lines.append(f"Standing: wealth {profile.wealth}, renown {profile.renown}, honour {profile.honour}, infamy {profile.infamy}")
     if profile.cause_of_death is not None:
-        lines.append(f"Died of {profile.cause_of_death.value.replace('_', ' ')}")
+        lines.append(f"Died of {spoken(profile.cause_of_death)}")
     kin = []
     for label, ids in (
         ("parents", await parents_of(session, mortal.id)),
@@ -42,7 +43,7 @@ async def life_lines(session: AsyncSession, rules: Rules, mortal: EntityRow, *, 
     strain = "near breaking" if profile.stress >= rules.stress.break_threshold * 3 // 4 else "bearable"
     lines.append(f"Stress: {profile.stress}/{FULL} ({strain})")
     if profile.career is not None:
-        lines.append(f"Path in life: {profile.career.value}")
+        lines.append(f"Path in life: {spoken(profile.career)}")
     gear = await session.get(MortalEquipmentRow, mortal.id)
     if gear is not None:
         carried = [item for item in (gear.wielded_main_id, gear.armour_body_id, gear.mount_id, gear.focus_id) if item is not None]

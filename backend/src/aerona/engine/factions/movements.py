@@ -186,10 +186,13 @@ async def ground_of(ctx: TickContext, community: EntityRow, realm: Realm, laws: 
     return Ground(community, realm, laws, await values_for(ctx.session, community.id), await class_shares(ctx.session, ctx.rules, community.id), content)
 
 
-async def movement_of(ctx: TickContext, realm_id: int, cause: MovementCause) -> MovementProfileRow | None:
-    found: MovementProfileRow | None = await ctx.session.scalar(
-        select(MovementProfileRow).where(MovementProfileRow.polity_entity_id == realm_id, MovementProfileRow.cause == cause).limit(1)
-    )
+MovementIndex = dict[tuple[int | None, MovementCause], MovementProfileRow]
+
+
+async def movements_by_cause(ctx: TickContext) -> MovementIndex:
+    found: MovementIndex = {}
+    for row in await ctx.session.scalars(select(MovementProfileRow).order_by(MovementProfileRow.faction_entity_id)):
+        found.setdefault((row.polity_entity_id, row.cause), row)
     return found
 
 
@@ -284,13 +287,13 @@ async def overturn(ctx: TickContext, realm: Realm, row: MovementProfileRow, laws
     return await revolution(ctx, realm, laws)
 
 
-async def tend_realm(ctx: TickContext, realm: Realm, laws: LawBook, book: RealmBook, tally: MovementTally) -> None:
+async def tend_realm(ctx: TickContext, realm: Realm, laws: LawBook, book: RealmBook, tally: MovementTally, *, movements: MovementIndex) -> None:
     table = ctx.rules.movements
     members = [found for member in realm.members if (found := await ctx.session.get(EntityRow, member)) is not None and found.status is EntityStatus.CANON]
     grounds = {member.id: await ground_of(ctx, member, realm, laws) for member in members}
     for cause in MovementCause:
         aims = {member.id: await PRESSURES[cause](ctx, grounds[member.id]) for member in members}
-        row = await movement_of(ctx, realm.entity.id, cause)
+        row = movements.get((realm.entity.id, cause))
         mean = sum(aims.values()) / len(aims) if aims else 0.0
         if row is None:
             if mean < table.found_at or not members or not ctx.rng(seed_of("movement.found", realm.entity.id, cause.value, ctx.epoch)).chance(table.found_pct):
@@ -324,6 +327,7 @@ async def tend_realm(ctx: TickContext, realm: Realm, laws: LawBook, book: RealmB
 async def tend_movements(ctx: TickContext, tally: MovementTally) -> None:
     book = await RealmBook.load(ctx.session)
     laws = await LawBook.load(ctx.session)
+    movements = await movements_by_cause(ctx)
     for realm in list(book.realms.values()):
         if not held(realm.entity.id) and realm.members:
-            await tend_realm(ctx, realm, laws, book, tally)
+            await tend_realm(ctx, realm, laws, book, tally, movements=movements)

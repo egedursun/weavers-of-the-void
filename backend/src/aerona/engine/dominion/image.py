@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS, MANIFESTATION_ORDER
 from aerona.catalog.kinds.belief_stances import BELIEF_STANCES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -145,7 +146,7 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
     tally.turned += 1
     await note(
         ctx,
-        f"{god.name} became what its peoples believed: a god of {domain.value.replace('_', ' ')}.",
+        f"{god.name} became what its peoples believed: a god of {spoken(domain)}.",
         key="dominion.image_turned",
         ids=[god.id],
         son_id=god.id if isinstance(god, SonRow) else None,

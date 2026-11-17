@@ -65,7 +65,7 @@ async def town_lines(scope: Scope, town: EntityRow) -> list[str]:
         select(ReconstructionRow).where(ReconstructionRow.settlement_entity_id == town.id, ReconstructionRow.finished_epoch.is_(None)).limit(1)
     )
     if rebuild is not None:
-        found.append(f"{town.name} is rebuilding after {an(rebuild.cause.value)}, {spoken(rebuild.plan)}, {rebuild.progress}% done")
+        found.append(f"{town.name} is rebuilding after {an(spoken(rebuild.cause))}, {spoken(rebuild.plan)}, {rebuild.progress}% done")
     return found
 
 
@@ -125,5 +125,5 @@ async def son_agrarian_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(ReconstructionRow.id)
         .limit(LIST_LINES)
     ):
-        found.append(f"{town.name} (settlement {town.id}) is rebuilding after {an(rebuild.cause.value)}")
+        found.append(f"{town.name} (settlement {town.id}) is rebuilding after {an(spoken(rebuild.cause))}")
     return found

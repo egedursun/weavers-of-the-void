@@ -173,7 +173,9 @@ async def intrude(ctx: TickContext, attempt: Attempt) -> IntrusionRow:
     if attempt.target_node_id is not None and held(attempt.target_node_id):
         raise ValidationFailedError("That target is held against the world.")
     table = ctx.rules.intrusion
-    rng = ctx.rng(f"intrusion.{attempt.actor_id}.{attempt.target_node_id}.{attempt.aim.value}.{ctx.epoch}")
+    actor = attempt.actor_id if attempt.actor_id is not None else "unknown"
+    aimed = attempt.target_node_id if attempt.target_node_id is not None else attempt.target.value
+    rng = ctx.rng(f"intrusion.{actor}.{aimed}.{attempt.aim.value}.{ctx.epoch}")
     edge = await edge_of(ctx, attempt)
     security = await security_of(ctx, attempt.target, attempt.target_node_id)
     succeeded = rng.chance(clamp_percent(PERCENT // 2 + edge - security))

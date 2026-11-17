@@ -2,7 +2,7 @@ from sqlalchemy import or_, select
 
 from aerona.agents.context.cycle_lines import named, words
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import (
     ClimateOscillationRow,
@@ -29,7 +29,7 @@ async def world_lines(scope: Scope, world_id: int) -> list[str]:
         found.append("the monsoon failed this year" if season.failed else f"the monsoon came at {season.strength}% of its usual strength")
     swing = await session.get(ClimateOscillationRow, world_id)
     if swing is not None and swing.phase is not OscillationPhase.NEUTRAL:
-        found.append(f"the world is in {an(swing.phase.value + ' swing')} of its climate")
+        found.append(f"the world is in {an(spoken(swing.phase) + ' swing')} of its climate")
     windows = await session.scalars(
         select(LaunchWindowRow)
         .where(LaunchWindowRow.open.is_(True), or_(LaunchWindowRow.from_world_id == world_id, LaunchWindowRow.to_world_id == world_id))

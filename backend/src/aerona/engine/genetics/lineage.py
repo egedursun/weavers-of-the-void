@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.genetics import LOCI, LOOKS_LOCI
 from aerona.catalog.kinds.gifts import GIFT_STANCES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
@@ -154,7 +155,7 @@ async def examine_children(ctx: TickContext) -> int:
             taken += 1
             await note(
                 ctx,
-                f"{faction.name} tested the children of the town and took {child.name}, gifted in {schools[0].value.replace('_', ' ')}.",
+                f"{faction.name} tested the children of the town and took {child.name}, gifted in {spoken(schools[0])}.",
                 key="genetics.order_recruits",
                 ids=[faction.id, child.id],
             )

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from aerona.catalog.world_views import WORLD_VIEWS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.domain.enums.domain import Domain
@@ -46,7 +47,7 @@ class BattleGround:
             parts.append("by night")
         terrain = self.terrain
         if terrain is not None:
-            parts.append(f"on {terrain.value.replace('_', ' ')} ground")
+            parts.append(f"on {spoken(terrain)} ground")
         return ", ".join(parts)
 
 

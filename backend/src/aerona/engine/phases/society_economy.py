@@ -9,6 +9,7 @@ from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT, TENTHS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
+from aerona.core.grammar import spoken as spoken_word
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -574,7 +575,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER], labour=labour)
     await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
     await kitchen(ctx, world.economy, entity, RefiningTally())
-    await cook_dishes(ctx, entity, KitchenTally())
+    await cook_dishes(ctx, entity, KitchenTally(), world.book.knowledge)
     meal, basket = await consume(ctx, entity, society, world)
     await enforce_storage(ctx, world.economy, entity)
     row = await sync_aggregates(ctx.session, rules, entity)
@@ -862,7 +863,7 @@ async def set_stores(ctx: TickContext, entity_id: int, stocks: Mapping[Commodity
     for commodity, value in stocks.items():
         room = await storage_room(ctx, entity, commodity)
         if value < 0 or value > room:
-            raise ValidationFailedError(f"{commodity.value.capitalize()} stores must be between 0 and {room}, what its stores can hold.")
+            raise ValidationFailedError(f"{spoken_word(commodity).capitalize()} stores must be between 0 and {room}, what its stores can hold.")
     ledger = goods_of(ctx.session, ctx.epoch)
     for commodity, value in stocks.items():
         current = (await society_of(ctx.session, ctx.rules, entity_id)).stocks[commodity]

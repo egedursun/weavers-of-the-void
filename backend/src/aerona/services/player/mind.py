@@ -394,7 +394,7 @@ async def set_need(scope: PlayerScope, command: SetNeed) -> Effect:
     await mind_for(scope, node)
     await write_needs(scope.session, node.id, {command.need: command.value})
     await hold(scope, node, NEED_LOCK, command.lock)
-    return Effect(f"{node.name}'s {label(command.need.value)} is now {command.value}.", target_node_id=node.id)
+    return Effect(f"{node.name}'s {label(command.need.value)} is now {command.value:d}.", target_node_id=node.id)
 
 
 @player_action("mind:pressure", ActionKind.OTHER)
@@ -405,7 +405,7 @@ async def set_pressure(scope: PlayerScope, command: SetPressure) -> Effect:
     await mind_for(scope, node)
     await write_pressures(scope.session, node.id, {command.pressure: command.value})
     await hold(scope, node, NEED_LOCK, command.lock)
-    return Effect(f"{node.name}'s {label(command.pressure.value)} is now {command.value}.", target_node_id=node.id)
+    return Effect(f"{node.name}'s {label(command.pressure.value)} is now {command.value:d}.", target_node_id=node.id)
 
 
 @player_action("mind:role", ActionKind.OTHER)

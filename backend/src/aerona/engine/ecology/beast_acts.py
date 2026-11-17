@@ -3,7 +3,9 @@ from collections.abc import Mapping
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
+from aerona.db.stored import stored_id
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.economy import ResourceProfileRow
@@ -133,7 +135,7 @@ def ready(attack: CreatureAttackRow, epoch: int) -> bool:
 
 
 async def wound(ctx: TickContext, beast: EntityRow, victim: EntityRow, attack: CreatureAttackRow, damage_type: DamageType) -> None:
-    told = f"struck by the {attack.delivery.value} of {beast.name}"
+    told = f"struck by the {spoken(attack.delivery)} of {beast.name}"
     harm = Harm(ctx.rules.creature_anatomy.attack_damage, HarmCause.MONSTER, told, damage_type=damage_type, source_node_id=beast.id, killer_id=beast.id)
     await apply_hits(ctx, victim, harm)
     if attack.effect is AttackEffect.DRAIN and not held(beast.id):
@@ -142,7 +144,7 @@ async def wound(ctx: TickContext, beast: EntityRow, victim: EntityRow, attack: C
 
 async def bind_mind(ctx: TickContext, beast: EntityRow, victims: list[EntityRow], attack: CreatureAttackRow) -> None:
     table = ctx.rules.creature_anatomy
-    rng = ctx.rng(f"attack.mind.{beast.id}.{attack.id}.{ctx.epoch}")
+    rng = ctx.rng(f"attack.mind.{beast.id}.{await stored_id(ctx.session, attack)}.{ctx.epoch}")
     if attack.effect is AttackEffect.FEAR:
         for mortal in victims:
             await add_stress(ctx.session, mortal.id, table.fear_stress, ctx.epoch)
@@ -159,11 +161,11 @@ async def strike(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town:
     if "last_used_epoch" not in attack.locked:
         attack.last_used_epoch = ctx.epoch
     if attack.effect in (AttackEffect.ENTANGLE, AttackEffect.CHARM):
-        return await seize(ctx, beast, row, town, f"taken by the {attack.delivery.value} of {beast.name}")
+        return await seize(ctx, beast, row, town, f"taken by the {spoken(attack.delivery)} of {beast.name}")
     living = await townsfolk(ctx, town)
     if not living:
         return None
-    victim = ctx.rng(f"attack.{beast.id}.{attack.id}.{town.id}.{ctx.epoch}").pick(living)
+    victim = ctx.rng(f"attack.{beast.id}.{await stored_id(ctx.session, attack)}.{town.id}.{ctx.epoch}").pick(living)
     victims = living if attack.range in WHOLE_TOWN else [victim]
     damage_type = WOUNDS[attack.effect]
     if attack.effect is AttackEffect.VENOM:

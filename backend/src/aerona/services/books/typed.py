@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapper
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
-from aerona.core.grammar import singular
+from aerona.core.grammar import singular, spoken
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
 from aerona.db.tables.ledger import LedgerChangeRow
@@ -265,10 +265,10 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
         f"the crisis of epoch {row.opened_epoch} between {_named(names, row.demander_entity_id)} and {_named(names, row.target_entity_id)}"
     ),
     "resolutions": lambda row, names: f"the {words(str(row.kind.value)).lower()} resolution of epoch {row.proposed_epoch}",
-    "crime_cases": lambda row, names: f"the {row.crime.value} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
+    "crime_cases": lambda row, names: f"the {spoken(row.crime)} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
     "accounts": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.holder_entity_id) or 'someone'} from epoch {row.epoch}",
     "designs": lambda row, names: f"{row.name} of {_named(names, row.owner_entity_id) or 'no one'}",
-    "cascades": lambda row, names: f"the {row.act.value} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
+    "cascades": lambda row, names: f"the {spoken(row.act)} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
     "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
     "vehicle_groups": lambda row, names: f"the group of {row.count} held by {_named(names, row.holder_node_id) or 'no one'}",
     "army_units": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.army_entity_id) or 'an army'}",

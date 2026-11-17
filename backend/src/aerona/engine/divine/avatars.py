@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.divine import AvatarRow
 from aerona.db.tables.dominion import GodDesignRow, GodImageRow
 from aerona.db.tables.entities import EntityRow
@@ -35,7 +36,7 @@ async def manifest(ctx: TickContext, god: God, place: EntityRow) -> EntityRow:
     image = await ctx.session.get(GodImageRow, god.id)
     floor = ctx.rules.god_design.manifestation_floor_pct / PERCENT
     vigour = floor + (1 - floor) * (design.manifestation_strength if design is not None else PERCENT) / PERCENT
-    seen = f" Its peoples see it as {image.manifestation.value}." if image is not None else ""
+    seen = f" Its peoples see it as {spoken(image.manifestation)}." if image is not None else ""
     avatar = await open_record(
         ctx.session,
         ctx.epoch,

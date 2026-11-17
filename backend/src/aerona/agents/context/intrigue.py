@@ -52,9 +52,9 @@ async def intrigue_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> 
     secrets = [f"{SECRETS[row.kind].label.lower()} (known to {several(len(row.known_by) - 1, 'other', 'others')})" for row in own[:cap]]
     leverage: list[str] = []
     for hook in await session.scalars(select(HookRow).where(HookRow.holder_node_id == me.id, HookRow.used_epoch.is_(None)).order_by(HookRow.id).limit(cap)):
-        leverage.append(f"{an(hook.strength.value)} hook on {await name_of(session, hook.target_node_id)}")
+        leverage.append(f"{an(spoken(hook.strength))} hook on {await name_of(session, hook.target_node_id)}")
     for hook in await session.scalars(select(HookRow).where(HookRow.target_node_id == me.id, HookRow.used_epoch.is_(None)).order_by(HookRow.id).limit(cap)):
-        leverage.append(f"{await name_of(session, hook.holder_node_id)} holds {an(hook.strength.value)} hook on you")
+        leverage.append(f"{await name_of(session, hook.holder_node_id)} holds {an(spoken(hook.strength))} hook on you")
     favours = await session.scalars(
         select(FavourRow)
         .where(or_(FavourRow.owed_by_node_id == me.id, FavourRow.owed_to_node_id == me.id), FavourRow.called_epoch.is_(None))

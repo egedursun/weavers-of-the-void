@@ -4,7 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.intrigue import FAVOUR_LABELS, HOOK_DEMAND_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SCHEME_FIELDS, SECRET_FIELDS, BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.node import NodeRow
@@ -262,7 +262,7 @@ async def grant(scope: PlayerScope, command: GrantHook) -> Effect:
         raise ValidationFailedError(f"{holder.name} is held against change.")
     row.strength, row.source = command.strength, command.source
     await scope.session.flush()
-    return Effect(f"{holder.name} now holds {an(command.strength.value)} hook on {target.name}.", target_node_id=holder.id, values={"hook_id": row.id})
+    return Effect(f"{holder.name} now holds {an(spoken(command.strength))} hook on {target.name}.", target_node_id=holder.id, values={"hook_id": row.id})
 
 
 @player_action("hook:edit", ActionKind.EDIT_RECORD)
@@ -276,7 +276,7 @@ async def edit_hook(scope: PlayerScope, command: EditHook) -> Effect:
         row.last_demand = None
     row.locked = command.hold
     await scope.session.flush()
-    return Effect(f"The hook is {row.strength.value}{' and held' if row.locked else ''}.", target_node_id=row.holder_node_id)
+    return Effect(f"The hook is {spoken(row.strength)}{' and held' if row.locked else ''}.", target_node_id=row.holder_node_id)
 
 
 @player_action("hook:use", ActionKind.EDIT_RECORD)
@@ -532,7 +532,7 @@ async def set_belief(scope: PlayerScope, command: SetBelief) -> Effect:
     await scope.session.flush()
     label = belief_label(command.attribute)
     return Effect(
-        f"{holder.name} now believes the {label.lower()} of {subject.name} is {command.value} ({command.confidence}% sure).", target_node_id=holder.id
+        f"{holder.name} now believes the {label.lower()} of {subject.name} is {command.value:d} ({command.confidence}% sure).", target_node_id=holder.id
     )
 
 

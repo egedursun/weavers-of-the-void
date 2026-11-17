@@ -20,6 +20,7 @@ from aerona.catalog.cosmography import (
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.entities import EntityRow
@@ -156,7 +157,7 @@ async def deepen_celestial(runtime: AgentRuntime, kind: CelestialKind, node_id: 
         else:
             scale = await scale_row(session, kind, node_id)
             if scale is None:
-                raise NotFoundError(f"No such {kind.value}.")
+                raise NotFoundError(f"No such {spoken(kind)}.")
             name, lore, world_id = scale.name, scale.description or "", None
             details, neighbours = await scale_lines(session, scale)
         context = DeepenCelestialContext(
@@ -182,7 +183,7 @@ async def deepen_celestial(runtime: AgentRuntime, kind: CelestialKind, node_id: 
     async with runtime.database.write() as session:
         row = await depth_row(session, kind, node_id)
         if row is None:
-            raise NotFoundError(f"No such {kind.value}.")
+            raise NotFoundError(f"No such {spoken(kind)}.")
         depth = normalize_depth(output, (await load_scope(session, rules)).epoch, None, None)
         row.depth = depth
     return depth

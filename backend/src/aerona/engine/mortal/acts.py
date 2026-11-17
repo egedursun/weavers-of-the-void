@@ -6,7 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.mind import CAREER_SKILLS, PROFESSIONS
 from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import partial
 from aerona.db.tables.entities import EntityRow
@@ -524,7 +524,7 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
             await connect(ctx.session, mortal.id, patron.id, BondKind.WORSHIPS, ctx.epoch, description="took vows")
     await note(
         ctx,
-        f"{mortal.name} left the life of {an((old or MortalRole.COMMONER).value)} to become {an(role.value)}.",
+        f"{mortal.name} left the life of {an(spoken(old or MortalRole.COMMONER))} to become {an(spoken(role))}.",
         key=f"career.{best.value}",
         ids=[mortal.id],
     )

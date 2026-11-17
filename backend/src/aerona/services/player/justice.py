@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow, LawProposalRow, ProposalStanceRow
 from aerona.db.tables.node import NodeRow
@@ -245,7 +246,7 @@ async def set_stance(scope: PlayerScope, command: SetStance) -> Effect:
         scope.session.add(found)
     found.stance, found.weight, found.locked = command.stance, command.weight, command.hold
     await scope.session.flush()
-    return Effect(f"A voice of weight {command.weight} now stands {command.stance.value} on the proposal.", target_node_id=row.polity_entity_id)
+    return Effect(f"A voice of weight {command.weight} now stands {spoken(command.stance)} on the proposal.", target_node_id=row.polity_entity_id)
 
 
 @player_action("stance:remove", ActionKind.EDIT_RECORD)
@@ -317,7 +318,7 @@ async def edit_case(scope: PlayerScope, command: EditCase) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"The case stands at {row.stage.value} with evidence {row.evidence}.", target_node_id=row.accused_entity_id)
+    return Effect(f"The case stands at {spoken(row.stage)} with evidence {row.evidence}.", target_node_id=row.accused_entity_id)
 
 
 @player_action("case:hold", ActionKind.EDIT_RECORD)
@@ -363,7 +364,7 @@ async def set_witness(scope: PlayerScope, command: SetWitness) -> Effect:
         scope.session.add(found)
     found.testimony, found.reliability, found.locked = command.testimony, command.reliability, command.hold
     await scope.session.flush()
-    return Effect(f"{witness.name} {command.testimony.value} the accused, with reliability {command.reliability}.", target_node_id=witness.id)
+    return Effect(f"{witness.name} {spoken(command.testimony)} the accused, with reliability {command.reliability}.", target_node_id=witness.id)
 
 
 @player_action("witness:remove", ActionKind.EDIT_RECORD)

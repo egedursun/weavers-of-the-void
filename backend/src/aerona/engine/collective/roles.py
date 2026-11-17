@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import STANCE_ORDER
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import RoleNormRow, SexRatioRow
 from aerona.db.tables.cycles import ManumissionRow
@@ -207,7 +208,7 @@ async def open_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
             continue
         row.eligibility, row.since_epoch = OPENING[row.eligibility], ctx.epoch
         tally.opened += 1
-        await note(ctx, f"With so few left to fill it, {people.name} opened the {row.role.value} role to all.", key="roles.opened", ids=[people.id])
+        await note(ctx, f"With so few left to fill it, {people.name} opened the {spoken(row.role)} role to all.", key="roles.opened", ids=[people.id])
         return
 
 

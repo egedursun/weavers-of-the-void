@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.affairs import MandateRow, NobleDemandRow
 from aerona.db.tables.agrarian import CommonsRow, PreparednessRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -216,7 +217,7 @@ async def judge(ctx: TickContext, realm: Realm, row: MandateRow, tally: MandateT
     place = await ctx.session.get(EntityRow, row.settlement_entity_id or -1)
     await note(
         ctx,
-        f"{place.name if place is not None else realm.entity.name} failed the {row.kind.value.replace('_', ' ')} mandate of {realm.entity.name}.",
+        f"{place.name if place is not None else realm.entity.name} failed the {spoken(row.kind)} mandate of {realm.entity.name}.",
         key="affairs.mandate_failed",
         ids=[realm.entity.id, *([place.id] if place is not None else [])],
         kind=ChronicleKind.CIVILIZATION,
@@ -276,7 +277,7 @@ async def weigh_demands(ctx: TickContext, realm: Realm, tally: MandateTally) -> 
                 kind=MemoryKind.ILL_WILL,
                 magnitude=-ctx.rules.affairs.demand_grudge,
                 epoch=ctx.epoch,
-                note=f"a demand for {want.value.replace('_', ' ')} left unmet",
+                note=f"a demand for {spoken(want)} left unmet",
             )
             tally.soured += 1
     await ctx.session.flush()

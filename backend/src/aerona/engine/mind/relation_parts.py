@@ -5,8 +5,10 @@ from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fast_session import prime_prefixes, prime_rows
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
-from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mind import CultureValueRow, MemoryRow, PersonalityValueRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.thin_sections import RelationComponentRow
 from aerona.db.write_guard import held
@@ -86,6 +88,9 @@ async def gather(ctx: TickContext, nodes: set[int]) -> Facts:
         facts.bonds.setdefault((bond.source_node_id, bond.kind), set()).add(bond.target_node_id)
     feuds = await ctx.session.execute(select(FeudRow.first_entity_id, FeudRow.second_entity_id).where(FeudRow.status == FeudStatus.ACTIVE))
     facts.feuds = {(min(first, second), max(first, second)) for first, second in feuds.all()}
+    await prime_rows(ctx.session, EntityRow, nodes)
+    await prime_prefixes(ctx.session, CultureValueRow, nodes)
+    await prime_prefixes(ctx.session, PersonalityValueRow, nodes)
     for node in nodes:
         facts.values[node] = await values_for(ctx.session, node)
     return facts

@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any
 
 from sqlalchemy import event, func, select
@@ -14,6 +14,7 @@ from sqlalchemy.util import EMPTY_DICT
 from aerona.db.read_memo import KEEP_KEY, memo_of, pending_tables, register_index, table_names, track_dirty
 
 PREFIX_KEYS = 2
+PRIME_CHUNK = 500
 WHOLE_KEY = "aerona.whole_tables"
 WHOLE_ROWS_MAX = 40_000
 COLUMN_KEYS: dict[Mapper[Any], frozenset[str]] = {}
@@ -156,6 +157,36 @@ async def rows_by_prefix[O](session: AsyncSession, model: type[O], value: Any) -
         if found is not None:
             return list(found)
     return list(await session.scalars(select(model).where(mapper.primary_key[0] == value)))
+
+
+async def prime_rows(session: AsyncSession, model: type[Any], ids: Iterable[Any]) -> None:
+    mapper = class_mapper(model)
+    known = session.sync_session.identity_map
+    wanted = sorted({value for value in ids if value is not None and mapper.identity_key_from_primary_key((value,)) not in known})
+    for start in range(0, len(wanted), PRIME_CHUNK):
+        list(await session.scalars(select(model).where(mapper.primary_key[0].in_(wanted[start : start + PRIME_CHUNK]))))
+
+
+async def prime_prefixes(session: AsyncSession, model: type[Any], values: Iterable[Any]) -> None:
+    mapper = class_mapper(model)
+    if not isinstance(session, FastSession) or len(mapper.primary_key) < PREFIX_KEYS:
+        return
+    tables = table_names(mapper.tables)
+    name = f"prefix:{','.join(sorted(tables))}"
+    memo = memo_of(session, name, tables)
+    if memo is None:
+        return
+    wanted = sorted({value for value in values if value is not None and value not in memo})
+    key = mapper.get_property_by_column(mapper.primary_key[0]).key
+    found: dict[Any, list[Any]] = {value: [] for value in wanted}
+    for start in range(0, len(wanted), PRIME_CHUNK):
+        statement = select(model).where(mapper.primary_key[0].in_(wanted[start : start + PRIME_CHUNK])).order_by(*mapper.primary_key)
+        for row in await session.scalars(statement):
+            found[getattr(row, key)].append(row)
+    after = memo_of(session, name, tables)
+    if after is not None:
+        for value, rows in found.items():
+            after.setdefault(value, rows)
 
 
 def drop_whole_on_write(state: ORMExecuteState) -> None:

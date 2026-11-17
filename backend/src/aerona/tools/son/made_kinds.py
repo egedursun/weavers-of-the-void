@@ -8,7 +8,7 @@ from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, REASON_MAX, REASON_MIN, SHORT_DESCRIPTION_MAX
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -109,7 +109,7 @@ async def shape_vehicle_type(call: SonCall, args: ShapeVehicleTypeInput) -> str:
     sizes = frame_sizes(args.frame)
     if args.emphasis is not None:
         if args.emphasis not in sizes:
-            fail(SonResult.SHAPING_REFUSED, reason=f"{an(FRAMES[args.frame].label.lower())} has no {args.emphasis.value.replace('_', ' ')}")
+            fail(SonResult.SHAPING_REFUSED, reason=f"{an(FRAMES[args.frame].label.lower())} has no {spoken(args.emphasis)}")
         sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
     design = await draw_design(call.tick, owner, args.frame, sizes=sizes, name=args.name, knowledge=await KnowledgeMap.load(call.session))
     design.description = args.description

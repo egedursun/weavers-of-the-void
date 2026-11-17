@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.belief_depth import SOURCE_TRUST_FIELDS, SourceTrustRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import RiftRow
@@ -191,7 +191,7 @@ async def trust_set(scope: PlayerScope, command: TrustSet) -> Effect:
         row = SourceTrustRow(holder_node_id=holder.id, source=command.source, locked=[])
         scope.session.add(row)
     await edit_fields(row, {"trust": command.trust}, command.hold, [], set(SOURCE_TRUST_FIELDS))
-    return Effect(f"{holder.name} trusts {command.source.value.replace('_', ' ')} at {command.trust}.", holder.id)
+    return Effect(f"{holder.name} trusts {spoken(command.source)} at {command.trust}.", holder.id)
 
 
 async def trust_of(scope: PlayerScope, holder_id: int, source: BeliefSource) -> SourceTrustRow:
@@ -205,7 +205,7 @@ async def trust_of(scope: PlayerScope, holder_id: int, source: BeliefSource) -> 
 async def trust_edit(scope: PlayerScope, command: TrustEdit) -> Effect:
     row = await trust_of(scope, command.holder_id, command.source)
     changed = await edit_fields(row, typed(type(row), command.values), command.hold, command.release, set(SOURCE_TRUST_FIELDS))
-    return Effect(f"Trust in {command.source.value.replace('_', ' ')}: {', '.join(changed) or 'nothing'} set.", command.holder_id)
+    return Effect(f"Trust in {spoken(command.source)}: {', '.join(changed) or 'nothing'} set.", command.holder_id)
 
 
 @player_action("source_trust:delete", ActionKind.EDIT_RECORD)
@@ -236,7 +236,7 @@ async def rift_control_set(scope: PlayerScope, command: RiftControlSet) -> Effec
     values = {"work": command.work, "toll": command.toll, "claimant_entity_id": command.claimant_id}
     await edit_fields(row, values, True, [], set(RIFT_CONTROL_FIELDS))
     row.claimed_epoch = await scope.epoch() if command.claimant_id is not None else row.claimed_epoch
-    return Effect(f"The rift is held to {command.work.value.replace('_', ' ')}.", rift.region_entity_id)
+    return Effect(f"The rift is held to {spoken(command.work)}.", rift.region_entity_id)
 
 
 async def control_of(scope: PlayerScope, rift_id: int) -> RiftControlRow:

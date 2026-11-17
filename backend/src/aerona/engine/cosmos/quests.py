@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.quests import LEGENDARY_AIMS, OBSTACLE_EPOCHS, REWARD_WORDS, quest_name
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -115,14 +115,14 @@ def legendary_name(quest: LegendaryQuestRow) -> str:
 
 async def open_quest(ctx: TickContext, draft: LegendaryDraft, by: str, opened_by: ActorKind) -> LegendaryQuestRow:
     if draft.aim not in LEGENDARY_AIMS.get(draft.target_kind, ()):
-        raise ValidationFailedError(f"A legendary quest cannot {draft.aim.value} {an(draft.target_kind.value.replace('_', ' '))}.")
+        raise ValidationFailedError(f"A legendary quest cannot {spoken(draft.aim)} {an(spoken(draft.target_kind))}.")
     target = await quest_target(ctx.session, draft.target_kind)
     name = quest_name(draft.aim, draft.target_kind)
     if opened_by is ActorKind.FATE and held(target.entity_id, target.star_id):
         raise ValidationFailedError(f"{name} would turn on a held thing.")
     thread = ThreadRow(
         epoch=ctx.epoch,
-        text=f"Legendary quest: {name}, {target.text}. Reward: {REWARD_WORDS[draft.reward]}; obstacle: {draft.obstacle.value.replace('_', ' ')}.",
+        text=f"Legendary quest: {name}, {target.text}. Reward: {REWARD_WORDS[draft.reward]}; obstacle: {spoken(draft.obstacle)}.",
         status=ThreadStatus.OPEN,
     )
     ctx.session.add(thread)

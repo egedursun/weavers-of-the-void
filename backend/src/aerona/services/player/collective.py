@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.collective import (
     AccountKind,
@@ -446,7 +447,7 @@ async def crowd_mood_delete(scope: PlayerScope, command: TownTarget) -> Effect:
 @player_action("cascade:spark", ActionKind.EDIT_RECORD)
 async def cascade_spark(scope: PlayerScope, command: SparkDraft) -> Effect:
     row = await control.spark_cascade(await scope.context("cascade_spark"), command.town_id, command.trigger)
-    return Effect(f"{row.participants} took part; the cascade ended as {row.outcome.value}.", command.town_id)
+    return Effect(f"{row.participants} took part; the cascade ended as {spoken(row.outcome)}.", command.town_id)
 
 
 @player_action("cascade:delete", ActionKind.EDIT_RECORD)

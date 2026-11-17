@@ -7,14 +7,13 @@ from aerona.catalog.ethics import HONOUR_MODELS, STANCE_ORDER, STANCE_READINGS
 from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.fast_session import rows_by_prefix
-from aerona.db.repositories.entities import EntityRepository
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.mind import CultureEthicRow, CultureHonourRow, MemoryRow, ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, MemoryKind, PressureKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import DeathCause
@@ -333,13 +332,15 @@ class SchismCall:
 
 async def schism(ctx: TickContext, people: EntityRow) -> SchismCall | None:
     table = ctx.rules.ethics
-    members = [
-        mortal
-        for mortal in await ctx.session.scalars(
+    mortals = list(
+        await ctx.session.scalars(
             select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.world_id == people.world_id)
         )
-        if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)) and await belongs(ctx.session, mortal, people.id)
-    ]
+    )
+    flags: dict[int, set[EntityFlag]] = {mortal.id: set() for mortal in mortals}
+    for holder_id, flag in await ctx.session.execute(select(EntityFlagRow.entity_id, EntityFlagRow.flag).where(EntityFlagRow.entity_id.in_(list(flags)))):
+        flags[holder_id].add(flag)
+    members = [mortal for mortal in mortals if is_notable(ctx.rules, mortal, flags[mortal.id]) and await belongs(ctx.session, mortal, people.id)]
     if len(members) < table.schism_min:
         return None
     ethics = await ethics_of(ctx.session, people.id)

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import and_, func, or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.culture import RiteProfileRow
@@ -150,7 +150,7 @@ async def reveal(ctx: TickContext, site: MagicSiteRow, finder: EntityRow | None,
         who = finder.name if finder is not None else "the gods"
         await note(
             ctx,
-            f"{who} found {an(site.kind.value.replace('_', ' '))} of {site.school.value.replace('_', ' ')} magic at {place.name}.",
+            f"{who} found {an(spoken(site.kind))} of {spoken(site.school)} magic at {place.name}.",
             key="dominion.magic_site_found",
             ids=[place.id, *([finder.id] if finder is not None else [])],
         )

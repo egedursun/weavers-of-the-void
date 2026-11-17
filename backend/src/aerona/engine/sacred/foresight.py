@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.sacred import DIVINATION_LAWS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.dominion import MiracleRecordRow
@@ -119,7 +120,7 @@ async def take_up(ctx: TickContext, people: EntityRow, kind: DivinationKind) -> 
     row.validity = await validity_of(ctx, row)
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{people.name} took up {kind.value.replace('_', ' ')} to read what is to come.", key="sacred.divination", ids=[people.id])
+    await note(ctx, f"{people.name} took up {spoken(kind)} to read what is to come.", key="sacred.divination", ids=[people.id])
     return row
 
 

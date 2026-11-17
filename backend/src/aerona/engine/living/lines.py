@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.kinds.line_outcomes import LINE_OUTCOMES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -96,7 +97,7 @@ async def lawful(session: AsyncSession, maker: EntityRow, method: CultivationMet
         return None
     named = await law_param(session, maker.location_id, LawKind.LIVING_CRAFT_LAW, method.value)
     level = named if named is not None else await law_param(session, maker.location_id, LawKind.LIVING_CRAFT_LAW, "level")
-    return f"{method.value.replace('_', ' ')} is banned here" if str(level) == "banned" else None
+    return f"{spoken(method)} is banned here" if str(level) == "banned" else None
 
 
 async def from_persons(session: AsyncSession, source_ids: tuple[int, ...]) -> bool:

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.constructs import InstructionSetRow
 from aerona.db.tables.entities import EntityRow
@@ -410,7 +411,7 @@ async def weather(ctx: TickContext, act: Act, form: SpellForm | None) -> str | N
         return None
     kind = FORM_WEATHER.get(form, WeatherKind.RAIN) if form is not None else WeatherKind.RAIN
     await force_weather(ctx.session, region, kind, from_epoch=ctx.epoch, epochs=1, season_position=None)
-    return f"called {kind.value.replace('_', ' ')} over {region.name}"
+    return f"called {spoken(kind)} over {region.name}"
 
 
 async def future_for(ctx: TickContext, seer: EntityRow, subject: EntityRow | None) -> tuple[ProphecyPredicate, int, int]:

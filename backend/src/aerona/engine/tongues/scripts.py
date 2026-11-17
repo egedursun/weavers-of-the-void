@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from aerona.catalog.tongues import SCRIPT_CHAIN, SCRIPT_SIGNS, WRITABLE
 from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.tongues import ScriptRow
 from aerona.db.write_guard import held
@@ -88,7 +89,7 @@ async def evolve(ctx: TickContext, language: EntityRow, profile: LanguageProfile
     tally.evolved += 1
     await note(
         ctx,
-        f"The script of {language.name} became {WRITING_SYSTEM_PHRASES[following]} through {cause.value}.",
+        f"The script of {language.name} became {WRITING_SYSTEM_PHRASES[following]} through {spoken(cause)}.",
         key="tongues.script_evolved",
         ids=[language.id],
         kind=ChronicleKind.CULTURE,

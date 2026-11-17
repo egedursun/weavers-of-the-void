@@ -1,3 +1,4 @@
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.quests import QuestAim
@@ -55,7 +56,7 @@ async def quest(scope: PlayerScope, command: Quest) -> Effect:
 @player_action("hero:resolve", ActionKind.ADVENTURE)
 async def resolve(scope: PlayerScope, command: QuestEnd) -> Effect:
     status = await resolve_quest(await scope.context("resolve_quest"), command.hero_id, command.succeed)
-    return Effect(f"The quest ended: {status.value.replace('_', ' ')}.", command.hero_id, values={"status": status.value})
+    return Effect(f"The quest ended: {spoken(status)}.", command.hero_id, values={"status": status.value})
 
 
 @player_action("hero:recall", ActionKind.RECALL_HERO)
@@ -74,9 +75,7 @@ async def apprentice(scope: PlayerScope, command: HeroTarget) -> Effect:
 async def hunt(scope: PlayerScope, command: Hunt) -> Effect:
     result = await send_hero_to_hunt(await scope.context("hunt"), command.hero_id, command.monster_id)
     created = (result.legend.id,) if result.legend is not None else ()
-    return Effect(
-        f"The hunt ended: {result.outcome.value.replace('_', ' ')}.", command.monster_id, created_ids=created, values={"outcome": result.outcome.value}
-    )
+    return Effect(f"The hunt ended: {spoken(result.outcome)}.", command.monster_id, created_ids=created, values={"outcome": result.outcome.value})
 
 
 @player_action("faction:found", ActionKind.FOUND_FACTION)
