@@ -17,7 +17,7 @@ async def test_many_beliefs_of_one_holder_ask_for_its_trust_once(session: AsyncS
         if "source_trust" in statement:
             asked.append(statement)
 
-    engine = session.bind.sync_engine if hasattr(session.bind, "sync_engine") else session.bind
+    engine = session.sync_session.get_bind()
     event.listen(engine, "before_cursor_execute", counted)
     try:
         for attribute in ("wealth", "population", "might", "piety"):
