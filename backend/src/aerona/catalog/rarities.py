@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from aerona.constants.tool_inputs import POWER_LEVEL_MIN
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.models.names import NameSimilarityPolicy
 from aerona.rules.registry import Rules
@@ -105,16 +106,26 @@ def build_rarity_table(rules: Rules) -> dict[Rarity, RarityProfile]:
     return profiles
 
 
-def entity_rarity(rules: Rules, power_level: int) -> Rarity:
+def _entity_tiers(rules: Rules) -> tuple[tuple[int, Rarity], ...]:
     core = rules.core_rules
-    thresholds = (
+    return (
         (core.tier_mythic, Rarity.MYTHIC),
         (core.tier_legendary, Rarity.LEGENDARY),
         (core.tier_epic, Rarity.EPIC),
         (core.tier_rare, Rarity.RARE),
         (core.tier_uncommon, Rarity.UNCOMMON),
     )
-    return next((rarity for threshold, rarity in thresholds if power_level >= threshold), Rarity.COMMON)
+
+
+def entity_rarity(rules: Rules, power_level: int) -> Rarity:
+    return next((rarity for threshold, rarity in _entity_tiers(rules) if power_level >= threshold), Rarity.COMMON)
+
+
+def entity_power_band(rules: Rules, rarity: Rarity) -> tuple[int, int | None]:
+    tiers = _entity_tiers(rules)
+    low = next((threshold for threshold, tier in tiers if tier is rarity), POWER_LEVEL_MIN)
+    higher = [threshold for threshold, tier in tiers if tier.rank > rarity.rank]
+    return low, (min(higher) - 1 if higher else None)
 
 
 def name_similarity_policy(rules: Rules) -> NameSimilarityPolicy:

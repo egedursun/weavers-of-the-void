@@ -1526,6 +1526,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/belonging/IdentityPanel.tsx` | 1 | 2026-11-16 | `c7f937836f5d82d5` |
 | `frontend/src/features/belonging/PeersPanel.tsx` | 3 | 2026-11-16 | `0b66d6a1206cbd37` |
 | `frontend/src/features/belonging/SanctuaryPanel.tsx` | 2 | 2026-11-16 | `f45e5c602c8e9b3b` |
+| `frontend/src/features/cards/CardsScreen.tsx` | 1 | 2026-11-17 | `bc51932b8084e21e` |
 | `frontend/src/features/celestial/SeasonCalendarPanel.tsx` | 2 | 2026-11-16 | `d09658b031f0c123` |
 | `frontend/src/features/celestial/WorldSeasonsSection.tsx` | 2 | 2026-11-16 | `bbff202bfda96acd` |
 | `frontend/src/features/chronicle/ChronicleFilters.tsx` | 1 | 2026-11-16 | `99a5523219c50dcd` |

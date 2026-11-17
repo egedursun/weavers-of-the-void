@@ -32,6 +32,7 @@ import {
   SunMoon,
   Target,
   UsersRound,
+  WalletCards,
   Waypoints,
   Wrench,
 } from 'lucide-react'
@@ -40,6 +41,7 @@ export type NavRoute =
   | '/'
   | '/epoch'
   | '/pantheon'
+  | '/cards'
   | '/goals'
   | '/council'
   | '/prayers'
@@ -193,6 +195,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Crown,
         description: 'Your sons, their cards, threads and rivalries.',
         shortcut: '3',
+      },
+      {
+        id: 'cards',
+        title: 'Cards',
+        to: '/cards',
+        icon: WalletCards,
+        description:
+          'Every god, mortal, beast, spirit and being as a collectible card: search, swipe, turn over and save.',
       },
       {
         id: 'prayers',

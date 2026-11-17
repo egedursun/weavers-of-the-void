@@ -3,6 +3,7 @@
 @import './theme.css';
 @import './ornate.css';
 @import './chrome.css';
+@import './cards.css';
 
 @custom-variant dark (&:is(.dark *):not(.dark .light *));
 

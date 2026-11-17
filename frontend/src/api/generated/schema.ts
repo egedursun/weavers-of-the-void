@@ -1727,6 +1727,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/cards': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_cards_api_cards_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/opportunities/creator': {
     parameters: {
       query?: never
@@ -45837,6 +45853,7 @@ export interface components {
       fate: components['schemas']['CaptiveFate']
       count?: number | null
     }
+    CardOrder: 'power' | 'name' | 'newest'
     CareerPath:
       | 'stay'
       | 'army'
@@ -46299,6 +46316,61 @@ export interface components {
       worlds_changed: boolean
       relations_changed: boolean
       foreign_god_ids: number[]
+    }
+    CharacterCard: {
+      node_id: number
+      node_kind: components['schemas']['NodeKind']
+      entity_type: components['schemas']['EntityType'] | null
+      name: string
+      title: string | null
+      subtype: string | null
+      rarity: components['schemas']['Rarity'] | null
+      stars: number | null
+      power_level: number | null
+      level: number | null
+      xp: number | null
+      domains: components['schemas']['Domain'][]
+      world_id: number | null
+      cover: string | null
+      flavor: string
+      headline: components['schemas']['CharacterCardStat'][]
+      stats: components['schemas']['CharacterCardStat'][]
+      abilities: components['schemas']['CharacterCardAbility'][]
+      notes: components['schemas']['CharacterCardNote'][]
+      fallen: boolean
+      born_epoch: number | null
+      ended_epoch: number | null
+    }
+    CharacterCardAbility: {
+      name: string
+      text: string
+    }
+    CharacterCardNote: {
+      label: string
+      text: string
+    }
+    CharacterCardPage: {
+      items: components['schemas']['CharacterCard'][]
+      total: number
+      offset: number
+      limit: number
+      decks: components['schemas']['CharacterDeckCount'][]
+      rarities: components['schemas']['CharacterRarityCount'][]
+    }
+    CharacterCardStat: {
+      key: string
+      label: string
+      value: number
+      maximum: number | null
+    }
+    CharacterDeckCount: {
+      node_kind: components['schemas']['NodeKind']
+      entity_type: components['schemas']['EntityType'] | null
+      total: number
+    }
+    CharacterRarityCount: {
+      rarity: components['schemas']['Rarity']
+      total: number
     }
     ChargeArrangement:
       | 'two_and_one'
@@ -84058,6 +84130,43 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_cards_api_cards_get: {
+    parameters: {
+      query?: {
+        q?: string | null
+        node_kind?: components['schemas']['NodeKind'] | null
+        entity_type?: components['schemas']['EntityType'] | null
+        rarity?: components['schemas']['Rarity'] | null
+        world_id?: number | null
+        fallen?: boolean | null
+        order?: components['schemas']['CardOrder']
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CharacterCardPage']
         }
       }
       default: {
@@ -163085,6 +163194,9 @@ export const captiveStatusValues: ReadonlyArray<
   'released',
   'ward',
 ]
+export const cardOrderValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CardOrder']
+> = ['power', 'name', 'newest']
 export const careerPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CareerPath']
 > = [
