@@ -30,12 +30,25 @@ TRUST_BASE = 60
 BELIEF_INDEX = "aerona.belief_index"
 BELIEF_INDEX_WHOLE = "aerona.belief_index.whole"
 BELIEF_PENDING = "aerona.belief_index.pending"
+TRUST_ABSENT = "source_trust_absent"
 BELIEF_KEYS = ("holder_node_id", "subject_node_id", "attribute")
 
 
 def note_pending(sync: Session, instance: object) -> None:
     if isinstance(instance, BeliefRow):
         sync.info.setdefault(BELIEF_PENDING, []).append(instance)
+    if isinstance(instance, SourceTrustRow):
+        sync.info.get(TRUST_ABSENT, set()).discard((instance.holder_node_id, instance.source))
+
+
+async def trust_of(session: AsyncSession, holder_id: int, source: BeliefSource) -> SourceTrustRow | None:
+    absent: set[tuple[int, BeliefSource]] = session.sync_session.info.setdefault(TRUST_ABSENT, set())
+    if (holder_id, source) in absent:
+        return None
+    row = await session.get(SourceTrustRow, (holder_id, source))
+    if row is None:
+        absent.add((holder_id, source))
+    return row
 
 
 def foreign_beliefs(sync: Session, index: dict[int, dict[tuple[int, str], BeliefRow]]) -> bool:
@@ -86,6 +99,7 @@ def follow_beliefs(sync: Session, *_: object) -> None:
 
 
 def drop_beliefs(sync: Session, *_: object) -> None:
+    sync.info.pop(TRUST_ABSENT, None)
     sync.info.pop(BELIEF_INDEX, None)
     sync.info.pop(BELIEF_INDEX_WHOLE, None)
     sync.info.pop(BELIEF_PENDING, None)
@@ -109,7 +123,7 @@ async def believe(
 ) -> BeliefRow | None:
     if held(holder_id):
         return None
-    trusted = await ctx.session.get(SourceTrustRow, (holder_id, source))
+    trusted = await trust_of(ctx.session, holder_id, source)
     if trusted is not None:
         if trusted.trust < ctx.rules.belief_depth.trust_floor and not false:
             return None
