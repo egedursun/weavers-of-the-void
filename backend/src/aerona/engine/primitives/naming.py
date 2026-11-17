@@ -1,8 +1,9 @@
 from collections import Counter
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.constants.engine import ENGINE_SEED_SEPARATOR, PERSON_NAME_ATTEMPTS, WORLD_LANGUAGE_FALLBACKS
 from aerona.db.read_memo import memo_of, memoized, table_names
@@ -25,19 +26,52 @@ from aerona.language.similarity import NamePool
 from aerona.language.voice import build_voice, phonology_for
 from aerona.rules.registry import Rules
 
-NAME_TABLES = table_names((NameRegistryRow,))
 ALPHABET_TABLES = table_names((LexemeRow, EntityRow))
 
 
+POOLS_KEY = "aerona.name_pools"
+
+
+def pools_of(sync: Session) -> dict[int, tuple[Rules, NamePool]]:
+    pools: dict[int, tuple[Rules, NamePool]] = sync.info.setdefault(POOLS_KEY, {})
+    return pools
+
+
+def grow_pools(sync: Session, instance: object) -> None:
+    if not isinstance(instance, NameRegistryRow):
+        return
+    for _rules, pool in sync.info.get(POOLS_KEY, {}).values():
+        pool.add(instance.display)
+
+
+def shrink_pools(sync: Session, *_: object) -> None:
+    if any(isinstance(item, NameRegistryRow) for item in sync.deleted):
+        sync.info.pop(POOLS_KEY, None)
+
+
+def drop_pools(sync: Session, *_: object) -> None:
+    sync.info.pop(POOLS_KEY, None)
+
+
+def drop_pools_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select and getattr(getattr(state.statement, "table", None), "name", None) == NameRegistryRow.__tablename__:
+        drop_pools(state.session)
+
+
+event.listen(Session, "transient_to_pending", grow_pools)
+event.listen(Session, "before_flush", shrink_pools)
+event.listen(Session, "after_soft_rollback", drop_pools)
+event.listen(Session, "do_orm_execute", drop_pools_on_write)
+
+
 async def registered_pool(session: AsyncSession, rules: Rules) -> NamePool:
-    memo = memo_of(session, "registered_pool", NAME_TABLES)
-    known: tuple[Rules, NamePool] | None = memo.get(id(rules)) if memo is not None else None
+    pools = pools_of(session.sync_session)
+    known = pools.get(id(rules))
     if known is not None and known[0] is rules:
         return known[1]
-    pool = NamePool(list(await session.scalars(select(NameRegistryRow.display))), rules)
-    after = memo_of(session, "registered_pool", NAME_TABLES)
-    if after is not None:
-        after[id(rules)] = (rules, pool)
+    pending = [item.display for item in session.sync_session.new if isinstance(item, NameRegistryRow)]
+    pool = NamePool([*await session.scalars(select(NameRegistryRow.display)), *pending], rules)
+    pools_of(session.sync_session)[id(rules)] = (rules, pool)
     return pool
 
 

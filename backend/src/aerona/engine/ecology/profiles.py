@@ -345,7 +345,7 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
     terrain = land.dominant_terrain if land is not None else TerrainKind.PLAIN
     habitat = {terrain.value: PERCENT}
     if traits & {T.AQUATIC, T.AMPHIBIOUS} or nature.plan is P.AQUATIC:
-        habitat |= {kind.value: ctx.rules.habitat.water_fit for kind in WATER}
+        habitat |= {kind.value: ctx.rules.habitat.water_fit for kind in sorted(WATER)}
     temperature = land.temperature if land is not None else table.default_temperature
     elevation = land.elevation_mean if land is not None else 0
     seasonal = land is not None and land.seasonality >= ctx.rules.dormancy.seasonal_at and size in SLEEPERS and not nature.migratory

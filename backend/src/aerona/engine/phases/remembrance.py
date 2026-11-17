@@ -500,7 +500,7 @@ async def heroes_remembered(ctx: TickContext, budget: int) -> int:
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.DEAD, EntityRow.end_epoch == ctx.epoch - 1)
         .order_by(EntityRow.id)
     )
-    flagged = {flag: await flags_by_entity(ctx.session, flag) for flag in HERO_FLAGS}
+    flagged = {flag: await flags_by_entity(ctx.session, flag) for flag in sorted(HERO_FLAGS)}
     for mortal in unheld(list(dead)):
         if made >= budget:
             break
