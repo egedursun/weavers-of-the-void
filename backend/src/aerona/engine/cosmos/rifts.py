@@ -10,18 +10,19 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.travel import RouteClosure, TravelMethod
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.interconnect.annotations import reads
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import StepDraft, record
 
 WARDS = frozenset({EngineKind.TEMPLE, EngineKind.WALL})
 
@@ -60,14 +61,15 @@ async def open_rift(
     ctx.session.add(rift)
     await ctx.session.flush()
     await open_passage(ctx, rift)
-    where = region.name if region is not None else world.name
-    await note(
+    where = region.id if region is not None else world.id
+    await record(
         ctx,
-        f"A rift opened in {where} into {dimension.name}.",
-        key=f"rift.opened.{cause.value}",
-        ids=[region.id] if region is not None else [],
+        f"rift.opened.{cause.value}",
+        roles={IncidentRole.PLACE: where, IncidentRole.DESTINATION: dimension.id, IncidentRole.ACTOR: by_node_id},
+        facts={"cause": cause, "size": rift.size, "stability": rift.stability},
+        steps=(StepDraft(StepAction.OPEN, actor=by_node_id, locus_kind=StepLocus.REGION if region is not None else StepLocus.REALM, locus_node=where),),
+        place=region.id if region is not None else None,
         world_id=world.id,
-        kind=ChronicleKind.COSMIC,
     )
     return rift
 
@@ -99,17 +101,27 @@ async def close_passage(ctx: TickContext, rift: RiftRow) -> None:
         route.closure = RouteClosure.SEALED
 
 
-async def seal_rift(ctx: TickContext, rift_id: int, by: str) -> RiftRow:
+async def seal_rift(ctx: TickContext, rift_id: int, by_id: int | None = None) -> RiftRow:
     rift = await ctx.session.get(RiftRow, rift_id)
     if rift is None:
         raise NotFoundError("No such rift.")
     if rift.state not in OPEN_RIFT_STATES:
         raise ValidationFailedError("That rift is already closed.")
+    size = rift.size
     rift.state = RiftState.SEALED
     rift.size = 0
     rift.sealed_epoch = ctx.epoch
     await close_passage(ctx, rift)
-    await note(ctx, f"{by} sealed a rift.", key="rift.sealed", world_id=rift.world_id, kind=ChronicleKind.MIRACLE)
+    where = rift.region_entity_id or rift.world_id
+    await record(
+        ctx,
+        "rift.sealed",
+        roles={IncidentRole.PLACE: where, IncidentRole.DESTINATION: rift.dimension_id, IncidentRole.ACTOR: by_id},
+        facts={"size": size},
+        steps=(StepDraft(StepAction.CLOSE, actor=by_id, outcome=StepOutcome.SUCCESS),),
+        place=rift.region_entity_id,
+        world_id=rift.world_id,
+    )
     await ctx.session.flush()
     return rift
 
@@ -129,7 +141,7 @@ async def tear_toward(
     return await open_rift(ctx, world, region, others[0], cause, by_node_id=by_node_id)
 
 
-async def seal_near(ctx: TickContext, region_id: int | None, by: str) -> RiftRow | None:
+async def seal_near(ctx: TickContext, region_id: int | None, by_id: int | None = None) -> RiftRow | None:
     if region_id is None:
         return None
     statement = (
@@ -138,7 +150,7 @@ async def seal_near(ctx: TickContext, region_id: int | None, by: str) -> RiftRow
     for rift in await ctx.session.scalars(statement):
         if held(rift.world_id, rift.region_entity_id, rift.dimension_id) or "state" in rift.locked:
             continue
-        await seal_rift(ctx, rift.id, by)
+        await seal_rift(ctx, rift.id, by_id)
         dimension = await ctx.session.get(DimensionRow, rift.dimension_id)
         if dimension is not None and "veil" not in dimension.locked:
             dimension.veil = clamp_percent(dimension.veil + ctx.rules.rifts.ward_veil)
@@ -161,8 +173,15 @@ async def collapse(ctx: TickContext, rift: RiftRow) -> None:
     region = await ctx.session.get(EntityRow, rift.region_entity_id) if rift.region_entity_id is not None else None
     if region is not None and not held(region.id):
         await apply_disaster(ctx, region, Disaster.EARTHQUAKE, ctx.rules.rifts.collapse_severity / PERCENT)
-    await note(
-        ctx, f"A rift collapsed{' in ' + region.name if region is not None else ''}.", key="rift.collapsed", world_id=rift.world_id, kind=ChronicleKind.COSMIC
+    where = rift.region_entity_id or rift.world_id
+    await record(
+        ctx,
+        "rift.collapsed",
+        roles={IncidentRole.PLACE: where, IncidentRole.DESTINATION: rift.dimension_id},
+        facts={"severity": ctx.rules.rifts.collapse_severity},
+        steps=(StepDraft(StepAction.COLLAPSE, outcome=StepOutcome.DESTROYED),),
+        place=rift.region_entity_id,
+        world_id=rift.world_id,
     )
 
 
@@ -179,7 +198,16 @@ async def tend_rift(ctx: TickContext, rift: RiftRow) -> None:
         rift.state = RiftState.SEALED
         rift.sealed_epoch = ctx.epoch
         await close_passage(ctx, rift)
-        await note(ctx, "A rift closed by itself.", key="rift.closed", world_id=rift.world_id, kind=ChronicleKind.COSMIC)
+        where = rift.region_entity_id or rift.world_id
+        await record(
+            ctx,
+            "rift.closed",
+            roles={IncidentRole.PLACE: where, IncidentRole.DESTINATION: rift.dimension_id},
+            facts={"stability": rift.stability},
+            steps=(StepDraft(StepAction.CLOSE, outcome=StepOutcome.SUCCESS),),
+            place=rift.region_entity_id,
+            world_id=rift.world_id,
+        )
         return
     if "state" not in rift.locked:
         steady = rift.stability >= table.steady_at

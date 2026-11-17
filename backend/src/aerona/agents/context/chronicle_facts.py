@@ -6,12 +6,14 @@ from sqlalchemy import or_, select
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
 from aerona.core.grammar import fill
+from aerona.db.repositories.chronicle import kept_lines
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
@@ -23,6 +25,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import GodConflictOutcome
+from aerona.engine.lore.account_text import account_context
 from aerona.prompts.contexts.chronicler import (
     ChroniclerFactSheet,
     ContestKind,
@@ -91,6 +94,7 @@ class EpochFacts:
     rejected: dict[int, str] = field(default_factory=dict)
     record_names: dict[int, str] = field(default_factory=dict)
     world_of: dict[str, int | None] = field(default_factory=dict)
+    event_rows: dict[str, int] = field(default_factory=dict)
 
     @property
     def sheet(self) -> ChroniclerFactSheet:
@@ -172,9 +176,7 @@ async def unique_rejected(scope: Scope) -> dict[int, str]:
 async def epoch_rows(scope: Scope, epoch: int, rejected: set[int]) -> tuple[list[ChronicleRow], dict[int, list[EntityRow]]]:
     rows = list(
         await scope.session.scalars(
-            select(ChronicleRow)
-            .where(ChronicleRow.epoch == epoch, ChronicleRow.visible.is_(True), ChronicleRow.kind.not_in([ChronicleKind.ENGINE_RAW, ChronicleKind.SYSTEM]))
-            .order_by(ChronicleRow.id)
+            select(ChronicleRow).where(ChronicleRow.epoch == epoch, kept_lines(), ChronicleRow.kind != ChronicleKind.SYSTEM).order_by(ChronicleRow.id)
         )
     )
     links = await linked_entities(scope, [row.id for row in rows])
@@ -249,11 +251,14 @@ async def contest_outcomes(scope: Scope, epoch: int) -> list[FactOutcome]:
 async def previous_verdict_facts(scope: Scope, epoch: int, limit: int, son_names: set[str]) -> tuple[list[FactVerdict], dict[str, list[str]]]:
     rows = list(
         await scope.session.scalars(
-            select(ChronicleRow).where(ChronicleRow.epoch == epoch - 1, ChronicleRow.template_key.in_(VERDICT_KEYS)).order_by(ChronicleRow.id).limit(limit)
+            select(ChronicleRow).where(ChronicleRow.epoch == epoch - 1, ChronicleRow.template_key.in_(VERDICT_KEYS)).order_by(ChronicleRow.id)
         )
     )
     links = await linked_entities(scope, [row.id for row in rows])
-    verdicts = [FactVerdict(ref=verdict_ref(row.id), text=shorten(row.text, scope.rules.chronicle_audit.deed_chars)) for row in rows]
+    verdicts = [
+        FactVerdict(ref=verdict_ref(row.id), text=shorten(row.text, scope.rules.chronicle_audit.deed_chars), required=index < limit)
+        for index, row in enumerate(rows)
+    ]
     keys = {verdict_ref(row.id): [entity.name for entity in links.get(row.id, []) if entity.name not in son_names] for row in rows}
     return verdicts, keys
 
@@ -312,6 +317,7 @@ def add_events(scope: Scope, facts: EpochFacts, rows: list[ChronicleRow], links:
                 continue
             folded[fold] = row.id
             ref = event_ref(row.id)
+            facts.event_rows[ref] = row.id
             per_category[category] += 1
             world = scope.world_name(row.world_id) if scope.multi_world and row.world_id is not None else None
             facts.events.append(FactEvent(ref=ref, category=category.value, world=world or None, text=shorten(row.text, settings.deed_chars)))
@@ -389,6 +395,39 @@ async def history_facts(scope: Scope, epoch: int) -> list[FactHistory]:
     ]
 
 
+async def with_accounts(scope: Scope, events: list[FactEvent], rows: dict[str, int]) -> list[FactEvent]:
+    chronicle_ids = sorted({rows[event.ref] for event in events if event.ref in rows})
+    if not chronicle_ids:
+        return events
+    incidents = {
+        chronicle: incident
+        for incident, chronicle in await scope.session.execute(
+            select(IncidentRow.id, IncidentRow.chronicle_id).where(IncidentRow.chronicle_id.in_(chronicle_ids))
+        )
+    }
+    limit = scope.rules.context.chronicler_steps_shown
+    told: list[FactEvent] = []
+    for event in events:
+        incident_id = incidents.get(rows.get(event.ref, 0))
+        if incident_id is None:
+            told.append(event)
+            continue
+        account = await account_context(scope.session, incident_id, step_offset=0, step_limit=limit)
+        told.append(
+            event.model_copy(
+                update={
+                    "name": account.name,
+                    "place": account.place,
+                    "account": [f"{role.role}: {role.name}" for role in account.roles] + [f"{fact.key}: {fact.value!s}" for fact in account.facts],
+                    "steps": [step.text for step in account.steps],
+                    "more_steps": account.more_steps,
+                    "cause": account.cause,
+                }
+            )
+        )
+    return told
+
+
 async def epoch_facts(scope: Scope, epoch: int) -> EpochFacts:
     settings = scope.rules.chronicle_audit
     rejected = await unique_rejected(scope)
@@ -414,6 +453,7 @@ async def epoch_facts(scope: Scope, epoch: int) -> EpochFacts:
     )
     generic = {scope.creator.name, *son_names.values(), *(world.name for world in scope.worlds.values())}
     add_events(scope, facts, rows, links, skip=son_rows, generic=generic)
+    facts.events = await with_accounts(scope, facts.events, facts.event_rows)
     facts.histories.extend(await history_facts(scope, epoch))
     facts.tales.extend(await tale_facts(scope, epoch))
     facts.payoffs.extend(await payoff_facts(scope, epoch))

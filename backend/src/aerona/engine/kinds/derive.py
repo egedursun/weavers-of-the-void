@@ -8,6 +8,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
 from aerona.db.kind_concepts.registry import CONCEPTS
 from aerona.db.kind_concepts.spec import ConceptSpec
+from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kinds import GoodKindRow, KindHoldingRow, KindRow
 from aerona.db.write_guard import held
@@ -15,15 +16,16 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.demography.prices import market_index
 from aerona.engine.kinds.acts import filled
 from aerona.engine.kinds.life import CARRIED
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.language.generator import NameKind
 
 Tied = Callable[[TickContext, KindRow], Awaitable[set[CommodityKind]]]
@@ -211,11 +213,12 @@ async def substitute(ctx: TickContext, holding: KindHoldingRow, tally: DeriveTal
     if "strength" not in holding.locked:
         holding.strength = clamp_int(holding.strength - table.substitution_fade, 0, PERCENT)
     tally.substituted += 1
-    await note(
+    await record(
         ctx,
-        f"{row.name} came into use in place of {kind.name} while {COMMODITIES[scarce].label.lower()} stayed dear.",
-        key="kinds.substituted",
-        ids=[holding.holder_node_id],
+        "kinds.substituted",
+        roles={IncidentRole.OWNER: holding.holder_node_id},
+        facts={"concept": holding.concept, "kind": kind.name, "substitute": row.name, "scarce": scarce, "plenty": plenty, "price_index": felt},
+        terms=(Term("market.price", prices[scarce], source_node_id=holding.holder_node_id), Term("kinds.scarcity_index", table.scarcity_index)),
     )
 
 
@@ -261,7 +264,12 @@ async def fuse(ctx: TickContext, holder_id: int, holdings: list[KindHoldingRow],
                 return
             averaged(spec, stronger, weaker, row)
             tally.fused += 1
-            await note(ctx, f"{row.name} grew out of {stronger.name} and {weaker.name}.", key="kinds.fused", ids=[holder_id])
+            await record(
+                ctx,
+                "kinds.fused",
+                roles={IncidentRole.OWNER: holder_id},
+                facts={"concept": concept, "kind": row.name, "stronger": stronger.name, "weaker": weaker.name},
+            )
             return
 
 

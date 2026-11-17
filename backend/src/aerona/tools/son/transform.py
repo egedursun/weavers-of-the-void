@@ -11,6 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.transform import TransformKind, TransformTrigger
 from aerona.engine.transform.run import press
 from aerona.prompts import SonToolId
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -49,7 +49,12 @@ async def press_transformation(call: SonCall, args: PressTransformationInput) ->
     call.spend_essence(cost)
     call.target(node.id)
     change = TRANSFORMS[args.kind].label.lower()
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.PRESS_TRANSFORMATION, son=call.son.name, subject=node.name, change=change, reason=args.reason)
+    await call.record(
+        "tools.son.press_transformation",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"change": change, "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.TRANSFORMATION_PRESSED, subject=node.name, change=change, progress=row.progress)
 
 

@@ -1,4 +1,5 @@
-from collections.abc import Sequence
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -140,6 +141,8 @@ class RecordSpec:
 class SweepResult:
     closed: int
     transferred: int
+    passed: Mapping[int, tuple[int, tuple[int, ...]]] = field(default_factory=dict)
+    closed_of: Mapping[int, int] = field(default_factory=dict)
 
 
 def sentence_case(text: str) -> str:
@@ -244,10 +247,12 @@ async def retire(
     append: bool = False,
     close_bonds: bool = False,
 ) -> EntityRow:
+    entities = EntityRepository(session)
+    await entities.load_columns(entity)
     if note:
         entity.description = append_sentence(entity.description, note)
     fate_note = append_sentence(entity.fate_note, note) if note and append else note
-    await EntityRepository(session).set_status(entity, status, epoch, fate_note)
+    await entities.set_status(entity, status, epoch, fate_note)
     if entity.end_epoch is None or entity.end_epoch != epoch:
         entity.end_epoch = epoch
     if close_bonds:
@@ -299,10 +304,13 @@ async def sweep_dead_bonds(session: AsyncSession, epoch: int, single_id: int | N
     heirs: dict[int, EntityRow | None] = {}
     closed = 0
     transferred = 0
+    passed: dict[int, list[int]] = defaultdict(list)
+    closed_of: dict[int, int] = defaultdict(int)
     statement = select(BondRow).where(BondRow.state == BondState.ACTIVE, BondRow.kind.in_(list(SOURCE_STATE_KINDS)), BondRow.source_node_id.in_(list(dead_ids)))
     for bond in list(await session.scalars(statement.order_by(BondRow.id))):
         await bonds.deactivate(bond, epoch, DEATH_CLOSE_REASON)
         closed += 1
+        closed_of[bond.source_node_id] += 1
         if bond.kind not in INHERITED_KINDS:
             continue
         target = await living_entity(session, bond.target_node_id)
@@ -321,15 +329,18 @@ async def sweep_dead_bonds(session: AsyncSession, epoch: int, single_id: int | N
         dead = await session.get(EntityRow, bond.source_node_id)
         await connect(session, heir.id, target.id, bond.kind, epoch, description=f"inherited from {dead.name if dead is not None else 'the dead'}")
         transferred += 1
+        passed[bond.source_node_id].append(target.id)
     target_statement = select(BondRow).where(
         BondRow.state == BondState.ACTIVE, BondRow.kind.in_(list(TARGET_STATE_KINDS)), BondRow.target_node_id.in_(list(dead_ids))
     )
     for bond in list(await session.scalars(target_statement.order_by(BondRow.id))):
         await bonds.deactivate(bond, epoch, DEATH_CLOSE_REASON)
         closed += 1
+        closed_of[bond.target_node_id] += 1
     for route in list(await session.scalars(select(RouteRow).where(RouteRow.controller_entity_id.in_(list(dead_ids))))):
         dead = await session.get(EntityRow, route.controller_entity_id) if route.controller_entity_id is not None else None
         heir = heirs.get(dead.id) if dead is not None and dead.id in heirs else (await heir_of(session, dead) if dead is not None else None)
         route.controller_entity_id = heir.id if heir is not None and heir.entity_type in COMMUNITY_TYPES else None
     await session.flush()
-    return SweepResult(closed, transferred)
+    inherited = {dead_id: (heir.id, tuple(targets)) for dead_id, targets in passed.items() if (heir := heirs.get(dead_id)) is not None}
+    return SweepResult(closed, transferred, inherited, dict(closed_of))

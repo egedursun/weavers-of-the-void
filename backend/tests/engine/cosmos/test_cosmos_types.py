@@ -124,7 +124,7 @@ async def test_a_black_sun_lasts_until_its_star_is_rekindled(ctx: TickContext, c
     await sky_event(ctx, SkyEventKind.BLACK_SUN, SkyOrder(star_id=cosmos.star.id))
     assert SkyEventKind.BLACK_SUN in (await active_sky(ctx.session, ctx.epoch + 20))[cosmos.home.id]
     later = tick(ctx.session, ctx.rules, epoch=ctx.epoch + 3)
-    await rekindle_star(later, cosmos.star.id, "The Creator")
+    await rekindle_star(later, cosmos.star.id, "The Creator", cosmos.creator.id)
     row = await ctx.session.scalar(select(SkyEventRow).where(SkyEventRow.kind == SkyEventKind.BLACK_SUN))
     assert row is not None and row.until_epoch == ctx.epoch + 3
     assert SkyEventKind.BLACK_SUN not in (await active_sky(ctx.session, ctx.epoch + 4)).get(cosmos.home.id, frozenset())

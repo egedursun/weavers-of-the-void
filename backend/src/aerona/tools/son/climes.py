@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.climes import DIRECTIONS, CirculationBand
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.climes import control
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -51,7 +51,12 @@ async def stir_monsoon(call: SonCall, args: StirMonsoonInput) -> str:
     values = {"strength": strength, "failed": strength < call.tick.rules.monsoons.fail_below}
     await control.set_record(call.tick, "monsoon_season", {"world_id": world.id, "epoch": call.tick.epoch}, values)
     told = "a strong monsoon" if args.strong else "the failing of the monsoon"
-    await call.chronicle(ChronicleKind.CLIMATE, lines.STIR_MONSOON, entity_ids=[], son=call.son.name, told=told, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.stir_monsoon",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"told": str(told), "reason": args.reason},
+        kind=ChronicleKind.CLIMATE,
+    )
     return result(SonResult.MONSOON_STIRRED, world=world.name, strong=args.strong)
 
 
@@ -67,8 +72,12 @@ async def turn_wind(call: SonCall, args: TurnWindInput) -> str:
     await control.set_record(call.tick, "region_wind", {"region_entity_id": region.id}, {"band": band, "wind_from": args.wind_from})
     call.target(region.id)
     direction = DIRECTIONS[args.wind_from]
-    await call.chronicle(
-        ChronicleKind.CLIMATE, lines.TURN_WIND, entity_ids=[region.id], son=call.son.name, region=region.name, direction=direction, reason=args.reason
+    await call.record(
+        "tools.son.turn_wind",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"direction": str(direction), "reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.CLIMATE,
     )
     return result(SonResult.WIND_TURNED, region=region.name, direction=direction)
 

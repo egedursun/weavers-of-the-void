@@ -3,7 +3,7 @@ from types import MappingProxyType
 from aerona.core.total import total
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim, KillMethod, LegalSystem, MoleHuntOutcome, RecruitMotive, RegistryKind
+from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim, KillMethod, LegalSystem, RecruitMotive, RegistryKind
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import OfficeKind
 
@@ -73,15 +73,6 @@ MOTIVE_TEXT = total(
         RecruitMotive.IDEOLOGY: "for belief",
         RecruitMotive.COMPROMISE: "under a hook",
         RecruitMotive.EGO: "for pride or grievance",
-    },
-)
-HUNT_TEXT = total(
-    MoleHuntOutcome,
-    {
-        MoleHuntOutcome.CAUGHT: "caught a mole",
-        MoleHuntOutcome.CLEARED: "accused an official and cleared them",
-        MoleHuntOutcome.PURGED: "purged an innocent official",
-        MoleHuntOutcome.DEFECTED: "drove an innocent official to defect",
     },
 )
 METHOD_STEALTH = total(

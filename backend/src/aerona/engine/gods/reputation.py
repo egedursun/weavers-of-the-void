@@ -4,7 +4,6 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.catalog.creator import ACTION_PASSIONS, CREATOR_PASSIONS, polarity_of
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.agency import ActionRecordRow
@@ -15,12 +14,14 @@ from aerona.domain.enums.action import ActionKind, ActionPolarity
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorPassion
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import ReputationLabel, SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import creator_row
 from aerona.engine.primitives.numbers import clamp_float, clamp_percent, decay_weight, decayed_value
 from aerona.engine.primitives.queries import living_sons
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 TRACE_ONLY_KINDS = frozenset({ActionKind.DRAIN_ESSENCE, ActionKind.DEVOUR, ActionKind.DEMOTE})
@@ -214,8 +215,14 @@ async def drift_son(ctx: TickContext, son: SonRow, creator: CreatorRow | None) -
     store_reputation(son, reputation, ctx.epoch)
     decay_pushes(ctx.rules, son)
     if previous is not None and previous is not reputation.label and reputation.label in NOTABLE_LABELS:
-        line = god_lines.REPUTATION_CHANGE
-        await ctx.chronicle(ChronicleKind.CREATOR_REPUTATION, line.render(son=son.name, label=reputation.label.value), template_key=line.key, son_id=son.id)
+        await record(
+            ctx,
+            "gods.reputation.change",
+            roles={IncidentRole.ACTOR: son.id},
+            facts={"label": reputation.label},
+            kind=ChronicleKind.CREATOR_REPUTATION,
+            son_id=son.id,
+        )
         ctx.count("label_changes")
     await ctx.session.flush()
     return reputation

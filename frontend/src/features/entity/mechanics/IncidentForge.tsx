@@ -27,10 +27,10 @@ import { ConfirmDialog, Medallion, Paged } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { INCIDENT_ROLE } from '@/features/records/labels'
 import { named } from '../environment/labels'
 import { badgeVariant } from '../realm/labels'
 import { NumberField, RecordField } from '../realm/parts'
-import { INCIDENT_ROLE } from './labels'
 
 type Incident = components['schemas']['IncidentRecord']
 type Role = components['schemas']['IncidentRole']
@@ -220,6 +220,12 @@ export function IncidentForge({
   const [text, setText] = useState('')
   const [magnitude, setMagnitude] = useState('30')
   const [year, setYear] = useState('')
+  const [season, setSeason] = useState('')
+  const [day, setDay] = useState('')
+  const [hour, setHour] = useState('')
+  const [place, setPlace] = useState<number | null>(null)
+  const [origin, setOrigin] = useState<number | null>(null)
+  const [destination, setDestination] = useState<number | null>(null)
   const [cause, setCause] = useState<number | null>(null)
   const [participants, setParticipants] = useState<Participant[]>([
     { node_id: nodeId, role: 'subject', name: 'This record' },
@@ -233,6 +239,12 @@ export function IncidentForge({
             kind: 'player.history',
             magnitude: Number(magnitude) || 0,
             year: year === '' ? null : Number(year),
+            season: season === '' ? null : Number(season) - 1,
+            day: day === '' ? null : Number(day) - 1,
+            hour: hour === '' ? null : Number(hour) - 1,
+            place_entity_id: place,
+            origin_entity_id: origin,
+            destination_entity_id: destination,
             cause_incident_id: cause,
             participants: participants.map(({ node_id, role }) => ({
               node_id,
@@ -291,6 +303,54 @@ export function IncidentForge({
           onChange={setYear}
         />
         <CausePicker incidents={incidents} value={cause} onChange={setCause} />
+        <NumberField
+          label='Season (from 1)'
+          value={season}
+          min={1}
+          max={100}
+          placeholder='Not told'
+          blocked={busy ?? null}
+          onChange={setSeason}
+        />
+        <NumberField
+          label='Day (from 1)'
+          value={day}
+          min={1}
+          max={1000}
+          placeholder='Not told'
+          blocked={busy ?? null}
+          onChange={setDay}
+        />
+        <NumberField
+          label='Hour (from 1)'
+          value={hour}
+          min={1}
+          max={100}
+          placeholder='Not told'
+          blocked={busy ?? null}
+          onChange={setHour}
+        />
+        <RecordField
+          label='Where it happened'
+          types={null}
+          value={place}
+          onChange={setPlace}
+          blocked={busy ?? null}
+        />
+        <RecordField
+          label='Set out from'
+          types={null}
+          value={origin}
+          onChange={setOrigin}
+          blocked={busy ?? null}
+        />
+        <RecordField
+          label='Bound for'
+          types={null}
+          value={destination}
+          onChange={setDestination}
+          blocked={busy ?? null}
+        />
       </div>
       <ParticipantsEditor
         participants={participants}
@@ -335,6 +395,8 @@ export function IncidentControls({
             text: text.trim() === '' ? null : text,
             magnitude: Number(magnitude) || 0,
             clear_place: false,
+            clear_origin: false,
+            clear_destination: false,
           },
         })
       ),

@@ -1,12 +1,13 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
-from aerona.catalog.collective import ACT_COLLECTION, ACT_TEXT, ANGER, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
+from aerona.catalog.collective import ACT_COLLECTION, ANGER, ANGRY_ACTS, FAITH_ACTS, TRIGGERS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.collective import CascadeRow, CrowdMoodRow, MobRow, MovementRow
 from aerona.db.tables.disease import OutbreakRow
@@ -24,6 +25,8 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionRole
 from aerona.domain.enums.mind import Facet
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.belonging.effects import apart_from_ruler
@@ -36,11 +39,11 @@ from aerona.engine.cycles.indenture import indentured_share
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.split import facets_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import church_in
 from aerona.engine.urban.coverage import people_of_districts
 
@@ -185,11 +188,11 @@ async def conformity_of(ctx: TickContext, town: EntityRow) -> float:
     )
     if not mortals:
         return 0.0
-    total = 0.0
+    summed = 0.0
     for mortal_id in mortals:
         facets = await facets_of(ctx.session, mortal_id)
-        total += sum(facets.get(facet, 0) for facet in CONFORMING) / (len(CONFORMING) * FACET_SPAN)
-    return max(-1.0, min(1.0, total / len(mortals)))
+        summed += sum(facets.get(facet, 0) for facet in CONFORMING) / (len(CONFORMING) * FACET_SPAN)
+    return max(-1.0, min(1.0, summed / len(mortals)))
 
 
 async def deterrence_of(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow) -> int:
@@ -404,7 +407,6 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     tally.cascades += 1
     if outcome is CascadeOutcome.FIZZLED and not forced:
         return row
-    where = f"the {spoken(district.kind)} of {town.name}" if district is not None else town.name
     if outcome is CascadeOutcome.PANIC:
         await flee(ctx, town, row, tally, district_people=district_people)
         tally.panics += 1
@@ -420,9 +422,48 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
         ctx, ACT_COLLECTION[act], world_id=town.world_id, members={town.id: CollectionRole.PLACE}, places=[town.id], source_key=f"collective.{act.value}"
     )
     row.collection_id = collection.id if collection is not None else None
-    text = f"Moved by {TRIGGERS[trigger].text}, {participants} of the folk of {where} {ACT_TEXT[act]}."
-    await note(ctx, text, key=f"collective.{act.value}", ids=[town.id])
+    await record(
+        ctx,
+        f"collective.{act.value}",
+        roles={IncidentRole.PLACE: town.id},
+        facts={
+            "act": act,
+            "trigger": trigger,
+            "participants": participants,
+            "share": share,
+            "outcome": outcome,
+            "district": district.kind if district is not None else None,
+        },
+        steps=(
+            StepDraft(
+                CROWD_STEPS[outcome],
+                amount=participants or None,
+                unit=FactUnit.PEOPLE if participants else None,
+                locus_kind=StepLocus.DISTRICT if district is not None else StepLocus.SETTLEMENT,
+                locus_key=district.kind.value if district is not None else None,
+                locus_node=None if district is not None else town.id,
+            ),
+            *(
+                (StepDraft(StepAction.TRAMPLE, parent=0, amount=row.deaths, unit=FactUnit.PEOPLE, outcome=StepOutcome.KILLED),)
+                if outcome is CascadeOutcome.PANIC and row.deaths
+                else ()
+            ),
+        ),
+        place=town.id,
+        world_id=town.world_id,
+    )
     return row
+
+
+CROWD_STEPS: Mapping[CascadeOutcome, StepAction] = total(
+    CascadeOutcome,
+    {
+        CascadeOutcome.FIZZLED: StepAction.WANE,
+        CascadeOutcome.MOB: StepAction.SPREAD,
+        CascadeOutcome.PANIC: StepAction.FLEE,
+        CascadeOutcome.MOVEMENT: StepAction.BEGIN,
+    },
+)
 
 
 async def stir_towns(ctx: TickContext, tally: CrowdTally) -> None:
@@ -459,7 +500,14 @@ async def lynch(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTall
         return
     await apply_hits(ctx, victim, Harm(LETHAL, HarmCause.PUNISHMENT, f"lynched by a mob in {town.name}", killer_id=mob.leader_entity_id))
     tally.lynchings += 1
-    await note(ctx, f"A mob in {town.name} killed {victim.name} without any trial.", key="collective.lynching", ids=[victim.id, town.id])
+    await record(
+        ctx,
+        "collective.mob_killed",
+        roles={IncidentRole.VICTIM: victim.id, IncidentRole.PLACE: town.id, IncidentRole.LEADER: mob.leader_entity_id},
+        facts={"anger": mob.anger, "size": mob.size},
+        steps=(StepDraft(StepAction.FINISH, actor=mob.leader_entity_id, target=victim.id, outcome=StepOutcome.KILLED),),
+        place=town.id,
+    )
 
 
 async def storm(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTally) -> None:
@@ -490,11 +538,17 @@ async def storm(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTall
     shift(mob, "damage", harm, high=PERCENT * 100)
 
 
-async def end_mob(ctx: TickContext, mob: MobRow, town: EntityRow, by: MobEnd, tally: CrowdTally) -> None:
+async def end_mob(ctx: TickContext, mob: MobRow, town: EntityRow, by: MobEnd, tally: CrowdTally, *, dead: int = 0) -> None:
     mob.status, mob.ended_by = MobStatus.DISPERSED, by
     tally.dispersed += 1
-    words = {MobEnd.FATIGUE: "tired and went home", MobEnd.FORCE: "was broken up by force", MobEnd.CONCESSION: "dispersed after its demands were met"}
-    await note(ctx, f"The crowd in {town.name} {words[by]}.", key=f"collective.mob_{by.value}", ids=[town.id])
+    await record(
+        ctx,
+        f"collective.mob_{by.value}",
+        roles={IncidentRole.PLACE: town.id, IncidentRole.LEADER: mob.leader_entity_id},
+        facts={"end": by, "size": mob.size, "damage": mob.damage, "dead": dead},
+        steps=(StepDraft(StepAction.END, amount=dead or None, unit=FactUnit.PEOPLE if dead else None),),
+        place=town.id,
+    )
 
 
 async def concede(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTally) -> bool:
@@ -526,7 +580,7 @@ async def rage_mobs(ctx: TickContext, tally: CrowdTally) -> None:
             dead = round_half_up(mob.size * table.trample_per_mille / 1000 * 3)
             set_stats(town, population=max(0, population_of(town) - dead))
             tally.dead += dead
-            await end_mob(ctx, mob, town, MobEnd.FORCE, tally)
+            await end_mob(ctx, mob, town, MobEnd.FORCE, tally, dead=dead)
             continue
         realm = await realm_of_town(ctx, town.id)
         mercy = ctx.rng(f"concede.{mob.id}.{ctx.epoch}").chance(PERCENT // 4) if realm is not None else False
@@ -549,7 +603,14 @@ async def tend_movements(ctx: TickContext, tally: CrowdTally) -> None:
         shift(movement, "strength", feeling * table.heat / (PERCENT * 2) - table.movement_decay)
         if movement.strength <= 0 and "ended_epoch" not in movement.locked:
             movement.ended_epoch = ctx.epoch
-            await note(ctx, f"The movement in {town.name} faded away.", key="collective.movement_faded", ids=[town.id])
+            await record(
+                ctx,
+                "collective.movement_faded",
+                roles={IncidentRole.PLACE: town.id},
+                facts={"act": movement.act, "members": movement.members},
+                steps=(StepDraft(StepAction.END),),
+                place=town.id,
+            )
     await ctx.session.flush()
 
 

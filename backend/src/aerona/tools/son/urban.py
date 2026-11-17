@@ -8,6 +8,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.engine.settlement import control
 from aerona.prompts import SonToolId
@@ -16,7 +17,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 NAME_MAX = 80
@@ -58,8 +58,12 @@ async def raise_district(call: SonCall, args: RaiseDistrictInput) -> str:
     call.spend_essence(tools.raise_district_essence)
     call.target(town.id)
     label = district.kind.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.RAISE_DISTRICT, entity_ids=[town.id], son=call.son.name, district=label, town=town.name, reason=args.reason
+    await call.record(
+        "tools.son.raise_district",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: town.id},
+        facts={"district": str(label), "reason": str(args.reason)},
+        place=town.id,
+        kind=ChronicleKind.CIVILIZATION,
     )
     return result(SonResult.DISTRICT_RAISED, district=label, name=town.name, level=district.level)
 
@@ -74,7 +78,12 @@ async def design_district(call: SonCall, args: DesignDistrictInput) -> str:
         call.tick, call.world_id, args.name, args.base_kind, values, description=args.reason, son_id=call.son.id
     )
     call.spend_essence(tools.design_district_essence)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.DESIGN_DISTRICT, son=call.son.name, design=design.name, base=args.base_kind.value.replace("_", " "))
+    await call.record(
+        "tools.son.design_district",
+        roles={IncidentRole.ACTOR: call.son.id},
+        facts={"design": design.name, "base": args.base_kind},
+        kind=ChronicleKind.CIVILIZATION,
+    )
     return result(SonResult.DISTRICT_DESIGNED, id=design.id, name=design.name)
 
 

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any
 
 from aerona.catalog.civilization import unlocked
@@ -12,14 +13,16 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
@@ -32,6 +35,8 @@ from aerona.engine.primitives.mechanics import assign_mechanics
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import military_strength
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.engine.structures.profiles import ensure_profile as structure_profile
@@ -95,6 +100,31 @@ def pct(value: float, percent: int) -> float:
 
 def clamp(value: float) -> int:
     return max(0, min(PERCENT, round(value)))
+
+
+@dataclass(frozen=True)
+class MadeItem:
+    maker_id: int
+    item_id: int
+    resources: list[EntityRow]
+    worked: int
+    quality: QualityTier
+
+
+def making_steps(made: MadeItem, *, tempered: bool, enchanted: int, flawed: int, abundance_loss: int) -> tuple[StepDraft, ...]:
+    steps = [StepDraft(StepAction.GATHER, actor=made.maker_id, target=resource.id, amount=abundance_loss, unit=FactUnit.PERCENT) for resource in made.resources]
+    steps.append(StepDraft(StepAction.WORK, actor=made.maker_id, target=made.item_id, amount=made.worked, unit=FactUnit.STRENGTH))
+    if len(made.resources) > 1:
+        steps.append(StepDraft(StepAction.ASSEMBLE, actor=made.maker_id, target=made.item_id, amount=len(made.resources), unit=FactUnit.COUNT))
+    if tempered:
+        steps.append(StepDraft(StepAction.TEMPER, actor=made.maker_id, target=made.item_id))
+    if enchanted > 0:
+        steps.append(StepDraft(StepAction.ENCHANT, actor=made.maker_id, target=made.item_id, amount=enchanted, unit=FactUnit.STRENGTH))
+    if flawed > 0:
+        steps.append(StepDraft(StepAction.FLAW, actor=made.maker_id, target=made.item_id, amount=flawed, unit=FactUnit.STRENGTH))
+    finished = StepOutcome.PARTIAL if made.quality is QualityTier.POOR else StepOutcome.SUCCESS
+    steps.append(StepDraft(StepAction.FINISH_WORK, actor=made.maker_id, target=made.item_id, outcome=finished))
+    return tuple(steps)
 
 
 async def _usable_resource(call: MortalCall, resource_id: int) -> EntityRow:
@@ -170,17 +200,29 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
     fit = owner is not None and owner.id != call.me.id and owner.status is EntityStatus.CANON and owner.entity_type in CARRIER_TYPES
     carrier = owner if fit and owner is not None and await near(call, owner) else call.me
     await bonds.connect(BondDraft(carrier.id, item.id, BondKind.OWNS, call.epoch))
-    quality = "masterwork" if damage + protection >= tools.craft_masterwork else "sturdy" if damage + protection >= tools.craft_sturdy else "crude"
-    await call.chronicle(
-        ChronicleKind.PRODUCTION,
-        lines.PRODUCED,
-        entity_ids=[call.me.id, item.id],
-        me=call.me.name,
-        resources=" and ".join(resource.name for resource in resources),
-        name=item.name,
-        category=label,
-        quality=lines.QUALITY[quality],
-    )
+    sum_of = damage + protection
+    quality = QualityTier.MASTERWORK if sum_of >= tools.craft_masterwork else QualityTier.FINE if sum_of >= tools.craft_sturdy else QualityTier.POOR
+    with explaining():
+        term("mortal_tools.craft_skill_pct", skilled, source_node_id=call.me.id)
+        term("mortal_tools.craft_metallurgy_bonus", metallurgy)
+        term("mortal_tools.craft_magic_bonus", magic)
+        await call.record(
+            "tools.mortal.produced",
+            roles={
+                IncidentRole.MAKER: call.me.id,
+                IncidentRole.PRODUCT: item.id,
+                IncidentRole.OWNER: carrier.id,
+                IncidentRole.INSTRUMENT: [resource.id for resource in resources],
+            },
+            facts={"category": args.category, "quality": quality, "damage": damage, "protection": protection, "might": stats["might"]},
+            steps=making_steps(
+                MadeItem(call.me.id, item.id, resources, worked, quality),
+                tempered=material is not None and (category in WEAPONS or category in ARMOUR),
+                enchanted=stats["might"] if magic > 0 else 0,
+                flawed=stats["curse"],
+                abundance_loss=tools.craft_abundance_loss,
+            ),
+        )
     return result(MortalResult.PRODUCED, id=item.id, name=item.name, damage=damage, protection=protection, might=stats["might"])
 
 
@@ -233,15 +275,16 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
         value = stat(call.me, key)
         if value is not None:
             set_stats(call.me, **{key: max(0, value - tools.build_cost)})
-    await call.chronicle(
-        ChronicleKind.CONSTRUCTION,
-        lines.BUILT,
-        entity_ids=[call.me.id, work.id],
-        me=call.me.name,
-        name=work.name,
-        location=location.name,
-        subtype=lines.SUBTYPE_SUFFIX.format(subtype=work.subtype) if work.subtype else "",
-        dedication=lines.DEDICATION.format(son=god.name) if god is not None and god.status is not SonStatus.DEAD else "",
+    await call.record(
+        "tools.mortal.built",
+        roles={
+            IncidentRole.MAKER: call.me.id,
+            IncidentRole.PRODUCT: work.id,
+            IncidentRole.PLACE: location.id,
+            IncidentRole.PATRON: god.id if god is not None and living_god else None,
+        },
+        facts={"structure": args.structure_kind, "cost": tools.build_cost},
+        place=location.id,
     )
     return result(MortalResult.BUILT, id=work.id, name=work.name)
 
@@ -305,7 +348,7 @@ async def create_culture(call: MortalCall, args: CultureInput) -> str:
         related = await call.session.get(EntityRow, related_id)
         if related is not None and related.status is EntityStatus.CANON and related.id != created.id:
             await bonds.connect(BondDraft(created.id, related.id, BondKind.TELLS_OF, call.epoch, lines.SUBJECT_OF.format(kind=kind_label)))
-    await call.chronicle(ChronicleKind.CULTURE, lines.CULTURE, entity_ids=[call.me.id, created.id], kind=kind_label, me=call.me.name, name=created.name)
+    await call.record("tools.mortal.culture", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: created.id})
     await call.bump(TurnCounter.CULTURES_CREATED)
     return result(MortalResult.CULTURE_BORN, id=created.id, name=created.name)
 
@@ -335,14 +378,10 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
     await BondRepository(call.session).connect(BondDraft(call.me.id, resource.id, BondKind.OWNS, call.epoch, lines.DISCOVERED_BOND))
     await assign_mechanics(call.session, call.rules, resource, resource_choice=args.mechanics or ())
     await call.bump(TurnCounter.DISCOVERIES)
-    await call.chronicle(
-        ChronicleKind.EXPLORATION,
-        lines.DISCOVERED,
-        entity_ids=[call.me.id, resource.id],
-        me=call.me.name,
-        name=resource.name,
-        location=location.name,
-        subtype=lines.SUBTYPE_SUFFIX.format(subtype=resource.subtype) if resource.subtype else "",
+    await call.record(
+        "tools.mortal.discovered",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: resource.id, IncidentRole.PLACE: location.id},
+        facts={"kind_of_find": resource.subtype},
     )
     return result(MortalResult.DISCOVERED, id=resource.id, name=resource.name)
 
@@ -365,14 +404,10 @@ async def _seizure_holds(call: MortalCall, resource: EntityRow, owners: list[Ent
                     MemoryKind.HARMED_ME,
                     note=lines.SEIZE_ATTEMPT.format(resource=resource.name),
                 )
-    names = JOIN.join(owner.name for owner in owners)
-    await call.chronicle(
-        ChronicleKind.RESOURCE,
-        lines.SEIZE_REPELLED,
-        entity_ids=[call.me.id, resource.id, *(owner.id for owner in owners)],
-        me=call.me.name,
-        resource=resource.name,
-        owners=names,
+    await call.record(
+        "tools.mortal.seize_repelled",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: resource.id, IncidentRole.OWNER: [owner.id for owner in owners]},
+        facts={"mine": mine, "theirs": theirs},
     )
     return False, mine, theirs
 
@@ -402,13 +437,13 @@ async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
         holds, mine, theirs = await _seizure_holds(call, resource, owners)
         if not holds:
             return result(MortalResult.SEIZE_REPELLED, mine=mine, theirs=theirs, name=resource.name, owners=JOIN.join(owner.name for owner in owners))
-    angered: list[str] = []
+    angered: list[EntityRow] = []
     for bond in await bonds.incoming(resource.id, BondKind.OWNS):
         owner = await call.session.get(EntityRow, bond.source_node_id)
         await bonds.deactivate(bond, call.epoch, lines.SEIZED_NOTE.format(me=call.me.name, epoch=call.epoch)[:KEY_MAX_LENGTH])
         if owner is None or owner.status is not EntityStatus.CANON or not is_community(owner):
             continue
-        angered.append(owner.name)
+        angered.append(owner)
         reason = lines.CONFISCATION.format(resource=resource.name)
         grudge = (
             await change_relation(call.tick, owner.id, call.me.id, -tools.seizure_relation_loss, MemoryKind.HARMED_ME, note=reason)
@@ -420,14 +455,11 @@ async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
     await bonds.connect(BondDraft(call.me.id, resource.id, BondKind.OWNS, call.epoch))
     call.target(resource.id)
     await call.bump(TurnCounter.CLAIMS)
-    names = angered[: tools.chronicle_named_communities]
-    await call.chronicle(
-        ChronicleKind.RESOURCE,
-        lines.CLAIMED,
-        entity_ids=[call.me.id, resource.id],
-        me=call.me.name,
-        resource=resource.name,
-        angered=lines.ANGERED.format(owners=JOIN.join(names)) if names else "",
+    names = [owner.name for owner in angered]
+    await call.record(
+        "tools.mortal.claimed_angered" if angered else "tools.mortal.claimed",
+        roles={IncidentRole.OWNER: call.me.id, IncidentRole.INSTRUMENT: resource.id, IncidentRole.VICTIM: [owner.id for owner in angered]},
+        place=resource.location_id,
     )
     return result(MortalResult.CLAIMED, name=resource.name, angered=JOIN.join(names))
 
@@ -486,14 +518,11 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
     patron = await bonds.patron(call.me.id)
     if patron is not None:
         await bonds.connect(BondDraft(settlement.id, patron, BondKind.WORSHIPS, call.epoch))
-    await call.chronicle(
-        ChronicleKind.MIGRATION,
-        lines.MIGRATED,
-        entity_ids=[call.me.id, settlement.id],
-        count=migrants,
-        me=call.me.name,
-        name=settlement.name,
-        location=location.name,
+    await call.record(
+        "tools.mortal.migrated",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: settlement.id, IncidentRole.PLACE: location.id},
+        facts={"migrants": migrants},
+        place=location.id,
     )
     return result(MortalResult.SETTLED, id=settlement.id, name=settlement.name, count=migrants)
 

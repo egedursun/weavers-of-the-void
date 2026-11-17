@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.catalog.statecraft import RESOLUTION_TEXT as KIND_TEXT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, an, several, spoken
 from aerona.db.tables.affairs import (
@@ -24,7 +25,6 @@ from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import CouncilTask, CourtPosition, MandateKind, MandateState, NobleWant, ResolutionKind, ResolutionState, TaxKind
-from aerona.engine.polity.assembly import KIND_TEXT
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.elections import ElectionTally, elect
 from aerona.engine.polity.laws import LawBook

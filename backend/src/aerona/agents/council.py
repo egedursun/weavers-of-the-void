@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import write_line
+from aerona.agents.chronicle import record_line
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.siblings import relations_of
 from aerona.agents.context.world_header import world_header
@@ -33,6 +33,8 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.divine import CouncilMotion, SonPunishment
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes, CouncilSpeech
@@ -41,6 +43,7 @@ from aerona.engine.divine.motions import Motion
 from aerona.engine.divine.rulings import MOTION_LABELS, enact, leaning, record
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import StepDraft
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.council import AgendaKind, CouncilAgendaContext, CouncilMember, CouncilRelation, CouncilSessionContext, CouncilTarget
@@ -320,8 +323,20 @@ async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutp
     subject = output.agenda.strip().rstrip(TRAILING_PUNCTUATION) if god_asked else topic
     verdict = "passed" if passed else "rejected"
     note_text = f" {'; '.join(notes)}." if notes else ""
-    text = f'The Council of the Gods convened ({subject}). Motion: "{minutes.motion}" — {verdict} ({yes} yes, {no} no).{note_text} {minutes.summary}'
-    await write_line(scope.session, scope.rules, scope.epoch, ChronicleKind.COUNCIL, text, key="council.held")
+    ballots = tuple(
+        StepDraft(StepAction.VOTE, actor=son_id, outcome=StepOutcome.ACCEPTED if vote.vote is CouncilVote.YES else StepOutcome.REFUSED)
+        for son_id, vote in sorted(votes.items())
+        if vote.vote is not CouncilVote.ABSTAIN
+    )
+    await record_line(
+        scope.session,
+        scope.rules,
+        "council.held",
+        roles={IncidentRole.MEMBER: [son.id for son in members]},
+        facts={"topic": subject, "motion": minutes.motion, "verdict": verdict, "yes": yes, "no": no, "notes": note_text, "summary": minutes.summary},
+        kind=ChronicleKind.COUNCIL,
+        steps=(*ballots, StepDraft(StepAction.COUNT_VOTES, outcome=StepOutcome.ACCEPTED if passed else StepOutcome.REFUSED)),
+    )
     return CouncilResult(row.id, topic, passed, minutes.motion, notes)
 
 

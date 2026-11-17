@@ -1,19 +1,17 @@
 from dataclasses import dataclass, field
 
-from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
-from aerona.catalog.production import CHAIN_STEPS, SHIP_INPUTS, WORKSHOP_LABELS, ChainStep
+from aerona.catalog.production import CHAIN_STEPS, SHIP_INPUTS, ChainStep
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
 from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -25,9 +23,9 @@ from aerona.engine.factions.guilds import guild_standard
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import feed, method_for, process_of_step
 from aerona.engine.military.war_lines import war_output
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.recording.record import record
 from aerona.engine.structures.readers import workshop_output
 
 M = MaterialKind
@@ -178,16 +176,13 @@ async def consume_inputs(
 
 async def note_bottleneck(ctx: TickContext, community: EntityRow, step: ChainStep, missing: CommodityKind, tally: RefiningTally) -> None:
     tally.bottlenecks[missing.value] = tally.bottlenecks.get(missing.value, 0) + 1
-    if tally.noted >= ctx.rules.refining.shortage_note_cap:
-        return
     tally.noted += 1
-    where = WORKSHOP_LABELS[step.workshop].lower() if step.workshop is not None else "homes"
-    await note(
+    await record(
         ctx,
-        f"The {where} of {community.name} stood idle for want of {COMMODITIES[missing].label.lower()}: no {COMMODITIES[step.output].label.lower()} was made.",
-        key="refining.bottleneck",
-        ids=[community.id],
-        kind=ChronicleKind.PRODUCTION,
+        "refining.bottleneck",
+        roles={IncidentRole.SUBJECT: community.id},
+        facts={"workshop": step.workshop, "missing": missing, "output": step.output, "output_qty": step.output_qty},
+        place=community.id,
     )
 
 
@@ -310,12 +305,12 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
         ctx.session.add(row)
         book.workshops.setdefault(community.id, {})[kind] = row
         tally.built += 1
-        await note(
+        await record(
             ctx,
-            f"{community.name} raised {an(WORKSHOP_LABELS[kind].lower())}.",
-            key="refining.workshop_built",
-            ids=[community.id],
-            kind=ChronicleKind.PRODUCTION,
+            "refining.workshop_built",
+            roles={IncidentRole.MAKER: community.id},
+            facts={"workshop": kind, "timber": table.build_timber, "stone": table.build_stone},
+            place=community.id,
         )
         return
 

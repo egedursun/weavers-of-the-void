@@ -15,7 +15,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import Attribution, Authenticity, IntrusionAim, IntrusionApproach, IntrusionOutcome, IntrusionTarget
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import OutageCause
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.economy.routes import enemies_of
@@ -25,8 +27,9 @@ from aerona.engine.minds.kinds import seizure_holds
 from aerona.engine.minds.values import best_level
 from aerona.engine.networks.book import shake_ledger
 from aerona.engine.networks.kinds import ACCESS_GUARD, CONTENT_WORTH, TAKEN_CONTENT, TARGET_GUARD
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.technology.profiles import family_level
 
@@ -210,8 +213,25 @@ async def intrude(ctx: TickContext, attempt: Attempt) -> IntrusionRow:
     await ctx.session.flush()
     if victim is not None and blamed is not None and blamed != victim.id:
         await change_relation(ctx, victim.id, blamed, -AIM_HARM[attempt.aim], MemoryKind.SPIED_ON_US, note="blamed for an intrusion")
-    ids = [node for node in (attempt.actor_id, attempt.target_node_id) if node is not None]
-    await note(ctx, "An intrusion was made." if not found else "An intrusion was found.", key=f"intrusion.{outcome.value}", ids=ids)
+    await record_incident(
+        ctx,
+        f"intrusion.{outcome.value}",
+        roles={IncidentRole.ACTOR: attempt.actor_id, IncidentRole.TARGET: attempt.target_node_id, IncidentRole.ACCUSED: blamed},
+        facts={
+            "outcome": outcome,
+            "aim": attempt.aim,
+            "approach": attempt.approach,
+            "attribution": attribution,
+            "detection": detection,
+            "edge": edge,
+            "security": security,
+        },
+        steps=(
+            StepDraft(
+                StepAction.INTRUDE, actor=attempt.actor_id, target=attempt.target_node_id, outcome=StepOutcome.SUCCESS if succeeded else StepOutcome.FAILURE
+            ),
+        ),
+    )
     return row
 
 

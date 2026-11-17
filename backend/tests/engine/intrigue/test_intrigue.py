@@ -3,7 +3,18 @@ from sqlalchemy import select
 from aerona.db.tables.intrigue import BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.mind import FacetRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, HookStrength, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
+from aerona.domain.enums.intrigue import (
+    BeliefSource,
+    FavourOrigin,
+    HookDemand,
+    HookSource,
+    HookStrength,
+    IdentityReason,
+    IntrigueSecret,
+    PlotKind,
+    SchemePhase,
+    TrueNameCause,
+)
 from aerona.domain.enums.mind import Facet
 from aerona.engine.intrigue.beliefs import BeliefView, believe, fade_beliefs
 from aerona.engine.intrigue.favours import call_favour
@@ -118,7 +129,7 @@ async def test_true_names_bind_and_are_renewed(realm: Realm) -> None:
     assert await teach_name(ctx, row, mage.id)
     assert await name_power(ctx, mage.id, bearer) > 1.0
     assert await realm.session.scalar(select(HookRow).where(HookRow.holder_node_id == mage.id, HookRow.source == HookSource.TRUE_NAME)) is not None
-    assert await rename(ctx, Namer(realm.session, RULES), row, cause="through an initiation", name="Esk-Ithel")
+    assert await rename(ctx, Namer(realm.session, RULES), row, cause=TrueNameCause.INITIATION, name="Esk-Ithel")
     assert row.name == "Esk-Ithel" and row.known_by == [bearer.id]
     assert await realm.session.scalar(select(HookRow).where(HookRow.holder_node_id == mage.id, HookRow.source == HookSource.TRUE_NAME)) is None
     assert await realm.session.get(TrueNameRow, bearer.id) is row

@@ -1,4 +1,3 @@
-from enum import StrEnum
 from typing import Annotated, Any
 
 from pydantic import Field
@@ -17,7 +16,8 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, InterworldTreatyKind
 from aerona.domain.enums.polity import TreatyKind as PolityTreatyKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.polity.accords import Clause
@@ -38,12 +38,7 @@ PERCENT = 100
 INCITABLE = frozenset({EntityType.FACTION, EntityType.PEOPLE, EntityType.SETTLEMENT})
 
 
-class TreatyKind(StrEnum):
-    ALLIANCE = "alliance"
-    TRADE = "trade"
-
-
-TREATY_BONDS = {TreatyKind.ALLIANCE: BondKind.ALLY, TreatyKind.TRADE: BondKind.TRADES_WITH}
+TREATY_BONDS = {InterworldTreatyKind.ALLIANCE: BondKind.ALLY, InterworldTreatyKind.TRADE: BondKind.TRADES_WITH}
 
 
 class InciteInput(ToolInput):
@@ -55,7 +50,7 @@ class InciteInput(ToolInput):
 class TreatyInput(ToolInput):
     a_id: int
     b_id: int
-    kind: TreatyKind
+    kind: InterworldTreatyKind
     terms: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
@@ -95,8 +90,11 @@ async def incite_war(call: SonCall, args: InciteInput) -> str:
         patron = await bonds.patron(side.id)
         if patron is not None and patron != call.son.id and await call.session.get(SonRow, patron) is not None:
             await shift_relation(call, patron, -tools.incite_patron_relation)
-    await call.chronicle(
-        ChronicleKind.INTRIGUE, lines.INCITE, entity_ids=[first.id, second.id], son=call.son.name, first=first.name, second=second.name, pretext=args.pretext
+    await call.record(
+        "tools.son.incite",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={"first": str(first.name), "second": str(second.name), "pretext": str(args.pretext)},
+        kind=ChronicleKind.INTRIGUE,
     )
     return result(SonResult.INCITE_TOOK, roll=roll, chance=chance, first=first.name, second=second.name)
 
@@ -119,7 +117,7 @@ async def make_interworld_treaty(call: SonCall, args: TreatyInput) -> str:
     require_essence(call, tools.treaty_cost)
     clauses = [Clause(ClauseKind.TRADE_RIGHTS, first.id, second.id), Clause(ClauseKind.NON_AGGRESSION, first.id, second.id)]
     await sign_derived(call.tick, PolityTreatyKind.INTERWORLD, first.id, second.id, until=call.epoch + call.rules.treaties.alliance_epochs, clauses=clauses)
-    if args.kind is TreatyKind.ALLIANCE:
+    if args.kind is InterworldTreatyKind.ALLIANCE:
         await sign_derived(
             call.tick,
             PolityTreatyKind.ALLIANCE_DEFENSIVE,
@@ -131,17 +129,18 @@ async def make_interworld_treaty(call: SonCall, args: TreatyInput) -> str:
     await change_relation(call.tick, first.id, second.id, tools.treaty_relation, MemoryKind.ALLIED_WITH, note=lines.TREATY_EVENT)
     call.spend_essence(tools.treaty_cost)
     call.target(first.id)
-    await call.chronicle(
-        ChronicleKind.DIPLOMACY,
-        lines.TREATY,
-        entity_ids=[first.id, second.id],
-        son=call.son.name,
-        treaty=args.kind.value,
-        first=first.name,
-        first_world=await world_name(call, first.world_id),
-        second=second.name,
-        second_world=await world_name(call, second.world_id),
-        terms=args.terms,
+    await call.record(
+        "tools.son.treaty",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={
+            "treaty": args.kind,
+            "first": str(first.name),
+            "first_world": await world_name(call, first.world_id),
+            "second": str(second.name),
+            "second_world": await world_name(call, second.world_id),
+            "terms": str(args.terms),
+        },
+        kind=ChronicleKind.DIPLOMACY,
     )
     return result(SonResult.TREATY_MADE, first=first.name, second=second.name, label=label)
 

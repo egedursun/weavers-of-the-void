@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.lore.theories import Revelation, reveal
 from aerona.engine.phases.knowledge_levels import shift_level
@@ -21,7 +22,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, grant
 
 
@@ -46,8 +46,11 @@ async def advance_knowledge(call: SonCall, args: AdvanceInput) -> str:
     call.spend_essence(table.son_advance_cost)
     call.target(knowledge.id)
     gained = await grant(call, call.son, call.rules.son_tools.knowledge_xp, call.rules.son_tools.knowledge_renown)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE, lines.ADVANCE_KNOWLEDGE, entity_ids=[knowledge.id], son=call.son.name, knowledge=knowledge.name, level=level, how=args.how
+    await call.record(
+        "tools.son.advance_knowledge",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: knowledge.id},
+        facts={"level": level, "how": str(args.how)},
+        kind=ChronicleKind.KNOWLEDGE,
     )
     return result(SonResult.KNOWLEDGE_ADVANCED, name=knowledge.name, level=level, gained=gained)
 
@@ -84,14 +87,12 @@ async def reveal_truth(call: SonCall, args: RevealInput) -> str:
     call.target(theory_row.id)
     gained = await grant(call, call.son, call.rules.son_tools.knowledge_xp, call.rules.son_tools.knowledge_renown)
     domain = DOMAINS[profile.domain].label.lower()
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.REVEAL_TRUTH,
-        entity_ids=[community.id, theory_row.id],
-        son=call.son.name,
-        place=community.name,
-        name=theory_row.name,
-        domain=domain,
+    await call.record(
+        "tools.son.reveal_truth",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: community.id, IncidentRole.SUBJECT: theory_row.id},
+        facts={"domain": domain},
+        place=community.id,
+        kind=ChronicleKind.KNOWLEDGE,
     )
     return result(SonResult.TRUTH_REVEALED, place=community.name, id=theory_row.id, name=theory_row.name, domain=domain, gained=gained)
 

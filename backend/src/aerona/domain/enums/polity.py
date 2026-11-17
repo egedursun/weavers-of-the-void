@@ -270,6 +270,11 @@ class TreatyKind(StrEnum):
     NAVAL_LIMIT = "naval_limit"
 
 
+class InterworldTreatyKind(StrEnum):
+    ALLIANCE = "alliance"
+    TRADE = "trade"
+
+
 class TreatyStatus(StrEnum):
     IN_FORCE = "in_force"
     FULFILLED = "fulfilled"
@@ -324,3 +329,68 @@ class OathPenalty(StrEnum):
     EXILE = "exile"
     OUTLAWRY = "outlawry"
     CURSE = "curse"
+
+
+class OathBreach(StrEnum):
+    BLOOD_UNAVENGED = "the_blood_went_unavenged"
+    ROAD_UNWALKED = "the_road_was_never_walked"
+    SERVICE_LEFT = "the_service_was_left"
+    WEALTH_GATHERED = "wealth_was_gathered"
+    BLOOD_SHED = "blood_was_shed"
+    UNION_PUT_ASIDE = "the_union_was_put_aside"
+    KEEPERS_LEFT = "the_keepers_were_left"
+    LOVER_TAKEN = "a_lover_was_taken"
+    THRONE_SEIZED = "the_throne_was_seized"
+    MEMBER_BROKE_AWAY = "a_member_broke_away"
+    TOWN_REVOLTED = "a_town_rose_in_revolt"
+    SECRETS_TOLD = "secrets_were_told"
+    SECRETS_WRUNG = "secrets_were_wrung_out"
+    MARRIAGE_MADE = "a_marriage_was_made"
+    GOD_RELEASED = "a_god_broke_it"
+    TREATY_BROKEN = "the_treaty_was_broken"
+
+
+class TreatyBreach(StrEnum):
+    WAR_ON_PARTY = "war_on_a_sworn_party"
+    CLAUSE_MISREAD = "a_misread_clause"
+    SOLDIERS_IN_DEMILITARISED_LAND = "soldiers_in_demilitarised_land"
+    FLEET_PAST_TONNAGE = "a_fleet_past_its_tonnage"
+    FORBIDDEN_METHOD = "a_forbidden_method_of_war"
+    TRIBUTE_UNPAID = "tribute_left_unpaid"
+    HOSTAGE_TAKEN_BACK = "a_hostage_taken_back"
+    TOLLS_CHARGED = "tolls_charged"
+    SUBMITTED_TO_ANOTHER = "submission_to_another_overlord"
+    ROSE_AGAINST_OVERLORD = "a_rising_against_the_overlord"
+    HIDDEN_SHOWN = "what_was_hidden_shown"
+    GOD_COMMANDED = "a_god_commanded_it"
+    CALL_TO_ARMS_REFUSED = "the_call_to_arms_refused"
+    SHIPS_BUILT_IN_SECRET = "ships_built_in_secret"
+    COMPANY_UNPAID = "the_company_left_unpaid"
+    ALLY_BETRAYED = "an_ally_betrayed"
+    TRIBUTE_REFUSED = "tribute_refused"
+    FAITH_BROKEN_BY_CHOICE = "faith_broken_by_choice"
+    BEAST_TRIBUTE_UNPAID = "tribute_to_a_beast_unpaid"
+    DEMAND_UNMET = "a_demand_left_unmet"
+
+
+class HouseEnd(StrEnum):
+    LAST_MEMBER_DIED = "last_member_died"
+    JOINED_TO_HOUSE = "joined_to_house"
+    NAME_STRUCK = "name_struck"
+
+
+class CoupCause(StrEnum):
+    POWER_BASE = "a_subject_turned_their_power_base_on_the_throne"
+    MARSHAL = "the_marshal_turned_the_army_on_the_throne"
+    REGENT = "the_regent_took_the_crown"
+    FACTION = "a_faction_raised_its_swords"
+
+
+class DiplomacyOutcome(StrEnum):
+    ALLIANCE_ACCEPTED = "alliance_accepted"
+    MARRIAGE_ACCEPTED = "marriage_accepted"
+    UNION_REFUSED = "union_refused"
+    PEACE_MADE = "peace_made"
+    PEACE_REFUSED = "peace_refused"
+    TRIBUTE_SCORNED = "tribute_scorned"
+    TRIBUTE_AGREED = "tribute_agreed"

@@ -15,6 +15,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.ages import ArcOutcome, SeasonSpell, SetupKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.storyteller import control
 from aerona.engine.storyteller.ages import current_age
@@ -24,7 +25,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -80,7 +80,12 @@ async def unsettle_seasons(call: SonCall, args: UnsettleSeasonsInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.SEASONS_REFUSED, why=reason_of(error))
     call.target(world.id)
-    await call.chronicle(ChronicleKind.CLIMATE, lines.UNSETTLE_SEASONS, entity_ids=[], son=call.son.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.unsettle_seasons",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CLIMATE,
+    )
     return result(SonResult.SEASONS_UNSETTLED, world=world.name, length=row.spell_length)
 
 
@@ -91,7 +96,12 @@ async def lengthen_winter(call: SonCall, args: LengthenWinterInput) -> str:
         fail(SonResult.WINTER_REFUSED, why="no long winter holds that world")
     await control.edit_record(call.tick, "irregular_season", world.id, {"spell_length": row.spell_length + args.epochs}, [])
     call.target(world.id)
-    await call.chronicle(ChronicleKind.CLIMATE, lines.LENGTHEN_WINTER, entity_ids=[], son=call.son.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.lengthen_winter",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CLIMATE,
+    )
     return result(SonResult.WINTER_LENGTHENED, world=world.name, epochs=args.epochs)
 
 
@@ -108,7 +118,12 @@ async def press_tale(call: SonCall, args: PressTaleInput) -> str:
     await control.press_arc(call.tick, arc.id, PERCENT)
     call.target(subject.id)
     told = arc.template.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.FATE, lines.PRESS_TALE, entity_ids=[subject.id], son=call.son.name, subject=subject.name, tale=told, reason=args.reason)
+    await call.record(
+        "tools.son.press_tale",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: subject.id},
+        facts={"tale": str(told), "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.TALE_PRESSED, subject=subject.name, tale=told)
 
 
@@ -121,7 +136,12 @@ async def foreshadow(call: SonCall, args: ForeshadowInput) -> str:
         fail(SonResult.FORESHADOW_REFUSED, why="a stronger hand holds it")
     row = await control.add_setup(call.tick, SetupKind.PORTENT, call.son.id, subject.id)
     call.target(subject.id)
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.FORESHADOW, entity_ids=[subject.id], son=call.son.name, subject=subject.name, reason=args.reason)
+    await call.record(
+        "tools.son.foreshadow",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: subject.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.FORESHADOWED, subject=subject.name, lapse=row.opened_epoch + call.tick.rules.arcs.lapse_epochs)
 
 
@@ -139,7 +159,9 @@ async def echo_life(call: SonCall, args: EchoLifeInput) -> str:
         fail(SonResult.ECHO_REFUSED, why="no tale was ever told of that life")
     await control.add_echo(call.tick, age.id, arc.template, mortal.id, call.tick.rules.ages.echo_weight)
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.FATE, lines.ECHO_LIFE, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, reason=args.reason)
+    await call.record(
+        "tools.son.echo_life", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id}, facts={"reason": args.reason}, kind=ChronicleKind.FATE
+    )
     return result(SonResult.LIFE_ECHOED, mortal=mortal.name, tale=arc.template.value.replace("_", " "))
 
 

@@ -475,3 +475,14 @@ class SayingKind(StrEnum):
     OATH = "oath"
     TONGUE_TWISTER = "tongue_twister"
     HYMN = "hymn"
+
+
+class ItemCategory(StrEnum):
+    WEAPON = "weapon"
+    ARMOUR = "armour"
+    SHIELD = "shield"
+    TOOL = "tool"
+    JEWELLERY = "jewellery"
+    SACRED_RELIC = "sacred_relic"
+    INSTRUMENT = "instrument"
+    BOOK = "book"

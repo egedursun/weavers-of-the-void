@@ -8,9 +8,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow, OfficeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.justice import TrialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
 from aerona.engine.lore.civics import realm_allows, unlearned
@@ -25,7 +25,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 SEATS = frozenset({OfficeKind.RULER, *COUNCIL})
 BASES = {
@@ -81,9 +80,7 @@ async def bring_law(call: MortalCall, realm: Realm, kind: LawKind, params: dict[
         fail(MortalResult.PROPOSAL_REFUSED, why="the realm already debates as many laws as it can, or a god holds it")
     title = law_title(kind)
     call.target(realm.entity.id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.LAW_PROPOSED, entity_ids=[call.me.id, realm.entity.id], me=call.me.name, law=title, realm=realm.entity.name
-    )
+    await call.record("tools.mortal.law_proposed", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.entity.id}, facts={"law": kind})
     return result(MortalResult.LAW_PROPOSED, law=title, realm=realm.entity.name, stall=call.rules.enactment.stall_epochs)
 
 
@@ -113,7 +110,12 @@ async def accuse(call: MortalCall, args: AccuseInput) -> str:
     place = await call.session.get(EntityRow, accused.location_id)
     crime = CRIME_TEXT[args.crime]
     call.target(accused.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.ACCUSATION, entity_ids=[call.me.id, accused.id], me=call.me.name, accused=accused.name, crime=crime)
+    await call.record(
+        "tools.mortal.accusation",
+        roles={IncidentRole.ACCUSER: call.me.id, IncidentRole.ACCUSED: accused.id},
+        facts={"crime": args.crime},
+        place=accused.location_id,
+    )
     return result(
         MortalResult.ACCUSATION_MADE,
         accused=accused.name,

@@ -7,26 +7,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.evolution import keystone_of
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
-from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import EcosystemServiceRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.evolution import KeystoneRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
 Services = dict[KeystoneRole, int]
-ROLE_WORDS = {
-    KeystoneRole.POLLINATOR: "pollinators",
-    KeystoneRole.SOIL_MAKER: "soil-makers",
-    KeystoneRole.DAM_BUILDER: "dam-builders",
-    KeystoneRole.SCAVENGER: "scavengers",
-}
 
 
 @dataclass
@@ -116,11 +111,17 @@ async def keep_services(ctx: TickContext, tally: KeystoneTally) -> None:
             strength = row.strength
         elif row.strength > 0 and strength <= 0:
             tally.lost += 1
-            region = await ctx.session.get(EntityRow, region_id)
-            if region is not None:
-                await note(ctx, f"{region.name} has lost its {ROLE_WORDS[role]}.", key="ecology.keystone_lost", ids=[region_id])
+            await record(
+                ctx,
+                "ecology.keystone_lost",
+                roles={IncidentRole.PLACE: region_id, IncidentRole.SUBJECT: row.species_entity_id},
+                facts={"role": role, "strength": row.strength},
+                place=region_id,
+            )
         if "strength" not in row.locked:
-            row.strength = strength
+            with explaining_alone():
+                term("keystone.strongest_species", strength, source_node_id=species_id)
+                row.strength = strength
         if "species_entity_id" not in row.locked:
             row.species_entity_id = species_id
         row.epoch = ctx.epoch

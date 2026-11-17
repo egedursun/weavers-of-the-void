@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.finance import FOOD_HOARDS
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.economy import MarketPriceRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -12,20 +13,20 @@ from aerona.db.tables.mind import FacetRow, PressureRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import SpeculationStatus
 from aerona.domain.enums.mind import ActKind, Facet, PressureKind
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.owners import credit_owner, purse_value
 from aerona.engine.intrigue.beliefs import believed_prices
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
 
@@ -156,14 +157,13 @@ async def settle_hoards(ctx: TickContext, book: EconomyBook, tally: SpeculationT
         if bust:
             tally.busts += 1
             await ruin(ctx, row.merchant_node_id)
-            merchant = book.entities.get(row.merchant_node_id)
-            market = book.entities.get(row.market_node_id)
-            await note(
+            await record(
                 ctx,
-                f"Prices fell in {market.name if market else 'the market'} and {merchant.name if merchant else 'a speculator'} was ruined by the hoard.",
-                key="speculation.bust",
-                ids=[item for item in (row.merchant_node_id, row.market_node_id) if item],
-                kind=ChronicleKind.TRADE,
+                "speculation.bust",
+                roles={IncidentRole.VICTIM: row.merchant_node_id, IncidentRole.PLACE: row.market_node_id},
+                facts={"good": row.commodity, "units": row.units, "bought_at": row.price, "sold_at": price, "loss": -row.gain},
+                terms=(Term("speculation.bought_at", row.price), Term("speculation.sold_at", price), Term("speculation.units", row.units, ModifierOp.MULTIPLY)),
+                place=row.market_node_id,
             )
         else:
             tally.sold += 1

@@ -7,16 +7,17 @@ from aerona.db.tables.polity import VassalageRow
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.statecraft import SubjectKind
 from aerona.domain.enums.war import REVOLT_CAUSES, WarCause
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.crises import power_of
 from aerona.engine.polity.regard import borders, core_values, value_distance
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import StepDraft, record
 
 TRIBUTE_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.TRIBUTARY, SubjectKind.COLONY, SubjectKind.ENCLAVE, SubjectKind.MANDATE})
 LEVY_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.MARCH, SubjectKind.COLONY, SubjectKind.MANDATE})
@@ -115,13 +116,24 @@ async def bargain(ctx: TickContext, book: RealmBook, strength: MilitaryStrength,
         if LIBERTY not in row.locked:
             row.liberty = clamp_int(row.liberty - table.renegotiate_loyalty, 0, PERCENT)
         tally.renegotiated += 1
-        text = f"{overlord.entity.name} eased the terms of {vassal.entity.name}, halving what it owes."
+        eased = True
     else:
         if LOYALTY not in row.locked:
             row.loyalty = clamp_int(row.loyalty - table.renegotiate_loyalty, 0, PERCENT)
         tally.refused += 1
-        text = f"{overlord.entity.name} refused {vassal.entity.name}'s plea for better terms."
-    await note(ctx, text, key="statecraft.terms", ids=[overlord.entity.id, vassal.entity.id], kind=ChronicleKind.CIVILIZATION)
+        eased = False
+    await record(
+        ctx,
+        "statecraft.terms_eased" if eased else "statecraft.terms_refused",
+        roles={IncidentRole.AUTHORITY: overlord.entity.id, IncidentRole.SUBJECT: vassal.entity.id},
+        facts={"tribute": row.tribute_pct, "liberty": row.liberty, "vassal_power": mine, "overlord_power": theirs},
+        steps=(
+            StepDraft(StepAction.PROPOSE, actor=vassal.entity.id, target=overlord.entity.id),
+            StepDraft(StepAction.BARGAIN, actor=vassal.entity.id, target=overlord.entity.id, amount=mine, unit=FactUnit.STRENGTH),
+            StepDraft(StepAction.AGREE if eased else StepAction.REFUSE, actor=overlord.entity.id, target=vassal.entity.id),
+        ),
+        place=overlord.profile.capital_entity_id,
+    )
 
 
 async def confirm(ctx: TickContext, book: RealmBook, row: VassalageRow, tally: SubjectTally) -> None:

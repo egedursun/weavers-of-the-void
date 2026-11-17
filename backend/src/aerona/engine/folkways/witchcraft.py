@@ -25,6 +25,7 @@ from aerona.domain.enums.faith import FanaticismKind
 from aerona.domain.enums.folkways import AccusationOutcome, MishapResponse
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.sacred import DivinationValidity
 from aerona.domain.models.entity_stats import EventStats
@@ -33,7 +34,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.kin import close_kin_of
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.trials import judge_for, trial_for
 from aerona.engine.primitives.folk import present_in
@@ -41,6 +41,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.sacred.places import realm_of_town, region_of
 from aerona.engine.services.war import ongoing_war_count
 
@@ -203,14 +204,19 @@ async def accuse(
     tally.true += guilty
     if hunt is not None and "accused" not in hunt.locked:
         hunt.accused += 1
-    named_by = (
-        ", named by its diviners"
+    key = (
+        "witchcraft.accused_by_diviners"
         if seen is not None or (named is None and await consulted(ctx, folk_id))
-        else ", named by rumour"
+        else "witchcraft.accused_by_rumour"
         if accused.location_id is not None and await rumoured(ctx, accused.location_id, accused.id)
-        else ""
+        else "witchcraft.accused"
     )
-    await note(ctx, f"{accused.name} of {town.name} was accused of witchcraft{named_by}.", key="witchcraft.accused", ids=[accused.id, town.id])
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.ACCUSED: accused.id,
+        IncidentRole.PLACE: town.id,
+        IncidentRole.ACCUSER: accuser.id if accuser else None,
+    }
+    await record(ctx, key, roles=roles, facts={"suspects": len(suspects)}, place=town.id)
     return row
 
 
@@ -258,7 +264,7 @@ async def stir_hunts(ctx: TickContext, tally: WitchTally) -> None:
         fervour = clamp_int(table.hunt_fervour + (table.zealous_fervour if await zealous(ctx, town) else 0), 0, PERCENT)
         ctx.session.add(WitchHuntRow(settlement_entity_id=town_id, fervour=fervour, started_epoch=ctx.epoch, locked=[]))
         tally.hunts += 1
-        await note(ctx, f"A witch hunt took hold of {town.name}.", key="witchcraft.hunt", ids=[town_id])
+        await record(ctx, "witchcraft.hunt", roles={IncidentRole.PLACE: town_id}, facts={"fervour": fervour, "accusations": count}, place=town_id)
     await ctx.session.flush()
 
 
@@ -290,7 +296,7 @@ async def zealous(ctx: TickContext, town: EntityRow) -> bool:
 
 
 async def remember_hunt(ctx: TickContext, town: EntityRow, hunt: WitchHuntRow) -> None:
-    record = await open_record(
+    entry = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
@@ -308,7 +314,7 @@ async def remember_hunt(ctx: TickContext, town: EntityRow, hunt: WitchHuntRow) -
             subtype="witch hunt",
         ),
     )
-    await connect(ctx.session, town.id, record.id, BondKind.TELLS_OF, ctx.epoch, description="lived through it")
+    await connect(ctx.session, town.id, entry.id, BondKind.TELLS_OF, ctx.epoch, description="lived through it")
 
 
 async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
@@ -324,7 +330,7 @@ async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
         if hunt.fervour <= 0 and "ended_epoch" not in hunt.locked:
             hunt.ended_epoch = ctx.epoch
             await remember_hunt(ctx, town, hunt)
-            await note(ctx, f"The witch hunt in {town.name} came to an end.", key="witchcraft.hunt_over", ids=[town.id])
+            await record(ctx, "witchcraft.hunt_over", roles={IncidentRole.PLACE: town.id}, facts={"accused": hunt.accused}, place=town.id)
 
 
 async def settle(ctx: TickContext, tally: WitchTally) -> None:

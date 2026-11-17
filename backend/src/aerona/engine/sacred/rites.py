@@ -17,14 +17,15 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, TenetKind
 from aerona.domain.enums.mind import DreamKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import AfterlifeModel, SacramentKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import tech_factor
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.guards import perform
 from aerona.engine.sacred.places import church_of, patron_of, plagued_regions, realm_of_town, region_of, town_of
 from aerona.engine.sacred.signs import dominion_over, miracles_by_region, struck_regions
@@ -302,7 +303,7 @@ async def drift(ctx: TickContext, town: EntityRow, row: FaithClimateRow, tally: 
         await add_flag(ctx.session, town.id, EntityFlag.GODLESS, ctx.epoch)
         row.godless = True
         tally.godless += 1
-        await note(ctx, f"{town.name} stopped believing in any god.", key="sacred.godless", ids=[town.id])
+        await record(ctx, "sacred.godless", roles={IncidentRole.PLACE: town.id}, place=town.id)
     elif flagged and piety >= table.faithful_piety:
         await remove_flag(ctx.session, town.id, EntityFlag.GODLESS)
         row.godless = False

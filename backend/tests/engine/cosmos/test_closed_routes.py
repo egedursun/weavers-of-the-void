@@ -42,7 +42,7 @@ async def test_travellers_wait_out_a_route_shut_for_a_while(session: AsyncSessio
 
 @pytest.mark.parametrize(
     ("closure", "reason"),
-    [(RouteClosure.SEALED, "sealed"), (RouteClosure.SNAPPED, "sail snapped"), (RouteClosure.COLLAPSED, "bridge collapsed")],
+    [(RouteClosure.SEALED, "sealed"), (RouteClosure.SNAPPED, "snapped"), (RouteClosure.COLLAPSED, "collapsed")],
 )
 async def test_travellers_are_lost_on_a_route_shut_for_good(session: AsyncSession, cosmos: Cosmos, rules: Rules, closure: RouteClosure, reason: str) -> None:
     journey, route, ctx = await under_way(session, cosmos, rules, TravelMethod.ANCIENT_GATE)

@@ -27,14 +27,16 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.kind_crafts import ColourMeaning, EmblemSystem, FurnishingCategory, ToolCategory
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.kinds.acts import HOLDINGS
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_of_town
 from aerona.rules.registry import Rules
 
@@ -299,8 +301,13 @@ async def restrict_colour(ctx: TickContext, realm_id: int, colour: ColourTermRow
         ctx.session.add(ColourMeaningRow(colour_term_id=colour.id, culture_node_id=realm_id, meaning=ColourMeaning.RANK, since_epoch=ctx.epoch, locked=[]))
     await ctx.session.flush()
     tally.restricted += 1
-    realm = await ctx.session.get(EntityRow, realm_id)
-    await note(ctx, f"{realm.name if realm else 'A realm'} keeps the colour {colour.name} for its highest rank.", key="colours.restricted", ids=[realm_id])
+    await record(
+        ctx,
+        "colours.restricted",
+        roles={IncidentRole.AUTHORITY: realm_id},
+        facts={"colour": colour.name, "category": colour.category},
+        steps=(StepDraft(StepAction.DECREE, actor=realm_id),),
+    )
 
 
 async def repeal_colour(ctx: TickContext, realm_id: int, colour: ColourTermRow, tally: CraftTally) -> None:
@@ -319,9 +326,12 @@ async def repeal_colour(ctx: TickContext, realm_id: int, colour: ColourTermRow, 
         )
     )
     tally.repealed += 1
-    realm = await ctx.session.get(EntityRow, realm_id)
-    await note(
-        ctx, f"The folk of {realm.name if realm else 'a realm'} rose and tore down the restriction on {colour.name}.", key="colours.repealed", ids=[realm_id]
+    await record(
+        ctx,
+        "colours.repealed",
+        roles={IncidentRole.AUTHORITY: realm_id},
+        facts={"colour": colour.name, "category": colour.category},
+        steps=(StepDraft(StepAction.REFUSE, target=realm_id, outcome=StepOutcome.REVERSED),),
     )
 
 
@@ -363,7 +373,12 @@ async def garment_fashion(ctx: TickContext, tally: CraftTally) -> None:
             garment.novelty = clamp_int(garment.novelty + round_half_up(change), 0, PERCENT)
             if before < table.revival_floor <= garment.novelty:
                 tally.revived += 1
-                await note(ctx, f"{garment.name} came back into fashion.", key="dress.revival")
+                await record(
+                    ctx,
+                    "dress.revival",
+                    roles={IncidentRole.ORIGIN: garment.origin_node_id},
+                    facts={"garment": garment.name, "novelty": garment.novelty, "adoption": adoption},
+                )
         pull = (garment.novelty - PERCENT // 2) * weight * ctx.rules.dress.fashion_pull_pct / PERCENT
         for holding in holdings:
             if "strength" in holding.locked or held(holding.holder_node_id):

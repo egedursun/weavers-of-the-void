@@ -26,6 +26,7 @@ from aerona.domain.enums.creator import (
 from aerona.domain.enums.demography import MotifSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import creator_row
@@ -33,11 +34,11 @@ from aerona.engine.gods.worship import creator_worshippers
 from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.mind.book import pressures_of, values_for
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_war_count
 from aerona.language.generator import NameKind
 
@@ -359,7 +360,7 @@ async def keep_covenants(ctx: TickContext, creator: CreatorRow) -> int:
         if row.state is CovenantState.OFFERED:
             if standing.stance in {CreatorStance.WORSHIP, CreatorStance.REVERENCE}:
                 row.state = CovenantState.SEALED
-                await note(ctx, f"{people.name} sealed a covenant with the Creator.", key="creator.covenant_sealed", ids=[people.id])
+                await record(ctx, "creator.covenant_sealed", roles={IncidentRole.SUBJECT: people.id})
             elif ctx.epoch - row.since_epoch >= table.offer_epochs:
                 row.state = CovenantState.ENDED
             moved += 1
@@ -372,7 +373,7 @@ async def keep_covenants(ctx: TickContext, creator: CreatorRow) -> int:
         if row.breaches >= table.breach_limit:
             row.state = CovenantState.BROKEN
             creator.mood_anger = clamp_percent(creator.mood_anger + table.drift)
-            await note(ctx, f"The covenant between {people.name} and the Creator broke.", key="creator.covenant_broken", ids=[people.id])
+            await record(ctx, "creator.covenant_broken", roles={IncidentRole.SUBJECT: people.id})
         elif row.until_epoch is not None and ctx.epoch >= row.until_epoch:
             row.state = CovenantState.KEPT
             move(standing, love=table.drift * 2, gratitude=table.drift * 2)

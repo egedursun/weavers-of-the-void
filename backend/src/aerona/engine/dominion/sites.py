@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import and_, func, or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.culture import RiteProfileRow
@@ -22,6 +21,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
 from aerona.engine.cosmos.routes import RouteSpec, open_route, reaching
@@ -31,10 +31,10 @@ from aerona.engine.dominion.book import DominionBook
 from aerona.engine.faith.book import patron_node
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mythic.servitors import turned_back
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 SITE_KINDS = tuple(MagicSiteKind)
 SCHOOLS = tuple(MagicSchool)
@@ -148,11 +148,11 @@ async def reveal(ctx: TickContext, site: MagicSiteRow, finder: EntityRow | None,
         await open_gateway(ctx, site, place)
     if place is not None:
         who = finder.name if finder is not None else "the gods"
-        await note(
+        await record(
             ctx,
-            f"{who} found {an(spoken(site.kind))} of {spoken(site.school)} magic at {place.name}.",
-            key="dominion.magic_site_found",
-            ids=[place.id, *([finder.id] if finder is not None else [])],
+            "dominion.magic_site_found",
+            roles={IncidentRole.SUBJECT: [place.id, *[place.id, *([finder.id] if finder is not None else [])]]},
+            facts={"who": str(who), "kind": site.kind, "school": site.school},
         )
 
 
@@ -274,8 +274,8 @@ async def tend_thrones(ctx: TickContext, tally: SiteTally) -> None:
             place = await ctx.session.get(EntityRow, throne.place_entity_id)
             if place is not None:
                 name = await god_name(ctx, holder)
-                await note(
-                    ctx, f"The throne of power at {place.name} passed to {name}.", key="dominion.throne_passed", ids=[place.id, *([holder] if holder else [])]
+                await record(
+                    ctx, "dominion.throne_passed", roles={IncidentRole.SUBJECT: [place.id, *[place.id, *([holder] if holder else [])]]}, facts={"name": name}
                 )
         if throne.holder_node_id is None:
             continue

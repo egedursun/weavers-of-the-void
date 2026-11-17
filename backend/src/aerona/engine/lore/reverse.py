@@ -3,22 +3,23 @@ from sqlalchemy import select
 from aerona.catalog.discovery import DANGEROUS_TECHNIQUES, ITEM_CLASSES, ITEM_MATERIALS
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.discovery import ArtifactStudyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import key_parts
 from aerona.engine.lore.dangers import strike
 from aerona.engine.lore.research import has_technique
 from aerona.engine.lore.research_depth import RESEARCHERS, add_progress, field_skill
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record as record_incident
 
 SKILL_FLOOR = 10
 
@@ -56,14 +57,12 @@ async def study(ctx: TickContext, holder: EntityRow, item: ItemProfileRow, techn
     if row.progress < PERCENT:
         return False
     await add_progress(ctx, holder.id, row.technique, table.reverse_progress)
-    item_entity = await ctx.session.get(EntityRow, item.item_entity_id)
-    studied = item_entity.name if item_entity is not None else "a made thing"
-    await note(
+    await record_incident(
         ctx,
-        f"The scholars of {holder.name} took {studied} apart and learned {TECHNIQUES[row.technique].label.lower()} from it.",
-        key="discovery.reverse_engineered",
-        ids=[holder.id, item.item_entity_id],
-        kind=ChronicleKind.KNOWLEDGE,
+        "discovery.reverse_engineered",
+        roles={IncidentRole.ACTOR: holder.id, IncidentRole.INSTRUMENT: item.item_entity_id},
+        facts={"technique": row.technique, "progress": table.reverse_progress, "skill": skill},
+        terms=[Term("rules.discovery.reverse_progress", table.reverse_progress)],
     )
     danger = DANGEROUS_TECHNIQUES.get(row.technique)
     rng = ctx.rng(f"research.reverse_incident.{holder.id}.{item.item_entity_id}")

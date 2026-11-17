@@ -2,11 +2,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.engine.phases.interconnect import modifier_upkeep
 from aerona.engine.primitives.modifiers import Contribution, ModifierDraft, ModifierIndex, add_modifier, combine, remove_modifiers
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from tests.engine.warfare.factories import make, make_ctx
 
@@ -68,10 +68,16 @@ async def test_every_chronicle_line_records_an_incident(session: AsyncSession, w
     folk = await make(session, "Reed Folk", EntityType.PEOPLE, world_id, population=900)
     city = await make(session, "Stone Gate", EntityType.SETTLEMENT, world_id, population=800)
     ctx = make_ctx(session, Rules(), epoch=7)
-    first = await ctx.chronicle(ChronicleKind.WAR, "Reed Folk marched on Stone Gate.", template_key="war.march", entity_ids=[folk.id, city.id], magnitude=40)
-    second = await ctx.chronicle(ChronicleKind.WAR, "Stone Gate burned.", template_key="war.burned", entity_ids=[city.id], cause_incident_id=first.incident_id)
+    first = await record(
+        ctx,
+        "player.history",
+        roles={IncidentRole.ACTOR: folk.id, IncidentRole.TARGET: city.id},
+        facts={"account": "Reed Folk marched on Stone Gate."},
+        magnitude=40,
+    )
+    second = await record(ctx, "player.history", roles={IncidentRole.SUBJECT: city.id}, facts={"account": "Stone Gate burned."}, cause=first.incident_id)
     incident = await session.get(IncidentRow, second.incident_id)
-    assert incident is not None and incident.kind == "war.burned" and incident.cause_incident_id == first.incident_id
+    assert incident is not None and incident.kind == "player.history" and incident.cause_incident_id == first.incident_id
     assert incident.chronicle_id == second.row.id
     participants = list(await session.scalars(select(IncidentParticipantRow).where(IncidentParticipantRow.incident_id == first.incident_id)))
-    assert sorted((row.node_id, row.role) for row in participants) == sorted([(folk.id, IncidentRole.SUBJECT), (city.id, IncidentRole.SUBJECT)])
+    assert sorted((row.node_id, row.role) for row in participants) == sorted([(folk.id, IncidentRole.ACTOR), (city.id, IncidentRole.TARGET)])

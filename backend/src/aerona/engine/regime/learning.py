@@ -5,7 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.catalog.structures import RESEARCH_HOUSES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.db.record_context import Term
 from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.entities import EntityRow
@@ -24,6 +24,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.regime import CredentialKind
 from aerona.domain.enums.society import SocialClass
@@ -38,7 +39,6 @@ from aerona.engine.lore.research import SCHOLARLY, techniques_of
 from aerona.engine.lore.research_depth import add_progress
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.skills import practise
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.offices import adult, subjects
@@ -46,9 +46,9 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.records import definite
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.readers import Working, working
 
@@ -142,11 +142,12 @@ async def hold_sitting(ctx: TickContext, book: RealmBook, realm: Realm, row: Exa
         await grant(ctx, mortal, CredentialKind.EXAMINATION, granter_id=realm.entity.id, skill=skill, tally=tally)
     tally.sittings += 1
     tally.graduates += passed
-    await note(
+    await record_incident(
         ctx,
-        f"{realm.entity.name} held its examinations: {passed} of {several(candidates, 'candidate', 'candidates')} passed.",
-        key="examinations.held",
-        ids=[realm.entity.id],
+        "examinations.held",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.MEMBER: [mortal.id for _, mortal, _ in scored]},
+        facts={"candidates": candidates, "passed": passed, "mark": row.pass_mark, "quota": quota},
+        terms=[Term("rules.examinations.pass_rate", table.pass_rate)],
     )
     await ctx.session.flush()
     return sitting
@@ -288,8 +289,14 @@ async def migrate(ctx: TickContext, rows: dict[int, tuple[Working, AcademicFreed
             for technique in lacking[:CARRIED]:
                 await add_progress(ctx, destination, technique, table.carried_progress)
             tally.migrated += 1
-            await note(
-                ctx, f"{mortal.name} left the stifled learning of their home for a freer house.", key="learning.migrated", ids=[mortal.id, origin, destination]
+            await record_incident(
+                ctx,
+                "learning.migrated",
+                roles={IncidentRole.ACTOR: mortal.id, IncidentRole.ORIGIN: origin, IncidentRole.DESTINATION: destination},
+                facts={"techniques_carried": len(lacking[:CARRIED]), "progress": table.carried_progress},
+                origin=origin,
+                destination=destination,
+                terms=[Term("rules.academic_freedom.carried_progress", table.carried_progress)],
             )
 
 
@@ -331,7 +338,13 @@ async def found_school(ctx: TickContext, host_id: int, members: set[int], tally:
         members.add(disciple.id)
     members.add(master.id)
     tally.schools += 1
-    await note(ctx, f"{master.name} gathered disciples into {definite(school.name)}.", key="schools.founded", ids=[master.id, host_id])
+    await record_incident(
+        ctx,
+        "schools.founded",
+        roles={IncidentRole.TEACHER: master.id, IncidentRole.LEARNER: sorted(members - {master.id})},
+        facts={"school": school.name, "disciples": len(members) - 1},
+        place=host_id,
+    )
     await ctx.session.flush()
     return school
 

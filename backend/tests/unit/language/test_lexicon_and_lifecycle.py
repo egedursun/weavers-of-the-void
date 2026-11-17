@@ -8,9 +8,9 @@ from aerona.language.primitive import plan_primitive_language, primitive_languag
 from aerona.language.similarity import NamePool
 from aerona.language.succession import SpokenNearby, local_language, nearest_language
 from aerona.language.titles import HolderTitle, community_phrase, from_among, holder_title, holder_title_of, possessive
-from aerona.language.vitality import VitalityChange, assess_vitality, death_notes_allowed, vitality_note
+from aerona.language.vitality import VitalityChange, assess_vitality
 from aerona.language.voice import build_voice, phonology_for
-from aerona.language.writing import ScriptChoiceInputs, choose_writing_system, complexity_after_script, script_note, writing_system_weights
+from aerona.language.writing import ScriptChoiceInputs, choose_writing_system, complexity_after_script, writing_system_weights
 from aerona.rules.registry import Rules
 
 RULES = Rules()
@@ -44,7 +44,6 @@ def test_writing_system_choice_follows_weights() -> None:
     assert choose_writing_system(inputs, lambda: 0.999999, RULES) is WritingSystem.NOTCH
     assert complexity_after_script(None, RULES) == RULES.deep_life.script_default_complexity + RULES.deep_life.script_complexity_gain
     assert complexity_after_script(99, RULES) == 100
-    assert "a syllabary" in script_note("Velar", "Tirun", WritingSystem.SYLLABARY)
 
 
 def test_dialect_split_conditions() -> None:
@@ -73,14 +72,10 @@ def test_language_vitality_transitions() -> None:
     assert died is not None
     assert died.change is VitalityChange.DIED
     assert died.decipherable
-    assert "script survives" in vitality_note("Tirun", died)
     revived = assess_vitality(grace + 1, 3, True, False, RULES)
     assert revived is not None
     assert revived.change is VitalityChange.REVIVED
-    assert vitality_note("Tirun", revived) == "Tirun is spoken again."
     assert assess_vitality(grace + 1, 3, False, False, RULES) is None
-    assert death_notes_allowed(0, RULES)
-    assert not death_notes_allowed(RULES.deep_life.language_death_note_cap, RULES)
 
 
 def test_nearest_language_prefers_location_then_ancestors_then_weighted_majority() -> None:

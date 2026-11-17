@@ -3,7 +3,7 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.catalog.cosmography import BARRED_GALAXIES, GALACTIC_EVENT_LABELS, GALAXY_AGE_LABELS, GALAXY_AGE_ORDER, SPIRAL_GALAXIES
+from aerona.catalog.cosmography import BARRED_GALAXIES, GALACTIC_EVENT_LABELS, GALAXY_AGE_ORDER, SPIRAL_GALAXIES
 from aerona.catalog.travel import travel_method_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -16,10 +16,11 @@ from aerona.db.tables.physics import StarSystemRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import GalacticEventKind, GalacticNucleus, GalacticStructureKind, GalacticZone, GalaxyAge, GalaxyType, RouteScope
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import Discovery, StarType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, GALAXY_TYPE_MECHANICS, STRUCTURE_MECHANICS
@@ -29,10 +30,10 @@ from aerona.engine.cosmos.stars import StarSpec, create_star
 from aerona.engine.cosmos.stellar import physics_of_stars
 from aerona.engine.cosmos.systems import join_system
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import scale_stat, shift_bounded
+from aerona.engine.recording.record import StepDraft, record
 
 BRIGHT_DOMAINS = frozenset({Domain.STAR, Domain.SUN, Domain.LIGHT, Domain.SKY})
 DARK_DOMAINS = frozenset({Domain.DEATH, Domain.ASH, Domain.SHADOW})
@@ -81,7 +82,22 @@ async def open_event(
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, text, key=f"galaxy.{kind.value}", kind=ChronicleKind.SKY)
+    await record(
+        ctx,
+        f"galaxy.{kind.value}",
+        roles={
+            IncidentRole.SUBJECT: galaxy.id,
+            IncidentRole.CO_ACTOR: other.id if other is not None else None,
+            IncidentRole.ACTOR: star.id if star is not None else None,
+        },
+        facts={
+            "event": kind,
+            "intensity": row.intensity,
+            "structure": structure.name if structure is not None else None,
+            "epochs": ctx.rules.galaxies.event_epochs,
+        },
+        steps=(StepDraft(StepAction.BEGIN, target=galaxy.id), StepDraft(StepAction.END, target=galaxy.id)),
+    )
     ctx.count(f"galactic_{kind.value}")
     return row
 
@@ -120,8 +136,15 @@ async def age_galaxy(ctx: TickContext, galaxy: GalaxyRow) -> None:
         return
     if not ctx.rng(f"galaxy_age.{galaxy.id}").chance(ctx.rules.galaxies.age_chance):
         return
-    galaxy.age_stage = GALAXY_AGE_ORDER[GALAXY_AGE_ORDER.index(galaxy.age_stage) + 1]
-    await note(ctx, f"{galaxy.name} entered its {GALAXY_AGE_LABELS[galaxy.age_stage].lower()} age.", key="galaxy.aged", kind=ChronicleKind.SKY)
+    before = galaxy.age_stage
+    galaxy.age_stage = GALAXY_AGE_ORDER[GALAXY_AGE_ORDER.index(before) + 1]
+    await record(
+        ctx,
+        "galaxy.aged",
+        roles={IncidentRole.SUBJECT: galaxy.id},
+        facts={"age": galaxy.age_stage, "chance": ctx.rules.galaxies.age_chance},
+        steps=(StepDraft(StepAction.AGE, target=galaxy.id, instrument_key=before.value, record_table=GalaxyRow.__tablename__, record_key=str(galaxy.id)),),
+    )
 
 
 async def bear_stars(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyRow) -> int:
@@ -156,7 +179,13 @@ async def bear_stars(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyR
         cosmography.stars[star.id] = star
         born += 1
         await pair_newborn(ctx, cosmography, star, structure, rng)
-        await note(ctx, f"A new star, {star.name}, was born in {structure.name} of {galaxy.name}.", key="galaxy.star_born", kind=ChronicleKind.SKY)
+        await record(
+            ctx,
+            "galaxy.star_born",
+            roles={IncidentRole.SUBJECT: galaxy.id, IncidentRole.PRODUCT: star.id},
+            facts={"structure": structure.name, "star_type": star_type, "chance": chance * PERCENT},
+            steps=(StepDraft(StepAction.APPEAR, target=star.id, outcome=StepOutcome.SUCCESS),),
+        )
     return born
 
 
@@ -172,7 +201,12 @@ async def pair_newborn(ctx: TickContext, cosmography: Cosmography, star: StarRow
     system = await ctx.session.get(StarSystemRow, primary.system_id)
     if system is not None and "separation" not in system.locked:
         system.separation = table.binary_separation_tenths / 10
-    await note(ctx, f"{star.name} was born as the companion of {siblings[0].name}.", key="star.binary_born", kind=ChronicleKind.SKY)
+    await record(
+        ctx,
+        "star.binary_born",
+        roles={IncidentRole.SUBJECT: siblings[0].id, IncidentRole.PRODUCT: star.id},
+        facts={"separation": system.separation if system is not None else table.binary_separation_tenths / 10},
+    )
     return True
 
 
@@ -332,7 +366,13 @@ async def break_arms(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyR
             if star.structure_id == structure.id and unlocked(star, "structure_id") and not held(star.id):
                 star.structure_id = None
         broken += 1
-        await note(ctx, f"{structure.name} broke apart as {galaxy.name} fell into {host.name}.", key="galaxy.arm_broken", kind=ChronicleKind.SKY)
+        await record(
+            ctx,
+            "galaxy.arm_broken",
+            roles={IncidentRole.SUBJECT: galaxy.id, IncidentRole.DESTINATION: host.id},
+            facts={"structure": structure.name, "chance": ctx.rules.galaxies.merger_arm_break},
+            steps=(StepDraft(StepAction.COLLIDE, actor=galaxy.id, target=host.id, outcome=StepOutcome.BROKEN),),
+        )
     return broken
 
 
@@ -480,7 +520,12 @@ async def galaxy_cults(ctx: TickContext, cosmography: Cosmography) -> int:
         if galaxy is None or galaxy.id not in stirred or not rng.chance(ctx.rules.galaxies.cult_chance):
             continue
         await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_GALAXY, ctx.epoch)
-        await note(ctx, f"{community.name} came to worship {galaxy.name}.", key="galaxy.cult_risen", ids=[community.id], kind=ChronicleKind.WORSHIP)
+        await record(
+            ctx,
+            "galaxy.cult_risen",
+            roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: galaxy.id},
+            facts={"chance": ctx.rules.galaxies.cult_chance},
+        )
         risen += 1
     return risen
 
@@ -528,7 +573,6 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.galactic_events",
     "table.galactic_structures",
     "table.galaxies",
@@ -541,10 +585,12 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
 @writes(
     "table.chronicle",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.galactic_events",
     "table.galactic_structures",
     "table.galaxies",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.stars",
 )

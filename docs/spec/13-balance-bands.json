@@ -2,11 +2,78 @@
   "source": "spec 13, J.6 balance sims and loop delay tests",
   "run": "scripts/balance_sim.py --epochs 100 (LLM-free, seeded rich cosmos)",
   "bands": [
-    {"metric": "wars_per_epoch", "low": 0.2, "high": 6, "meaning": "wars break out, but the world is not at war with itself every epoch"},
-    {"metric": "mean_age_at_death", "low": 25, "high": 130, "meaning": "mortals neither die as children nor outlive their lifespans en masse; the ceiling leaves room for notable, medicine and long-lived house lifespans"},
-    {"metric": "maimed_share_pct", "low": 0.5, "high": 35, "meaning": "the maimed are visible but do not become the majority"},
-    {"metric": "community_growth_per_epoch_pct", "low": -5, "high": 40, "meaning": "communities neither collapse nor multiply without bound"},
-    {"metric": "hostile_pair_share_pct", "low": 0, "high": 60, "meaning": "hatred exists but most pairs are not blood enemies"},
-    {"metric": "doom_per_epoch", "low": 0, "high": 5, "meaning": "the doom clock creeps rather than races"}
-  ]
+    {
+      "metric": "wars_per_epoch",
+      "low": 0.2,
+      "high": 6,
+      "meaning": "wars break out, but the world is not at war with itself every epoch"
+    },
+    {
+      "metric": "mean_age_at_death",
+      "low": 25,
+      "high": 130,
+      "meaning": "mortals neither die as children nor outlive their lifespans en masse; the ceiling leaves room for notable, medicine and long-lived house lifespans"
+    },
+    {
+      "metric": "maimed_share_pct",
+      "low": 0.5,
+      "high": 35,
+      "meaning": "the maimed are visible but do not become the majority"
+    },
+    {
+      "metric": "community_growth_per_epoch_pct",
+      "low": -5,
+      "high": 40,
+      "meaning": "communities neither collapse nor multiply without bound"
+    },
+    {
+      "metric": "hostile_pair_share_pct",
+      "low": 0,
+      "high": 60,
+      "meaning": "hatred exists but most pairs are not blood enemies"
+    },
+    {
+      "metric": "doom_per_epoch",
+      "low": 0,
+      "high": 5,
+      "meaning": "the doom clock creeps rather than races"
+    }
+  ],
+  "record_bands": {
+    "source": "spec 16 49.8, the record of events",
+    "run": "scripts/record_bands.py <copy of a lived world> --epochs 1 (LLM-free; the world is copied with sqlite backup and never touched)",
+    "baseline": {
+      "epoch_seconds": 88.2,
+      "world": "the live world at epoch 53 before W49 (c597ecad)",
+      "rows_per_epoch": 19479,
+      "living_mortals": 100,
+      "rows_per_epoch_per_thousand_mortals": 194790
+    },
+    "bands": [
+      {
+        "metric": "record_rows_per_epoch_per_thousand_mortals",
+        "low": 194790,
+        "high": 19479000,
+        "meaning": "the record keeps at least what it kept before W49 and grows by at most a hundred times, every incident, fact, step, state, term, change and line included"
+      },
+      {
+        "metric": "numeric_changes_with_terms_pct",
+        "low": 100,
+        "high": 100,
+        "meaning": "every number the engine changes says why: its terms, or a kind that sets it outright"
+      },
+      {
+        "metric": "required_places_given_pct",
+        "low": 100,
+        "high": 100,
+        "meaning": "every happening whose kind needs a place has one"
+      },
+      {
+        "metric": "epoch_time_added_by_recording_pct",
+        "low": -100,
+        "high": 35,
+        "meaning": "recording every happening and change adds at most a third to the epoch time measured before W49, kept by batching at flush"
+      }
+    ]
+  }
 }

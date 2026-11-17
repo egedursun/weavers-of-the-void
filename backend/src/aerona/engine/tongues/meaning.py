@@ -9,20 +9,20 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.tongues import MeaningShiftRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.tongues import SenseShift, WordRegister
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.lore.taboos import kept
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.tongues.grammar import compounds, head_first
 
 ALSO = "; also "
@@ -132,7 +132,7 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
         LexemeRow(
             language_entity_id=language.id,
             word=clipped(name, LEXEME_WORD_MAX_LENGTH),
-            meaning=clipped(f"the old name of {name}, kept for the sacred and the poets", LEXEME_TEXT_MAX_LENGTH),
+            meaning=clipped(f"the old name of {name}, kept in sacred speech", LEXEME_TEXT_MAX_LENGTH),
             added_by_kind=ActorKind.ENGINE,
             added_by_node_id=None,
             epoch=ctx.epoch,
@@ -148,12 +148,8 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
         exonym.form, exonym.gloss, exonym.epoch = euphemism.word, gloss, ctx.epoch
     row = record(ctx, euphemism, SenseShift.EUPHEMISM, name, node_id)
     row.new_meaning = clipped(gloss, NAME_MAX_LENGTH)
-    await note(
-        ctx,
-        f"Those who speak {language.name} stopped saying {name} aloud and said {euphemism.word} instead.",
-        key="tongues.taboo",
-        ids=[language.id, node_id],
-        kind=ChronicleKind.CULTURE,
+    await record_incident(
+        ctx, "tongues.taboo", roles={IncidentRole.SUBJECT: language.id, IncidentRole.TARGET: node_id}, facts={"name": name, "euphemism": euphemism.word}
     )
     return euphemism
 

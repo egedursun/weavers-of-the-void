@@ -12,8 +12,8 @@ from aerona.engine.primitives.queries import living_sons
 logger = logging.getLogger(__name__)
 
 
-@reads("table.action_records", "table.creator", "table.epoch_year_cursors", "table.messages", "table.nodes", "table.sons")
-@writes("table.chronicle", "table.creator", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
+@reads("table.action_records", "table.creator", "table.messages", "table.nodes", "table.sons")
+@writes("table.chronicle", "table.creator", "table.incident_participants", "table.incidents", "table.sons")
 async def reputation(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     for son in await living_sons(ctx.session):

@@ -10,7 +10,18 @@ from aerona.db.tables.intrigue import SCHEME_FIELDS, SECRET_FIELDS, BeliefRow, F
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, HookStrength, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
+from aerona.domain.enums.intrigue import (
+    BeliefSource,
+    FavourOrigin,
+    HookDemand,
+    HookSource,
+    HookStrength,
+    IdentityReason,
+    IntrigueSecret,
+    PlotKind,
+    SchemePhase,
+    TrueNameCause,
+)
 from aerona.engine.intrigue.favours import call_favour, owe, use_hook
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.intrigue.names import name_bearer, rename, teach_name
@@ -320,7 +331,7 @@ async def edit_favour(scope: PlayerScope, command: EditFavour) -> Effect:
         row.magnitude = command.magnitude
     row.locked = command.hold
     await scope.session.flush()
-    return Effect(f"The favour weighs {row.magnitude}{' and is held' if row.locked else ''}.", target_node_id=row.owed_by_node_id)
+    return Effect(f"The favour has a weight of {row.magnitude}{' and is held' if row.locked else ''}.", target_node_id=row.owed_by_node_id)
 
 
 @player_action("favour:call", ActionKind.EDIT_RECORD)
@@ -396,7 +407,7 @@ async def unmask_identity(scope: PlayerScope, command: IdentityTarget) -> Effect
     ):
         await expose(ctx, secret)
     await scope.session.flush()
-    return Effect(f"The mask of {row.false_name} fell away.", target_node_id=row.mortal_node_id)
+    return Effect(f"The false name {row.false_name} was seen through.", target_node_id=row.mortal_node_id)
 
 
 @player_action("identity:delete", ActionKind.EDIT_RECORD)
@@ -450,7 +461,7 @@ async def hold_scheme(scope: PlayerScope, command: EditScheme) -> Effect:
     row = await found_row(scope, SchemeRow, command.scheme_id, "scheme")
     row.locked = held(row.locked, list(SCHEME_FIELDS), command.hold)
     await scope.session.flush()
-    return Effect("The scheme is frozen where it stands." if command.hold else "The scheme moves again.", target_node_id=row.owner_node_id)
+    return Effect("The scheme is held where it stands." if command.hold else "The scheme moves again.", target_node_id=row.owner_node_id)
 
 
 @player_action("scheme:delete", ActionKind.EDIT_RECORD)
@@ -475,7 +486,7 @@ async def name_truly(scope: PlayerScope, command: SetTrueName) -> Effect:
         row = await name_bearer(ctx, bearer.id, command.name, command.language_id)
         if row is None:
             raise ValidationFailedError(f"{bearer.name} is held against change.")
-    elif not await rename(ctx, Namer(scope.session, ctx.rules), row, cause="by the Creator's word", name=command.name):
+    elif not await rename(ctx, Namer(scope.session, ctx.rules), row, cause=TrueNameCause.GOD_WORD, name=command.name):
         raise ValidationFailedError("No new true name could be found in any tongue of its world.")
     if command.language_id is not None:
         row.language_node_id = command.language_id

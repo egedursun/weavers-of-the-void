@@ -10,15 +10,15 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceMode, Stat
 from aerona.domain.models.profiles import ExistenceProfile, GodDepth, Personality
 from aerona.engine.cosmos.foreign_gods import clean_stats, wake
 from aerona.engine.primitives.renames import rewrite_name
+from aerona.engine.recording.record import record
 from aerona.engine.transform.anchors import star_god_died
 from aerona.rules.registry import Rules
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import FOREIGN_GOD_EDITED, FOREIGN_GOD_STATUS
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 PERSONALITY_FIELDS = ("appearance", "temperament", "obsession", "fear", "speech_style", "secret")
@@ -188,11 +188,25 @@ async def edit_foreign_god(scope: PlayerScope, command: EditForeignGod) -> Effec
         _status(god, command.status, ctx.epoch)
         if command.status is ForeignGodStatus.DEAD:
             await star_god_died(ctx, god)
-        line = FOREIGN_GOD_STATUS
-        messages.append(await hand(ctx, creator, line, world_id=god.world_id, kind=ChronicleKind.FOREIGN_GOD, god=god.name, status=command.status.value))
+        written = await record(
+            ctx,
+            "player.foreign_god.status",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: god.id},
+            facts={"status": command.status},
+            world_id=god.world_id,
+            kind=ChronicleKind.FOREIGN_GOD,
+        )
+        messages.append(written.text)
     if not fields and not messages:
         raise ValidationFailedError(f"Nothing to change on {god.name}.")
     if fields:
-        line = FOREIGN_GOD_EDITED
-        messages.append(await hand(ctx, creator, line, world_id=god.world_id, kind=ChronicleKind.FOREIGN_GOD, god=god.name, fields=", ".join(fields)))
+        written = await record(
+            ctx,
+            "player.foreign_god.edited",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: god.id},
+            facts={"fields": ", ".join(fields)},
+            world_id=god.world_id,
+            kind=ChronicleKind.FOREIGN_GOD,
+        )
+        messages.append(written.text)
     return Effect(" ".join(messages), god.id)

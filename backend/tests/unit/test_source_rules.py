@@ -43,3 +43,18 @@ def test_a_naive_singular_is_caught() -> None:
     naive = "label = words(target).lower().rstrip(" + repr("s") + ")"
     assert rules.NAIVE_SINGULAR.search(naive)
     assert not rules.NAIVE_SINGULAR.search("label = singular(words(target).lower())")
+
+
+def test_a_local_or_argument_that_hides_an_import_is_caught_but_a_comprehension_name_is_its_own() -> None:
+    rules = load_rules()
+    source = (
+        "from aerona.engine.recording.record import record\n"
+        "from aerona.core.total import total\n"
+        "async def write(ctx, total):\n"
+        "    record = 1\n"
+        "    rows = [record for record in range(3)]\n"
+        "    return rows\n"
+    )
+    assert rules.shadowed_imports(ast.parse(source)) == [(3, "total"), (4, "record")]
+    kept = "from aerona.engine.recording.record import record\nasync def write(ctx):\n    return [record for record in range(3)]\n"
+    assert rules.shadowed_imports(ast.parse(kept)) == []

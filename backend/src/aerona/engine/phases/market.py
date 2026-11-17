@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -9,9 +10,9 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.war import DebtStatus, WarCause
@@ -20,13 +21,13 @@ from aerona.engine.economy.debt_law import DebtLaw, bind_debtor, coin_weight, de
 from aerona.engine.gods.economy import depletion_price, mechanics_of, shift_reserve
 from aerona.engine.gods.queries import owners_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
 from aerona.engine.primitives.strength import military_strength
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war, impose_tribute
 from aerona.rules.registry import Rules
@@ -52,10 +53,27 @@ def debt_words(bond: BondRow) -> str:
     return f"{bond.debt_amount or 0} {bond.debt_what or 'silver'}"
 
 
-async def _debt_chronicle(ctx: TickContext, text: str, key: str, ids: list[int], noted: bool = True) -> None:
-    await ctx.chronicle(ChronicleKind.DEBT, text, template_key=f"market.{key}", entity_ids=ids)
-    if noted:
-        await note(ctx, text, key=f"market.{key}_note", ids=ids, kind=ChronicleKind.DEBT)
+async def debt_ended(
+    ctx: TickContext,
+    key: str,
+    bond: BondRow,
+    debtor: EntityRow,
+    creditor: EntityRow,
+    *,
+    others: Mapping[IncidentRole, int | None] | None = None,
+    numbers: Mapping[str, int] | None = None,
+) -> None:
+    await record(
+        ctx,
+        f"market.{key}",
+        roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id, **(others or {})},
+        facts={
+            "owed": bond.debt_amount or 0,
+            "what": bond.debt_what or "silver",
+            "overdue": max(0, ctx.epoch - (bond.debt_due_epoch or ctx.epoch)),
+            **(numbers or {}),
+        },
+    )
 
 
 async def _seizable(session: AsyncSession, debtor_id: int) -> EntityRow | None:
@@ -67,8 +85,7 @@ async def _seizable(session: AsyncSession, debtor_id: int) -> EntityRow | None:
 async def wipe_at_jubilee(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor: EntityRow) -> None:
     await close_debt(ctx, bond, "wiped at the jubilee")
     await change_relation(ctx, debtor.id, creditor.id, ctx.rules.market.jubilee_relation, MemoryKind.GIFTED_ME, note="debt wiped at the jubilee")
-    text = f"The jubilee came and the law wiped the debt of {debt_words(bond)} {debtor.name} owed to {creditor.name}."
-    await _debt_chronicle(ctx, text, "debt_jubilee", [debtor.id, creditor.id])
+    await debt_ended(ctx, "debt_jubilee", bond, debtor, creditor)
 
 
 async def by_debt_law(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor: EntityRow, law: DebtLaw | None) -> str | None:
@@ -80,22 +97,20 @@ async def by_debt_law(ctx: TickContext, bond: BondRow, debtor: EntityRow, credit
     if await relation(ctx.session, ctx.rules, creditor.id, debtor.id) >= table.debt_forgive_relation:
         await close_debt(ctx, bond, "forgiven")
         await change_relation(ctx, creditor.id, debtor.id, table.debt_forgive_gain, MemoryKind.GIFTED_ME, note="debt forgiven")
-        await _debt_chronicle(ctx, f"{creditor.name} forgave the debt of {owed} owed by {debtor.name}.", "debt_forgiven", [debtor.id, creditor.id])
+        await debt_ended(ctx, "debt_forgiven", bond, debtor, creditor)
         return "forgiven"
     if law is not None and law.remedy is DebtRemedy.BONDAGE:
         bound = await bind_debtor(ctx, debtor, creditor)
         await close_debt(ctx, bond, "paid in bondage", DebtStatus.REPAID)
         await change_relation(ctx, debtor.id, creditor.id, -table.debt_grudge, MemoryKind.HARMED_ME, note="bound for a debt")
-        text = f"By the law of bondage, {debtor.name} paid its debt of {owed} to {creditor.name} in bound labour ({bound} bound)."
-        await _debt_chronicle(ctx, text, "debt_bondage", [debtor.id, creditor.id])
+        await debt_ended(ctx, "debt_bondage", bond, debtor, creditor, numbers={"bound": bound})
         return "bondage"
     if law is not None and law.remedy is DebtRemedy.PRISON:
         jailed = await jail_debtor(ctx, debtor, creditor, owed)
         if jailed is not None:
             await close_debt(ctx, bond, "debtor imprisoned")
             await change_relation(ctx, debtor.id, creditor.id, -table.debt_grudge, MemoryKind.HARMED_ME, note="jailed for a debt")
-            text = f"By the law of the debtors' prison, {creditor.name} threw {jailed.name} of {debtor.name} into a cell for the unpaid debt of {owed}."
-            await _debt_chronicle(ctx, text, "debt_prison", [debtor.id, creditor.id, jailed.id])
+            await debt_ended(ctx, "debt_prison", bond, debtor, creditor, others={IncidentRole.ACCUSED: jailed.id})
             return "prison"
     return None
 
@@ -107,13 +122,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
     rng = ctx.rng(f"debt_end.{bond.id}")
     if overdue_for >= table.debt_expiry:
         await close_debt(ctx, bond, "lapsed")
-        await _debt_chronicle(
-            ctx,
-            f"The debt of {owed} {debtor.name} owed to {creditor.name} lapsed; nobody claims it any more.",
-            "debt_lapsed",
-            [debtor.id, creditor.id],
-            noted=False,
-        )
+        await debt_ended(ctx, "debt_lapsed", bond, debtor, creditor)
         return "lapsed"
     lawful = await by_debt_law(ctx, bond, debtor, creditor, await debt_law_of(ctx, debtor, creditor))
     if lawful is not None:
@@ -125,9 +134,7 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
         await close_debt(ctx, bond, "turned to tribute")
         await impose_tribute(ctx, debtor, creditor, None, f"in return for the unpaid debt of {owed}")
         await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.DEMANDED_TRIBUTE, note="debt turned to tribute")
-        await _debt_chronicle(
-            ctx, f"{debtor.name} could not pay its debt of {owed}; {creditor.name} bound it to tribute.", "debt_tribute", [debtor.id, creditor.id]
-        )
+        await debt_ended(ctx, "debt_tribute", bond, debtor, creditor)
         return "tribute"
     resource = await _seizable(ctx.session, debtor.id)
     if resource is not None and rng.chance(round(table.debt_seize_chance * weight)):
@@ -136,14 +143,12 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
         await bonds.connect(BondDraft(creditor.id, resource.id, BondKind.OWNS, ctx.epoch, f"seized for the unpaid debt of {debtor.name}"))
         await close_debt(ctx, bond, "resource seized")
         await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.HARMED_ME, note="resource seized")
-        text = f"{creditor.name} seized {debtor.name}'s {resource.name} for the unpaid debt of {owed}."
-        await _debt_chronicle(ctx, text, "debt_seized", [debtor.id, creditor.id, resource.id])
+        await debt_ended(ctx, "debt_seized", bond, debtor, creditor, others={IncidentRole.INSTRUMENT: resource.id})
         return "seized"
     if rng.chance(round(table.debt_war_chance * weight)) and await declare_war(ctx, creditor.id, debtor.id, f"the unpaid debt of {owed}", cause=WarCause.DEBT):
         await close_debt(ctx, bond, "turned to war")
         await change_relation(ctx, creditor.id, debtor.id, -table.debt_grudge, MemoryKind.FOUGHT_US, note="debt war")
-        text = f"The unpaid debt of {owed} turned to war: {creditor.name} declared {debtor.name} its enemy to take it by force."
-        await _debt_chronicle(ctx, text, "debt_war", [debtor.id, creditor.id])
+        await debt_ended(ctx, "debt_war", bond, debtor, creditor)
         return "war"
     return None
 
@@ -202,10 +207,13 @@ async def exhaust(ctx: TickContext, resource: EntityRow) -> None:
         for key in (PROSPERITY_KEY, WEALTH_KEY):
             if stat(owner, key) is not None:
                 set_stats(owner, **{key: clamp_int(stat_or(owner, key, 0) - table.depletion_loss, 0, PERCENT)})
-    lost = f"; {', '.join(owner.name for owner in owners)} lost what it gave" if owners else ""
-    text = f"{resource.name} was exhausted: nothing is left to take{lost}."
-    await ctx.chronicle(ChronicleKind.RESOURCE, text, template_key="market.exhausted", entity_ids=[resource.id, *(owner.id for owner in owners)])
-    await note(ctx, text, key="market.exhausted_note", ids=[resource.id], kind=ChronicleKind.RESOURCE)
+    await record(
+        ctx,
+        "market.exhausted",
+        roles={IncidentRole.SUBJECT: resource.id, IncidentRole.OWNER: [owner.id for owner in owners]},
+        facts={"loss": table.depletion_loss},
+        place=resource.location_id,
+    )
 
 
 async def _refill(ctx: TickContext, resource: EntityRow) -> bool:
@@ -217,7 +225,7 @@ async def _refill(ctx: TickContext, resource: EntityRow) -> bool:
         return False
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETED)
     await remove_flag(ctx.session, resource.id, EntityFlag.DEPLETING)
-    await note(ctx, f"{resource.name} filled again after long ages; it yields once more.", key="market.refilled", ids=[resource.id])
+    await record(ctx, "market.refilled", roles={IncidentRole.SUBJECT: resource.id}, facts={"abundance": abundance}, place=resource.location_id)
     return True
 
 
@@ -248,7 +256,13 @@ async def resource_market(ctx: TickContext) -> None:
         if abundance <= table.depletion_abundance and load >= table.depletion_demand:
             if resource.id not in depleting:
                 await add_flag(ctx.session, resource.id, EntityFlag.DEPLETING, ctx.epoch)
-                await note(ctx, f"{resource.name} hit bottom; its owners take what little is left.", key="market.depleting", ids=[resource.id])
+                await record(
+                    ctx,
+                    "market.depleting",
+                    roles={IncidentRole.SUBJECT: resource.id},
+                    facts={"abundance": abundance, "demand": load},
+                    place=resource.location_id,
+                )
             elif exhausted < table.depletion_cap and ctx.rng(f"exhaust.{resource.id}").chance(table.depletion_chance):
                 await exhaust(ctx, resource)
                 exhausted += 1
@@ -273,7 +287,6 @@ async def resource_market(ctx: TickContext) -> None:
     "table.currencies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.nodes",
@@ -292,7 +305,6 @@ async def resource_market(ctx: TickContext) -> None:
     "table.community_societies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -313,12 +325,15 @@ async def write_off_debt(session: AsyncSession, rules: Rules, bond_id: int) -> s
     ctx = await manual_context(session, "write_off_debt", rules, key=str(bond_id))
     debtor, creditor = await session.get(EntityRow, bond.source_node_id), await session.get(EntityRow, bond.target_node_id)
     await close_debt(ctx, bond, "written off by the Creator")
-    names = (debtor.name if debtor else "a debtor", creditor.name if creditor else "a creditor")
     if debtor is not None and creditor is not None and debtor.status is EntityStatus.CANON and creditor.status is EntityStatus.CANON:
         await change_relation(ctx, creditor.id, debtor.id, rules.market.debt_forgive_gain, MemoryKind.GIFTED_ME, note="debt written off")
-    text = f"The Creator wrote off the debt of {debt_words(bond)} {names[0]} owed to {names[1]}."
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="market.written_off", entity_ids=[bond.source_node_id, bond.target_node_id])
-    return text
+    written = await record(
+        ctx,
+        "market.written_off",
+        roles={IncidentRole.BORROWER: bond.source_node_id, IncidentRole.LENDER: bond.target_node_id},
+        facts={"owed": bond.debt_amount or 0, "what": bond.debt_what or "silver"},
+    )
+    return written.text
 
 
 async def run_market(session: AsyncSession, rules: Rules) -> None:

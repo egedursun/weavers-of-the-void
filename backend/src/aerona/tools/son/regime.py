@@ -12,6 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.engine.primitives.queries import living_entity
@@ -23,7 +24,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -69,7 +69,12 @@ async def shape_rule(call: SonCall, args: ShapeRuleInput) -> str:
     realm = await reached(call, args.polity_id, frozenset({EntityType.POLITY}), SonResult.RULE_REFUSED, "there is no such realm")
     await control.set_regime(call.tick, realm.id, {"selectorate": args.selectorate.value, "public_share": args.public_share})
     call.target(realm.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_RULE, entity_ids=[realm.id], son=call.son.name, realm=realm.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_rule",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"realm": str(realm.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.RULE_SHAPED, name=realm.name, selectorate=args.selectorate.value, share=args.public_share)
 
 
@@ -84,8 +89,11 @@ async def anoint_founder(call: SonCall, args: AnointFounderInput) -> str:
     row = await control.set_regime(call.tick, realm.id, {})
     await control.set_regime(call.tick, realm.id, {"founder_entity_id": ruler.id, "charismatic": min(PERCENT, row.charismatic + ANOINTING)})
     call.target(realm.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.ANOINT_FOUNDER, entity_ids=[realm.id, ruler.id], son=call.son.name, ruler=ruler.name, realm=realm.name, reason=args.reason
+    await call.record(
+        "tools.son.anoint_founder",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.AUTHORITY: ruler.id, IncidentRole.SUBJECT: realm.id},
+        facts={"realm": str(realm.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.FOUNDER_ANOINTED, name=ruler.name, realm=realm.name, charisma=row.charismatic)
 
@@ -94,7 +102,12 @@ async def free_learning(call: SonCall, args: FreeLearningInput) -> str:
     house = await reached(call, args.structure_id, frozenset({EntityType.STRUCTURE}), SonResult.LEARNING_REFUSED, "there is no such house of learning")
     row = await control.set_freedom(call.tick, house.id, {"level": args.level})
     call.target(house.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.FREE_LEARNING, entity_ids=[house.id], son=call.son.name, house=house.name, reason=args.reason)
+    await call.record(
+        "tools.son.free_learning",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: house.id},
+        facts={"house": str(house.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.LEARNING_FREED, name=house.name, level=row.level)
 
 
@@ -102,14 +115,11 @@ async def inspire_school(call: SonCall, args: InspireSchoolInput) -> str:
     founder = await reached(call, args.founder_id, frozenset({EntityType.MORTAL}), SonResult.SCHOOL_REFUSED, "there is no such mortal")
     school = await control.found_school(call.tick, founder.id, args.name, None)
     call.target(founder.id)
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.INSPIRE_SCHOOL,
-        entity_ids=[founder.id],
-        son=call.son.name,
-        founder=founder.name,
-        school=definite(school.name),
-        reason=args.reason,
+    await call.record(
+        "tools.son.inspire_school",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: founder.id},
+        facts={"founder": str(founder.name), "school": definite(school.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.SCHOOL_INSPIRED, name=definite(school.name), founder=founder.name, id=school.id)
 

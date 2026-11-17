@@ -6,6 +6,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, alive, god_of
@@ -16,9 +17,9 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.military.battle import Side
 from aerona.engine.mythic.offices import conquer_offices
 from aerona.engine.mythic.servitors import host_of, shake_host
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.strength import has_power
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -115,25 +116,28 @@ async def intervene(ctx: TickContext, war_id: int, sequence: int, first: Side, s
         await god_grudge(ctx, loser.god.id, winner.god.id, MemoryKind.HUMILIATED_ME, f"overcame it in the battle for {loser.side.entity.name}")
         await conquer_offices(ctx, winner.god.id, loser.god.id, stream)
         await shake_host(ctx, loser.god.id)
-        await note(
+        await record(
             ctx,
-            f"{winner.god.name} overcame {loser.god.name} in the battle between {first.entity.name} and {second.entity.name}; "
-            f"the intervention of {loser.god.name} turned against {loser.side.entity.name}.",
-            key="divine.battle_contest",
-            ids=[first.entity.id, second.entity.id],
-            son_id=son,
+            "divine.battle_contest",
+            roles={
+                IncidentRole.ACTOR: winner.god.id,
+                IncidentRole.OPPONENT: loser.god.id,
+                IncidentRole.SUBJECT: [first.entity.id, second.entity.id],
+                IncidentRole.VICTIM: loser.side.entity.id,
+            },
             kind=ChronicleKind.CHALLENGE,
+            son_id=son,
             world_id=first.entity.world_id,
         )
         return 2
     for hand in hands:
         lay(ctx, hand)
         await awe(ctx, hand)
-        await note(
+        await record(
             ctx,
-            f"{hand.god.name} intervened in the battle for {hand.side.entity.name}" + (", striking its foes." if hand.smites else ", steadying its faithful."),
-            key="divine.battle_hand",
-            ids=[hand.side.entity.id],
+            "divine.battle_hand",
+            roles={IncidentRole.ACTOR: hand.god.id, IncidentRole.BENEFICIARY: hand.side.entity.id},
+            facts={"deed": "striking its foes" if hand.smites else "steadying its faithful"},
             son_id=hand.god.id if isinstance(hand.god, SonRow) else None,
             kind=ChronicleKind.CHALLENGE,
             world_id=hand.side.entity.world_id,

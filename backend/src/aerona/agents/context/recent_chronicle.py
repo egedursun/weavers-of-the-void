@@ -3,9 +3,8 @@ import re
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
-from aerona.db.repositories.chronicle import in_world
+from aerona.db.repositories.chronicle import in_world, kept_lines
 from aerona.db.tables.lore import ChronicleRow as ChronicleRecord
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import RecentChronicleContext
 from aerona.prompts.contexts.common import ChronicleRow
@@ -26,11 +25,7 @@ def prompt_text(text: str) -> str:
 
 
 async def recent_rows(scope: Scope, limit: int, world_id: int | None = None) -> list[ChronicleRow]:
-    statement = (
-        select(ChronicleRecord)
-        .where(ChronicleRecord.kind != ChronicleKind.ENGINE_RAW, ChronicleRecord.visible.is_(True), ChronicleRecord.hidden_as_duplicate.is_(False))
-        .order_by(ChronicleRecord.id.desc())
-    )
+    statement = select(ChronicleRecord).where(kept_lines()).order_by(ChronicleRecord.id.desc())
     if world_id is not None and scope.multi_world:
         statement = statement.where(in_world(world_id, scope.primary_world_id))
     rows = list(await scope.session.scalars(statement.limit(limit)))

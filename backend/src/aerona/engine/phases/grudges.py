@@ -5,14 +5,15 @@ from itertools import combinations, product
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import canon, living_entity
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.services.war import declare_war
 
 
@@ -20,6 +21,8 @@ from aerona.engine.services.war import declare_war
 class Feud:
     first_son: str
     second_son: str
+    first_id: int
+    second_id: int
 
     @property
     def gods(self) -> str:
@@ -31,11 +34,12 @@ async def leak(ctx: TickContext, feud: Feud, first: EntityRow, second: EntityRow
     reason = f"holy war: {feud.gods}" if holy else f"the grudge between {feud.gods}"
     if not await declare_war(ctx, first.id, second.id, reason, cause=WarCause.DIVINE_GRUDGE):
         return False
-    if holy:
-        text = f"The grudge between {feud.gods} turned into a holy war: {first.name} and {second.name} came to blows."
-    else:
-        text = f"The grudge between {feud.gods} leaked to the mortals: {first.name} and {second.name} became enemies."
-    await note(ctx, text, key="grudges.holy_war" if holy else "grudges.enmity", ids=[first.id, second.id])
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.ACTOR: first.id,
+        IncidentRole.OPPONENT: second.id,
+        IncidentRole.PATRON: (feud.first_id, feud.second_id),
+    }
+    await record(ctx, "grudges.holy_war" if holy else "grudges.enmity", roles=roles, facts={"cause": WarCause.DIVINE_GRUDGE})
     return True
 
 
@@ -56,8 +60,8 @@ async def worshippers_by_patron(ctx: TickContext) -> tuple[dict[int, list[Entity
     return by_patron, names
 
 
-@reads("table.bonds", "table.epoch_year_cursors", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@reads("table.bonds", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def divine_grudges(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     rng = ctx.rng()
@@ -68,7 +72,7 @@ async def divine_grudges(ctx: TickContext) -> None:
     for first_son, second_son in combinations(sorted(by_patron), 2):
         if await sons.relation(first_son, second_son) > -effects.god_grudge_relation:
             continue
-        feud = Feud(names[first_son], names[second_son])
+        feud = Feud(names[first_son], names[second_son], first_son, second_son)
         for first, second in product(by_patron[first_son], by_patron[second_son]):
             if leaked >= effects.god_grudge_cap:
                 return

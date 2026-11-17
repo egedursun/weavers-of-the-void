@@ -328,7 +328,7 @@ WILDS_MECHANICS = (
         phases=("beast_cycles", "glory_hunts", "monster_raids"),
         surface=Surface(drawer=BEAST, layer=LAIR_LAYER),
         backfill="beast_cycles: great kinds bring forth named beasts",
-        templates=("beasts.risen", "beasts.deed", "beasts.fallen"),
+        templates=("beasts.risen", "beasts.raid", "beasts.fallen"),
         fields=(
             "temper",
             "lair_place_id",
@@ -1304,7 +1304,7 @@ TYPED: tuple[Raw, ...] = (
     (
         "animal_gods",
         "S3.2",
-        "A son of the Hunt takes the form of its worshippers' totem, and the kind is holy where they are prayed to",
+        "A son of the hunt makes the totem of those who worship it holy to itself",
         ("husbandry", "ecology"),
         ECOLOGY,
         (SP, "son", "people"),

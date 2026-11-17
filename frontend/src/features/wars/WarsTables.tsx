@@ -28,6 +28,7 @@ import { PageControls } from '@/components/domain/PageControls'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
+import { ReportSteps } from '@/features/records/ReportSteps'
 import {
   WAR_PAGE_SIZE,
   type ArmyView,
@@ -305,6 +306,10 @@ export function BattlesList({ warId }: { warId: number }) {
                   </Badge>
                 )}
               </div>
+              <ReportSteps
+                nodeId={item.record?.id ?? null}
+                label='How the battle unfolded'
+              />
             </div>
           </>
         )

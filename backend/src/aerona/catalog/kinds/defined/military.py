@@ -1,17 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.military import (
-    CaptiveFate,
-    CasualtyFate,
-    DuelContext,
-    FeudParty,
-    OutcomeClass,
-    SabotageKind,
-    SiegeWork,
-    SpyOwnerKind,
-    TargetClass,
-    VesselArmament,
-)
+from aerona.domain.enums.military import CaptiveFate, CasualtyFate, DuelContext, FeudParty, OutcomeClass, SabotageKind, SiegeWork, SpyOwnerKind, TargetClass
 
 CAPTIVE_FATE = total(
     CaptiveFate,
@@ -72,7 +61,7 @@ DUEL_CONTEXT = total(
         ),
         DuelContext.TRIAL: Defined(
             "Trial",
-            checked_by=("engine.military.duels.bout", "engine.military.duels.downed"),
+            checked_by=("engine.military.duels.Duel.downed", "engine.military.duels.Duel.ended"),
             used_by=("engine.phases.warfare.ordeals", "services.player.military_depth.DUEL_CONTEXTS"),
         ),
         DuelContext.CHAMPION: Defined("Champion", checked_by=(), used_by=("engine.polity.wars.champions", "services.player.military_depth.DUEL_CONTEXTS")),
@@ -125,21 +114,15 @@ SABOTAGE_KIND = total(
     SabotageKind,
     {
         SabotageKind.GRANARY_FIRE: Defined(
-            "Granary fire",
-            checked_by=("engine.phases.espionage.SABOTAGE_LINES", "engine.phases.espionage.sabotage"),
-            used_by=("engine.phases.espionage.sabotage_kind",),
+            "Granary fire", checked_by=("engine.phases.espionage.sabotage",), used_by=("engine.phases.espionage.sabotage_kind",)
         ),
         SabotageKind.WALL_WEAKENING: Defined(
-            "Wall weakening",
-            checked_by=("engine.phases.espionage.SABOTAGE_LINES", "engine.phases.espionage.sabotage"),
-            used_by=("engine.phases.espionage.sabotage_kind",),
+            "Wall weakening", checked_by=("engine.phases.espionage.sabotage",), used_by=("engine.phases.espionage.sabotage_kind",)
         ),
         SabotageKind.POISON_WELLS: Defined(
-            "Poison wells",
-            checked_by=("engine.phases.espionage.SABOTAGE_LINES", "engine.phases.espionage.sabotage"),
-            used_by=("engine.phases.espionage.sabotage_kind",),
+            "Poison wells", checked_by=("engine.phases.espionage.sabotage",), used_by=("engine.phases.espionage.sabotage_kind",)
         ),
-        SabotageKind.ARSON: Defined("Arson", checked_by=("engine.phases.espionage.SABOTAGE_LINES",), used_by=("engine.phases.espionage.sabotage_kind",)),
+        SabotageKind.ARSON: Defined("Arson", checked_by=(), used_by=("engine.phases.espionage.sabotage_kind",)),
         SabotageKind.NETWORK_ATTACK: Defined("Network attack", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.BRIDGE_DESTRUCTION: Defined("Bridge destruction", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.BLIGHT_RELEASE: Defined("Blight release", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
@@ -155,7 +138,9 @@ SIEGE_WORK = total(
     SiegeWork,
     {
         SiegeWork.CIRCUMVALLATION: Defined(
-            "Circumvallation", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS", "engine.military.siege_depth.encircled")
+            "Circumvallation",
+            checked_by=(),
+            used_by=("engine.military.siege.season_steps", "engine.military.siege_depth.ACTION_WORKS", "engine.military.siege_depth.encircled"),
         ),
         SiegeWork.TOWERS: Defined("Towers", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS",)),
         SiegeWork.RAMS: Defined("Rams", checked_by=(), used_by=("engine.military.siege_depth.ACTION_WORKS",)),
@@ -196,27 +181,5 @@ TARGET_CLASS = total(
     {
         TargetClass.SOFT: Defined("Soft", checked_by=("engine.military.battle.hard_guard",), used_by=("engine.military.battle.class_of",)),
         TargetClass.HARD: Defined("Hard", checked_by=(), used_by=("engine.military.battle.class_of",)),
-    },
-)
-
-VESSEL_ARMAMENT = total(
-    VesselArmament,
-    {
-        VesselArmament.RAMS: Defined(
-            "Rams", checked_by=(), used_by=("catalog.equipment.FAMILIES", "catalog.vehicles.FRAMES", "engine.military.vessels.vessel_power")
-        ),
-        VesselArmament.MISSILES: Defined(
-            "Missiles",
-            checked_by=(),
-            used_by=("catalog.equipment.FAMILIES", "catalog.vehicles.FRAMES", "engine.military.vessels.vessel_power", "engine.operations.sail.modern_shot"),
-        ),
-        VesselArmament.SIEGE_ENGINES: Defined(
-            "Siege engines", checked_by=(), used_by=("catalog.equipment.FAMILIES", "catalog.vehicles.FRAMES", "engine.military.vessels.vessel_power")
-        ),
-        VesselArmament.RITES: Defined(
-            "Rites",
-            checked_by=(),
-            used_by=("catalog.equipment.FAMILIES", "catalog.vehicles.FRAMES", "engine.military.vessels.vessel_power", "engine.operations.sail.shot_for"),
-        ),
     },
 )

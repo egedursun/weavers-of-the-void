@@ -12,6 +12,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.happening import RiverShiftCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import DangerOrigin, DangerSource
 from aerona.engine.environment import region_control
 from aerona.prompts import SonToolId
@@ -20,7 +21,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -60,14 +60,13 @@ async def sanctify_region(call: SonCall, args: SanctifyInput) -> str:
     call.target(region.id)
     ground = await region_control.sanctify(call.session, call.rules, region.id, args.sacredness, held=True)
     call.spend_essence(cost)
-    await call.chronicle(
-        ChronicleKind.MIRACLE,
-        lines.SANCTIFY_REGION,
-        entity_ids=[region.id],
+    await call.record(
+        "tools.son.sanctify_region",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.MIRACLE,
         world_id=region.world_id,
-        son=call.son.name,
-        region=region.name,
-        reason=args.reason,
     )
     return result(SonResult.REGION_SANCTIFIED, name=region.name, sacredness=ground.sacredness)
 
@@ -83,15 +82,13 @@ async def curse_region(call: SonCall, args: CurseRegionInput) -> str:
     )
     call.spend_essence(cost)
     label = DANGERS[args.danger].label
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.CURSE_REGION,
-        entity_ids=[region.id],
+    await call.record(
+        "tools.son.curse_region",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"danger": label.lower(), "reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.WORLD,
         world_id=region.world_id,
-        son=call.son.name,
-        danger=label.lower(),
-        region=region.name,
-        reason=args.reason,
     )
     return result(SonResult.REGION_CURSED, danger=label, name=region.name, strength=strength)
 
@@ -108,16 +105,12 @@ async def redirect_river(call: SonCall, args: RedirectRiverInput) -> str:
     call.target(target.id)
     call.spend_essence(cost)
     river = moved.river.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.REDIRECT_RIVER,
-        entity_ids=[source.id, target.id],
+    await call.record(
+        "tools.son.redirect_river",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: source.id, IncidentRole.TARGET: target.id},
+        facts={"river": str(river), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
         world_id=source.world_id,
-        son=call.son.name,
-        river=river,
-        source=source.name,
-        target=target.name,
-        reason=args.reason,
     )
     return result(SonResult.RIVER_REDIRECTED, river=river, source=source.name, target=target.name)
 

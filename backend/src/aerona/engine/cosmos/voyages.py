@@ -7,6 +7,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction
 from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
@@ -18,8 +20,8 @@ from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import disease_for, open_outbreak
 from aerona.engine.economy.stocks import goods_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 DARK_SCOPES = frozenset({RouteScope.INTERGALACTIC, RouteScope.INTERCLUSTER, RouteScope.INTERDIMENSIONAL})
@@ -51,16 +53,16 @@ async def voyage_epoch(ctx: TickContext, journey: JourneyRow, traveller: EntityR
         found = CargoLine(commodity=CommodityKind.TOOLS, amount=table.derelict_goods)
         if "cargo" not in journey.locked:
             journey.cargo = [*journey.cargo, found]
-        add_event(journey, ctx.epoch, JourneyEventKind.DERELICT, "they came upon a derelict and took what it held")
+        await add_event(ctx, journey, JourneyEventKind.DERELICT, "they came upon a derelict and took what it held")
     origin = await ctx.session.get(WorldRow, journey.origin_world_id)
     dark = journey.scope in DARK_SCOPES or (origin is not None and origin.leakage >= OUTER_LEAK)
     if dark and rng.chance(table.outer_touch_chance):
         if not held(traveller.id):
             shift_sanity(ctx.rules, traveller, -table.outer_touch_sanity)
-        add_event(journey, ctx.epoch, JourneyEventKind.OUTER_TOUCH, "something from outside touched them on the way")
+        await add_event(ctx, journey, JourneyEventKind.OUTER_TOUCH, "something from outside touched them on the way")
     if route.toll_controller_entity_id is not None and route.toll_pct and journey.cargo and "cargo" not in journey.locked:
         journey.cargo = [line.model_copy(update={"amount": line.amount - line.amount * route.toll_pct // PERCENT}) for line in journey.cargo]
-        add_event(journey, ctx.epoch, JourneyEventKind.TOLL, "they paid the toll of the route")
+        await add_event(ctx, journey, JourneyEventKind.TOLL, "they paid the toll of the route")
 
 
 async def crossing_text(ctx: TickContext, journey: JourneyRow) -> str:
@@ -77,7 +79,7 @@ async def crossing_text(ctx: TickContext, journey: JourneyRow) -> str:
 async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:
     table = ctx.rules.journeys
     if journey.scope in FAR_SCOPES:
-        add_event(journey, ctx.epoch, JourneyEventKind.CROSSING, await crossing_text(ctx, journey))
+        await add_event(ctx, journey, JourneyEventKind.CROSSING, await crossing_text(ctx, journey))
     if journey.scope is RouteScope.INTERDIMENSIONAL and not held(traveller.id):
         cosmography = await cosmography_of(ctx.session)
         dimension = cosmography.place_world_id(journey.destination_world_id).dimension
@@ -88,7 +90,26 @@ async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) ->
     if market is not None and journey.cargo and not held(market.id):
         for line in journey.cargo:
             await goods_of(ctx.session, ctx.epoch).add(market.id, line.commodity, line.amount, GoodsFlow.TRADE, material=line.material)
-        await note(ctx, f"{traveller.name}'s convoy brought its goods to {market.name}.", key="travel.cargo_delivered", ids=[traveller.id, market.id])
+        await record(
+            ctx,
+            "travel.cargo_delivered",
+            roles={IncidentRole.ACTOR: traveller.id, IncidentRole.RECEIVER: market.id},
+            facts={"goods": [line.commodity for line in journey.cargo], "amounts": [line.amount for line in journey.cargo]},
+            steps=tuple(
+                StepDraft(
+                    StepAction.DELIVER,
+                    actor=traveller.id,
+                    target=market.id,
+                    instrument_kind=InstrumentKind.SUBSTANCE,
+                    instrument_key=line.commodity.value,
+                    amount=line.amount,
+                    unit=FactUnit.COUNT,
+                )
+                for line in journey.cargo
+            ),
+            place=market.id,
+            cause=journey.incident_id,
+        )
         journey.cargo = []
     if any(line.sick for line in journey.passengers) and ctx.rng(f"voyage_sickness.{journey.id}").chance(table.sick_spread_chance):
         book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
@@ -96,6 +117,11 @@ async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) ->
         if region is not None and not held(region.id):
             disease = await disease_for(ctx, book, region)
             await open_outbreak(ctx, book, disease, region.id, path=SpreadPath.JOURNEY, severity=PERCENT // 3)
-            await note(
-                ctx, f"Sick travellers of {traveller.name} brought {disease.name} to {region.name}.", key="travel.sick_arrival", ids=[traveller.id, region.id]
+            await record(
+                ctx,
+                "travel.sick_arrival",
+                roles={IncidentRole.ACTOR: traveller.id, IncidentRole.SUBJECT: disease.id, IncidentRole.PLACE: region.id},
+                facts={"severity": PERCENT // 3},
+                place=region.id,
+                cause=journey.incident_id,
             )

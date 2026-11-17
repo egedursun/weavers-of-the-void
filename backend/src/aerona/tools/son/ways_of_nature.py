@@ -13,6 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import OuterHunger
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.evolution import EvolvedTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.divine.outer import outer_profile
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -22,7 +23,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -55,7 +55,12 @@ async def turn_hunger(call: SonCall, args: HungerInput) -> str:
     await call.session.flush()
     call.target(being.id)
     what = f"the hunger of {being.name} turned to {spoken(args.hunger)}"
-    await call.chronicle(ChronicleKind.MIRACLE, lines.TURN_HUNGER, entity_ids=[being.id], son=call.son.name, what=what, reason=args.reason)
+    await call.record(
+        "tools.son.turn_hunger",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: being.id},
+        facts={"what": str(what), "reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.WAY_TAKEN, what=what)
 
 
@@ -77,7 +82,12 @@ async def shape_trait(call: SonCall, args: TraitInput) -> str:
     await call.session.flush()
     call.target(species.id)
     what = f"{spoken(args.trait)} {'raised' if args.raise_it else 'lowered'} in {species.name}"
-    await call.chronicle(ChronicleKind.MIRACLE, lines.SHAPE_TRAIT, entity_ids=[species.id], son=call.son.name, what=what, reason=args.reason)
+    await call.record(
+        "tools.son.shape_trait",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: species.id},
+        facts={"what": str(what), "reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.WAY_TAKEN, what=what)
 
 

@@ -18,6 +18,7 @@ from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import IdeologyStats, ItemStats
@@ -31,11 +32,11 @@ from aerona.engine.lore.printing import banned_for, printed, read_in_secret
 from aerona.engine.lore.research import institutions
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import declare_war
 
 IT = IdeologyTenet
@@ -336,8 +337,8 @@ async def answer(ctx: TickContext, son: SonRow, creed: EntityRow, row: IdeologyA
             epoch=ctx.epoch,
             note=f"struck down for {creed.name}",
         )
-        await note(
-            ctx, f"{son.name} struck at those who follow {creed.name}.", key="lore.godless_persecuted", ids=[creed.id, row.adherent_entity_id], son_id=son.id
+        await record(
+            ctx, "lore.godless_persecuted", roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [creed.id, row.adherent_entity_id]}, son_id=son.id
         )
         return "persecuted"
     if son.essence < table.miracle_essence:
@@ -345,13 +346,7 @@ async def answer(ctx: TickContext, son: SonRow, creed: EntityRow, row: IdeologyA
     son.essence -= table.miracle_essence
     son.faith += table.miracle_faith
     row.strength = clamp_int(row.strength - table.miracle_doubt, 0, PERCENT)
-    await note(
-        ctx,
-        f"{son.name} answered {creed.name} with a sign, and some of its followers wavered.",
-        key="lore.godless_miracle",
-        ids=[creed.id, row.adherent_entity_id],
-        son_id=son.id,
-    )
+    await record(ctx, "lore.godless_miracle", roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [creed.id, row.adherent_entity_id]}, son_id=son.id)
     return "miracle"
 
 

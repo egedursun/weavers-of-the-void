@@ -14,6 +14,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, ServitorRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import lay_enchantment as lay_law
@@ -27,7 +28,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -107,7 +107,12 @@ async def make_servitor(call: SonCall, args: MakeServitorInput) -> str:
     call.spend_essence(cost)
     call.target(row.spirit_entity_id)
     role = args.role.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORLD, lines.MAKE_SERVITOR, entity_ids=[row.spirit_entity_id], son=call.son.name, name=args.name, role=role)
+    await call.record(
+        "tools.son.make_servitor",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: row.spirit_entity_id},
+        facts={"name": str(args.name), "role": str(role)},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.SERVITOR_MADE, name=args.name, id=row.spirit_entity_id)
 
 
@@ -138,7 +143,9 @@ async def lay_geas(call: SonCall, args: LayGeasInput) -> str:
     await ensure_in_reach(call, bearer)
     row = await lay(call.tick, bearer, layer_node_id=call.son.id, layer=GeasLayer.GOD, mode=args.mode, act=args.act)
     call.target(bearer.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.LAY_GEAS, entity_ids=[bearer.id], son=call.son.name, bearer=bearer.name, reason=args.reason)
+    await call.record(
+        "tools.son.lay_geas", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: bearer.id}, facts={"reason": args.reason}, kind=ChronicleKind.WORLD
+    )
     return result(SonResult.GEAS_LAID, id=row.id, name=bearer.name)
 
 
@@ -164,7 +171,12 @@ async def call_heroquest(call: SonCall, args: CallHeroquestInput) -> str:
         fail(SonResult.QUEST_REFUSED, why=party)
     row = await begin_quest(call.tick, quester, legend, party)
     call.target(quester.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.CALL_HEROQUEST, entity_ids=[quester.id], son=call.son.name, quester=quester.name, reason=args.reason)
+    await call.record(
+        "tools.son.call_heroquest",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.CO_ACTOR: quester.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.QUEST_CALLED, id=row.id, name=quester.name)
 
 
@@ -195,7 +207,12 @@ async def lay_enchantment(call: SonCall, args: EnchantInput) -> str:
         vis_form=None,
     )
     call.target(law.law_entity_id)
-    await call.chronicle(ChronicleKind.COSMIC_LAW, lines.LAY_ENCHANTMENT, entity_ids=[law.law_entity_id], son=call.son.name, name=args.name, reason=args.reason)
+    await call.record(
+        "tools.son.lay_enchantment",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: law.law_entity_id},
+        facts={"name": str(args.name), "reason": args.reason},
+        kind=ChronicleKind.COSMIC_LAW,
+    )
     return result(SonResult.ENCHANTMENT_LAID, id=law.law_entity_id, name=args.name)
 
 

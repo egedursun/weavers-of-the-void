@@ -178,3 +178,12 @@ class MajorEventCategory(StrEnum):
     LEGEND_AND_WONDER = "legend_and_wonder"
     WAR = "war"
     FAITH = "faith"
+
+
+class ChronicleScope(StrEnum):
+    WORLD = "world"
+    STAR = "star"
+    NODE = "node"
+    SON = "son"
+    CREATOR = "creator"
+    FOREIGN_GOD = "foreign_god"

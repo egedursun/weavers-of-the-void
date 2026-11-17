@@ -7,8 +7,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.arts import ClubKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.constructs import ContractStatus, OrderCondition, OrderKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.arts import control as arts
 from aerona.engine.constructs import control as constructs
 from aerona.engine.constructs.orders import holder_of
@@ -20,7 +20,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 FIRST = 1
 
@@ -60,7 +59,11 @@ async def forge_work(call: MortalCall, args: ForgeWorkInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.FORGERY_DECLINED, why=reason_of(error))
     call.target(row.item_entity_id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.FORGE_WORK, entity_ids=[call.me.id, original.id], me=call.me.name, original=original.name)
+    await call.record(
+        "tools.mortal.forge_work",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.SUBJECT: original.id, IncidentRole.PRODUCT: row.item_entity_id},
+        facts={"forgery": row.kind, "skill": row.skill},
+    )
     return result(MortalResult.FORGERY_MADE, original=original.name, kind=row.kind.value, skill=row.skill)
 
 
@@ -73,7 +76,7 @@ async def buy_work(call: MortalCall, args: BuyWorkInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.PURCHASE_DECLINED, why=reason_of(error))
     call.target(work.id)
-    await call.chronicle(ChronicleKind.TRADE, lines.BUY_WORK, entity_ids=[call.me.id, work.id], me=call.me.name, work=work.name)
+    await call.record("tools.mortal.buy_work", roles={IncidentRole.BUYER: call.me.id, IncidentRole.SUBJECT: work.id}, facts={"price": sale.price})
     return result(MortalResult.WORK_BOUGHT, work=work.name, price=sale.price)
 
 
@@ -86,7 +89,12 @@ async def found_club(call: MortalCall, args: FoundClubInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.CLUB_DECLINED, why=reason_of(error))
     call.target(row.faction_entity_id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.FOUND_CLUB, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name)
+    await call.record(
+        "tools.mortal.found_club",
+        roles={IncidentRole.LEADER: call.me.id, IncidentRole.PRODUCT: row.faction_entity_id, IncidentRole.PLACE: town.id},
+        facts={"game": row.kind},
+        place=town.id,
+    )
     return result(MortalResult.CLUB_FOUNDED, town=town.name, kind=row.kind.value.replace("_", " "))
 
 
@@ -104,7 +112,7 @@ async def take_contract(call: MortalCall, args: TakeContractInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.CONTRACT_DECLINED, why=reason_of(error))
     call.target(beast.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.TAKE_CONTRACT, entity_ids=[call.me.id, beast.id], me=call.me.name, beast=beast.name)
+    await call.record("tools.mortal.take_contract", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: beast.id}, facts={"bounty": row.bounty})
     return result(MortalResult.CONTRACT_TAKEN, beast=beast.name, bounty=row.bounty)
 
 
@@ -122,7 +130,11 @@ async def command_construct(call: MortalCall, args: CommandConstructInput) -> st
         fail(MortalResult.COMMAND_DECLINED, why="there is no such target")
     await constructs.give_order(call.tick, rules.id, args.kind, target_id=args.target_id, priority=FIRST, condition=OrderCondition.ALWAYS, until_epoch=None)
     call.target(body.id)
-    await call.chronicle(ChronicleKind.ORDER, lines.COMMAND_CONSTRUCT, entity_ids=[call.me.id, body.id], me=call.me.name, name=body.name, order=args.kind.value)
+    await call.record(
+        "tools.mortal.command_construct",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: body.id, IncidentRole.TARGET: target.id if target is not None else None},
+        facts={"order": args.kind},
+    )
     return result(
         MortalResult.CONSTRUCT_COMMANDED, name=body.name, order=args.kind.value.replace("_", " "), target=target.name if target else "no one in particular"
     )

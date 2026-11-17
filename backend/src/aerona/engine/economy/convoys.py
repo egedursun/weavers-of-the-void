@@ -19,6 +19,7 @@ from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.intrigue import BeliefSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.urban import ConvoyStatus, PreservationMethod, TransportKind
 from aerona.engine.context import TickContext
@@ -30,10 +31,10 @@ from aerona.engine.factions.privateers import privateers_against
 from aerona.engine.intrigue.beliefs import DEFENCE, believe
 from aerona.engine.lore.art_forms import practise
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import move_stat, shift_bounded, stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.vehicles.caravans import carrier_group, raid_carriers
 from aerona.rules.registry import Rules
@@ -249,11 +250,12 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
     privateers = await privateers_against(ctx.session, convoy.owner_entity_id)
     mine, theirs = await sides_of(ctx.session, convoy, profile)
     war = mine is not None and theirs is not None and mine != theirs and await opposed(ctx.session, mine, theirs)
+    roll = ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT
     status = fate_of(
         ctx.rules,
         convoy,
         profile,
-        ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT,
+        roll,
         privateers=privateers,
         war=war,
         escorted=await escorted_by_treaty(ctx.session, mine, theirs),
@@ -266,6 +268,7 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
     elif status is ConvoyStatus.DELAYED:
         tally.delayed += 1
     else:
+        cargo_lost = sum(convoy.cargo.values())
         convoy.cargo = {}
         tally.raided += int(status is ConvoyStatus.RAIDED)
         tally.lost += int(status is ConvoyStatus.LOST)
@@ -273,11 +276,18 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
         if carriers is not None:
             struck = await raid_carriers(ctx, carriers.group, 2 if status is ConvoyStatus.LOST else 1, f"convoy.{convoy.id}")
             tally.carriers_lost += struck.lost
-        route = await ctx.session.get(EntityRow, convoy.route_entity_id)
-        if route is not None and status is ConvoyStatus.RAIDED:
-            await note(ctx, f"A convoy on {route.name} was raided and its goods taken.", key="trade.convoy_raided", ids=[route.id])
-        elif route is not None:
-            await note(ctx, f"A convoy on {route.name} was lost at sea.", key="trade.convoy_lost", ids=[route.id])
+        await record(
+            ctx,
+            "trade.convoy_raided" if status is ConvoyStatus.RAIDED else "trade.convoy_lost",
+            roles={IncidentRole.SUBJECT: convoy.route_entity_id, IncidentRole.OWNER: convoy.owner_entity_id, IncidentRole.OPPONENT: theirs if war else None},
+            facts={
+                "mode": profile.mode,
+                "cargo_lost": cargo_lost,
+                "roll": round(roll),
+                "at_war": int(war),
+                "carriers_lost": struck.lost if carriers is not None else 0,
+            },
+        )
 
 
 async def wear_fleets(ctx: TickContext, tally: ConvoyTally) -> None:

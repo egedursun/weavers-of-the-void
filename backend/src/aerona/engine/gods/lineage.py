@@ -9,10 +9,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import community_of
 from aerona.engine.gods.stats import Trait, add_trait, trait
 from aerona.engine.primitives.faith import worship_creator
+from aerona.engine.recording.record import record
 
 CURSED_TRAITS = (
     Trait.PROSPERITY,
@@ -79,12 +81,12 @@ async def curse_bloodline(ctx: TickContext, creator: CreatorRow, root: EntityRow
     members = [member for member in await bloodline(ctx, root) if member.status is EntityStatus.CANON]
     for member in members:
         await curse(ctx, member)
-    line = god_lines.BLOODLINE_CURSE
-    await ctx.chronicle(
-        ChronicleKind.DIVINE_SIGN if reason else ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, reason=f" ({reason})" if reason else "", root=root.name, count=len(members)),
-        template_key=line.key,
-        entity_ids=[member.id for member in members],
+    await record(
+        ctx,
+        "gods.power.bloodline_curse",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: [root.id, *[member.id for member in members]]},
+        facts={"reason": str(f" ({reason})" if reason else ""), "count": len(members)},
+        kind=ChronicleKind.DIVINE_SIGN if reason else ChronicleKind.CREATOR_HAND,
     )
     ctx.count("bloodline_curses")
     return members
@@ -100,9 +102,12 @@ async def lift_bloodline_curse(ctx: TickContext, creator: CreatorRow, root: Enti
     for member in members:
         await entities.remove_flag(member.id, EntityFlag.BLOODLINE_CURSE)
         await entities.remove_flag(member.id, EntityFlag.CURSED)
-    line = god_lines.BLOODLINE_LIFT
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, root=root.name, count=len(members)), template_key=line.key, entity_ids=[root.id]
+    await record(
+        ctx,
+        "gods.power.bloodline_lift",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: root.id},
+        facts={"count": len(members)},
+        kind=ChronicleKind.CREATOR_HAND,
     )
     return len(members)
 
@@ -115,13 +120,17 @@ async def make_prophet(ctx: TickContext, creator: CreatorRow, mortal: EntityRow,
     community = await community_of(ctx.session, mortal)
     if community is not None and trait(community, Trait.PIETY) is not None:
         add_trait(community, Trait.PIETY, rules.prophet_piety)
-    line = god_lines.PROPHET
     clause = god_lines.PROPHET_LISTENS.format(community=community.name) if community is not None else ""
-    await ctx.chronicle(
-        ChronicleKind.DIVINE_SIGN if spontaneous else ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, content=god_lines.PROPHET_CONTENT if spontaneous else "", mortal=mortal.name, community=clause),
-        template_key=line.key,
-        entity_ids=[mortal.id] + ([community.id] if community is not None else []),
+    await record(
+        ctx,
+        "gods.power.prophet",
+        roles={
+            IncidentRole.ACTOR: creator.id,
+            IncidentRole.TARGET: mortal.id,
+            IncidentRole.SUBJECT: [*[mortal.id] + ([community.id] if community is not None else [])],
+        },
+        facts={"content": str(god_lines.PROPHET_CONTENT if spontaneous else ""), "community": str(clause)},
+        kind=ChronicleKind.DIVINE_SIGN if spontaneous else ChronicleKind.CREATOR_HAND,
     )
     ctx.count("prophets")
     return community

@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState, Medallion } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { AccountDigest } from '@/features/records/AccountDigest'
+import { INCIDENT_ROLE } from '@/features/records/labels'
 import { loreKeys } from '../api/keys'
 import { named } from '../environment/labels'
 import { badgeVariant } from '../realm/labels'
-import { INCIDENT_ROLE } from './labels'
 
 type Graph = components['schemas']['CausalityView']
 type CausalNode = components['schemas']['CausalNode']
@@ -224,7 +225,7 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
       </div>
       <Muted variant='caption'>
         Each column is one more step of cause; dashed gold lines reach across
-        epochs. Pick an incident to read it.
+        epochs. Pick an incident to read its steps and what it changed.
       </Muted>
       {selected && (
         <div className='flex min-w-0 items-start gap-2 rounded-md border surface-sheen border-gild/60 bg-card p-2'>
@@ -259,6 +260,7 @@ export function CausalityGraph({ nodeId }: { nodeId: number }) {
           </div>
         </div>
       )}
+      {selected && <AccountDigest incidentId={selected.id} />}
     </div>
   )
 }

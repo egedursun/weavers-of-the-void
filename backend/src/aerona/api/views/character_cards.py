@@ -200,7 +200,7 @@ def _foreign_god_card(god: ForeignGodRow, powers: list[tuple[str, str]]) -> Char
 
 def _entity_card(entity: EntityRow, rules: Rules) -> CharacterCard:
     spec = ENTITY_TYPES[entity.entity_type]
-    lines = _present(_stat_line(field.key, field.label, stat(entity, field.key), field.bounds(rules)[1]) for field in spec.stats)
+    stat_lines = _present(_stat_line(field.key, field.label, stat(entity, field.key), field.bounds(rules)[1]) for field in spec.stats)
     return CharacterCard(
         node_id=entity.id,
         node_kind=NodeKind.ENTITY,
@@ -217,8 +217,8 @@ def _entity_card(entity: EntityRow, rules: Rules) -> CharacterCard:
         world_id=entity.world_id,
         cover=None,
         flavor=_flavor(entity.description),
-        headline=lines[:HEADLINE_SIZE],
-        stats=lines,
+        headline=stat_lines[:HEADLINE_SIZE],
+        stats=stat_lines,
         abilities=[],
         notes=[],
         fallen=entity.status in ENDED_ENTITY,

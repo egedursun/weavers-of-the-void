@@ -16,17 +16,18 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import believers_faith, worshippers
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, patron_son
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag, canon, flags_by_entity, living_son, remove_flag
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 NATIVE_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
@@ -116,13 +117,20 @@ async def turn_natives(ctx: TickContext, god: ForeignGodRow, struck: set[int]) -
         await adopt_old_god(ctx, native, god, syncretic, "turned to the old god")
         turned += 1
         if syncretic and patron is not None:
-            text = f"{native.name} began to bring offerings both to {patron.name} and to {world_name}'s old god {god.name}."
+            how = f"began to bring offerings both to {patron.name} and to {world_name}'s old god"
+            dreaming = ""
         else:
             former = f"turned away from {patron.name} and " if patron is not None else ""
+            how = f"{former}returned to {world_name}'s old god"
             dreaming = "" if awake(god) else "; even asleep, the god walked in their dreams"
-            text = f"{native.name} {former}returned to {world_name}'s old god {god.name}{dreaming}."
-        await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="native_faith.turned", entity_ids=[native.id], son_id=patron.id if patron else None)
-        await note(ctx, text, key="native_faith.turned_note", ids=[native.id], kind=ChronicleKind.FOREIGN_GOD)
+        await record(
+            ctx,
+            "native_faith.turned",
+            roles={IncidentRole.SUBJECT: native.id, IncidentRole.TARGET: god.id, IncidentRole.PREDECESSOR: patron.id if patron is not None else None},
+            facts={"how": how, "dreaming": dreaming},
+            kind=ChronicleKind.FOREIGN_GOD,
+            son_id=patron.id if patron else None,
+        )
     return turned
 
 
@@ -144,12 +152,12 @@ async def return_one(ctx: TickContext, believer: EntityRow, god: ForeignGodRow) 
         await remove_flag(ctx.session, believer.id, EntityFlag.SYNCRETIC)
         await ctx.session.flush()
         patron = await patron_son(ctx.session, believer)
-        return f"{believer.name} left off its offerings to {god.name}; it worships only {patron.name if patron else 'the pantheon'} now."
+        return f"left off its offerings to {god.name}; it worships only {patron.name if patron else 'the pantheon'} now"
     home = await pantheon_home(ctx.session, believer)
     if home is None or not await change_religion(ctx.session, believer, home.id, ctx.epoch, f"left {god.name} and returned to the pantheon"):
         return None
     await remove_flag(ctx.session, believer.id, EntityFlag.RETURNED_TO_OLD_GOD)
-    return f"{believer.name} left the old god {god.name} and turned to {home.name}."
+    return f"left the old god {god.name} and turned to {home.name}"
 
 
 async def return_to_pantheon(ctx: TickContext, gods: list[ForeignGodRow]) -> int:
@@ -163,13 +171,18 @@ async def return_to_pantheon(ctx: TickContext, gods: list[ForeignGodRow]) -> int
             multiplier = 1 if awake(god) else table.return_defeated_mult_pct / PERCENT
             if not ctx.rng(f"return.{god.id}.{believer.id}").chance(table.return_chance * multiplier):
                 continue
-            text = await return_one(ctx, believer, god)
-            if text is None:
+            how = await return_one(ctx, believer, god)
+            if how is None:
                 continue
             god.stance = clamp_int(god.stance - table.stance_loss, RELATION_MIN, RELATION_MAX)
             returned += 1
-            await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="native_faith.returned", entity_ids=[believer.id])
-            await note(ctx, text, key="native_faith.returned_note", ids=[believer.id], kind=ChronicleKind.FOREIGN_GOD)
+            await record(
+                ctx,
+                "native_faith.returned",
+                roles={IncidentRole.SUBJECT: believer.id, IncidentRole.PREDECESSOR: god.id},
+                facts={"how": how},
+                kind=ChronicleKind.FOREIGN_GOD,
+            )
     return returned
 
 
@@ -209,7 +222,6 @@ async def feed_god(ctx: TickContext, god: ForeignGodRow) -> None:
     "table.bonds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.nodes",
     "table.reverences",
@@ -219,7 +231,6 @@ async def feed_god(ctx: TickContext, god: ForeignGodRow) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.incident_participants",
     "table.incidents",
@@ -248,9 +259,10 @@ async def syncretize(session: AsyncSession, rules: Rules, entity_id: int, god_id
     ctx = await manual_context(session, "syncretize", rules, key=f"{entity_id}:{god_id}")
     patron = await patron_son(session, entity)
     await adopt_old_god(ctx, entity, god, patron is not None, "the Creator joined the two faiths")
-    text = f"The Creator joined the faith of {entity.name} with the old rites of {god.name}."
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="native_faith.syncretized", entity_ids=[entity.id])
-    return text
+    written = await record(
+        ctx, "native_faith.syncretized", roles={IncidentRole.SUBJECT: entity.id, IncidentRole.TARGET: god.id}, kind=ChronicleKind.CREATOR_HAND
+    )
+    return written.text
 
 
 async def run_native_faith(session: AsyncSession, rules: Rules) -> None:

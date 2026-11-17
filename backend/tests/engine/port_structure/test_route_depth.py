@@ -301,7 +301,7 @@ async def test_the_backfill_ledgers_past_tolls_and_aims_old_route_wars(session: 
 
 
 async def test_beasts_carry_cargo_to_their_hoard(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(trade_routes={"danger_loss_pct": 100}, route_dangers={"beast_note_units": 1}, market={"credit_threshold": 0, "credit_chance": 0})
+    rules = tuned_rules(trade_routes={"danger_loss_pct": 100}, market={"credit_threshold": 0, "credit_chance": 0})
     rules = replace(rules, route_dangers=replace(rules.route_dangers, bandit_region_pct=0))
     first, second = await markets(session, world, rules)
     beast = await entity(session, "Graveljaw", EntityType.BEAST, BeastStats(danger=100), world_id=world.world.id, location_id=world.regions[1].id)

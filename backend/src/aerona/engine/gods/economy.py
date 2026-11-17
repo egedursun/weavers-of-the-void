@@ -22,6 +22,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import TravelMethod
@@ -42,6 +43,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.recording.record import record
 
 PIRATE_METHODS = frozenset({TravelMethod.LIGHT_SAIL, TravelMethod.SLINGSHOT_ORBIT, TravelMethod.CARRIER_MOUNT, TravelMethod.ROCKETRY})
 WITHDRAWAL_TRAITS = (Trait.PROSPERITY, Trait.DEFENSE, Trait.STRENGTH, Trait.PIETY)
@@ -118,10 +120,7 @@ async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityR
         if since is not None and ctx.epoch - since >= hook_epochs and row.addicted_since_epoch is None:
             row.addicted_since_epoch = ctx.epoch
             row.withdrawal_since_epoch = None
-            line = god_lines.ECONOMY_ADDICTED
-            await ctx.chronicle(
-                ChronicleKind.RESOURCE, line.render(owner=owner.name, resource=resource.name), template_key=line.key, entity_ids=[owner.id, resource.id]
-            )
+            await record(ctx, "gods.economy.addicted", roles={IncidentRole.OWNER: owner.id, IncidentRole.SUBJECT: resource.id}, kind=ChronicleKind.RESOURCE)
 
 
 async def _pay_demand(ctx: TickContext, owner: EntityRow, commodity: CommodityKind | None, units: int, cost: int) -> bool:
@@ -154,13 +153,13 @@ async def _abandon(ctx: TickContext, resource: EntityRow, owner: EntityRow, dema
     chosen = rng.pick(others) if others else None
     if chosen is not None:
         await bonds.connect(BondDraft(chosen.id, resource.id, BondKind.OWNS, ctx.epoch, god_lines.ECONOMY_SENTIENT_BOND))
-    line = god_lines.ECONOMY_SENTIENT_LEFT
     clause = god_lines.ECONOMY_SENTIENT_CHOSEN.format(owner=chosen.name) if chosen is not None else ""
-    await ctx.chronicle(
-        ChronicleKind.RESOURCE,
-        line.render(resource=resource.name, demand=demand, owner=owner.name, chosen=clause),
-        template_key=line.key,
-        entity_ids=[resource.id, owner.id] + ([chosen.id] if chosen is not None else []),
+    await record(
+        ctx,
+        "gods.economy.sentient_left",
+        roles={IncidentRole.SUBJECT: [resource.id, *[resource.id, owner.id] + ([chosen.id] if chosen is not None else [])], IncidentRole.OWNER: owner.id},
+        facts={"demand": demand, "chosen": str(clause)},
+        kind=ChronicleKind.RESOURCE,
     )
 
 
@@ -181,12 +180,12 @@ async def _sentient(ctx: TickContext, resource: EntityRow, owners: list[EntityRo
     demand, wanted, units = rng.pick(god_lines.SENTIENT_DEMANDS)
     commodity = CommodityKind(wanted) if wanted is not None else None
     if rng.chance(economy.sentient_resource_keep_chance) and await _pay_demand(ctx, owner, commodity, units, cost):
-        line = god_lines.ECONOMY_SENTIENT_PAID
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE,
-            line.render(resource=resource.name, demand=demand, owner=owner.name),
-            template_key=line.key,
-            entity_ids=[resource.id, owner.id],
+        await record(
+            ctx,
+            "gods.economy.sentient_paid",
+            roles={IncidentRole.SUBJECT: [resource.id, owner.id]},
+            facts={"demand": demand, "owner_detail": str(owner.name)},
+            kind=ChronicleKind.RESOURCE,
         )
         return
     negotiator, skill = await best_negotiator(ctx.session, owner)
@@ -234,12 +233,11 @@ async def _sacred(ctx: TickContext, resource: EntityRow, owners: list[EntityRow]
             await BondRepository(ctx.session).connect(
                 BondDraft(son.id, owner.id, BondKind.CURSED, ctx.epoch, god_lines.ECONOMY_SACRED_BOND.format(resource=resource.name))
             )
-            line = god_lines.ECONOMY_SACRED_CURSE
-            await ctx.chronicle(
-                ChronicleKind.CURSE,
-                line.render(son=son.name, owner=owner.name, resource=resource.name),
-                template_key=line.key,
-                entity_ids=[owner.id],
+            await record(
+                ctx,
+                "gods.economy.sacred_curse",
+                roles={IncidentRole.ACTOR: son.id, IncidentRole.OWNER: owner.id, IncidentRole.SUBJECT: resource.id},
+                kind=ChronicleKind.CURSE,
                 son_id=son.id,
             )
 
@@ -253,9 +251,8 @@ async def depletion_price(ctx: TickContext, resource: EntityRow, doom: int | Non
     if place is not None:
         await entities.add_flag(place.id, EntityFlag.CURSED, ctx.epoch)
     await advance_doom(ctx.session, ctx.rules, doom if doom is not None else ctx.rules.economy.depletion_apocalypse)
-    line = god_lines.ECONOMY_DEPLETED
     clause = god_lines.ECONOMY_DEPLETED_PLACE.format(place=place.name) if place is not None else ""
-    await ctx.chronicle(ChronicleKind.RESOURCE, line.render(resource=resource.name, place=clause), template_key=line.key, entity_ids=[resource.id])
+    await record(ctx, "gods.economy.depleted", roles={IncidentRole.SUBJECT: resource.id}, facts={"place_detail": str(clause)}, kind=ChronicleKind.RESOURCE)
 
 
 async def _has_access(ctx: TickContext, entity: EntityRow, resource: EntityRow) -> bool:
@@ -289,13 +286,11 @@ async def withdrawal(ctx: TickContext) -> None:
             row.addicted_since_epoch = None
             row.withdrawal_since_epoch = None
             await ctx.session.merge(AddictionImmunityRow(community_entity_id=entity.id, resource_entity_id=resource.id, recovered_epoch=ctx.epoch))
-            line = god_lines.ECONOMY_RECOVERED
+            told_key = "gods.economy.recovered"
         else:
             row.withdrawal_since_epoch = row.withdrawal_since_epoch or ctx.epoch
-            line = god_lines.ECONOMY_WITHDRAWAL
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE, line.render(entity=entity.name, resource=resource.name), template_key=line.key, entity_ids=[entity.id, resource.id]
-        )
+            told_key = "gods.economy.withdrawal"
+        await record(ctx, told_key, roles={IncidentRole.SUBJECT: entity.id, IncidentRole.INSTRUMENT: resource.id}, kind=ChronicleKind.RESOURCE)
 
 
 @reads(
@@ -312,7 +307,6 @@ async def withdrawal(ctx: TickContext) -> None:
     "table.bonds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.nodes",
     "table.resource_mechanics",
     "table.resource_profiles",
@@ -329,7 +323,6 @@ async def withdrawal(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.resource_profiles",
@@ -411,9 +404,12 @@ async def _claim_deposits(ctx: TickContext) -> None:
             continue
         owner = max(pool, key=lambda entity: (headcount(entity), -entity.id))
         await bonds.connect(BondDraft(owner.id, deposit.id, BondKind.OWNS, ctx.epoch, god_lines.ECONOMY_DEPOSIT_CLAIM_BOND))
-        line = god_lines.ECONOMY_DEPOSIT_CLAIMED
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE, line.render(owner=owner.name, deposit=deposit.name), template_key=line.key, entity_ids=[owner.id, deposit.id]
+        await record(
+            ctx,
+            "gods.economy.deposit_claimed",
+            roles={IncidentRole.SUBJECT: [deposit.id, owner.id]},
+            facts={"owner_detail": str(owner.name)},
+            kind=ChronicleKind.RESOURCE,
         )
 
 
@@ -458,12 +454,13 @@ async def create_deposit(ctx: TickContext, region: EntityRow) -> EntityRow | Non
     )
     ctx.session.add(ResourceMechanicRow(entity_id=deposit.id, mechanic=ResourceMechanic.FIXED))
     await set_resource_yield(ctx.session, ctx.rules, deposit.id, CommodityKind.MAGICAL_REAGENTS)
-    line = god_lines.ECONOMY_DEPOSIT_BORN
-    await ctx.chronicle(
-        ChronicleKind.RESOURCE,
-        line.render(resource=resource.name, world=world.name if world else "", region=region.name),
-        template_key=line.key,
-        entity_ids=[deposit.id],
+    await record(
+        ctx,
+        "gods.economy.deposit_born",
+        roles={IncidentRole.PLACE: region.id, IncidentRole.SUBJECT: deposit.id},
+        facts={"resource": str(resource.name), "world": str(world.name if world else "")},
+        place=region.id,
+        kind=ChronicleKind.RESOURCE,
     )
     await ctx.session.flush()
     return deposit
@@ -497,16 +494,14 @@ async def monopoly(ctx: TickContext) -> None:
     for holder in await entities.with_flag(EntityFlag.COSMIC_MONOPOLY):
         if holder.id != sole:
             await entities.remove_flag(holder.id, EntityFlag.COSMIC_MONOPOLY)
-            line = god_lines.ECONOMY_MONOPOLY_BROKEN
-            await ctx.chronicle(ChronicleKind.RESOURCE, line.render(owner=holder.name), template_key=line.key, entity_ids=[holder.id])
+            await record(ctx, "gods.economy.monopoly_broken", roles={IncidentRole.OWNER: holder.id}, kind=ChronicleKind.RESOURCE)
     if sole is None:
         return
     owner = await ctx.session.get(EntityRow, sole)
     if owner is None:
         return
     if await entities.add_flag(owner.id, EntityFlag.COSMIC_MONOPOLY, ctx.epoch):
-        line = god_lines.ECONOMY_MONOPOLY
-        await ctx.chronicle(ChronicleKind.RESOURCE, line.render(owner=owner.name), template_key=line.key, entity_ids=[owner.id])
+        await record(ctx, "gods.economy.monopoly", roles={IncidentRole.OWNER: owner.id}, kind=ChronicleKind.RESOURCE)
     add_trait(owner, Trait.WEALTH, economy.monopoly_gain)
     add_trait(owner, Trait.SWAY, economy.monopoly_gain)
     add_trait(owner, Trait.INFLUENCE, economy.monopoly_gain)
@@ -556,8 +551,13 @@ async def found_faction(ctx: TickContext, kind: EngineKind, region: EntityRow) -
             split_title=False,
         )
     )
-    line = god_lines.ECONOMY_MARKET_BORN if market else god_lines.ECONOMY_PIRATES_BORN
-    await ctx.chronicle(ChronicleKind.TRADE, line.render(region=region.name), template_key=line.key, entity_ids=[faction.id, region.id])
+    await record(
+        ctx,
+        "gods.economy.market_born" if market else "gods.economy.pirates_born",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: region.id},
+        place=region.id,
+        kind=ChronicleKind.TRADE,
+    )
     return faction
 
 
@@ -572,12 +572,13 @@ async def move_market(ctx: TickContext, market: EntityRow, region: EntityRow) ->
         if other is not None and other.world_id == old_world and old_world != region.world_id:
             await bonds.deactivate(bond, ctx.epoch, "market moved")
     world = await ctx.session.get(WorldRow, region.world_id)
-    line = god_lines.ECONOMY_MARKET_MOVED
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        line.render(market=market.name, world=world.name if world else "", region=region.name),
-        template_key=line.key,
-        entity_ids=[market.id, region.id],
+    await record(
+        ctx,
+        "gods.economy.market_moved",
+        roles={IncidentRole.SUBJECT: market.id, IncidentRole.PLACE: region.id},
+        facts={"world": str(world.name if world else "")},
+        place=region.id,
+        kind=ChronicleKind.TRADE,
     )
 
 
@@ -634,7 +635,6 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.cosmos",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.journeys",
@@ -650,7 +650,7 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

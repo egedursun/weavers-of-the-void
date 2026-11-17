@@ -28,6 +28,7 @@ from aerona.domain.enums.entity import LOCATION_TYPES, EntityFlag, EntityStatus,
 from aerona.domain.enums.intervention import Disaster, InterventionKind, Miracle
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.models.stats import STAT_CEILING
 from aerona.engine.body.hits import Harm
@@ -41,28 +42,14 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.player import guards
-from aerona.services.player.chronicle import tell
 from aerona.services.player.lines import (
-    BLESSED,
-    CHAINED,
-    CURSED,
-    DEFIANT,
-    DISASTER,
-    EXILED,
-    KNOWLEDGE_FORGOTTEN,
-    KNOWLEDGE_TAUGHT,
-    LIGHTNING,
-    MIRACLE,
-    PARDONED,
     PEACE_EFFECT,
-    SUPPRESS_FAILED,
-    SUPPRESSED,
-    VERB_ACT,
 )
 from aerona.services.player.ports import RevelationRequest
 from aerona.services.player.runtime import CostedJob, PlayerRuntime, submit_costed, unavailable
@@ -185,7 +172,16 @@ async def bless(scope: PlayerScope, command: Bless) -> Effect:
         gift, kind = f"+{actions.bless_existence_amount} existence", ActionKind.BLESS_EXISTENCE
     son.loyalty = clamp_percent(son.loyalty + actions.bless_loyalty)
     ctx = await scope.context("bless")
-    message = await tell(ctx, BLESSED, son_id=son.id, creator=creator.name, son=son.name, gift=gift)
+    message = (
+        await record(
+            ctx,
+            "player.son.blessed",
+            roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id},
+            facts={"gift": str(gift)},
+            kind=ChronicleKind.CREATOR_HAND,
+            son_id=son.id,
+        )
+    ).text
     return Effect(message, son.id, essence_spent=spent, kind=kind, tool=f"bless:{command.kind.value}")
 
 
@@ -216,13 +212,21 @@ async def _suppress(scope: PlayerScope, ctx: TickContext, son_id: int) -> Effect
             lethal=False,
         )
         son.fame = max(0, son.fame - actions.suppress_renown_loss)
-        line, kind = SUPPRESSED, ActionKind.SUPPRESS_REBELLION
+        key, kind = "player.son.suppressed", ActionKind.SUPPRESS_REBELLION
     else:
         son.fame += actions.suppress_fail_renown
         son.ambition = clamp_percent(son.ambition + actions.suppress_fail_ambition)
         creator.essence = max(0, creator.essence - actions.suppress_fail_essence)
-        line, kind = SUPPRESS_FAILED, ActionKind.SUPPRESS_FAILED
-    message = await tell(ctx, line, son_id=son.id, kind=ChronicleKind.REBELLION, creator=creator.name, son=son.name, god=god_roll, son_roll=son_roll)
+        key, kind = "player.son.suppress_failed", ActionKind.SUPPRESS_FAILED
+    written = await record(
+        ctx,
+        key,
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: son.id},
+        facts={"god_roll": god_roll, "son_roll": son_roll},
+        son_id=son.id,
+        kind=ChronicleKind.REBELLION,
+    )
+    message = written.text
     return Effect(message, son.id, essence_spent=spent, kind=kind, values={"won": god_roll >= son_roll})
 
 
@@ -237,7 +241,11 @@ async def _pardon(scope: PlayerScope, ctx: TickContext, son_id: int) -> Effect:
         await end_rebellion(ctx, creator, son)
     son.chained = False
     son.loyalty = clamp_percent(son.loyalty + scope.rules.god_actions.pardon_loyalty)
-    message = await tell(ctx, PARDONED, son_id=son.id, creator=creator.name, son=son.name)
+    message = (
+        await record(
+            ctx, "player.son.pardoned", roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id}, kind=ChronicleKind.CREATOR_HAND, son_id=son.id
+        )
+    ).text
     return Effect(message, son.id, kind=ActionKind.FORGIVE)
 
 
@@ -261,24 +269,28 @@ async def punish(scope: PlayerScope, command: Punish) -> Effect:
             Harm(bolt, HarmCause.PUNISHMENT, "was struck down by the creator", damage_type=DamageType.FIRE, source_node_id=creator.id),
             lethal=False,
         )
-        line, kind = LIGHTNING, ActionKind.LIGHTNING
+        key, kind = "player.son.lightning", ActionKind.LIGHTNING
     elif command.kind is GodPunishmentKind.CHAIN:
         if son.chained:
             raise ValidationFailedError(f"{son.name} is already chained.")
         if son.last_acted_epoch >= ctx.epoch:
             raise ValidationFailedError(f"{son.name} already acted this epoch; chains come too late.")
         son.chained = True
-        line, kind = CHAINED, ActionKind.CHAIN
+        key, kind = "player.son.chained", ActionKind.CHAIN
     else:
         if son.status is SonStatus.EXILED:
             raise ValidationFailedError(f"{son.name} is already in exile.")
         son.status = SonStatus.EXILED
-        line, kind = EXILED, ActionKind.EXILE_SON
-    message = await tell(ctx, line, son_id=son.id, creator=creator.name, son=son.name)
+        key, kind = "player.son.exiled", ActionKind.EXILE_SON
+    message = (
+        await record(ctx, key, roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: son.id}, son_id=son.id, kind=ChronicleKind.CREATOR_HAND)
+    ).text
     if son.will > actions.defiant_will:
         son.loyalty = clamp_percent(son.loyalty - actions.punish_defiant_loyalty_loss)
         son.wrath = clamp_percent(son.wrath + actions.punish_defiant_wrath)
-        message = f"{message} {await tell(ctx, DEFIANT, son_id=son.id, son=son.name)}"
+        message = (
+            f"{message} {(await record(ctx, 'player.son.defiant', roles={IncidentRole.ACTOR: son.id}, kind=ChronicleKind.CREATOR_HAND, son_id=son.id)).text}"
+        )
     else:
         son.loyalty = clamp_percent(son.loyalty + actions.punish_submissive_loyalty)
         son.wrath = clamp_percent(son.wrath + actions.punish_submissive_wrath)
@@ -361,9 +373,15 @@ async def work_miracle(act: Act) -> Effect:
         witnesses=await witness_count(ctx, target),
     )
     label = MIRACLES[command.miracle].label.lower()
-    message = await tell(
-        ctx, MIRACLE, ids=[target.id], kind=ChronicleKind.MIRACLE, creator=creator.name, label=label, entity=target.name, effects=", ".join(notes) or label
-    )
+    message = (
+        await record(
+            ctx,
+            "player.intervention.miracle",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+            facts={"label": label, "effects": str(", ".join(notes) or label)},
+            kind=ChronicleKind.MIRACLE,
+        )
+    ).text
     return Effect(message, target.id, essence_spent=spent, kind=ActionKind.MIRACLE, tool=act.tool)
 
 
@@ -379,9 +397,15 @@ async def send_disaster(act: Act) -> Effect:
     event = await record_disaster_event(ctx, target, command.disaster, actions.disaster_event_severity, impact)
     detail = f"; {'; '.join(impact.notes)}" if impact.notes else ""
     label = DISASTERS[command.disaster].label.lower()
-    message = await tell(
-        ctx, DISASTER, ids=[target.id, event.id], kind=ChronicleKind.DISASTER, creator=creator.name, label=label, entity=target.name, notes=detail
-    )
+    message = (
+        await record(
+            ctx,
+            "player.intervention.disaster",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: event.id},
+            facts={"label": label, "notes": str(detail)},
+            kind=ChronicleKind.DISASTER,
+        )
+    ).text
     return Effect(message, target.id, essence_spent=spent, created_ids=(event.id,), kind=ActionKind.DISASTER, tool=act.tool, values={"dead": len(impact.dead)})
 
 
@@ -395,15 +419,14 @@ async def teach_knowledge(act: Act) -> Effect:
     spent = guards.charge(creator, scope.rules.intervention_costs.teach_knowledge, "intervention_costs.teach_knowledge")
     if not await teach(ctx, target.id, knowledge, f"taught by {creator.name}"):
         raise ValidationFailedError(f"{target.name} already knows {knowledge.name}; the essence was returned.")
-    message = await tell(
-        ctx,
-        KNOWLEDGE_TAUGHT,
-        ids=[target.id, knowledge.id],
-        kind=ChronicleKind.KNOWLEDGE,
-        creator=creator.name,
-        entity=target.name,
-        knowledge=knowledge.name,
-    )
+    message = (
+        await record(
+            ctx,
+            "player.entity.knowledge",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: knowledge.id},
+            kind=ChronicleKind.KNOWLEDGE,
+        )
+    ).text
     return Effect(message, target.id, essence_spent=spent, kind=ActionKind.TEACH_KNOWLEDGE, tool=act.tool)
 
 
@@ -414,7 +437,15 @@ async def lay_curse(act: Act) -> Effect:
     notes = await _curse(ctx, target)
     if await _fingerprint(scope, target) == before:
         raise ValidationFailedError(f"The curse found nothing to harm in {target.name}; the essence was returned.")
-    message = await tell(ctx, CURSED, ids=[target.id], creator=creator.name, entity=target.name, effects=", ".join(notes))
+    message = (
+        await record(
+            ctx,
+            "player.intervention.curse",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+            facts={"effects": str(", ".join(notes))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, target.id, essence_spent=spent, kind=ActionKind.CURSE, tool=act.tool)
 
 
@@ -425,7 +456,15 @@ async def verb_act(act: Act) -> Effect:
     amount = VERB_SIGN[verb] * scope.rules.intervention_costs.verb_strength
     await APPLIERS[command.object](ctx, target, command.object_key, amount, creator.id)
     named = command.object.value.replace("_", " ") + (f" ({command.object_key.replace('_', ' ')})" if command.object_key else "")
-    message = await tell(ctx, VERB_ACT, ids=[target.id], creator=creator.name, verb=verb.value, entity=target.name, what=named)
+    message = (
+        await record(
+            ctx,
+            "player.intervention.verb",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+            facts={"verb": verb, "what": str(named)},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, target.id, essence_spent=spent, kind=ActionKind.MIRACLE if amount > 0 else ActionKind.CURSE, tool=act.tool)
 
 
@@ -477,18 +516,21 @@ async def set_knowledge(scope: PlayerScope, command: SetKnowledge) -> Effect:
     if command.known:
         if not await teach(ctx, target.id, knowledge, f"by {creator.name}'s hand"):
             raise ValidationFailedError(f"{target.name} already knows {knowledge.name}.")
-        message = await tell(
-            ctx,
-            KNOWLEDGE_TAUGHT,
-            ids=[target.id, knowledge.id],
-            kind=ChronicleKind.KNOWLEDGE,
-            creator=creator.name,
-            entity=target.name,
-            knowledge=knowledge.name,
-        )
+        message = (
+            await record(
+                ctx,
+                "player.entity.knowledge",
+                roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: knowledge.id},
+                kind=ChronicleKind.KNOWLEDGE,
+            )
+        ).text
         return Effect(message, target.id)
     closed = await BondRepository(scope.session).close_between(target.id, knowledge.id, [BondKind.KNOWS], ctx.epoch, "forgotten by the god's hand")
     if not closed:
         raise ValidationFailedError(f"{target.name} does not know {knowledge.name}.")
-    message = await tell(ctx, KNOWLEDGE_FORGOTTEN, ids=[target.id, knowledge.id], kind=ChronicleKind.KNOWLEDGE, entity=target.name, knowledge=knowledge.name)
+    message = (
+        await record(
+            ctx, "player.entity.knowledge_forgotten", roles={IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: knowledge.id}, kind=ChronicleKind.KNOWLEDGE
+        )
+    ).text
     return Effect(message, target.id)

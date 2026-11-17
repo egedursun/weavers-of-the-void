@@ -4,9 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.engine.disease.origin import ORIGIN_LOCK, caused_by_origin, mark_strain_origin, origin_incident, origin_line
-from aerona.engine.notes import note
 from aerona.engine.primitives.manual import manual_context
-from tests.engine.core.factories import CoreWorld
+from tests.engine.core.factories import CoreWorld, tell_history
 
 
 async def incident_of(session: AsyncSession, chronicle_id: int) -> IncidentRow:
@@ -19,12 +18,12 @@ async def test_a_strain_remembers_where_it_first_rose_and_later_tellings_point_b
     ctx = await manual_context(session, "test")
     profile = DiseaseProfileRow(locked=[])
     assert await origin_incident(ctx, profile) is None and await origin_line(ctx, None) == ""
-    first = await note(ctx, "A sickness changed in the valley.", key="disease.strain", ids=[world.regions[0].id])
+    first = await tell_history(ctx, "A sickness changed in the valley.", ids=[world.regions[0].id])
     await mark_strain_origin(ctx, profile, first)
     origin = await incident_of(session, first.id)
     assert profile.origin_incident_id == origin.id
     assert str(origin.epoch) in await origin_line(ctx, profile)
-    later = await note(ctx, "The sickness stayed in the valley.", key="disease.endemic", ids=[world.regions[0].id])
+    later = await tell_history(ctx, "The sickness stayed in the valley.", ids=[world.regions[0].id])
     await caused_by_origin(ctx, later, profile)
     assert (await incident_of(session, later.id)).cause_incident_id == origin.id
     await caused_by_origin(ctx, first, profile)
@@ -34,7 +33,7 @@ async def test_a_strain_remembers_where_it_first_rose_and_later_tellings_point_b
 async def test_a_held_origin_is_kept(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await manual_context(session, "test")
     profile = DiseaseProfileRow(locked=[ORIGIN_LOCK])
-    row = await note(ctx, "A sickness changed in the valley.", key="disease.strain", ids=[world.regions[0].id])
+    row = await tell_history(ctx, "A sickness changed in the valley.", ids=[world.regions[0].id])
     await mark_strain_origin(ctx, profile, row)
     await mark_strain_origin(ctx, None, row)
     assert profile.origin_incident_id is None

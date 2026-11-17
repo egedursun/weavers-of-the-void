@@ -50,7 +50,7 @@ THIS WORLD'S OLD/FOREIGN GODS (talk_to_foreign_god):
 {% if routes %}
 ROUTES BETWEEN WORLDS:
 {% for route in routes %}
-- route#{{ route.id }} {{ route.world_a }} ↔ {{ route.world_b }} ({{ route.method_label }}, {{ route.duration }} ages)
+- route#{{ route.id }} {{ route.world_a }} ↔ {{ route.world_b }} ({{ route.method_label }}, {{ route.duration | several("age", "ages") }})
 {% endfor %}
 {% else %}
 NO ROUTES BETWEEN WORLDS: mortals cannot travel to other worlds. Create a gate, bridge or ship (create_vessel with target_world_id) or give your peoples knowledge of sky navigation or shipbuilding.

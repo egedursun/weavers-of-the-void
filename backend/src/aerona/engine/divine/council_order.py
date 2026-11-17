@@ -27,15 +27,16 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import CouncilMotion, CouncilSeat, EscalationStep, VotingRule
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import SourceAccess
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.divine.decrees import active_rulings, assigned_world
 from aerona.engine.divine.foreign import pact_between
 from aerona.engine.divine.motions import Motion
-from aerona.engine.notes import note
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 M = CouncilMotion
@@ -228,13 +229,7 @@ async def enforce_ladder(ctx: TickContext) -> int:
             if known is not None or held(god_id):
                 continue
             step = await escalate(ctx, ruling, god_id)
-            await note(
-                ctx,
-                f"A god broke the council's ruling and met its {spoken(step)}.",
-                key="council.violation",
-                kind=ChronicleKind.COUNCIL,
-                ids=[god_id],
-            )
+            await record(ctx, "council.violation", roles={IncidentRole.SUBJECT: god_id}, facts={"step": step}, kind=ChronicleKind.COUNCIL)
             met += 1
     await ctx.session.flush()
     return met

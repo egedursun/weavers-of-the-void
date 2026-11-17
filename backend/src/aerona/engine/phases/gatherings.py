@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.storyteller import RecoveryKind, TensionBand
 from aerona.engine.context import TickContext
 from aerona.engine.gatherings.hold import GatheringTally, gather_all
@@ -12,11 +13,11 @@ from aerona.engine.gatherings.wider_occasions import wider_occasions
 from aerona.engine.history.collections import CollectionTally, close_quiet, from_occupations, from_purges, from_schemes, gather_incidents
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.traditions import bless_harvest
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.world_balance import living_worlds
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.sites.digs import DigTally, mark_battlefields, start_digs, tend_battlefields, tend_digs
 from aerona.engine.sites.rooms import RoomTally, keep_sites
 from aerona.engine.storyteller.pace import StorytellerTally, measure, recovered
@@ -40,7 +41,6 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.crime_cases",
     "table.culture_ethics",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.gathering_guests",
     "table.gatherings",
     "table.hooks",
@@ -85,13 +85,14 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.collection_places",
     "table.community_stocks",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.gathering_guests",
     "table.gatherings",
     "table.goods_flows",
     "table.hooks",
     "table.incident_collections",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.mortal_profiles",
@@ -149,7 +150,15 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     community = await hardest_pressed(ctx, world_id)
     if community is None or held(community.id) or not await bless_harvest(ctx, community, atlas, ctx.rules.storyteller.harvest_gift):
         return False
-    await note(ctx, f"After hard years, the harvest of {community.name} came in full.", key="storyteller.recovery", ids=[community.id])
+    await record_incident(
+        ctx,
+        "storyteller.recovery",
+        roles={IncidentRole.BENEFICIARY: community.id},
+        facts={
+            "gift": ctx.rules.storyteller.harvest_gift,
+            "chance": chance,
+        },
+    )
     return True
 
 
@@ -159,7 +168,6 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     "table.cosmos",
     "table.dominions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
     "table.hidden_truths",
@@ -187,7 +195,7 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.region_environment",
@@ -230,7 +238,6 @@ async def site_rooms(ctx: TickContext) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.excavation_stages",
     "table.excavations",
     "table.incident_participants",
@@ -245,7 +252,6 @@ async def site_rooms(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.collection_members",
     "table.collection_places",
-    "table.epoch_year_cursors",
     "table.excavation_stages",
     "table.excavations",
     "table.incident_collections",

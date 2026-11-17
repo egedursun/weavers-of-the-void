@@ -96,6 +96,23 @@ TYPED: tuple[InvariantSpec, ...] = (
     InvariantSpec(
         "genome_alleles", "genomes", "every allele a genome carries is an allele of its locus", Remedy.REPAIR, "set to the common allele of the locus"
     ),
+    InvariantSpec(
+        "fact_schema", "incident_facts", "every fact of a happening is one its kind declares, of the declared type and unit", Remedy.REPAIR, "the fact dropped"
+    ),
+    InvariantSpec(
+        "kind_known", "incidents", "every happening is of a kind the catalogue declares", Remedy.REPAIR, "retired to its successor kind, its old key kept"
+    ),
+    InvariantSpec("step_nesting", "incident_steps", "a step nests only inside another step of the same happening", Remedy.REPAIR, "the nesting cleared"),
+    InvariantSpec("step_action", "incident_steps", "every step of a happening is an action its kind declares", Remedy.REPORT, "the step dropped"),
+    InvariantSpec("moment_after_cause", "incidents", "a happening is never earlier than its cause", Remedy.REPAIR, "moved to the moment of its cause"),
+    InvariantSpec(
+        "step_moment_order", "incident_steps", "a step is never earlier than the step before it", Remedy.REPAIR, "moved to the moment of the step before"
+    ),
+    InvariantSpec("witness_present", "incident_participants", "a witness was at the place of the happening", Remedy.REPAIR, "the witness dropped"),
+    InvariantSpec("change_in_scope", "state_changes", "every change the engine made belongs to a happening", Remedy.REPAIR, "linked to the phase that made it"),
+    InvariantSpec(
+        "checkpoint_holds", "state_checkpoints", "the past rebuilt from the changes equals each checkpoint", Remedy.REPAIR, "the checkpoint taken again"
+    ),
 )
 
 DERIVED_REASONS: dict[str, str] = {

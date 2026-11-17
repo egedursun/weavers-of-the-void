@@ -8,6 +8,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.ecology.fossil_control import first_hidden
 from aerona.engine.ecology.fossils import FossilTally, finder_in, reveal
 from aerona.engine.primitives.queries import living_entity
@@ -17,7 +18,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -43,7 +43,13 @@ async def lay_bare_fossils(call: SonCall, args: LayBareFossilsInput) -> str:
     await reveal(call.tick, bed, await finder_in(call.tick, region.id), FossilTally())
     call.spend_essence(cost)
     call.target(region.id)
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.LAY_BARE_FOSSILS, entity_ids=[region.id], son=call.son.name, region=region.name, reason=args.reason)
+    await call.record(
+        "tools.son.lay_bare_fossils",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.FOSSILS_LAID_BARE, region=region.name, source=bed.source.value.replace("_", " "), reading=bed.reading.value.replace("_", " "))
 
 

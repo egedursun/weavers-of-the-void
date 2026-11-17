@@ -26,6 +26,26 @@ from aerona.domain.enums.war import CaptiveStatus
 from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
 from aerona.services.integrity.kind_links import bring_into_range, cut_lineage, drop_holding, kinds_out_of_range, stray_holdings, tangled_lineage
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
+from aerona.services.integrity.record_links import (
+    absent_witnesses,
+    broken_checkpoints,
+    clear_nesting,
+    crossed_nesting,
+    drop_fact,
+    drop_step,
+    drop_witness,
+    early_moments,
+    follow_cause,
+    follow_step,
+    misfit_facts,
+    retake_checkpoint,
+    retire_kind,
+    scope_change,
+    steps_out_of_order,
+    undeclared_steps,
+    unknown_kinds,
+    unscoped_changes,
+)
 
 LOCKED = "locked"
 NODE_ID_LIST = "_node_ids"
@@ -325,6 +345,15 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "kind_lineage": (tangled_lineage, cut_lineage),
     "kind_ranges": (kinds_out_of_range, bring_into_range),
     "genome_alleles": (stray_alleles, mend_alleles),
+    "fact_schema": (misfit_facts, drop_fact),
+    "step_nesting": (crossed_nesting, clear_nesting),
+    "step_action": (undeclared_steps, drop_step),
+    "moment_after_cause": (early_moments, follow_cause),
+    "step_moment_order": (steps_out_of_order, follow_step),
+    "witness_present": (absent_witnesses, drop_witness),
+    "change_in_scope": (unscoped_changes, scope_change),
+    "checkpoint_holds": (broken_checkpoints, retake_checkpoint),
+    "kind_known": (unknown_kinds, retire_kind),
 }
 
 

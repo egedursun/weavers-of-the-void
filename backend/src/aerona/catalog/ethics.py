@@ -30,7 +30,7 @@ ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
         A.MUTILATION: "Mutilation as punishment",
         A.BETRAYAL: "Betrayal",
         A.MERCY_TO_ENEMY: "Mercy to an enemy",
-        A.HUMAN_SACRIFICE: "Human sacrifice",
+        A.SACRIFICE_OF_PEOPLE: "Sacrifice of people",
         A.TRADE_WITH_OUTSIDERS: "Trade with outsiders",
         A.BUILDING_TEMPLES: "Building temples",
         A.BURNING_BOOKS: "Burning books",

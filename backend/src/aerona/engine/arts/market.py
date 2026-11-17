@@ -19,11 +19,13 @@ from aerona.domain.enums.arts import ArtMarketRole
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import close, connect, living_entity
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_of_town, region_of, town_of
 
 MIDDLING = 50
@@ -215,7 +217,14 @@ async def sell(
     row.last_buyer_node_id = buyer.id
     row.last_sale_epoch = ctx.epoch
     await ctx.session.flush()
-    await note(ctx, f"{buyer.name} bought {artwork.name} for {row.price}.", key="arts.sold", ids=[artwork.id, buyer.id])
+    await record(
+        ctx,
+        "arts.sold",
+        roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: sale.seller_node_id, IncidentRole.PRODUCT: artwork.id},
+        facts={"price": row.price, "provenance": row.provenance},
+        steps=(StepDraft(StepAction.PAY, actor=buyer.id, target=sale.seller_node_id, amount=row.price, unit=FactUnit.COIN),),
+        place=sale.fair_place_entity_id,
+    )
     return sale
 
 
@@ -296,8 +305,13 @@ async def court_patronage(ctx: TickContext, tally: MarketTally) -> None:
             continue
         artist.location_id = int(capital)
         tally.lured += 1
-        realm = await ctx.session.get(EntityRow, target[1])
-        await note(ctx, f"{artist.name} was drawn to the court of {realm.name if realm else 'a realm'}.", key="arts.lured", ids=[artist.id, target[1]])
+        await record(
+            ctx,
+            "arts.lured",
+            roles={IncidentRole.SUBJECT: artist.id, IncidentRole.PATRON: target[1], IncidentRole.DESTINATION: int(capital)},
+            steps=(StepDraft(StepAction.ARRIVE, actor=artist.id, target=int(capital)),),
+            place=int(capital),
+        )
 
 
 async def keep_market(ctx: TickContext, tally: MarketTally) -> None:

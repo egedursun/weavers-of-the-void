@@ -3,13 +3,14 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import record
 
 LEFT_BEHIND_TYPES = frozenset({EntityType.STRUCTURE, EntityType.ITEM})
 
@@ -18,23 +19,19 @@ async def abandon(ctx: TickContext, settlement: EntityRow) -> EntityRow:
     await retire(ctx.session, settlement, ctx.epoch, f"Epoch {ctx.epoch}: abandoned, turned into a ruin.", append=True, close_bonds=True)
     await add_flag(ctx.session, settlement.id, EntityFlag.RUIN, ctx.epoch)
     remains = [item for item in await EntityRepository(ctx.session).contents(settlement.id) if item.entity_type in LEFT_BEHIND_TYPES]
-    left = f" Left behind: {', '.join(item.name for item in remains)}." if remains else ""
-    await note(ctx, f"{settlement.name} was abandoned and fell to ruin.{left}", key="ruins.abandoned", ids=[settlement.id, *(item.id for item in remains)])
+    await record(
+        ctx,
+        "ruins.abandoned",
+        roles={IncidentRole.SUBJECT: settlement.id, IncidentRole.PRODUCT: [item.id for item in remains]},
+        facts={"population": stat_or(settlement, "population", 0), "left_behind": len(remains)},
+        place=settlement.id,
+    )
     ctx.count("abandoned")
     return settlement
 
 
-@reads("settlement.population", "table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.routes")
-@writes(
-    "table.bonds",
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.entities",
-    "table.entity_flags",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-)
+@reads("settlement.population", "table.bonds", "table.entity_flags", "table.routes")
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.entity_flags", "table.incident_participants", "table.incidents")
 async def abandonment(ctx: TickContext) -> None:
     world_rules = ctx.rules.deep_world
     sheltered = await flags_by_entity(ctx.session, EntityFlag.PROTECTED_FROM_RUIN)
@@ -55,12 +52,10 @@ async def protect_from_ruin(ctx: TickContext, settlement_id: int, protected: boo
         raise ValidationFailedError("Only a living settlement can be sheltered from ruin.")
     if protected:
         changed = await add_flag(ctx.session, settlement.id, EntityFlag.PROTECTED_FROM_RUIN, ctx.epoch)
-        text = f"{settlement.name} was sheltered: however empty it grows, it will not fall to ruin."
     else:
         changed = await remove_flag(ctx.session, settlement.id, EntityFlag.PROTECTED_FROM_RUIN)
-        text = f"{settlement.name} lost its shelter against ruin."
     if changed:
-        await note(ctx, text, key="ruins.sheltered" if protected else "ruins.unsheltered", ids=[settlement.id])
+        await record(ctx, "ruins.sheltered" if protected else "ruins.unsheltered", roles={IncidentRole.SUBJECT: settlement.id}, place=settlement.id)
     return changed
 
 

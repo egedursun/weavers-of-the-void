@@ -7,10 +7,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
-from aerona.domain.enums.polity import ClauseKind, TreatyKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, DiplomacyOutcome, TreatyKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.polity.accords import Clause
 from aerona.engine.polity.treaties import sign_derived
@@ -47,7 +47,7 @@ def strength_of(call: MortalCall, entity: EntityRow) -> float:
     )
 
 
-async def _union(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll: int) -> str:
+async def _union(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll: int) -> DiplomacyOutcome:
     tools = call.rules.mortal_tools
     if roll <= tools.diplomacy_alliance_threshold:
         clauses = [Clause(ClauseKind.CALL_TO_ARMS, call.me.id, target.id), Clause(ClauseKind.CALL_TO_ARMS, target.id, call.me.id)]
@@ -64,28 +64,28 @@ async def _union(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll
         )
         gain = tools.diplomacy_marriage_relation if args.kind is DiplomacyKind.MARRIAGE else tools.diplomacy_alliance_relation
         await change_relation(call.tick, call.me.id, target.id, gain, DIPLOMACY_MEMORIES.get(args.kind, MemoryKind.GOODWILL), note=args.kind.value)
-        return lines.DIPLOMACY_OUTCOMES["accepted"].format(target=target.name)
+        return DiplomacyOutcome.MARRIAGE_ACCEPTED if args.kind is DiplomacyKind.MARRIAGE else DiplomacyOutcome.ALLIANCE_ACCEPTED
     await change_relation(call.tick, call.me.id, target.id, -tools.diplomacy_reject_relation, MemoryKind.HUMILIATED_ME, note=args.kind.value)
-    return lines.DIPLOMACY_OUTCOMES["refused"].format(target=target.name)
+    return DiplomacyOutcome.UNION_REFUSED
 
 
-async def _peace(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll: int) -> str:
+async def _peace(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll: int) -> DiplomacyOutcome:
     tools = call.rules.mortal_tools
     if roll <= tools.diplomacy_peace_threshold:
         await settle_peace(call.tick, call.me.id, target.id, WarEnding.PEACE, args.terms[:KEY_MAX_LENGTH], apply_relation=False)
         await change_relation(call.tick, call.me.id, target.id, tools.diplomacy_peace_relation, MemoryKind.MADE_PEACE, note=args.kind.value)
-        return lines.DIPLOMACY_OUTCOMES["peace"]
-    return lines.DIPLOMACY_OUTCOMES["no_peace"]
+        return DiplomacyOutcome.PEACE_MADE
+    return DiplomacyOutcome.PEACE_REFUSED
 
 
-async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) -> str:
+async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) -> DiplomacyOutcome:
     tools = call.rules.mortal_tools
     if strength_of(call, call.me) < strength_of(call, target) * tools.tribute_superiority_pct / PERCENT:
         await BondRepository(call.session).connect(
             BondDraft(target.id, call.me.id, BondKind.ENEMY, call.epoch, lines.INSOLENT_TRIBUTE, war_cause=WarCause.TRIBUTE_REVOLT)
         )
         await change_relation(call.tick, call.me.id, target.id, -tools.tribute_insolence_relation, MemoryKind.HUMILIATED_ME, note=lines.INSOLENT_TRIBUTE)
-        return lines.DIPLOMACY_OUTCOMES["laughed"].format(target=target.name)
+        return DiplomacyOutcome.TRIBUTE_SCORNED
     for key in ("wealth", "prosperity"):
         paid = stat(target, key)
         if paid is not None:
@@ -96,7 +96,7 @@ async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) ->
             set_stats(call.me, wealth=min(PERCENT, wealth + tools.tribute_taker_gain))
     await impose_tribute(call.tick, target, call.me, None, args.terms)
     await change_relation(call.tick, call.me.id, target.id, -tools.tribute_relation, MemoryKind.DEMANDED_TRIBUTE, note=args.kind.value)
-    return lines.DIPLOMACY_OUTCOMES["tribute"].format(target=target.name)
+    return DiplomacyOutcome.TRIBUTE_AGREED
 
 
 async def diplomacy(call: MortalCall, args: DiplomacyInput) -> str:
@@ -126,16 +126,9 @@ async def diplomacy(call: MortalCall, args: DiplomacyInput) -> str:
         outcome = await _peace(call, target, args, roll)
     else:
         outcome = await _tribute(call, target, args)
-    await call.chronicle(
-        ChronicleKind.DIPLOMACY,
-        lines.DIPLOMACY,
-        entity_ids=[call.me.id, target.id],
-        me=call.me.name,
-        offer=args.kind.value,
-        target=target.name,
-        outcome=outcome,
-    )
-    return result(MortalResult.DIPLOMACY_DONE, outcome=outcome[:1].upper() + outcome[1:])
+    await call.record(f"tools.mortal.diplomacy_{outcome.value}", roles={IncidentRole.ENVOY: call.me.id, IncidentRole.TARGET: target.id}, facts={"roll": roll})
+    told = lines.DIPLOMACY_OUTCOMES[outcome.value].format(target=target.name)
+    return result(MortalResult.DIPLOMACY_DONE, outcome=told[:1].upper() + told[1:])
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

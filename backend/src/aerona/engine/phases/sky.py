@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.worlds import SKY_EVENT_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several
+from aerona.core.grammar import an
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -18,9 +18,11 @@ from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod
@@ -41,13 +43,13 @@ from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, connect, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import shift_bounded, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 from aerona.engine.services.war_resolution import settle_peace
 from aerona.engine.storyteller.pace import paced
 from aerona.engine.structures.readers import strength_at, working
@@ -69,6 +71,14 @@ class SkyOrder:
     route_id: int | None = None
     duration: int | None = None
     by: str | None = None
+    by_id: int | None = None
+
+
+@dataclass(frozen=True)
+class SkyOutcome:
+    text: str
+    roles: dict[IncidentRole, RoleValue] = field(default_factory=dict)
+    facts: dict[str, FactInput] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -117,7 +127,7 @@ async def omen_bonus(ctx: TickContext, world_id: int) -> int:
     return round(max((item.strength for item in found), default=0.0) * ctx.rules.structure_functions.observatory_omen_certainty)
 
 
-async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
+async def _eclipse(ctx: TickContext, world: WorldRow) -> SkyOutcome:
     sky = ctx.rules.sky
     seen = await sky_clarity(ctx, world, "sky.eclipse")
     for entity in await canon(ctx.session, INHABITANT_TYPES, world.id):
@@ -144,11 +154,15 @@ async def _eclipse(ctx: TickContext, world: WorldRow) -> str:
             engine_kind=EngineKind.ECLIPSE_PROPHECY,
         ),
     )
-    await eclipse_seers(ctx, prophecy, world)
-    return f"In {world.name} an eclipse lasted the whole epoch, and a prophecy was made under it."
+    seers = await eclipse_seers(ctx, prophecy, world)
+    return SkyOutcome(
+        f"In {world.name} an eclipse lasted the whole epoch, and a prophecy was made under it.",
+        {IncidentRole.PRODUCT: prophecy.id, IncidentRole.TELLER: [seer.id for seer in seers]},
+        {"clarity": seen * PERCENT},
+    )
 
 
-async def _comet(ctx: TickContext, world: WorldRow) -> str:
+async def _comet(ctx: TickContext, world: WorldRow) -> SkyOutcome:
     sky = ctx.rules.sky
     rng = ctx.rng("comet")
     comet = await open_record(
@@ -174,16 +188,20 @@ async def _comet(ctx: TickContext, world: WorldRow) -> str:
     enmities = list(await ctx.session.scalars(statement.order_by(BondRow.id)))
     bond = rng.pick_or_none(enmities)
     if bond is None or not rng.chance(sky.comet_peace_chance * await sky_clarity(ctx, world, "sky.comet")):
-        return f"A comet appeared in {world.name}'s sky."
+        return SkyOutcome(f"A comet appeared in {world.name}'s sky.", {IncidentRole.PRODUCT: comet.id})
     first, second = await ctx.session.get(EntityRow, bond.source_node_id), await ctx.session.get(EntityRow, bond.target_node_id)
     await settle_peace(ctx, bond.source_node_id, bond.target_node_id, WarEnding.PEACE, "the comet's omen")
     for side in (bond.source_node_id, bond.target_node_id):
         await connect(ctx.session, comet.id, side, BondKind.CAUSED, ctx.epoch, description="its omen was read as peace")
     names = (first.name if first else "one side", second.name if second else "the other")
-    return f"A comet appeared in {world.name}'s sky. Reading the omen as peace, {names[0]} and {names[1]} laid down arms."
+    return SkyOutcome(
+        f"A comet appeared in {world.name}'s sky. Reading the omen as peace, {names[0]} and {names[1]} laid down arms.",
+        {IncidentRole.PRODUCT: comet.id, IncidentRole.MEMBER: [bond.source_node_id, bond.target_node_id]},
+        {"peace": 1},
+    )
 
 
-async def _alignment(ctx: TickContext, world: WorldRow, star_id: int | None, ordered: bool) -> str:
+async def _alignment(ctx: TickContext, world: WorldRow, star_id: int | None, ordered: bool) -> SkyOutcome:
     sky = ctx.rules.sky
     session = ctx.session
     star_worlds = {item.id for item in await worlds_of_star(session, star_id)} if star_id is not None else {world.id}
@@ -210,12 +228,13 @@ async def _alignment(ctx: TickContext, world: WorldRow, star_id: int | None, ord
         parts.append(f"slingshot orbits opened for {number_word(sky.alignment_open_epochs)} epochs")
     if revealed:
         parts.append(f"in the aligned light {number_word(revealed)} hidden routes were revealed")
+    counts: dict[str, FactInput] = {"shortened": len(near), "opened": slingshots, "revealed": revealed}
     if not parts:
-        return f"The planets aligned{around}; but there was no route for the alignment to open."
-    return f"The planets aligned{around}: {'; '.join(parts)}."
+        return SkyOutcome(f"The planets aligned{around}; but there was no route for the alignment to open.", {}, counts)
+    return SkyOutcome(f"The planets aligned{around}: {'; '.join(parts)}.", {}, counts)
 
 
-async def _void_storm(ctx: TickContext, world: WorldRow, order: SkyOrder, by: str) -> str:
+async def _void_storm(ctx: TickContext, world: WorldRow, order: SkyOrder, by: str) -> SkyOutcome:
     route = await ctx.session.get(RouteRow, order.route_id) if order.route_id is not None else None
     if route is None:
         statement = select(RouteRow).where(
@@ -224,19 +243,21 @@ async def _void_storm(ctx: TickContext, world: WorldRow, order: SkyOrder, by: st
         route = ctx.rng("storm_route").pick_or_none(list(await ctx.session.scalars(statement.order_by(RouteRow.id))))
     if route is None:
         raise ValidationFailedError(f"There is no open route to sever in {world.name}'s sky.")
-    result = await sever_route(ctx, route.id, duration=order.duration or ctx.rules.sky.god_storm_epochs, by=by, write=False)
-    return result.text
+    duration = order.duration or ctx.rules.sky.god_storm_epochs
+    result = await sever_route(ctx, route.id, duration=duration, by=by, write=False)
+    other = route.world_b_id if route.world_a_id == world.id else route.world_a_id
+    return SkyOutcome(result.text, {IncidentRole.DESTINATION: other}, {"duration": duration})
 
 
-async def _star_event(ctx: TickContext, kind: SkyEventKind, star_id: int | None) -> str:
+async def _star_event(ctx: TickContext, kind: SkyEventKind, star_id: int | None) -> SkyOutcome:
     if star_id is None:
         raise ValidationFailedError(f"{an(SKY_EVENT_LABELS[kind].lower(), capital=True)} needs a star.")
     star = await require_star(ctx.session, star_id)
     if kind is SkyEventKind.SUPERNOVA:
-        return await supernova(ctx, star)
+        return SkyOutcome(await supernova(ctx, star))
     if kind is SkyEventKind.FLARE:
-        return await flare(ctx, star)
-    return await black_sun(ctx, star)
+        return SkyOutcome(await flare(ctx, star))
+    return SkyOutcome(await black_sun(ctx, star))
 
 
 async def lasting_until(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> int | None:
@@ -269,21 +290,28 @@ async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> Sk
         raise ValidationFailedError(f"{world.name} was forgotten; no event can be ordered in its sky.")
     star_id = order.star_id if order.star_id is not None else await WorldRepository(ctx.session).root_star_id(world)
     if kind is SkyEventKind.ECLIPSE:
-        text = await _eclipse(ctx, world)
+        outcome = await _eclipse(ctx, world)
     elif kind is SkyEventKind.COMET:
-        text = await _comet(ctx, world)
+        outcome = await _comet(ctx, world)
     elif kind is SkyEventKind.ALIGNMENT:
-        text = await _alignment(ctx, world, star_id, ordered=order.by is not None)
+        outcome = await _alignment(ctx, world, star_id, ordered=order.by is not None)
     elif kind is SkyEventKind.VOID_STORM:
-        text = await _void_storm(ctx, world, order, order.by or "The Creator")
+        outcome = await _void_storm(ctx, world, order, order.by or "The Creator")
     elif kind is SkyEventKind.TRANSIT:
-        text = await _transit(ctx, world)
+        outcome = await _transit(ctx, world)
     else:
-        text = await _star_event(ctx, kind, order.star_id if order.star_id is not None else star_id)
+        outcome = await _star_event(ctx, kind, order.star_id if order.star_id is not None else star_id)
+    text = outcome.text
     until = await lasting_until(ctx, kind, order)
     ctx.session.add(SkyEventRow(kind=kind, epoch=ctx.epoch, until_epoch=until, world_id=world.id, star_id=star_id, route_id=order.route_id, text=text))
-    prefix = f"{order.by} commanded the sky: " if order.by else ""
-    await ctx.chronicle(ChronicleKind.SKY, prefix + text, template_key=f"sky.{kind.value}", world_id=world.id, feed_category=FeedCategory.SKY)
+    await record(
+        ctx,
+        f"sky.{kind.value}",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.ACTOR: star_id, IncidentRole.AUTHORITY: order.by_id, **outcome.roles},
+        facts={"event": kind, "lasting": max(0, until - ctx.epoch + 1) if until is not None else 0, **outcome.facts},
+        steps=(StepDraft(StepAction.APPEAR, actor=star_id, locus_kind=StepLocus.SKY, locus_node=world.id),),
+        world_id=world.id,
+    )
     ctx.count(f"event.{kind.value}")
     return SkyEventResult(kind, world.id, star_id, text)
 
@@ -308,7 +336,7 @@ async def sky_rows(session: AsyncSession) -> dict[int, WorldPhysicsRow]:
     return {row.world_id: row for row in await session.scalars(select(WorldPhysicsRow))}
 
 
-async def _transit(ctx: TickContext, world: WorldRow) -> str:
+async def _transit(ctx: TickContext, world: WorldRow) -> SkyOutcome:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
     pairs = [pair for pair in transit_pairs(ctx.rules, worlds, await sky_rows(ctx.session)) if pair[0].id == world.id]
     due = [inner for _outer, inner, period in pairs if next_epoch(ctx.epoch, period, transit_phase(world, inner)) == ctx.epoch]
@@ -317,8 +345,10 @@ async def _transit(ctx: TickContext, world: WorldRow) -> str:
         if not held(community.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.orbits.transit_piety)
     if inner is None:
-        return f"A dark body crossed in front of the star in {world.name}'s sky."
-    return f"{inner.name} crossed in front of the star in {world.name}'s sky."
+        return SkyOutcome(f"A dark body crossed in front of the star in {world.name}'s sky.", {}, {"piety": ctx.rules.orbits.transit_piety})
+    return SkyOutcome(
+        f"{inner.name} crossed in front of the star in {world.name}'s sky.", {IncidentRole.CO_ACTOR: inner.id}, {"piety": ctx.rules.orbits.transit_piety}
+    )
 
 
 async def calendar_signs(ctx: TickContext) -> int:
@@ -407,11 +437,12 @@ async def _time_traveller(ctx: TickContext, thread: ThreadRow, place: EntityRow)
         ),
     )
     ctx.session.add(ThreadLinkRow(thread_id=thread.id, entity_id=traveller.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch))
-    await note(
+    await record(
         ctx,
-        f"Someone from the future came to {place.name}: they seem to know the end of an ongoing story.",
-        key="sky.time_traveller",
-        ids=[traveller.id, place.id],
+        "sky.time_traveller",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.PLACE: place.id},
+        facts={"age": stat_or(traveller, "age", 0)},
+        place=place.id,
     )
     return traveller
 
@@ -433,9 +464,7 @@ async def _echo_prophecy(ctx: TickContext, thread: ThreadRow) -> EntityRow:
         ),
     )
     ctx.session.add(ThreadLinkRow(thread_id=thread.id, entity_id=prophecy.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch))
-    await note(
-        ctx, f"The prophecy of something that has not happened yet was found in an old record (story#{thread.id}).", key="sky.echo_prophecy", ids=[prophecy.id]
-    )
+    await record(ctx, "sky.echo_prophecy", roles={IncidentRole.PRODUCT: prophecy.id}, facts={"certainty": stat_or(prophecy, "certainty", 0)})
     return prophecy
 
 
@@ -464,23 +493,18 @@ async def two_timed_hero(ctx: TickContext) -> EntityRow | None:
         if mortal.id in tagged or stat_or(mortal, CHARISMA_KEY, 0) < minimum:
             continue
         await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.TWO_TIMED, ctx.epoch)
-        await note(ctx, f"{mortal.name} was seen in two epochs at once: one young, one old. No one knows which is real.", key="sky.two_timed", ids=[mortal.id])
+        await record(ctx, "sky.two_timed", roles={IncidentRole.SUBJECT: mortal.id}, facts={"charisma": stat_or(mortal, CHARISMA_KEY, 0)})
         return mortal
     return None
 
 
-def time_difference(rules: Rules, traveller: str, origin: WorldRow | None, target: WorldRow | None, epochs: int) -> str | None:
+def time_gap_years(rules: Rules, origin: WorldRow | None, target: WorldRow | None, epochs: int) -> int | None:
     origin_factor = origin.time_factor if origin is not None else 1.0
     target_factor = target.time_factor if target is not None else 1.0
-    gap = abs(origin_factor - target_factor)
-    if gap < rules.sky.time_factor_diff_threshold_pct / PERCENT or target is None:
+    gap = target_factor - origin_factor
+    if abs(gap) < rules.sky.time_factor_diff_threshold_pct / PERCENT or target is None:
         return None
-    years = round(rules.time.years_per_epoch * max(1, epochs) * gap)
-    if target_factor < origin_factor:
-        tail = "had passed extra in the world they left behind; those they knew had died, their children had grown old"
-    else:
-        tail = "had passed less; when they return they will have stayed young enough that nobody recognises them"
-    return f"When {traveller}'s travellers reached {target.name}, {several(years, 'year', 'years')} {tail}."
+    return round(rules.time.years_per_epoch * max(1, epochs) * gap)
 
 
 async def drift_worlds(ctx: TickContext) -> None:
@@ -499,9 +523,20 @@ async def drift_worlds(ctx: TickContext) -> None:
             choices = [star for star in stars if star.id != world.star_id]
             destination = rng.pick_or_none(choices)
             if destination is not None:
+                origin = world.star_id
                 world.star_id = destination.id
                 await align_moons(session)
-                await note(ctx, f"{world.name} sailed on between the stars and now orbits {destination.name}.", key="sky.world_drift", feed=FeedCategory.SKY)
+                await record(
+                    ctx,
+                    "sky.world_drift",
+                    roles={IncidentRole.SUBJECT: world.id, IncidentRole.ORIGIN: origin, IncidentRole.DESTINATION: destination.id},
+                    facts={"period": period},
+                    steps=(
+                        StepDraft(StepAction.DEPART, actor=world.id),
+                        StepDraft(StepAction.ARRIVE, actor=world.id, locus_kind=StepLocus.ORBIT, locus_node=destination.id),
+                    ),
+                    world_id=world.id,
+                )
     await session.flush()
 
 
@@ -516,7 +551,6 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.incident_participants",
     "table.incidents",
@@ -547,8 +581,9 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.name_registry",
@@ -557,9 +592,7 @@ async def drift_worlds(ctx: TickContext) -> None:
 )
 async def sky_phase(ctx: TickContext) -> None:
     ctx.count("calendar_signs", await calendar_signs(ctx))
-    result = await spontaneous_sky_event(ctx)
-    if result is not None:
-        await note(ctx, result.text, key=f"sky.spontaneous.{result.kind.value}", feed=FeedCategory.SKY)
+    await spontaneous_sky_event(ctx)
     if ctx.rng("echo_roll").chance(ctx.rules.sky.time_echo_chance):
         await time_echo(ctx)
     if ctx.rng("two_timed_roll").chance(ctx.rules.sky.two_timed_hero_chance):

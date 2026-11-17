@@ -41,6 +41,7 @@ from aerona.engine.environment.battleground import cover_missile_pct
 from aerona.engine.military.command import family_factor
 from aerona.engine.military.tables import counters, defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
 from aerona.engine.primitives.harshness import harshness
+from aerona.engine.recording.record import StepDraft
 from aerona.rules.registry import Rules
 
 F = UnitFamily
@@ -118,6 +119,7 @@ class Stack:
     captured: int = 0
     missing: int = 0
     deserted: int = 0
+    seen: tuple[int, int, bool, Formation] | None = None
 
     @property
     def alive(self) -> bool:
@@ -220,6 +222,19 @@ class Side:
         return sum(stack.row.count for stack in self.stacks if stack.alive and stack.row.kind is kind)
 
 
+@dataclass(frozen=True)
+class StackChange:
+    army_id: int
+    enemy_id: int
+    stack_id: int
+    kind: UnitKind
+    lost: int
+    morale: int
+    routed: bool
+    rallied: bool
+    formation: Formation | None
+
+
 @dataclass
 class PhaseLog:
     phase: BattlePhase
@@ -227,6 +242,34 @@ class PhaseLog:
     defender_losses: int
     summary: str
     details: dict[str, int | str] = field(default_factory=dict)
+    changes: list[StackChange] = field(default_factory=list)
+
+
+def traced(log: PhaseLog, *sides: Side) -> PhaseLog:
+    first, second = sides
+    for side, enemy in ((first, second), (second, first)):
+        for stack in side.stacks:
+            if stack.seen is None:
+                stack.seen = (stack.start, stack.row.morale, False, stack.row.formation)
+            count, morale, routed, formation = stack.seen
+            morale_now = stack.row.morale
+            now = (stack.row.count, morale_now, stack.routed, stack.row.formation)
+            if now != stack.seen:
+                log.changes.append(
+                    StackChange(
+                        side.army.id,
+                        enemy.army.id,
+                        stack.row.id,
+                        stack.row.kind,
+                        max(0, count - stack.row.count),
+                        morale_now - morale,
+                        stack.routed and not routed,
+                        routed and not stack.routed,
+                        stack.row.formation if stack.row.formation != formation else None,
+                    )
+                )
+            stack.seen = now
+    return log
 
 
 @dataclass
@@ -248,6 +291,7 @@ class BattleResult:
     feint: bool = False
     collapsed: int | None = None
     standard_taken: int | None = None
+    vehicle_steps: list[StepDraft] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -786,6 +830,10 @@ def reach(rules: Rules, striker: Side, target: Side) -> float:
     return 1 - aloft * (1 - rules.naval.sky_counter_pct / PERCENT)
 
 
+def hidden_soldiers(side: Side) -> int:
+    return sum(stack.row.count for stack in side.stacks if stack.hidden)
+
+
 def spring_trap(rules: Rules, side: Side, enemy: Side) -> list[Stack]:
     if not side.trap:
         return []
@@ -1081,7 +1129,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
             if ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
                 lead.surprise = dulled(rules, rules.weather_battle_effects.fog_ambush_pct / PERCENT, other.keen)
     summary = f"{lead.entity.name} saw further" + (" and refused battle" if refused else " and chose the ground")
-    phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name, **seen})]
+    phases = [traced(PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name, **seen}), attacker, defender)]
     if refused:
         return lead, phases
     attacker.tactic = choose_tactic(rules, streams("plan.attacker"), attacker, defender.profile.doctrine, ground)
@@ -1100,7 +1148,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         else "",
     }
     summary = f"{attacker.tactic.value.replace('_', ' ')} against {defender.tactic.value.replace('_', ' ')}"
-    phases.append(PhaseLog(BattlePhase.PLAN, 0, 0, summary, details))
+    phases.append(traced(PhaseLog(BattlePhase.PLAN, 0, 0, summary, details), attacker, defender))
     return None, phases
 
 
@@ -1131,35 +1179,45 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     orders.update({f"defender_{key}": value for key, value in command(rules, streams, defender, ground).items()})
     orders["width"] = attacker.width
     orders["feint"] = attacker.entity.name if feint(rules, streams, attacker, defender) else ""
-    phases = [PhaseLog(BattlePhase.COMMAND, 0, 0, "orders went down the line", orders)]
+    phases = [traced(PhaseLog(BattlePhase.COMMAND, 0, 0, "orders went down the line", orders), attacker, defender)]
     ranged = MISSILE_FAMILIES - {F.MAGIC}
     to_d, to_a = missiles(rules, streams, attacker, defender, ground, families=ranged), missiles(rules, streams, defender, attacker, ground, families=ranged)
     pinned: dict[str, int | str] = {"fog": ", ".join(fog), "pinned": sum(1 for stack in (*attacker.stacks, *defender.stacks) if stack.suppressed)}
-    phases.append(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the volleys flew" + (" into a called fog" if fog else ""), pinned))
+    phases.append(traced(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "volleys" + (" into a called fog" if fog else ""), pinned), attacker, defender))
     attacker.surprise = defender.surprise = 1.0
     for striker, target in ((attacker, defender), (defender, attacker)):
         if striker.tactic in STRIKE_TACTICS:
             striker.surprise = dulled(rules, rules.tactics.strike_surprise_pct / PERCENT, target.keen)
     flank = outflank(rules, attacker, defender, ground, streams)
     if flank is not None:
-        phases.append(flank)
+        phases.append(traced(flank, attacker, defender))
     dealt_a, taken_a = charge(rules, streams, attacker, defender, ground)
     dealt_d, taken_d = charge(rules, streams, defender, attacker, ground)
-    phases.append(PhaseLog(BattlePhase.CHARGE, taken_a + dealt_d, dealt_a + taken_d, "the mounted troops and the beasts struck"))
+    phases.append(traced(PhaseLog(BattlePhase.CHARGE, taken_a + dealt_d, dealt_a + taken_d, "the charge"), attacker, defender))
     shaken(rules, attacker, streams, phase="charge")
     shaken(rules, defender, streams, phase="charge")
     for index in range(rules.tactics.melee_rounds):
+        lying = {"attacker": hidden_soldiers(attacker), "defender": hidden_soldiers(defender)}
         lost_a, lost_d = melee_round(rules, streams, attacker, defender, ground, index=index)
         attacker.planned = defender.planned = False
         shaken(rules, attacker, streams, phase=f"melee{index}")
         shaken(rules, defender, streams, phase=f"melee{index}")
-        phases.append(PhaseLog(BattlePhase.MELEE, lost_a, lost_d, f"melee, round {index + 1}"))
+        sprung: dict[str, int | str] = {
+            f"{role}_revealed": lying[role] - hidden_soldiers(side)
+            for role, side in (("attacker", attacker), ("defender", defender))
+            if lying[role] > hidden_soldiers(side)
+        }
+        phases.append(traced(PhaseLog(BattlePhase.MELEE, lost_a, lost_d, f"melee, round {index + 1}", sprung), attacker, defender))
         struck = [side.entity.name for side in (attacker, defender) if collapse(rules, streams, side, f"melee{index}")]
         committed = {side.entity.name: commit_reserves(rules, streams, side, index) for side in (attacker, defender)}
         if any(committed.values()) or struck:
             details: dict[str, int | str] = {name: soldiers for name, soldiers in committed.items()}
             details["commander_fell"] = ", ".join(struck)
-            phases.append(PhaseLog(BattlePhase.RESERVES, 0, 0, "the reserves came up" if any(committed.values()) else "a commander fell", details))
+            phases.append(
+                traced(
+                    PhaseLog(BattlePhase.RESERVES, 0, 0, "reserves committed" if any(committed.values()) else "a commander fell", details), attacker, defender
+                )
+            )
         if broken(attacker) or broken(defender):
             break
     burn_a, burn_d = backlash(rules, attacker, ground), backlash(rules, defender, ground)
@@ -1167,9 +1225,10 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     magic_a, magic_d = rites(rules, streams, attacker, defender, ground), rites(rules, streams, defender, attacker, ground)
     god_a, god_d = divine_hand(rules, attacker, defender), divine_hand(rules, defender, attacker)
     gods: dict[str, int | str] = {"attacker_god_struck": god_a, "defender_god_struck": god_d}
-    phases.append(
-        PhaseLog(BattlePhase.RITES, magic_d + burn_a + god_d, magic_a + burn_d + god_a, "rites and prayers", {**terror, **gods, "backlash": burn_a + burn_d})
+    rites_log = PhaseLog(
+        BattlePhase.RITES, magic_d + burn_a + god_d, magic_a + burn_d + god_a, "rites and prayers", {**terror, **gods, "backlash": burn_a + burn_d}
     )
+    phases.append(traced(rites_log, attacker, defender))
     return phases
 
 
@@ -1282,7 +1341,11 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
     pursued = pursue(rules, winner, loser, ground)
     details: dict[str, int | str] = {"baggage": winner.baggage_taken}
     phases.append(
-        PhaseLog(BattlePhase.PURSUIT, pursued if loser is attacker else 0, pursued if loser is defender else 0, f"{winner.entity.name} pursued", details)
+        traced(
+            PhaseLog(BattlePhase.PURSUIT, pursued if loser is attacker else 0, pursued if loser is defender else 0, f"{winner.entity.name} pursued", details),
+            attacker,
+            defender,
+        )
     )
     outcome = classify(rules, winner, loser, strong / weak)
     gap = min(PERCENT, (strong - weak) / strong * PERCENT) if strong else 0.0
@@ -1296,8 +1359,8 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "deserted": sum(stack.deserted for stack in (*attacker.stacks, *defender.stacks)),
         "captured": sum(stack.captured for stack in (*attacker.stacks, *defender.stacks)),
     }
-    phases.append(PhaseLog(BattlePhase.SALVAGE, 0, 0, f"{winner.entity.name} stripped the field", {"arms": winner.salvaged}))
-    phases.append(PhaseLog(BattlePhase.AFTERMATH, attacker.lost, defender.lost, outcome.value, dict(summary)))
+    phases.append(traced(PhaseLog(BattlePhase.SALVAGE, 0, 0, f"{winner.entity.name} stripped the field", {"arms": winner.salvaged}), attacker, defender))
+    phases.append(traced(PhaseLog(BattlePhase.AFTERMATH, attacker.lost, defender.lost, outcome.value, dict(summary)), attacker, defender))
     for stack in (*attacker.stacks, *defender.stacks):
         settle(rules, stack)
     factors = {

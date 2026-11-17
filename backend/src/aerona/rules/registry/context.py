@@ -96,3 +96,10 @@ class ContextRules:
     harvest_poor_below_pct: int = rule(80, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Harvest below which a region is described to the gods as hungry (%)")
     harvest_rich_above_pct: int = rule(120, 0, 300, RuleGroup.CONTEXT_BUDGETS, "Harvest above which a region is described to the gods as rich (%)")
     scar_shown_depth: int = rule(20, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Least depth of a scar the gods are told about")
+    account_steps_shown: int = rule(30, 1, 500, RuleGroup.CONTEXT_BUDGETS, "Steps of a happening shown in one account; the rest are paged")
+    chronicler_steps_shown: int = rule(
+        6, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Steps of each major happening the chronicler sees as definite outcomes; the count of the rest is given"
+    )
+    records_shown: int = rule(
+        8, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Happenings, steps and changes of its own an agent sees in its context; the rest are reached by tools"
+    )

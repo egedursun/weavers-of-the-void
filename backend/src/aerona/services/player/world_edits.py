@@ -11,15 +11,16 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, WorldType
 from aerona.engine.cosmos.orbits import match_air, match_gravity, match_kind
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import forget_world, set_mirror_twin
 from aerona.engine.primitives.renames import rewrite_name
+from aerona.engine.recording.record import record
 from aerona.services.player import guards
-from aerona.services.player.chronicle import tell
-from aerona.services.player.lines import WORLD_RENAMED, WORLD_RESHAPED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 TEXT_FIELDS = ("cosmology", "description", "image_prompt")
@@ -154,7 +155,7 @@ async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, 
     if discovery is Discovery.FORGOTTEN:
         creator = await scope.creator()
         ctx = await scope.context("forget_world")
-        await forget_world(ctx, world.id, creator.name)
+        await forget_world(ctx, world.id, creator.id)
         notes.append("it was forgotten")
         return
     remembered = world.discovery is Discovery.FORGOTTEN
@@ -192,7 +193,18 @@ async def edit_world(scope: PlayerScope, command: EditWorld) -> Effect:
     if command.name is not None:
         old = await _rename(scope, world, command.name)
         if old is not None:
-            messages.append(await tell(ctx, WORLD_RENAMED, world_id=world.id, old=old, new=world.name))
+            messages.append(
+                (
+                    await record(
+                        ctx,
+                        "player.world.renamed",
+                        roles={IncidentRole.SUBJECT: world.id},
+                        facts={"old": old},
+                        kind=ChronicleKind.CREATOR_HAND,
+                        world_id=world.id,
+                    )
+                ).text
+            )
     for field in TEXT_FIELDS:
         value = getattr(command, field)
         if value is not None:
@@ -219,6 +231,17 @@ async def edit_world(scope: PlayerScope, command: EditWorld) -> Effect:
     if notes:
         detail = f": {'; '.join(notes)}"
         kind = _edit_kind(remembered, command.discovery)
-        messages.append(await tell(ctx, WORLD_RESHAPED, world_id=world.id, world=world.name, notes=detail))
+        messages.append(
+            (
+                await record(
+                    ctx,
+                    "player.world.reshaped",
+                    roles={IncidentRole.SUBJECT: world.id},
+                    facts={"notes": detail},
+                    kind=ChronicleKind.CREATOR_HAND,
+                    world_id=world.id,
+                )
+            ).text
+        )
         return Effect(" ".join(messages), world.id, kind=kind)
     return Effect(" ".join(messages), world.id)

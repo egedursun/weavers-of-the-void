@@ -18,7 +18,6 @@ class MarketRules:
     credit_chance: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Trade flow: chance a buyer who could pay still buys a large load on credit (%)")
     credit_term: int = rule(3, 1, 50, RuleGroup.ECONOMY, "Term of a credit debt (epochs)")
     credit_divisor: int = rule(3, 1, 1000, RuleGroup.ECONOMY, "Size of a credit debt: the moved amount divided by this")
-    note_cap: int = rule(3, 0, 100, RuleGroup.ECONOMY, "Market: most famine purchases or credit sales noted separately per epoch")
     debt_patience: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Debt: epochs the creditor waits after the term before acting")
     debt_ending_cap: int = rule(3, 0, 100, RuleGroup.ECONOMY, "Debt: most overdue debts closed per epoch")
     debt_forgive_relation: int = rule(30, -100, 100, RuleGroup.ECONOMY, "Debt: a creditor whose relation to the debtor is at least this forgives the debt")

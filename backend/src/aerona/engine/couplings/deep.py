@@ -11,12 +11,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.couplings import SealKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.couplings.rite_body import owned_rites
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 
 async def active_seal(session: AsyncSession, place_id: int) -> DeepSealRow | None:
@@ -61,7 +62,7 @@ async def seal_after_breach(ctx: TickContext, resource: EntityRow, community: En
     else:
         return None
     row = await seal_deep(ctx, resource.id, kind, community.id)
-    await note(ctx, f"{community.name} sealed the deep beneath {resource.name}.", key="seal.made", ids=[resource.id, community.id])
+    await record(ctx, "seal.made", roles={IncidentRole.SUBJECT: [community.id, resource.id]})
     return row
 
 
@@ -90,12 +91,12 @@ async def test_seal(ctx: TickContext, row: DeepSealRow) -> None:
     if profile is not None and profile.reserve * PERCENT < profile.initial_reserve * table.unseal_reserve_pct:
         row.strength = 0
         row.broken_epoch = ctx.epoch
-        await note(ctx, f"The miners of {place.name} dug through its seal to reach the deep again.", key="seal.unsealed", ids=[place.id])
+        await record(ctx, "seal.unsealed", roles={IncidentRole.SUBJECT: place.id})
         return
     row.strength = clamp_percent(row.strength - loss)
     if row.strength == 0:
         row.broken_epoch = ctx.epoch
-        await note(ctx, f"The seal beneath {place.name} gave way; the deep is open again.", key="seal.broken", ids=[place.id])
+        await record(ctx, "seal.broken", roles={IncidentRole.SUBJECT: place.id})
 
 
 @reads("table.bonds", "table.deep_seals", "table.resource_profiles", "table.rite_profiles", "table.species_ranges")

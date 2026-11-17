@@ -64,8 +64,6 @@ class ConsumptionRules:
     impiety_pressure_pct: int = rule(60, 0, 300, E, "Impiety pressure from missing incense and sacred goods (%)")
     insecurity_pressure_pct: int = rule(40, 0, 300, E, "Insecurity pressure from missing weapons and armour (%)")
     arcane_pressure_pct: int = rule(30, 0, 300, E, "Stagnation pressure from missing magical reagents (%)")
-    notable_cold_deaths: int = rule(50, 1, 1000000, E, "Cold deaths in an epoch the chronicle notes")
-    notable_sick: int = rule(100, 1, 1000000, E, "People fallen sick for want of medicine in an epoch the chronicle notes")
 
 
 @dataclass(frozen=True)

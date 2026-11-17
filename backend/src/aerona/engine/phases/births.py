@@ -17,7 +17,9 @@ from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.transform import TransformKind
@@ -26,7 +28,7 @@ from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.customs import culture_of
-from aerona.engine.body.healing import HealingWorld, tier_index
+from aerona.engine.body.healing import Care, HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import rested_fertility
@@ -48,7 +50,6 @@ from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
 from aerona.engine.polity.houses import bloodline_fertility
@@ -74,6 +75,7 @@ from aerona.engine.primitives.queries import (
 from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 from aerona.engine.storyteller.pace import recovered
 from aerona.engine.transform.record import blocked, record_transformation
 from aerona.engine.unions.axes import spousing_of
@@ -401,13 +403,8 @@ def notable_plan(rules: Rules, community: EntityRow, social_class: SocialClass, 
 async def raise_notable(ctx: TickContext, community: EntityRow, social_class: SocialClass, role: NotableRole, namer: Namer | None = None) -> EntityRow:
     plan = notable_plan(ctx.rules, community, social_class, role)
     mortal = await born_mortal(ctx, community, plan, namer)
-    circle = from_among(community.name, SOCIAL_CLASSES[social_class].plural.lower())
-    await note(
-        ctx,
-        f"{sentence_case(an(role.subtype))} whose name is spoken arose {circle}: {mortal.name}.",
-        key="births.notable",
-        ids=[community.id, mortal.id],
-    )
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: mortal.id, IncidentRole.ORIGIN: community.id}
+    await record(ctx, "births.notable", roles=roles, facts={"social_class": social_class, "role": role.role}, place=mortal.location_id)
     return mortal
 
 
@@ -453,7 +450,7 @@ async def crown(ctx: TickContext, community: EntityRow, namer: Namer | None = No
     )
     ruler = await born_mortal(ctx, community, plan, namer)
     await connect(ctx.session, ruler.id, community.id, BondKind.RULES, ctx.epoch, description="took the throne")
-    await note(ctx, f"{ruler.name} took the throne of {community.name} as {subtype}.", key="births.ruler", ids=[community.id, ruler.id])
+    await record(ctx, "births.ruler", roles={IncidentRole.SUCCESSOR: ruler.id, IncidentRole.SUBJECT: community.id}, facts={"role": MortalRole.RULER})
     return ruler
 
 
@@ -501,9 +498,8 @@ async def found_settlement(
     if ruin is not None:
         if not await has_ruler(ctx, ruin.id):
             await homeland_rule(ctx, people, ruin)
-        await note(
-            ctx, f"{people.name} grew crowded; they settled the ruin of {ruin.name} and rebuilt it.", key="births.village_ruin", ids=[people.id, ruin.id]
-        )
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: people.id, IncidentRole.DESTINATION: ruin.id}
+        await record(ctx, "births.village_ruin", roles=roles, facts={"migrants": migrants}, place=ruin.id, destination=ruin.id)
         return ruin
     name = await namer.from_speaker(people.id, seed_of(people.id, ctx.epoch, "village", existing), NameKind.PLACE)
     subtype = VILLAGE_SUBTYPE if existing else HOMELAND_SUBTYPE
@@ -538,9 +534,8 @@ async def found_settlement(
     if patron is not None:
         await connect(ctx.session, settlement.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
     await bind_language_and_faith(ctx, settlement, atlas, people)
-    await note(
-        ctx, f"{people.name} grew crowded; they founded a new settlement in {region.name}.", key="births.village", ids=[people.id, settlement.id, region.id]
-    )
+    founded: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: people.id, IncidentRole.PRODUCT: settlement.id, IncidentRole.PLACE: region.id}
+    await record(ctx, "births.village", roles=founded, facts={"migrants": migrants, "settlements_before": existing}, place=region.id, destination=settlement.id)
     ctx.count("villages")
     return settlement
 
@@ -626,12 +621,8 @@ async def ethnogenesis(ctx: TickContext, atlas: RegionAtlas, settlement: EntityR
         await connect(ctx.session, people.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
     atlas.remember(people)
     await bind_language_and_faith(ctx, people, atlas, settlement)
-    await note(
-        ctx,
-        f"Descended from {ancestor.name}, {settlement.name} became a distinct people over generations.",
-        key="births.ethnogenesis",
-        ids=[settlement.id, people.id, ancestor.id],
-    )
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PRODUCT: people.id, IncidentRole.ORIGIN: settlement.id, IncidentRole.PREDECESSOR: ancestor.id}
+    await record(ctx, "births.ethnogenesis", roles=roles, facts={"population": stat_or(people, "population", 0)}, place=settlement.id)
     ctx.count("new_peoples")
     return people
 
@@ -704,12 +695,8 @@ async def uplift(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> En
         await connect(ctx.session, people.id, creator.id, BondKind.WORSHIPS, ctx.epoch, description="its creator")
     atlas.remember(people)
     await bind_language_and_faith(ctx, people, atlas)
-    await note(
-        ctx,
-        f"A branch that learned to speak arose among the {species.name}; it is now a people called {people.name}.",
-        key="births.sapience",
-        ids=[species.id, people.id],
-    )
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PRODUCT: people.id, IncidentRole.ORIGIN: species.id}
+    await record(ctx, "births.sapience", roles=roles, facts={"population": stat_or(people, "population", 0)})
     ctx.count("new_peoples")
     await record_transformation(ctx, TransformKind.UPLIFT, species.id, people.id)
     return people
@@ -753,7 +740,6 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.community_societies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.incident_participants",
     "table.incidents",
@@ -782,8 +768,8 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -812,7 +798,17 @@ def child_class(first: EntityRow, second: EntityRow) -> SocialClass | None:
     return min(classes, key=lambda item: CLASS_RANK.get(item, len(CLASS_RANK)))
 
 
-async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer | None = None, *, twin: int = 0) -> EntityRow:
+async def bear_child(
+    ctx: TickContext,
+    first: EntityRow,
+    second: EntityRow,
+    namer: Namer | None = None,
+    *,
+    twin: int = 0,
+    bearer: EntityRow | None = None,
+    attendant: int | None = None,
+    birth: Mapping[str, FactInput] | None = None,
+) -> EntityRow:
     effects = ctx.rules.world_effects
     rng = ctx.rng(seed_of("child", first.id, second.id, twin))
     deviation = effects.inheritance_deviation
@@ -826,6 +822,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, twin)) or await child_namer.person(
         [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, twin)
     )
+    sex = born_sex(ctx.rules, await system_of(ctx.session, first), rng)
     child = await open_record(
         ctx.session,
         ctx.epoch,
@@ -841,7 +838,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
                 charisma=averaged("charisma"),
                 age=0,
                 lifespan=clamp_int(lifespans / 2 + rng.integer(-deviation, deviation), effects.child_min_lifespan, ctx.rules.deep_life.lifespan_cap),
-                sex=born_sex(ctx.rules, await system_of(ctx.session, first), rng).value,
+                sex=sex.value,
                 **inherited_summaries(ctx.rules, first, second, rng),
             ),
             power=max(1, round_half_up((first.power_level + second.power_level) / 2) - 1),
@@ -868,7 +865,19 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     if patron is not None:
         await connect(ctx.session, child.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
         await birth_geas(ctx, child, patron.id)
-    await note(ctx, f"A child of {first.name} and {second.name} was born.", key="births.child", ids=[first.id, second.id, child.id])
+    mother = bearer or first
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.CHILD: child.id,
+        IncidentRole.PARENT: [first.id] if first.id == second.id else [first.id, second.id],
+        IncidentRole.HEALER: attendant,
+    }
+    facts: dict[str, FactInput] = {"sex": sex, "twin": twin, "lifespan": stat_or(child, "lifespan", 0), **(birth or {})}
+    steps = (
+        StepDraft(StepAction.GO_INTO_LABOUR, actor=mother.id),
+        StepDraft(StepAction.GIVE_BIRTH, actor=mother.id, target=child.id, outcome=StepOutcome.SUCCESS),
+        StepDraft(StepAction.NAME_CHILD, actor=first.id, target=child.id),
+    )
+    await record(ctx, "births.child", roles=roles, facts=facts, steps=steps, place=child.location_id)
     ctx.count("children")
     return child
 
@@ -927,7 +936,7 @@ def bearer_of(first: EntityRow, second: EntityRow) -> EntityRow:
     return first
 
 
-async def birth_risk(ctx: TickContext, bearer: EntityRow) -> float:
+async def birth_risk(ctx: TickContext, bearer: EntityRow) -> tuple[float, Care]:
     table = ctx.rules.fertility
     healing = await HealingWorld.load(ctx.session, ctx.rules)
     care = await healing.care_for(ctx.session, bearer)
@@ -940,7 +949,7 @@ async def birth_risk(ctx: TickContext, bearer: EntityRow) -> float:
     late = age >= start + (end - start) * table.late_age_from_pct / PERCENT
     risk = table.mortality_base_pct * max(0.0, 1 - medicine) * (table.late_age_risk_pct / PERCENT if late else 1.0)
     risk *= 1 + (PERCENT - profile.health) / PERCENT
-    return harsh_chance(ctx.rules, HarshnessScale.CHILDBIRTH_DEATH, risk)
+    return harsh_chance(ctx.rules, HarshnessScale.CHILDBIRTH_DEATH, risk), care
 
 
 async def hunger_of(ctx: TickContext, mortal: EntityRow) -> int:
@@ -954,19 +963,33 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     bearer = await bearer_among(ctx.session, first, second, rng, bearer_of(first, second))
     stillborn = table.stillbirth_pct * (table.hunger_stillbirth_pct / PERCENT if await hunger_of(ctx, bearer) >= table.hunger_from else 1.0)
     born: list[EntityRow] = []
+    risk, care = await birth_risk(ctx, bearer)
+    attendant = care.healer.mortal.id if care.healer is not None and care.healer.mortal.id not in (first.id, second.id) else None
+    lost = rng.chance(risk)
+    hunger = await hunger_of(ctx, bearer)
+    facts: dict[str, FactInput] = {
+        "stillbirth_chance": round_half_up(stillborn),
+        "death_risk": round_half_up(risk),
+        "hunger": hunger,
+        "medicine": care.tier,
+        "bearer_died": int(lost),
+    }
     if rng.chance(stillborn):
-        await note(ctx, f"The child of {first.name} and {second.name} was stillborn.", key="births.stillborn", ids=[first.id, second.id])
+        steps = [StepDraft(StepAction.GO_INTO_LABOUR, actor=bearer.id), StepDraft(StepAction.LOSE_CHILD, actor=bearer.id, outcome=StepOutcome.FAILURE)]
+        if lost:
+            steps.append(StepDraft(StepAction.DIE, actor=bearer.id, outcome=StepOutcome.KILLED))
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.PARENT: [first.id, second.id], IncidentRole.PATIENT: bearer.id, IncidentRole.HEALER: attendant}
+        await record(ctx, "births.stillborn", roles=roles, facts=facts, steps=steps, place=bearer.location_id)
         ctx.count("stillborn")
     else:
         count = table.twin_cap if rng.chance(table.twins_pct) else 1
         for twin in range(count):
-            born.append(await bear_child(ctx, first, second, namer, twin=twin))
+            born.append(await bear_child(ctx, first, second, namer, twin=twin, bearer=bearer, attendant=attendant, birth=facts))
         if count > 1:
-            await note(
-                ctx, f"{first.name} and {second.name} were blessed with twins.", key="births.twins", ids=[first.id, second.id, *(child.id for child in born)]
-            )
+            roles = {IncidentRole.PARENT: [first.id, second.id], IncidentRole.CHILD: [child.id for child in born], IncidentRole.HEALER: attendant}
+            await record(ctx, "births.twins", roles=roles, facts={"children": count, **facts}, place=bearer.location_id)
             ctx.count("twins")
-    if rng.chance(await birth_risk(ctx, bearer)):
+    if lost:
         other = second if bearer is first else first
         for child in born:
             await remember(
@@ -1009,7 +1032,6 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.bonds",
     "table.culture_values",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.house_members",
@@ -1034,7 +1056,6 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.conditions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",

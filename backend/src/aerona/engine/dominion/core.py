@@ -20,19 +20,19 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ThoughtKind
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.dominion.design import ensure_designs
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.modifiers import GROWTH_KEY, ModifierDraft, add_modifier
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 PREFIX = "dominion."
 CLERGY = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
@@ -238,7 +238,7 @@ async def rebuild_rulers(ctx: TickContext, atlas: RegionAtlas, tally: DominionTa
             god = await ctx.session.get(NodeRow, top)
             place = await ctx.session.get(EntityRow, region)
             if god is not None and place is not None:
-                await note(ctx, f"The dominion of {god.name} now rules {place.name}.", key="dominion.ruled", ids=[top, region])
+                await record(ctx, "dominion.ruled", roles={IncidentRole.SUBJECT: [god.id, place.id, top, region]})
     await ctx.session.flush()
 
 

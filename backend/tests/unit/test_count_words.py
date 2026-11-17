@@ -114,3 +114,10 @@ def test_a_name_counted_by_several_before_a_plural_verb_is_flagged() -> None:
     )
     found = checker().counts({Path("module.py"): source})
     assert [item.text for item in found] == ["{tales} were"]
+
+
+def test_a_template_count_before_a_plural_word_is_caught() -> None:
+    module = checker()
+    line = "you used {{ line.tool }} {{ line.uses }} times; {{ world_name }} cosmos; {{ line.epochs | several('age', 'ages') }}"
+    found = [(field, word) for field, word in module.TEMPLATE_COUNT.findall(line) if module.plural(word) and not module.named(field)]
+    assert found == [("line.uses", "times")]

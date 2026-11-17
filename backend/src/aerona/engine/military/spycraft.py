@@ -2,7 +2,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -22,6 +21,7 @@ from aerona.domain.enums.military import AgentStatus, SpyCover, SpyOwnerKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import TREASURY_LOCK, receive_coin
@@ -158,18 +158,18 @@ async def catch_agent(ctx: TickContext, network: SpyNetworkRow, target: EntityRo
     return mortal
 
 
-async def burn_district(ctx: TickContext, target: EntityRow) -> str:
+async def burn_district(ctx: TickContext, target: EntityRow) -> DistrictKind | None:
     district = await ctx.session.scalar(
         select(DistrictRow).where(DistrictRow.settlement_entity_id == target.id).order_by(DistrictRow.condition.desc()).limit(1)
     )
     depth = ctx.rules.espionage.arson_damage
     if district is not None:
         district.condition = clamp_int(district.condition - depth, 0, PERCENT)
-        return f"the {spoken(district.kind)} quarter burned"
+        return district.kind
     ground = await region_environment(ctx.session, target.id)
     if ground is not None:
         await scar_region(ctx.session, ctx.rules, ground, ScarKind.BURNED, depth // 2)
-    return "fires swept the town"
+    return None
 
 
 async def wound_ruler(ctx: TickContext, victim: EntityRow, owner: EntityRow) -> bool:
@@ -228,7 +228,7 @@ async def at_war(ctx: TickContext, first: int, second: int) -> bool:
     return any(row.war_id in mine and mine[row.war_id] is not row.side for row in theirs)
 
 
-async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
+async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow, network: SpyNetworkRow) -> int | None:
     realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == target.id).limit(1))
     if realm_id is None:
         return None
@@ -262,7 +262,7 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
         paid = 0 if is_held(record, "wealth") else min(record.wealth, table.blackmail_wealth, room)
         record.wealth -= paid
         shift_stat(owner, "wealth", paid)
-    return f"{owner.name} held the secrets of {holder.name}, {spoken(office.kind)} of {target.name}, and bent them to its will"
+    return holder.id
 
 
 async def migrate_bonds(ctx: TickContext) -> int:

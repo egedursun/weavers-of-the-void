@@ -5,8 +5,8 @@ from aerona.catalog.genetics import HOUSEHOLD_DECISION_LABELS
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.households.homes import dwelling_of
 from aerona.engine.households.life import HouseholdTally, apprentice, lodger, match, members_of, migrate, renovate, sell_furnishing, servants
 from aerona.prompts import MortalToolId
@@ -15,7 +15,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 RULERS = frozenset({HouseholdRole.HEAD, HouseholdRole.SPOUSE})
 
@@ -60,7 +59,12 @@ async def tend_home(call: MortalCall, args: HomeInput) -> str:
     decision = household.last_decision or HouseholdDecision.RENOVATE
     label = HOUSEHOLD_DECISION_LABELS[decision].lower()
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.HOME_TENDED, entity_ids=[call.me.id], me=call.me.name, household=household.name, deed=label)
+    await call.record(
+        "tools.mortal.home_tended",
+        roles={IncidentRole.ACTOR: call.me.id},
+        facts={"household": household.name, "decision": decision, "wealth": household.wealth},
+        place=household.settlement_node_id,
+    )
     return result(MortalResult.HOME_TENDED, household=household.name, deed=label, wealth=household.wealth)
 
 

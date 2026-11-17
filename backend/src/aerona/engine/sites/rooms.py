@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.gatherings import GUARDED_ROOMS, ITEM_ROOMS, ROOM_PLACES, ROOM_SETTLEMENTS, ROOM_STRUCTURES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
 from aerona.db.tables.made import MadeRealmRow
@@ -21,16 +21,18 @@ from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.site import RoomContentKind, SiteChallenge, SiteRoomKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
 
 CHALLENGES = (SiteChallenge.TRAP, SiteChallenge.GUARDIAN, SiteChallenge.PUZZLE, SiteChallenge.HAZARD)
@@ -188,15 +190,23 @@ async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, roo
     shift_stat(delver, "piety", ctx.rules.sites.relic_piety, 0)
 
 
-async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, _room: SiteRoomRow) -> None:
+async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, room: SiteRoomRow) -> None:
     await connect(ctx.session, delver.id, mind.id, BondKind.KNOWS, ctx.epoch, description="woke it in the depths")
     mind.location_id = delver.location_id
-    await note(ctx, f"{delver.name} found and woke {mind.name} in the depths.", key="site.mind_woken", ids=[delver.id, mind.id])
+    await record_incident(ctx, "site.mind_woken", roles={IncidentRole.ACTOR: delver.id, IncidentRole.TARGET: mind.id, IncidentRole.PLACE: room.site_entity_id})
 
 
-async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, _room: SiteRoomRow) -> None:
+async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, room: SiteRoomRow) -> None:
     await connect(ctx.session, delver.id, realm.id, BondKind.KNOWS, ctx.epoch, description="found the way into it")
-    await note(ctx, f"{delver.name} found a way into {realm.name}.", key="site.realm_gate", ids=[delver.id, realm.id])
+    await record_incident(
+        ctx,
+        "site.realm_gate",
+        roles={
+            IncidentRole.ACTOR: delver.id,
+            IncidentRole.DESTINATION: realm.id,
+            IncidentRole.PLACE: room.site_entity_id,
+        },
+    )
 
 
 FOUND: Mapping[RoomContentKind, Callable[[TickContext, EntityRow, EntityRow, SiteRoomRow], Awaitable[None]]] = {
@@ -254,10 +264,23 @@ async def delve(ctx: TickContext, delver: EntityRow, site: EntityRow, companions
     layout = await layout_of(ctx, site) if not rooms else None
     if layout is not None:
         rooms = await furnish(ctx, site, layout)
+    steps: list[StepDraft] = []
     for room in rooms:
         if room.cleared_epoch is not None:
             continue
-        if not await walk_room(ctx, delver, room, companions, walk):
+        passed = await walk_room(ctx, delver, room, companions, walk)
+        steps.append(
+            StepDraft(
+                StepAction.ENTER,
+                actor=delver.id,
+                locus_kind=StepLocus.ROOM,
+                locus_key=room.kind.value,
+                outcome=StepOutcome.SUCCESS if passed else StepOutcome.WOUNDED,
+                record_table="site_rooms",
+                record_key=str(room.id),
+            )
+        )
+        if not passed:
             break
         if "cleared_epoch" not in room.locked:
             room.cleared_epoch, room.cleared_by_entity_id = ctx.epoch, delver.id
@@ -266,12 +289,12 @@ async def delve(ctx: TickContext, delver: EntityRow, site: EntityRow, companions
         await add_renown(ctx.session, delver.id, ctx.rules.sites.delve_renown, ctx.epoch, rules=ctx.rules)
     walk.reached_heart = bool(rooms) and all(room.cleared_epoch is not None for room in rooms)
     if rooms:
-        told = "reached its heart" if walk.reached_heart else f"cleared {walk.cleared} of its {several(len(rooms), 'room', 'rooms')}"
-        await note(
+        await record_incident(
             ctx,
-            f"{delver.name} walked {site.name} room by room and {told}.",
-            key="site.delved",
-            ids=[delver.id, site.id, *walk.loot],
-            roles={delver.id: IncidentRole.ACTOR, site.id: IncidentRole.PLACE},
+            "site.delved",
+            roles={IncidentRole.ACTOR: delver.id, IncidentRole.PLACE: site.id, IncidentRole.PRODUCT: list(walk.loot)},
+            facts={"cleared": walk.cleared, "rooms": len(rooms), "heart": int(walk.reached_heart)},
+            steps=steps,
+            place=site.id,
         )
     return walk

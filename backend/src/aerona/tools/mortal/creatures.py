@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.cosmos.fauna import merge_species as merge
@@ -73,9 +74,12 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
     call.target(species.id)
     if skill >= difficulty:
         await bonds.connect(BondDraft(call.me.id, species.id, BondKind.TAMED, call.epoch, args.how))
-        await call.chronicle(ChronicleKind.DOMESTICATION, lines.TAMED, entity_ids=[call.me.id, species.id], me=call.me.name, species=species.name, how=args.how)
+        await call.record(
+            "tools.mortal.tamed", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: species.id}, facts={"how": args.how, "danger": round(danger)}
+        )
         return result(MortalResult.TAMED, name=species.name)
-    if call.rng("rage").probability(danger / tools.tame_attack_divisor):
+    attacked = call.rng("rage").probability(danger / tools.tame_attack_divisor)
+    if attacked:
         kept = (PERCENT - tools.tame_attack_loss_pct) / PERCENT
         population = stat(call.me, "population")
         if population is not None:
@@ -85,7 +89,11 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
             mauled = Harm(hp - max(1, round(hp * kept)), HarmCause.MONSTER, f"mauled by {species.name}", source_node_id=species.id, killer_id=species.id)
             await apply_hits(call.tick, call.me, mauled, lethal=False)
         await bonds.connect(BondDraft(species.id, call.me.id, BondKind.HUNTS, call.epoch, lines.ENRAGED))
-    await call.chronicle(ChronicleKind.DOMESTICATION, lines.TAME_FAILED, entity_ids=[call.me.id, species.id], me=call.me.name, species=species.name)
+    await call.record(
+        "tools.mortal.tame_failed",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: species.id},
+        facts={"danger": round(danger), "attacked": int(attacked)},
+    )
     return result(MortalResult.NOT_TAMED, name=species.name)
 
 
@@ -108,15 +116,12 @@ async def merge_species(call: MortalCall, args: MergeSpeciesInput) -> str:
     await BondRepository(call.session).connect(BondDraft(call.me.id, merged.id, BondKind.TAMED, call.epoch, lines.SELF_MADE))
     call.remember_creation(merged.id)
     call.target(merged.id)
-    traits = sorted(trait.value.replace("_", " ") for trait in await EntityRepository(call.session).traits(merged.id))
-    await call.chronicle(
-        ChronicleKind.MERGED_SPECIES,
-        lines.MERGED,
-        entity_ids=[call.me.id, merged.id],
-        me=call.me.name,
-        first=first.name,
-        second=second.name,
-        merged=merged.name,
+    held_traits = sorted(await EntityRepository(call.session).traits(merged.id))
+    traits = [trait.value.replace("_", " ") for trait in held_traits]
+    await call.record(
+        "tools.mortal.species_merged",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.PARENT: [first.id, second.id], IncidentRole.PRODUCT: merged.id},
+        facts={"traits": held_traits},
     )
     return result(MortalResult.SPECIES_MERGED, id=merged.id, name=merged.name, traits=TRAIT_SEPARATOR.join(traits) or NO_TRAITS)
 
@@ -135,7 +140,7 @@ async def bind_spirit(call: MortalCall, args: BindSpiritInput) -> str:
     for thing in (spirit, target):
         if thing.world_id != call.me.world_id or not await near(call, thing):
             fail(MortalResult.BIND_TOO_FAR, name=thing.name)
-    bound = await soul_bind(call.tick, spirit.id, target.id, call.me.name, call.me.id)
+    bound = await soul_bind(call.tick, spirit.id, target.id, call.me.id)
     animated = bound.id if bound.id != target.id else None
     if animated is not None:
         call.remember_creation(animated)
@@ -179,27 +184,25 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
         knowledge = call.rng("relic").pick(lost)
         await teach(call.tick, call.me.id, knowledge, lines.RUIN_FOUND.format(ruin=ruin.name))
         await EntityRepository(call.session).remove_flag(knowledge.id, EntityFlag.LOST)
-        await call.chronicle(
-            ChronicleKind.EXPLORATION,
-            lines.RUIN_KNOWLEDGE,
-            entity_ids=[call.me.id, ruin.id, knowledge.id],
-            me=call.me.name,
-            knowledge=knowledge.name,
-            ruin=ruin.name,
+        await call.record(
+            "tools.mortal.ruin_knowledge", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: ruin.id, IncidentRole.PRODUCT: knowledge.id}
         )
         return result(MortalResult.RUIN_KNOWLEDGE, knowledge=knowledge.name, ruin=ruin.name)
     if reason >= tools.relic_item_threshold and items:
         item = items[0]
         await BondRepository(call.session).connect(BondDraft(call.me.id, item.id, BondKind.OWNS, call.epoch, lines.RUIN_FOUND.format(ruin=ruin.name)))
-        await call.chronicle(
-            ChronicleKind.EXPLORATION, lines.RUIN_ITEM, entity_ids=[call.me.id, ruin.id, item.id], me=call.me.name, item=item.name, ruin=ruin.name
+        await call.record(
+            "tools.mortal.ruin_item",
+            roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: ruin.id, IncidentRole.PRODUCT: item.id},
+            facts={"reason": reason},
+            place=ruin.id,
         )
         return result(MortalResult.RUIN_ITEM, item=item.name, ruin=ruin.name)
     if reason < tools.relic_curse_threshold:
         await EntityRepository(call.session).add_flag(call.me.id, EntityFlag.CURSED, call.epoch)
-        await call.chronicle(ChronicleKind.EXPLORATION, lines.RUIN_CURSE, entity_ids=[call.me.id, ruin.id], me=call.me.name, ruin=ruin.name)
+        await call.record("tools.mortal.ruin_curse", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: ruin.id}, kind=ChronicleKind.EXPLORATION)
         return result(MortalResult.RUIN_CURSE, ruin=ruin.name)
-    await call.chronicle(ChronicleKind.EXPLORATION, lines.RUIN_NOTHING, entity_ids=[call.me.id, ruin.id], me=call.me.name, ruin=ruin.name)
+    await call.record("tools.mortal.ruin_nothing", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: ruin.id}, facts={"reason": reason}, place=ruin.id)
     return result(MortalResult.RUIN_NOTHING, ruin=ruin.name)
 
 
@@ -215,7 +218,7 @@ async def keep_pet(call: MortalCall, args: KeepPetInput) -> str:
         fail(MortalResult.PET_NONE)
     pet = await take_pet(call.tick, call.me, chosen)
     call.target(pet.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.PET_TAKEN, entity_ids=[call.me.id, pet.id], me=call.me.name, name=pet.name)
+    await call.record("tools.mortal.pet_taken", roles={IncidentRole.OWNER: call.me.id, IncidentRole.SUBJECT: pet.id, IncidentRole.ORIGIN: chosen.id})
     return result(MortalResult.PET_TAKEN, id=pet.id, name=pet.name)
 
 
@@ -235,8 +238,10 @@ async def train_herd(call: MortalCall, args: TrainHerdInput) -> str:
     kind = await session.get(EntityRow, args.species_id)
     name = kind.name if kind is not None else f"#{args.species_id}"
     call.target(args.species_id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.HERD_TRAINED, entity_ids=[call.me.id, args.species_id], me=call.me.name, name=name, training=args.training.value
+    await call.record(
+        "tools.mortal.herd_trained",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: args.species_id},
+        facts={"training": args.training, "gained": gained, "trained": herd.trained, "head": herd.head},
     )
     return result(MortalResult.HERD_TRAINED, id=args.species_id, name=name, training=args.training.value, gained=gained, trained=herd.trained, head=herd.head)
 

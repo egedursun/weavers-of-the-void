@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from aerona.catalog import god_lines
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import build_rarity_table
 from aerona.catalog.stats import max_essence, max_hp
@@ -8,9 +7,11 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import Stat
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.context import TickContext
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 
@@ -91,15 +92,13 @@ async def grant_progress(ctx: TickContext, son: SonRow, *, xp: int, fame: int) -
         first, second = rng.pick(stats), rng.pick(stats)
         setattr(son, first.value, clamp_stat(son.stat(first) + gains[0]))
         setattr(son, second.value, clamp_stat(son.stat(second) + gains[1]))
-        line = god_lines.SON_LEVEL_UP
-        await ctx.chronicle(ChronicleKind.SYSTEM, line.render(son=son.name, level=son.level), template_key=line.key, son_id=son.id)
+        await record(ctx, "sons.level_up", roles={IncidentRole.ACTOR: son.id}, facts={"level": son.level}, kind=ChronicleKind.SYSTEM, son_id=son.id)
         awakened: str | None = None
         for slot, level in enumerate(unlocks):
             power = powers.get(slot)
             if level == son.level and power is not None:
                 awakened = power.name or POWERS[power.effect].name
-                awoke = god_lines.SON_POWER_AWOKE
-                await ctx.chronicle(ChronicleKind.SYSTEM, awoke.render(son=son.name, power=awakened), template_key=awoke.key, son_id=son.id)
+                await record(ctx, "sons.power_awoke", roles={IncidentRole.ACTOR: son.id}, facts={"power": awakened}, kind=ChronicleKind.SYSTEM, son_id=son.id)
         level_ups.append(LevelUp(son.level, first, second, gains[0], gains[1], awakened))
     clamp_son(rules, son)
     await ctx.session.flush()

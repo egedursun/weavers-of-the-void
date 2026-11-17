@@ -29,7 +29,7 @@ class ApocalypseRules:
     gamma_burst: int = rule(3, 0, 50, RuleGroup.APOCALYPSE, "Each gamma-ray burst of the epoch advances the clock")
     leak_wound: int = rule(1, 0, 50, RuleGroup.APOCALYPSE, "Each leak wound advances the clock")
     variant_share_pct: int = rule(40, 0, 100, RuleGroup.APOCALYPSE, "Share of the clock one cause must hold to shape the end (%)")
-    twilight_fade_mult: int = rule(2, 1, 10, RuleGroup.APOCALYPSE, "Times faster sons fade in a twilight of the gods")
+    twilight_fade_mult: int = rule(2, 1, 10, RuleGroup.APOCALYPSE, "Times faster sons fade at the end of the gods")
     descent_beings: int = rule(1, 0, 10, RuleGroup.APOCALYPSE, "Outer beings that descend on the leakiest world in an outer descent")
     collapse_veil: int = rule(30, 0, 100, RuleGroup.APOCALYPSE, "Veil every dimension loses in a dimensional collapse")
     galactic_death_dimming: int = rule(20, 0, 100, RuleGroup.APOCALYPSE, "Brightness every star of the most dimmed galaxy loses in a galactic death")

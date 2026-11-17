@@ -18,6 +18,8 @@ def guard() -> ModuleType:
 
 def test_a_raw_enum_key_in_model_text_is_found_and_a_spoken_one_passes() -> None:
     checker = guard()
-    assert checker.raw_values('f"your town grew {profile.morphology.value}; the sign {row.kind.value}"') == ["profile.morphology", "row.kind"]
+    assert checker.raw_values('f"your town grew {profile.morphology.value}; the sign {row.kind.value}"') == [(1, "profile.morphology"), (1, "row.kind")]
     assert checker.raw_values('f"your town grew {spoken(profile.morphology)}"') == []
+    assert checker.raw_values('f"tools.mortal.demand_{args.demand.value}"') == []
+    assert checker.raw_values('f"{fact.key}: {fact.value!s}"') == []
     assert spoken(CreatorSignKind.COVENANT_OFFER) == "covenant offer"

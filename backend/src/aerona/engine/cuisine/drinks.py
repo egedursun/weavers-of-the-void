@@ -14,13 +14,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kinds import DrinkCategory, DrinkRole, GoodLegality, KindConcept, KindSpread, KindStance
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 CARRIED = frozenset({KindStance.MAKES, KindStance.USES, KindStance.FAVOURS})
@@ -166,7 +168,13 @@ async def first_drink(ctx: TickContext, people: EntityRow, tally: DrinkTally) ->
         if sum([await holding(ctx.session, home, good) for home in sorted(homes)]) > 0:
             drink = await found_drink(ctx, people, category)
             tally.founded += 1
-            await note(ctx, f"The {people.name} came to drink {drink.name}.", key="drink.founded", ids=[people.id])
+            await record(
+                ctx,
+                "drink.founded",
+                roles={IncidentRole.MAKER: people.id},
+                facts={"drink": drink.name, "category": category, "good": good},
+                steps=(StepDraft(StepAction.PREPARE, actor=people.id),),
+            )
             return
 
 
@@ -180,7 +188,13 @@ async def derive_drinks(ctx: TickContext, people: EntityRow, tally: DrinkTally) 
             continue
         made = await found_drink(ctx, people, drink.category, parent=drink)
         tally.derived += 1
-        await note(ctx, f"The {people.name} made {made.name} of their own from {drink.name}.", key="drink.derived", ids=[people.id])
+        await record(
+            ctx,
+            "drink.derived",
+            roles={IncidentRole.MAKER: people.id, IncidentRole.ORIGIN: drink.origin_node_id},
+            facts={"drink": made.name, "from": drink.name, "category": drink.category},
+            steps=(StepDraft(StepAction.COPY, actor=people.id),),
+        )
 
 
 async def drink_in(ctx: TickContext, people: EntityRow, tally: DrinkTally) -> None:

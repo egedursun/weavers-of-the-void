@@ -18,7 +18,9 @@ HISTORY_MAX = 1000
 
 
 @router.get("/cosmos/epoch-star", response_model=EpochStarView)
-async def read_epoch_star(services: ServicesDep, limit: int = Query(default=HISTORY_DEFAULT, ge=1, le=HISTORY_MAX)) -> EpochStarView:
+async def read_epoch_star(
+    services: ServicesDep, limit: int = Query(default=HISTORY_DEFAULT, ge=1, le=HISTORY_MAX), offset: int = Query(default=0, ge=0)
+) -> EpochStarView:
     async with reader(services) as session:
         worlds = list(await session.scalars(select(WorldRow).order_by(WorldRow.id)))
         current: list[EpochStarWorld] = []
@@ -26,7 +28,9 @@ async def read_epoch_star(services: ServicesDep, limit: int = Query(default=HIST
             body = await session.get(EntityRow, world.epoch_star_entity_id) if world.epoch_star_entity_id is not None else None
             current.append(EpochStarWorld(world_id=world.id, world_name=world.name, star=EntitySummary.model_validate(body) if body is not None else None))
         lines = list(
-            await session.scalars(select(ChronicleRow).where(ChronicleRow.template_key == EPOCH_BEGAN_KEY).order_by(ChronicleRow.epoch.desc()).limit(limit))
+            await session.scalars(
+                select(ChronicleRow).where(ChronicleRow.template_key == EPOCH_BEGAN_KEY).order_by(ChronicleRow.epoch.desc()).offset(offset).limit(limit)
+            )
         )
         history: list[EpochStarEntry] = []
         for line in lines:

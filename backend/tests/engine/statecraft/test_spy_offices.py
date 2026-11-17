@@ -88,8 +88,9 @@ async def test_a_blackmailed_envoy_speaks_for_the_spy(realm: Realm) -> None:
     spy, _ = await crown(realm, "Iron Crown")
     await office(realm, victim, OfficeKind.AMBASSADOR, "Ambassador")
     before = await relation(realm.session, ctx.rules, core.id, spy.id)
-    text = await blackmail_office(ctx, spy, core, await network(realm, spy, core))
-    assert text is not None and "Ambassador" in text
+    holder_id = await blackmail_office(ctx, spy, core, await network(realm, spy, core))
+    held = await realm.session.scalar(select(OfficeRow).where(OfficeRow.holder_entity_id == holder_id, OfficeRow.kind == OfficeKind.AMBASSADOR))
+    assert holder_id is not None and held is not None
     assert await relation(realm.session, ctx.rules, core.id, spy.id) > before
 
 

@@ -16,6 +16,7 @@ from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.living import LineTrait, Metabolism
 from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot
 from aerona.domain.enums.minds import MindUpkeep
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.models.entity_stats import ItemStats, StructureStats
@@ -26,10 +27,10 @@ from aerona.engine.living.kin import line_of
 from aerona.engine.living.production import LIVING_METHODS
 from aerona.engine.military.orders import create_vessel
 from aerona.engine.military.shipyard import Commission
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 from aerona.engine.structures.profiles import ensure_profile
 
 GROWN_POWER = 1
@@ -120,7 +121,7 @@ async def grow_organ(ctx: TickContext, bearer: EntityRow, slot: AugmentSlot, kin
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{bearer.name} was given a part grown for its body.", key="living.organ_grown", ids=[bearer.id])
+    await record(ctx, "living.organ_grown", roles={IncidentRole.PATIENT: bearer.id, IncidentRole.MAKER: grower_id}, facts={"integration": row.integration})
     return row
 
 
@@ -159,7 +160,7 @@ async def raise_sapience(ctx: TickContext, line: LivingLineRow, strength: int) -
     if "strength" not in found.locked:
         found.strength = clamp_percent(max(found.strength, strength))
     await ctx.session.flush()
-    await note(ctx, f"The line {line.name} was shaped toward thought.", key="living.sapience_shaped", ids=[])
+    await record(ctx, "living.sapience_shaped", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "strength": found.strength})
     return found
 
 
@@ -172,5 +173,5 @@ async def license_line(ctx: TickContext, line: LivingLineRow, licensee: EntityRo
     await give_coin(ctx.session, ctx.rules, owner, fee)
     line.licensed = True
     await connect(ctx.session, licensee.id, owner.id, BondKind.TRADES_WITH, ctx.epoch, description=f"licensed the line {line.name}")
-    await note(ctx, f"{licensee.name} took a licence to grow {line.name}.", key="living.licensed", ids=[licensee.id, owner.id])
+    await record(ctx, "living.licensed", roles={IncidentRole.BUYER: licensee.id, IncidentRole.SELLER: owner.id}, facts={"line": line.name, "fee": fee})
     return line

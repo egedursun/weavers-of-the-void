@@ -7,17 +7,18 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import first_faith_god, living_patron, patron_node, worship_creator, worships_anyone
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import active_bonds, add_flag, connect, living_entity, living_son, spoken_language
 from aerona.engine.primitives.records import MINIMUM_POWER_LEVEL, RecordSpec, open_record
+from aerona.engine.recording.record import StepDraft, record
 from aerona.language.lexicon import LexiconEntry, admissible_entries
 from aerona.language.primitive import primitive_language_name, primitive_words
 from aerona.language.succession import SpokenNearby, nearest_language
@@ -126,12 +127,10 @@ async def bind_first_language(ctx: TickContext, entity: EntityRow, atlas: Region
         return language, False
     language = await primitive_language(ctx, entity)
     await connect(ctx.session, entity.id, language.id, BondKind.SPEAKS, ctx.epoch, description="first sounds")
-    await note(
+    await record(
         ctx,
-        f"{entity.name} began to speak its own primitive tongue.",
-        key="settling.primitive_language",
-        ids=[entity.id, language.id],
-        kind=ChronicleKind.LANGUAGE,
+        "settling.primitive_language",
+        roles={IncidentRole.ACTOR: entity.id, IncidentRole.PRODUCT: language.id},
     )
     return language, True
 
@@ -150,15 +149,19 @@ async def bind_first_faith(ctx: TickContext, entity: EntityRow, atlas: RegionAtl
         await connect(ctx.session, entity.id, god.id, BondKind.WORSHIPS, ctx.epoch, description="first faith")
         return FaithBinding(god.id, seeking=False)
     if rng.chance(ctx.rules.deep_world.new_people_worship_creator_chance) and await worship_creator(ctx.session, entity, ctx.epoch, "first faith"):
-        await note(ctx, f"{entity.name} began praying directly to the creator.", key="settling.creator_faith", ids=[entity.id], kind=ChronicleKind.WORSHIP)
+        await record(
+            ctx,
+            "settling.creator_faith",
+            roles={IncidentRole.ACTOR: entity.id, IncidentRole.TARGET: await patron_node(ctx.session, entity)},
+            steps=(StepDraft(StepAction.PRAY, actor=entity.id),),
+        )
         return FaithBinding(await patron_node(ctx.session, entity), seeking=False)
     await add_flag(ctx.session, entity.id, EntityFlag.SEEKING_GOD, ctx.epoch)
-    await note(
+    await record(
         ctx,
-        f"{entity.name} is seeking a god; they wait for someone to hear their prayers.",
-        key="settling.seeking_god",
-        ids=[entity.id],
-        kind=ChronicleKind.WORSHIP,
+        "settling.seeking_god",
+        roles={IncidentRole.ACTOR: entity.id},
+        steps=(StepDraft(StepAction.PRAY, actor=entity.id, outcome=StepOutcome.NO_EFFECT),),
     )
     return FaithBinding(None, seeking=True)
 

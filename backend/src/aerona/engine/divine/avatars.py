@@ -9,15 +9,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, god_of
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import manifestation_broken
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import change_religion
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import record
 
 
 async def avatars_of(ctx: TickContext, god_id: int) -> list[AvatarRow]:
@@ -63,11 +64,11 @@ async def manifest(ctx: TickContext, god: God, place: EntityRow) -> EntityRow:
     )
     ctx.session.add(AvatarRow(avatar_entity_id=avatar.id, god_node_id=god.id, world_id=place.world_id, since_epoch=ctx.epoch, deeds=0, locked=[]))
     await ctx.session.flush()
-    await note(
+    await record(
         ctx,
-        f"{god.name} took a mortal form and walks among {place.name}.",
-        key="divine.avatar_manifest",
-        ids=[avatar.id, place.id],
+        "divine.avatar_manifest",
+        roles={IncidentRole.SUBJECT: [place.id, avatar.id]},
+        facts={"god": str(god.name)},
         son_id=god.id if isinstance(god, SonRow) else None,
     )
     return avatar
@@ -90,7 +91,7 @@ async def walk(ctx: TickContext, row: AvatarRow, avatar: EntityRow, god: God) ->
         return False
     if not await change_religion(ctx.session, place, god.id, ctx.epoch, f"won over by {avatar.name}"):
         return False
-    await note(ctx, f"{avatar.name} won {place.name} over to {god.name}.", key="divine.avatar_converts", ids=[avatar.id, place.id])
+    await record(ctx, "divine.avatar_converts", roles={IncidentRole.ACTOR: avatar.id, IncidentRole.SUBJECT: place.id}, facts={"god": str(god.name)})
     return True
 
 

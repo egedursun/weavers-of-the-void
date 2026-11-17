@@ -9,8 +9,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.primitives.queries import spoken_language
 from aerona.prompts import MortalToolId
@@ -88,9 +88,7 @@ async def found_language(call: MortalCall, args: FoundLanguageInput) -> str:
         await bonds.deactivate(bond, call.epoch, language.name)
     await bonds.connect(BondDraft(call.me.id, language.id, BondKind.SPEAKS, call.epoch))
     added = await add_words(call.session, language, args.words[: tools.coin_word_max_words], actor=(ActorKind.MORTAL, call.me.id), epoch=call.epoch)
-    await call.chronicle(
-        ChronicleKind.LANGUAGE, lines.LANGUAGE_BORN, entity_ids=[call.me.id, language.id], me=call.me.name, name=language.name, words=WORD_SEPARATOR.join(added)
-    )
+    await call.record("tools.mortal.language_born", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: language.id}, facts={"words": list(added)})
     await call.bump(TurnCounter.LANGUAGES_FOUNDED)
     return result(MortalResult.LANGUAGE_BORN, id=language.id, name=language.name)
 
@@ -110,7 +108,7 @@ async def coin_words(call: MortalCall, args: CoinWordsInput) -> str:
     if not added:
         return result(MortalResult.NO_NEW_WORDS)
     joined = WORD_SEPARATOR.join(added)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.WORDS, entity_ids=[call.me.id, language.id], me=call.me.name, language=language.name, words=joined)
+    await call.record("tools.mortal.words", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: language.id}, facts={"words": list(added)})
     return result(MortalResult.WORDS_ADDED, words=joined)
 
 

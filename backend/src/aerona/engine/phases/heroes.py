@@ -14,8 +14,8 @@ from aerona.db.tables.warfare import HeroQuestRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.quests import QuestAim
 from aerona.domain.enums.war import HeroQuestStatus
@@ -25,11 +25,10 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
-from aerona.engine.notes import note
 from aerona.engine.operations.expeditions import quest_expedition
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter
-from aerona.engine.phases.society_support.quest_claims import CLAIMS, Claim, reward_hero
+from aerona.engine.phases.society_support.quest_claims import CLAIMS, Claim, ClaimFacts, reward_hero
 from aerona.engine.phases.society_support.quests import QuestOption, QuestWorld, open_threads, quest_options
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
@@ -39,6 +38,7 @@ from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity, 
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import blood_feud_pairs
 from aerona.engine.services.sides import SideIndex, held_captives
@@ -120,7 +120,8 @@ async def start_quest(ctx: TickContext, hero: EntityRow, option: QuestOption) ->
     )
     ctx.session.add(quest)
     await ctx.session.flush()
-    await note(ctx, f"{hero.name} set out {option.description}.", key="heroes.quest_start", ids=[hero.id, option.target_id], kind=ChronicleKind.ADVENTURE)
+    facts: dict[str, FactInput] = {"aim": option.aim, "target_kind": option.target_kind, "obstacle": option.obstacle, "reward": option.reward}
+    await record(ctx, "heroes.quest_start", roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: option.target_id}, facts=facts)
     return quest
 
 
@@ -163,11 +164,11 @@ async def _reward(ctx: TickContext, hero: EntityRow, faith: FaithIndex) -> None:
         patron.fame += settings.quest_god_renown
 
 
-async def _claim_prize(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, target: EntityRow, world: HeroWorld) -> str:
+async def _claim_prize(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, target: EntityRow, world: HeroWorld) -> tuple[int, ClaimFacts]:
     side_id = world.quests.sides.side_of(hero) or hero.id
     side = await ctx.session.get(EntityRow, side_id) or hero
     await reward_hero(ctx, hero, quest.reward, quest.scale)
-    return await CLAIMS[quest.aim](ctx, Claim(hero, quest, target, side))
+    return side.id, await CLAIMS[quest.aim](ctx, Claim(hero, quest, target, side))
 
 
 async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, *, beaten: bool = False) -> None:
@@ -177,17 +178,18 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, 
         await close_quest(ctx, quest, HeroQuestStatus.DIED)
         await fatal_injury(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"))
         await death_path(ctx, hero, f"died on the road {quest.description}", manner=DeathCause.HARDSHIP)
-        text, key = f"{hero.name} gave their life on the road {quest.description}.", "heroes.quest_death"
+        key = "heroes.quest_death"
     elif beaten:
         await close_quest(ctx, quest, HeroQuestStatus.FAILED)
-        text, key = f"{hero.name} reached the end of the road {quest.description} and was beaten back.", "heroes.quest_failed"
+        key = "heroes.quest_failed"
     elif ctx.epoch - quest.started_epoch >= settings.quest_abandon_epochs:
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
-        text, key = f"{hero.name} searched for years but came back empty-handed from the quest {quest.description}.", "heroes.quest_abandoned"
+        key = "heroes.quest_abandoned"
     else:
         await apply_hits(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"), lethal=False)
         return
-    await note(ctx, text, key=key, ids=[hero.id], kind=ChronicleKind.ADVENTURE)
+    facts: dict[str, FactInput] = {"aim": quest.aim, "obstacle": quest.obstacle, "epochs": ctx.epoch - quest.started_epoch}
+    await record(ctx, key, roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: quest.target_node_id}, facts=facts)
 
 
 async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, world: HeroWorld, forced: bool | None = None) -> HeroQuestStatus:
@@ -214,10 +216,15 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
         return quest.status
     await close_quest(ctx, quest, HeroQuestStatus.SUCCEEDED)
     await _reward(ctx, hero, world.faith)
-    text = await _claim_prize(ctx, hero, quest, target, world)
-    if companions:
-        text = f"{text} {', '.join(companion.name for companion in companions)} were at their side."
-    await note(ctx, text, key=f"heroes.quest_{quest.aim.value}", ids=[hero.id, target.id, *[item.id for item in companions]], kind=ChronicleKind.ADVENTURE)
+    side_id, gained = await _claim_prize(ctx, hero, quest, target, world)
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.ACTOR: hero.id,
+        IncidentRole.TARGET: target.id,
+        IncidentRole.BENEFICIARY: side_id,
+        IncidentRole.ALLY: [item.id for item in companions],
+    }
+    facts: dict[str, FactInput] = {"aim": quest.aim, "reward": quest.reward, "scale": quest.scale, "chance": round(chance * 100), **gained}
+    await record(ctx, f"heroes.quest_{quest.aim.value}", roles=roles, facts=facts)
     return quest.status
 
 
@@ -262,13 +269,7 @@ async def _companion_round(ctx: TickContext, world: HeroWorld, counters: HeroCou
                 continue
             bonds.add(await BondRepository(ctx.session).connect(BondDraft(first.id, second.id, BondKind.COMPANION, ctx.epoch, "fellowship of the road")))
             counters.companions += 1
-            await note(
-                ctx,
-                f"{first.name} and {second.name} became companions of the road.",
-                key="heroes.companions",
-                ids=[first.id, second.id],
-                kind=ChronicleKind.ADVENTURE,
-            )
+            await record(ctx, "heroes.companions", roles={IncidentRole.ACTOR: first.id, IncidentRole.ALLY: second.id})
 
 
 def apprentice_stats(ctx: TickContext, master: EntityRow) -> MortalStats:
@@ -337,14 +338,12 @@ async def train_apprentice(ctx: TickContext, master: EntityRow, world: HeroWorld
     if language is not None:
         await bonds.connect(BondDraft(apprentice.id, language.id, BondKind.SPEAKS, ctx.epoch, "the master's tongue"))
     weapon = await _bequeath_weapon(ctx, master, apprentice)
-    entrusted = f" and entrusted {weapon.name} to them" if weapon is not None else ""
-    await note(
-        ctx,
-        f"{master.name} began training an apprentice{entrusted}.",
-        key="heroes.apprentice",
-        ids=[master.id, apprentice.id, *([weapon.id] if weapon else [])],
-        kind=ChronicleKind.LINEAGE,
-    )
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.TEACHER: master.id,
+        IncidentRole.LEARNER: apprentice.id,
+        IncidentRole.INSTRUMENT: weapon.id if weapon is not None else None,
+    }
+    await record(ctx, "heroes.apprentice_armed" if weapon is not None else "heroes.apprentice", roles=roles, facts={"age": stat_or(master, "age", 0)})
     return apprentice
 
 
@@ -400,6 +399,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.cosmos",
     "table.creator",
     "table.creature_anatomy",
+    "table.creature_attacks",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",
@@ -409,7 +409,6 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.expedition_members",
     "table.feuds",
     "table.geasa",
@@ -419,6 +418,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.holder_levels",
     "table.house_members",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
@@ -456,6 +456,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.transform_prospects",
     "table.world_domain_hooks",
     "table.world_maps",
+    "table.world_seasons",
 )
 @writes(
     "knowledge.spread",
@@ -470,13 +471,14 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.expedition_logs",
     "table.expedition_members",
     "table.expeditions",
     "table.griefs",
     "table.hero_quests",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.language_profiles",
@@ -525,7 +527,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
             name=name or f"{community.name} Hero",
             entity_type=EntityType.MORTAL,
             stats=hero_stats(ctx, community),
-            body=f"From among {community.name}, a hero arose in answer to the troubles of the age.",
+            body=f"From among {community.name}, a hero arose.",
             power=ctx.rules.heroes.birth_power,
             world_id=community.world_id,
             location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
@@ -544,8 +546,8 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     language = await spoken_language(ctx.session, community.id)
     if language is not None:
         await bonds.connect(BondDraft(hero.id, language.id, BondKind.SPEAKS, ctx.epoch, "mother tongue"))
-    await note(
-        ctx, f"A new hero was born among {community.name}.", key="heroes.birth", ids=[community.id, hero.id], feed=FeedCategory.LIFE, kind=ChronicleKind.BIRTH
+    await record(
+        ctx, "heroes.birth", roles={IncidentRole.CHILD: hero.id, IncidentRole.ORIGIN: community.id}, facts={"power": hero.power_level}, place=hero.location_id
     )
     return hero
 
@@ -556,7 +558,6 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.bonds",
     "table.creator",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -572,7 +573,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -647,7 +648,7 @@ async def recall_hero(ctx: TickContext, hero_id: int) -> HeroQuestRow:
     if quest is None:
         raise ValidationFailedError(f"{hero.name} is not on a quest.")
     await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
-    await note(ctx, f"{hero.name} was called back from the quest {quest.description}.", key="heroes.recalled", ids=[hero.id], kind=ChronicleKind.ADVENTURE)
+    await record(ctx, "heroes.recalled", roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: quest.target_node_id}, facts={"aim": quest.aim})
     return quest
 
 

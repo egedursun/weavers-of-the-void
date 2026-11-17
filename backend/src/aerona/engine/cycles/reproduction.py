@@ -9,14 +9,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.breeding import caste_for
 from aerona.engine.mortal.profile import ensure_profile
-from aerona.engine.notes import note
 from aerona.engine.phases.births import bear_child
 from aerona.engine.primitives.folk import folk_among
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 FLIPPED = {Sex.FEMALE.value: Sex.MALE.value, Sex.MALE.value: Sex.FEMALE.value}
 
@@ -55,7 +57,12 @@ async def change_sex(ctx: TickContext, mortal: EntityRow, row: PeopleReproductio
         return
     mortal.stats = mortal.stats.model_copy(update={"sex": FLIPPED[mortal.stats.sex]})
     tally.changed += 1
-    await note(ctx, f"{mortal.name} came of the age when their people change, and took the other sex.", key="reproduction.changed", ids=[mortal.id])
+    await record(
+        ctx,
+        "reproduction.changed",
+        roles={IncidentRole.SUBJECT: mortal.id},
+        facts={"age": age, "sex": Sex(mortal.stats.sex or Sex.OTHER.value), "change_age": row.change_age},
+    )
 
 
 async def keep_castes(ctx: TickContext, mortal: EntityRow, row: PeopleReproductionRow, tally: ReproductionTally) -> None:
@@ -74,7 +81,7 @@ async def bud(ctx: TickContext, mortal: EntityRow, tally: ReproductionTally) -> 
         return
     child = await bear_child(ctx, mortal, mortal)
     tally.budded += 1
-    await note(ctx, f"{mortal.name} budded and {child.name} grew from them.", key="reproduction.budded", ids=[mortal.id, child.id])
+    await record(ctx, "reproduction.budded", roles={IncidentRole.PARENT: mortal.id, IncidentRole.CHILD: child.id}, facts={"chance": round_half_up(chance)})
 
 
 async def keep_reproduction(ctx: TickContext, tally: ReproductionTally) -> None:

@@ -24,18 +24,19 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, SpeciesSpec, add_plant_profile, cycle_of, plant_products, profile_of
 from aerona.engine.environment.weather import Weather
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 PEST_TRAITS = frozenset({CreatureTrait.CROP_PEST})
@@ -238,9 +239,13 @@ async def gather_wild(ctx: TickContext, book: CropBook, atlas: RegionAtlas) -> d
             if all(row.plant_entity_id != plant_id for row in book.crops.get(region, [])):
                 add_crop(ctx, book, region, plant_id)
             counts["plants_sown"] += 1
-            species = await ctx.session.get(EntityRow, plant_id)
-            if species is not None:
-                await note(ctx, f"The farmers of {farmers[0].name} began to sow {species.name}.", key="flora.sown", ids=[farmers[0].id, plant_id])
+            await record(
+                ctx,
+                "flora.sown",
+                roles={IncidentRole.ACTOR: farmers[0].id, IncidentRole.SUBJECT: plant_id, IncidentRole.PLACE: region},
+                facts={"agriculture": await agriculture_level(ctx.session, [item.id for item in farmers])},
+                place=region,
+            )
             break
     return counts
 
@@ -387,7 +392,18 @@ async def breed_cultivars(ctx: TickContext, book: CropBook, atlas: RegionAtlas) 
             child = await breed_cultivar(ctx, book, row, farmers[0])
             if child is not None:
                 bred += 1
-                await note(ctx, f"The farmers of {farmers[0].name} bred a new cultivar, {child.name}.", key="flora.cultivar", ids=[farmers[0].id, child.id])
+                await record(
+                    ctx,
+                    "flora.cultivar",
+                    roles={
+                        IncidentRole.ACTOR: farmers[0].id,
+                        IncidentRole.SUBJECT: row.plant_entity_id,
+                        IncidentRole.PRODUCT: child.id,
+                        IncidentRole.PLACE: region_id,
+                    },
+                    facts={"skill": await master_farmer(ctx.session, [item.id for item in farmers])},
+                    place=region_id,
+                )
     return bred
 
 

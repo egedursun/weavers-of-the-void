@@ -11,12 +11,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.living import LineTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import add_flag, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 
 PEOPLE_POWER = 8
 RISEN_SHARE = 10
@@ -42,7 +43,12 @@ async def rise(ctx: TickContext, line: LivingLineRow, species: EntityRow) -> Ent
         await connect(ctx.session, line.maker_node_id, people.id, BondKind.PRODUCED, ctx.epoch, description="raised this people to thought")
     await add_flag(ctx.session, species.id, EntityFlag.SPECIES_BECAME_PEOPLE, ctx.epoch)
     await add_flag(ctx.session, people.id, EntityFlag.DESIGNED_PEOPLE, ctx.epoch)
-    await note(ctx, f"{species.name} rose to thought by design and became a people.", key="living.sapience", ids=[people.id, species.id])
+    await record(
+        ctx,
+        "living.sapience",
+        roles={IncidentRole.PRODUCT: people.id, IncidentRole.ORIGIN: species.id, IncidentRole.MAKER: line.maker_node_id},
+        facts={"line": line.name},
+    )
     return people
 
 
@@ -100,7 +106,12 @@ async def clone_peoples(ctx: TickContext) -> int:
         await add_flag(ctx.session, people.id, EntityFlag.DESIGNED_PEOPLE, ctx.epoch)
         for clone in free:
             await connect(ctx.session, clone, people.id, BondKind.MEMBER_OF, ctx.epoch, description="one of the clone folk")
-        await note(ctx, f"The clones of {source.name} became a people.", key="living.clone_people", ids=[people.id, source_id])
+        await record(
+            ctx,
+            "living.clone_people",
+            roles={IncidentRole.PRODUCT: people.id, IncidentRole.ORIGIN: source_id, IncidentRole.MEMBER: list(free)},
+            facts={"clones": len(free)},
+        )
         formed += 1
     return formed
 

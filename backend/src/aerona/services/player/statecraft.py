@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
@@ -9,7 +10,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.engine.polity.book import RealmBook
-from aerona.engine.polity.crises import DEMAND_TEXT, CrisisTally, Verdict
+from aerona.engine.polity.crises import CrisisTally, Verdict
 from aerona.engine.polity.crisis_outcomes import settle
 from aerona.engine.primitives.manual import manual_context
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action

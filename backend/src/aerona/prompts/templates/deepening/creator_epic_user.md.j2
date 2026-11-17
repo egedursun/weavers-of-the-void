@@ -40,4 +40,4 @@ HOW THE PEOPLES TELL OF THE GOD:
 {% include "shared/_epic_rule.md.j2" %}
 Write the creator god's epic in sections, from its beginning to today.{% if listed_ages %}
 
-THE PREVIOUS WRITING came out as a list of records (it counted the age numbers {{ listed_ages }} times). Write the same events again as scenes, without counting the ages.{% endif %}
+THE PREVIOUS WRITING came out as a list of records (it counted the age numbers {{ listed_ages | several("time", "times") }}). Write the same events again as scenes, without counting the ages.{% endif %}

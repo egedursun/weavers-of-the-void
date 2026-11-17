@@ -13,17 +13,18 @@ from aerona.db.tables.sacred import GeniusLocusRow, SpiritOfficeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import BureauRank, GeniusLocusKind, SpiritOffence
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import region_of
 
 PLACE_SPIRIT = "place spirit"
@@ -139,7 +140,7 @@ async def bind_spirit(ctx: TickContext, place: EntityRow, kind: GeniusLocusKind,
         )
     )
     await ctx.session.flush()
-    await note(ctx, f"A spirit came to dwell in {place.name}.", key="sacred.spirit_bound", ids=[spirit.id, place.id])
+    await record(ctx, "sacred.spirit_bound", roles={IncidentRole.SUBJECT: [place.id, spirit.id]})
     return row
 
 

@@ -12,6 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import QuirkKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.vehicles import VehicleFrame
@@ -28,7 +29,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -93,14 +93,11 @@ async def send_expedition(call: SonCall, args: SendExpeditionInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.EXPEDITION_REFUSED, why=str(error).rstrip("."))
     call.target(leader.id)
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.SEND_EXPEDITION,
-        entity_ids=[leader.id, target.id],
-        son=call.son.name,
-        leader=leader.name,
-        target=target.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.send_expedition",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: leader.id},
+        facts={"leader_detail": str(leader.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.EXPEDITION_SENT, leader=leader.name, target=target.name, legs=row.legs_total, party=len(companions) + 1)
 
@@ -115,8 +112,11 @@ async def stock_depot(call: SonCall, args: StockDepotInput) -> str:
         fail(SonResult.DEPOT_REFUSED, why=str(error).rstrip("."))
     depot.supplies = await draw(call.tick, owner, depot.capacity)
     call.target(land.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.STOCK_DEPOT, entity_ids=[owner.id, land.id], son=call.son.name, owner=owner.name, land=land.name, reason=args.reason
+    await call.record(
+        "tools.son.stock_depot",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [owner.id, land.id]},
+        facts={"owner_detail": str(owner.name), "land": str(land.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.DEPOT_STOCKED, owner=owner.name, land=land.name, supplies=depot.supplies)
 
@@ -131,8 +131,11 @@ async def steer_theatre(call: SonCall, args: SteerTheatreInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.THEATRE_REFUSED, why=str(error).rstrip("."))
     call.target(owner.id)
-    await call.chronicle(
-        ChronicleKind.WAR, lines.STEER_THEATRE, entity_ids=[owner.id], son=call.son.name, owner=owner.name, priority=args.priority, reason=args.reason
+    await call.record(
+        "tools.son.steer_theatre",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: owner.id},
+        facts={"owner_detail": str(owner.name), "priority": args.priority, "reason": args.reason},
+        kind=ChronicleKind.WAR,
     )
     return result(SonResult.THEATRE_STEERED, owner=owner.name, priority=args.priority)
 
@@ -144,8 +147,11 @@ async def mark_quirk(call: SonCall, args: MarkQuirkInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.QUIRK_REFUSED, why=str(error).rstrip("."))
     call.target(mortal.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.MARK_QUIRK, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, quirk=args.kind.value, reason=args.reason
+    await call.record(
+        "tools.son.mark_quirk",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: mortal.id},
+        facts={"mortal": str(mortal.name), "quirk": args.kind, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.QUIRK_MARKED, mortal=mortal.name, quirk=args.kind.value)
 
@@ -167,14 +173,11 @@ async def limit_fleets(call: SonCall, args: LimitFleetsInput) -> str:
         clauses=[Clause(ClauseKind.FLEET_LIMIT, first.id, second.id, dict(cap)), Clause(ClauseKind.FLEET_LIMIT, second.id, first.id, dict(cap))],
     )
     call.target(treaty.id)
-    await call.chronicle(
-        ChronicleKind.DIPLOMACY,
-        lines.LIMIT_FLEETS,
-        entity_ids=[first.id, second.id, treaty.id],
-        son=call.son.name,
-        first=first.name,
-        second=second.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.limit_fleets",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id, treaty.id]},
+        facts={"first": str(first.name), "second": str(second.name), "reason": args.reason},
+        kind=ChronicleKind.DIPLOMACY,
     )
     return result(SonResult.FLEETS_LIMITED, first=first.name, second=second.name, tonnage=args.tonnage)
 

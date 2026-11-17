@@ -27,7 +27,6 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import BodyPart
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import AccountKind, AccountMedium
 from aerona.domain.enums.constructs import CommandToken, MindWill
 from aerona.domain.enums.entity import EntityType
@@ -53,9 +52,11 @@ from aerona.domain.enums.made import (
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep, StateMedium
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.networks import NetworkAccess, NetworkCarrier, NetworkRole, OutageCause
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction
 from aerona.engine import augments
 from aerona.engine.collective.accounts import record
 from aerona.engine.constructs import control as constructs
@@ -72,6 +73,7 @@ from aerona.engine.phases.factions import found_faction
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.services.community_relations import change_relation
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -79,7 +81,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import EnactLawInput
 from aerona.tools.mortal.ruler import enact_law, throne_of
 
@@ -300,7 +301,7 @@ async def make_mind_tool(call: MortalCall, args: MakeMindInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.MIND_MAKING_DECLINED, why=why(error))
     call.target(target.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.MAKE_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.make_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: target.id})
     return result(MortalResult.MIND_MADE, name=target.name)
 
 
@@ -311,7 +312,7 @@ async def free_mind(call: MortalCall, args: MindInput) -> str:
         fail(MortalResult.MIND_FREEING_DECLINED, why=f"{target.name} already serves no one")
     profile.purpose = MindPurpose.FREE
     call.target(target.id)
-    await call.chronicle(ChronicleKind.ORDER, lines.FREE_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.free_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id})
     return result(MortalResult.MIND_FREED, name=target.name)
 
 
@@ -331,7 +332,7 @@ async def bind_mind(call: MortalCall, args: MindInput) -> str:
     if crime is not None:
         await mind_crime(call.tick, call.me.id, crime)
     call.target(target.id)
-    await call.chronicle(ChronicleKind.ORDER, lines.BIND_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.bind_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id})
     return result(MortalResult.MIND_BOUND, name=target.name)
 
 
@@ -344,7 +345,7 @@ async def save_mind_tool(call: MortalCall, args: SaveMindInput) -> str:
     if await captive_of(call, target.id) is not None:
         await mind_crime(call.tick, call.me.id, CrimeKind.MIND_THEFT)
     call.target(target.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SAVE_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.save_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id})
     return result(MortalResult.MIND_SAVED, name=target.name, state=row.id)
 
 
@@ -358,7 +359,7 @@ async def restore_mind_tool(call: MortalCall, args: RestoreMindInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.MIND_RESTORE_DECLINED, why=why(error))
     call.target(entity.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.RESTORE_MIND, entity_ids=[call.me.id, entity.id], me=call.me.name, name=entity.name)
+    await call.record("tools.mortal.restore_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: entity.id})
     return result(MortalResult.MIND_RESTORED, name=entity.name)
 
 
@@ -379,7 +380,7 @@ async def copy_mind_tool(call: MortalCall, args: SeatMindInput) -> str:
             call.tick, captive.home_entity_id, call.me.id, -SPYING, MemoryKind.SPIED_ON_US, note="copied the mind of one of ours held captive"
         )
     call.target(copy.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.COPY_MIND, entity_ids=[call.me.id, target.id, copy.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.copy_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id, IncidentRole.PRODUCT: copy.id})
     return result(MortalResult.MIND_COPIED, name=target.name)
 
 
@@ -391,7 +392,7 @@ async def transfer_mind_tool(call: MortalCall, args: SeatMindInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.MIND_TRANSFER_DECLINED, why=why(error))
     call.target(target.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.TRANSFER_MIND, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record("tools.mortal.transfer_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id})
     return result(MortalResult.MIND_TRANSFERRED, name=target.name)
 
 
@@ -403,9 +404,7 @@ async def merge_minds_tool(call: MortalCall, args: MergeMindsInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.MIND_MERGE_DECLINED, why=why(error))
     call.target(first.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.MERGE_MINDS, entity_ids=[call.me.id, first.id, second.id], me=call.me.name, first=first.name, second=second.name
-    )
+    await call.record("tools.mortal.merge_minds", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUCCESSOR: first.id, IncidentRole.PREDECESSOR: second.id})
     return result(MortalResult.MINDS_MERGED, first=first.name, second=second.name)
 
 
@@ -418,7 +417,9 @@ async def install_augment(call: MortalCall, args: InstallAugmentInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.AUGMENT_DECLINED, why=why(error))
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.INSTALL_AUGMENT, entity_ids=[call.me.id], me=call.me.name, kind=args.kind.value.replace("_", " "))
+    await call.record(
+        "tools.mortal.install_augment", roles={IncidentRole.ACTOR: call.me.id}, facts={"augment": args.kind, "make": args.make, "integration": row.integration}
+    )
     return result(MortalResult.AUGMENT_INSTALLED, kind=args.kind.value.replace("_", " "), integration=row.integration)
 
 
@@ -427,7 +428,7 @@ async def remove_augment(call: MortalCall, args: AugmentInput) -> str:
     if row is None or row.bearer_node_id != call.me.id:
         fail(MortalResult.AUGMENT_REMOVAL_DECLINED, why="you bear no such augment")
     await augments.remove(call.tick, row.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.REMOVE_AUGMENT, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.remove_augment", roles={IncidentRole.ACTOR: call.me.id}, facts={"augment": row.kind})
     return result(MortalResult.AUGMENT_REMOVED)
 
 
@@ -435,9 +436,13 @@ async def link_to(call: MortalCall, args: TargetInput) -> str:
     target = await thing(call, args.target_id, MortalResult.LINK_DECLINED, "mind")
     if target.id == call.me.id:
         fail(MortalResult.LINK_DECLINED, why="you cannot link to yourself")
-    await connect(call.session, call.me.id, target.id, BondKind.LINKED_WITH, call.tick.epoch, description="minds linked")
+    bond = await connect(call.session, call.me.id, target.id, BondKind.LINKED_WITH, call.tick.epoch, description="minds linked")
     call.target(target.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.LINK_TO, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record(
+        "tools.mortal.link_to",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.CO_ACTOR: target.id},
+        steps=(continuity.link_step(call.me.id, target.id, bond),),
+    )
     return result(MortalResult.LINKED, name=target.name)
 
 
@@ -456,7 +461,7 @@ async def run_remote_body(call: MortalCall, args: BodyInput) -> str:
         call.session.add(row)
     row.mind_node_id = call.me.id
     call.target(body.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.RUN_REMOTE_BODY, entity_ids=[call.me.id, body.id], me=call.me.name, name=body.name)
+    await call.record("tools.mortal.run_remote_body", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.INSTRUMENT: body.id})
     return result(MortalResult.REMOTE_RUNNING, name=body.name)
 
 
@@ -470,7 +475,7 @@ async def build_network(call: MortalCall, args: BuildNetworkInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.NETWORK_BUILD_DECLINED, why=why(error))
     call.target(row.network_entity_id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.BUILD_NETWORK, entity_ids=[call.me.id, row.network_entity_id], me=call.me.name)
+    await call.record("tools.mortal.build_network", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: row.network_entity_id})
     return result(MortalResult.NETWORK_BUILT, carrier=args.carrier.value.replace("_", " "))
 
 
@@ -490,7 +495,7 @@ async def join_network(call: MortalCall, args: NetworkInput) -> str:
         fail(MortalResult.NETWORK_JOIN_DECLINED, why="your home is on it already")
     await control.join_network(call.tick, node.id, member, NetworkRole.END)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.JOIN_NETWORK, entity_ids=[call.me.id, node.id], me=call.me.name, name=node.name)
+    await call.record("tools.mortal.join_network", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: node.id})
     return result(MortalResult.NETWORK_JOINED, name=node.name)
 
 
@@ -506,7 +511,7 @@ async def cut_network(call: MortalCall, args: CutNetworkInput) -> str:
     else:
         await control.cut_network(call.tick, node.id, OutageCause.SABOTAGE, 1, call.rules.intrusion.outage_severity)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.WAR, lines.CUT_NETWORK, entity_ids=[call.me.id, node.id], me=call.me.name, name=node.name)
+    await call.record("tools.mortal.cut_network", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: node.id})
     return result(MortalResult.NETWORK_CUT, name=node.name)
 
 
@@ -517,7 +522,7 @@ async def intrude_tool(call: MortalCall, args: IntrudeInput) -> str:
         row = await intrude(call.tick, Attempt(call.me.id, args.target, args.target_id, IntrusionApproach.TECHNICAL, args.aim))
     except ValidationFailedError as error:
         fail(MortalResult.INTRUSION_DECLINED, why=why(error))
-    await call.chronicle(ChronicleKind.WAR, lines.INTRUDE, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.intrude", roles={IncidentRole.ACTOR: call.me.id})
     return result(MortalResult.INTRUSION_MADE, outcome=row.outcome.value.replace("_", " "), found="found" if row.detection >= 50 else "unseen")
 
 
@@ -529,7 +534,9 @@ async def defend_system(call: MortalCall, args: SystemInput) -> str:
         fail(MortalResult.DEFENCE_DECLINED, why="there is no such network or store you can guard")
     skill = await best_skill(call.session, call.me.id, (SkillKind.COMPUTING, SkillKind.CRYPTOGRAPHY, SkillKind.RITUAL))
     guarded.security = clamp_percent(guarded.security + DEFENCE + skill // 10)
-    await call.chronicle(ChronicleKind.WORLD, lines.DEFEND_SYSTEM, entity_ids=[call.me.id], me=call.me.name)
+    await call.record(
+        "tools.mortal.defend_system", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: args.system_id}, facts={"security": guarded.security}
+    )
     return result(MortalResult.SYSTEM_DEFENDED, security=guarded.security)
 
 
@@ -547,7 +554,7 @@ async def leak_records(call: MortalCall, args: StoreInput) -> str:
     for secret in secrets:
         if "content" not in secret.locked:
             secret.content = DataContent.KNOWLEDGE
-    await call.chronicle(ChronicleKind.WORLD, lines.LEAK_RECORDS, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.leak_records", roles={IncidentRole.ACTOR: call.me.id}, facts={"secrets": len(secrets)})
     return result(MortalResult.RECORDS_LEAKED, count=len(secrets))
 
 
@@ -567,13 +574,17 @@ async def write_record(call: MortalCall, subject_id: int, authenticity: Authenti
 
 async def publish(call: MortalCall, args: RecordInput) -> str:
     subject = await write_record(call, args.subject_id, Authenticity.GENUINE, MortalResult.PUBLISH_DECLINED)
-    await call.chronicle(ChronicleKind.CULTURE, lines.PUBLISH, entity_ids=[call.me.id, subject.id], me=call.me.name, name=subject.name)
+    await call.record("tools.mortal.publish", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: subject.id})
     return result(MortalResult.PUBLISHED, name=subject.name)
 
 
 async def forge_record(call: MortalCall, args: RecordInput) -> str:
     subject = await write_record(call, args.subject_id, Authenticity.FORGED, MortalResult.FORGERY_DECLINED)
-    await call.chronicle(ChronicleKind.CULTURE, lines.FORGE_RECORD, entity_ids=[call.me.id, subject.id], me=call.me.name, name=subject.name)
+    await call.record(
+        "tools.mortal.forge_record",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: subject.id},
+        steps=(StepDraft(StepAction.FORGE_RECORD, actor=call.me.id, target=subject.id),),
+    )
     return result(MortalResult.RECORD_FORGED, name=subject.name)
 
 
@@ -588,7 +599,12 @@ async def found_company(call: MortalCall, args: CompanyNameInput) -> str:
     )
     call.session.add(CompanyShareRow(company_entity_id=company.id, holder_node_id=call.me.id, share=SHARES_MAX, locked=False))
     call.target(company.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.FOUND_COMPANY, entity_ids=[call.me.id, company.id], me=call.me.name, name=company.name)
+    await call.record(
+        "tools.mortal.found_company",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: company.id, IncidentRole.PLACE: town.id},
+        facts={"share": SHARES_MAX},
+        place=town.id,
+    )
     return result(MortalResult.COMPANY_FOUNDED, name=company.name)
 
 
@@ -605,7 +621,9 @@ async def charter_company(call: MortalCall, args: CompanyInput) -> str:
     node, row = await company_of(call, args.company_id, MortalResult.CHARTER_DECLINED)
     row.charter, row.polity_entity_id, row.chartered_epoch = CompanyCharter.CHARTERED, realm.entity.id, call.tick.epoch
     call.target(node.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.CHARTER_COMPANY, entity_ids=[call.me.id, node.id], me=call.me.name, name=node.name)
+    await call.record(
+        "tools.mortal.charter_company", roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: node.id, IncidentRole.OWNER: realm.entity.id}
+    )
     return result(MortalResult.COMPANY_CHARTERED, name=node.name, realm=realm.entity.name)
 
 
@@ -626,7 +644,7 @@ async def buy_shares(call: MortalCall, args: BuySharesInput) -> str:
     else:
         mine_now.share += args.share
     call.target(node.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.BUY_SHARES, entity_ids=[call.me.id, node.id], me=call.me.name, name=node.name)
+    await call.record("tools.mortal.buy_shares", roles={IncidentRole.BUYER: call.me.id, IncidentRole.SUBJECT: node.id}, facts={"share": args.share})
     return result(MortalResult.SHARES_BOUGHT, name=node.name, share=args.share)
 
 
@@ -641,7 +659,12 @@ async def build_replicator(call: MortalCall, args: BuildReplicatorInput) -> str:
         row = await control.found_line(call.tick, draft)
     except ValidationFailedError as error:
         fail(MortalResult.REPLICATOR_DECLINED, why=why(error))
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.BUILD_REPLICATOR, entity_ids=[call.me.id], me=call.me.name, name=row.name)
+    await call.record(
+        "tools.mortal.build_replicator",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.PLACE: town.location_id},
+        facts={"line": row.name, "feedstock": args.feedstock, "output": args.output},
+        place=town.location_id,
+    )
     return result(MortalResult.REPLICATOR_BUILT, name=row.name)
 
 
@@ -650,7 +673,7 @@ async def contain_replicator(call: MortalCall, args: LineInput) -> str:
     if line is None or (line.owner_node_id is not None and held(line.owner_node_id)):
         fail(MortalResult.CONTAINMENT_DECLINED, why="there is no such line")
     line.containment = clamp_percent(line.containment + CONTAINMENT)
-    await call.chronicle(ChronicleKind.WORLD, lines.CONTAIN_REPLICATOR, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.contain_replicator", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name, "containment": line.containment})
     return result(MortalResult.REPLICATOR_CONTAINED, name=line.name, containment=line.containment)
 
 
@@ -663,7 +686,9 @@ async def fabricate(call: MortalCall, _args: ToolInput) -> str:
         row = FabricationRow(settlement_entity_id=town.id, share_pct=0, dividend_pct=0, updated_epoch=call.tick.epoch, locked=[])
         call.session.add(row)
     row.share_pct = clamp_percent(row.share_pct + FABRICATION_STEP)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.FABRICATE, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name)
+    await call.record(
+        "tools.mortal.fabricate", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: town.id}, facts={"share": row.share_pct}, place=town.id
+    )
     return result(MortalResult.FABRICATED, town=town.name, share=row.share_pct)
 
 
@@ -676,7 +701,7 @@ async def license_pattern(call: MortalCall, args: PatternInput) -> str:
         if not await take_coin(call.session, call.rules, call.me, pattern.licence_fee):
             fail(MortalResult.LICENCE_DECLINED, why="you cannot pay its fee")
         await give_coin(call.session, call.rules, holder, pattern.licence_fee)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.LICENSE_PATTERN, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.license_pattern", roles={IncidentRole.ACTOR: call.me.id})
     return result(MortalResult.PATTERN_LICENSED, fee=0 if pattern.open else pattern.licence_fee)
 
 
@@ -689,7 +714,7 @@ async def study_relic(call: MortalCall, args: RelicInput) -> str:
     if "understood_pct" not in relic.locked:
         relic.understood_pct = clamp_percent(relic.understood_pct + call.rules.made_relics.study_gain)
     call.target(item.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.STUDY_RELIC, entity_ids=[call.me.id, item.id], me=call.me.name, name=item.name)
+    await call.record("tools.mortal.study_relic", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: item.id})
     return result(MortalResult.RELIC_STUDIED, name=item.name, understood=relic.understood_pct)
 
 
@@ -703,7 +728,7 @@ async def salvage(call: MortalCall, args: SiteInput) -> str:
     await give_coin(call.session, call.rules, call.me, amount)
     site.yield_left -= amount
     site.last_salvaged_epoch = call.tick.epoch
-    await call.chronicle(ChronicleKind.WORLD, lines.SALVAGE, entity_ids=[call.me.id, site.site_entity_id], me=call.me.name)
+    await call.record("tools.mortal.salvage", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: site.site_entity_id}, facts={"amount": amount})
     return result(MortalResult.SALVAGED, amount=amount)
 
 
@@ -713,7 +738,11 @@ async def build_realm(call: MortalCall, args: BuildRealmInput) -> str:
         f"the realm of {call.me.name}", call.me.id, host.id, args.purpose, args.ratio, RealmEntry.INTERFACE, RealmAwareness.KNOWS, MindUpkeep.MAINTENANCE
     )
     row = await control.make_realm(call.tick, draft)
-    await call.chronicle(ChronicleKind.CREATION, lines.BUILD_REALM, entity_ids=[call.me.id, row.dimension_id], me=call.me.name, host=host.name)
+    await call.record(
+        "tools.mortal.build_realm",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.HOST: host.id, IncidentRole.PRODUCT: row.dimension_id},
+        facts={"ratio": row.time_ratio_pct, "purpose": args.purpose},
+    )
     return result(MortalResult.REALM_BUILT, host=host.name, ratio=row.time_ratio_pct)
 
 
@@ -722,7 +751,7 @@ async def enter_realm_tool(call: MortalCall, args: RealmInput) -> str:
         await enter_realm(call.tick, call.me.id, args.realm_id)
     except ValidationFailedError as error:
         fail(MortalResult.REALM_ENTRY_DECLINED, why=why(error))
-    await call.chronicle(ChronicleKind.WORLD, lines.ENTER_REALM, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.enter_realm", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.DESTINATION: args.realm_id})
     return result(MortalResult.REALM_ENTERED)
 
 
@@ -735,7 +764,9 @@ async def confine_in_realm(call: MortalCall, args: ConfineInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.CONFINEMENT_DECLINED, why=why(error))
     call.target(target.id)
-    await call.chronicle(ChronicleKind.ORDER, lines.CONFINE_IN_REALM, entity_ids=[call.me.id, target.id], me=call.me.name, name=target.name)
+    await call.record(
+        "tools.mortal.confine_in_realm", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.VICTIM: target.id, IncidentRole.DESTINATION: args.realm_id}
+    )
     return result(MortalResult.CONFINED, name=target.name)
 
 
@@ -747,7 +778,11 @@ async def withdraw_people(call: MortalCall, args: WithdrawInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.WITHDRAWAL_DECLINED, why=why(error))
     call.target(people.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.WITHDRAW_PEOPLE, entity_ids=[call.me.id, people.id], me=call.me.name, name=people.name)
+    await call.record(
+        "tools.mortal.withdraw_people",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: people.id, IncidentRole.DESTINATION: args.realm_id},
+        facts={"moved": moved},
+    )
     return result(MortalResult.PEOPLE_WITHDRAWN, name=people.name, count=moved)
 
 
@@ -758,7 +793,9 @@ async def set_surveillance(call: MortalCall, args: SurveillanceInput) -> str:
     row: SurveillanceProfileRow = await profile_for(call.tick, realm.entity.id)
     row.focus = args.focus
     call.target(realm.entity.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.SET_SURVEILLANCE, entity_ids=[call.me.id, realm.entity.id], me=call.me.name, realm=realm.entity.name)
+    await call.record(
+        "tools.mortal.set_surveillance", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.entity.id}, facts={"focus": args.focus}
+    )
     return result(MortalResult.SURVEILLANCE_SET, realm=realm.entity.name, focus=args.focus.value.replace("_", " "))
 
 

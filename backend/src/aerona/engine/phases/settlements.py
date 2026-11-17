@@ -5,22 +5,25 @@ from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, canon, connect, has_flag, living_entity, remove_flag
-from aerona.engine.primitives.records import append_sentence, sentence_case
+from aerona.engine.primitives.records import append_sentence
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 
 DEFAULT_RESETTLED_SUBTYPE = "village"
 
@@ -123,7 +126,19 @@ async def order_resettlement(ctx: TickContext, ruin_id: int, source_id: int | No
     source = await living_entity(ctx.session, source_id)
     reason = f"settlers from {source.name}" if source is not None else "settlers sent by the gods"
     await restore_ruin(ctx, ruin, source, population, reason)
-    await note(ctx, f"{sentence_case(reason)} rebuilt the ruin of {ruin.name}.", key="settlements.resettled", ids=[ruin.id] + ([source.id] if source else []))
+    scope = current_scope()
+    await record(
+        ctx,
+        "settlements.resettled",
+        roles={
+            IncidentRole.PRODUCT: ruin.id,
+            IncidentRole.ORIGIN: source.id if source is not None else None,
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None,
+        },
+        facts={"settlers": population},
+        steps=(StepDraft(StepAction.SETTLE, actor=source.id if source is not None else None, target=ruin.id, amount=population, unit=FactUnit.PEOPLE),),
+        place=ruin.id,
+    )
     return ruin
 
 

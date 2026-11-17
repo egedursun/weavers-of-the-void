@@ -8,19 +8,19 @@ from aerona.db.tables.place import PlaceSecretRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import DiscoveryMode
 from aerona.engine.context import TickContext
 from aerona.engine.environment.secrets import reveal
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, has_flag, remove_flag
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 PIETY_KEY = "piety"
@@ -66,15 +66,21 @@ async def solve_mysteries(ctx: TickContext) -> int:
             await teach(ctx, seeker.id, found, f"found in the mystery of {place.name}")
             await remove_flag(ctx.session, found.id, EntityFlag.LOST)
             lost_knowledge.remove(found)
-            text = f"{seeker.name} solved the mystery of {place.name} and found the forgotten knowledge of {found.name} there."
-            await note(ctx, text, key="living_stats.mystery_knowledge", ids=[seeker.id, place.id, found.id], kind=ChronicleKind.KNOWLEDGE)
+            await record(
+                ctx,
+                "living_stats.mystery_knowledge",
+                roles={IncidentRole.ACTOR: seeker.id, IncidentRole.PLACE: place.id, IncidentRole.SUBJECT: found.id},
+                facts={"mystery": mystery},
+                place=place.id,
+            )
         elif stat(seeker, PIETY_KEY) is not None:
             set_stats(seeker, piety=clamp_int(stat_or(seeker, PIETY_KEY, 0) + table.mystery_pilgrim_piety, 0, PERCENT))
-            await note(
+            await record(
                 ctx,
-                f"The mystery of {place.name} draws pilgrims; {seeker.name} carried offerings there.",
-                key="living_stats.pilgrims",
-                ids=[seeker.id, place.id],
+                "living_stats.pilgrims",
+                roles={IncidentRole.ACTOR: seeker.id, IncidentRole.PLACE: place.id},
+                facts={"mystery": mystery, "piety": table.mystery_pilgrim_piety},
+                place=place.id,
             )
     return solved
 
@@ -87,12 +93,11 @@ async def mock_prophecy(ctx: TickContext, prophecy: EntityRow) -> None:
     son = await ctx.session.get(SonRow, prophecy.creator_son_id) if prophecy.creator_son_id is not None else None
     if son is not None and son.alive:
         son.fame = max(0, son.fame - table.prophecy_fame_loss)
-    tail = f"; the word of {son.name} lost its weight" if son is not None else ""
-    await note(
+    await record(
         ctx,
-        f"{prophecy.name} has gone unfulfilled for ages; now it is mocked{tail}.",
-        key="living_stats.mocked",
-        ids=[prophecy.id],
+        "living_stats.mocked",
+        roles={IncidentRole.SUBJECT: prophecy.id, IncidentRole.MAKER: son.id if son is not None else None},
+        facts={"fame_loss": table.prophecy_fame_loss if son is not None and son.alive else 0},
         son_id=son.id if son else None,
     )
 
@@ -141,7 +146,6 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.bonds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.item_profiles",
     "table.name_registry",
     "table.node_materials",
@@ -163,7 +167,6 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

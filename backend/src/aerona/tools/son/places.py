@@ -7,22 +7,24 @@ from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
-from aerona.db.tables.place import PlaceProfileRow
+from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.place import SecretKind, SecretOrigin
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.place import DiscoveryMode, SecretKind, SecretOrigin
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.environment.places import NEXUS_FIELD, SACREDNESS_LOCK, place_kind_of, write_kind
-from aerona.engine.environment.secrets import draft_for, hide
+from aerona.engine.environment.secrets import draft_for, hide, reveal
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import CommonResult, SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -32,6 +34,11 @@ class HideSecretInput(ToolInput):
     place_id: int
     kind: SecretKind
     strength: Annotated[int, Field(ge=0, le=PERCENT)] = 50
+    reason: Reason
+
+
+class RevealSecretInput(ToolInput):
+    place_id: int
     reason: Reason
 
 
@@ -64,13 +71,47 @@ async def hide_secret(call: SonCall, args: HideSecretInput) -> str:
     ground = await call.session.get(PlaceEnvironmentRow, place.id)
     region = await call.session.get(RegionEnvironmentRow, ground.region_entity_id) if ground is not None and ground.region_entity_id is not None else None
     draft = draft_for(args.kind, args.strength, call.rng(f"hide.{place.id}"), region)
-    hide(call.tick, place.id, draft, SecretOrigin.SON, call.son.id)
+    hidden = hide(call.tick, place.id, draft, SecretOrigin.SON, call.son.id)
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.HIDE_SECRET, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    await call.record(
+        "tools.son.hide_secret",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: place.id},
+        facts={"place_detail": str(place.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+        world_id=place.world_id,
+        steps=(
+            StepDraft(
+                StepAction.CONCEAL,
+                actor=call.son.id,
+                target=place.id,
+                record_table=PlaceSecretRow.__tablename__,
+                record_key=str(hidden.id),
+                outcome=StepOutcome.SUCCESS,
+            ),
+        ),
     )
     return result(SonResult.SECRET_HIDDEN, name=place.name)
+
+
+async def reveal_secret(call: SonCall, args: RevealSecretInput) -> str:
+    cost = call.rules.places.reveal_secret_essence
+    require_essence(call, cost)
+    place = await _place(call, args.place_id)
+    secret = await call.session.scalar(
+        select(PlaceSecretRow)
+        .where(PlaceSecretRow.place_entity_id == place.id, PlaceSecretRow.revealed_epoch.is_(None), PlaceSecretRow.held.is_(False))
+        .order_by(PlaceSecretRow.id)
+        .limit(1)
+    )
+    if secret is None:
+        fail(SonResult.NO_SECRET_HERE, name=place.name)
+    ground = await call.session.get(PlaceEnvironmentRow, place.id)
+    region = await call.session.get(RegionEnvironmentRow, ground.region_entity_id) if ground is not None and ground.region_entity_id is not None else None
+    await reveal(call.tick, secret, DiscoveryMode.SON, None, region, by_id=call.son.id)
+    call.spend_essence(cost)
+    call.target(place.id)
+    return result(SonResult.SECRET_REVEALED, name=place.name)
 
 
 async def sanctify_place(call: SonCall, args: PlaceActInput) -> str:
@@ -82,8 +123,12 @@ async def sanctify_place(call: SonCall, args: PlaceActInput) -> str:
     profile.locked = sorted({*profile.locked, SACREDNESS_LOCK})
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.SANCTIFY_PLACE, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    await call.record(
+        "tools.son.sanctify_place",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: place.id},
+        facts={"place_detail": str(place.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+        world_id=place.world_id,
     )
     return result(SonResult.PLACE_SANCTIFIED, name=place.name, sacredness=profile.sacredness)
 
@@ -101,8 +146,12 @@ async def raise_nexus(call: SonCall, args: PlaceActInput) -> str:
     ground.locked = sorted({*ground.locked, NEXUS_FIELD})
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.RAISE_NEXUS, entity_ids=[place.id], world_id=place.world_id, son=call.son.name, place=place.name, reason=args.reason
+    await call.record(
+        "tools.son.raise_nexus",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: place.id},
+        facts={"place_detail": str(place.name), "reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+        world_id=place.world_id,
     )
     return result(SonResult.NEXUS_RAISED, name=place.name)
 
@@ -116,6 +165,13 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             HideSecretInput,
             ToolMeta(ActionKind.HIDE_SECRET, son_standard_action, essence_cost=lambda rules: rules.places.hide_secret_essence),
             hide_secret,
+        ),
+        ToolSpec(
+            SonToolId.REVEAL_SECRET,
+            son,
+            RevealSecretInput,
+            ToolMeta(ActionKind.REVEAL_SECRET, son_standard_action, essence_cost=lambda rules: rules.places.reveal_secret_essence),
+            reveal_secret,
         ),
         ToolSpec(
             SonToolId.SANCTIFY_PLACE,

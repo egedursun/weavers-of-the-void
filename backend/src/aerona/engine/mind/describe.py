@@ -254,9 +254,9 @@ async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch
     totals: dict[Emotion, float] = {}
     for row in await thoughts_of(session, node_id):
         totals[row.emotion] = totals.get(row.emotion, 0.0) + thought_strength(row, epoch)
-    strongest = sorted(totals.items(), key=lambda item: (-item[1], item[0]))[: rules.context.mind_feelings_shown]
-    if strongest:
-        lines.append("Strongest feelings: " + ", ".join(f"{EMOTIONS[emotion].label.lower()} {round(total)}" for emotion, total in strongest))
+    strongest_feeling = sorted(totals.items(), key=lambda item: (-item[1], item[0]))[: rules.context.mind_feelings_shown]
+    if strongest_feeling:
+        lines.append("Strongest feelings: " + ", ".join(f"{EMOTIONS[emotion].label.lower()} {round(total)}" for emotion, total in strongest_feeling))
     griefs = list(await session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == node_id, GriefRow.stage.in_(OPEN_GRIEF))))
     for grief in griefs:
         lines.append(f"Grieving {await name_of(session, grief.deceased_node_id)}: {spoken(grief.stage)}")

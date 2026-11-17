@@ -43,7 +43,7 @@ async def test_a_hook_and_a_sway_give_the_plotter_a_hold_and_a_friend(realm: Rea
     owner, target = await mortal(realm, "Plotter"), await mortal(realm, "Mark")
     assert await strike(realm, PlotKind.FABRICATE_HOOK, owner, target) == "Plotter gained a hold over Mark"
     assert await realm.session.scalar(select(HookRow).where(HookRow.holder_node_id == owner.id, HookRow.target_node_id == target.id)) is not None
-    assert await strike(realm, PlotKind.SWAY, owner, target) == "Mark warmed to Plotter"
+    assert await strike(realm, PlotKind.SWAY, owner, target) == "Mark came to like Plotter"
     view = await realm.session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == target.id, RelationshipRow.subject_node_id == owner.id))
     assert view is not None and view.friendship > 0
 

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import VesselArmament, VesselStatus
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.economy.materials import set_node_material
@@ -22,7 +22,6 @@ from aerona.rules.registry import Rules
 @dataclass(frozen=True)
 class Commission:
     frame: VehicleFrame | None = None
-    armament: list[VesselArmament] | None = field(default=None)
     hull_material: MaterialKind | None = None
     fabric_material: MaterialKind | None = None
     home_port_id: int | None = None
@@ -39,7 +38,6 @@ async def commission(session: AsyncSession, rules: Rules, vessel: EntityRow, ord
         session.add(row)
     row.kind = VehicleKind.SHIP
     row.frame = hull
-    row.armament = [item.value for item in (order.armament if order.armament is not None else spec.armament)][: max(spec.slots, 0) or None]
     designed = await design_factor(session, rules, order.home_port_id or vessel.location_id, BlueprintKind.VESSEL, hull.value)
     row.seaworthiness = min(PERCENT, round(frame_value(rules, hull, "seaworthiness") * designed))
     row.crew = order.crew if order.crew is not None else spec.crew

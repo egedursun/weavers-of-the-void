@@ -27,7 +27,7 @@ Your turn was cut short earlier; continue from where you left off.
 
 {% endif %}
 {% if actions_left > 0 %}
-Use your {{ actions_left }} actions in your community's interest, then speak your saying.
+Use your {{ actions_left | several("action", "actions") }} in your community's interest, then speak your saying.
 {% else %}
 You have no actions left; only speak your saying.
 {% endif %}

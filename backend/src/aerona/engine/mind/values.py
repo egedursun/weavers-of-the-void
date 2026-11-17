@@ -4,9 +4,10 @@ from collections.abc import Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mind import AGENDA_VALUES, DOCTRINE_BASE, DOMAIN_VALUES, PASSION_VALUES, PEOPLE_STAT_VALUES, TRAITS, VALUE_LABELS
+from aerona.catalog.mind import AGENDA_VALUES, DOCTRINE_BASE, DOMAIN_VALUES, PASSION_VALUES, PEOPLE_STAT_VALUES, TRAITS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.record_context import Term
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -18,7 +19,8 @@ from aerona.db.tables.warfare import WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAxis, ValueHolder, ValuePole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS
@@ -53,10 +55,10 @@ from aerona.engine.mind.drift_causes import (
 )
 from aerona.engine.mind.space import blend
 from aerona.engine.mortal.kin import parents_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import foreign_patron, living_patron
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 VALUE_LOCK = "values"
@@ -345,11 +347,15 @@ async def note_shift(ctx: TickContext, community: EntityRow, before: Values, aft
     mark = ctx.rules.culture_drift.notable_value
     for axis in ValueAxis:
         old, new = before.get(axis, 0), after.get(axis, 0)
-        low, high = VALUE_LABELS[axis]
-        if old < mark <= new:
-            await note(ctx, f"{community.name} came to prize {high.lower()}.", key="culture.shift", ids=[community.id])
-        elif old > -mark >= new:
-            await note(ctx, f"{community.name} turned toward {low.lower()}.", key="culture.shift", ids=[community.id])
+        pole = ValuePole.HIGH if old < mark <= new else (ValuePole.LOW if old > -mark >= new else None)
+        if pole is not None:
+            await record_incident(
+                ctx,
+                "culture.shift",
+                roles={IncidentRole.SUBJECT: community.id},
+                facts={"axis": axis, "pole": pole, "before": old, "after": new},
+                terms=[Term("rules.culture_drift.notable_value", mark)],
+            )
 
 
 async def member_mean(ctx: TickContext, index: ValueIndex, body_id: int) -> Values | None:

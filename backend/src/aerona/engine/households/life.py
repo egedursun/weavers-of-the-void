@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from sqlalchemy import inspect, select
@@ -13,13 +14,14 @@ from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow, PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.genetics import HouseholdDecision, HouseholdRole
 from aerona.domain.enums.mind import ActKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage
 from aerona.domain.enums.polity import LawKind, OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.body.customs import people_of
@@ -41,13 +43,13 @@ from aerona.engine.mind.preference_depth import place_pull, shared_taste
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import children_of, spouses_of
 from aerona.engine.mortal.kinship import marry
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.records import death_path
 from aerona.engine.urban.desirability import land_value_of
 
@@ -273,11 +275,28 @@ async def tolerated(ctx: TickContext, head_id: int, act: ActKind) -> bool:
     return await ethic_reading(ctx.session, ctx.rules, head_id, act, values) >= ctx.rules.households.tolerated_at
 
 
-async def decided(ctx: TickContext, household: HouseholdRow, decision: HouseholdDecision, text: str, ids: list[int], *, tally: HouseholdTally) -> bool:
+async def decided(
+    ctx: TickContext,
+    household: HouseholdRow,
+    decision: HouseholdDecision,
+    *,
+    targets: Sequence[int] = (),
+    destination: int | None = None,
+    amount: int | None = None,
+    tally: HouseholdTally,
+    steps: Sequence[StepDraft] = (),
+) -> bool:
     household.last_decision = decision
     household.decided_epoch = ctx.epoch
     tally.decided += 1
-    await note(ctx, text, key=f"households.{decision.value}", ids=ids, kind=ChronicleKind.WORLD)
+    await record(
+        ctx,
+        f"households.{decision.value}",
+        roles={IncidentRole.ACTOR: household.head_node_id, IncidentRole.TARGET: list(targets), IncidentRole.DESTINATION: destination},
+        facts={"household": household.name, "decision": decision, "wealth": household.wealth, "amount": amount},
+        place=household.settlement_node_id,
+        steps=steps,
+    )
     return True
 
 
@@ -308,7 +327,14 @@ async def leave_elder(ctx: TickContext, household: HouseholdRow, members: list[M
     if dwelling is not None:
         dwelling.quality = clamp_int(dwelling.quality // 2, 0, PERCENT)
     await judged(ctx, head.id, elder.id, ActKind.ABANDONING_ELDERS, note=f"left {elder.name} to fend alone")
-    await note(ctx, f"In want, {household.name} left {elder.name} to fend alone.", key="households.abandon", ids=[head.id, elder.id])
+    await record(
+        ctx,
+        "households.abandon",
+        roles={IncidentRole.ACTOR: head.id, IncidentRole.VICTIM: elder.id},
+        facts={"household": household.name},
+        steps=(StepDraft(StepAction.ABANDON, actor=head.id, target=elder.id),),
+        place=household.settlement_node_id,
+    )
     tally.acts += 1
     return True
 
@@ -353,7 +379,7 @@ async def migrate(
         home = await dwelling_kind_row(ctx.session, dwelling.dwelling_kind_id)
         if not home.mobile and "quality" not in (dwelling.locked or []):
             dwelling.quality = starting_quality(home, household.social_class)
-    return await decided(ctx, household, HouseholdDecision.MIGRATE, f"{household.name} left in want for {target.name}.", [target.id], tally=tally)
+    return await decided(ctx, household, HouseholdDecision.MIGRATE, destination=target.id, tally=tally)
 
 
 async def sell_furnishing(ctx: TickContext, household: HouseholdRow, dwelling: DwellingRow | None, tally: HouseholdTally) -> bool:
@@ -368,7 +394,7 @@ async def sell_furnishing(ctx: TickContext, household: HouseholdRow, dwelling: D
     folk = await people_of(ctx.session, town) if town is not None else None
     await ctx.session.delete(item)
     household.wealth += max(ctx.rules.households.renovate_cost // 2, await furnishing_worth(ctx, folk.id if folk is not None else None))
-    return await decided(ctx, household, HouseholdDecision.SELL_FURNISHING, f"{household.name} sold a furnishing to get by.", [item.item_node_id], tally=tally)
+    return await decided(ctx, household, HouseholdDecision.SELL_FURNISHING, targets=[item.item_node_id], tally=tally)
 
 
 async def match(ctx: TickContext, household: HouseholdRow, members: list[Member], tally: HouseholdTally) -> bool:
@@ -413,8 +439,7 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
         ctx,
         household,
         HouseholdDecision.MARRY,
-        f"{household.name} matched {single.mortal.name} with {candidate.mortal.name} of {other.name}.",
-        [single.mortal.id, candidate.mortal.id],
+        targets=[single.mortal.id, candidate.mortal.id],
         tally=tally,
     )
 
@@ -450,8 +475,7 @@ async def apprentice(ctx: TickContext, household: HouseholdRow, members: list[Me
         ctx,
         household,
         HouseholdDecision.APPRENTICE,
-        f"{household.name} apprenticed {child.mortal.name} to {master.name}.",
-        [child.mortal.id, master.id],
+        targets=[child.mortal.id, master.id],
         tally=tally,
     )
 
@@ -469,8 +493,7 @@ async def renovate(ctx: TickContext, household: HouseholdRow, dwelling: Dwelling
         ctx,
         household,
         HouseholdDecision.RENOVATE,
-        f"{household.name} improved its {(await dwelling_kind_row(ctx.session, dwelling.dwelling_kind_id)).name}.",
-        [],
+        amount=table.renovate_cost,
         tally=tally,
     )
 
@@ -481,11 +504,13 @@ async def servants(ctx: TickContext, household: HouseholdRow, dwelling: Dwelling
         return False
     if household.servants and household.income < household.expenses:
         household.servants -= 1
-        return await decided(ctx, household, HouseholdDecision.DISMISS_SERVANT, f"{household.name} let a servant go.", [], tally=tally)
+        dismissed = (StepDraft(StepAction.DISMISS, actor=household.head_node_id, amount=1, unit=FactUnit.PEOPLE),)
+        return await decided(ctx, household, HouseholdDecision.DISMISS_SERVANT, amount=household.servants, tally=tally, steps=dismissed)
     rooms = dwelling.rooms if dwelling is not None else 1
     if household.wealth >= table.servant_wealth and household.servants < max(1, rooms // 2):
         household.servants += 1
-        return await decided(ctx, household, HouseholdDecision.HIRE_SERVANT, f"{household.name} took on a servant.", [], tally=tally)
+        hired = (StepDraft(StepAction.HIRE, actor=household.head_node_id, amount=1, unit=FactUnit.PEOPLE),)
+        return await decided(ctx, household, HouseholdDecision.HIRE_SERVANT, amount=household.servants, tally=tally, steps=hired)
     return False
 
 
@@ -511,7 +536,7 @@ async def lodger(
         guest = found[0].mortal
         await join_household(ctx, household, guest, HouseholdRole.LODGER)
         await ctx.session.delete(other)
-        return await decided(ctx, household, HouseholdDecision.TAKE_LODGER, f"{household.name} took in {guest.name} as a lodger.", [guest.id], tally=tally)
+        return await decided(ctx, household, HouseholdDecision.TAKE_LODGER, targets=[guest.id], tally=tally)
     return False
 
 
@@ -533,9 +558,7 @@ async def lend_at_interest(ctx: TickContext, household: HouseholdRow, head: Enti
     poorest.debts = {**poorest.debts, str(household.id): poorest.debts.get(str(household.id), 0) + lent}
     await judged(ctx, head.id, poorest.head_node_id, ActKind.USURY, note=f"lent at interest to {poorest.name}")
     tally.acts += 1
-    return await decided(
-        ctx, household, HouseholdDecision.LEND, f"{household.name} lent {lent} at interest to {poorest.name}.", [head.id, poorest.head_node_id], tally=tally
-    )
+    return await decided(ctx, household, HouseholdDecision.LEND, targets=[poorest.head_node_id], amount=lent, tally=tally)
 
 
 async def decide(ctx: TickContext, household: HouseholdRow, members: list[Member], dwelling: DwellingRow | None, tally: HouseholdTally) -> bool:

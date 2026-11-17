@@ -1,7 +1,6 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -12,14 +11,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.living import Fertility, GrowthStage, LineTrait, Metabolism
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.living.traits import eased, scaled, traits_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 
 SELF_FED = frozenset({Metabolism.LIGHT, Metabolism.PARTNER, Metabolism.SOURCE})
 STILL = frozenset({GrowthStage.DEAD})
@@ -84,7 +85,13 @@ async def end(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> None
     await decay(ctx, thing)
     if thing.status is EntityStatus.CANON:
         await retire_in(ctx, thing, "its life ran out", EntityStatus.DEAD if thing.entity_type in BEINGS else EntityStatus.DESTROYED)
-    await note(ctx, f"{thing.name} died and went back to the land.", key="living.died", ids=[thing.id])
+    await record(
+        ctx,
+        "living.died",
+        roles={IncidentRole.SUBJECT: thing.id},
+        facts={"age_seasons": row.age_seasons, "lifespan": row.lifespan_years},
+        steps=(StepDraft(StepAction.DIE, actor=thing.id, outcome=StepOutcome.KILLED),),
+    )
 
 
 async def breed(ctx: TickContext, row: LivingProfileRow) -> None:
@@ -112,7 +119,7 @@ async def mutate(ctx: TickContext, line: LivingLineRow) -> None:
     trait = rng.pick(fresh)
     strength = table.mutation_strength if rng.chance(PERCENT // 2) else -table.mutation_strength
     ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=strength < 0, locked=[]))
-    await note(ctx, f"A new trait arose in the line {line.name}: {spoken(trait)}.", key="living.mutated", ids=[])
+    await record(ctx, "living.mutated", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "trait": trait, "strength": strength})
 
 
 async def mend_army(ctx: TickContext, row: LivingProfileRow, thing: EntityRow, eating: bool, healed: int) -> None:
@@ -184,7 +191,7 @@ async def turn_away(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -
         return
     handler = await ctx.session.get(EntityRow, row.bonded_to_node_id)
     row.bonded_to_node_id = None
-    await note(ctx, f"{thing.name} turned from {handler.name if handler else 'its handler'} and answers to no one now.", key="living.turned", ids=[thing.id])
+    await record(ctx, "living.turned", roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: handler.id if handler else None}, facts={"bond": row.bond})
 
 
 def refuses(ctx: TickContext, row: LivingProfileRow | None) -> bool:

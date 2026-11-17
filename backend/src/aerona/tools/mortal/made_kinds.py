@@ -13,12 +13,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.cuisine.dishes import found_dish, known_methods
@@ -33,7 +33,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.collective import design_owner
 from aerona.tools.mortal.support import craft_of
 
@@ -98,7 +97,8 @@ async def draft_unit_type(call: MortalCall, args: DraftUnitTypeInput) -> str:
     design = await draw_type(call.tick, owner, args.role, await KnowledgeMap.load(call.session), name=args.name)
     design.description = args.description
     call.target(owner.id)
-    await call.chronicle(ChronicleKind.WAR, lines.UNIT_TYPE_DRAFTED, entity_ids=[call.me.id, owner.id], me=call.me.name, owner=owner.name, name=design.name)
+    roles = {IncidentRole.ACTOR: call.me.id, IncidentRole.OWNER: owner.id, **({IncidentRole.PRODUCT: design.entity_id} if design.entity_id is not None else {})}
+    await call.record("tools.mortal.draft_unit_type", roles=roles)
     return result(
         MortalResult.UNIT_TYPE_DRAFTED,
         owner=owner.name,
@@ -121,7 +121,11 @@ async def forge_model(call: MortalCall, args: ForgeModelInput) -> str:
     model = await draw_model(call.tick, owner, args.family, world_id=owner.world_id, quality=quality, name=args.name)
     model.description = args.description
     call.target(owner.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.MODEL_FORGED, entity_ids=[call.me.id, owner.id], me=call.me.name, name=model.name)
+    await call.record(
+        "tools.mortal.forge_model",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.OWNER: owner.id, IncidentRole.PRODUCT: model.entity_id},
+        facts={"family": args.family, "quality": quality},
+    )
     return result(
         MortalResult.MODEL_FORGED,
         name=model.name,
@@ -142,7 +146,11 @@ async def create_dish(call: MortalCall, args: CreateDishInput) -> str:
     dish = await found_dish(call.tick, people, args.method, args.course, foods, world_id=people.world_id, name=args.name)
     dish.description = args.description
     call.target(people.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.DISH_CREATED, entity_ids=[call.me.id, people.id], me=call.me.name, name=dish.name)
+    await call.record(
+        "tools.mortal.create_dish",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.MEMBER: people.id},
+        facts={"dish": dish.name, "method": args.method, "course": args.course, "foods": foods},
+    )
     return result(
         MortalResult.DISH_CREATED,
         owner=people.name,
@@ -163,7 +171,11 @@ async def draw_building_type(call: MortalCall, args: DrawStructureTypeInput) -> 
     design = await draw_structure_type(call.tick, people, args.structure_kind, world_id=people.world_id, name=args.name, form=args.form, storeys=args.storeys)
     design.description = args.description
     call.target(people.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.STRUCTURE_TYPE_DRAWN, entity_ids=[call.me.id, people.id], me=call.me.name, name=design.name)
+    await call.record(
+        "tools.mortal.draw_structure_type",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.OWNER: people.id, IncidentRole.PRODUCT: design.entity_id},
+        facts={"structure": args.structure_kind, "storeys": design.storeys},
+    )
     form = design.form.value.replace("_", " ") if design.form is not None else "any form"
     return result(
         MortalResult.STRUCTURE_TYPE_DRAWN,

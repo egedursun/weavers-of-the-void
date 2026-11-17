@@ -6,6 +6,7 @@ from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
@@ -13,12 +14,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar, region_environment
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.recording.record import record
 
 HEADCOUNT_KEYS = ("population", "followers")
 DECAYING_KEYS = ("prosperity", "fertility", "abundance", "strength", "wealth")
@@ -120,13 +121,12 @@ async def curse_decay(ctx: TickContext) -> None:
     "table.conditions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine
     rng = ctx.rng()
@@ -144,7 +144,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
         return False
     if entity.entity_type is EntityType.MORTAL:
         await end_condition(ctx, entity, ConditionKind.ENDLESS_HUNGER)
-    await note(ctx, f"The curse upon {entity.name} was lifted.", key="curses.lifted", ids=[entity.id])
+    await record(ctx, "curses.lifted", roles={IncidentRole.SUBJECT: entity.id})
     return True
 
 
@@ -177,7 +177,6 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.incident_participants",
@@ -209,7 +208,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -244,7 +243,7 @@ async def cursed_items(ctx: TickContext) -> None:
         contagious = owner.status is EntityStatus.CANON and rng.chance(rules.world_engine.cursed_item_contagion_chance)
         if contagious and not await has_flag(ctx.session, owner.id, EntityFlag.CURSED):
             await add_flag(ctx.session, owner.id, EntityFlag.CURSED, ctx.epoch)
-            await note(ctx, f"The curse of {item.name} spread to its owner {owner.name}.", key="curses.spread", ids=[item.id, owner.id])
+            await record(ctx, "curses.spread", roles={IncidentRole.SUBJECT: item.id, IncidentRole.OWNER: owner.id})
 
 
 DECAY_PHASES = (Phase("curse_decay", curse_decay),)

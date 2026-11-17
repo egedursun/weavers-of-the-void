@@ -8,20 +8,20 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.military import CaptiveCohortRow, MercenaryContractRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.military import CaptiveFate
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import LanguageStage
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.lore.language import learn_second, tongues_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.tongues.grammar import simplify
 from aerona.language.lexicon import LexiconEntry
 
@@ -87,12 +87,11 @@ async def form_pidgin(ctx: TickContext, home: EntityRow, tongues: tuple[EntityRo
         await store_words(ctx, pidgin, await words_from(ctx, parent, f"from {parent.name} (pidgin)"), home.id)
     for community in partners:
         await learn_second(ctx, community.id, pidgin.id, PIDGIN_SHARE)
-    await note(
+    await record_incident(
         ctx,
-        f"{pidgin.name} was born where {one.name} and {other.name} met without a shared tongue.",
-        key="tongues.pidgin",
-        ids=[*(row.id for row in partners), pidgin.id],
-        kind=ChronicleKind.LANGUAGE,
+        "tongues.pidgin",
+        roles={IncidentRole.PARENT: [one.id, other.id], IncidentRole.MEMBER: [row.id for row in partners], IncidentRole.PRODUCT: pidgin.id},
+        place=home.id,
     )
     return pidgin
 
@@ -151,13 +150,7 @@ async def creolise(ctx: TickContext, pidgin: EntityRow, profile: LanguageProfile
     pidgin.subtype = CREOLE_SUBTYPE
     await connect(ctx.session, community.id, pidgin.id, BondKind.SPEAKS, ctx.epoch, description=CREOLE_SUBTYPE)
     tally.creolised += 1
-    await note(
-        ctx,
-        f"The children of {community.name} grew up speaking {pidgin.name}, and the contact tongue became a creole.",
-        key="tongues.creolised",
-        ids=[community.id, pidgin.id],
-        kind=ChronicleKind.LANGUAGE,
-    )
+    await record_incident(ctx, "tongues.creolised", roles={IncidentRole.SUBJECT: community.id, IncidentRole.PRODUCT: pidgin.id})
     return True
 
 

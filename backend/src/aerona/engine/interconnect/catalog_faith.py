@@ -342,7 +342,7 @@ FAITH_MECHANICS = (
         couplings=(Coupling(Subsystem.FAITH, "arriving journeys carry preachers", EdgeKind.FLOW, "missions.journey_pct"),),
     ),
     Mechanic(
-        key="human_sacrifice_deaths",
+        key="sacrifice_of_people_deaths",
         spec_item="S4.4",
         title="Sacrificing communities give their own people to the god; every other people of the world holds it against them",
         subsystem=Subsystem.DEMOGRAPHY,
@@ -442,13 +442,13 @@ RAW = (
         (S.BODY, None, "presence"),
     ),
     (
-        "tenet_human_sacrifice",
+        "tenet_sacrifice_of_people",
         "S4.4",
         "Sacrifice of the living feeds blood gods and other peoples hold it against the faith",
         FAITH,
         DOCTRINE,
         (C, "son", "people"),
-        ("tenet_human_sacrifice",),
+        ("tenet_sacrifice_of_people",),
         (S.GODS, "doctrine.sacrifice_essence", "essence"),
     ),
     (

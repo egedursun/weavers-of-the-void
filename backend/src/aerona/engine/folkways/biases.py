@@ -268,20 +268,20 @@ async def lean(ctx: TickContext, node_id: int | None, decision: BiasedDecision) 
         return 1.0
     table = ctx.rules.biases
     damp = await damping(ctx, node_id)
-    total = 0.0
+    summed = 0.0
     strongest: tuple[float, BiasWeightRow] | None = None
     for bias, sign in PUSHES[decision].items():
         row = rows.get(bias)
         if row is None:
             continue
         push = (row.weight - MIDDLE) / MIDDLE * sign * table.push_pct * damp
-        total += push
+        summed += push
         if strongest is None or abs(push) > abs(strongest[0]):
             strongest = (push, row)
     if strongest is not None and round_half_up(strongest[0]) != 0:
         row = strongest[1]
         row.last_decision, row.last_shift, row.last_epoch = decision, round_half_up(strongest[0]), ctx.epoch
-    return max(0.0, 1 + total / PERCENT)
+    return max(0.0, 1 + summed / PERCENT)
 
 
 @memoized(OfficeRow, PolityMemberRow)

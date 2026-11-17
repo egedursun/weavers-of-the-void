@@ -5,7 +5,6 @@ from sqlalchemy import select
 from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
@@ -15,11 +14,11 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import TechnologyEra
@@ -31,20 +30,11 @@ from aerona.engine.lore.research import gate_open
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
 LIVE = (ProgrammeStage.PLANNING, ProgrammeStage.BUILDING, ProgrammeStage.TESTING)
 SPECIALISMS = (SkillKind.SCIENCE, SkillKind.ENGINEERING, SkillKind.COMPUTING)
-STAGE_WORDS = total(
-    ProgrammeStage,
-    {
-        ProgrammeStage.PLANNING: "began to plan",
-        ProgrammeStage.BUILDING: "began to build",
-        ProgrammeStage.TESTING: "began to test",
-        ProgrammeStage.COMPLETE: "mastered",
-        ProgrammeStage.ABANDONED: "gave up on",
-    },
-)
 
 
 @dataclass
@@ -147,12 +137,11 @@ async def specialists(ctx: TickContext, polity: int) -> int:
 
 
 async def tell(ctx: TickContext, row: TechProgrammeRow, realm: EntityRow, stage: ProgrammeStage) -> None:
-    label = TECHNIQUES[row.technique].label.lower()
-    await ctx.chronicle(
-        ChronicleKind.CIVILIZATION,
-        f"{realm.name} {STAGE_WORDS[stage]} {label}.",
-        template_key=f"programmes.{stage.value}",
-        entity_ids=[realm.id],
+    await record_incident(
+        ctx,
+        f"programmes.{stage.value}",
+        roles={IncidentRole.SUBJECT: realm.id},
+        facts={"technique": row.technique, "stage": stage},
         magnitude=ctx.rules.programmes.rumour_magnitude,
     )
 

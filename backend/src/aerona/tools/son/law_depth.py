@@ -11,16 +11,18 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.law.systems import system_for_case
 from aerona.engine.mythic.divine_spies import read_dreams as dream_secrets
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -49,7 +51,14 @@ async def answer_oracle(call: SonCall, args: AnswerOracleInput) -> str:
     await ensure_in_reach(call, town)
     case.oracle_answer = args.verdict
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.ANSWER_ORACLE, entity_ids=[town.id], son=call.son.name, town=town.name, reason=args.reason)
+    await call.record(
+        "tools.son.answer_oracle",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: town.id},
+        facts={"reason": args.reason},
+        place=town.id,
+        kind=ChronicleKind.WORLD,
+        steps=(StepDraft(StepAction.ANSWER, actor=call.son.id, target=town.id, record_table=CrimeCaseRow.__tablename__, record_key=str(case.id)),),
+    )
     return result(SonResult.ORACLE_ANSWERED, name=town.name, verdict=args.verdict.value)
 
 
@@ -62,7 +71,12 @@ async def read_dreams(call: SonCall, args: ReadDreamsInput) -> str:
     if learned is None:
         fail(SonResult.DREAMS_REFUSED, why="wards or a stronger god's presence turned you aside")
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.READ_DREAMS, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, reason=args.reason)
+    await call.record(
+        "tools.son.read_dreams",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.DREAMS_READ, name=mortal.name, count=len(learned))
 
 

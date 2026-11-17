@@ -30,8 +30,6 @@ class RouteDangersRules:
     sky_weather_pct: int = rule(150, 0, 300, G, "How hard foul weather bears on a sky lane (%)")
     sea_weather_pct: int = rule(100, 0, 300, G, "How hard storms at sea bear on a sea lane (%)")
     sea_danger_base: int = rule(10, 0, 100, G, "Danger of open water on any sea lane")
-    beast_note_units: int = rule(40, 0, 100000, G, "Units a beast must take from one load before the chronicle tells of it")
-    weather_note_units: int = rule(60, 0, 100000, G, "Units foul weather must spoil in one load before the chronicle tells of it")
 
 
 @dataclass(frozen=True)

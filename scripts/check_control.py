@@ -338,9 +338,19 @@ def editable(table: Table) -> bool:
     return any(column not in table.primary and column not in table.node_columns and column not in FIXED_COLUMNS for column in table.columns)
 
 
+def written_tables(text: str) -> set[str]:
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "writes":
+            for arg in node.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and arg.value.startswith("table."):
+                    found.add(arg.value.removeprefix("table."))
+    return found
+
+
 def main() -> int:
     code = Code(load_modules())
-    written = {name for path in (PACKAGE / "engine").rglob("*.py") for name in re.findall(r'"table\.([a-z_]+)"', path.read_text(encoding="utf-8"))}
+    written = {name for path in (PACKAGE / "engine").rglob("*.py") for name in written_tables(path.read_text(encoding="utf-8"))}
     engine_changes: dict[str, set[str]] = defaultdict(set)
     for key in code.defs:
         if key[0].startswith("aerona.engine"):

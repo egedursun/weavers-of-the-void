@@ -25,8 +25,9 @@ from aerona.db.tables.lore import CanonFactRow, FolkBeliefRow, LexemeRow, Thread
 from aerona.db.tables.meta import ImageRow, MapNoteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import DERIVED_BOND_KINDS, BondKind, BondRole, BondState
-from aerona.domain.enums.chronicle import ThreadStatus
+from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.divine.gods import god_of
 from aerona.engine.gods.rewards import adjust_reward
@@ -35,24 +36,13 @@ from aerona.engine.primitives.folk_names import folk_god_name, guarded_names
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.threads import advance_story, close_story, open_story, story_entities
+from aerona.engine.recording.record import record as record_incident
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand, tell
 from aerona.services.player.lines import (
     ALSO_KNOWN_AS,
-    BOND_ADDED,
-    BOND_BROKEN,
-    CANON_RESTORED,
-    CANON_STRUCK,
-    EPOCH_EDITED,
-    MERGED,
-    RECORD_EDITED,
-    RECORD_RENAMED,
     RESTORE_NOTE,
     STRIKE_NOTE,
-    THREAD_ADVANCED,
-    THREAD_CLOSED,
     THREAD_DEFAULT_CLOSING,
-    THREAD_OPENED,
 )
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -178,7 +168,11 @@ async def set_canon(scope: PlayerScope, command: SetCanon) -> Effect:
         await entities.set_status(record, EntityStatus.CANON, epoch, RESTORE_NOTE.format(creator=creator.name))
         reopened = await bonds.reopen_after_restore(record.id)
         await adjust_reward(scope.session, scope.rules, record.id, 0, thread=False, reason=creator.name)
-        message = await tell(ctx, CANON_RESTORED, ids=[record.id], creator=creator.name, entity=record.name)
+        message = (
+            await record_incident(
+                ctx, "player.canon.restored", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: record.id}, kind=ChronicleKind.CREATOR_HAND
+            )
+        ).text
         return Effect(message, record.id, kind=ActionKind.CANON_RESTORE, tool="canon:restore", values={"bonds_reopened": reopened})
     if record.status is EntityStatus.REJECTED:
         raise ValidationFailedError(f"{record.name} is already struck from canon.")
@@ -188,7 +182,11 @@ async def set_canon(scope: PlayerScope, command: SetCanon) -> Effect:
         scope.session, scope.rules, record.id, tools.reject_take_back_pct, thread=bool(tools.reject_reverts_thread), raise_only=True, reason=creator.name
     )
     await entities.set_status(record, EntityStatus.REJECTED, epoch, STRIKE_NOTE.format(creator=creator.name))
-    message = await tell(ctx, CANON_STRUCK, ids=[record.id], creator=creator.name, entity=record.name)
+    message = (
+        await record_incident(
+            ctx, "player.canon.struck", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: record.id}, kind=ChronicleKind.CREATOR_HAND
+        )
+    ).text
     return Effect(message, record.id, kind=ActionKind.CANON_STRIKE, tool="canon:strike", values={"bonds_hidden": hidden})
 
 
@@ -220,7 +218,17 @@ async def edit_record(scope: PlayerScope, command: EditRecord) -> Effect:
         old = record.name
         await EntityRepository(scope.session).rename(record, command.name.strip()[:NAME_MAX_LENGTH])
         await rewrite_name(scope.session, record.id, old, record.name)
-        messages.append(await hand(ctx, creator, RECORD_RENAMED, ids=[record.id], old=old, new=record.name))
+        messages.append(
+            (
+                await record_incident(
+                    ctx,
+                    "player.canon.renamed",
+                    roles={IncidentRole.PRODUCT: record.id, IncidentRole.AUTHORITY: creator.id},
+                    facts={"old": str(old)},
+                    kind=ChronicleKind.CREATOR_HAND,
+                )
+            ).text
+        )
     if command.title is not None:
         record.title = command.title.strip()[:TITLE_MAX_LENGTH] or None
         fields.append("title")
@@ -239,7 +247,17 @@ async def edit_record(scope: PlayerScope, command: EditRecord) -> Effect:
     if not fields and not messages:
         raise ValidationFailedError(f"Nothing to change on {record.name}.")
     if fields:
-        messages.append(await hand(ctx, creator, RECORD_EDITED, ids=[record.id], entity=record.name, fields=", ".join(fields)))
+        messages.append(
+            (
+                await record_incident(
+                    ctx,
+                    "player.canon.edited",
+                    roles={IncidentRole.TARGET: record.id, IncidentRole.AUTHORITY: creator.id},
+                    facts={"fields": str(", ".join(fields))},
+                    kind=ChronicleKind.CREATOR_HAND,
+                )
+            ).text
+        )
     return Effect(" ".join(messages), record.id)
 
 
@@ -255,7 +273,15 @@ async def open_thread(scope: PlayerScope, command: OpenThread) -> Effect:
     related = await story_entities(scope.session, thread.id)
     creator = await scope.creator()
     ctx = await scope.context("thread_open")
-    message = await hand(ctx, creator, THREAD_OPENED, ids=related, text=text[:THREAD_HEADLINE_LENGTH])
+    message = (
+        await record_incident(
+            ctx,
+            "player.canon.thread_opened",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: [*(related)]},
+            facts={"text": str(text[:THREAD_HEADLINE_LENGTH])},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, created_ids=(thread.id,), values={"thread_id": thread.id})
 
 
@@ -267,7 +293,15 @@ async def close_thread(scope: PlayerScope, command: CloseThread) -> Effect:
     await close_story(scope.session, thread, command.how.strip() or THREAD_DEFAULT_CLOSING, await scope.epoch())
     creator = await scope.creator()
     ctx = await scope.context("thread_close")
-    message = await hand(ctx, creator, THREAD_CLOSED, story=thread.id, how=thread.closing_text)
+    message = (
+        await record_incident(
+            ctx,
+            "player.canon.thread_closed",
+            roles={IncidentRole.AUTHORITY: creator.id},
+            facts={"story": thread.id, "how": thread.closing_text},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"thread_id": thread.id})
 
 
@@ -290,7 +324,15 @@ async def advance_thread(scope: PlayerScope, command: AdvanceThread) -> Effect:
     entity = await guards.entity(scope.session, command.entity_id)
     if not await advance_story(scope.session, thread, entity.id, await scope.epoch()):
         raise ValidationFailedError(f"{entity.name} already moved this story forward.")
-    message = await hand(await scope.context("thread_advance"), await scope.creator(), THREAD_ADVANCED, story=thread.id, entity=entity.name)
+    message = (
+        await record_incident(
+            await scope.context("thread_advance"),
+            "player.canon.thread_advanced",
+            roles={IncidentRole.TARGET: entity.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"story": thread.id},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, entity.id, values={"thread_id": thread.id, "progress": thread.progress})
 
 
@@ -308,7 +350,15 @@ async def edit_epoch(scope: PlayerScope, command: EditEpoch) -> Effect:
         changed.append("narrative")
     if not changed:
         raise ValidationFailedError("Give a name or a narrative.")
-    message = await hand(await scope.context("epoch_edit"), await scope.creator(), EPOCH_EDITED, epoch=row.epoch, fields=", ".join(changed))
+    message = (
+        await record_incident(
+            await scope.context("epoch_edit"),
+            "player.canon.epoch_edited",
+            roles={IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"epoch": row.epoch, "fields": str(", ".join(changed))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"epoch": row.epoch})
 
 
@@ -410,7 +460,15 @@ async def add_bond(scope: PlayerScope, command: AddBond) -> Effect:
     bond = await bonds.connect(BondDraft(command.source_id, command.target_id, command.kind, epoch, (command.description or "").strip() or DEFAULT_BOND_TEXT))
     creator = await scope.creator()
     ctx = await scope.context("bond_add")
-    message = await hand(ctx, creator, BOND_ADDED, ids=[command.source_id, command.target_id], first=first, second=second, label=bond_spec(command.kind).label)
+    message = (
+        await record_incident(
+            ctx,
+            "player.canon.bond_added",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: [command.source_id, command.target_id]},
+            facts={"first": first, "second": second, "label": bond_spec(command.kind).label},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, command.source_id, created_ids=(bond.id,))
 
 
@@ -430,9 +488,15 @@ async def remove_bond(scope: PlayerScope, command: BondTarget) -> Effect:
     second = await names.name_of(bond.target_node_id) or str(bond.target_node_id)
     creator = await scope.creator()
     ctx = await scope.context("bond_remove")
-    message = await hand(
-        ctx, creator, BOND_BROKEN, ids=[bond.source_node_id, bond.target_node_id], first=first, second=second, label=bond_spec(bond.kind).label
-    )
+    message = (
+        await record_incident(
+            ctx,
+            "player.canon.bond_broken",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: [bond.source_node_id, bond.target_node_id]},
+            facts={"first": str(first), "second": str(second), "label": bond_spec(bond.kind).label},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, bond.source_node_id)
 
 
@@ -525,7 +589,11 @@ async def merge_records(scope: PlayerScope, command: MergeRecords) -> Effect:
     await EntityRepository(scope.session).set_status(other, EntityStatus.DESTROYED, epoch, f"Merged into {main.name}.")
     creator = await scope.creator()
     ctx = await scope.context("merge")
-    message = await tell(ctx, MERGED, ids=[main.id, other.id], creator=creator.name, other=other.name, main=main.name)
+    message = (
+        await record_incident(
+            ctx, "player.canon.merged", roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: [other.id, main.id]}, kind=ChronicleKind.CREATOR_HAND
+        )
+    ).text
     return Effect(message, main.id, values={"bonds_moved": moved})
 
 

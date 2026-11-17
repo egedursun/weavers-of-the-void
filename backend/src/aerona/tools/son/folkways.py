@@ -12,6 +12,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import CharmPower, DecisionBias, ImpuritySource, MishapKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.folkways import control
 from aerona.engine.folkways.biases import MIDDLE
 from aerona.engine.primitives.queries import living_entity
@@ -21,7 +22,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -85,8 +85,11 @@ async def nudge_bias(call: SonCall, args: NudgeBiasInput) -> str:
     await control.set_bias(call.tick, mortal.id, args.bias, args.weight)
     call.target(mortal.id)
     told = args.bias.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.DIVINE_SIGN, lines.NUDGE_BIAS, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, bias=told, reason=args.reason
+    await call.record(
+        "tools.son.nudge_bias",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: mortal.id},
+        facts={"mortal": str(mortal.name), "bias": str(told), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
     )
     return result(SonResult.BIAS_NUDGED, mortal=mortal.name, bias=told, weight=args.weight, stronger=args.weight > MIDDLE)
 
@@ -97,8 +100,11 @@ async def declare_impurity(call: SonCall, args: DeclareImpurityInput) -> str:
     await control.set_source(call.tick, people.id, args.source, (rules.weight_low + rules.weight_high) // 2, 1)
     call.target(people.id)
     told = args.source.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.DECLARE_IMPURITY, entity_ids=[people.id], son=call.son.name, people=people.name, source=told, reason=args.reason
+    await call.record(
+        "tools.son.declare_impurity",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"people": people.name, "source": str(told), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.IMPURITY_DECLARED, people=people.name, source=told)
 
@@ -110,7 +116,12 @@ async def bless_charm(call: SonCall, args: BlessCharmInput) -> str:
         row.real = True
     call.target(item.id)
     told = args.power.value
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.BLESS_CHARM, entity_ids=[item.id], son=call.son.name, item=item.name, power=told, reason=args.reason)
+    await call.record(
+        "tools.son.bless_charm",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: item.id},
+        facts={"item": str(item.name), "power": str(told), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.CHARM_BLESSED, item=item.name, power=told)
 
 
@@ -125,8 +136,11 @@ async def send_misfortune(call: SonCall, args: SendMisfortuneInput) -> str:
     row = await control.add_mishap(call.tick, town.id, args.kind, args.victim_id, call.son.id)
     call.target(town.id)
     told = args.kind.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.DIVINE_SIGN, lines.SEND_MISFORTUNE, entity_ids=[town.id], son=call.son.name, town=town.name, kind=told, reason=args.reason
+    await call.record(
+        "tools.son.send_misfortune",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: town.id},
+        facts={"town": str(town.name), "kind": str(told), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
     )
     blamed = (row.attribution.value if row.attribution is not None else "chance").replace("_", " ")
     return result(SonResult.MISFORTUNE_SENT, town=town.name, kind=told, blamed=blamed)
@@ -142,7 +156,12 @@ async def stir_witch_hunt(call: SonCall, args: StirWitchHuntInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.HUNT_REFUSED, why=reason_of(error))
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.STIR_WITCH_HUNT, entity_ids=[town.id], son=call.son.name, town=town.name, reason=args.reason)
+    await call.record(
+        "tools.son.stir_witch_hunt",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: town.id},
+        facts={"town": str(town.name), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
+    )
     return result(SonResult.HUNT_STIRRED, town=town.name, fervour=row.fervour)
 
 

@@ -25,6 +25,8 @@ from aerona.domain.enums.cycles import (
 )
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.unions import (
     KinMatch,
     PartnerScope,
@@ -40,13 +42,13 @@ from aerona.domain.enums.unions import (
 from aerona.engine.cycles import control
 from aerona.engine.cycles.gifts import weigh_debt
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -145,14 +147,20 @@ async def answer_offerings(call: SonCall, args: AnswerOfferingsInput) -> str:
     gifts = await call.session.scalars(
         select(GiftRow).where(GiftRow.receiver_node_id == call.son.id, GiftRow.occasion == GiftOccasion.OFFERING, GiftRow.state == GiftState.OPEN)
     )
+    steps = [StepDraft(StepAction.ANSWER, actor=call.son.id, target=community.id, amount=owed, unit=FactUnit.COUNT)]
     for gift in gifts:
         giver = await call.session.get(EntityRow, gift.giver_node_id)
         if giver is not None and community.id in {giver.id, giver.location_id} and "state" not in gift.locked:
             gift.state = GiftState.RETURNED
             gift.settled_epoch = call.tick.epoch
+            steps.append(StepDraft(StepAction.RETURN_GIFT, actor=call.son.id, target=giver.id, record_table=GiftRow.__tablename__, record_key=str(gift.id)))
     call.target(community.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.ANSWER_OFFERINGS, entity_ids=[community.id], son=call.son.name, community=community.name, reason=args.reason
+    await call.record(
+        "tools.son.answer_offerings",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: community.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+        steps=steps,
     )
     return result(SonResult.OFFERINGS_ANSWERED, name=community.name, owed=max(0, row.offered - row.answered))
 
@@ -168,7 +176,9 @@ async def begin_long_plan(call: SonCall, args: BeginPlanInput) -> str:
         )
     except ValidationFailedError as error:
         fail(SonResult.PLAN_REFUSED, why=str(error).rstrip("."))
-    await call.chronicle(ChronicleKind.WORLD, lines.BEGIN_LONG_PLAN, entity_ids=[], son=call.son.name, plan=plan.name, reason=args.reason)
+    await call.record(
+        "tools.son.begin_long_plan", roles={IncidentRole.ACTOR: call.son.id}, facts={"plan": plan.name, "reason": args.reason}, kind=ChronicleKind.WORLD
+    )
     return result(SonResult.PLAN_BEGUN, name=plan.name, id=plan.id, steps=plan.steps)
 
 
@@ -179,7 +189,9 @@ async def further_plan(call: SonCall, args: FurtherPlanInput) -> str:
     if plan.finished_epoch is not None or "progress" in plan.locked:
         fail(SonResult.PLAN_REFUSED, why="that plan no longer moves")
     await control.advance_plan(call.tick, plan.id, call.tick.rules.long_plans.steps_per_epoch)
-    await call.chronicle(ChronicleKind.WORLD, lines.FURTHER_PLAN, entity_ids=[], son=call.son.name, plan=plan.name, reason=args.reason)
+    await call.record(
+        "tools.son.further_plan", roles={IncidentRole.ACTOR: call.son.id}, facts={"plan": plan.name, "reason": args.reason}, kind=ChronicleKind.WORLD
+    )
     return result(SonResult.PLAN_FURTHERED, name=plan.name, progress=plan.progress, steps=plan.steps)
 
 
@@ -188,7 +200,12 @@ async def shape_unions(call: SonCall, args: ShapeUnionsInput) -> str:
     values = args.model_dump(exclude={"people_id", "reason"}, mode="json")
     row = await control.set_union(call.tick, people.id, values)
     call.target(people.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_UNIONS, entity_ids=[people.id], son=call.son.name, people=people.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_unions",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"people": people.name, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.UNIONS_SHAPED, name=people.name, form=row.form.value, purpose=row.purpose.value, residence=row.residence.value)
 
 
@@ -203,7 +220,12 @@ async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
     }
     row = await control.set_kinship(call.tick, people.id, values)
     call.target(people.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_KINSHIP, entity_ids=[people.id], son=call.son.name, people=people.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_kinship",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"people": people.name, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(
         SonResult.KINSHIP_SHAPED,
         name=people.name,
@@ -216,7 +238,12 @@ async def shape_reproduction(call: SonCall, args: ShapeReproductionInput) -> str
     people = await reached(call, args.people_id, frozenset({EntityType.PEOPLE}), SonResult.REPRODUCTION_REFUSED, "there is no such people")
     row = await control.set_reproduction(call.tick, people.id, {"system": args.system.value})
     call.target(people.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_REPRODUCTION, entity_ids=[people.id], son=call.son.name, people=people.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_reproduction",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"people": people.name, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.REPRODUCTION_SHAPED, name=people.name, system=row.system.value.replace("_", " "))
 
 
@@ -224,8 +251,11 @@ async def try_realm(call: SonCall, args: TryRealmInput) -> str:
     realm = await reached(call, args.polity_id, frozenset({EntityType.POLITY}), SonResult.REALM_TRY_REFUSED, "there is no such realm")
     challenge = await control.strike_challenge(call.tick, realm.id, args.kind, args.severity)
     call.target(realm.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.TRY_REALM, entity_ids=[realm.id], son=call.son.name, realm=realm.name, kind=args.kind.value, reason=args.reason
+    await call.record(
+        "tools.son.try_realm",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"realm": str(realm.name), "kind": args.kind, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.REALM_TRIED, name=realm.name, kind=args.kind.value, response=challenge.response.value)
 
@@ -237,8 +267,11 @@ async def set_circuit(call: SonCall, args: SetCircuitInput) -> str:
         circuit = await control.new_circuit(call.tick, args.name, [stop.id for stop in stops], None)
     except ValidationFailedError as error:
         fail(SonResult.CIRCUIT_REFUSED, why=str(error).rstrip("."))
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.SET_CIRCUIT, entity_ids=[stop.id for stop in stops], son=call.son.name, circuit=circuit.name, reason=args.reason
+    await call.record(
+        "tools.son.set_circuit",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [*[stop.id for stop in stops]]},
+        facts={"circuit": circuit.name, "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.CIRCUIT_SET, name=circuit.name, count=len(circuit.stops), id=circuit.id)
 

@@ -123,6 +123,9 @@ export function WikiRecords({
     <>
       <CelestialTimeline
         lines={wiki?.timeline ?? []}
+        total={wiki?.timeline_total ?? 0}
+        scope='node'
+        scopeId={nodeId}
         emptyText={`The chronicle has not named ${name} yet.`}
       />
       <RecordGallery

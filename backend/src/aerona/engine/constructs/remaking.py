@@ -11,16 +11,17 @@ from aerona.domain.enums.body import BodyFunction
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import realm_of_town, town_of
 
 SHIFT = 20
@@ -78,7 +79,13 @@ async def remake(ctx: TickContext, culprit: EntityRow, case_id: int | None) -> R
     if forced is BodyFunction.GRASP:
         set_stats(culprit, strength=clamp_int(stat_or(culprit, "strength", 0) + SHIFT, 0, PERCENT))
     await ctx.session.flush()
-    await note(ctx, f"{culprit.name} was remade in body by the law.", key="law.remade", ids=[culprit.id])
+    await record(
+        ctx,
+        "law.remade",
+        roles={IncidentRole.ACCUSED: culprit.id, IncidentRole.AUTHORITY: realm},
+        facts={"lost": lost, "forced": forced, "bound_to": row.bound_to_entity_id},
+        place=town.id if town is not None else None,
+    )
     return row
 
 
@@ -99,7 +106,13 @@ async def rise(ctx: TickContext, town: EntityRow, rows: list[RemadeRow], tally: 
         if "grievance" not in row.locked:
             row.grievance //= 2
     tally.revolts += 1
-    await note(ctx, f"The remade of {town.name} rose against those who remade them.", key="law.remade_rose", ids=[town.id])
+    await record(
+        ctx,
+        "law.remade_rose",
+        roles={IncidentRole.SUBJECT: town.id, IncidentRole.MEMBER: [row.mortal_entity_id for row in rows]},
+        facts={"remade": len(rows)},
+        place=town.id,
+    )
 
 
 async def keep_remade(ctx: TickContext, tally: RemadeTally) -> None:

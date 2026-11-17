@@ -120,8 +120,8 @@ async def test_sever_and_stitch(ctx: TickContext, cosmos: Cosmos) -> None:
     result = await sever_route(storm_ctx, route.id, duration=3, by="The Creator")
     assert result.revealed and route.known and not route.active and result.waiting == 1
     assert route.temp_closed_until_epoch == ctx.epoch + 3
-    text = await repair_route(ctx, route.id, "The Creator")
-    assert route.active and "reopened the severed route" in text
+    text = await repair_route(ctx, route.id)
+    assert route.active and "opened again" in text
 
 
 async def test_alignment_reveals_and_unseals(ctx: TickContext, cosmos: Cosmos) -> None:

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, HolderLevelRow
@@ -13,10 +14,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.demography.tongues import tongue_link
@@ -25,17 +27,16 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import has_technique, masters
 from aerona.engine.lore.traditions import best_fit
 from aerona.engine.mind.hooks import converted
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import KnowledgeHoldings, teach
 from aerona.engine.primitives.faith import FaithIndex, change_religion, faith_dominance, faith_shares, worships_creator
 from aerona.engine.primitives.knowledge import LawBook, times_of
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, spoken_language
-from aerona.language.titles import community_phrase
+from aerona.engine.recording.record import FactInput, StepDraft
+from aerona.engine.recording.record import record as record_incident
 
 DIFFUSION_BOND_KINDS = (BondKind.ALLY, BondKind.RULES, BondKind.PAYS_TRIBUTE)
-ITEM_SEPARATOR = "; "
 
 
 @dataclass(frozen=True)
@@ -102,12 +103,12 @@ async def _diffuse_direction(
             continue
         if await teach(ctx, target.id, knowledge, f"spread from {source.name}", holdings):
             spread[0] += 1
-            await note(
+            await record_incident(
                 ctx,
-                f"Knowledge of {knowledge.name} spread from {source.name} to {target.name}.",
-                key="culture.knowledge_diffusion",
-                ids=[source.id, target.id, knowledge.id],
-                kind=ChronicleKind.KNOWLEDGE,
+                "culture.knowledge_diffusion",
+                roles={IncidentRole.TEACHER: source.id, IncidentRole.LEARNER: target.id, IncidentRole.SUBJECT: knowledge.id},
+                facts={"chance": min(100.0, chance * (1 + books + taught)), "from_books": books * PERCENT, "from_masters": taught * PERCENT},
+                terms=[Term("rules.research.teacher_pct", taught * PERCENT), Term("rules.research.book_diffusion_pct", books * PERCENT)],
             )
 
 
@@ -123,12 +124,12 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     if not ctx.rng(f"language.{target.id}").chance(ctx.rules.knowledge.language_spread_chance):
         return
     await bonds.connect(BondDraft(target.id, language.id, BondKind.SPEAKS, ctx.epoch, "spread"))
-    await note(
+    await record_incident(
         ctx,
-        f"The {language.name} language spread among {target.name}.",
-        key="culture.language_spread",
-        ids=[target.id, language.id],
-        kind=ChronicleKind.LANGUAGE,
+        "culture.language_spread",
+        roles={IncidentRole.SUBJECT: language.id, IncidentRole.LEARNER: target.id, IncidentRole.TEACHER: source.id},
+        facts={"chance": ctx.rules.knowledge.language_spread_chance},
+        terms=[Term("rules.knowledge.language_spread_chance", ctx.rules.knowledge.language_spread_chance)],
     )
 
 
@@ -142,7 +143,6 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -172,8 +172,9 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
 )
 async def knowledge_diffusion(ctx: TickContext) -> None:
@@ -238,7 +239,7 @@ async def _celebrated(ctx: TickContext, entity_id: int) -> list[EntityRow]:
     return traditions
 
 
-async def _pass_tradition(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int) -> str | None:
+async def _pass_tradition(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int) -> int | None:
     held = {tradition.id for tradition in await _celebrated(ctx, target.id)}
     offered = [tradition for tradition in await _celebrated(ctx, source.id) if tradition.id not in held]
     rng = ctx.rng(f"tradition.{source.id}.{target.id}")
@@ -249,10 +250,10 @@ async def _pass_tradition(ctx: TickContext, source: EntityRow, target: EntityRow
         return None
     tradition = chosen[0]
     await BondRepository(ctx.session).connect(BondDraft(target.id, tradition.id, BondKind.CELEBRATES, ctx.epoch, f"passed from {source.name}"))
-    return f"{target.name} adopted the {tradition.name} tradition"
+    return tradition.id
 
 
-async def _pass_knowledge(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int, first_contact: bool) -> str | None:
+async def _pass_knowledge(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int, first_contact: bool) -> int | None:
     holdings = await KnowledgeHoldings.load(ctx.session)
     offered = [
         knowledge
@@ -265,10 +266,10 @@ async def _pass_knowledge(ctx: TickContext, source: EntityRow, target: EntityRow
     knowledge = rng.pick(offered)
     if not await teach(ctx, target.id, knowledge, f"in contact with {source.name}", holdings):
         return None
-    return f"the {knowledge.name} knowledge passed to {target.name}"
+    return knowledge.id
 
 
-async def _pass_god(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int) -> str | None:
+async def _pass_god(ctx: TickContext, source: EntityRow, target: EntityRow, rate: int) -> int | None:
     faith = await FaithIndex.load(ctx.session)
     god = faith.patron(source.id)
     if god is None or not faith.is_living_god(god) or god == faith.patron(target.id) or await worships_creator(ctx.session, target.id):
@@ -279,37 +280,37 @@ async def _pass_god(ctx: TickContext, source: EntityRow, target: EntityRow, rate
     if not await change_religion(ctx.session, target, god, ctx.epoch, f"contact with {source.name}", syncretic=syncretic, faith=faith):
         return None
     await converted(ctx, target.id, source.id, note=f"contact with {source.name}")
-    name = faith.sons[god].name if god in faith.sons else "the Creator"
-    return f"{target.name} began making offerings to {name} too" if syncretic else f"{target.name} began to worship {name}"
+    return god
 
 
 async def cultural_contact(ctx: TickContext, source: EntityRow, target: EntityRow, *, first_contact: bool = False) -> int:
     if frozen(source.id, target.id):
         return 0
     rates = contact_rates(ctx, first_contact)
-    items: list[str] = []
+    facts: dict[str, FactInput] = {}
+    steps: list[StepDraft] = []
     if ctx.rng(f"contact_word.{source.id}.{target.id}").chance(rates.loanword):
         borrowing = await borrow_word(ctx, source, target)
         if borrowing is not None:
-            language = await ctx.session.get(EntityRow, borrowing.language_id)
-            items.append(f'{language.name if language else target.name} borrowed the word "{borrowing.word}"')
-    for outcome in (
-        await _pass_tradition(ctx, source, target, rates.tradition),
-        await _pass_knowledge(ctx, source, target, rates.knowledge, first_contact),
-        await _pass_god(ctx, source, target, rates.god),
+            facts["word"] = borrowing.word
+            steps.append(StepDraft(StepAction.LEARN, actor=target.id, target=source.id, record_table="lexemes", record_key=borrowing.word))
+    for key, action, outcome in (
+        ("tradition", StepAction.CELEBRATE, await _pass_tradition(ctx, source, target, rates.tradition)),
+        ("knowledge", StepAction.TEACH, await _pass_knowledge(ctx, source, target, rates.knowledge, first_contact)),
+        ("god", StepAction.CONVERT, await _pass_god(ctx, source, target, rates.god)),
     ):
         if outcome is not None:
-            items.append(outcome)
-    if items:
-        await note(
+            facts[key] = outcome
+            steps.append(StepDraft(action, actor=source.id, target=target.id, record_table="nodes", record_key=str(outcome)))
+    if facts:
+        await record_incident(
             ctx,
-            f"Cultural exchange {community_phrase(source.entity_type, source.name)} and {community_phrase(target.entity_type, target.name)}: "
-            f"{ITEM_SEPARATOR.join(items)}.",
-            key="culture.contact",
-            ids=[source.id, target.id],
-            kind=ChronicleKind.CULTURE,
+            "culture.contact",
+            roles={IncidentRole.ACTOR: source.id, IncidentRole.TARGET: target.id},
+            facts={**facts, "exchanges": len(facts)},
+            steps=steps,
         )
-    return len(items)
+    return len(facts)
 
 
 def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None]) -> tuple[EntityRow, EntityRow] | None:
@@ -324,7 +325,6 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.bonds",
     "table.creator",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.lexemes",
     "table.nodes",
     "table.reverences",
@@ -341,7 +341,6 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.lexemes",

@@ -6,6 +6,7 @@ from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition
+from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, sex_spec, sexes, total
@@ -13,6 +14,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
@@ -107,16 +109,26 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
     table = ctx.rules.peoples
     spans = (biology.maturity_years, biology.adult_years) if biology is not None else (table.maturity_years, table.adult_years)
     spec = await sex_spec(ctx.session, community)
-    for _ in range(sampled):
-        year = one_year(ctx.rules, rows, biology, pressures, spec)
-        births += await give_births(ctx, community, rows, year.births, spec)
-        deaths += sum(take(rows, band, amount) for band, amount in year.deaths.items())
-        age_cohorts(ctx.session, community, rows, spans, ctx.epoch)
-    remaining = round_half_up(ctx.rules.time.years_per_epoch * pressures.time) - sampled
-    after = total(rows)
-    if remaining > 0 and sampled > 0 and before > 0 and after > 0:
-        yearly = (after / before) ** (1 / sampled)
-        factor = yearly**remaining
-        for row in rows.values():
-            row.count = max(0, round_half_up(row.count * factor))
+    with explaining():
+        explain_pressures(community.id, pressures, sampled)
+        for _ in range(sampled):
+            year = one_year(ctx.rules, rows, biology, pressures, spec)
+            births += await give_births(ctx, community, rows, year.births, spec)
+            deaths += sum(take(rows, band, amount) for band, amount in year.deaths.items())
+            age_cohorts(ctx.session, community, rows, spans, ctx.epoch)
+        remaining = round_half_up(ctx.rules.time.years_per_epoch * pressures.time) - sampled
+        after = total(rows)
+        if remaining > 0 and sampled > 0 and before > 0 and after > 0:
+            yearly = (after / before) ** (1 / sampled)
+            factor = yearly**remaining
+            term("demography.unsampled_years", remaining, source_node_id=community.id)
+            term("demography.yearly_growth", factor, ModifierOp.MULTIPLY, source_node_id=community.id)
+            for row in rows.values():
+                row.count = max(0, round_half_up(row.count * factor))
     return total(rows) - before
+
+
+def explain_pressures(community_id: int, pressures: Pressures, sampled: int) -> None:
+    term("demography.sampled_years", sampled, source_node_id=community_id)
+    for name in ("fertility", "hunger", "crowding", "disease", "stress", "mortality", "time"):
+        term(f"demography.pressure.{name}", getattr(pressures, name), ModifierOp.MULTIPLY, source_node_id=community_id)

@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind, FactionRank
 from aerona.domain.enums.polity import (
     ClauseKind,
+    CoupCause,
     HouseTrait,
     LawKind,
     OathKind,
@@ -138,7 +139,7 @@ async def test_a_seized_throne_marks_the_usurper_with_infamy(scope: PlayerScope,
     book = await RealmBook.load(session)
     found = next(item for item in book.realms.values() if item.profile.core_entity_id == core)
     ctx = await scope.context("test_coup")
-    assert await seize_throne(ctx, found, usurper, "a test of arms")
+    assert await seize_throne(ctx, found, usurper, CoupCause.MARSHAL)
     repute = await session.get(MortalProfileRow, usurper.id)
     assert found.ruler_id == usurper.id and "usurper" in found.profile.legitimacy_parts and repute is not None and repute.infamy > 0
 

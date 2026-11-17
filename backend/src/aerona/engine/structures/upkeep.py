@@ -4,19 +4,19 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import TreasuryEntry
-from aerona.domain.enums.structure import STANDING_STATES, ConstructionState
+from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, RuinCause
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import decay_loss
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.means.building import can_repair, weathering
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.structures.integrity import ensure_sections, mend_sections, overall, state_for
 from aerona.engine.structures.profiles import host_for, material_props, refresh, standing_state
 from aerona.engine.structures.spec import Resolved
@@ -74,12 +74,18 @@ async def wear(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, 
     profile.condition = clamp_int(min(ceiling, overall(rows)), 0, PERCENT)
 
 
-async def fall_to_ruin(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, reason: str) -> None:
+async def fall_to_ruin(ctx: TickContext, work: EntityRow, profile: StructureProfileRow, cause: RuinCause) -> None:
     profile.construction_state = ConstructionState.RUINED
     profile.effect_pct = 0
     await add_flag(ctx.session, work.id, EntityFlag.RUIN, ctx.epoch)
     await unlink(ctx.session, work.id)
-    await note(ctx, f"{work.name} fell to ruin: {reason}.", key="structures.ruined", ids=[work.id], kind=ChronicleKind.CONSTRUCTION)
+    await record(
+        ctx,
+        "structures.ruined",
+        roles={IncidentRole.SUBJECT: work.id, IncidentRole.OWNER: profile.host_entity_id},
+        facts={"cause": cause, "condition": profile.condition, "unpaid_epochs": profile.unpaid_epochs},
+        place=work.location_id,
+    )
     ctx.count("structures_ruined")
 
 
@@ -100,11 +106,15 @@ async def keep(ctx: TickContext, work: EntityRow, profile: StructureProfileRow) 
         if profile.host_entity_id is None and profile.unpaid_epochs >= ctx.rules.upkeep.ruin_neglect_epochs:
             profile.construction_state = ConstructionState.RUINED
     if profile.construction_state is ConstructionState.RUINED:
-        await fall_to_ruin(ctx, work, profile, "no one kept it" if profile.condition > 0 else "it crumbled away")
+        await fall_to_ruin(ctx, work, profile, RuinCause.UNKEPT if profile.condition > 0 else RuinCause.CRUMBLED)
         return
     if before is ConstructionState.COMPLETE and profile.construction_state is ConstructionState.DAMAGED:
-        await note(
-            ctx, f"{work.name} is falling into disrepair; its upkeep went unpaid.", key="structures.damaged", ids=[work.id], kind=ChronicleKind.CONSTRUCTION
+        await record(
+            ctx,
+            "structures.neglected",
+            roles={IncidentRole.SUBJECT: work.id, IncidentRole.OWNER: profile.host_entity_id},
+            facts={"condition": profile.condition, "unpaid_epochs": profile.unpaid_epochs},
+            place=work.location_id,
         )
     await refresh(ctx.session, ctx.rules, work, profile)
     profile.updated_epoch = ctx.epoch

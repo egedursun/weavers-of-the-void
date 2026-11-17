@@ -4,6 +4,7 @@ from aerona.db.tables.cosmography import GalacticStructureRow, GalaxyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import GalacticStructureKind, PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.ladder import settle_star
@@ -11,6 +12,7 @@ from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 
 async def after_supernova(ctx: TickContext, star: StarRow) -> None:
@@ -37,7 +39,15 @@ async def after_supernova(ctx: TickContext, star: StarRow) -> None:
     for world in cosmography.worlds.values():
         if held(world.id) or cosmography.place_world(world).star is not star:
             continue
-        await cold_snap(ctx, world.id, ctx.rules.world_life.supernova_cold, f"The explosion of {star.name}")
+        cooled = await cold_snap(ctx, world.id, ctx.rules.world_life.supernova_cold)
+        if cooled:
+            await record(
+                ctx,
+                "climate.star_cold",
+                roles={IncidentRole.ACTOR: star.id, IncidentRole.SUBJECT: world.id},
+                facts={"cold": ctx.rules.world_life.supernova_cold, "regions": cooled},
+                world_id=world.id,
+            )
         regions = sorted(await canon(ctx.session, [EntityType.REGION], world.id), key=lambda row: row.id)
         rng = ctx.rng(f"supernova_shard.{star.id}.{world.id}")
         if regions and rng.chance(ctx.rules.phenomena.sky_shard_chance):

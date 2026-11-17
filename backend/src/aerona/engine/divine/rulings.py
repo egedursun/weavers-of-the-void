@@ -23,7 +23,9 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import CouncilMotion, GoalState, SonPunishment
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import OfficeChoice
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.transform import TransformKind, TransformTrigger
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes
@@ -45,9 +47,10 @@ from aerona.engine.divine.decrees import active_rulings, assigned_world
 from aerona.engine.divine.motions import Motion
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mythic.offices import appoint, vacant_office
-from aerona.engine.notes import note
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.transform.run import order
 
@@ -241,7 +244,14 @@ async def enforce_rulings(ctx: TickContext) -> int:
                 son = await ctx.session.get(SonRow, row.target_node_id)
                 if son is not None and son.status is SonStatus.EXILED and not held(son.id):
                     son.status = SonStatus.ACTIVE
-            await note(ctx, f"The council's ruling ({MOTION_LABELS[row.motion].lower()}) lapsed.", key="divine.ruling_lapsed", kind=ChronicleKind.COUNCIL)
+            await record_incident(
+                ctx,
+                "divine.ruling_lapsed",
+                roles={IncidentRole.TARGET: row.target_node_id},
+                facts={"motion": row.motion, "motion_label": MOTION_LABELS[row.motion].lower()},
+                kind=ChronicleKind.COUNCIL,
+                world_id=row.world_id,
+            )
             continue
         if row.motion is M.PUNISH_SON and row.punishment is SonPunishment.CHAIN and row.target_node_id is not None:
             son = await ctx.session.get(SonRow, row.target_node_id)
@@ -355,10 +365,18 @@ async def engine_council(ctx: TickContext) -> CouncilRow | None:
     row.minutes = row.minutes.model_copy(update={"notes": tuple(notes)})
     verdict = "passed" if passed else "rejected"
     tail = f" {'; '.join(notes)}." if notes else ""
-    await note(
+    await record_incident(
         ctx,
-        f"The Council of the Gods met on the motion: {label.lower()} — {verdict} ({yes} yes, {len(weights) - yes} no).{tail}",
-        key="council.engine_held",
+        "council.engine_held",
+        roles={IncidentRole.MEMBER: [god.id for god in [*members, *guests]]},
+        facts={"label": label.lower(), "verdict": verdict, "yes": yes, "no": len(weights) - yes, "tail": tail},
         kind=ChronicleKind.COUNCIL,
+        steps=(
+            *(
+                StepDraft(StepAction.VOTE, actor=god.id, outcome=StepOutcome.ACCEPTED if weights[god.id][1] else StepOutcome.REFUSED)
+                for god in [*members, *guests]
+            ),
+            StepDraft(StepAction.COUNT_VOTES, outcome=StepOutcome.ACCEPTED if passed else StepOutcome.REFUSED),
+        ),
     )
     return row

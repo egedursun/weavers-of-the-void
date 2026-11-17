@@ -15,6 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ProphecyPredicate
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Emotion
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import BureauRank, DivinationQuestion, ForesightSource, OmenVerdict, SacramentKind, SacramentProtection
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.sacred import control
@@ -24,7 +25,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -116,8 +116,11 @@ async def bind_genius_locus(call: SonCall, args: BindGeniusLocusInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.GENIUS_REFUSED, why=reason_of(error))
     call.target(row.spirit_entity_id)
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.BIND_GENIUS_LOCUS, entity_ids=[place.id, row.spirit_entity_id], son=call.son.name, place=place.name, reason=args.reason
+    await call.record(
+        "tools.son.bind_genius_locus",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [place.id, row.spirit_entity_id]},
+        facts={"place_detail": str(place.name), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.GENIUS_BOUND, place=place.name, kind=row.kind.value)
 
@@ -136,8 +139,11 @@ async def judge_petition(call: SonCall, args: JudgePetitionInput) -> str:
         fail(SonResult.PETITION_REFUSED, why=reason_of(error))
     call.target(spirit.id)
     verdict = "granted" if args.granted else "denied"
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.JUDGE_PETITION, entity_ids=[spirit.id], son=call.son.name, office=spirit.name, verdict=verdict, reason=args.reason
+    await call.record(
+        "tools.son.judge_petition",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: spirit.id},
+        facts={"office": str(spirit.name), "verdict": str(verdict), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.PETITION_JUDGED, office=spirit.name, verdict=verdict)
 
@@ -150,8 +156,11 @@ async def appoint_spirit(call: SonCall, args: AppointSpiritInput) -> str:
         fail(SonResult.SPIRIT_APPOINT_REFUSED, why=reason_of(error))
     call.target(spirit.id)
     standing = "dismissed" if row.dismissed else f"made a spirit of {spoken(row.rank)} rank"
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.APPOINT_SPIRIT, entity_ids=[spirit.id], son=call.son.name, spirit=spirit.name, standing=standing, reason=args.reason
+    await call.record(
+        "tools.son.appoint_spirit",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: spirit.id},
+        facts={"spirit": str(spirit.name), "standing": standing, "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.SPIRIT_APPOINTED, spirit=spirit.name, standing=standing)
 
@@ -163,7 +172,12 @@ async def answer_mystic(call: SonCall, args: AnswerMysticInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.MYSTIC_REFUSED, why=reason_of(error))
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.ANSWER_MYSTIC, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, reason=args.reason)
+    await call.record(
+        "tools.son.answer_mystic",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: mortal.id},
+        facts={"mortal": str(mortal.name), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
+    )
     return result(SonResult.MYSTIC_ANSWERED, mortal=mortal.name, visions=row.visions, followers=row.followers)
 
 
@@ -177,7 +191,12 @@ async def ease_theodicy(call: SonCall, args: EaseTheodicyInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.THEODICY_REFUSED, why=reason_of(error))
     call.target(town.id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.EASE_THEODICY, entity_ids=[town.id], son=call.son.name, town=town.name, reason=args.reason)
+    await call.record(
+        "tools.son.ease_theodicy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: town.id},
+        facts={"town": str(town.name), "reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.THEODICY_EASED, town=town.name)
 
 
@@ -188,8 +207,11 @@ async def teach_sacrament(call: SonCall, args: TeachSacramentInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.SACRAMENT_REFUSED, why=reason_of(error))
     call.target(cult.id)
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.TEACH_SACRAMENT, entity_ids=[cult.id], son=call.son.name, cult=cult.name, sacrament=args.kind.value, reason=args.reason
+    await call.record(
+        "tools.son.teach_sacrament",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cult.id},
+        facts={"cult": str(cult.name), "sacrament": args.kind, "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.SACRAMENT_TAUGHT, cult=cult.name, sacrament=args.kind.value, protection=row.protection.value)
 
@@ -204,7 +226,12 @@ async def align_afterlife(call: SonCall, args: AlignAfterlifeInput) -> str:
         fail(SonResult.AFTERLIFE_REFUSED, why=reason_of(error))
     call.target(cult.id)
     model = row.model.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORSHIP, lines.ALIGN_AFTERLIFE, entity_ids=[cult.id], son=call.son.name, cult=cult.name, model=model, reason=args.reason)
+    await call.record(
+        "tools.son.align_afterlife",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cult.id},
+        facts={"cult": str(cult.name), "model": str(model), "reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
+    )
     return result(SonResult.AFTERLIFE_ALIGNED, cult=cult.name, model=model, cost=call.tick.rules.afterlife_belief.align_cost)
 
 
@@ -215,8 +242,11 @@ async def sway_diviner(call: SonCall, args: SwayDivinerInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.DIVINER_REFUSED, why=reason_of(error))
     call.target(realm.id)
-    await call.chronicle(
-        ChronicleKind.FATE, lines.SWAY_DIVINER, entity_ids=[realm.id], son=call.son.name, realm=realm.name, verdict=args.verdict.value, reason=args.reason
+    await call.record(
+        "tools.son.sway_diviner",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"realm": str(realm.name), "verdict": args.verdict, "reason": args.reason},
+        kind=ChronicleKind.FATE,
     )
     return result(SonResult.DIVINER_SWAYED, realm=realm.name, verdict=args.verdict.value, heeded="heeded it" if row.heeded else "paid it little mind")
 
@@ -233,14 +263,11 @@ async def grant_foresight(call: SonCall, args: GrantForesightInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.FORESIGHT_REFUSED, why=reason_of(error))
     call.target(mortal.id)
-    await call.chronicle(
-        ChronicleKind.FATE,
-        lines.GRANT_FORESIGHT,
-        entity_ids=[mortal.id, subject.id],
-        son=call.son.name,
-        mortal=mortal.name,
-        subject=subject.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.grant_foresight",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [subject.id, mortal.id]},
+        facts={"mortal": str(mortal.name), "reason": args.reason},
+        kind=ChronicleKind.FATE,
     )
     return result(SonResult.FORESIGHT_GRANTED, mortal=mortal.name, subject=subject.name, certainty=row.certainty)
 
@@ -251,7 +278,9 @@ async def feed_on(call: SonCall, args: FeedOnInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.FEEDING_REFUSED, why=reason_of(error))
     call.target(call.son.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.FEED_ON, entity_ids=[], son=call.son.name, emotion=args.emotion.value, reason=args.reason)
+    await call.record(
+        "tools.son.feed_on", roles={IncidentRole.ACTOR: call.son.id}, facts={"emotion": args.emotion, "reason": args.reason}, kind=ChronicleKind.WORSHIP
+    )
     return result(SonResult.FEEDING_SET, emotion=args.emotion.value, weight=args.weight)
 
 

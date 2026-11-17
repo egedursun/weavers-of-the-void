@@ -11,15 +11,15 @@ from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.primitives.naming import seed_of
@@ -27,6 +27,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, close
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 POWER = 3
@@ -173,8 +174,8 @@ async def collapse(ctx: TickContext, company: EntityRow, row: CompanyProfileRow,
             set_stats(holder, wealth=clamp_int((stat(holder, WEALTH) or 0) - table.collapse_loss, 0, PERCENT))
     await default_loans(ctx, company, tally)
     await retire_in(ctx, company, "the company failed and its shareholders lost their stakes", close_bonds=True)
-    await note(
-        ctx, f"{company.name} collapsed, and every shareholder lost by it.", key="companies.collapsed", ids=[company.id], kind=ChronicleKind.CIVILIZATION
+    await record(
+        ctx, "companies.collapsed", roles={IncidentRole.SUBJECT: company.id}, facts={"loss_per_holder": table.collapse_loss}, place=company.location_id
     )
     tally.collapsed += 1
 
@@ -191,8 +192,12 @@ async def conquer(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, 
         return
     ctx.session.add(OccupationRow(region_entity_id=region, occupier_entity_id=company.id, since_epoch=ctx.epoch))
     row.region_entity_id = region
-    await note(
-        ctx, f"{company.name} seized the land at the far end of its route.", key="companies.conquest", ids=[company.id, region], kind=ChronicleKind.CIVILIZATION
+    await record(
+        ctx,
+        "companies.conquest",
+        roles={IncidentRole.ACTOR: company.id, IncidentRole.PLACE: region, IncidentRole.INSTRUMENT: row.route_entity_id},
+        steps=(StepDraft(StepAction.SEIZE_GOODS, actor=company.id, target=region, locus_kind=StepLocus.REGION, locus_node=region),),
+        place=region,
     )
     tally.conquered += 1
 
@@ -226,12 +231,12 @@ async def found_dominion(ctx: TickContext, company: EntityRow, row: CompanyProfi
     await ctx.session.delete(occupation)
     row.region_entity_id = None
     await retire_in(ctx, company, f"the company became {realm.entity.name}", close_bonds=True)
-    await note(
+    await record(
         ctx,
-        f"{company.name} put away its ledgers and ruled the land it held as {realm.entity.name}.",
-        key="companies.dominion",
-        ids=[company.id, realm.entity.id, market.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "companies.dominion",
+        roles={IncidentRole.PREDECESSOR: company.id, IncidentRole.SUCCESSOR: realm.entity.id, IncidentRole.PLACE: market.id},
+        facts={"government": realm.profile.government},
+        place=market.id,
     )
     tally.dominions += 1
     return True

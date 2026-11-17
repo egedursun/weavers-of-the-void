@@ -40,6 +40,7 @@ function detail(
     ...DETAIL,
     world: { id: 2, name: 'The Glass Wastes' },
     chronicle: [CHRONICLE_LINE],
+    chronicle_total: 1,
     ...extra,
     god: { ...GOD, ...god },
   }

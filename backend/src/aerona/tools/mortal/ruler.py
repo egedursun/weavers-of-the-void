@@ -8,8 +8,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
 from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.polity.book import Realm, RealmBook
@@ -20,7 +20,6 @@ from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import AppointOfficerInput, EnactLawInput, SetTaxInput
 from aerona.tools.mortal.justice import bring_law, law_known
 
@@ -54,8 +53,10 @@ async def enact_law(call: MortalCall, args: EnactLawInput) -> str:
         fail(MortalResult.LAW_TERMS_INVALID, reason=str(error))
     await call.bump(TurnCounter.LAWS_ENACTED)
     call.target(law.id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.LAW_LAID, entity_ids=[call.me.id, law.id, realm.entity.id], me=call.me.name, law=law.name, realm=realm.entity.name
+    await call.record(
+        "tools.mortal.law_laid",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.PRODUCT: law.id, IncidentRole.OWNER: realm.entity.id},
+        facts={"law": args.kind, "basis": LegitimacyBasis.DECREE},
     )
     return result(MortalResult.LAW_ENACTED, name=law.name, realm=realm.entity.name)
 

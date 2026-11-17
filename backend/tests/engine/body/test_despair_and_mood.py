@@ -53,11 +53,12 @@ async def test_a_despairing_break_is_told_and_eases_the_strain(realm: Realm) -> 
     assert await realm.session.scalar(select(ChronicleRow).where(ChronicleRow.template_key == "stress.despair")) is not None
 
 
-async def test_the_sorrow_line_names_the_mortal(realm: Realm) -> None:
+async def test_the_sorrow_break_is_told_as_despair_with_its_melancholy(realm: Realm) -> None:
     sufferer = await mortal(realm, "Lysa")
     ctx = context(realm.session)
     profile, _ = await ensure_profile(realm.session, sufferer.id, ctx.epoch)
-    assert "Lysa" in await BREAKS[StressBreak.DESPAIR](ctx, sufferer, profile, ctx.rng("test.despair"))
+    broke = await BREAKS[StressBreak.DESPAIR](ctx, sufferer, profile, ctx.rng("test.despair"))
+    assert broke.key == "stress.despair" and broke.facts["condition"] is ConditionKind.MELANCHOLY
 
 
 async def test_mood_is_read_from_the_profile_and_scales_labour_without_going_negative(realm: Realm) -> None:

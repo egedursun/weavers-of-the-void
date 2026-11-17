@@ -2,18 +2,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.structures import HOLY_HOUSES
 from aerona.core.errors import ValidationFailedError
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.environment.places import holy_place_ids
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 SITE_TYPES = frozenset({EntityType.PLACE, EntityType.STRUCTURE, EntityType.REGION})
@@ -49,7 +52,7 @@ async def has_holy_site(session: AsyncSession, community: EntityRow, world_id: i
     return (world is not None and world.patron_son_id == patron.id) or bool(await holy_sites(session, world_id, patron.id, rules))
 
 
-async def reach_holy_site(ctx: TickContext, rules: Rules, pilgrims: EntityRow, world_id: int, landing: EntityRow) -> tuple[EntityRow, str]:
+async def reach_holy_site(ctx: TickContext, rules: Rules, pilgrims: EntityRow, world_id: int, landing: EntityRow) -> tuple[EntityRow, StepDraft]:
     patron = await living_patron(ctx.session, pilgrims)
     sites = await holy_sites(ctx.session, world_id, patron.id if patron is not None else None, rules)
     site = sites[0] if sites else landing
@@ -59,17 +62,22 @@ async def reach_holy_site(ctx: TickContext, rules: Rules, pilgrims: EntityRow, w
     shift_stat(pilgrims, "piety", rules.travel.pilgrimage_piety)
     if patron is not None:
         patron.fame += rules.travel.pilgrimage_renown
-    in_name = f" in the name of {patron.name}" if patron is not None else ""
-    return site, f"the pilgrims made offerings at {site.name}{in_name}"
+    return site, StepDraft(
+        StepAction.OFFER, actor=pilgrims.id, target=site.id, locus_kind=StepLocus.SETTLEMENT, locus_node=site.id, outcome=StepOutcome.SUCCESS
+    )
 
 
-async def declare_pilgrimage_site(ctx: TickContext, entity_id: int, by: str) -> EntityRow:
+async def declare_pilgrimage_site(ctx: TickContext, entity_id: int) -> EntityRow:
     site = await living_entity(ctx.session, entity_id)
     if site is None or site.entity_type not in SITE_TYPES:
         raise ValidationFailedError("Only a place, structure or region can become a pilgrimage site.")
     if not await add_flag(ctx.session, site.id, EntityFlag.PILGRIMAGE_SITE, ctx.epoch):
         raise ValidationFailedError(f"{site.name} is already a pilgrimage site.")
-    await note(
-        ctx, f"{by} declared {site.name} a pilgrimage site; believers will travel to it from distant worlds.", key="travel.pilgrimage_site", ids=[site.id]
+    scope = current_scope()
+    await record(
+        ctx,
+        "travel.pilgrimage_site",
+        roles={IncidentRole.TARGET: site.id, IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
+        place=site.id,
     )
     return site

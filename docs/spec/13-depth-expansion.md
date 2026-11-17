@@ -1897,7 +1897,7 @@ One value space is used for **mortals, peoples, cults, factions and gods**. Alig
 Three functions use the value space:
 
 - `value_distance(a, b)` → 0–100. It feeds opinion (F7), migration preference, assimilation, conversion chance, marriage alliances, mortal loyalty and syncretism.
-- `value_reading(culture, act)` → how a culture judges an act (`ActKind`: execution, mutilation, betrayal, mercy to an enemy, human sacrifice, trade with outsiders, building temples, burning books…). This drives legitimacy, reputation and outrage.
+- `value_reading(culture, act)` → how a culture judges an act (`ActKind`: execution, mutilation, betrayal, mercy to an enemy, sacrifice of people, trade with outsiders, building temples, burning books…). This drives legitimacy, reputation and outrage.
 - `value_pressure(entity)` → drift toward neighbours, rulers, gods and experiences. A war makes a culture martial or pacifist depending on the outcome; plague raises piety or death acceptance; trade raises xenophilia and wealth; conquest by a foreign culture pulls toward it, or pushes away if resistance is high.
 
 **Implemented as.** It runs in the `mind_values`, `mind_survey`, `social_learning`, `mortal_minds` phases of the epoch. Rules namespaces: `social_learning`, `acts`. God levers: `mind:values`, `mind:lock`. Surfaces: `ValueRadar`, `section-norms`.
@@ -2190,7 +2190,7 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
 
 `culture_ethics` table: culture or cult, act kind, stance.
 
-- **ActKinds** (about 40): killing_kin, killing_outsider, killing_in_war, killing_captive, theft, oath_breaking, lying, slavery, torture, mutilation_punishment, human_sacrifice, animal_sacrifice, cannibalism, eating_sapients, adultery, incest_degree, polygamy, usury, desecration, necromancy, blood_magic, void_magic, magic_use, suicide, infanticide, abandoning_elders, ancestor_neglect, trade_with_infidels, conversion_by_force, iconoclasm, duel_to_death, revenge_killing, mercy_to_enemy, cowardice, hoarding_in_famine, abduction, bribery, treason, regicide, kin_strife, forced_labour (read when a realm summons its towns to a corvée, 4.9 RP4).
+- **ActKinds** (about 40): killing_kin, killing_outsider, killing_in_war, killing_captive, theft, oath_breaking, lying, slavery, torture, mutilation_punishment, sacrifice_of_people, animal_sacrifice, cannibalism, eating_sapients, adultery, incest_degree, polygamy, usury, desecration, necromancy, blood_magic, void_magic, magic_use, suicide, infanticide, abandoning_elders, ancestor_neglect, trade_with_infidels, conversion_by_force, iconoclasm, duel_to_death, revenge_killing, mercy_to_enemy, cowardice, hoarding_in_famine, abduction, bribery, treason, regicide, kin_strife, forced_labour (read when a realm summons its towns to a corvée, 4.9 RP4).
 - **Stance ladder:** required → admirable → acceptable → frowned_upon → shameful → unthinkable. Each step maps to typed effects:
   - opinion deltas toward the actor;
   - renown or infamy, local (F19);
@@ -4221,7 +4221,7 @@ Region land-use shares (F2.5) are derived from the distance to the nearest marke
 
 - **Doctrine** (`cult_doctrines`):
   - doctrine value vector;
-  - **tenets** (typed `TenetKind`, 3–6 per cult): pacifism, holy_war, asceticism, sacred_suffering (honours the maimed), purity_of_body (the maimed are unclean), ancestor_veneration, human_sacrifice, animal_sacrifice, celibate_clergy, proselytism, exclusivity (no syncretism), syncretic_openness, monastic_learning, anti_magic, sanctified_magic, judgement_by_deeds, judgement_by_faith, reincarnation, martyrdom_glory, divine_kingship (rulers are the god's sons), dietary_law(commodity), sacred_species(id), pilgrimage_duty(place);
+  - **tenets** (typed `TenetKind`, 3–6 per cult): pacifism, holy_war, asceticism, sacred_suffering (honours the maimed), purity_of_body (the maimed are unclean), ancestor_veneration, sacrifice_of_people, animal_sacrifice, celibate_clergy, proselytism, exclusivity (no syncretism), syncretic_openness, monastic_learning, anti_magic, sanctified_magic, judgement_by_deeds, judgement_by_faith, reincarnation, martyrdom_glory, divine_kingship (rulers are the god's sons), dietary_law(commodity), sacred_species(id), pilgrimage_duty(place);
   - `judgement_doctrine` (Part 3.3).
 - **Clergy:** an offices hierarchy (high priest, priests, monks, inquisitors), `clergy_count` (from the priest class share), `clergy_quality` (the theology skill aggregate).
 - **Holdings:** temples (structures bonded), lands (tithe base), relics (items with relic status), holy places.
@@ -4237,7 +4237,7 @@ Region land-use shares (F2.5) are derived from the distance to the nearest marke
    - holy_war: an offensive war on infidels gains a morale +, and peace with them costs zeal.
    - pacifism: the warrior class share target −, and refusing war costs the polity legitimacy when its ruler is devout.
    - sacred_suffering vs purity_of_body: inverts the presence reading of injured mortals for members (F4.5).
-   - human_sacrifice: cohort deaths and captives consumed; Death or Blood god essence +; infamy with other cultures.
+   - sacrifice_of_people: cohort deaths and captives consumed; Death or Blood god essence +; infamy with other cultures.
    - celibate_clergy: clergy lines don't found houses.
 2. **Zeal dynamics.**
    - Zeal rises from: persecution (a memory), martyrdom, miracles of the god, holy war victories, preaching, crises (plague, doom omens).
@@ -8593,7 +8593,7 @@ Integration happens in waves, but **the whole of this document is the deliverabl
 | K.6 | Per-people view of gods | Approved. Every people holds `son_standing` (awe, love, fear, neglect) toward every god it knows, alongside its single patron. Decision 27 is unchanged: worship stays single-patron, and standing only shapes prayers, fears, conversions and grudges. | 9.1, 9.2, 9.3 |
 | K.7 | Reincarnation | Rare and earned, never the default. It needs an open gate (doctrine, law, rite or god) and an exceptional soul, and even then it is a low chance. Rites and tenets can block it. | 3.3 |
 | K.8 | Engine tick time | The tick budget is **CPU computation** of the deterministic engine (no LLM inside it). It is met by making the engine efficient and multicore (J.11), not by raising the target: `engine_budget.tick_target_seconds` stays [20] for the reference world. Separately, LLM-bearing steps (son, mortal and Fate turns), whose prompts grow with the typed context blocks of J.8, get comfortable per-call and per-turn timeouts (`model.*` and `agents.*` timeout rules raised so that no turn is cut off by growth in context). | J.11, J.8 |
-| K.9 | Sensitive acts as data | Kept. Cannibalism, infanticide, incest degrees, human sacrifice and similar acts stay in the ethics catalog (F16) as typed acts that cultures allow or condemn. Narration follows G9: stated or implied, never described in detail. | F16, G9 |
+| K.9 | Sensitive acts as data | Kept. Cannibalism, infanticide, incest degrees, sacrifice of people and similar acts stay in the ethics catalog (F16) as typed acts that cultures allow or condemn. Narration follows G9: stated or implied, never described in detail. | F16, G9 |
 | K.10 | Mortals replacing gods | Possible but rare: the god must be weak, the mortal overwhelming, and the mortal must kill the god. This applies to the player's sons too, with notification and J.16c levers; Fate approves | 3.1 reference pass 3, 9.1 reference pass 3 |
 | K.11 | Falls and corruption of sons | Both stay, with an advance warning to the player and intervention levers before they happen; integrated through the existing son status, god-death and outer-being mechanics, not as special cases | F49, F49 reference passes 9 and 10 |
 | K.12 | Belief shaping gods | Stays. Its strength is an equation of belief intensity, worship share, crisis severity and the god's malleability (facets and existence). A pin lever stops it on pinned fields | 9.1 reference pass 3, J.16c |

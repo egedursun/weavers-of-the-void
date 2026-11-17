@@ -14,6 +14,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode
 from aerona.domain.enums.environment import RiverClass, TerrainKind
 from aerona.domain.enums.military import RESTING, CommandArea, Stance
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind, EchelonOrder
 from aerona.engine.agrarian.rings import eased_regions
 from aerona.engine.body.variants import fear_of
@@ -23,12 +24,12 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.military.command import command_areas
 from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of
-from aerona.engine.notes import note
 from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 
 FOODS = (CommodityKind.GRAIN, CommodityKind.BREAD, CommodityKind.FISH, CommodityKind.LIVESTOCK)
@@ -195,11 +196,12 @@ async def feeding_depot(ctx: TickContext, march: March, web: Network, tally: Sup
     ctx.session.add(field)
     await ctx.session.flush()
     tally.depots += 1
-    await note(
+    await record(
         ctx,
-        f"{march.army.name} founded a field depot to feed its advance.",
-        key="logistics.field_depot",
-        ids=[march.army.id, spot],
+        "logistics.field_depot",
+        roles={IncidentRole.SUBJECT: march.army.id},
+        facts={"region": spot, "supplies": field.supplies, "capacity": field.capacity},
+        place=spot,
     )
     return field
 
@@ -365,11 +367,12 @@ async def culminate(ctx: TickContext, march: March, flow: SupplyFlowRow | None, 
         keep(row, "pause_seasons", table.pause_seasons)
         hold(march)
         tally.paused += 1
-        await note(
+        await record(
             ctx,
-            f"{march.army.name} outran its supply and paused its offensive before it broke.",
-            key="logistics.culminated",
-            ids=[march.army.id, march.owner.id],
+            "logistics.culminated",
+            roles={IncidentRole.SUBJECT: march.army.id, IncidentRole.OWNER: march.owner.id},
+            facts={"pause": table.pause_seasons},
+            place=march.profile.region_entity_id,
         )
         return row
     if ctx.rng(f"culmination.{march.army.id}.{ctx.epoch}.{row.offensive_seasons}").chance(table.collapse_chance):
@@ -380,11 +383,12 @@ async def culminate(ctx: TickContext, march: March, flow: SupplyFlowRow | None, 
             if "morale" not in stack.locked:
                 stack.morale = clamp_int(stack.morale - round_half_up(table.collapse_morale * fear), 0, PERCENT)
         tally.collapsed += 1
-        await note(
+        await record(
             ctx,
-            f"{march.army.name} pressed on past the end of its supply, and its offensive collapsed.",
-            key="logistics.collapsed",
-            ids=[march.army.id, march.owner.id],
+            "logistics.collapsed",
+            roles={IncidentRole.SUBJECT: march.army.id, IncidentRole.OWNER: march.owner.id},
+            facts={"morale_lost": round_half_up(table.collapse_morale * fear)},
+            place=march.profile.region_entity_id,
         )
     return row
 

@@ -15,6 +15,8 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import ArtworkStats, EntityStats, LegendStats, StructureStats, TraditionStats
@@ -22,7 +24,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.disease.outbreaks import disease_god
 from aerona.engine.happenings.profile import toll_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, living_patron
 from aerona.engine.primitives.naming import seed_of
@@ -30,6 +31,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.profiles import ensure_profile
 
@@ -143,10 +145,10 @@ async def memorial(ctx: TickContext, form: MemorialForm, name: str, subtype: str
     return created
 
 
-async def _tell(ctx: TickContext, record: EntityRow, about_ids: list[int], description: str) -> None:
+async def _tell(ctx: TickContext, entry: EntityRow, about_ids: list[int], description: str) -> None:
     bonds = BondRepository(ctx.session)
     for about in about_ids:
-        await bonds.connect(BondDraft(record.id, about, BondKind.TELLS_OF, ctx.epoch, description))
+        await bonds.connect(BondDraft(entry.id, about, BondKind.TELLS_OF, ctx.epoch, description))
 
 
 async def fallen_of_war(ctx: TickContext, war_event_id: int) -> list[int]:
@@ -394,7 +396,7 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
         else:
             choice = MemorialForm.LAMENT if killed else MemorialForm.TALE
     if choice is MemorialForm.MONUMENT and home is not None and seat_of(home) is not None:
-        record = await memorial(
+        entry = await memorial(
             ctx,
             MemorialForm.MONUMENT,
             f"{mortal.name} Tomb",
@@ -403,10 +405,10 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             location_id=seat_of(home),
             world_id=mortal.world_id,
         )
-        await connect(ctx.session, home.id, record.id, BondKind.BUILT, ctx.epoch, description=f"in memory of {mortal.name}")
+        await connect(ctx.session, home.id, entry.id, BondKind.BUILT, ctx.epoch, description=f"in memory of {mortal.name}")
     elif choice in (MemorialForm.LAMENT, MemorialForm.EPIC):
         makers = f"the people of {home.name}" if home is not None else "those who knew them"
-        record = await memorial(
+        entry = await memorial(
             ctx,
             choice,
             f"{mortal.name} {'Lament' if choice is MemorialForm.LAMENT else 'Epic'}",
@@ -416,10 +418,10 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             world_id=mortal.world_id,
         )
         if home is not None:
-            await connect(ctx.session, home.id, record.id, BondKind.PRODUCED, ctx.epoch, description=f"for {mortal.name}")
+            await connect(ctx.session, home.id, entry.id, BondKind.PRODUCED, ctx.epoch, description=f"for {mortal.name}")
     else:
         among = f"among {home.name}" if home is not None else "among mortals"
-        record = await memorial(
+        entry = await memorial(
             ctx,
             MemorialForm.TALE,
             f"{mortal.name} Saga",
@@ -429,14 +431,9 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             world_id=mortal.world_id,
         )
         if home is not None:
-            await connect(ctx.session, home.id, record.id, BondKind.TELLS_OF, ctx.epoch, description="tells the saga")
-    await _tell(ctx, record, [mortal.id], "remembers")
-    return [record.id]
-
-
-async def _named(ctx: TickContext, ids: list[int]) -> str:
-    names = [entity.name for entity in [await ctx.session.get(EntityRow, entity_id) for entity_id in ids] if entity is not None]
-    return ", ".join(names)
+            await connect(ctx.session, home.id, entry.id, BondKind.TELLS_OF, ctx.epoch, description="tells the saga")
+    await _tell(ctx, entry, [mortal.id], "remembers")
+    return [entry.id]
 
 
 async def wars_remembered(ctx: TickContext, budget: int) -> int:
@@ -455,14 +452,30 @@ async def wars_remembered(ctx: TickContext, budget: int) -> int:
         if not memory.ids:
             continue
         made += 1
-        event = await ctx.session.get(EntityRow, war.event_entity_id)
-        war_name = plain_name(event.name) if event is not None else "the war"
         if memory.victor is not None:
-            mourned = f"; {memory.loser.name} made a lament for its defeat" if memory.loser is not None else ""
-            text = f"{memory.victor.name} remembered the victory of {war_name}{mourned}: {await _named(ctx, memory.ids)}."
+            await record(
+                ctx,
+                "remembrance.war",
+                roles={
+                    IncidentRole.SUBJECT: war.event_entity_id,
+                    IncidentRole.ACTOR: memory.victor.id,
+                    IncidentRole.OPPONENT: memory.loser.id if memory.loser is not None else None,
+                    IncidentRole.PRODUCT: memory.ids,
+                },
+                facts={"battles": war.battles},
+                steps=(
+                    StepDraft(StepAction.CELEBRATE, actor=memory.victor.id, target=war.event_entity_id),
+                    *((StepDraft(StepAction.MOURN, actor=memory.loser.id, target=war.event_entity_id),) if memory.loser is not None else ()),
+                ),
+            )
         else:
-            text = f"{' and '.join(side.name for side in memory.sides)} swore a peace oath in memory of {war_name}."
-        await note(ctx, text, key="remembrance.war", ids=[war.event_entity_id, *memory.ids, *(side.id for side in memory.sides)])
+            await record(
+                ctx,
+                "remembrance.war_peace",
+                roles={IncidentRole.SUBJECT: war.event_entity_id, IncidentRole.MEMBER: [side.id for side in memory.sides], IncidentRole.PRODUCT: memory.ids},
+                facts={"battles": war.battles},
+                steps=tuple(StepDraft(StepAction.SWEAR, actor=side.id, target=war.event_entity_id) for side in memory.sides),
+            )
     return made
 
 
@@ -487,7 +500,13 @@ async def disasters_remembered(ctx: TickContext, budget: int) -> int:
             continue
         ids = await remember_disaster(ctx, event)
         made += 1
-        await note(ctx, f"{plain_name(event.name)} was not forgotten: {await _named(ctx, ids)} remembers it.", key="remembrance.disaster", ids=[event.id, *ids])
+        await record(
+            ctx,
+            "remembrance.disaster",
+            roles={IncidentRole.SUBJECT: event.id, IncidentRole.PRODUCT: ids},
+            facts={"toll": toll},
+            steps=(StepDraft(StepAction.MOURN, target=event.id),),
+        )
     return made
 
 
@@ -509,7 +528,12 @@ async def heroes_remembered(ctx: TickContext, budget: int) -> int:
             continue
         ids = await remember_dead(ctx, mortal)
         made += 1
-        await note(ctx, f"{mortal.name} was not forgotten: {await _named(ctx, ids)} remembers them.", key="remembrance.hero", ids=[mortal.id, *ids])
+        await record(
+            ctx,
+            "remembrance.hero",
+            roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.PRODUCT: ids},
+            steps=(StepDraft(StepAction.HONOUR, target=mortal.id),),
+        )
     return made
 
 
@@ -558,27 +582,37 @@ async def plague_faith(ctx: TickContext) -> int:
                 and roll < settings.plague_turn_chance
                 and await change_religion(ctx.session, community, turned_to.id, ctx.epoch, f"turned to it during {name}", syncretic=current is not None)
             ):
-                text = f"During {name}, {community.name} turned to {turned_to.name}."
-                await note(ctx, text, key="remembrance.plague_turned", ids=[plague.id, community.id], son_id=turned_to.id)
+                await record(
+                    ctx,
+                    "remembrance.plague_turned",
+                    roles={
+                        IncidentRole.SUBJECT: plague.id,
+                        IncidentRole.ACTOR: community.id,
+                        IncidentRole.TARGET: turned_to.id,
+                        IncidentRole.PREDECESSOR: current.id if current is not None else None,
+                    },
+                    steps=(StepDraft(StepAction.CONVERT, actor=community.id, target=turned_to.id),),
+                    son_id=turned_to.id,
+                )
             elif roll < settings.plague_turn_chance + settings.plague_estrange_chance:
                 shift_stat(community, "piety", -settings.plague_piety_loss)
                 await add_flag(ctx.session, community.id, EntityFlag.ESTRANGED_BY_PLAGUE, ctx.epoch)
-                god = current.name if current is not None else "the sky"
-                await note(
+                await record(
                     ctx,
-                    f"During {name}, {community.name} turned away from {god}.",
-                    key="remembrance.plague_estranged",
-                    ids=[plague.id, community.id],
+                    "remembrance.plague_estranged",
+                    roles={IncidentRole.SUBJECT: plague.id, IncidentRole.ACTOR: community.id, IncidentRole.TARGET: current.id if current is not None else None},
+                    facts={"piety": -settings.plague_piety_loss},
+                    steps=(StepDraft(StepAction.DENY, actor=community.id, target=current.id if current is not None else None),),
                     son_id=current.id if current is not None else None,
                 )
             else:
                 shift_stat(community, "piety", settings.plague_piety_gain)
-                god = current.name if current is not None else "its prayers"
-                await note(
+                await record(
                     ctx,
-                    f"Facing {name}, {community.name} clung tighter to {god}.",
-                    key="remembrance.plague_clung",
-                    ids=[plague.id, community.id],
+                    "remembrance.plague_clung",
+                    roles={IncidentRole.SUBJECT: plague.id, IncidentRole.ACTOR: community.id, IncidentRole.TARGET: current.id if current is not None else None},
+                    facts={"piety": settings.plague_piety_gain},
+                    steps=(StepDraft(StepAction.PRAY, actor=community.id, target=current.id if current is not None else None),),
                     son_id=current.id if current is not None else None,
                 )
             for cult in cults:
@@ -607,7 +641,6 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.holder_levels",
     "table.holder_techniques",
@@ -642,8 +675,8 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.name_registry",

@@ -20,6 +20,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
 from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.vehicles import MountKind, VehicleFrame
 from aerona.engine.collective.designs import FULL_SIZE, draw_design, frame_sizes
@@ -35,7 +36,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, label_of, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
@@ -117,7 +117,12 @@ async def shape_vehicle_type(call: SonCall, args: ShapeVehicleTypeInput) -> str:
         await add_mount(call.tick, design.id, mount, {})
     pay(call, cost, owner.id)
     frame = FRAMES[args.frame].label.lower()
-    await call.chronicle(ChronicleKind.WAR, lines.SHAPE_VEHICLE_TYPE, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=design.name)
+    await call.record(
+        "tools.son.shape_vehicle_type",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: owner.id},
+        facts={"owner_detail": str(owner.name), "name": design.name},
+        kind=ChronicleKind.WAR,
+    )
     return result(
         SonResult.VEHICLE_TYPE_SHAPED,
         owner=owner.name,
@@ -139,7 +144,12 @@ async def shape_equipment(call: SonCall, args: ShapeEquipmentInput) -> str:
     model.description = args.description
     pay(call, cost, owner.id)
     family = FAMILIES[args.family].label.lower()
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_EQUIPMENT, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=model.name)
+    await call.record(
+        "tools.son.shape_equipment",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: owner.id},
+        facts={"owner_detail": str(owner.name), "name": model.name},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.EQUIPMENT_SHAPED, owner=owner.name, name=model.name, id=model.id, family=family, quality=model.quality)
 
 
@@ -153,7 +163,12 @@ async def shape_dish(call: SonCall, args: ShapeDishInput) -> str:
     dish = await found_dish(call.tick, owner, args.method, args.course, foods, world_id=owner.world_id, name=args.name)
     dish.description = args.description
     pay(call, cost, owner.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.SHAPE_DISH, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=dish.name)
+    await call.record(
+        "tools.son.shape_dish",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: owner.id},
+        facts={"owner_detail": str(owner.name), "name": dish.name},
+        kind=ChronicleKind.CULTURE,
+    )
     return result(SonResult.DISH_SHAPED, owner=owner.name, name=dish.name, id=dish.id, method=args.method.value, course=label_of(args.course))
 
 
@@ -175,7 +190,12 @@ async def shape_structure_type(call: SonCall, args: ShapeStructureTypeInput) -> 
     design.description = args.description
     pay(call, cost, owner.id)
     kind = STRUCTURES[args.structure_kind].label.lower()
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_STRUCTURE_TYPE, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=design.name)
+    await call.record(
+        "tools.son.shape_structure_type",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: owner.id},
+        facts={"owner_detail": str(owner.name), "name": design.name},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.STRUCTURE_TYPE_SHAPED, owner=owner.name, name=design.name, id=design.id, kind=kind)
 
 
@@ -191,7 +211,12 @@ async def strike_being(call: SonCall, args: StrikeBeingInput) -> str:
     if outcome is None:
         fail(SonResult.SHAPING_REFUSED, reason=f"{being.name} cannot be struck now")
     pay(call, cost, being.id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.STRIKE_BEING, entity_ids=[being.id], son=call.son.name, being=being.name, reason=args.reason)
+    await call.record(
+        "tools.son.strike_being",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: being.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.BEING_STRUCK, name=being.name, outcome=label_of(outcome))
 
 

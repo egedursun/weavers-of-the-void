@@ -151,6 +151,7 @@ class MemoryRow(CreatedAtMixin, Base):
     note: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     event_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    step_id: Mapped[int | None] = mapped_column(ForeignKey("incident_steps.id", ondelete="SET NULL"))
     inherited_from_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
 
 

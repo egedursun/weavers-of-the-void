@@ -2,11 +2,12 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import TreatyBreach, TreatyKind, TreatyStatus
 from aerona.domain.enums.war import TributeStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -16,12 +17,14 @@ from aerona.engine.polity.accords import end_treaty, treaty_between
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import FactInput, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war, end_tribute, impose_tribute, is_community
 
 
-async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key=key, entity_ids=ids, feed_category=FeedCategory.WAR)
+async def told(ctx: TickContext, key: str, payer: EntityRow, receiver: EntityRow, **facts: FactInput) -> None:
+    await record(ctx, key, roles={IncidentRole.GIVER: payer.id, IncidentRole.RECEIVER: receiver.id}, facts=facts, place=payer.location_id)
 
 
 @reads(
@@ -52,7 +55,6 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -104,9 +106,10 @@ async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> 
     "table.deed_claims",
     "table.deeds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.memories",
     "table.messages",
@@ -139,21 +142,30 @@ async def tribute(ctx: TickContext) -> None:
         if payer is None or receiver is None or pact is None:
             await end_tribute(ctx, row, TributeStatus.ENDED, "tribute ended")
             if payer is not None and receiver is not None:
-                await change_relation(ctx, payer.id, receiver.id, rules.tribute_end_relation, MemoryKind.FREED_US, note="tribute ended")
-                await _note(ctx, f"The tribute {payer.name} paid to {receiver.name} ended.", "tribute.ended", (payer.id, receiver.id))
+                with explaining():
+                    gained = ctx.rules.campaigns.tribute_end_relation
+                    await change_relation(ctx, payer.id, receiver.id, gained, MemoryKind.FREED_US, note="tribute ended")
+                    await told(ctx, "tribute.ended", payer, receiver, epochs=ctx.epoch - row.since_epoch, relation_gained=gained)
             continue
         if row.since_epoch == ctx.epoch:
             continue
         greed = await greed_drive(ctx.session, ctx.rules, receiver.id)
-        if await strength.power(payer) > await strength.power(receiver) * rules.tribute_revolt_strength_pct / PERCENT and rng.chance(
-            rules.tribute_revolt_chance * greed
-        ):
-            await breach(ctx, pact, payer.id, clause=None, reason="it grew strong and refused the tribute")
+        payer_power, receiver_power = await strength.power(payer), await strength.power(receiver)
+        if payer_power > receiver_power * rules.tribute_revolt_strength_pct / PERCENT and rng.chance(rules.tribute_revolt_chance * greed):
+            await breach(ctx, pact, payer.id, clause=None, reason=TreatyBreach.TRIBUTE_REFUSED)
             await end_tribute(ctx, row, TributeStatus.REVOLTED, "tribute revolt")
             await change_relation(ctx, payer.id, receiver.id, -rules.tribute_revolt_relation, MemoryKind.FOUGHT_US, note="tribute revolt")
             war = await declare_war(ctx, payer.id, receiver.id, "tribute revolt", cause=WarCause.TRIBUTE_REVOLT)
-            tail = "; the two sides declared each other enemies" if war else ""
-            await _note(ctx, f"{payer.name} grew strong and refused to pay tribute to {receiver.name}{tail}.", "tribute.revolt", (payer.id, receiver.id))
+            await told(
+                ctx,
+                "tribute.revolt_war" if war else "tribute.revolt",
+                payer,
+                receiver,
+                payer_power=payer_power,
+                receiver_power=receiver_power,
+                chance=rules.tribute_revolt_chance * greed,
+                epochs=ctx.epoch - row.since_epoch,
+            )
             ctx.count("tribute_revolts")
 
 
@@ -164,7 +176,7 @@ async def decree_tribute(ctx: TickContext, payer_id: int, receiver_id: int) -> T
     if payer.id == receiver.id:
         raise ValidationFailedError("A community cannot pay tribute to itself.")
     row = await impose_tribute(ctx, payer, receiver, None, "by decree")
-    await _note(ctx, f"By decree {payer.name} pays tribute to {receiver.name}.", "tribute.decree", (payer.id, receiver.id))
+    await told(ctx, "tribute.decree", payer, receiver)
     return row
 
 
@@ -180,8 +192,10 @@ async def forgive_tribute(ctx: TickContext, tribute_id: int) -> TributeRow:
     if pact is not None:
         await end_treaty(ctx, pact, TreatyStatus.FULFILLED, "the tribute was forgiven")
     if payer is not None and receiver is not None:
-        await change_relation(ctx, payer.id, receiver.id, ctx.rules.campaigns.tribute_end_relation, MemoryKind.GIFTED_ME, note="tribute forgiven")
-        await _note(ctx, f"The tribute {payer.name} paid to {receiver.name} was forgiven.", "tribute.forgiven", (payer.id, receiver.id))
+        with explaining():
+            gained = ctx.rules.campaigns.tribute_end_relation
+            await change_relation(ctx, payer.id, receiver.id, gained, MemoryKind.GIFTED_ME, note="tribute forgiven")
+            await told(ctx, "tribute.forgiven", payer, receiver, epochs=ctx.epoch - row.since_epoch, relation_gained=gained)
     return row
 
 

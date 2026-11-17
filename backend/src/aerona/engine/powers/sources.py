@@ -26,6 +26,7 @@ from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.powers import (
     PowerCost,
@@ -45,7 +46,6 @@ from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers.kinds import locus_factor, tide_wave
 from aerona.engine.primitives.distance import RegionAtlas
@@ -53,6 +53,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 
 LAND_LOCI = frozenset({SourceLocus.PLACE, SourceLocus.SKY, SourceLocus.SURROUNDINGS, SourceLocus.LIFE, SourceLocus.DEATH})
 RENEWAL_KINDS = {
@@ -301,7 +302,7 @@ async def deplete(ctx: TickContext, row: SourceDensityRow, source: PowerSourceRo
     if not row.depleted:
         return
     if not was:
-        await note(ctx, f"The land ran thin of {source.name}: it had been drawn on past what it could give.", key="source.depleted", ids=[row.region_entity_id])
+        await record(ctx, "source.depleted", roles={IncidentRole.SUBJECT: row.region_entity_id}, facts={"source": source.name})
     if not await surroundings_cost(ctx, source.id):
         return
     towns = await ctx.session.scalars(

@@ -92,7 +92,7 @@ INTRIGUE_SECRET = total(
             checked_by=("engine.powers.society.broken_vows",),
             used_by=(
                 "catalog.intrigue.SECRETS",
-                "engine.polity.oaths.break_oath",
+                "engine.polity.oaths.broken_oath",
                 "engine.polity.trials.AREA_SECRETS",
                 "engine.polity.trials.NAMED_CRIME_SECRETS",
             ),

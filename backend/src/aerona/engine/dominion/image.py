@@ -6,7 +6,6 @@ from sqlalchemy import func, select
 from aerona.catalog.dominion import ALIGNMENT_MANIFESTATIONS, MANIFESTATION_ORDER
 from aerona.catalog.kinds.belief_stances import BELIEF_STANCES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -19,6 +18,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import Manifestation, PerceivedAlignment
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import Facet, PressureKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, faithful_communities, living_gods
 from aerona.engine.dominion.miracles import MIRACLE_DOMAINS, MIRACLE_KINDS
@@ -26,9 +26,9 @@ from aerona.engine.dominion.worship import perceived_of
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.ethics import at_war
 from aerona.engine.mind.split import facets_of, write_facets
-from aerona.engine.notes import note
 from aerona.engine.primitives.holds import is_held
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 DISASTER_KEY = "disaster."
 NEUTRAL = PERCENT // 2
@@ -144,11 +144,11 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
     god.domain_secondary = domain
     row.domain_pressure = 0
     tally.turned += 1
-    await note(
+    await record(
         ctx,
-        f"{god.name} became what its peoples believed: a god of {spoken(domain)}.",
-        key="dominion.image_turned",
-        ids=[god.id],
+        "dominion.image_turned",
+        roles={IncidentRole.SUBJECT: god.id},
+        facts={"god": str(god.name), "domain": domain},
         son_id=god.id if isinstance(god, SonRow) else None,
     )
 

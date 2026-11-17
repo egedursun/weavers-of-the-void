@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Any
 
 from pydantic import Field
@@ -5,7 +6,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.db.tables.affairs import NobleDemandRow, TaxPolicyRow
 from aerona.db.tables.agrarian import LandRingRow
 from aerona.db.tables.body import MaimedCohortRow
@@ -26,7 +27,6 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.agrarian import LandUseRing
 from aerona.domain.enums.body import MaimedKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import (
     ArmsRim,
     ChargeArrangement,
@@ -54,6 +54,7 @@ from aerona.domain.enums.integrity import SectionState
 from aerona.domain.enums.law_depth import JurisdictionClaim
 from aerona.domain.enums.military import CommanderTrait
 from aerona.domain.enums.mind import EthicalStance, HonourModel, PressureKind, WantKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CrewStation, PointOfSail, ShotKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.relations import CircleKind
@@ -81,6 +82,7 @@ from aerona.engine.operations.control import set_crew, set_ship
 from aerona.engine.polity.control import create_vassalage
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import FactInput, RoleValue
 from aerona.engine.sacred.places import town_of
 from aerona.engine.structures.control import edit_section
 from aerona.engine.urban.control import set_racket
@@ -91,7 +93,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 NAME_MAX = 120
 TEXT_MAX = 600
@@ -317,8 +318,8 @@ async def led_faction(call: MortalCall) -> FactionProfileRow:
     return row
 
 
-async def done(call: MortalCall, line: Any, ids: list[int], what: str) -> str:
-    await call.chronicle(ChronicleKind.CIVILIZATION, line, entity_ids=[call.me.id, *ids], me=call.me.name, what=what)
+async def recorded(call: MortalCall, key: str, what: str, *, roles: Mapping[IncidentRole, RoleValue], facts: Mapping[str, FactInput]) -> str:
+    await call.record(key, roles={IncidentRole.ACTOR: call.me.id, **roles}, facts=facts)
     return result(MortalResult.WAY_TAKEN, what=what)
 
 
@@ -342,14 +343,16 @@ async def take_arms(call: MortalCall, args: ArmsInput) -> str:
         row.supporter_pose = args.supporter_pose
     await call.session.flush()
     call.target(holder_id)
-    return await done(call, lines.TAKE_ARMS, [holder_id], f"new arms on a field of {spoken(args.field)}")
+    what = await call.record("tools.mortal.take_arms", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: holder_id}, facts={"field": args.field})
+    return result(MortalResult.WAY_TAKEN, what=what)
 
 
 async def reckon_years(call: MortalCall, args: DatingInput) -> str:
     realm = await ruled_realm(call)
     await set_dating(call.tick, realm.id, args.kind, anchor_year=await current_year(call.session), label_id=call.me.id, cycle_years=args.cycle_years)
     call.target(realm.id)
-    return await done(call, lines.RECKON_YEARS, [realm.id], f"years counted by {spoken(args.kind)} in {realm.name}")
+    await call.record("tools.mortal.reckon_years", roles={IncidentRole.AUTHORITY: realm.id, IncidentRole.ACTOR: call.me.id}, facts={"dating": args.kind})
+    return result(MortalResult.WAY_TAKEN, what=f"years counted by {spoken(args.kind)} in {realm.name}")
 
 
 async def speak_for_norm(call: MortalCall, args: NormInput) -> str:
@@ -358,7 +361,13 @@ async def speak_for_norm(call: MortalCall, args: NormInput) -> str:
     if row is None or row.stance is not args.stance:
         fail(MortalResult.WAY_REFUSED, why="the custom is held as it is")
     call.target(people.id)
-    return await done(call, lines.SPEAK_FOR_NORM, [people.id], f"{spoken(args.behaviour)} in {spoken(args.situation)} held {spoken(args.stance)}")
+    return await recorded(
+        call,
+        "tools.mortal.speak_for_norm",
+        f"{spoken(args.behaviour)} in {spoken(args.situation)} held {spoken(args.stance)}",
+        roles={IncidentRole.AUTHORITY: people.id},
+        facts={"situation": args.situation, "behaviour": args.behaviour, "stance": args.stance},
+    )
 
 
 async def set_role_custom(call: MortalCall, args: RoleInput) -> str:
@@ -369,7 +378,13 @@ async def set_role_custom(call: MortalCall, args: RoleInput) -> str:
     except (NotFoundError, ValidationFailedError) as error:
         fail(MortalResult.WAY_REFUSED, why=str(error).rstrip("."))
     call.target(people.id)
-    return await done(call, lines.SET_ROLE_CUSTOM, [people.id], f"who may be {spoken(args.role)}: {spoken(args.eligibility)}")
+    return await recorded(
+        call,
+        "tools.mortal.set_role_custom",
+        f"who may be {spoken(args.role)}: {spoken(args.eligibility)}",
+        roles={IncidentRole.AUTHORITY: people.id},
+        facts={"role": args.role, "eligibility": args.eligibility, "min_age": args.min_age, "stance": args.stance},
+    )
 
 
 async def read_the_sky(call: MortalCall, args: ReadingInput) -> str:
@@ -379,7 +394,13 @@ async def read_the_sky(call: MortalCall, args: ReadingInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="no such body stands in your sky")
     await set_reading(call.tick, body.id, people.id, args.reading)
     call.target(body.id)
-    return await done(call, lines.READ_THE_SKY, [body.id, people.id], f"{body.name} read as {spoken(args.reading)}")
+    return await recorded(
+        call,
+        "tools.mortal.read_the_sky",
+        f"{body.name} read as {spoken(args.reading)}",
+        roles={IncidentRole.SUBJECT: body.id, IncidentRole.AUTHORITY: people.id},
+        facts={"reading": args.reading},
+    )
 
 
 async def set_speech(call: MortalCall, args: RegisterInput) -> str:
@@ -390,7 +411,13 @@ async def set_speech(call: MortalCall, args: RegisterInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="there is no such living language")
     await set_register(call.tick, people.id, args.speech, language.id, hold=False)
     call.target(language.id)
-    return await done(call, lines.SET_SPEECH, [people.id, language.id], f"{language.name} as the tongue for {spoken(args.speech)}")
+    return await recorded(
+        call,
+        "tools.mortal.set_speech",
+        f"{language.name} as the tongue for {spoken(args.speech)}",
+        roles={IncidentRole.AUTHORITY: people.id, IncidentRole.INSTRUMENT: language.id},
+        facts={"speech": args.speech},
+    )
 
 
 async def teach_tongue(call: MortalCall, args: TongueInput) -> str:
@@ -407,7 +434,12 @@ async def teach_tongue(call: MortalCall, args: TongueInput) -> str:
     row.share = clamp_int(row.share + TONGUE_GAIN, 0, PERCENT)
     await call.session.flush()
     call.target(town.id)
-    return await done(call, lines.TEACH_TONGUE, [town.id, language.id], f"{language.name} taught in {town.name} for {spoken(args.kind)} use")
+    await call.record(
+        "tools.mortal.teach_tongue",
+        roles={IncidentRole.TEACHER: call.me.id, IncidentRole.LEARNER: town.id, IncidentRole.SUBJECT: language.id},
+        facts={"use": args.kind, "share": row.share},
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"{language.name} taught in {town.name} for {spoken(args.kind)} use")
 
 
 async def keep_legacy(call: MortalCall, args: LegacyInput) -> str:
@@ -420,7 +452,13 @@ async def keep_legacy(call: MortalCall, args: LegacyInput) -> str:
         fail(MortalResult.WAY_REFUSED, why=f"{predecessor.name} left nothing of that kind to keep")
     await set_legacy(call.tick, people.id, args.kind, key, predecessor.id)
     call.target(people.id)
-    return await done(call, lines.KEEP_LEGACY, [people.id, predecessor.id], f"the {spoken(args.kind)} of {predecessor.name}")
+    return await recorded(
+        call,
+        "tools.mortal.keep_legacy",
+        f"the {spoken(args.kind)} of {predecessor.name}",
+        roles={IncidentRole.HEIR: people.id, IncidentRole.PREDECESSOR: predecessor.id},
+        facts={"legacy": args.kind},
+    )
 
 
 async def assign_caste(call: MortalCall, args: CasteInput) -> str:
@@ -434,21 +472,26 @@ async def assign_caste(call: MortalCall, args: CasteInput) -> str:
         fail(MortalResult.WAY_REFUSED, why=f"{target.name} is not of your people")
     await set_caste(call.tick, target.id, args.caste)
     call.target(target.id)
-    return await done(call, lines.ASSIGN_CASTE, [target.id], f"{target.name} as {spoken(args.caste)}")
+    return await recorded(
+        call, "tools.mortal.assign_caste", f"{target.name} as {spoken(args.caste)}", roles={IncidentRole.TARGET: target.id}, facts={"caste": args.caste}
+    )
 
 
 async def proclaim_age(call: MortalCall, args: AgeInput) -> str:
     realm = await ruled_realm(call)
     await set_era(call.tick, realm.id, None, args.age, hold=False)
     call.target(realm.id)
-    return await done(call, lines.PROCLAIM_AGE, [realm.id], f"an age of {spoken(args.age)} in {realm.name}")
+    return await recorded(
+        call, "tools.mortal.proclaim_age", f"an age of {spoken(args.age)} in {realm.name}", roles={IncidentRole.AUTHORITY: realm.id}, facts={"age": args.age}
+    )
 
 
 async def draw_blueprint(call: MortalCall, args: DesignInput) -> str:
     row = await draw(call.tick, call.me, args.kind, args.subject.strip())
     if row is None:
         fail(MortalResult.WAY_REFUSED, why="you hold that design already")
-    return await done(call, lines.DRAW_BLUEPRINT, [], f"a design of {spoken(args.kind)} for {args.subject.strip()}")
+    await call.record("tools.mortal.draw_blueprint", roles={IncidentRole.MAKER: call.me.id}, facts={"design": args.kind, "purpose": args.subject.strip()})
+    return result(MortalResult.WAY_TAKEN, what=f"a design of {spoken(args.kind)} for {args.subject.strip()}")
 
 
 async def devise_use(call: MortalCall, args: UseInput) -> str:
@@ -456,7 +499,9 @@ async def devise_use(call: MortalCall, args: UseInput) -> str:
     row = SpeciesUseKindRow(name=args.name.strip(), base_use=args.use, output_pct=PERCENT, description=args.description, locked=[])
     call.session.add(row)
     await call.session.flush()
-    return await done(call, lines.DEVISE_USE, [], f"{row.name}, a way to keep beasts for {spoken(args.use)}")
+    return await recorded(
+        call, "tools.mortal.devise_use", f"{row.name}, a way to keep beasts for {spoken(args.use)}", roles={}, facts={"name": row.name, "use": args.use}
+    )
 
 
 async def raise_movement(call: MortalCall, args: MovementInput) -> str:
@@ -471,7 +516,13 @@ async def raise_movement(call: MortalCall, args: MovementInput) -> str:
     row.support = clamp_int(row.support + MOVEMENT_SUPPORT, 0, PERCENT)
     await call.session.flush()
     call.target(faction.faction_entity_id)
-    return await done(call, lines.RAISE_MOVEMENT, [faction.faction_entity_id], f"a movement for {spoken(args.cause)}")
+    return await recorded(
+        call,
+        "tools.mortal.raise_movement",
+        f"a movement for {spoken(args.cause)}",
+        roles={IncidentRole.PRODUCT: faction.faction_entity_id},
+        facts={"cause": args.cause, "support": row.support},
+    )
 
 
 async def claim_courts(call: MortalCall, args: ClaimInput) -> str:
@@ -481,7 +532,13 @@ async def claim_courts(call: MortalCall, args: ClaimInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="that is no other realm")
     await set_claim(call.tick, other.id, realm.id, args.claim, CLAIM_STRENGTH)
     call.target(other.id)
-    return await done(call, lines.CLAIM_COURTS, [realm.id, other.id], f"a claim of {spoken(args.claim)} over {other.name}")
+    return await recorded(
+        call,
+        "tools.mortal.claim_courts",
+        f"a claim of {spoken(args.claim)} over {other.name}",
+        roles={IncidentRole.AUTHORITY: realm.id, IncidentRole.TARGET: other.id},
+        facts={"claim": args.claim},
+    )
 
 
 async def drill_trait(call: MortalCall, args: TraitInput) -> str:
@@ -489,7 +546,8 @@ async def drill_trait(call: MortalCall, args: TraitInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="you command no army")
     if not await set_trait(call.tick, call.me.id, args.trait, held=True):
         fail(MortalResult.WAY_REFUSED, why="you have that way of command already")
-    return await done(call, lines.DRILL_TRAIT, [], f"a commander's way: {spoken(args.trait)}")
+    await call.record("tools.mortal.drill_trait", roles={IncidentRole.LEADER: call.me.id}, facts={"trait": args.trait})
+    return result(MortalResult.WAY_TAKEN, what=f"a commander's way: {spoken(args.trait)}")
 
 
 async def face_fear(call: MortalCall, args: FearInput) -> str:
@@ -499,11 +557,11 @@ async def face_fear(call: MortalCall, args: FearInput) -> str:
     if "strength" in row.locked:
         fail(MortalResult.WAY_REFUSED, why="the gods hold that fear in you")
     row.strength = clamp_int(row.strength - FEAR_EASE, 0, PERCENT)
-    what = f"the fear of {spoken(row.kind)}"
+    fear, strength = row.kind, row.strength
     if row.strength == 0:
         await call.session.delete(row)
     await call.session.flush()
-    return await done(call, lines.FACE_FEAR, [], what)
+    return await recorded(call, "tools.mortal.face_fear", f"the fear of {spoken(fear)}", roles={}, facts={"fear": fear, "strength": strength})
 
 
 async def take_up_want(call: MortalCall, args: WantInput) -> str:
@@ -512,7 +570,13 @@ async def take_up_want(call: MortalCall, args: WantInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="there is no such living thing to want")
     call.session.add(WantRow(holder_node_id=call.me.id, kind=args.kind, target_node_id=args.target_id, epoch=call.tick.epoch, locked=[]))
     await call.session.flush()
-    return await done(call, lines.TAKE_UP_WANT, [*([target.id] if target is not None else [])], f"a want of {spoken(args.kind)}")
+    return await recorded(
+        call,
+        "tools.mortal.take_up_want",
+        f"a want of {spoken(args.kind)}",
+        roles={IncidentRole.TARGET: target.id if target is not None else None},
+        facts={"want": args.kind},
+    )
 
 
 async def ease_pressure(call: MortalCall, args: PressureInput) -> str:
@@ -521,7 +585,7 @@ async def ease_pressure(call: MortalCall, args: PressureInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="that does not weigh on you")
     row.value = max(0, row.value - PRESSURE_EASE)
     await call.session.flush()
-    return await done(call, lines.EASE_PRESSURE, [], f"the weight of {spoken(args.pressure)}")
+    return await recorded(call, "tools.mortal.ease_pressure", f"{spoken(args.pressure)} eased", roles={}, facts={"pressure": args.pressure, "left": row.value})
 
 
 async def teach_honour(call: MortalCall, args: HonourInput) -> str:
@@ -536,7 +600,13 @@ async def teach_honour(call: MortalCall, args: HonourInput) -> str:
     row.model = args.model
     await call.session.flush()
     call.target(people.id)
-    return await done(call, lines.TEACH_HONOUR, [people.id], f"honour as {spoken(args.model)} among {people.name}")
+    return await recorded(
+        call,
+        "tools.mortal.teach_honour",
+        f"honour as {spoken(args.model)} among {people.name}",
+        roles={IncidentRole.LEARNER: people.id},
+        facts={"honour": args.model},
+    )
 
 
 async def resist_drift(call: MortalCall, args: DriftInput) -> str:
@@ -549,7 +619,13 @@ async def resist_drift(call: MortalCall, args: DriftInput) -> str:
         row.amount = row.amount // 2
     await call.session.flush()
     call.target(town.id)
-    return await done(call, lines.RESIST_DRIFT, [town.id], f"the pull of {spoken(args.cause)} on {town.name}")
+    return await recorded(
+        call,
+        "tools.mortal.resist_drift",
+        f"{town.name} held against the change {spoken(args.cause)} drove",
+        roles={IncidentRole.PLACE: town.id},
+        facts={"cause": args.cause, "causes": len(rows)},
+    )
 
 
 async def my_vessel(call: MortalCall, vessel_id: int) -> EntityRow:
@@ -565,14 +641,25 @@ async def man_station(call: MortalCall, args: StationInput) -> str:
     vessel = await my_vessel(call, args.vessel_id)
     await set_crew(call.tick, vessel.id, args.station, {"count": args.count})
     call.target(vessel.id)
-    return await done(call, lines.MAN_STATION, [vessel.id], f"{several(args.count, 'hand', 'hands')} at {spoken(args.station)} on {vessel.name}")
+    what = await call.record(
+        "tools.mortal.man_station",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: vessel.id},
+        facts={"station": args.station, "count": args.count},
+    )
+    return result(MortalResult.WAY_TAKEN, what=what)
 
 
 async def trim_sails(call: MortalCall, args: SailInput) -> str:
     vessel = await my_vessel(call, args.vessel_id)
     await set_ship(call.tick, vessel.id, {"point_of_sail": args.point_of_sail.value, "shot": args.shot.value})
     call.target(vessel.id)
-    return await done(call, lines.TRIM_SAILS, [vessel.id], f"{vessel.name} {spoken(args.point_of_sail)} with {spoken(args.shot)} shot")
+    what = f"{vessel.name} {spoken(args.point_of_sail)} with {spoken(args.shot)} shot"
+    await call.record(
+        "tools.mortal.trim_sails",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: vessel.id},
+        facts={"point_of_sail": args.point_of_sail, "shot": args.shot},
+    )
+    return result(MortalResult.WAY_TAKEN, what=what)
 
 
 async def found_circle(call: MortalCall, args: CircleInput) -> str:
@@ -587,7 +674,13 @@ async def found_circle(call: MortalCall, args: CircleInput) -> str:
     row.kind, row.meeting_place_id = args.kind, town.id
     await call.session.flush()
     call.target(faction.faction_entity_id)
-    return await done(call, lines.FOUND_CIRCLE, [faction.faction_entity_id, town.id], f"a circle of {spoken(args.kind)} in {town.name}")
+    return await recorded(
+        call,
+        "tools.mortal.found_circle",
+        f"a circle of {spoken(args.kind)} in {town.name}",
+        roles={IncidentRole.PRODUCT: faction.faction_entity_id, IncidentRole.PLACE: town.id},
+        facts={"circle": args.kind},
+    )
 
 
 async def press_demand(call: MortalCall, args: DemandInput) -> str:
@@ -601,7 +694,7 @@ async def press_demand(call: MortalCall, args: DemandInput) -> str:
         call.session.add(row)
     row.met = False
     await call.session.flush()
-    return await done(call, lines.PRESS_DEMAND, [], f"a demand of {spoken(args.want)}")
+    return await recorded(call, "tools.mortal.press_demand", f"a demand of {spoken(args.want)}", roles={}, facts={"want": args.want})
 
 
 async def swear_fealty(call: MortalCall, args: FealtyInput) -> str:
@@ -622,7 +715,13 @@ async def swear_fealty(call: MortalCall, args: FealtyInput) -> str:
     row.kind = args.kind
     await call.session.flush()
     call.target(overlord.id)
-    return await done(call, lines.SWEAR_FEALTY, [realm.id, overlord.id], f"{realm.name} bound to {overlord.name} as {spoken(args.kind)}")
+    return await recorded(
+        call,
+        "tools.mortal.swear_fealty",
+        f"{realm.name} bound to {overlord.name} as {spoken(args.kind)}",
+        roles={IncidentRole.SUBJECT: realm.id, IncidentRole.AUTHORITY: overlord.id},
+        facts={"bond": args.kind},
+    )
 
 
 async def set_levy(call: MortalCall, args: LevyInput) -> str:
@@ -636,7 +735,10 @@ async def set_levy(call: MortalCall, args: LevyInput) -> str:
     row.rate, row.epoch = args.rate, call.tick.epoch
     await call.session.flush()
     call.target(realm.id)
-    return await done(call, lines.SET_LEVY, [realm.id], f"{spoken(args.kind)} at {args.rate} in a hundred")
+    await call.record(
+        "tools.mortal.set_levy", roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: realm.id}, facts={"tax": args.kind, "rate": args.rate}
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"{spoken(args.kind)} at {args.rate} in a hundred")
 
 
 async def run_racket(call: MortalCall, args: RacketInput) -> str:
@@ -647,14 +749,26 @@ async def run_racket(call: MortalCall, args: RacketInput) -> str:
     except (NotFoundError, ValidationFailedError) as error:
         fail(MortalResult.WAY_REFUSED, why=str(error).rstrip("."))
     call.target(town.id)
-    return await done(call, lines.RUN_RACKET, [faction.faction_entity_id, town.id], f"{spoken(args.kind)} in {town.name}")
+    await call.record(
+        "tools.mortal.run_racket",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OWNER: faction.faction_entity_id, IncidentRole.VICTIM: town.id},
+        facts={"racket": args.kind, "income": RACKET_INCOME},
+        place=town.id,
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"{spoken(args.kind)} in {town.name}")
 
 
 async def refit_section(call: MortalCall, args: RefitInput) -> str:
     vessel = await my_vessel(call, args.vessel_id)
     await set_vessel_section(call.tick, vessel.id, args.section, {"condition": PERCENT, "state": SectionState.SOUND.value})
     call.target(vessel.id)
-    return await done(call, lines.REFIT_SECTION, [vessel.id], f"the {spoken(args.section)} of {vessel.name} made sound")
+    await call.record(
+        "tools.mortal.refit_section",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.SUBJECT: vessel.id},
+        facts={"section": args.section},
+        place=vessel.location_id,
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"the {spoken(args.section)} of {vessel.name} made sound")
 
 
 async def shore_up(call: MortalCall, args: ShoreInput) -> str:
@@ -667,9 +781,15 @@ async def shore_up(call: MortalCall, args: ShoreInput) -> str:
         fail(MortalResult.WAY_REFUSED, why=f"{structure.name} has no such part")
     if "condition" in row.locked:
         fail(MortalResult.WAY_REFUSED, why="the gods hold that part as it is")
-    await edit_section(call.tick, structure.id, args.section, {"condition": min(PERCENT, row.condition + REPAIR)}, [])
+    before, after = row.condition, min(PERCENT, row.condition + REPAIR)
+    await edit_section(call.tick, structure.id, args.section, {"condition": after}, [])
     call.target(structure.id)
-    return await done(call, lines.SHORE_UP, [structure.id], f"the {spoken(args.section)} of {structure.name} shored up")
+    await call.record(
+        "tools.mortal.shore_up",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: structure.id},
+        facts={"section": args.section, "before": before, "after": after},
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"the {spoken(args.section)} of {structure.name} shored up")
 
 
 async def replan_land(call: MortalCall, args: RingInput) -> str:
@@ -683,7 +803,13 @@ async def replan_land(call: MortalCall, args: RingInput) -> str:
         fail(MortalResult.WAY_REFUSED, why="the gods hold that land's use as it is")
     await set_ring(call.tick, region.id, {"ring": args.ring.value, "market_entity_id": town.id})
     call.target(region.id)
-    return await done(call, lines.REPLAN_LAND, [region.id, town.id], f"{region.name} given over to {spoken(args.ring)}")
+    await call.record(
+        "tools.mortal.replan_land",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: region.id, IncidentRole.PLACE: town.id},
+        facts={"ring": args.ring},
+        place=town.id,
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"{region.name} given over to {spoken(args.ring)}")
 
 
 async def tend_maimed(call: MortalCall, args: MaimedInput) -> str:
@@ -695,7 +821,10 @@ async def tend_maimed(call: MortalCall, args: MaimedInput) -> str:
     row.updated_epoch = call.tick.epoch
     await call.session.flush()
     call.target(town.id)
-    return await done(call, lines.TEND_MAIMED, [town.id], f"one with {spoken(args.kind)} brought back to work in {town.name}")
+    await call.record(
+        "tools.mortal.tend_maimed", roles={IncidentRole.HEALER: call.me.id, IncidentRole.PLACE: town.id}, facts={"maimed": args.kind, "left": row.count}
+    )
+    return result(MortalResult.WAY_TAKEN, what=f"one with {spoken(args.kind)} brought back to work in {town.name}")
 
 
 async def devise_custom(call: MortalCall, args: CustomInput) -> str:
@@ -703,7 +832,9 @@ async def devise_custom(call: MortalCall, args: CustomInput) -> str:
         row = await create_kind(call.tick, args.catalog, args.base, args.name, description=args.description, params={}, world_id=call.me.world_id)
     except (NotFoundError, ValidationFailedError) as error:
         fail(MortalResult.WAY_REFUSED, why=str(error).rstrip("."))
-    return await done(call, lines.DEVISE_CUSTOM, [], f"{row.name}, a new {spoken(args.catalog)}")
+    return await recorded(
+        call, "tools.mortal.devise_custom", f"{row.name}, a new {spoken(args.catalog)}", roles={}, facts={"name": row.name, "catalog": args.catalog}
+    )
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

@@ -16,6 +16,7 @@ export const DRAWER_KINDS = [
   'creator',
   'world-guide',
   'help',
+  'incident',
 ] as const
 
 export type DrawerKind = (typeof DRAWER_KINDS)[number]
@@ -37,6 +38,7 @@ export const DRAWER_KIND_LABEL: Record<DrawerKind, string> = {
   creator: 'Creator',
   'world-guide': "Traveller's guide",
   help: 'Help',
+  incident: 'Happening',
 }
 
 export type DrawerEntry = {

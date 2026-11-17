@@ -4,10 +4,10 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import SettlementStats
@@ -16,12 +16,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.disease.book import COLONY, DiseaseBook
 from aerona.engine.disease.course import region_communities
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.structures.construction import Commission, begin
 
 STIGMATISED = 50
@@ -92,13 +92,8 @@ async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:
                 set_stats(community, population=population - expelled)
                 set_stats(colony, population=(stat(colony, "population") or 0) + expelled)
             moved += expelled
-            await note(
-                ctx,
-                f"{community.name} sent {expelled} of its sick away to {colony.name} for fear of {disease.name}.",
-                key="disease.expelled",
-                ids=[community.id, colony.id, disease.id],
-                kind=ChronicleKind.WORLD,
-            )
+            roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: community.id, IncidentRole.DESTINATION: colony.id, IncidentRole.INSTRUMENT: disease.id}
+            await record(ctx, "disease.expelled", roles=roles, facts={"expelled": expelled, "stigma_reach": round_half_up(reach * PERCENT)}, place=community.id)
     return moved
 
 
@@ -117,12 +112,12 @@ async def build_hospitals(ctx: TickContext, book: DiseaseBook) -> int:
             hospital, _ = await begin(ctx, Commission(site=community, kind=StructureKind.HOSPITAL, name=f"the house of healing of {community.name}"))
             book.hospitals.setdefault(region_id, []).append(hospital)
             built += 1
-            await note(
+            await record(
                 ctx,
-                f"Merciful {community.name} began to build {hospital.name}.",
-                key="disease.hospital",
-                ids=[community.id, hospital.id],
-                kind=ChronicleKind.WORLD,
+                "disease.hospital",
+                roles={IncidentRole.ACTOR: community.id, IncidentRole.PRODUCT: hospital.id},
+                facts={"mercy": (await values_for(ctx, community)).get(ValueAxis.MERCY, 0)},
+                place=community.id,
             )
             break
     return built

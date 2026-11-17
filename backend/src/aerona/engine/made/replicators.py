@@ -15,16 +15,17 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import ReplicatorOutput, ReplicatorScale, ReplicatorStage
 from aerona.domain.enums.minds import MindAffect, MindOrigin, MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import PhenomenonStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import law_for, law_lets_will_grow, profile_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.structures.construction import material_commodity
 
 DONE = frozenset({ReplicatorStage.STOPPED, ReplicatorStage.EXTINCT})
@@ -107,12 +108,20 @@ async def spread(
     seeded = 0
     far = await far_land(ctx, line, presence, towns, here)
     if far is not None:
-        ctx.session.add(ReplicatorPresenceRow(line_id=line.id, place_node_id=far, mass=presence.mass // 4, growth=presence.growth, locked=[]))
+        sent = presence.mass // 4
+        ctx.session.add(ReplicatorPresenceRow(line_id=line.id, place_node_id=far, mass=sent, growth=presence.growth, locked=[]))
         here.add(far)
-        presence.mass -= presence.mass // 4
+        presence.mass -= sent
         if "owner_node_id" not in line.locked:
             line.owner_node_id = None
-        await note(ctx, f"{line.name} crossed to another world and slipped its makers' hands.", key="replicator.voyage", ids=[far])
+        await record(
+            ctx,
+            "replicator.voyage",
+            roles={IncidentRole.ORIGIN: presence.place_node_id, IncidentRole.DESTINATION: far},
+            facts={"line": line.name, "mass": sent},
+            origin=presence.place_node_id,
+            destination=far,
+        )
         return 1
     share = presence.mass // (4 * max(1, SCALE_REACH[line.scale]))
     for region in atlas.neighbours(presence.place_node_id):
@@ -125,7 +134,13 @@ async def spread(
         seeded += 1
     if seeded:
         presence.mass -= share * seeded
-        await note(ctx, f"{line.name} spread into a neighbouring land.", key="replicator.spread", ids=[presence.place_node_id])
+        await record(
+            ctx,
+            "replicator.spread",
+            roles={IncidentRole.ORIGIN: presence.place_node_id},
+            facts={"line": line.name, "lands": seeded, "mass": share * seeded},
+            place=presence.place_node_id,
+        )
     return seeded
 
 
@@ -135,7 +150,7 @@ async def stop_runaway(ctx: TickContext, line: ReplicatorLineRow) -> bool:
     if line.mind_node_id is not None and (await profile_of(ctx.session, ctx.rules, line.mind_node_id, ctx.epoch)).will is MindWill.EXCEEDING:
         return False
     line.stage = ReplicatorStage.STOPPED
-    await note(ctx, f"{line.name} was stopped by its kill switch.", key="replicator.stopped", ids=[])
+    await record(ctx, "replicator.stopped", roles={IncidentRole.OWNER: line.owner_node_id}, facts={"line": line.name, "scale": line.scale, "by_kill_switch": 1})
     return True
 
 
@@ -166,7 +181,13 @@ async def drift_line(ctx: TickContext, line: ReplicatorLineRow, presences: list[
     ctx.session.add(child)
     await ctx.session.flush()
     movable[-1].line_id = child.id
-    await note(ctx, f"A copy error in {line.name} began a line of its own.", key="replicator.drifted", ids=[movable[-1].place_node_id])
+    await record(
+        ctx,
+        "replicator.drifted",
+        roles={IncidentRole.PLACE: movable[-1].place_node_id},
+        facts={"line": line.name, "new_line": child.name, "error": line.error_pct},
+        place=movable[-1].place_node_id,
+    )
     return child
 
 
@@ -199,7 +220,12 @@ async def wake_swarm(ctx: TickContext, line: ReplicatorLineRow, presences: list[
         clamp_percent(sum(row.mass for row in presences) // table.wake_mass * ctx.rules.minds.baseline_capacity),
     )
     line.mind_node_id = swarm.id
-    await note(ctx, f"{line.name} woke as one mind across its many bodies.", key="replicator.woke", ids=[swarm.id])
+    await record(
+        ctx,
+        "replicator.woke",
+        roles={IncidentRole.PRODUCT: swarm.id},
+        facts={"line": line.name, "mass": sum(row.mass for row in presences), "capacity": mind.capacity},
+    )
     return swarm
 
 
@@ -229,7 +255,7 @@ async def run_line(ctx: TickContext, atlas: RegionAtlas, towns: dict[int, list[E
     await wake_swarm(ctx, line, presences)
     if presences and all(row.mass <= 0 for row in presences) and "stage" not in line.locked:
         line.stage = ReplicatorStage.EXTINCT
-        await note(ctx, f"{line.name} died out.", key="replicator.extinct", ids=[])
+        await record(ctx, "replicator.extinct", roles={IncidentRole.OWNER: line.owner_node_id}, facts={"line": line.name, "scale": line.scale})
 
 
 @reads("table.community_stocks", "table.entities", "table.mind_profiles", "table.replicator_lines", "table.replicator_presences")

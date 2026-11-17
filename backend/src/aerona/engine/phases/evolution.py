@@ -38,7 +38,6 @@ async def trait_evolution(ctx: TickContext) -> None:
 @reads(
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",
@@ -46,7 +45,7 @@ async def trait_evolution(ctx: TickContext) -> None:
     "table.species_ranges",
     "table.species_traits",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.species_ranges")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.species_ranges")
 async def niches(ctx: TickContext) -> None:
     tally = NicheTally()
     await keep_niches(ctx, tally)

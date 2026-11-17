@@ -57,4 +57,9 @@ export const DRAWER_PAGES: DrawerPages = {
       default: module.HelpDrawer,
     }))
   ),
+  incident: lazy(() =>
+    import('@/features/records/EventPage').then((module) => ({
+      default: module.EventPage,
+    }))
+  ),
 }

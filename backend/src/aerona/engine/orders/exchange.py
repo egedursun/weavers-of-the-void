@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.db.record_context import Term
 from aerona.db.tables.economy import CurrencyRow, GoodsFlowRow, LoanRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -14,12 +14,13 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import GoodsFlow, LoanStatus, TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.eras.effects import era_techniques
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -118,11 +119,13 @@ async def settle_rate(ctx: TickContext, route: TradeRouteProfileRow, tally: Exch
     if before and row.rate * PERCENT >= before * (PERCENT + table.shock_pct):
         hit = await shock_debtors(ctx, base, quote, (row.rate - before) * PERCENT // before)
         tally.shocks += 1
-        await note(
+        await record(
             ctx,
-            f"The {base.name} rose sharply against the {quote.name}; {several(hit, 'debt', 'debts')} in foreign coin grew.",
-            key="exchange.shock",
-            ids=[market.id],
+            "exchange.shock",
+            roles={IncidentRole.PLACE: market.id},
+            facts={"base": base.name, "quote": quote.name, "rise": (row.rate - before) * PERCENT // before, "debts_hit": hit},
+            terms=(Term("exchange.rate_before", before), Term("exchange.rate_after", row.rate), Term("exchange.shock_pct", table.shock_pct)),
+            place=market.id,
         )
     row.volume, row.updated_epoch = 0, ctx.epoch
     tally.rates += 1

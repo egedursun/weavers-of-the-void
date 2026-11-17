@@ -12,23 +12,14 @@ from aerona.catalog.incident_roles import positional_role
 from aerona.constants.engine import FOLDED_TEMPLATE_SUFFIX
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.random import SeededRandom
 from aerona.db.repositories.base import Repository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
-from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, EpochYearCursorRow
+from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, NotificationCategory
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.models.calendar import YearWindow, chronicle_year
-
-
-@dataclass(frozen=True)
-class ChronicleClock:
-    years_per_epoch: int
-    window: YearWindow
-    pace_divisor: int
-    rng: SeededRandom
+from aerona.domain.enums.records import IncidentTier
 
 
 @dataclass(frozen=True)
@@ -46,6 +37,14 @@ class ChronicleDraft:
     magnitude: int = 0
     year: int | None = None
     roles: Mapping[int, IncidentRole] = field(default_factory=dict)
+    participants: Sequence[tuple[int, IncidentRole]] = ()
+    incident_id: int | None = None
+    season: int | None = None
+    day: int | None = None
+    hour: int | None = None
+    origin_entity_id: int | None = None
+    destination_entity_id: int | None = None
+    tier: IncidentTier = IncidentTier.LINE
 
 
 @dataclass(frozen=True)
@@ -85,6 +84,10 @@ def told_kind(row: ChronicleRow) -> ChronicleKind:
 CAUSE_SCOPE: ContextVar[int | None] = ContextVar("cause_scope", default=None)
 
 
+def scoped_cause() -> int | None:
+    return CAUSE_SCOPE.get()
+
+
 @contextmanager
 def caused_by(incident_id: int | None) -> Iterator[None]:
     token = CAUSE_SCOPE.set(incident_id if incident_id is not None else CAUSE_SCOPE.get())
@@ -113,6 +116,19 @@ def incident_for(session: AsyncSession | Session, node_id: int, epoch: int) -> i
     return last.incident_id if last is not None and last.epoch == epoch and node_id in last.participants else None
 
 
+def typed_participants(incident_id: int, given: Sequence[tuple[int, IncidentRole]]) -> list[IncidentParticipantRow]:
+    rows: list[IncidentParticipantRow] = []
+    seen: set[tuple[int, IncidentRole]] = set()
+    places: dict[IncidentRole, int] = {}
+    for node_id, role in given:
+        if (node_id, role) in seen:
+            continue
+        seen.add((node_id, role))
+        rows.append(IncidentParticipantRow(incident_id=incident_id, node_id=node_id, role=role, position=places.get(role, 0)))
+        places[role] = places.get(role, 0) + 1
+    return rows
+
+
 @dataclass(frozen=True)
 class ChronicleWrite:
     row: ChronicleRow
@@ -137,19 +153,16 @@ def in_world(world_id: int, primary_world_id: int) -> ColumnElement[bool]:
 
 
 class ChronicleRepository(Repository):
-    async def append(self, draft: ChronicleDraft, clock: ChronicleClock | None = None) -> ChronicleWrite:
+    async def append(self, draft: ChronicleDraft) -> ChronicleWrite:
         text = " ".join(draft.text.split())
         if not text:
             raise ValidationFailedError("A chronicle line cannot be empty.")
         entity_ids = list(dict.fromkeys(entity_id for entity_id in draft.entity_ids if entity_id > 0))
         world_id = draft.world_id if draft.world_id is not None else await self._derive_world(entity_ids, draft.son_id)
-        year = (
-            await self._exact_year(draft.epoch, draft.year)
-            if draft.year is not None
-            else await self._stamp_year(draft.epoch, clock)
-            if clock is not None
-            else None
-        )
+        involved = [*entity_ids, *([draft.son_id] if draft.son_id is not None else [])]
+        scoped = CAUSE_SCOPE.get()
+        cause = draft.cause_incident_id if draft.cause_incident_id is not None else scoped
+        year = draft.year
         row = ChronicleRow(
             epoch=draft.epoch,
             year=year,
@@ -166,29 +179,23 @@ class ChronicleRepository(Repository):
         linked = [entity_id for entity_id in entity_ids if entity_id in existing]
         self.session.add_all(ChronicleEntityRow(chronicle_id=row.id, entity_id=entity_id, position=position) for position, entity_id in enumerate(linked))
         involved = [*linked, *([draft.son_id] if draft.son_id is not None else [])]
-        scoped = CAUSE_SCOPE.get()
-        cause = draft.cause_incident_id if draft.cause_incident_id is not None else scoped if scoped is not None else await self.cause_of(involved, draft.epoch)
         magnitude = draft.magnitude or min(PERCENT, KIND_WEIGHTS.get(draft.kind, DEFAULT_WEIGHT) + PARTICIPANT_WEIGHT * len(involved))
-        incident = IncidentRow(
-            kind=draft.template_key or draft.kind.value,
-            epoch=draft.epoch,
-            year=year,
-            world_id=world_id,
-            place_entity_id=draft.place_entity_id,
-            cause_incident_id=cause,
-            chronicle_id=row.id,
-            magnitude=magnitude,
+        incident = await self.incident_for(draft, year=year, world_id=world_id, cause=cause, chronicle_id=row.id, magnitude=magnitude)
+        participants = (
+            typed_participants(incident.id, draft.participants)
+            if draft.participants
+            else [
+                IncidentParticipantRow(
+                    incident_id=incident.id,
+                    node_id=entity_id,
+                    role=draft.roles.get(entity_id) or positional_role(draft.template_key, entity_ids.index(entity_id)) or IncidentRole.SUBJECT,
+                    position=position,
+                )
+                for position, entity_id in enumerate(linked)
+            ]
         )
-        await self.insert(incident)
-        participants = [
-            IncidentParticipantRow(
-                incident_id=incident.id,
-                node_id=entity_id,
-                role=draft.roles.get(entity_id) or positional_role(draft.template_key, entity_ids.index(entity_id)) or IncidentRole.SUBJECT,
-                position=position,
-            )
-            for position, entity_id in enumerate(linked)
-        ]
+        if draft.participants:
+            linked = [node for node, _ in draft.participants]
         if draft.son_id is not None and draft.son_id not in linked:
             participants.append(IncidentParticipantRow(incident_id=incident.id, node_id=draft.son_id, role=IncidentRole.ACTOR, position=0))
         if draft.place_entity_id is not None and draft.place_entity_id not in linked and draft.place_entity_id in existing:
@@ -198,18 +205,27 @@ class ChronicleRepository(Repository):
         self.session.info[LAST_INCIDENT] = LastIncident(incident.id, draft.epoch, frozenset(involved))
         return ChronicleWrite(row, chronicle_notification(draft.kind, draft.feed_category), incident.id)
 
-    async def cause_of(self, involved: Sequence[int], epoch: int) -> int | None:
-        if not involved:
-            return None
-        statement = (
-            select(IncidentRow.id)
-            .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
-            .where(IncidentRow.epoch == epoch, IncidentParticipantRow.node_id.in_(list(involved)), IncidentParticipantRow.role.not_in(QUIET_ROLES))
-            .order_by(IncidentRow.id.desc())
-            .limit(1)
-        )
-        found: int | None = await self.session.scalar(statement)
-        return found
+    async def incident_for(
+        self, draft: ChronicleDraft, *, year: int | None, world_id: int | None, cause: int | None, chronicle_id: int, magnitude: int
+    ) -> IncidentRow:
+        found = await self.session.get(IncidentRow, draft.incident_id) if draft.incident_id is not None else None
+        incident = found or IncidentRow(epoch=draft.epoch)
+        incident.kind = draft.template_key or draft.kind.value
+        incident.year = year if year is not None else incident.year
+        incident.season = draft.season if draft.season is not None else incident.season
+        incident.day = draft.day if draft.day is not None else incident.day
+        incident.hour = draft.hour if draft.hour is not None else incident.hour
+        incident.world_id = world_id if world_id is not None else incident.world_id
+        incident.place_entity_id = draft.place_entity_id if draft.place_entity_id is not None else incident.place_entity_id
+        incident.origin_entity_id = draft.origin_entity_id
+        incident.destination_entity_id = draft.destination_entity_id
+        incident.cause_incident_id = cause if cause is not None and cause != incident.id else incident.cause_incident_id
+        incident.chronicle_id = chronicle_id
+        incident.magnitude = magnitude
+        incident.tier = draft.tier
+        if found is None:
+            await self.insert(incident)
+        return incident
 
     async def prior_incident(self, node_ids: Sequence[int], kinds: Sequence[str] = (), *, before_epoch: int | None = None, shared: bool = False) -> int | None:
         wanted = list(dict.fromkeys(node_ids))
@@ -266,34 +282,6 @@ class ChronicleRepository(Repository):
             .limit(limit)
         )
         return list(await self.session.scalars(statement))
-
-    async def last_year(self, epoch: int) -> int | None:
-        cursor = await self.session.get(EpochYearCursorRow, epoch)
-        return cursor.last_year if cursor is not None else None
-
-    async def _exact_year(self, epoch: int, year: int) -> int:
-        cursor = await self.session.get(EpochYearCursorRow, epoch)
-        if cursor is None:
-            self.session.add(EpochYearCursorRow(epoch=epoch, last_year=year))
-        elif year > cursor.last_year:
-            cursor.last_year = year
-        return year
-
-    async def _stamp_year(self, epoch: int, clock: ChronicleClock) -> int:
-        cursor = await self.session.get(EpochYearCursorRow, epoch)
-        year = chronicle_year(
-            epoch=epoch,
-            years_per_epoch=clock.years_per_epoch,
-            window=clock.window,
-            last_year=cursor.last_year if cursor else None,
-            roll=clock.rng.random(),
-            pace_divisor=clock.pace_divisor,
-        )
-        if cursor is None:
-            self.session.add(EpochYearCursorRow(epoch=epoch, last_year=year))
-        else:
-            cursor.last_year = year
-        return year
 
     async def _derive_world(self, entity_ids: list[int], son_id: int | None) -> int | None:
         if entity_ids:

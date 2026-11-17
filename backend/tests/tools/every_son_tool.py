@@ -1,6 +1,7 @@
 from typing import Any
 
 from tests.tools.every_setup import (
+    buried_secret,
     cosmic_being,
     court_diviners,
     created,
@@ -64,6 +65,7 @@ from tests.tools.every_setup import (
     turf_held,
     two_stars,
     war_theatre,
+    witnessed_happening,
     world_body,
     wounded,
 )
@@ -183,6 +185,18 @@ SON_CASES: dict[str, Case] = {
     "inspect_entity": Case(plain(id=people)),
     "search_entities": Case(plain(query="Kessar")),
     "my_memory": Case(),
+    "recall_event": Case(plain(incident_id=lambda _realm, ids: ids["incident"]), witnessed_happening),
+    "retell_event": Case(
+        plain(
+            incident_id=lambda _realm, ids: ids["incident"],
+            distortions=lambda realm, ids: [
+                {"kind": "doer_swapped", "role": "actor", "told_id": realm.mortal_id},
+                {"kind": "step_dropped", "step_id": ids["step"]},
+                {"kind": "moment_changed", "told_year": 9},
+            ],
+        ),
+        witnessed_happening,
+    ),
     "inspect_sibling": Case(plain(son_id=sibling)),
     "write_plan": Case(plain(plan="Tend the valley roads and teach the folk to keep ledgers of the harvest.")),
     "choose_anchor": Case(plain(entity_id=resource, reason=REASON)),
@@ -343,6 +357,7 @@ SON_CASES: dict[str, Case] = {
     ),
     "found_school": Case(plain(name="School of Ledgers", tenets=["legalism"], founder_id=mortal), knows_written_law),
     "hide_secret": Case(plain(place_id=place, reason=REASON)),
+    "reveal_secret": Case(plain(place_id=place, reason=REASON), buried_secret),
     "sanctify_place": Case(plain(place_id=place, reason=REASON)),
     "raise_nexus": Case(plain(place_id=place, reason=REASON), surveyed),
     "reshape_land": Case(plain(region_id=region, act="green", reason=REASON), surveyed),

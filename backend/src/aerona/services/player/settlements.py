@@ -1,16 +1,17 @@
 from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.lifecycle.succession import designate_heir
 from aerona.engine.phases.births import awaken_species, bless_with_child, crown_ruler, order_village, raise_notable_by_hand, trigger_ethnogenesis
 from aerona.engine.phases.ruins import abandon_settlement, protect_from_ruin
 from aerona.engine.phases.settlements import order_resettlement
 from aerona.engine.phases.spirits import lay_spirit_to_rest
+from aerona.engine.recording.record import record
 from aerona.engine.records import retire_record
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import CAPITAL_SEATED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 from aerona.services.wiki import designate_capital
 
@@ -95,7 +96,15 @@ async def seat_capital(scope: PlayerScope, command: SettlementTarget) -> Effect:
     settlement = await guards.entity(scope.session, command.settlement_id)
     ruler = await designate_capital(scope.session, settlement, await scope.epoch())
     ctx = await scope.context("seat_capital")
-    text = await hand(ctx, await scope.creator(), CAPITAL_SEATED, ids=[settlement.id, ruler.id], settlement=settlement.name, ruler=ruler.name)
+    text = (
+        await record(
+            ctx,
+            "player.settlement.capital",
+            roles={IncidentRole.PLACE: settlement.id, IncidentRole.AUTHORITY: (await scope.creator()).id, IncidentRole.OWNER: ruler.id},
+            place=settlement.id,
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(text, settlement.id, values={"ruler_id": ruler.id})
 
 

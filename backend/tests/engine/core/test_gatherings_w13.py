@@ -238,8 +238,8 @@ async def test_a_feud_raid_walks_the_rooms_of_the_town_it_strikes(ctx: TickConte
     leader = await mortal(session, "Pell", world, raiders.id, strength=90)
     await bond(session, leader.id, raiders.id, BondKind.RULES)
     room = await control.create_room(ctx, target.id, SiteRoomKind.STORE, challenge=SiteChallenge.NONE, difficulty=0, position=None)
-    told = await walk_raided(ctx, raiders, target)
-    assert leader.name in told
+    walked = await walk_raided(ctx, raiders, target)
+    assert walked is not None and walked[0] == leader.id
     assert room.cleared_epoch == ctx.epoch
     assert room.cleared_by_entity_id == leader.id
 

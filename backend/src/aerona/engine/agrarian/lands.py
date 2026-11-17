@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
@@ -26,8 +26,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import MandateKind, MandateState
@@ -40,7 +42,6 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.living.traits import eased, traits_of
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.mandates import issue
@@ -49,6 +50,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 
 LONG_LIVED = frozenset({GrowthCycle.PERENNIAL, GrowthCycle.TREE})
 CITY_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
@@ -177,15 +179,13 @@ async def plant(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         )
         planted.add((region_id, plant_id))
         tally.planted += 1
-        plant_entity = await ctx.session.get(EntityRow, plant_id)
-        region = await ctx.session.get(EntityRow, region_id)
-        if plant_entity is not None and region is not None:
-            await note(
-                ctx,
-                f"{owner.name} planted {plant_entity.name} in {region.name}; the {spoken(kind)} will bear in {several(epochs, 'epoch', 'epochs')}.",
-                key="perennials.planted",
-                ids=[owner.id, region.id],
-            )
+        await record(
+            ctx,
+            "perennials.planted",
+            roles={IncidentRole.ACTOR: owner.id, IncidentRole.PRODUCT: plant_id, IncidentRole.PLACE: region_id},
+            facts={"perennial": kind, "area": table.area, "epochs": epochs},
+            place=region_id,
+        )
 
 
 async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
@@ -209,12 +209,12 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         owner = await ctx.session.get(EntityRow, row.owner_node_id) if row.owner_node_id is not None else None
         if owner is not None and not held(owner.id):
             bred = PERCENT + traits.get(LineTrait.YIELD, 0) * ctx.rules.living_production.yield_pct // PERCENT
-            coin_pct, field, toll = KIND_TOLL[row.kind]
+            coin_pct, column, toll = KIND_TOLL[row.kind]
             earned = row.area * table.coin_per_area * row.condition / PERCENT * max(0, bred) / PERCENT * coin_pct / PERCENT
             await give_coin(ctx.session, ctx.rules, owner, round_half_up(earned))
             land = lands.lands.get(row.region_entity_id)
-            if toll and land is not None and field not in land.locked:
-                setattr(land, field, clamp_int(getattr(land, field) + toll, 0, PERCENT))
+            if toll and land is not None and column not in land.locked:
+                setattr(land, column, clamp_int(getattr(land, column) + toll, 0, PERCENT))
     for region_id, count in sorted(bearing.items()):
         for town in lands.towns.get(region_id, []):
             if not held(town.id):
@@ -228,13 +228,12 @@ async def replant(ctx: TickContext, row: PerennialRow) -> None:
     row.planted_epoch = ctx.epoch
     if "condition" not in row.locked:
         row.condition = PERCENT
-    region = await ctx.session.get(EntityRow, row.region_entity_id)
-    epochs_counted = several(row.mature_epochs, "epoch", "epochs")
-    await note(
+    await record(
         ctx,
-        f"The old {spoken(row.kind)} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {epochs_counted}.",
-        key="perennials.replanted",
-        ids=[row.region_entity_id],
+        "perennials.replanted",
+        roles={IncidentRole.PLACE: row.region_entity_id},
+        facts={"perennial": row.kind, "epochs": row.mature_epochs},
+        place=row.region_entity_id,
     )
 
 
@@ -280,12 +279,12 @@ COMMONS_BOON: Mapping[CommonsKind, tuple[str, int]] = total(
 
 
 def bestow(row: CommonsRow, town: EntityRow, profile: SettlementProfileRow | None) -> None:
-    field, amount = COMMONS_BOON[row.kind]
+    column, amount = COMMONS_BOON[row.kind]
     gain = amount * row.condition // PERCENT
-    if field == "prosperity":
-        shift_stat(town, field, gain)
-    elif profile is not None and field not in profile.locked:
-        setattr(profile, field, clamp_int(getattr(profile, field) + gain, 0, PERCENT * 100 if field == "construction_capacity" else PERCENT))
+    if column == "prosperity":
+        shift_stat(town, column, gain)
+    elif profile is not None and column not in profile.locked:
+        setattr(profile, column, clamp_int(getattr(profile, column) + gain, 0, PERCENT * 100 if column == "construction_capacity" else PERCENT))
 
 
 def wear_share(ctx: TickContext, rule: CommonsRule) -> int:
@@ -359,15 +358,16 @@ async def enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, encloser: 
                 household.wealth = max(0, household.wealth - household.wealth * table.household_loss // PERCENT)
         await judged(ctx, encloser.id, town.id, ActKind.ENCLOSING, note=f"enclosed the common {spoken(row.kind)} of {town.name}")
     put(row, "dispossessed", row.dispossessed + driven)
-    region = await ctx.session.get(EntityRow, row.region_entity_id)
-    went = f" and went to {city.name} for work" if city is not None else " and were left without homes"
-    cottagers_counted = several(driven, "cottager", "cottagers")
-    await note(
-        ctx,
-        f"{encloser.name} enclosed the common {spoken(row.kind)} of {region.name if region else 'the land'}; {cottagers_counted} lost their living{went}.",
-        key="commons.enclosed",
-        ids=[encloser.id, *([city.id] if city is not None else []), *[town.id for town in towns]],
-    )
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.ACTOR: encloser.id,
+        IncidentRole.PLACE: row.region_entity_id,
+        IncidentRole.VICTIM: [town.id for town in towns],
+    }
+    facts: dict[str, FactInput] = {"common": row.kind, "driven": driven}
+    if city is not None:
+        await record(ctx, "commons.enclosed", roles={**roles, IncidentRole.DESTINATION: city.id}, facts=facts, place=row.region_entity_id)
+    else:
+        await record(ctx, "commons.enclosed_homeless", roles=roles, facts=facts, place=row.region_entity_id)
     return driven
 
 
@@ -406,14 +406,13 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
         ):
             put(row, "rule", CommonsRule.COUNCIL)
             tally.councils += 1
-            steward_town = await ctx.session.get(EntityRow, row.steward_entity_id)
-            if steward_town is not None:
-                await note(
-                    ctx,
-                    f"The folk of {steward_town.name} formed a council to rule the use of their common {spoken(row.kind)}.",
-                    key="commons.council",
-                    ids=[steward_town.id],
-                )
+            await record(
+                ctx,
+                "commons.council",
+                roles={IncidentRole.SUBJECT: row.steward_entity_id},
+                facts={"common": row.kind, "condition": row.condition},
+                place=row.steward_entity_id,
+            )
         await maybe_enclose(ctx, row, rows=rows, book=book, orders=orders)
         await obey_orders(ctx, lands, row, orders, book=book, tally=tally)
         if row.rule is CommonsRule.ENCLOSED and row.encloser_node_id is not None:
@@ -489,12 +488,13 @@ async def reserve_land(ctx: TickContext, lands: Holdings, rows: list[GameReserve
         rows.append(row)
         reserved.add(region_id)
         tally.reserves += 1
-        region = await ctx.session.get(EntityRow, region_id)
-        await note(
+        await record(
             ctx,
-            f"{house.name} reserved the game of {region.name if region else 'its land'} for its own hunts; the folk may no longer hunt there.",
-            key="game.reserved",
-            ids=[house.id, region_id],
+            "game.reserved",
+            roles={IncidentRole.OWNER: house.id, IncidentRole.PLACE: region_id, IncidentRole.SUBJECT: quarry},
+            facts={"strictness": row.strictness},
+            steps=(StepDraft(StepAction.DECREE, actor=house.id, target=region_id),),
+            place=region_id,
         )
 
 
@@ -546,12 +546,13 @@ async def keep_reserves(ctx: TickContext, lands: Holdings, tally: LandsTally) ->
                 if profile is not None:
                     shift(profile, "unrest", table.unrest_gain)
             await charge_poacher(ctx, towns, row)
-            region = await ctx.session.get(EntityRow, row.region_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"Poachers were caught in the reserve of {region.name if region else 'the land'} and punished; the folk of the land resent the game laws.",
-                key="game.poachers_punished",
-                ids=[town.id for town in towns],
+                "game.poachers_punished",
+                roles={IncidentRole.OWNER: row.holder_node_id, IncidentRole.PLACE: row.region_entity_id, IncidentRole.MEMBER: [town.id for town in towns]},
+                facts={"poaching": row.poaching, "resentment": row.resentment, "unrest": table.unrest_gain},
+                steps=(StepDraft(StepAction.PUNISH, actor=row.holder_node_id),),
+                place=row.region_entity_id,
             )
 
 

@@ -376,6 +376,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.INSPECT_ENTITY: ToolText("Shows the details of an entity. Free.", {"id": "The entity's id"}),
     T.SEARCH_ENTITIES: ToolText("Searches entities. Free.", {"query": "A word in the name or description"}),
+    T.RECOUNT: ToolText(
+        "Tells the people you live among what you know of a happening you saw or took part in, step by step as you know it; they carry it on "
+        "as your account. 1 action.",
+        {"incident_id": "The happening's id", "step_offset": "Where to start in its steps when they run past one page"},
+    ),
     T.FOUND_LANGUAGE: ToolText(
         "You give birth to your own language: its name, its kind in your people's own terms, its sound structure and first words. From now on "
         "you speak this language. 1 action.",

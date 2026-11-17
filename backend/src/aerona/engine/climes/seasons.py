@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import ClimateOscillationRow, MonsoonSeasonRow, RegionWindRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -14,13 +13,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.climes import OscillationPhase
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.climes.shifts import current_coasts
 from aerona.engine.context import TickContext
 from aerona.engine.environment.notable import year_in
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 
 THIRDS = 3
 
@@ -80,7 +80,13 @@ async def keep_monsoons(ctx: TickContext, world: WorldRow, tally: SeasonTally) -
             magnitude=clamp_int(PERCENT - row.strength, 0, PERCENT),
         )
     )
-    await note(ctx, f"The monsoon failed over {world.name}, and hunger followed on its coasts.", key="monsoons.failed", ids=regions[:3])
+    await record(
+        ctx,
+        "monsoons.failed",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.VICTIM: regions},
+        facts={"strength": row.strength, "hunger": table.famine_prosperity},
+        world_id=world.id,
+    )
 
 
 async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally) -> None:
@@ -103,8 +109,12 @@ async def keep_oscillation(ctx: TickContext, world: WorldRow, tally: SeasonTally
         row.phase = turned
         tally.turned += 1
         if turned is not OscillationPhase.NEUTRAL:
-            await note(
-                ctx, f"The seas of {world.name} turned to their {spoken(turned)} phase, and the rains shifted with them.", key="oscillations.turned", ids=[]
+            await record(
+                ctx,
+                "oscillations.turned",
+                roles={IncidentRole.SUBJECT: world.id},
+                facts={"phase": turned, "period": row.period, "strength": row.strength},
+                world_id=world.id,
             )
 
 
@@ -129,12 +139,13 @@ async def carry_kinds(ctx: TickContext, tally: SeasonTally) -> None:
             SpeciesRangeRow(species_entity_id=kind, region_entity_id=there.location_id, abundance=table.stowaway_abundance, since_epoch=ctx.epoch, locked=[])
         )
         tally.carried += 1
-        species = await ctx.session.get(EntityRow, kind)
-        await note(
+        await record(
             ctx,
-            f"The current carried {species.name if species else 'a living kind'} from the coast of {here.name} to the coast of {there.name}.",
-            key="currents.carried",
-            ids=[kind, there.id],
+            "currents.carried",
+            roles={IncidentRole.SUBJECT: kind, IncidentRole.ORIGIN: here.id, IncidentRole.DESTINATION: there.id},
+            facts={"abundance": table.stowaway_abundance},
+            origin=here.id,
+            destination=there.id,
         )
 
 

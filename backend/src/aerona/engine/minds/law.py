@@ -11,6 +11,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.made import MadeMindStance
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MadeMindSouls, StateMedium
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.factions.companies import realm_of
@@ -20,8 +21,8 @@ from aerona.engine.minds.continuity import law_for
 from aerona.engine.minds.profiles import is_made, profile_of
 from aerona.engine.minds.souls import default_law, soul_law
 from aerona.engine.minds.values import liberty_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 
 STATUS_STEPS = ("property", "ward", "servant", "citizen", "sovereign")
@@ -34,14 +35,14 @@ async def grant_soul(ctx: TickContext, mind_id: int) -> MindProfileRow:
     if (await soul_law(ctx.session, mind_id)).made_mind_souls is MadeMindSouls.NONE:
         raise ValidationFailedError("The law of this world gives no made mind a soul.")
     profile.souled = True
-    await note(ctx, "A made mind was given a soul.", key="mind.souled", ids=[mind_id])
+    await record_incident(ctx, "mind.souled", roles={IncidentRole.SUBJECT: mind_id})
     return profile
 
 
 async def withhold_soul(ctx: TickContext, mind_id: int) -> MindProfileRow:
     profile = await profile_of(ctx.session, ctx.rules, mind_id, ctx.epoch)
     profile.souled = False
-    await note(ctx, "A made mind's soul was withheld.", key="mind.soul_withheld", ids=[mind_id])
+    await record_incident(ctx, "mind.soul_withheld", roles={IncidentRole.SUBJECT: mind_id})
     return profile
 
 
@@ -84,7 +85,9 @@ async def tend_status(ctx: TickContext, row: MindProfileRow, entity: EntityRow) 
     if realm is None or held(realm) or not ctx.rng(f"mind.movement.{row.node_id}.{ctx.epoch}").chance(table.movement_chance):
         return
     await change_relation(ctx, row.node_id, realm, -table.bond_by_status, MemoryKind.HUMILIATED_ME, note="held at a status below what it sought")
-    await note(ctx, f"{entity.name} rose with the made minds who sought a higher standing.", key="mind.movement", ids=[row.node_id, realm])
+    await record_incident(
+        ctx, "mind.movement", roles={IncidentRole.ACTOR: row.node_id, IncidentRole.TARGET: realm}, facts={"bond_loss": table.bond_by_status, "wanted": wanted}
+    )
     ctx.count("mind_movements")
 
 
@@ -106,7 +109,12 @@ async def keep_the_dead(ctx: TickContext) -> int:
         state = MindStateRow(mind_node_id=entity.id, taken_epoch=ctx.epoch, fidelity_pct=row.fidelity_pct, holder_node_id=archive.structure_entity_id)
         state.medium_kind, state.sealed, state.copies, state.owner_node_id, state.locked = StateMedium.RECORD, False, 1, archive.holder_node_id, []
         ctx.session.add(state)
-        await note(ctx, f"The mind of {entity.name} was kept in an archive at its end.", key="mind.archived_at_death", ids=[entity.id])
+        await record_incident(
+            ctx,
+            "mind.archived_at_death",
+            roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: archive.structure_entity_id},
+            facts={"fidelity": row.fidelity_pct},
+        )
         kept += 1
     return kept
 

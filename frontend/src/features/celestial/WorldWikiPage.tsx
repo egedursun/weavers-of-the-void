@@ -44,7 +44,12 @@ import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { CosmosAgrarianSection } from '@/features/agrarian/CosmosAgrarianSection'
 import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
-import { useChronicleKindLabels } from '@/features/chronicle/api'
+import { OlderLinesButton } from '@/features/chronicle/OlderLinesButton'
+import {
+  type ChronicleScope,
+  useChronicleKindLabels,
+  useOlderLines,
+} from '@/features/chronicle/api'
 import { WorldPlacementSection } from '@/features/cosmography/HeavenlyLife'
 import { RiftsForWorld } from '@/features/cosmography/RiftsPanel'
 import { EncountersSection } from '@/features/cosmos/EncountersSection'
@@ -376,15 +381,26 @@ function WorldSky({ wiki }: { wiki: WorldWiki }) {
 
 export function CelestialTimeline({
   lines,
+  total,
+  scope,
+  scopeId,
   emptyText,
 }: {
   lines: WorldWiki['timeline']
+  total: number
+  scope: ChronicleScope
+  scopeId: number
   emptyText: string
 }) {
   const labels = useChronicleKindLabels()
+  const older = useOlderLines(scope, scopeId, lines.length, total)
+  const known = [...lines, ...older.lines].sort((a, b) => b.id - a.id)
   return (
-    <Section title='Chronicle' description='The latest lines written about it.'>
-      {lines.length === 0 ? (
+    <Section
+      title='Chronicle'
+      description='The lines written about it, newest first.'
+    >
+      {known.length === 0 ? (
         <EmptyState
           icon={ScrollText}
           size='compact'
@@ -392,22 +408,25 @@ export function CelestialTimeline({
           description={emptyText}
         />
       ) : (
-        <PagedList
-          items={lines}
-          initial={10}
-          noun={['entry', 'entries']}
-          as='ol'
-          className='flex min-w-0 flex-col gap-1'
-          itemKey={(line) => line.id}
-        >
-          {(line) => (
-            <ChronicleEntry
-              line={line}
-              kindLabel={labels.get(line.kind)}
-              editable={false}
-            />
-          )}
-        </PagedList>
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={known}
+            initial={10}
+            noun={['entry', 'entries']}
+            as='ol'
+            className='flex min-w-0 flex-col gap-1'
+            itemKey={(line) => line.id}
+          >
+            {(line) => (
+              <ChronicleEntry
+                line={line}
+                kindLabel={labels.get(line.kind)}
+                editable={false}
+              />
+            )}
+          </PagedList>
+          <OlderLinesButton older={older} />
+        </div>
       )}
     </Section>
   )
@@ -473,6 +492,9 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <WorldSky wiki={data} />
       <CelestialTimeline
         lines={data.timeline}
+        total={data.timeline_total}
+        scope='world'
+        scopeId={data.world.id}
         emptyText='Nothing has been written about this world yet.'
       />
       <RecordGallery

@@ -5,20 +5,19 @@ from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.gods import CreatorDetail, CreatorMood, CreatorReputation, FolkView, MoodInput, PassionInfo, SonReputation
 from aerona.api.schemas.records import CreatorRecord, EntitySummary
-from aerona.api.views.common import chronicle_lines, images_of
+from aerona.api.views.common import images_of
+from aerona.api.views.scoped_lines import scoped_lines
 from aerona.catalog.creator import CREATOR_PASSIONS
-from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.db.tables.lore import FolkBeliefRow
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.services.gods.creator_mood import read_cult, read_mood
 from aerona.services.gods.reputation import read_cosmos_reputation
 from aerona.services.images.records import cover_of
 
 router = APIRouter(tags=["creator"])
 
-TRACE_KINDS = (ChronicleKind.CREATOR_HAND, ChronicleKind.WORLD_BIRTH, ChronicleKind.COUNCIL, ChronicleKind.DIVINE_SIGN, ChronicleKind.ORDER)
 
 ALIASES = (
     Alias("PATCH", "/creator", "creator:edit"),
@@ -46,11 +45,7 @@ async def read_creator(services: ServicesDep) -> CreatorDetail:
             .where(FolkBeliefRow.god_node_id == creator.id)
             .order_by(FolkBeliefRow.epoch.desc())
         )
-        traces = list(
-            await session.scalars(
-                select(ChronicleRow).where(ChronicleRow.kind.in_(TRACE_KINDS), shown_lines()).order_by(ChronicleRow.id.desc()).limit(rules.server.god_traces)
-            )
-        )
+        traces, traces_total = await scoped_lines(session, ChronicleScope.CREATOR, None, offset=0, limit=rules.server.god_traces)
         return CreatorDetail(
             creator=CreatorRecord.model_validate(creator),
             cover=await cover_of(session, creator.id),
@@ -76,7 +71,8 @@ async def read_creator(services: ServicesDep) -> CreatorDetail:
                 )
                 for row, name in beliefs
             ],
-            traces=await chronicle_lines(session, list(reversed(traces))),
+            traces=traces,
+            traces_total=traces_total,
             images=await images_of(session, creator.id),
         )
 

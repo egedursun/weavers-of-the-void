@@ -63,14 +63,14 @@ async def test_black_sun_feeds_outer_cults(ctx: TickContext, cosmos: Cosmos) -> 
 
 async def test_extinguish_and_rekindle(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Coast", cosmos.home.id, fertility=60)
-    await extinguish_star(ctx, cosmos.star.id, "Velan")
+    await extinguish_star(ctx, cosmos.star.id, "Velan", cosmos.creator.id)
     assert cosmos.star.star_type is StarType.DEAD_STAR
     assert region.stats.fertility == 60 - ctx.rules.pantheon.extinguish_fertility_loss
-    await rekindle_star(ctx, cosmos.star.id, "Aeron")
+    await rekindle_star(ctx, cosmos.star.id, "Aeron", cosmos.creator.id)
     assert cosmos.star.star_type is StarType.REBORN_STAR
     with pytest.raises(ValidationFailedError):
-        await rekindle_star(ctx, cosmos.star.id, "Aeron")
-    star = await hang_star(ctx, "Newlight", StarType.BLUE_GIANT, "Aeron")
+        await rekindle_star(ctx, cosmos.star.id, "Aeron", cosmos.creator.id)
+    star = await hang_star(ctx, "Newlight", StarType.BLUE_GIANT, cosmos.creator.id)
     assert star.brightness > 0
 
 

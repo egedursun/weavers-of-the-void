@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -12,13 +11,15 @@ from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.gods.stats import Trait, add_trait
 from aerona.engine.polity.accords import Clause, end_treaty, sign
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 Payer = Callable[[TickContext, EntityRow, CommodityKind | None, int, int], Awaitable[bool]]
 Shifter = Callable[[AsyncSession, EntityRow, int], Awaitable[None]]
@@ -84,12 +85,15 @@ async def strike_pact(ctx: TickContext, resource: EntityRow, owner: EntityRow, t
         clauses=[Clause(ClauseKind.RESOURCE_DEMAND, owner.id, resource.id, terms.params(ctx.epoch - terms.every))],
         until=ctx.epoch + ctx.rules.sentient_pacts.pact_epochs,
     )
-    line = god_lines.ECONOMY_SENTIENT_PACT
-    await ctx.chronicle(
-        ChronicleKind.RESOURCE,
-        line.render(resource=resource.name, owner=owner.name, demand=terms.demand, negotiator=negotiator.name if negotiator is not None else owner.name),
-        template_key=line.key,
-        entity_ids=[resource.id, owner.id, treaty.id, *([negotiator.id] if negotiator is not None else [])],
+    await record(
+        ctx,
+        "gods.economy.sentient_pact",
+        roles={
+            IncidentRole.SUBJECT: [resource.id, *[resource.id, owner.id, treaty.id, *([negotiator.id] if negotiator is not None else [])]],
+            IncidentRole.OWNER: owner.id,
+        },
+        facts={"demand": terms.demand, "negotiator": str(negotiator.name if negotiator is not None else owner.name)},
+        kind=ChronicleKind.RESOURCE,
     )
     return treaty
 
@@ -112,24 +116,24 @@ async def keep_pact(
         clause.last_kept_epoch = ctx.epoch
         await shift(ctx.session, resource, table.honour_reserve_pct)
         add_trait(owner, Trait.PROSPERITY, table.honour_prosperity)
-        line = god_lines.ECONOMY_SENTIENT_PACT_KEPT
-        await ctx.chronicle(
-            ChronicleKind.RESOURCE,
-            line.render(resource=resource.name, owner=owner.name, demand=terms.demand),
-            template_key=line.key,
-            entity_ids=[resource.id, owner.id, profile.treaty_entity_id],
+        await record(
+            ctx,
+            "gods.economy.sentient_pact_kept",
+            roles={IncidentRole.OWNER: owner.id, IncidentRole.SUBJECT: resource.id, IncidentRole.AUTHORITY: profile.treaty_entity_id},
+            facts={"demand": terms.demand, "units": terms.units},
+            kind=ChronicleKind.RESOURCE,
         )
         return "kept"
-    await breach(ctx, profile, owner.id, clause=clause, reason=f"it did not give {resource.name} {terms.demand}")
+    await breach(ctx, profile, owner.id, clause=clause, reason=TreatyBreach.DEMAND_UNMET, occasion=resource.id)
     add_trait(owner, Trait.PROSPERITY, -table.wrath_prosperity)
     add_trait(owner, Trait.WEALTH, -table.wrath_prosperity)
     await shift(ctx.session, resource, -table.wrath_reserve_pct)
-    line = god_lines.ECONOMY_SENTIENT_PACT_BROKEN
-    await ctx.chronicle(
-        ChronicleKind.CURSE,
-        line.render(resource=resource.name, owner=owner.name, demand=terms.demand),
-        template_key=line.key,
-        entity_ids=[resource.id, owner.id, profile.treaty_entity_id],
+    await record(
+        ctx,
+        "gods.economy.sentient_pact_broken",
+        roles={IncidentRole.OWNER: owner.id, IncidentRole.SUBJECT: resource.id, IncidentRole.AUTHORITY: profile.treaty_entity_id},
+        facts={"demand": terms.demand, "units": terms.units},
+        kind=ChronicleKind.CURSE,
     )
     return "broken"
 

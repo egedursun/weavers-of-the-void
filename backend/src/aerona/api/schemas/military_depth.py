@@ -2,7 +2,9 @@ from typing import Any
 
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.collective import DesignComponentKind
+from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.integrity import Criticality, SectionHazard
 from aerona.domain.enums.military import (
     CasualtyFate,
@@ -14,7 +16,6 @@ from aerona.domain.enums.military import (
     PeaceTermKind,
     TargetClass,
     UnitKind,
-    VesselArmament,
     VesselStatus,
 )
 from aerona.domain.enums.society import KnowledgeBranch
@@ -114,13 +115,22 @@ class FrameSpecView(ApiModel):
     slots: int
     mounts: list[MountKind]
     sections: list[FrameSectionView]
-    armament: list[VesselArmament]
     branch: KnowledgeBranch | None
     level: int
     tier: int | None
     sky: bool
     living: bool
     strangeness: int
+
+
+class VesselWeaponView(ApiModel):
+    mount: MountKind
+    section: VehicleSection | None
+    family: EquipmentFamily
+    model_id: int
+    model_name: str
+    count: int
+    damage_type: DamageType
 
 
 class VesselView(ApiModel):
@@ -135,7 +145,7 @@ class VesselView(ApiModel):
     hull_material: str | None
     fabric_material: str | None
     condition: int
-    armament: list[VesselArmament]
+    weapons: list[VesselWeaponView]
     seaworthiness: int
     cargo_capacity: int
     crew: int

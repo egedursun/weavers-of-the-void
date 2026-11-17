@@ -8,14 +8,16 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import PeopleStats, ResourceStats, SpeciesStats
@@ -39,7 +41,6 @@ from aerona.engine.ecology.profiles import assign_traits
 from aerona.engine.ecology.ranges import adapt_subspecies
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -48,6 +49,7 @@ from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, put_stat, scale_stat, shift_bounded, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 VICTIM_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
@@ -73,7 +75,12 @@ async def edible_souls(ctx: TickContext, location: EntityRow) -> list[EntityRow]
 
 async def swallow_soul(ctx: TickContext, species: EntityRow, soul: EntityRow) -> EntityRow:
     await retire(ctx.session, soul, ctx.epoch, f"Epoch {ctx.epoch}: {species.name} swallowed it.")
-    await note(ctx, f"{species.name} swallowed {soul.name}; in those lands no dead return anymore.", key="creatures.soul_eaten", ids=[species.id, soul.id])
+    await record(
+        ctx,
+        "creatures.soul_eaten",
+        roles={IncidentRole.ACTOR: species.id, IncidentRole.VICTIM: soul.id, IncidentRole.PLACE: soul.location_id},
+        place=soul.location_id,
+    )
     return soul
 
 
@@ -119,7 +126,7 @@ async def _mutation_chance(ctx: TickContext, species: EntityRow, leaks: dict[int
     return chance + radiation_mutation(ctx.rules, await ctx.session.get(WorldRow, species.world_id))
 
 
-async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> EntityRow:
+async def mutate_species(ctx: TickContext, species: EntityRow, leak: int, chance: float) -> EntityRow:
     creatures = ctx.rules.creatures
     rng = ctx.rng("mutation")
     owned = await traits_of(ctx.session, species.id)
@@ -132,7 +139,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> Ent
             for key in SPECIES_STAT_KEYS
         }
         stats = stats.model_copy(update=changes)
-    cause = "under the influence of what leaked in from outside" if leak >= creatures.mutation_leak_text_threshold else "under the influence of curse and magic"
+    cause = "what leaked in from outside" if leak >= creatures.mutation_leak_text_threshold else "curse and magic"
     born = f": {new_trait.value.replace('_', ' ')}" if new_trait is not None else ""
     mutant = await open_record(
         ctx.session,
@@ -140,7 +147,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> Ent
         RecordSpec(
             name=f"{species.name} Corruption",
             entity_type=EntityType.SPECIES,
-            body=f"{species.name} changed {cause}; a new form was born{born}.",
+            body=f"{species.name} changed under {cause}; a new form was born{born}.",
             stats=stats,
             power=species.power_level,
             world_id=species.world_id,
@@ -152,7 +159,12 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> Ent
     )
     await BondRepository(ctx.session).connect(BondDraft(mutant.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, "mutation"))
     await EntityRepository(ctx.session).add_flag(species.id, EntityFlag.MUTATED, ctx.epoch)
-    await note(ctx, f"{species.name} mutated; a new form was born.", key="creatures.mutation", ids=[species.id, mutant.id])
+    await record(
+        ctx,
+        "creatures.mutation",
+        roles={IncidentRole.SUBJECT: species.id, IncidentRole.PRODUCT: mutant.id},
+        facts={"cause": cause, "trait": new_trait, "leak": leak, "chance": chance},
+    )
     return mutant
 
 
@@ -168,8 +180,9 @@ async def species_mutations(ctx: TickContext) -> int:
         flags = await repository.flags(species.id)
         if EntityFlag.MUTATED in flags:
             continue
-        if rng.probability(await _mutation_chance(ctx, species, leaks, flags)):
-            await mutate_species(ctx, species, leaks.get(species.world_id, 0))
+        chance = await _mutation_chance(ctx, species, leaks, flags)
+        if rng.probability(chance):
+            await mutate_species(ctx, species, leaks.get(species.world_id, 0), chance * PERCENT)
             mutated += 1
     return mutated
 
@@ -202,7 +215,12 @@ async def split_changed_people(ctx: TickContext, people: EntityRow) -> EntityRow
     scale_stat(ctx.rules, people, POPULATION_KEY, (PERCENT - creatures.people_mutation_share_pct) / PERCENT)
     await EntityRepository(ctx.session).add_flag(people.id, EntityFlag.MUTATED, ctx.epoch)
     await BondRepository(ctx.session).connect(BondDraft(changed.id, people.id, BondKind.DESCENDS_FROM, ctx.epoch, "mutation"))
-    await note(ctx, f"A changed branch split from {people.name}: {changed.name}.", key="creatures.people_mutation", ids=[people.id, changed.id])
+    await record(
+        ctx,
+        "creatures.people_mutation",
+        roles={IncidentRole.SUBJECT: people.id, IncidentRole.PRODUCT: changed.id},
+        facts={"count": max(1, round(population * creatures.people_mutation_share_pct / PERCENT)), "share": creatures.people_mutation_share_pct},
+    )
     return changed
 
 
@@ -235,7 +253,13 @@ async def hybridize(ctx: TickContext) -> EntityRow | None:
                 description=f"{first.name} and {second.name} mixed over generations in the same lands and bore a hybrid.",
             )
             hybrid.subtype = "hybrid"
-            await note(ctx, f"{first.name} and {second.name} hybridized.", key="creatures.hybrid", ids=[first.id, second.id, hybrid.id])
+            await record(
+                ctx,
+                "creatures.hybrid",
+                roles={IncidentRole.ACTOR: first.id, IncidentRole.CO_ACTOR: second.id, IncidentRole.PRODUCT: hybrid.id, IncidentRole.PLACE: first.location_id},
+                facts={"chance": ctx.rules.creatures.hybrid_chance},
+                place=first.location_id,
+            )
             return hybrid
     return None
 
@@ -268,9 +292,11 @@ async def merge_spontaneously(ctx: TickContext) -> EntityRow | None:
         ctx, first, second, maker=maker, description=f"{maker.name} joined {first.name} and {second.name} with biomancy into a new species."
     )
     await BondRepository(ctx.session).connect(BondDraft(maker.id, merged.id, BondKind.TAMED, ctx.epoch, "its own making"))
-    text = f"{maker.name} merged {first.name} and {second.name} into a merged species: {merged.name}."
-    await ctx.chronicle(
-        ChronicleKind.MERGED_SPECIES, text, template_key="creatures.species_merged", entity_ids=[maker.id, merged.id], feed_category=FeedCategory.LIFE
+    await record(
+        ctx,
+        "creatures.species_merged",
+        roles={IncidentRole.MAKER: maker.id, IncidentRole.ACTOR: first.id, IncidentRole.CO_ACTOR: second.id, IncidentRole.PRODUCT: merged.id},
+        facts={"chance": ctx.rules.creatures.species_merge_chance},
     )
     return merged
 
@@ -293,7 +319,12 @@ async def merged_escapes(ctx: TickContext) -> int:
             await BondRepository(ctx.session).connect(BondDraft(merged.id, maker.id, BondKind.HUNTS, ctx.epoch, "escaped and returned"))
             for key in (POPULATION_KEY, FOLLOWERS_KEY):
                 scale_stat(ctx.rules, maker, key, (PERCENT - creatures.merged_escape_population_loss_pct) / PERCENT)
-        await note(ctx, f"{merged.name} got out of control and turned on those who made it.", key="creatures.merged_escaped", ids=[merged.id])
+        await record(
+            ctx,
+            "creatures.merged_escaped",
+            roles={IncidentRole.ACTOR: merged.id, IncidentRole.VICTIM: maker.id if maker is not None and maker.status is EntityStatus.CANON else None},
+            facts={"loss": creatures.merged_escape_population_loss_pct, "danger": stat_or(merged, DANGER_KEY, creatures.merged_default_danger)},
+        )
         count += 1
     return count
 
@@ -325,7 +356,13 @@ async def megafauna_trail(ctx: TickContext, beast: EntityRow) -> EntityRow | Non
     )
     await set_mechanics(ctx.session, trail, [ResourceMechanic.ADDICTIVE] if cosmic else [ResourceMechanic.DECAYING])
     await set_resource_yield(ctx.session, ctx.rules, trail.id, CommodityKind.MAGICAL_REAGENTS)
-    await note(ctx, f"Where {beast.name} passed, a trail remained: {trail.name}.", key="creatures.megafauna_trail", ids=[beast.id, trail.id])
+    await record(
+        ctx,
+        "creatures.megafauna_trail",
+        roles={IncidentRole.SUBJECT: beast.id, IncidentRole.PRODUCT: trail.id, IncidentRole.PLACE: beast.location_id},
+        facts={"value": stat_or(trail, "value", 0), "might": stat_or(trail, "might", 0)},
+        place=beast.location_id,
+    )
     return trail
 
 
@@ -340,7 +377,7 @@ async def megafauna(ctx: TickContext) -> int:
             continue
         if beast.id not in tagged:
             await repository.add_flag(beast.id, EntityFlag.MEGAFAUNA, ctx.epoch)
-            await note(ctx, f"{beast.name} grew into a megafauna.", key="creatures.megafauna", ids=[beast.id])
+            await record(ctx, "creatures.megafauna", roles={IncidentRole.SUBJECT: beast.id}, facts={"power": beast.power_level})
         if beast.location_id is not None and rng.chance(creatures.megafauna_trace_chance):
             await megafauna_trail(ctx, beast)
             trails += 1
@@ -351,11 +388,11 @@ async def predator_bonds(ctx: TickContext) -> int:
     species = await _species(ctx)
     change = await derive_links(ctx, species)
     ctx.count("hunting_links_broken", change.broken)
-    names = {item.id: item.name for item in species}
+    known = {item.id for item in species}
     for hunter_id, prey_ids in sorted(change.formed.items()):
-        prey = [names[item] for item in prey_ids if item in names]
-        listed = prey[0] if len(prey) == 1 else f"{', '.join(prey[:-1])} and {prey[-1]}"
-        await note(ctx, f"{names[hunter_id]} began hunting {listed}.", key="creatures.predation", ids=[hunter_id, *prey_ids])
+        prey = sorted(item for item in prey_ids if item in known)
+        if hunter_id in known and prey:
+            await record(ctx, "creatures.predation", roles={IncidentRole.ACTOR: hunter_id, IncidentRole.TARGET: prey})
     return sum(len(items) for items in change.formed.values())
 
 
@@ -380,7 +417,12 @@ async def predation_pressure(ctx: TickContext) -> int:
         if gap < creatures.depletion_danger_margin or prey.power_level > creatures.depletion_max_prey_power or not rng.chance(creatures.prey_depletion_chance):
             continue
         await retire(ctx.session, prey, ctx.epoch, f"Epoch {ctx.epoch}: {hunter.name} consumed it.")
-        await note(ctx, f"{prey.name} became extinct as {hunter.name}'s prey.", key="creatures.prey_extinct", ids=[hunter.id, prey.id])
+        await record(
+            ctx,
+            "creatures.prey_extinct",
+            roles={IncidentRole.ACTOR: hunter.id, IncidentRole.VICTIM: prey.id},
+            facts={"gap": gap, "chance": creatures.prey_depletion_chance},
+        )
         extinct += 1
     return extinct
 
@@ -403,11 +445,11 @@ async def starving_predators(ctx: TickContext) -> int:
             continue
         await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "prey extinct")
         put_stat(ctx.rules, hunter, DANGER_KEY, species_danger(ctx.rules, hunter) + creatures.starving_predator_danger)
-        await note(
+        await record(
             ctx,
-            f"{prey.name} went extinct; {hunter.name}, which hunted it, starved and turned on the settlements.",
-            key="creatures.starving",
-            ids=[hunter.id, prey.id],
+            "creatures.starving",
+            roles={IncidentRole.ACTOR: hunter.id, IncidentRole.SUBJECT: prey.id},
+            facts={"danger": species_danger(ctx.rules, hunter)},
         )
         starved += 1
     return starved
@@ -438,7 +480,6 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
@@ -465,7 +506,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -513,13 +554,18 @@ async def creature_migration(ctx: TickContext) -> int:
         if target is None or target.status is not EntityStatus.CANON or held(target.id):
             continue
         await BondRepository(ctx.session).connect(BondDraft(species.id, target.id, BondKind.LIVES_IN, ctx.epoch, f"Epoch {ctx.epoch} migration"))
-        source = await ctx.session.get(EntityRow, home) if home is not None else None
-        origin = source.name if source is not None else "its lands"
-        await note(
+        await record(
             ctx,
-            f"Herds of {species.name} spilled out of {origin} and spread into the lands of {target.name}.",
-            key="creatures.migration",
-            ids=[species.id, target.id],
+            "creatures.migration",
+            roles={IncidentRole.SUBJECT: species.id, IncidentRole.ORIGIN: home, IncidentRole.DESTINATION: target.id},
+            facts={"chance": chance},
+            origin=home,
+            destination=target.id,
+            steps=(
+                StepDraft(StepAction.DEPART, actor=species.id, locus_kind=StepLocus.REGION, locus_node=home),
+                StepDraft(StepAction.MIGRATE, actor=species.id, locus_kind=StepLocus.REGION, locus_node=target.id),
+                StepDraft(StepAction.ARRIVE, actor=species.id, locus_kind=StepLocus.REGION, locus_node=target.id),
+            ),
         )
         moved += 1
     return moved
@@ -558,8 +604,13 @@ async def creature_rebellion(ctx: TickContext) -> int:
             for key in (POPULATION_KEY, FOLLOWERS_KEY):
                 scale_stat(ctx.rules, victim, key, creatures.creature_revolt_population_kept_pct / PERCENT)
         son.existence = max(0, son.existence - creatures.creature_revolt_son_existence_loss)
-        attacked = f"; it attacked {victim.name} who worship them" if victim is not None else ""
-        await note(ctx, f"{species.name} rose up against its creator {son.name}{attacked}.", key="creatures.rebellion", ids=[species.id], son_id=son.id)
+        await record(
+            ctx,
+            "creatures.rebellion",
+            roles={IncidentRole.ACTOR: species.id, IncidentRole.TARGET: son.id, IncidentRole.VICTIM: victim.id if victim is not None else None},
+            facts={"kept": creatures.creature_revolt_population_kept_pct, "existence_loss": creatures.creature_revolt_son_existence_loss},
+            son_id=son.id,
+        )
         risen += 1
     return risen
 
@@ -651,8 +702,11 @@ async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityR
     await settle_size(ctx.session, child.id, home.id)
     for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[species.id], targets=[home.id]):
         await bonds.deactivate(bond, ctx.epoch, "speciation")
-    await note(
-        ctx, f"{species.name} diverged into a new subspecies in the lands of {home.name}.", key="creatures.speciation", ids=[species.id, child.id, home.id]
+    await record(
+        ctx,
+        "creatures.speciation",
+        roles={IncidentRole.SUBJECT: species.id, IncidentRole.PRODUCT: child.id, IncidentRole.PLACE: home.id},
+        place=home.id,
     )
     return child
 
@@ -687,7 +741,8 @@ async def spare_soul(session: AsyncSession, rules: Rules, soul_id: int, spared: 
         return await repository.remove_flag(soul.id, EntityFlag.SPARED_SOUL)
     changed = await repository.add_flag(soul.id, EntityFlag.SPARED_SOUL, ctx.epoch)
     if changed:
-        await note(ctx, f"The Creator spared {soul.name}; nothing may feed on it.", key="creatures.soul_spared", ids=[soul.id])
+        creator = await session.scalar(select(CreatorRow.id).limit(1))
+        await record(ctx, "creatures.soul_spared", roles={IncidentRole.AUTHORITY: creator, IncidentRole.SUBJECT: soul.id})
     return changed
 
 
@@ -695,7 +750,7 @@ async def force_mutation(session: AsyncSession, rules: Rules, species_id: int) -
     ctx = await manual_context(session, "mutation", rules, key=str(species_id))
     species = await _require_species(session, species_id)
     world = await session.get(WorldRow, species.world_id)
-    return await mutate_species(ctx, species, world.leakage if world is not None else 0)
+    return await mutate_species(ctx, species, world.leakage if world is not None else 0, PERCENT)
 
 
 async def force_people_split(session: AsyncSession, rules: Rules, people_id: int) -> EntityRow:
@@ -774,8 +829,16 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
     await creature_phase(await manual_context(session, "creatures", rules))
 
 
-@reads("species.danger", "table.bonds", "table.entities", "table.entity_traits", "table.epoch_year_cursors", "table.nodes", "table.world_maps")
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@reads("species.danger", "table.bonds", "table.entities", "table.entity_traits", "table.nodes", "table.world_maps")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+)
 async def creature_migration_phase(ctx: TickContext) -> None:
     await creature_migration(ctx)
 
@@ -788,7 +851,6 @@ async def creature_migration_phase(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.sons",
@@ -804,7 +866,6 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "species.strength",
     "table.bonds",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.name_registry",
     "table.nodes",
     "table.region_environment",
@@ -819,7 +880,6 @@ async def creature_rebellion_phase(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

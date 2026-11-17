@@ -3,9 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.resolves import RESOLVES
-from aerona.catalog.operations import AFFLICTIONS, GROUND_LABELS, QUIRK_ORIGINS, VIRTUES
+from aerona.catalog.operations import AFFLICTIONS, QUIRK_ORIGINS, VIRTUES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -18,6 +17,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import ExpeditionEvent, ExpeditionGround, ExpeditionRole, ExpeditionStatus, QuirkKind, ResolveKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -25,10 +25,11 @@ from aerona.engine.economy.purse import give_coin
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
+from aerona.engine.operations.expedition_record import log_entry
 from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.engine.sites.rooms import Walk, delve, layout_of, rooms_of
 from aerona.rules.registry.operations import ExpeditionRules
 
@@ -114,8 +115,8 @@ async def role_for(ctx: TickContext, mortal_id: int, taken: list[ExpeditionRole]
     return best
 
 
-def log(ctx: TickContext, party: Party, event: ExpeditionEvent, **values: object) -> None:
-    ctx.session.add(ExpeditionLogRow(expedition_id=party.row.id, epoch=ctx.epoch, leg=party.row.legs_done, event=event, locked=[], **values))
+async def log(ctx: TickContext, party: Party, event: ExpeditionEvent, **values: object) -> None:
+    await log_entry(ctx, party.row, ExpeditionLogRow(expedition_id=party.row.id, epoch=ctx.epoch, leg=party.row.legs_done, event=event, locked=[], **values))
 
 
 async def grant_quirk(ctx: TickContext, mortal_id: int, kind: QuirkKind, *, source_id: int | None, expedition_id: int | None) -> QuirkRow:
@@ -142,7 +143,7 @@ async def maybe_quirk(ctx: TickContext, party: Party, event: ExpeditionEvent, ta
     kind = pair[rng.below(len(pair))]
     await grant_quirk(ctx, member.mortal_entity_id, kind, source_id=party.row.target_entity_id, expedition_id=party.row.id)
     party.quirks.setdefault(member.mortal_entity_id, set()).add(kind)
-    log(ctx, party, E.QUIRK, member_entity_id=member.mortal_entity_id, quirk=kind)
+    await log(ctx, party, E.QUIRK, member_entity_id=member.mortal_entity_id, quirk=kind)
     tally.quirks += 1
 
 
@@ -154,7 +155,7 @@ async def harm(ctx: TickContext, party: Party, member: ExpeditionMemberRow, dama
     stress(ctx, party, member, ctx.rules.expeditions.harm_stress)
     if mortal.status is not EntityStatus.CANON and "fallen" not in member.locked:
         member.fallen = True
-        log(ctx, party, E.FALLEN, member_entity_id=mortal.id)
+        await log(ctx, party, E.FALLEN, member_entity_id=mortal.id)
         tally.fallen += 1
 
 
@@ -188,14 +189,20 @@ async def launch(
     await ctx.session.flush()
     for mortal, role in zip([leader, *companions], roles, strict=True):
         ctx.session.add(ExpeditionMemberRow(expedition_id=row.id, mortal_entity_id=mortal.id, role=role, locked=[]))
-    ctx.session.add(ExpeditionLogRow(expedition_id=row.id, epoch=ctx.epoch, leg=0, event=E.SETOUT, member_entity_id=leader.id, locked=[]))
-    await ctx.session.flush()
+    await log_entry(ctx, row, ExpeditionLogRow(expedition_id=row.id, epoch=ctx.epoch, leg=0, event=E.SETOUT, member_entity_id=leader.id, locked=[]))
     tally.launched += 1
-    await note(
+    await record(
         ctx,
-        f"{leader.name} set out with {several(len(companions), 'companion', 'companions')} into {GROUND_LABELS[ground]}: {target.name}.",
-        key="expedition.set_out",
-        ids=[leader.id, target.id, *[mortal.id for mortal in companions]],
+        "expedition.set_out",
+        roles={
+            IncidentRole.LEADER: leader.id,
+            IncidentRole.DESTINATION: target.id,
+            IncidentRole.MEMBER: [mortal.id for mortal in companions],
+            IncidentRole.PATRON: sponsor_id,
+        },
+        facts={"ground": ground, "companions": len(companions), "legs": row.legs_total, "provisions": row.provisions, "light": row.light},
+        place=target.id,
+        cause=row.incident_id,
     )
     return row
 
@@ -303,7 +310,7 @@ async def expose(ctx: TickContext, party: Party, land: RegionEnvironmentRow | No
         keep(member, "wet", clamp_int(member.wet + (table.wet_per_leg * scale // PERCENT if rain else 0) - relief, 0, PERCENT))
         keep(member, "fatigue", clamp_int(member.fatigue + table.leg_fatigue * scale // PERCENT, 0, PERCENT))
         if max(member.cold, member.wet, member.hunger, member.fatigue) >= table.exposure_harm:
-            log(ctx, party, E.EXPOSURE, member_entity_id=member.mortal_entity_id)
+            await log(ctx, party, E.EXPOSURE, member_entity_id=member.mortal_entity_id)
             await harm(ctx, party, member, table.exposure_hp, cause=HarmCause.EXPOSURE, reason="died of exposure on an expedition", tally=tally)
             await maybe_quirk(ctx, party, E.EXPOSURE, tally)
 
@@ -321,7 +328,7 @@ async def test_resolve(ctx: TickContext, party: Party, tally: ExpeditionTally) -
         lead = await skill_level(ctx.session, member.mortal_entity_id, SkillKind.LEADERSHIP)
         virtue = rng.chance(table.virtue_chance + lead // 4)
         member.resolve = rng.pick(sorted(VIRTUES if virtue else AFFLICTIONS))
-        log(ctx, party, E.VIRTUE if virtue else E.AFFLICTION, member_entity_id=member.mortal_entity_id, resolve=member.resolve, stress=member.stress)
+        await log(ctx, party, E.VIRTUE if virtue else E.AFFLICTION, member_entity_id=member.mortal_entity_id, resolve=member.resolve, stress=member.stress)
         if virtue:
             tally.virtues += 1
             keep(member, "stress", member.stress // 2)
@@ -340,14 +347,14 @@ async def camp(ctx: TickContext, party: Party, tally: ExpeditionTally, *, force:
     for member in alive:
         keep(member, "fatigue", clamp_int(member.fatigue - table.camp_fatigue, 0, PERCENT))
         stress(ctx, party, member, -table.camp_stress)
-    log(ctx, party, E.CAMP, provisions_used=len(alive))
+    await log(ctx, party, E.CAMP, provisions_used=len(alive))
     tally.camps += 1
     await maybe_quirk(ctx, party, E.CAMP, tally)
     rng = ctx.rng(f"ambush.{party.row.id}.{party.row.legs_done}.{ctx.epoch}")
     if rng.chance(table.ambush_chance + party.row.darkness // AMBUSH_DARK_SHARE):
         victim = rng.pick(alive)
         guard = min(PERCENT, party.count(R.FIGHTER) * table.fighter_guard_pct)
-        log(ctx, party, E.AMBUSH, member_entity_id=victim.mortal_entity_id)
+        await log(ctx, party, E.AMBUSH, member_entity_id=victim.mortal_entity_id)
         tally.ambushes += 1
         await harm(
             ctx,
@@ -388,7 +395,7 @@ async def leg(ctx: TickContext, party: Party, land: RegionEnvironmentRow | None,
     lit = party.row.light
     eat(ctx, party)
     light(ctx, party)
-    log(
+    await log(
         ctx,
         party,
         E.ROOM if party.row.ground is G.SITE else E.LEG,
@@ -417,25 +424,37 @@ async def finish(ctx: TickContext, party: Party, tally: ExpeditionTally) -> None
     if not party.alive:
         keep(party.row, "status", ExpeditionStatus.LOST)
         party.row.ended_epoch = ctx.epoch
-        log(ctx, party, E.LOSS)
+        await log(ctx, party, E.LOSS)
         tally.lost += 1
-        await note(ctx, f"{party.row.name} never came back.", key="expedition.lost", ids=[item for item in (party.row.target_entity_id,) if item])
+        await record(
+            ctx,
+            "expedition.lost",
+            roles={IncidentRole.LEADER: party.row.leader_entity_id, IncidentRole.DESTINATION: party.row.target_entity_id},
+            facts={"members": len(party.members), "legs_done": party.row.legs_done},
+            place=party.row.target_entity_id,
+            cause=party.row.incident_id,
+        )
         return
     keep(party.row, "status", ExpeditionStatus.RETURNED)
     party.row.ended_epoch = ctx.epoch
-    log(ctx, party, E.RETURN)
+    await log(ctx, party, E.RETURN)
     tally.returned += 1
     for member in party.alive:
         await add_renown(ctx.session, member.mortal_entity_id, ctx.rules.sites.delve_renown, ctx.epoch, rules=ctx.rules)
         if member.resolve in AFFLICTIONS and "resolve" not in member.locked:
             member.resolve = ResolveKind.STEADY
     await maybe_quirk(ctx, party, E.RETURN, tally)
-    crew = several(len(party.members), "member", "members")
-    await note(
+    await record(
         ctx,
-        f"{party.row.name} came back with {several(party.row.found, 'find', 'finds')} and {len(party.alive)} of its {crew}.",
-        key="expedition.returned",
-        ids=[member.mortal_entity_id for member in party.alive],
+        "expedition.returned",
+        roles={
+            IncidentRole.LEADER: party.row.leader_entity_id,
+            IncidentRole.MEMBER: [member.mortal_entity_id for member in party.alive if member.mortal_entity_id != party.row.leader_entity_id],
+            IncidentRole.DESTINATION: party.row.target_entity_id,
+        },
+        facts={"finds": party.row.found, "returned": len(party.alive), "members": len(party.members), "renown": ctx.rules.sites.delve_renown},
+        place=party.row.target_entity_id,
+        cause=party.row.incident_id,
     )
 
 

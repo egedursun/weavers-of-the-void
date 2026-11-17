@@ -8,13 +8,14 @@ from aerona.db.tables.transform import StarModifierRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.transform import StarModifierSource
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 
 async def anchored_gods(ctx: TickContext, *, world_id: int | None = None, star_id: int | None = None) -> list[ForeignGodRow]:
@@ -69,6 +70,6 @@ async def star_god_died(ctx: TickContext, god: ForeignGodRow) -> StarModifierRow
     )
     if region is not None:
         await form_phenomenon(ctx, PhenomenonKind.DIVINE_RESIDUE, region, PhenomenonCause.GOD_DEATH, cause_node_id=god.id)
-    await note(ctx, f"{god.name} died, and {star.name} dims for it.", key="transform.star_god_death", world_id=god.world_id)
+    await record(ctx, "transform.star_god_death", roles={IncidentRole.SUBJECT: [god.id, star.id]}, world_id=god.world_id)
     await ctx.session.flush()
     return row

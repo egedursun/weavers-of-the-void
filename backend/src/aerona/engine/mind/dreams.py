@@ -20,6 +20,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import DreamKind, DreamReading, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.engine.body.conditions import gain_condition
@@ -31,10 +32,10 @@ from aerona.engine.mind.split import facets_of
 from aerona.engine.mind.thoughts import need_importance, shift_mind, strength_of, think, thinker, thoughts_of
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.standing import add_renown, add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
@@ -198,7 +199,7 @@ async def nightmare(ctx: TickContext, mortal: EntityRow, mind: Mind, base: int) 
     await add_stress(ctx.session, mortal.id, table.nightmare_stress, ctx.epoch)
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.HAD_NIGHTMARE, ctx.epoch, intensity=row.intensity)
     if await recurring(ctx, mortal, row):
-        await note(ctx, f"{mortal.name} is haunted by the same nightmare night after night.", key="dream.recurring", ids=[mortal.id])
+        await record(ctx, "dream.recurring", roles={IncidentRole.SUBJECT: mortal.id})
     return row
 
 
@@ -308,7 +309,12 @@ async def read_into(ctx: TickContext, mortal: EntityRow, row: DreamRow) -> None:
         reader = await ctx.session.get(EntityRow, row.reader_node_id) if row.reader_node_id is not None else None
         by = f" by {reader.name}" if reader is not None and reader.id != mortal.id else ""
         reading = row.reading.value.replace("_", " ")
-        await note(ctx, f"A dream of {mortal.name} was read{by} as {reading}.", key="dream.reading", ids=[mortal.id, *([reader.id] if reader else [])])
+        await record(
+            ctx,
+            "dream.reading",
+            roles={IncidentRole.SUBJECT: [mortal.id, *[mortal.id, *([reader.id] if reader else [])]]},
+            facts={"by": str(by), "reading": str(reading)},
+        )
 
 
 async def visitations(ctx: TickContext) -> int:

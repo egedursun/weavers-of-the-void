@@ -11,10 +11,11 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import active_bonds, canon
+from aerona.engine.recording.record import record
 
 BLESSING = PackageKind.DIVINE_BLESSING
 TAINT = PackageKind.VOID_TAINT
@@ -62,18 +63,21 @@ async def mark_lineages(ctx: TickContext, tally: LineageTally) -> None:
         if profile.sacred_to_node_id is not None and await ctx.session.get(LineageMarkRow, (species.id, BLESSING)) is None and rng.chance(table.blessing_pct):
             await mark(ctx, species, BLESSING, blessing=True, source_node_id=profile.sacred_to_node_id)
             tally.blessed += 1
-            await note(ctx, f"The line of {species.name} carries a blessing now, from parent to young.", key="ecology.lineage_blessed", ids=[species.id])
+            await record(
+                ctx,
+                "ecology.lineage_blessed",
+                roles={IncidentRole.SUBJECT: species.id, IncidentRole.PATRON: profile.sacred_to_node_id},
+                facts={"chance": table.blessing_pct},
+            )
         curse = await active_bonds(ctx.session, [BondKind.CURSED], targets=[species.id])
         if curse and await ctx.session.get(LineageMarkRow, (species.id, TAINT)) is None:
             await mark(ctx, species, TAINT, blessing=False, source_node_id=curse[-1].source_node_id)
             tally.tainted += 1
-            await note(ctx, f"The curse on {species.name} passes from parent to young.", key="ecology.lineage_cursed", ids=[species.id])
+            await record(ctx, "ecology.lineage_cursed", roles={IncidentRole.SUBJECT: species.id, IncidentRole.ACTOR: curse[-1].source_node_id})
         elif species.id in tainted and await ctx.session.get(LineageMarkRow, (species.id, TAINT)) is None and rng.chance(table.taint_pct):
             await mark(ctx, species, TAINT, blessing=False, source_node_id=None)
             tally.tainted += 1
-            await note(
-                ctx, f"The line of {species.name} is tainted by the leaking land, from parent to young.", key="ecology.lineage_tainted", ids=[species.id]
-            )
+            await record(ctx, "ecology.lineage_tainted", roles={IncidentRole.SUBJECT: species.id}, facts={"chance": table.taint_pct})
 
 
 async def pass_to_beast(ctx: TickContext, beast: EntityRow, species_id: int | None) -> int:

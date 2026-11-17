@@ -35,15 +35,18 @@ from aerona.domain.enums.polity import (
     ClauseKind,
     DecisionRule,
     GovernmentKind,
+    HouseEnd,
     HouseTrait,
     LawKind,
     LegitimacyBasis,
+    OathBreach,
     OathKind,
     OathStatus,
     OfficeKind,
     OfficePower,
     PartyRole,
     RegionalStanding,
+    TreatyBreach,
     TreatyKind,
     TreatyStatus,
 )
@@ -352,7 +355,7 @@ async def merge_houses(ctx: TickContext, house_id: int, into_id: int) -> int:
         if mortal is not None:
             await join(ctx, book, into_id, mortal, by_marriage=False)
             moved += 1
-    await extinguish(ctx, book, house_id, f"it was joined to {book.houses[into_id].name}")
+    await extinguish(ctx, book, house_id, HouseEnd.JOINED_TO_HOUSE, occasion=into_id)
     return moved
 
 
@@ -362,7 +365,7 @@ async def end_house(ctx: TickContext, house_id: int) -> None:
         raise NotFoundError("No such house.")
     for row in await ctx.session.scalars(select(HouseMemberRow).where(HouseMemberRow.house_entity_id == house_id)):
         await ctx.session.delete(row)
-    await extinguish(ctx, book, house_id, "the Creator struck its name")
+    await extinguish(ctx, book, house_id, HouseEnd.NAME_STRUCK)
 
 
 async def grant_claim(
@@ -415,7 +418,7 @@ async def break_treaty(ctx: TickContext, treaty_id: int, breaker_id: int) -> Non
     profile = await ctx.session.get(TreatyProfileRow, treaty_id)
     if profile is None or profile.status is not TreatyStatus.IN_FORCE:
         raise NotFoundError("No treaty in force.")
-    await breach(ctx, profile, breaker_id, clause=None, reason="the Creator bade it")
+    await breach(ctx, profile, breaker_id, clause=None, reason=TreatyBreach.GOD_COMMANDED)
 
 
 async def edit_treaty(
@@ -614,7 +617,7 @@ async def break_oath_by_hand(ctx: TickContext, oath_id: int) -> OathRow:
     oath = await ctx.session.get(OathRow, oath_id)
     if oath is None:
         raise NotFoundError("No such oath.")
-    await break_oath(ctx, oath, "the Creator released no one")
+    await break_oath(ctx, oath, OathBreach.GOD_RELEASED)
     return oath
 
 

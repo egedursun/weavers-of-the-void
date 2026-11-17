@@ -12,7 +12,7 @@ CLAIM_BASIS = total(
                 "engine.collective.accounts.rally_true_line",
                 "engine.polity.houses.branch",
                 "engine.polity.houses.inherit_claims",
-                "engine.regime.rule.rival_claim",
+                "engine.regime.rule.claimed_by_kin",
             ),
         ),
         ClaimBasis.MARRIAGE: Defined("Marriage", checked_by=(), used_by=("engine.polity.houses.marriage_claims",)),

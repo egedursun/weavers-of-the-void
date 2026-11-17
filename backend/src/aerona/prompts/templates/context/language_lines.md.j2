@@ -1,4 +1,4 @@
 {% for language in languages %}
-- #{{ language.id }} {{ language.name }} ({{ language.subtype if language.subtype else "language" }}; {{ language.word_count }} words; {% if language.dead %}DEAD LANGUAGE: no living speaker{% else %}speakers: {{ language.speakers | join(", ") if language.speakers else "none" }}{% endif %}): {% if language.words %}{% for word in language.words %}{{ word.word }} = {{ word.meaning }}{% if not loop.last %}; {% endif %}{% endfor %}{% else %}no words yet{% endif %}
+- #{{ language.id }} {{ language.name }} ({{ language.subtype if language.subtype else "language" }}; {{ language.word_count | several("word", "words") }}; {% if language.dead %}DEAD LANGUAGE: no living speaker{% else %}speakers: {{ language.speakers | join(", ") if language.speakers else "none" }}{% endif %}): {% if language.words %}{% for word in language.words %}{{ word.word }} = {{ word.meaning }}{% if not loop.last %}; {% endif %}{% endfor %}{% else %}no words yet{% endif %}
 
 {% endfor %}

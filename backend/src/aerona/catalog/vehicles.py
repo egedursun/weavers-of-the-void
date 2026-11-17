@@ -7,7 +7,6 @@ from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.integrity import Criticality, SectionHazard
-from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.vehicles import (
     MountKind,
@@ -338,7 +337,6 @@ class FrameSpec:
     branch: KnowledgeBranch | None = None
     level: int = 0
     strangeness: int = 0
-    armament: tuple[VesselArmament, ...] = ()
 
     @property
     def kind(self) -> DesignKind:
@@ -421,7 +419,6 @@ FUELS: MappingProxyType[Propulsion, CommodityKind | None] = total(
         P.TOWED: None,
     },
 )
-V = VesselArmament
 
 
 def frame(
@@ -429,7 +426,6 @@ def frame(
     values: tuple[int, int, int, int, int, int, int, int],
     gate: tuple[KnowledgeBranch | None, int] = (None, 0),
     strangeness: int = 0,
-    armament: tuple[VesselArmament, ...] = (),
 ) -> FrameSpec:
     name, label, domain, family, propulsion, size = head
     speed, reach, cargo, crew, troops, endurance, armour, structure = values
@@ -452,7 +448,6 @@ def frame(
         branch,
         level,
         strangeness,
-        armament,
     )
 
 
@@ -474,19 +469,16 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.CHARIOT, "Chariot", D.LAND, Y.CHARIOT, P.DRAFT_ANIMALS, Z.SMALL),
                 (65, 30, 5, 2, 0, 30, 15, 25),
                 (K.WARFARE, 1),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.WAR_WAGON, "War wagon", D.LAND, Y.WAGON, P.DRAFT_ANIMALS, Z.MEDIUM),
                 (20, 30, 40, 4, 8, 40, 35, 45),
                 (K.WARFARE, 2),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.BEAST_CARRIER, "Beast carrier", D.LAND, Y.MOUNT, P.RIDDEN, Z.LARGE),
                 (30, 35, 60, 3, 8, 45, 30, 70),
                 (K.WARFARE, 2),
-                armament=(V.MISSILES,),
             ),
             frame((F.RAIL_CAR, "Rail car", D.LAND, Y.RAIL, P.TOWED, Z.LARGE), (50, 60, 300, 2, 40, 60, 10, 50), (K.METALLURGY, 4)),
             frame((F.LOCOMOTIVE, "Locomotive", D.LAND, Y.RAIL, P.STEAM, Z.LARGE), (60, 60, 50, 4, 0, 65, 20, 70), (K.METALLURGY, 4)),
@@ -498,19 +490,16 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.ARMOURED_CAR, "Armoured car", D.LAND, Y.MOTOR, P.COMBUSTION, Z.MEDIUM),
                 (65, 65, 20, 3, 4, 55, 45, 60),
                 (K.WARFARE, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.TANK, "Tank", D.LAND, Y.TRACKED, P.COMBUSTION, Z.LARGE),
                 (40, 55, 10, 4, 0, 65, 80, 90),
                 (K.WARFARE, 5),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.WALKER, "Walker", D.LAND, Y.WALKER, P.ELECTRIC, Z.LARGE),
                 (45, 55, 20, 2, 0, 60, 60, 80),
                 (K.METALLURGY, 6),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame((F.CRAWLER, "Crawler", D.LAND, Y.TRACKED, P.COMBUSTION, Z.HUGE), (20, 60, 500, 8, 30, 75, 50, 120), (K.METALLURGY, 5)),
             frame(
@@ -518,63 +507,53 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (35, 40, 20, 1, 0, 70, 55, 90),
                 (K.MAGIC, 3),
                 20,
-                (V.RAMS, V.RITES),
             ),
             frame((F.CONSTRUCT_CARRIER, "Construct carrier", D.LAND, Y.CONSTRUCT, P.MAGIC, Z.HUGE), (25, 45, 200, 2, 20, 75, 45, 110), (K.MAGIC, 4), 25),
             frame(
                 (F.BATTERING_RAM, "Battering ram", D.LAND, Y.RAM, P.CREW, Z.MEDIUM),
                 (10, 5, 0, 12, 0, 40, 30, 45),
                 (K.WARFARE, 1),
-                armament=(V.RAMS,),
             ),
             frame(
                 (F.SIEGE_TOWER, "Siege tower", D.LAND, Y.TOWER, P.CREW, Z.LARGE),
                 (5, 5, 0, 10, 40, 35, 35, 60),
                 (K.WARFARE, 2),
-                armament=(V.MISSILES,),
             ),
             frame((F.MANTLET, "Mantlet", D.LAND, Y.RAM, P.CREW, Z.SMALL), (10, 5, 0, 4, 6, 40, 40, 25), (K.WARFARE, 1)),
             frame(
                 (F.CATAPULT, "Catapult", D.LAND, Y.THROWER, P.TOWED, Z.MEDIUM),
                 (10, 10, 0, 8, 0, 35, 10, 35),
                 (K.WARFARE, 2),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.TREBUCHET, "Trebuchet", D.LAND, Y.THROWER, P.TOWED, Z.LARGE),
                 (5, 5, 0, 15, 0, 40, 10, 50),
                 (K.WARFARE, 3),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.BALLISTA, "Ballista", D.LAND, Y.THROWER, P.TOWED, Z.SMALL),
                 (15, 10, 0, 4, 0, 35, 10, 25),
                 (K.WARFARE, 2),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.BOMBARD, "Bombard", D.LAND, Y.GUN, P.TOWED, Z.LARGE),
                 (5, 10, 0, 10, 0, 40, 15, 55),
                 (K.METALLURGY, 3),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.FIELD_GUN, "Field gun", D.LAND, Y.GUN, P.TOWED, Z.MEDIUM),
                 (20, 20, 0, 6, 0, 45, 15, 40),
                 (K.METALLURGY, 4),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.MORTAR, "Mortar", D.LAND, Y.GUN, P.TOWED, Z.SMALL),
                 (15, 15, 0, 4, 0, 45, 15, 30),
                 (K.METALLURGY, 4),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.ROCKET_BATTERY, "Rocket battery", D.LAND, Y.GUN, P.TOWED, Z.MEDIUM),
                 (25, 30, 0, 5, 0, 45, 10, 35),
                 (K.METALLURGY, 5),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame((F.RAFT, "Raft", D.WATER, Y.BOAT, P.CURRENT, Z.SMALL), (15, 10, 20, 4, 4, 10, 0, 10)),
             frame((F.CANOE, "Canoe", D.WATER, Y.BOAT, P.CREW, Z.SMALL), (35, 20, 10, 2, 2, 20, 0, 10)),
@@ -586,88 +565,74 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.GALLEY, "Galley", D.WATER, Y.GALLEY, P.SAIL_AND_OAR, Z.MEDIUM),
                 (55, 35, 80, 120, 40, 35, 10, 50),
                 (K.SEAFARING, 1),
-                armament=(V.RAMS, V.MISSILES),
             ),
             frame(
                 (F.LONGSHIP, "Longship", D.WATER, Y.GALLEY, P.SAIL_AND_OAR, Z.MEDIUM),
                 (65, 55, 60, 50, 30, 45, 5, 45),
                 (K.SEAFARING, 1),
-                armament=(V.RAMS,),
             ),
             frame(
                 (F.COG, "Cog", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.MEDIUM),
                 (40, 60, 200, 25, 30, 55, 10, 55),
                 (K.SHIPBUILDING, 1),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.CARRACK, "Carrack", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.LARGE),
                 (50, 85, 320, 60, 60, 70, 15, 70),
                 (K.SHIPBUILDING, 2),
-                armament=(V.MISSILES, V.SIEGE_ENGINES),
             ),
             frame(
                 (F.GALLEON, "Galleon", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.LARGE),
                 (50, 90, 400, 120, 80, 72, 20, 80),
                 (K.SHIPBUILDING, 3),
-                armament=(V.MISSILES, V.SIEGE_ENGINES),
             ),
             frame(
                 (F.FRIGATE, "Frigate", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.LARGE),
                 (65, 85, 150, 150, 40, 70, 20, 70),
                 (K.SHIPBUILDING, 3),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.WARSHIP, "Warship", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.LARGE),
                 (50, 70, 120, 200, 80, 65, 25, 80),
                 (K.SHIPBUILDING, 2),
-                armament=(V.RAMS, V.MISSILES, V.SIEGE_ENGINES),
             ),
             frame(
                 (F.SHIP_OF_THE_LINE, "Ship of the line", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.HUGE),
                 (40, 75, 200, 600, 100, 75, 35, 110),
                 (K.SHIPBUILDING, 4),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame((F.STEAMSHIP, "Steamship", D.WATER, Y.STEAM_SHIP, P.STEAM, Z.LARGE), (60, 100, 500, 80, 100, 80, 15, 90), (K.SHIPBUILDING, 4)),
             frame(
                 (F.IRONCLAD, "Ironclad", D.WATER, Y.STEAM_SHIP, P.STEAM, Z.LARGE),
                 (45, 80, 150, 200, 60, 75, 70, 110),
                 (K.SHIPBUILDING, 4),
-                armament=(V.SIEGE_ENGINES, V.RAMS),
             ),
             frame(
                 (F.BATTLESHIP, "Battleship", D.WATER, Y.STEAM_SHIP, P.COMBUSTION, Z.HUGE),
                 (55, 110, 200, 1200, 200, 85, 90, 160),
                 (K.SHIPBUILDING, 5),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.SUBMARINE, "Submarine", D.UNDERWATER, Y.SUBMARINE, P.ELECTRIC, Z.LARGE),
                 (45, 100, 50, 50, 10, 80, 30, 70),
                 (K.SHIPBUILDING, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.LIVING_SHIP, "Living ship", D.WATER, Y.LIVING, P.SELF, Z.LARGE),
                 (70, 90, 150, 30, 40, 75, 25, 80),
                 (K.MAGIC, 3),
                 55,
-                (V.RAMS, V.RITES),
             ),
             frame(
                 (F.FIRE_SHIP, "Fire ship", D.WATER, Y.BOAT, P.SAIL, Z.MEDIUM),
                 (45, 20, 0, 6, 0, 30, 0, 25),
                 (K.SEAFARING, 2),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame((F.BALLOON, "Balloon", D.AIR, Y.BALLOON, P.BUOYANCY, Z.SMALL), (20, 30, 15, 2, 2, 20, 0, 10), (K.SKY_NAVIGATION, 1)),
             frame(
                 (F.AIRSHIP, "Airship", D.AIR, Y.AIRSHIP, P.COMBUSTION, Z.HUGE),
                 (55, 100, 150, 30, 40, 45, 10, 70),
                 (K.SKY_NAVIGATION, 3),
-                armament=(V.MISSILES,),
             ),
             frame((F.GLIDER, "Glider", D.AIR, Y.AIRCRAFT, P.BUOYANCY, Z.SMALL), (50, 25, 5, 1, 1, 20, 0, 10), (K.SKY_NAVIGATION, 1)),
             frame((F.ORNITHOPTER, "Ornithopter", D.AIR, Y.AIRCRAFT, P.CREW, Z.SMALL), (55, 30, 5, 1, 1, 25, 0, 15), (K.SKY_NAVIGATION, 2), 10),
@@ -676,27 +641,23 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (75, 80, 100, 30, 30, 40, 10, 55),
                 (K.SKY_NAVIGATION, 1),
                 20,
-                (V.MISSILES, V.RITES),
             ),
             frame(
                 (F.SKYSHIP, "Skyship", D.AIR, Y.AIRSHIP, P.MAGIC, Z.LARGE),
                 (85, 80, 100, 40, 40, 40, 15, 60),
                 (K.SKY_NAVIGATION, 1),
                 20,
-                (V.MISSILES, V.RITES),
             ),
             frame((F.FLYING_CARRIAGE, "Flying carriage", D.AIR, Y.AIRSHIP, P.MAGIC, Z.MEDIUM), (70, 50, 30, 2, 6, 35, 5, 30), (K.MAGIC, 3), 25),
             frame(
                 (F.AEROPLANE, "Aeroplane", D.AIR, Y.AIRCRAFT, P.COMBUSTION, Z.MEDIUM),
                 (100, 90, 40, 2, 4, 50, 10, 40),
                 (K.SKY_NAVIGATION, 4),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.ROTORCRAFT, "Rotorcraft", D.AIR, Y.ROTORCRAFT, P.COMBUSTION, Z.MEDIUM),
                 (80, 60, 40, 2, 10, 45, 15, 40),
                 (K.SKY_NAVIGATION, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.FLYING_CAR, "Flying car", D.AIR, Y.AIRCRAFT, P.ELECTRIC, Z.SMALL),
@@ -708,7 +669,6 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (60, 50, 30, 1, 6, 55, 40, 70),
                 (K.MAGIC, 4),
                 30,
-                (V.RAMS, V.RITES),
             ),
             frame(
                 (F.ORBITAL_LANDER, "Orbital lander", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.MEDIUM),
@@ -727,21 +687,18 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (80, 160, 400, 200, 150, 85, 50, 150),
                 (K.VOID_LIVING, 3),
                 20,
-                (V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.GENERATION_SHIP, "Generation ship", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.COLOSSAL),
                 (25, 200, 800, 500, 300, 80, 30, 200),
                 (K.VOID_LIVING, 2),
                 35,
-                (V.RITES,),
             ),
             frame(
                 (F.VOID_ARK, "Void ark", D.SPACE, Y.SPACECRAFT, P.MAGIC, Z.COLOSSAL),
                 (35, 180, 600, 300, 400, 85, 35, 220),
                 (K.VOID_LIVING, 3),
                 40,
-                (V.RITES,),
             ),
             frame(
                 (F.CLOUD_SKIMMER, "Cloud skimmer", D.GAS_GIANT, Y.SPACECRAFT, P.REACTION, Z.LARGE),
@@ -764,14 +721,12 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (60, 150, 150, 30, 30, 70, 25, 80),
                 (K.GATE_LORE, 3),
                 60,
-                (V.RITES,),
             ),
             frame((F.HOVERCRAFT, "Hovercraft", D.AMPHIBIOUS, Y.MOTOR, P.COMBUSTION, Z.MEDIUM), (70, 60, 60, 3, 20, 50, 10, 40), (K.METALLURGY, 5)),
             frame(
                 (F.AMPHIBIOUS_CARRIER, "Amphibious carrier", D.AMPHIBIOUS, Y.TRACKED, P.COMBUSTION, Z.LARGE),
                 (40, 50, 40, 3, 20, 60, 40, 70),
                 (K.METALLURGY, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.LANDING_CRAFT, "Landing craft", D.AMPHIBIOUS, Y.BOAT, P.COMBUSTION, Z.MEDIUM),
@@ -786,7 +741,6 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (20, 30, 50, 1, 4, 60, 40, 70),
                 (K.MAGIC, 3),
                 30,
-                armament=(V.RAMS,),
             ),
             frame(
                 (F.DEEP_CRAWLER, "Deep crawler", D.UNDERGROUND, Y.TRACKED, P.ELECTRIC, Z.LARGE),
@@ -798,7 +752,6 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.ATTACK_SUBMARINE, "Attack submarine", D.UNDERWATER, Y.SUBMARINE, P.REACTION, Z.LARGE),
                 (55, 140, 40, 100, 20, 85, 40, 90),
                 (K.SHIPBUILDING, 6),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.GAS_HARVESTER, "Gas harvester", D.GAS_GIANT, Y.AIRSHIP, P.REACTION, Z.HUGE),
@@ -816,20 +769,17 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (25, 200, 500, 200, 400, 80, 30, 200),
                 (K.GATE_LORE, 4),
                 60,
-                armament=(V.RITES,),
             ),
             frame(
                 (F.DIVINE_VESSEL, "Divine vessel", D.PLANAR, Y.SPACECRAFT, P.DIVINE, Z.LARGE),
                 (80, 200, 100, 10, 20, 90, 40, 100),
                 (K.GATE_LORE, 5),
                 80,
-                armament=(V.RITES,),
             ),
             frame(
                 (F.SPACE_FIGHTER, "Space fighter", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.SMALL),
                 (120, 60, 5, 1, 1, 40, 15, 30),
                 (K.VOID_LIVING, 2),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.FREIGHTER, "Freighter", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.HUGE),
@@ -845,37 +795,31 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.CORVETTE, "Corvette", D.SPACE, Y.SPACECRAFT, P.FOLD_DRIVE, Z.LARGE),
                 (90, 140, 60, 40, 30, 75, 40, 90),
                 (K.VOID_LIVING, 2),
-                armament=(V.MISSILES, V.SIEGE_ENGINES),
             ),
             frame(
                 (F.DREADNOUGHT, "Dreadnought", D.SPACE, Y.SPACECRAFT, P.FOLD_DRIVE, Z.COLOSSAL),
                 (40, 180, 300, 2000, 1000, 95, 90, 300),
                 (K.VOID_LIVING, 4),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.JET_FIGHTER, "Jet fighter", D.AIR, Y.AIRCRAFT, P.COMBUSTION, Z.SMALL),
                 (160, 80, 5, 1, 1, 45, 15, 35),
                 (K.SKY_NAVIGATION, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.BOMBER, "Bomber", D.AIR, Y.AIRCRAFT, P.COMBUSTION, Z.LARGE),
                 (90, 120, 100, 6, 1, 55, 20, 60),
                 (K.SKY_NAVIGATION, 5),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.DRONE, "Drone", D.AIR, Y.AIRCRAFT, P.ELECTRIC, Z.SMALL),
                 (90, 50, 5, 1, 1, 40, 0, 10),
                 (K.SKY_NAVIGATION, 6),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.TRIREME, "Trireme", D.WATER, Y.GALLEY, P.SAIL_AND_OAR, Z.LARGE),
                 (55, 40, 40, 170, 30, 40, 15, 50),
                 (K.SEAFARING, 1),
-                armament=(V.RAMS,),
             ),
             frame(
                 (F.COASTAL_TRADER, "Coastal trader", D.WATER, Y.SAILING_SHIP, P.SAIL, Z.MEDIUM),
@@ -887,13 +831,11 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.FLEET_CARRIER, "Fleet carrier", D.WATER, Y.STEAM_SHIP, P.COMBUSTION, Z.COLOSSAL),
                 (45, 120, 300, 2000, 500, 85, 60, 180),
                 (K.SHIPBUILDING, 6),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.HOVER_TANK, "Hover tank", D.LAND, Y.TRACKED, P.ELECTRIC, Z.LARGE),
                 (80, 80, 20, 4, 6, 70, 80, 110),
                 (K.METALLURGY, 7),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame((F.BICYCLE, "Bicycle", D.LAND, Y.CART, P.CREW, Z.SMALL), (35, 40, 10, 1, 0, 40, 0, 10), (K.METALLURGY, 4)),
             frame((F.RICKSHAW, "Rickshaw", D.LAND, Y.CART, P.CREW, Z.SMALL), (20, 20, 20, 1, 2, 30, 0, 12), (K.TRADE, 2)),
@@ -906,19 +848,16 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.APC, "Armoured personnel carrier", D.LAND, Y.TRACKED, P.COMBUSTION, Z.MEDIUM),
                 (55, 60, 20, 3, 10, 60, 55, 70),
                 (K.WARFARE, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.SELF_PROPELLED_GUN, "Self-propelled gun", D.LAND, Y.TRACKED, P.COMBUSTION, Z.LARGE),
                 (35, 50, 15, 5, 0, 60, 50, 75),
                 (K.WARFARE, 5),
-                armament=(V.SIEGE_ENGINES,),
             ),
             frame(
                 (F.MISSILE_CARRIER, "Missile carrier", D.LAND, Y.MOTOR, P.COMBUSTION, Z.LARGE),
                 (45, 70, 10, 4, 0, 55, 25, 55),
                 (K.WARFARE, 6),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame((F.MOTORBOAT, "Motorboat", D.WATER, Y.BOAT, P.COMBUSTION, Z.SMALL), (70, 50, 30, 2, 6, 40, 0, 20), (K.SHIPBUILDING, 4)),
             frame((F.HYDROFOIL, "Hydrofoil", D.WATER, Y.BOAT, P.COMBUSTION, Z.MEDIUM), (110, 70, 40, 4, 40, 50, 5, 30), (K.SHIPBUILDING, 5)),
@@ -932,20 +871,17 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.DESTROYER, "Destroyer", D.WATER, Y.STEAM_SHIP, P.COMBUSTION, Z.LARGE),
                 (85, 110, 60, 250, 40, 75, 45, 100),
                 (K.SHIPBUILDING, 5),
-                armament=(V.MISSILES, V.SIEGE_ENGINES),
             ),
             frame(
                 (F.CRUISER, "Cruiser", D.WATER, Y.STEAM_SHIP, P.COMBUSTION, Z.HUGE),
                 (70, 120, 120, 600, 100, 80, 65, 130),
                 (K.SHIPBUILDING, 5),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame((F.ICEBREAKER, "Icebreaker", D.WATER, Y.STEAM_SHIP, P.COMBUSTION, Z.LARGE), (40, 110, 300, 60, 20, 85, 50, 140), (K.SHIPBUILDING, 5)),
             frame(
                 (F.VTOL, "Vertical lift craft", D.AIR, Y.AIRCRAFT, P.COMBUSTION, Z.MEDIUM),
                 (110, 70, 30, 2, 12, 50, 15, 40),
                 (K.SKY_NAVIGATION, 6),
-                armament=(V.MISSILES,),
             ),
             frame((F.SPACEPLANE, "Spaceplane", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.MEDIUM), (130, 90, 40, 3, 8, 60, 20, 50), (K.VOID_LIVING, 2)),
             frame((F.ESCAPE_POD, "Escape pod", D.SPACE, Y.SPACECRAFT, P.REACTION, Z.SMALL), (40, 10, 2, 1, 4, 30, 10, 20), (K.VOID_LIVING, 1)),
@@ -954,20 +890,17 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (F.CARRIER_VESSEL, "Carrier vessel", D.SPACE, Y.SPACECRAFT, P.FOLD_DRIVE, Z.COLOSSAL),
                 (35, 200, 1500, 1500, 2000, 95, 70, 320),
                 (K.VOID_LIVING, 5),
-                armament=(V.MISSILES,),
             ),
             frame(
                 (F.BATTLE_MECH, "Battle mech", D.LAND, Y.WALKER, P.ELECTRIC, Z.HUGE),
                 (40, 50, 10, 1, 0, 60, 85, 120),
                 (K.METALLURGY, 7),
-                armament=(V.SIEGE_ENGINES, V.MISSILES),
             ),
             frame(
                 (F.BIOSHIP, "Bioship", D.SPACE, Y.LIVING, P.SELF, Z.HUGE),
                 (80, 160, 400, 40, 200, 85, 40, 150),
                 (K.BIOMANCY, 3),
                 45,
-                (V.RAMS, V.MISSILES),
             ),
         )
     },

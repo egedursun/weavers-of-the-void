@@ -45,7 +45,6 @@ from aerona.engine.cosmos.formation import FormationTally, form_worlds
 from aerona.engine.cosmos.orbits import infer
 from aerona.engine.cycles.ecology import EcologyTally, keep_transformations, remake, set_back
 from aerona.engine.environment.long_seasons import SeasonTally, keep_seasons, winter_share
-from aerona.engine.notes import note
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, has_flag
@@ -58,7 +57,7 @@ from aerona.prompts import PromptId
 from aerona.prompts.catalog import render
 from aerona.prompts.contexts.narrative import VoicesContext
 from aerona.services.integrity.ages_links import mend_ages_links
-from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, natural_law, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, natural_law, settlement, tell_history, tuned_rules
 
 
 async def at(session: AsyncSession, epoch: int, **rules: dict[str, int]) -> TickContext:
@@ -253,7 +252,7 @@ async def test_a_killing_of_kin_starts_a_revenge_that_ends_when_the_avenger_slay
     figure = await session.get(ArcFigureRow, (arc.id, killer.id))
     assert figure is not None and figure.role is ArcRole.FOE
     ctx = await at(session, 4)
-    await note(ctx, "Tarn met Varek at the ford.", key="test.meeting", ids=[avenger.id, killer.id])
+    await tell_history(ctx, "Tarn met Varek at the ford.", ids=[avenger.id, killer.id])
     await keep_arcs(ctx, ArcTally())
     assert arc.stage is ArcStage.RISING and arc.beats == 1
     await connect(session, avenger.id, killer.id, BondKind.KILLED, 5)
@@ -352,11 +351,11 @@ async def test_a_quest_runs_through_the_stages_of_the_heros_journey_and_keeps_ea
     arc = await open_arc(ctx, hero.id, ArcTemplate.QUEST, ((guide.id, ArcRole.MENTOR),))
     assert arc.stage is ArcStage.CALL
     long_line = "Selk and Orla crossed the high pass together. " * 20
-    await note(await at(session, 3), long_line, key="test.crossing", ids=[hero.id, guide.id])
+    await tell_history(await at(session, 3), long_line, ids=[hero.id, guide.id])
     await keep_arcs(await at(session, 3), ArcTally())
     assert arc.stage is ArcStage.REFUSAL
     beat = await session.scalar(select(ArcBeatRow).where(ArcBeatRow.arc_id == arc.id, ArcBeatRow.stage == ArcStage.REFUSAL))
-    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "test.crossing"))
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "player.history", ChronicleRow.text.startswith("Selk and Orla")))
     assert beat is not None and told is not None and beat.text == told and len(beat.text) > 480
     feud = await open_arc(ctx, guide.id, ArcTemplate.REVENGE, ((hero.id, ArcRole.FOE),))
     assert feud.stage is ArcStage.INCITING
@@ -371,7 +370,7 @@ async def test_a_gods_portent_presses_the_tale_of_its_subject_and_is_paid_by_its
     setup = await tales.add_setup(ctx, SetupKind.PORTENT, world.son.id, marked.id)
     await keep_drama(await at(session, 3, arcs={"setup_pull": 25, "stall_epochs": 50}), [], DramaTally())
     assert arc.drama == 25 and setup.payoff is PayoffKind.OPEN
-    await note(await at(session, 4), "Ysa and Brann met at the market.", key="test.market", ids=[marked.id, other.id])
+    await tell_history(await at(session, 4), "Ysa and Brann met at the market.", ids=[marked.id, other.id])
     await keep_arcs(await at(session, 4), ArcTally())
     tally = DramaTally()
     await pay_setups(await at(session, 5), tally)

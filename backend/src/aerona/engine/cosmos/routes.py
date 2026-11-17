@@ -8,12 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.cosmography import SCOPE_LABELS, SCOPE_ORDER
 from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, medium_of, travel_method_profile
-from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
+from aerona.constants.cosmos import NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, several, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.anatomy import CreatureAnatomyRow
@@ -28,12 +29,14 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, ClusterKind, RouteScope
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMedium, TravelMethod, VehicleKind
@@ -42,6 +45,7 @@ from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 from aerona.engine.body.hits import Harm
 from aerona.engine.climes.windows import window_delay
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.journey_record import JOURNEY_STEPS, journey_step
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_reach
 from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
@@ -58,6 +62,8 @@ from aerona.engine.primitives.knowledge import branch_level, knows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
+from aerona.engine.recording.record import FactInput, StepDraft, kind_of, record
+from aerona.engine.recording.render import render_incident
 from aerona.engine.structures.readers import gate_opened
 from aerona.rules.registry import Rules
 
@@ -548,9 +554,9 @@ async def can_use_route(session: AsyncSession, rules: Rules, epoch: int, travell
     return None if status.is_open else status.reason
 
 
-def add_event(journey: JourneyRow, epoch: int, kind: JourneyEventKind, text: str, loss: int = 0) -> None:
-    events = [*journey.events, JourneyEvent(epoch=epoch, kind=kind, text=text, loss=loss)]
-    journey.events = events[-JOURNEY_EVENT_LIMIT:]
+async def add_event(ctx: TickContext, journey: JourneyRow, kind: JourneyEventKind, text: str, loss: int = 0) -> None:
+    journey.events = [*journey.events, JourneyEvent(epoch=ctx.epoch, kind=kind, text=text, loss=loss)]
+    await journey_step(ctx, journey, JOURNEY_STEPS[kind], amount=loss)
 
 
 @dataclass(frozen=True)
@@ -656,6 +662,10 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
         start_epoch=ctx.epoch,
     )
     session.add(journey)
+    await session.flush()
+    await journey_step(ctx, journey, StepAction.DEPART, amount=carried)
+    for event in journey.events:
+        await journey_step(ctx, journey, JOURNEY_STEPS[event.kind], amount=event.loss)
     await load_voyage(ctx, journey, traveller)
     await provision(ctx, journey, traveller)
     await session.flush()
@@ -694,11 +704,11 @@ async def provision(ctx: TickContext, journey: JourneyRow, traveller: EntityRow)
     ):
         loss = ctx.rules.nutrition.voyage_deficiency
         journey.passengers = [line.model_copy(update={"condition": clamp_int(line.condition - loss, 0, PERCENT)}) for line in journey.passengers]
-        add_event(journey, ctx.epoch, JourneyEventKind.PROVISIONS, "they set out with no fresh or preserved food for so long a way")
+        await add_event(ctx, journey, JourneyEventKind.PROVISIONS, "they set out with no fresh or preserved food for so long a way")
     if left <= 0 or "passengers" in journey.locked:
         return
     journey.passengers = [line.model_copy(update={"condition": clamp_int(line.condition - table.short_condition, 0, PERCENT)}) for line in journey.passengers]
-    add_event(journey, ctx.epoch, JourneyEventKind.PROVISIONS, f"they set out short of {left} food for the way")
+    await add_event(ctx, journey, JourneyEventKind.PROVISIONS, f"they set out short of {left} food for the way")
 
 
 async def load_voyage(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:
@@ -744,17 +754,26 @@ async def recall_journey(ctx: TickContext, journey_id: int, by: str) -> str:
     traveller = await ctx.session.get(EntityRow, journey.traveller_entity_id)
     if traveller is not None and journey.population > 0:
         put_stat(ctx.rules, traveller, headcount_key(traveller), headcount(traveller) + journey.population)
-    add_event(journey, ctx.epoch, JourneyEventKind.OTHER, f"{by} recalled the expedition; travellers returned home")
+    await add_event(ctx, journey, JourneyEventKind.OTHER, f"{by} recalled the expedition; travellers returned home")
     journey.status = JourneyStatus.RECALLED
     journey.end_epoch = ctx.epoch
-    target = await world_name(ctx.session, journey.destination_world_id)
-    name = traveller.name if traveller is not None else "the travellers"
-    text = f"{by} recalled {name}'s expedition to {target}; {several(journey.population, 'soul', 'souls')} returned home."
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="travel.journey_recalled", entity_ids=[journey.traveller_entity_id])
-    return text
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "travel.journey_recalled",
+        roles={
+            IncidentRole.ACTOR: journey.traveller_entity_id,
+            IncidentRole.DESTINATION: journey.destination_world_id,
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None,
+        },
+        facts={"travellers": journey.population},
+        steps=(StepDraft(StepAction.RETURN, actor=journey.traveller_entity_id, amount=journey.population, unit=FactUnit.PEOPLE),),
+        cause=journey.incident_id,
+    )
+    return written.text
 
 
-async def reveal_hidden_route(ctx: TickContext, route_id: int, by: str) -> str:
+async def reveal_hidden_route(ctx: TickContext, route_id: int, finder: int | None = None) -> str:
     route = await ctx.session.get(RouteRow, route_id)
     if route is None:
         raise NotFoundError("No such route.")
@@ -762,11 +781,19 @@ async def reveal_hidden_route(ctx: TickContext, route_id: int, by: str) -> str:
         raise ValidationFailedError("This route is not hidden.")
     route.known = True
     book = await RouteBook.load(ctx.session, ctx.rules, ctx.epoch)
-    closed = "" if book.is_open(route) else " The route is closed for now; it will be used when it opens."
-    first, second = await world_name(ctx.session, route.world_a_id), await world_name(ctx.session, route.world_b_id)
-    text = f"{by} revealed the hidden route between {first} and {second}: {method_label(route.method)}.{closed}"
-    await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="travel.route_revealed_by_hand", feed_category=FeedCategory.GATE)
-    return text
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "travel.route_revealed_by_hand",
+        roles={IncidentRole.ACTOR: finder, IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
+        facts={
+            "first": route.world_a_id,
+            "second": route.world_b_id,
+            "method": route.method,
+            "route_state": book.status(route).state,
+        },
+    )
+    return written.text
 
 
 async def _community_count(session: AsyncSession, world_id: int) -> int:
@@ -912,7 +939,14 @@ class SeverResult:
 
 
 async def sever_route(
-    ctx: TickContext, route_id: int, *, duration: int | None = None, by: str | None = None, reason: str | None = None, write: bool = True
+    ctx: TickContext,
+    route_id: int,
+    *,
+    duration: int | None = None,
+    by: str | None = None,
+    by_id: int | None = None,
+    reason: str | None = None,
+    write: bool = True,
 ) -> SeverResult:
     session, rules = ctx.session, ctx.rules
     route = await session.get(RouteRow, route_id)
@@ -939,30 +973,40 @@ async def sever_route(
         if rng.chance(rules.beyond.storm_loss_chance):
             journey.status = JourneyStatus.LOST
             journey.end_epoch = ctx.epoch
-            add_event(journey, ctx.epoch, JourneyEventKind.VOID_STORM, "the void storm destroyed the expedition")
+            await add_event(ctx, journey, JourneyEventKind.VOID_STORM, "the void storm destroyed the expedition")
             lost += 1
         else:
             journey.status = JourneyStatus.WAITING
             waiting += 1
-    first, second = await world_name(session, route.world_a_id), await world_name(session, route.world_b_id)
-    opener = f"{by} unleashed a void storm{f' ({reason})' if reason else ''}: " if by else "A void storm "
-    verb = "it swallowed" if by else "swallowed"
-    hidden_word = "hidden " if was_hidden else ""
-    text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; it reopens at the start of Epoch {ctx.epoch + span}"
-    if lost or waiting:
-        under = several(lost + waiting, "expedition", "expeditions")
-        text += f"; of the {under} under way, {several(lost, 'was', 'were')} lost, {waiting} survived and wait for it to reopen"
-    text += "."
-    if revealed:
-        text += " When the route broke it was revealed: it is no longer hidden; it can be used again once the storm calms."
+    facts: dict[str, FactInput] = {
+        "first": route.world_a_id,
+        "second": route.world_b_id,
+        "opens_epoch": ctx.epoch + span,
+        "epochs_closed": span,
+        "journeys_lost": lost,
+        "journeys_waiting": waiting,
+        "routes_revealed": 1 if revealed else 0,
+        "reason": reason,
+    }
     if write:
-        kind = ChronicleKind.COSMIC if by else ChronicleKind.HORROR
-        await ctx.chronicle(kind, text, template_key="travel.route_severed", feed_category=FeedCategory.GATE)
+        scope = current_scope()
+        authority = by_id if by_id is not None else scope.actor_node_id if scope is not None and by else None
+        written = await record(
+            ctx,
+            "travel.route_severed",
+            roles={IncidentRole.AUTHORITY: authority},
+            facts=facts,
+            kind=ChronicleKind.COSMIC if by else ChronicleKind.HORROR,
+        )
+        text = written.text
+    else:
+        named = {**facts, "first": await world_name(session, route.world_a_id), "second": await world_name(session, route.world_b_id)}
+        text = render_incident(kind_of("travel.route_severed"), {}, named)
     await session.flush()
     return SeverResult(route.id, ctx.epoch + span, span, lost, waiting, revealed, text)
 
 
-async def repair_route(ctx: TickContext, route_id: int, by: str) -> str:
+async def repair_route(ctx: TickContext, route_id: int) -> str:
     session = ctx.session
     route = await session.get(RouteRow, route_id)
     if route is None:
@@ -977,15 +1021,20 @@ async def repair_route(ctx: TickContext, route_id: int, by: str) -> str:
         if builder is None or builder.status is not SonStatus.ACTIVE:
             raise ValidationFailedError("The bridge's builder fell; the bridge collapsed with them, nothing remains to reopen.")
     severed = route.temp_closed_until_epoch is not None or route.closure in (RouteClosure.SEVERED, RouteClosure.SNAPPED)
+    closure = route.closure or (RouteClosure.SEVERED if severed else RouteClosure.SEALED)
     route.active = True
     route.closure = None
     route.temp_closed_until_epoch = None
     route.temp_open_until_epoch = None
-    action = "reopened the severed route" if severed else "broke the seal of the sealed route and reopened it"
-    text = f"{by} {action} between {await world_name(session, route.world_a_id)} and {await world_name(session, route.world_b_id)}."
-    await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="travel.route_stitched", feed_category=FeedCategory.GATE)
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "travel.route_stitched",
+        roles={IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
+        facts={"first": route.world_a_id, "second": route.world_b_id, "closure": closure},
+    )
     await session.flush()
-    return text
+    return written.text
 
 
 async def _star_worlds(session: AsyncSession, star_id: int) -> set[int]:
@@ -1006,7 +1055,7 @@ async def snap_sail_routes(ctx: TickContext, star_id: int) -> int:
         route.closure = RouteClosure.SNAPPED
         snapped += 1
         for journey in await session.scalars(select(JourneyRow).where(JourneyRow.route_id == route.id, JourneyRow.status.in_(LIVE_JOURNEYS))):
-            add_event(journey, ctx.epoch, JourneyEventKind.SAIL_SNAPPED, "the sail snapped when its star died")
+            await add_event(ctx, journey, JourneyEventKind.SAIL_SNAPPED, "the sail snapped when its star died")
             journey.status = JourneyStatus.LOST if rng.chance(ctx.rules.travel_methods.sail_snap_loss_pct) else JourneyStatus.STRANDED
             journey.end_epoch = ctx.epoch if journey.status is JourneyStatus.LOST else None
     await session.flush()
@@ -1029,7 +1078,7 @@ async def scorch_sail_routes(ctx: TickContext, star_id: int) -> int:
         route.temp_open_until_epoch = None
         scorched += 1
         for journey in await session.scalars(select(JourneyRow).where(JourneyRow.route_id == route.id, JourneyRow.status.in_(LIVE_JOURNEYS))):
-            add_event(journey, ctx.epoch, JourneyEventKind.SAIL_SNAPPED, "the sail burned in a stellar flare")
+            await add_event(ctx, journey, JourneyEventKind.SAIL_SNAPPED, "the sail burned in a stellar flare")
             lost = rng.chance(rules.travel_methods.sail_snap_loss_pct)
             journey.status = JourneyStatus.LOST if lost else JourneyStatus.WAITING
             journey.end_epoch = ctx.epoch if lost else None

@@ -3,19 +3,19 @@ import math
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, WorldPhysicsRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.travel import RouteClosure, TravelMethod, VehicleKind
 from aerona.domain.enums.world import SkyEventKind, StarType
 from aerona.domain.models.entity_stats import ProphecyStats, TraditionStats
@@ -25,11 +25,11 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.vessels import owned_vessels
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.traditions import profile_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 
 AGE_KEY = "age"
 WANDERING_SUBTYPES: dict[str, CosmicFeatureKind] = {"comet": CosmicFeatureKind.PERIODIC_COMET, "wandering light": CosmicFeatureKind.WANDERING_STAR}
@@ -118,8 +118,14 @@ async def keep_wormholes(ctx: TickContext) -> int:
         if route.active != open_now:
             route.active = open_now
             route.closure = None if open_now else RouteClosure.COLLAPSED
-            text = f"The throat of {hole.name} opened again." if open_now else f"The throat of {hole.name} closed for a time."
-            await note(ctx, text, key="feature.wormhole_window", world_id=hole.world_id, kind=ChronicleKind.COSMIC)
+            await record(
+                ctx,
+                "feature.wormhole_opened" if open_now else "feature.wormhole_window",
+                roles={IncidentRole.ORIGIN: hole.world_id, IncidentRole.DESTINATION: hole.world_b_id},
+                facts={"name": hole.name, "instability": hole.instability},
+                steps=(StepDraft(StepAction.OPEN if open_now else StepAction.CLOSE, outcome=StepOutcome.SUCCESS),),
+                world_id=hole.world_id,
+            )
         kept += 1
     return kept
 
@@ -170,7 +176,7 @@ async def devour(ctx: TickContext, cosmography: Cosmography) -> int:
             if world.parent_world_id is not None or world.orbit > well.radius or held(world.id) or "orbit" in world.locked:
                 continue
             world.orbit = round(world.orbit * (PERCENT - table.devour_pct) / PERCENT, 4)
-            if world.orbit <= table.horizon_orbit_hundredths / PERCENT and await scorch_world(ctx, world, f"{star.name} swallowed", lost=True):
+            if world.orbit <= table.horizon_orbit_hundredths / PERCENT and await scorch_world(ctx, world, star.id, lost=True):
                 swallowed += 1
     return swallowed
 
@@ -184,11 +190,11 @@ async def slingshot(ctx: TickContext, journey: JourneyRow, route: RouteRow, trav
     age = stat(traveller, AGE_KEY)
     if age is not None and not held(traveller.id):
         set_stats(traveller, age=max(0, age - years))
-    await note(
+    await record(
         ctx,
-        f"{traveller.name} passed the well of a black hole and arrived {several(years, 'year', 'years')} younger than their kin.",
-        key="feature.slingshot",
-        ids=[traveller.id],
+        "feature.slingshot",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: journey.destination_world_id},
+        facts={"years": years},
         world_id=journey.destination_world_id,
     )
     return True
@@ -211,7 +217,13 @@ async def pass_rogues(ctx: TickContext, cosmography: Cosmography) -> int:
             rogue.star_id = target.id
             rogue.x, rogue.y = target.x, target.y
             rogue.next_return_epoch = ctx.epoch + table.rogue_pass_epochs
-            await note(ctx, f"{rogue.name} drifted into the system of {target.name}.", key="feature.rogue_arrived", kind=ChronicleKind.SKY)
+            await record(
+                ctx,
+                "feature.rogue_arrived",
+                roles={IncidentRole.DESTINATION: target.id, IncidentRole.VICTIM: [world.id for world in worlds_of(cosmography, target.id)]},
+                facts={"name": rogue.name, "perturbation": table.rogue_perturb_pct},
+                steps=(StepDraft(StepAction.APPEAR, locus_kind=StepLocus.ORBIT, locus_node=target.id),),
+            )
         for world in worlds_of(cosmography, rogue.star_id):
             physics = await ctx.session.get(WorldPhysicsRow, world.id)
             if physics is None or held(world.id) or "eccentricity" in physics.locked:
@@ -253,13 +265,13 @@ async def return_comets(ctx: TickContext, cosmography: Cosmography) -> int:
                         text=f"{comet.name} returned.",
                     )
                 )
-            await note(
+            await record(
                 ctx,
-                f"{comet.name} returned to the sky of {world.name}.",
-                key="feature.comet_returned",
-                ids=[body.id] if body is not None else [],
+                "feature.comet_returned",
+                roles={IncidentRole.PLACE: world.id, IncidentRole.SUBJECT: body.id if body is not None else None},
+                facts={"name": comet.name, "period": max(1, comet.period_epochs)},
+                steps=(StepDraft(StepAction.APPEAR, locus_kind=StepLocus.SKY, locus_node=world.id),),
                 world_id=world.id,
-                kind=ChronicleKind.SKY,
             )
             if body is not None:
                 await festival(ctx, comet, body, world)

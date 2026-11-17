@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.polity import TreatyKind as PolityTreatyKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
@@ -29,13 +30,12 @@ from aerona.engine.phases.travel import send_expedition
 from aerona.engine.polity.accords import Clause
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import WarBlock, can_open_war, declare_war
 from aerona.engine.services.war_resolution import settle_peace
 from aerona.services.gods import death
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand, tell
-from aerona.services.player.lines import DECREED, DISCOVERY_ROUND, EXPEDITION_SENT, EXPLORED, FEDERATION_FOUNDED, RITE_ORDERED, ROAD_SHOWN, WORLD_SENSED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 TRAVELLER_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
@@ -152,16 +152,15 @@ async def decree(scope: PlayerScope, command: Decree) -> Effect:
         await change_relation(ctx, first.id, second.id, hand_rules.decree_trade_relation, MemoryKind.DIVINE_WILL, note=DECREE_REASON)
         kind = ActionKind.ESTABLISH_TRADE
     creator = await scope.creator()
-    message = await hand(
-        ctx,
-        creator,
-        DECREED,
-        ids=[first.id, second.id],
-        kind=ChronicleKind.DIPLOMACY,
-        decree=command.kind.value.capitalize(),
-        first=first.name,
-        second=second.name,
-    )
+    message = (
+        await record(
+            ctx,
+            "player.entity.decree",
+            roles={IncidentRole.SUBJECT: [first.id, second.id], IncidentRole.AUTHORITY: creator.id},
+            facts={"decree": str(command.kind.value.capitalize())},
+            kind=ChronicleKind.DIPLOMACY,
+        )
+    ).text
     return Effect(message, first.id, kind=kind, tool=f"decree:{command.kind.value}")
 
 
@@ -198,9 +197,15 @@ async def expedition(scope: PlayerScope, command: Expedition) -> Effect:
     epochs = journey.epochs_left
     creator = await scope.creator()
     ctx = await scope.context("expedition")
-    message = await hand(
-        ctx, creator, EXPEDITION_SENT, ids=[traveller.id], entity=traveller.name, intent=command.intent.value, world=destination.name, epochs=epochs
-    )
+    message = (
+        await record(
+            ctx,
+            "player.entity.expedition",
+            roles={IncidentRole.TARGET: traveller.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"intent": command.intent, "world": str(destination.name), "epochs": epochs},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, traveller.id, created_ids=(journey.id,), values={"journey_id": journey.id, "travellers": travellers})
 
 
@@ -213,7 +218,15 @@ async def explore(scope: PlayerScope, command: Explore) -> Effect:
         raise ValidationFailedError("There is no region to explore in this world; a new region must be found first (land: region).")
     creator = await scope.creator()
     ctx = await scope.context("explore")
-    message = await hand(ctx, creator, EXPLORED, ids=[explorer.id, found.land.id], kind=ChronicleKind.EXPLORATION, entity=explorer.name, land=found.land.name)
+    message = (
+        await record(
+            ctx,
+            "player.entity.explored",
+            roles={IncidentRole.TARGET: explorer.id, IncidentRole.PLACE: found.land.id, IncidentRole.AUTHORITY: creator.id},
+            place=found.land.id,
+            kind=ChronicleKind.EXPLORATION,
+        )
+    ).text
     return Effect(message, explorer.id, created_ids=(found.land.id,))
 
 
@@ -224,11 +237,13 @@ async def seek_route(scope: PlayerScope, command: EntityTarget) -> Effect:
     ctx = await scope.context("seek_route")
     result = await search_route(ctx, seeker, SEEK_HOW, certain=True)
     if result.status is SearchStatus.ROUTE:
-        await tell(ctx, ROAD_SHOWN, ids=[seeker.id], kind=ChronicleKind.EXPLORATION, creator=creator.name, entity=seeker.name)
+        await record(ctx, "player.entity.road", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: seeker.id}, kind=ChronicleKind.EXPLORATION)
         return Effect(result.text, seeker.id, created_ids=(result.route.id,) if result.route is not None else ())
     if result.status is SearchStatus.INTUITION:
         await record_intuition(ctx, seeker, SEEK_HOW, result.method)
-        message = await tell(ctx, WORLD_SENSED, ids=[seeker.id], kind=ChronicleKind.EXPLORATION, creator=creator.name, entity=seeker.name)
+        message = (
+            await record(ctx, "player.entity.sensed", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: seeker.id}, kind=ChronicleKind.EXPLORATION)
+        ).text
         return Effect(message, seeker.id)
     raise ValidationFailedError(
         "There is already a road to every known world and no new world can be sensed this epoch (world rule mortal_tools.unknown_world_per_epoch)."
@@ -242,7 +257,13 @@ async def order_rite(scope: PlayerScope, command: Rite) -> Effect:
     result = await death.order_rite(scope.session, scope.rules, worshipper.id, son.id, command.kind, victim_id=command.victim_id)
     creator = await scope.creator()
     ctx = await scope.context("rite")
-    await hand(ctx, creator, RITE_ORDERED, ids=[worshipper.id], son_id=son.id, kind=ChronicleKind.RESURRECTION, entity=worshipper.name, son=son.name)
+    await record(
+        ctx,
+        "player.entity.rite",
+        roles={IncidentRole.TARGET: worshipper.id, IncidentRole.SUBJECT: son.id, IncidentRole.AUTHORITY: creator.id},
+        kind=ChronicleKind.RESURRECTION,
+        son_id=son.id,
+    )
     return Effect(result.text, worshipper.id)
 
 
@@ -253,7 +274,16 @@ async def discovery_round(scope: PlayerScope, command: DiscoveryRound) -> Effect
     found = await planet_exploration(ctx, world.id)
     result = f"{several(len(found), 'new land', 'new lands')} found" if found else "this time nobody found a new land"
     creator = await scope.creator()
-    message = await hand(ctx, creator, DISCOVERY_ROUND, world_id=world.id, kind=ChronicleKind.EXPLORATION, world=world.name, result=result)
+    message = (
+        await record(
+            ctx,
+            "player.world.discovery",
+            roles={IncidentRole.AUTHORITY: creator.id},
+            facts={"world": str(world.name), "result": str(result)},
+            kind=ChronicleKind.EXPLORATION,
+            world_id=world.id,
+        )
+    ).text
     return Effect(message, world.id, created_ids=tuple(item.land.id for item in found))
 
 
@@ -307,7 +337,13 @@ async def found_federation(scope: PlayerScope, command: Federation) -> Effect:
                 until=None,
                 clauses=[Clause(ClauseKind.CALL_TO_ARMS, first.id, second.id), Clause(ClauseKind.CALL_TO_ARMS, second.id, first.id)],
             )
-    message = await tell(
-        ctx, FEDERATION_FOUNDED, ids=[faction.id, *member_ids], kind=ChronicleKind.CIVILIZATION, creator=creator.name, name=faction.name, members=names
-    )
+    message = (
+        await record(
+            ctx,
+            "player.entity.federation",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: [*([faction.id, *member_ids])]},
+            facts={"name": str(faction.name), "members": names},
+            kind=ChronicleKind.CIVILIZATION,
+        )
+    ).text
     return Effect(message, faction.id, created_ids=(faction.id,))

@@ -16,16 +16,18 @@ from aerona.domain.enums.constructs import CommandToken, OrderCondition, OrderKi
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.arts import control as arts
 from aerona.engine.constructs import control as constructs
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -115,8 +117,11 @@ async def build_construct(call: SonCall, args: BuildConstructInput) -> str:
     body = await call.session.get(EntityRow, row.entity_id)
     name = body.name if body is not None else "the construct"
     call.target(row.entity_id)
-    await call.chronicle(
-        ChronicleKind.CREATION, lines.BUILD_CONSTRUCT, entity_ids=[maker.id, row.entity_id], son=call.son.name, maker=maker.name, name=name, reason=args.reason
+    await call.record(
+        "tools.son.build_construct",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [maker.id, row.entity_id]},
+        facts={"maker_detail": str(maker.name), "name": str(name), "reason": args.reason},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.CONSTRUCT_BUILT, maker=maker.name, name=name, material=row.material.value, source=row.power_source.value)
 
@@ -142,8 +147,11 @@ async def order_construct(call: SonCall, args: OrderConstructInput) -> str:
         fail(SonResult.CONSTRUCT_ORDER_REFUSED, why=reason_of(error))
     aim = target.name if target is not None else "no one in particular"
     call.target(body.id)
-    await call.chronicle(
-        ChronicleKind.CREATION, lines.ORDER_CONSTRUCT, entity_ids=[body.id], son=call.son.name, name=body.name, order=args.kind.value, reason=args.reason
+    await call.record(
+        "tools.son.order_construct",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: body.id},
+        facts={"order": args.kind, "reason": args.reason},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.CONSTRUCT_ORDERED, name=body.name, order=args.kind.value.replace("_", " "), target=aim)
 
@@ -155,7 +163,12 @@ async def seize_construct(call: SonCall, args: SeizeConstructInput) -> str:
         fail(SonResult.CONSTRUCT_SEIZE_REFUSED, why="it answers no token at all")
     await constructs.edit_record(call.tick, "instruction_set", rules.id, {"command_token": CommandToken.WORD, "holder_node_id": call.son.id}, [])
     call.target(body.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.SEIZE_CONSTRUCT, entity_ids=[body.id], son=call.son.name, name=body.name, reason=args.reason)
+    await call.record(
+        "tools.son.seize_construct",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: body.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CREATION,
+    )
     return result(SonResult.CONSTRUCT_SEIZED, name=body.name)
 
 
@@ -169,7 +182,13 @@ async def expose_forgery(call: SonCall, args: ExposeForgeryInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.FORGERY_EXPOSE_REFUSED, why=reason_of(error))
     call.target(item.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.EXPOSE_FORGERY, entity_ids=[item.id], son=call.son.name, item=item.name, reason=args.reason)
+    await call.record(
+        "tools.son.expose_forgery",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: item.id},
+        facts={"item": str(item.name), "reason": args.reason},
+        kind=ChronicleKind.CULTURE,
+        steps=(StepDraft(StepAction.FIND_EVIDENCE, actor=call.son.id, target=item.id, record_table=ForgeryRow.__tablename__, record_key=str(row.id)),),
+    )
     return result(SonResult.FORGERY_EXPOSED, item=item.name)
 
 
@@ -181,8 +200,11 @@ async def canonise_work(call: SonCall, args: CanoniseWorkInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.CANON_REFUSED, why=reason_of(error))
     call.target(work.id)
-    await call.chronicle(
-        ChronicleKind.CULTURE, lines.CANONISE_WORK, entity_ids=[people.id, work.id], son=call.son.name, work=work.name, people=people.name, reason=args.reason
+    await call.record(
+        "tools.son.canonise_work",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [people.id, work.id]},
+        facts={"work": str(work.name), "people": people.name, "reason": args.reason},
+        kind=ChronicleKind.CULTURE,
     )
     return result(SonResult.CANONISED, work=work.name, people=people.name)
 
@@ -196,14 +218,11 @@ async def inspire_movement(call: SonCall, args: InspireMovementInput) -> str:
     faction = await call.session.get(EntityRow, row.faction_entity_id)
     name = faction.name if faction is not None else "a new school"
     call.target(row.faction_entity_id)
-    await call.chronicle(
-        ChronicleKind.CULTURE,
-        lines.INSPIRE_MOVEMENT,
-        entity_ids=[town.id, row.faction_entity_id],
-        son=call.son.name,
-        town=town.name,
-        name=name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.inspire_movement",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [town.id, row.faction_entity_id]},
+        facts={"town": str(town.name), "name": str(name), "reason": args.reason},
+        kind=ChronicleKind.CULTURE,
     )
     return result(SonResult.MOVEMENT_INSPIRED, town=town.name, name=name)
 
@@ -225,7 +244,12 @@ async def rig_match(call: SonCall, args: RigMatchInput) -> str:
         fail(SonResult.MATCH_REFUSED, why=reason_of(error))
     winner = home if args.winner_id == home.id else away
     call.target(winner.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.RIG_MATCH, entity_ids=[home.id, away.id], son=call.son.name, winner=winner.name, reason=args.reason)
+    await call.record(
+        "tools.son.rig_match",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.CO_ACTOR: winner.id, IncidentRole.SUBJECT: [home.id, away.id]},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CULTURE,
+    )
     return result(SonResult.MATCH_RIGGED, home=home.name, away=away.name, winner=winner.name)
 
 
@@ -237,8 +261,11 @@ async def set_beast_bounty(call: SonCall, args: SetBeastBountyInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.BEAST_BOUNTY_REFUSED, why=reason_of(error))
     call.target(beast.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.SET_BEAST_BOUNTY, entity_ids=[town.id, beast.id], son=call.son.name, town=town.name, beast=beast.name, reason=args.reason
+    await call.record(
+        "tools.son.set_beast_bounty",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [town.id, beast.id]},
+        facts={"town": str(town.name), "beast": str(beast.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.BEAST_BOUNTY_SET, town=town.name, beast=beast.name, bounty=row.bounty)
 
@@ -252,7 +279,12 @@ async def mark_birth(call: SonCall, args: MarkBirthInput) -> str:
         fail(SonResult.BIRTH_MARK_REFUSED, why=reason_of(error))
     sign = "a dreaded sign" if args.dreaded else "a kindly sign"
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.FATE, lines.MARK_BIRTH, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, sign=sign, reason=args.reason)
+    await call.record(
+        "tools.son.mark_birth",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: mortal.id},
+        facts={"mortal": str(mortal.name), "sign": str(sign), "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.BIRTH_MARKED, mortal=mortal.name, sign=sign, influence=row.influence.value)
 
 

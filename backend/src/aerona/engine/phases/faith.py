@@ -1,11 +1,10 @@
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.backfill import backfill_faith
@@ -21,13 +20,14 @@ from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats
+from aerona.engine.recording.record import record
+from aerona.engine.recording.record import record as record_incident
 
 BLOOD_GODS = frozenset({Domain.BLOOD, Domain.DEATH, Domain.BONE, Domain.HUNGER, Domain.WAR})
 THOUSAND = 1000
@@ -42,7 +42,7 @@ def feed_god(ctx: TickContext, church: Church, amount: int) -> None:
     cap_gained_essence(ctx.rules, god, before)
 
 
-async def human_sacrifice(ctx: TickContext, church: Church, book: FaithBook) -> int:
+async def sacrifice_of_people(ctx: TickContext, church: Church, book: FaithBook) -> int:
     table = ctx.rules.doctrine
     given = 0
     for member in church.members:
@@ -64,7 +64,7 @@ async def human_sacrifice(ctx: TickContext, church: Church, book: FaithBook) -> 
             kind=MemoryKind.ILL_WILL,
             magnitude=-table.sacrifice_infamy,
             epoch=ctx.epoch,
-            note="human sacrifice",
+            note="a life given in sacrifice",
         )
     return given
 
@@ -78,8 +78,8 @@ async def sacrifices(ctx: TickContext, church: Church, book: FaithBook) -> int:
             offered += await ledger.take_units(member.id, CommodityKind.LIVESTOCK, table.animal_sacrifice_livestock, GoodsFlow.OFFERING)
         if offered:
             feed_god(ctx, church, table.sacrifice_essence // 2 or 1)
-    if church.holds(TenetKind.HUMAN_SACRIFICE) and church.members:
-        offered += await human_sacrifice(ctx, church, book)
+    if church.holds(TenetKind.SACRIFICE_OF_PEOPLE) and church.members:
+        offered += await sacrifice_of_people(ctx, church, book)
     return offered
 
 
@@ -92,16 +92,17 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     ctx.count("tithes", await tithe(ctx, church, laws))
     ctx.count("devotion", await devotion(ctx, church, book.faith.patron(cult)))
     built = await spend(ctx, church, knowledge)
-    if built in {"temple", "monastery"}:
-        lines.append(FaithLine(f"{church.cult.name} raised {an(built)} from its tithes.", f"faith.{built}", (cult,)))
+    if built == "temple":
+        lines.append(FaithLine("faith.temple", {IncidentRole.MAKER: cult}))
+    if built == "monastery":
+        lines.append(FaithLine("faith.monastery", {IncidentRole.MAKER: cult}))
     if built:
         ctx.count(f"spent_{built}")
     pilgrims, _ = await pilgrimage(ctx, church)
     ctx.count("pilgrims", pilgrims)
     for saint in await saints(ctx, church):
         relic = await canonise(ctx, church, saint)
-        text = f"{church.cult.name} named {saint.name} a saint; pilgrims come to the relics."
-        lines.append(FaithLine(text, "faith.saint", (cult, saint.id, relic.item_entity_id)))
+        lines.append(FaithLine("faith.saint", {IncidentRole.AUTHORITY: cult, IncidentRole.SUBJECT: saint.id, IncidentRole.PRODUCT: relic.item_entity_id}))
         ctx.count("saints")
     zeal = await stir(ctx, church, book, laws=laws, atlas=atlas)
     if pilgrims >= THOUSAND and church.doctrine is not None:
@@ -169,20 +170,23 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.disease_cures",
     "table.disease_profiles",
     "table.districts",
+    "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.goods_flows",
     "table.herds",
     "table.heresies",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.house_members",
     "table.immunities",
+    "table.impurity_sources",
     "table.incident_participants",
     "table.incidents",
     "table.item_profiles",
+    "table.kind_holdings",
     "table.language_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
@@ -221,6 +225,9 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.species_profiles",
     "table.species_ranges",
     "table.spirit_profiles",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
     "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
@@ -253,9 +260,9 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.districts",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.item_profiles",
@@ -283,7 +290,7 @@ async def faith_cycles(ctx: TickContext) -> None:
         if held(church.cult.id):
             continue
         for line in await church_year(ctx, church, book, laws=laws, atlas=atlas, knowledge=knowledge):
-            await note(ctx, line.text, key=line.key, ids=list(line.ids), kind=ChronicleKind.WORSHIP)
+            await record_incident(ctx, line.key, roles=dict(line.roles), facts=dict(line.facts))
 
 
 @reads(
@@ -316,7 +323,6 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.divine_wounds",
     "table.entities",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -341,6 +347,8 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
+    "table.traits",
+    "table.transform_prospects",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.worlds",
@@ -358,10 +366,12 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.conditions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_step_states",
+    "table.incident_steps",
     "table.incidents",
     "table.personality_values",
     "table.possessions",
@@ -373,6 +383,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.soul_judgements",
     "table.spirit_profiles",
     "table.traits",
+    "table.transformations",
 )
 async def soul_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
@@ -395,12 +406,12 @@ async def soul_cycles(ctx: TickContext) -> None:
         child = await reincarnate(ctx, profile, spirit)
         if child is not None:
             ctx.count("reborn")
-            await note(ctx, f"The soul of {spirit.name} was born again as {child.name}.", key="afterlife.reborn", ids=[spirit.id, child.id])
+            await record(ctx, "afterlife.reborn", roles={IncidentRole.CHILD: child.id, IncidentRole.SUBJECT: spirit.id}, facts={"spirit": str(spirit.name)})
             continue
         host = await possess(ctx, profile, spirit)
         if host is not None:
             ctx.count("possessions")
-            await note(ctx, f"{spirit.name} took hold of {host.name}.", key="afterlife.possession", ids=[spirit.id, host.id])
+            await record(ctx, "afterlife.possession", roles={IncidentRole.HOST: host.id, IncidentRole.SUBJECT: spirit.id}, facts={"spirit": str(spirit.name)})
     possessed, exorcised = await possessions(ctx)
     ctx.count("possessed", possessed)
     ctx.count("exorcised", exorcised)

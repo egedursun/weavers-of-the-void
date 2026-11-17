@@ -10,6 +10,8 @@ import {
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { chronicleKindIcon } from '@/components/domain/chronicleKindIcons'
+import { OlderLinesButton } from '@/features/chronicle/OlderLinesButton'
+import { type OlderLines } from '@/features/chronicle/api'
 import { useLinkTargets } from '@/features/chronicle/linkTargets'
 import { type ChronicleLine } from './api'
 
@@ -32,6 +34,7 @@ type ChronicleListProps = {
   emptyTitle: string
   emptyText: string
   newestFirst?: boolean
+  older?: OlderLines
 }
 
 export function ChronicleList({
@@ -41,8 +44,10 @@ export function ChronicleList({
   emptyTitle,
   emptyText,
   newestFirst = true,
+  older,
 }: ChronicleListProps) {
-  const ordered = newestFirst ? [...lines].sort((a, b) => b.id - a.id) : lines
+  const known = older ? [...lines, ...older.lines] : lines
+  const ordered = newestFirst ? [...known].sort((a, b) => b.id - a.id) : known
   const page = useShowMore(ordered, LINES_SHOWN, LINES_STEP)
   return (
     <Section title={title} description={description} level={3}>
@@ -69,6 +74,7 @@ export function ChronicleList({
             ))}
           </Timeline>
           <ShowMore state={page} noun={['entry', 'entries']} />
+          {older && <OlderLinesButton older={older} />}
         </div>
       )}
     </Section>

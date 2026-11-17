@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.concealment import BreachRow, HiddenTruthRow, PublicKnowledgeRow, TruthKeeperRow, TruthSeekerRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow
@@ -13,7 +14,8 @@ from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperResponse, KeeperRole, SeekerAim, TruthAttitude
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import TreatyBreach, TreatyStatus
 from aerona.domain.enums.powers import GiftedAttitude
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.crowds import begin_movement
@@ -22,10 +24,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.polity.treaties import breach as treaty_breach
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
+from aerona.engine.recording.record import record as record_incident
 
 LEAN = 25
 ACCORD_BREAKING = frozenset({BreachCause.OVERT_USE, BreachCause.WAR, BreachCause.DEFECTOR})
@@ -126,7 +128,13 @@ async def breach(
     )
     ctx.session.add(record)
     await ctx.session.flush()
-    await note(ctx, f"Something hidden showed itself: {truth.title}.", key="truth.breached", ids=[truth.subject_node_id, *seen])
+    await record_incident(
+        ctx,
+        "truth.breached",
+        roles={IncidentRole.SUBJECT: truth.subject_node_id, IncidentRole.WITNESS: list(seen)},
+        facts={"truth": truth.title, "truth_kind": truth.kind, "cause": cause, "spread": spread},
+        place=place_id,
+    )
     await break_accord(ctx, truth, cause)
     return record
 
@@ -137,7 +145,7 @@ async def break_accord(ctx: TickContext, truth: HiddenTruthRow, cause: BreachCau
     accord = await ctx.session.get(TreatyProfileRow, truth.accord_entity_id)
     if accord is None or accord.status is not TreatyStatus.IN_FORCE or held(accord.treaty_entity_id):
         return
-    await treaty_breach(ctx, accord, truth.subject_node_id, clause=None, reason="what was kept hidden was shown")
+    await treaty_breach(ctx, accord, truth.subject_node_id, clause=None, reason=TreatyBreach.HIDDEN_SHOWN)
 
 
 async def harm_knowers(ctx: TickContext, truth: HiddenTruthRow, knowers: list[int]) -> None:
@@ -230,7 +238,13 @@ async def reveal_or_fade(ctx: TickContext, truth: HiddenTruthRow, row: PublicKno
         row.revealed_epoch = ctx.epoch
         if "attitude" not in row.locked:
             row.attitude = await attitude_on_reveal(ctx, row.population_node_id)
-        await note(ctx, f"What was hidden became known: {truth.title}.", key="truth.revealed", ids=[truth.subject_node_id, row.population_node_id])
+        await record_incident(
+            ctx,
+            "truth.revealed",
+            roles={IncidentRole.SUBJECT: truth.subject_node_id, IncidentRole.RECEIVER: row.population_node_id},
+            facts={"truth": truth.title, "truth_kind": truth.kind, "know": row.know_pct, "believe": row.believe_pct},
+            terms=[Term("rules.concealment.reveal_know", table.reveal_know), Term("rules.concealment.reveal_believe", table.reveal_believe)],
+        )
         await react(ctx, truth, row)
         if truth.hidden_from is not ConcealScope.EVERYONE and "revealed" not in truth.locked:
             truth.revealed = True
@@ -296,7 +310,7 @@ async def keep_hidden_folk(ctx: TickContext, attitudes: dict[int, GiftedAttitude
         ctx.session.add(truth)
         await ctx.session.flush()
         ctx.session.add(TruthKeeperRow(truth_id=truth.id, keeper_node_id=people_id, role=KeeperRole.MEMBER, locked=[]))
-        await note(ctx, f"The gifted among {people.name} went into hiding.", key="truth.hidden", ids=[people_id])
+        await record_incident(ctx, "truth.hidden", roles={IncidentRole.SUBJECT: people_id}, facts={"truth": truth.title})
         hid += 1
     return hid
 

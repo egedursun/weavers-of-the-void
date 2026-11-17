@@ -15,11 +15,11 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
@@ -41,6 +41,7 @@ from aerona.engine.primitives.queries import canon, living_entity, spoken_langua
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
@@ -109,10 +110,6 @@ def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
     return factions.order_strength, factions.order_wealth, factions.order_sway
 
 
-async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:
-    await ctx.chronicle(ChronicleKind.CIVILIZATION, text, template_key=key, entity_ids=ids)
-
-
 async def disband_uprisings(ctx: TickContext) -> int:
     rules = ctx.rules.factions
     rng = ctx.rng("disband")
@@ -123,9 +120,9 @@ async def disband_uprisings(ctx: TickContext) -> int:
             continue
         if await bonds.outgoing(faction.id, BondKind.ENEMY) or await bonds.incoming(faction.id, BondKind.ENEMY) or not rng.chance(rules.revolt_disband_chance):
             continue
-        await retire_in(ctx, faction, "the uprising died out; the rebels dispersed or melted back into the people", close_bonds=True)
+        await retire_in(ctx, faction, "the uprising died out; the rebels dispersed and rejoined the people", close_bonds=True)
         if disbanded < rules.revolt_disband_note_cap:
-            await _note(ctx, f"{faction.name} died out; the rebels dispersed and went home.", "faction.uprising_disbanded", (faction.id,))
+            await record_incident(ctx, "faction.uprising_disbanded", roles={IncidentRole.SUBJECT: faction.id})
         disbanded += 1
     return disbanded
 
@@ -265,7 +262,13 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
     patron = await bonds.patron(community.id)
     if patron is not None:
         await bonds.connect(BondDraft(faction.id, patron, BondKind.WORSHIPS, ctx.epoch, f"the faith of {community.name}"))
-    await _note(ctx, f"{an(plan.subtype, capital=True)} was founded in {community.name}.", "faction.founded", (faction.id, community.id))
+    await record_incident(
+        ctx,
+        "faction.founded",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: community.id},
+        facts={"kind": kind},
+        place=community.id,
+    )
     ctx.count("factions_founded")
     return faction
 
@@ -311,7 +314,6 @@ async def found_factions(ctx: TickContext) -> int:
     "table.culture_values",
     "table.districts",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_actions",
     "table.faction_goals",
     "table.faction_memberships",
@@ -358,12 +360,13 @@ async def found_factions(ctx: TickContext) -> int:
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.faction_actions",
     "table.faction_goals",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.injuries",
     "table.law_jurisdictions",
@@ -418,7 +421,7 @@ async def dissolve_faction(ctx: TickContext, faction_id: int) -> EntityRow:
     if faction is None or faction.entity_type is not EntityType.FACTION:
         raise ValidationFailedError("Only a living faction can be dissolved.")
     await retire_in(ctx, faction, "dissolved by decree", close_bonds=True)
-    await _note(ctx, f"{faction.name} was dissolved; its members went their own ways.", "faction.dissolved", (faction.id,))
+    await record_incident(ctx, "faction.dissolved", roles={IncidentRole.SUBJECT: faction.id})
     return faction
 
 

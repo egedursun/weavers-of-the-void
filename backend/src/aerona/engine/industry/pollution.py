@@ -9,11 +9,11 @@ from aerona.db.tables.economy import ProductionRunRow
 from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.industry import EnergyKind, Pollutant
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -21,11 +21,11 @@ from aerona.engine.environment.book import add_scar
 from aerona.engine.eras.effects import tech_factor
 from aerona.engine.industry.energy import draw
 from aerona.engine.industry.methods import reveres_nature
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 from aerona.rules.registry import Rules
 
@@ -175,14 +175,7 @@ async def blight(ctx: TickContext, book: EconomyBook, tally: PollutionTally) -> 
         if after > before:
             tally.blighted += 1
             if before == 0:
-                region = book.entities.get(region_id)
-                await note(
-                    ctx,
-                    f"The soil of {region.name if region is not None else 'the land'} sickened under the waste of its works; a blight spread.",
-                    key="industry.blight",
-                    ids=[region_id],
-                    kind=ChronicleKind.WORLD,
-                )
+                await record(ctx, "industry.blight", roles={IncidentRole.SUBJECT: region_id}, facts={"soil": row.soil, "depth": after}, place=region_id)
 
 
 async def tend_pollution(ctx: TickContext, book: EconomyBook, tally: PollutionTally) -> None:

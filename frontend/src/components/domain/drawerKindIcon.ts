@@ -8,6 +8,7 @@ import {
   Layers,
   type LucideIcon,
   Orbit,
+  ScrollText,
   Star,
   Sun,
   Workflow,
@@ -26,4 +27,5 @@ export const DRAWER_KIND_ICON: Record<DrawerKind, LucideIcon> = {
   creator: Sun,
   'world-guide': Compass,
   help: CircleHelp,
+  incident: ScrollText,
 }

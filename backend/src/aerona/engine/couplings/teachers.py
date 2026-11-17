@@ -19,16 +19,17 @@ from aerona.domain.enums.couplings import TeachingKind, TeachingState
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import RECORDED
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.names import teach_name
 from aerona.engine.lore.art_forms import practise
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect, top_region
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record as record_incident
 
 HOSTILE_TEMPERS = frozenset({BeastTemper.ENRAGED})
 
@@ -239,7 +240,9 @@ async def lesson(
         )
         ctx.session.add(row)
         await ctx.session.flush()
-        await note(ctx, f"{teacher.name} taught {learner.name}.", key=f"teaching.{kind.value}", ids=[learner.id, teacher.id])
+        await record_incident(
+            ctx, f"teaching.{kind.value}", roles={IncidentRole.TEACHER: teacher.id, IncidentRole.LEARNER: learner.id}, facts={"teaching": kind, "price": price}
+        )
         return row
     return None
 
@@ -349,9 +352,9 @@ async def remember_age(ctx: TickContext, beast: EntityRow, profile: BeastProfile
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.hooks",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.teachings",

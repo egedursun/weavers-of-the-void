@@ -5,18 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.holds import INCITEMENT_KEY, is_held
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.rules.registry.incitement import IncitementRules
 
 INCITED_NOTE = "set the war upon us"
@@ -81,16 +80,13 @@ async def answer_incitement(ctx: TickContext, war: WarRow, victor_id: int | None
             epoch=ctx.epoch,
             note=INCITED_NOTE,
         )
-    event = await living_entity(ctx.session, war.event_entity_id)
-    name = event.name if event is not None else "the war"
-    outcome = f" {loser.name} will not forget who set it upon them." if toll.grieved and loser is not None else ""
-    await note(
+    roles = {IncidentRole.ACTOR: son.id, **({IncidentRole.TARGET: loser.id} if toll.grieved and loser is not None else {})}
+    await record(
         ctx,
-        f"{son.name} reaped the war they had stirred: {name} ended after {several(war.battles, 'battle', 'battles')}.{outcome}",
-        key="war.incitement_reaped",
-        ids=[entity.id for entity in (event, loser) if entity is not None],
+        "war.incitement_reaped",
+        roles=roles,
+        facts={"war": war.event_entity_id, "battles": war.battles},
         son_id=son.id,
-        kind=ChronicleKind.WAR,
     )
     ctx.count("incitements_reaped")
     return toll

@@ -14,6 +14,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import GiftOccasion, LongPlanKind, ManumissionPath
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.structure import ConstructionStatus
 from aerona.engine.cycles import control
@@ -29,7 +30,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 MANY = 1_000_000
 NAME = 200
@@ -102,8 +102,11 @@ async def bestow_gift(call: MortalCall, args: GiveGiftInput) -> str:
     if gift is None:
         fail(MortalResult.GIFT_REFUSED, why="you cannot afford it")
     call.target(receiver.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.BESTOW_GIFT, entity_ids=[call.me.id, receiver.id], me=call.me.name, receiver=receiver.name, value=gift.value
+    await call.record(
+        "tools.mortal.bestow_gift",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.RECEIVER: receiver.id},
+        facts={"value": gift.value},
+        kind=ChronicleKind.WORLD,
     )
     if gift.state not in OBLIGING:
         return result(MortalResult.GIFT_SPURNED, name=receiver.name)
@@ -123,7 +126,7 @@ async def answer_gift(call: MortalCall, args: GiftInput) -> str:
     if answer is None:
         fail(MortalResult.GIFT_ANSWER_REFUSED, why="you cannot afford to answer it")
     giver = await node_name(call.session, gift.giver_node_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.ANSWER_GIFT, entity_ids=[call.me.id], me=call.me.name, giver=giver)
+    await call.record("tools.mortal.answer_gift", roles={IncidentRole.ACTOR: call.me.id}, facts={"giver_detail": giver}, kind=ChronicleKind.WORLD)
     return result(MortalResult.GIFT_ANSWERED, name=giver, value=answer.value)
 
 
@@ -131,7 +134,7 @@ async def refuse_gift(call: MortalCall, args: RefuseGiftInput) -> str:
     gift = await owed_gift(call, args.gift_id)
     await refuse(call.tick, gift)
     giver = await node_name(call.session, gift.giver_node_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.REFUSE_GIFT, entity_ids=[call.me.id], me=call.me.name, giver=giver)
+    await call.record("tools.mortal.refuse_gift", roles={IncidentRole.ACTOR: call.me.id}, facts={"giver_detail": giver}, kind=ChronicleKind.WORLD)
     return result(MortalResult.GIFT_DECLINED, name=giver)
 
 
@@ -144,7 +147,12 @@ async def make_offering(call: MortalCall, args: OfferingInput) -> str:
         fail(MortalResult.OFFERING_REFUSED, why="you cannot afford it")
     await give(call.tick, call.me.id, god.id, args.value, GiftOccasion.OFFERING, pay=False)
     row = await offer(call.tick, home, god.id, args.value)
-    await call.chronicle(ChronicleKind.WORLD, lines.MAKE_OFFERING, entity_ids=[call.me.id], me=call.me.name, value=args.value, god=god.name)
+    await call.record(
+        "tools.mortal.make_offering",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: god.id},
+        facts={"value": args.value},
+        kind=ChronicleKind.WORLD,
+    )
     return result(MortalResult.OFFERING_MADE, value=args.value, name=god.name, offered=row.offered, answered=row.answered)
 
 
@@ -156,7 +164,12 @@ async def free_bound(call: MortalCall, args: FreeBoundInput) -> str:
     row = await control.free_bound(call.tick, town.id, args.share, args.path)
     count = row.count if row is not None else 0
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.FREE_BOUND, entity_ids=[call.me.id, town.id], me=call.me.name, count=count, town=town.name)
+    await call.record(
+        "tools.mortal.free_bound",
+        roles={IncidentRole.AUTHORITY: realm.id, IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: town.id},
+        facts={"freed": count, "share": args.share, "path": args.path},
+        place=town.id,
+    )
     return result(MortalResult.BOUND_FREED, count=count, name=town.name)
 
 
@@ -175,7 +188,12 @@ async def lay_corvee(call: MortalCall, args: CorveeInput) -> str:
         fail(MortalResult.CORVEE_REFUSED, why="that work is not raised in your realm")
     await set_corvee(call.tick, town.id, args.share, realm.id, work.id if args.share > 0 else None)
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.LAY_CORVEE, entity_ids=[call.me.id, town.id, work.id], me=call.me.name, town=town.name, work=work.name)
+    await call.record(
+        "tools.mortal.lay_corvee",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.VICTIM: town.id, IncidentRole.SUBJECT: work.id},
+        facts={"share": args.share},
+        place=town.id,
+    )
     return result(MortalResult.CORVEE_LAID, share=args.share, name=town.name, work=work.name)
 
 
@@ -197,7 +215,11 @@ async def begin_realm_plan(call: MortalCall, args: RealmPlanInput) -> str:
         )
     except ValidationFailedError as error:
         fail(MortalResult.REALM_PLAN_REFUSED, why=str(error).rstrip("."))
-    await call.chronicle(ChronicleKind.WORLD, lines.BEGIN_REALM_PLAN, entity_ids=[call.me.id, realm.id], me=call.me.name, realm=realm.name, plan=plan.name)
+    await call.record(
+        "tools.mortal.begin_realm_plan",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OWNER: realm.id},
+        facts={"plan": plan.name, "plan_kind": plan.kind, "steps": plan.steps},
+    )
     return result(MortalResult.REALM_PLAN_BEGUN, name=plan.name, id=plan.id)
 
 

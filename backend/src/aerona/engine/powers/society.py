@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IdentityReason, IntrigueSecret
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.powers import BloodlineRule, GiftedAttitude, PowerDeviceEffect, PowerOrigin, PowerState, PowerVisibility, RestrictionKind
@@ -26,7 +27,6 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import enact, law_param
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.powers.devices import devices_of
@@ -35,6 +35,7 @@ from aerona.engine.powers.war import field_gifted
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 
 CASTE_NAME = "those born with powers"
 CASTE_STANDING = {GiftedAttitude.HONOURED: 85, GiftedAttitude.PERSECUTED: 10}
@@ -215,7 +216,7 @@ async def form_bands(ctx: TickContext) -> int:
         )
         for member in free:
             await connect(ctx.session, member, band.id, BondKind.MEMBER_OF, ctx.epoch, description="one of the band")
-        await note(ctx, f"Those with powers gathered as {band.name}.", key="power.band", ids=[band.id, *free])
+        await record(ctx, "power.band", roles={IncidentRole.SUBJECT: [*[band.id, *free]]}, facts={"band": str(band.name)})
         formed += 1
     return formed
 
@@ -439,7 +440,7 @@ async def broken_vows(ctx: TickContext) -> int:
         restriction.broken = True
         if "state" not in power.locked:
             power.state = PowerState.LOST
-        await note(ctx, "A vow was broken, and the power bound to it was lost.", key="power.vow_broken", ids=[power.holder_node_id])
+        await record(ctx, "power.vow_broken", roles={IncidentRole.SUBJECT: power.holder_node_id})
         broken += 1
     return broken
 

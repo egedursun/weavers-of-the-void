@@ -2,17 +2,18 @@ from sqlalchemy import select
 
 from aerona.catalog.materials import LUXURY_MATERIALS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import MIDDLE, MaterialBook, node_material, worth
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import StepDraft, record
 
 
 async def temples_in(ctx: TickContext, place_id: int) -> list[EntityRow]:
@@ -42,11 +43,13 @@ async def loot_temple(ctx: TickContext, temple: EntityRow, looter: EntityRow, *,
     units, metal = await temple_hoard(ctx, temple, materials)
     added = await inject_hoard(ctx, looter, units, metal)
     await sync_aggregates(ctx.session, ctx.rules, looter)
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"{looter.name} carried the treasure of {temple.name} home: {several(added, 'load', 'loads')} of {spoken(metal)} flooded its market.",
-        template_key="money.temple_loot",
-        entity_ids=[looter.id, temple.id],
+    await record(
+        ctx,
+        "money.temple_loot",
+        roles={IncidentRole.ACTOR: looter.id, IncidentRole.VICTIM: temple.id},
+        facts={"loads": added, "metal": metal},
+        steps=(StepDraft(StepAction.PILLAGE, actor=looter.id, target=temple.id, amount=added, unit=FactUnit.COUNT),),
+        place=temple.location_id,
     )
     return added
 

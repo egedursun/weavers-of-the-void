@@ -47,6 +47,7 @@ from aerona.domain.enums.operations import (
     ResolveKind,
 )
 from aerona.domain.enums.polity import ClauseKind, DecisionRule, GovernmentKind, OfficeKind, PartyRole, TreatyKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarEnding, WarStatus
@@ -59,9 +60,10 @@ from aerona.engine.military.vessels import best_hull
 from aerona.engine.operations.admiralty import AdmiraltyTally, keep_admiralty
 from aerona.engine.operations.command import CommandTally, command_edge, issue_orders, organise
 from aerona.engine.operations.control import set_crew
+from aerona.engine.operations.engagement import engage
 from aerona.engine.operations.expeditions import ExpeditionTally, advance, arrive, danger_of, eat, launch, party_of, strain
 from aerona.engine.operations.limits import over_limit
-from aerona.engine.operations.sail import SailTally, engage, ship_state, take_prize
+from aerona.engine.operations.sail import SailTally, ship_state, take_prize
 from aerona.engine.operations.supply import SupplyTally, culminate, draw, keep_network, network, supply_season, throughput
 from aerona.engine.operations.theatres import TheatreTally, keep_theatres
 from aerona.engine.polity.accords import Clause, sign
@@ -263,9 +265,7 @@ async def test_the_marshal_shares_reserves_between_fronts_and_reinforces_them(se
 
 async def ship(session: AsyncSession, world: CoreWorld, owner: EntityRow, name: str, crew: int) -> tuple[EntityRow, VesselProfileRow]:
     vessel = await entity(session, name, EntityType.VESSEL, VesselStats(), world_id=world.world.id, location_id=world.regions[0].id)
-    row = VesselProfileRow(
-        entity_id=vessel.id, kind=VehicleKind.SHIP, crew=crew, cargo_capacity=50, condition=100, status=VesselStatus.AFLOAT, armament=[], locked=[]
-    )
+    row = VesselProfileRow(entity_id=vessel.id, kind=VehicleKind.SHIP, crew=crew, cargo_capacity=50, condition=100, status=VesselStatus.AFLOAT, locked=[])
     session.add(row)
     await bond(session, owner.id, vessel.id, BondKind.OWNS)
     await session.flush()
@@ -285,6 +285,7 @@ async def test_a_ship_in_irons_is_raked_and_a_broken_ship_strikes_and_is_taken_a
     fight = await engage(ctx, hunter, prey, (2.0, 1.0), tally)
     assert stuck.raked > 0 and tally.raked > 0
     assert fight.struck and fight.loser.id == prey[0].id
+    assert {step.action for step in fight.steps} >= {StepAction.MANOEUVRE, StepAction.FIRE, StepAction.STRIKE_COLOURS}
     money = await take_prize(ctx, hunter[1], prey[0], prey[1], town)
     assert money > 0 and stuck.prize_of_entity_id == town.id and prey[1].crew == stuck.prize_crew > 0
 

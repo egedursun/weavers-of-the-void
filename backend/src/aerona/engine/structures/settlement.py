@@ -3,16 +3,16 @@ from collections import defaultdict
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.integrity import HarmForce
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.structures.damage import harm
 from aerona.engine.structures.profiles import material_props, profiles_at
 from aerona.engine.structures.readers import Working, working
@@ -144,14 +144,7 @@ async def burn(ctx: TickContext, entity: EntityRow, fires: int) -> int:
         burned += 1
         await harm(ctx, work, profile, loss, cause="fire", force=HarmForce.FIRE, quiet=True)
     if burned:
-        await note(
-            ctx,
-            f"The fire in {entity.name} scorched {burned} of its structures.",
-            key="structures.burned",
-            ids=[entity.id],
-            kind=ChronicleKind.CONSTRUCTION,
-            feed=FeedCategory.DISASTER,
-        )
+        await record(ctx, "structures.burned", roles={IncidentRole.SUBJECT: entity.id}, facts={"fires": fires, "burned": burned}, place=entity.id)
     return burned
 
 

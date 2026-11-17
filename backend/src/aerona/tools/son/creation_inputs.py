@@ -42,7 +42,6 @@ from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath, TenetKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
 from aerona.domain.enums.place import PlaceKind
@@ -147,7 +146,6 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "target_world_id": (int | None, None),
             "vessel_kind": (VehicleKind | None, None),
             "frame": (VehicleFrame | None, None),
-            "armament": (list[VesselArmament] | None, None),
             "hull_material": (MaterialKind | None, None),
             "fabric_material": (MaterialKind | None, None),
             "home_port_id": (int | None, None),

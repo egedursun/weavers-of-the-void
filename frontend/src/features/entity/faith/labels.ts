@@ -69,7 +69,11 @@ export const TENETS: Record<string, Named> = {
     icon: Users,
     tone: 'gold',
   },
-  human_sacrifice: { label: 'Human sacrifice', icon: Skull, tone: 'danger' },
+  sacrifice_of_people: {
+    label: 'Sacrifice of people',
+    icon: Skull,
+    tone: 'danger',
+  },
   animal_sacrifice: {
     label: 'Animal sacrifice',
     icon: PawPrint,

@@ -10,6 +10,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.eras.progress import LIVE
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
@@ -42,8 +42,11 @@ async def sabotage_programme(call: SonCall, args: SabotageProgrammeInput) -> str
     row.sabotaged += 1
     call.target(realm.id)
     label = TECHNIQUES[row.technique].label.lower()
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.SABOTAGE_PROGRAMME, entity_ids=[realm.id], son=call.son.name, realm=realm.name, technique=label, reason=args.reason
+    await call.record(
+        "tools.son.sabotage_programme",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"technique": label, "reason": args.reason},
+        kind=ChronicleKind.CIVILIZATION,
     )
     return result(SonResult.PROGRAMME_HINDERED, realm=realm.name, technique=label, progress=row.progress)
 

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.customs import RevivalRow
@@ -15,17 +14,19 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.customs import RevivalAim, RevivalGoal, RevivalStage
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.body.customs import people_of
 from aerona.engine.climes.crossings import road_belonging
 from aerona.engine.context import TickContext
 from aerona.engine.lore.names import tongue_of
 from aerona.engine.mind.book import clamp_value, stored_values, write_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import change_religion, is_living_god, patron_node
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.renown.currencies import ruler_of_realm
 from aerona.engine.services.community_relations import change_relation
 
@@ -116,7 +117,13 @@ async def open_revival(ctx: TickContext, people: EntityRow, tally: RevivalTally)
     ctx.session.add(row)
     await ctx.session.flush()
     tally.begun += 1
-    await note(ctx, f"Pressed by others, the {people.name} began a movement to {spoken(goal)}.", key="revivals.begun", ids=[people.id])
+    await record(
+        ctx,
+        "revivals.begun",
+        roles={IncidentRole.ACTOR: people.id, IncidentRole.OPPONENT: row.dominant_entity_id, IncidentRole.LEADER: row.prophet_node_id},
+        facts={"aim": aim, "goal": goal},
+        steps=(StepDraft(StepAction.BEGIN, actor=people.id),),
+    )
     return row
 
 
@@ -178,7 +185,13 @@ async def restore_god(ctx: TickContext, row: RevivalRow, people: EntityRow) -> N
     if old is None or not ctx.rng(seed_of("revival.restore", row.id, ctx.epoch)).chance(ctx.rules.revivals.restore_chance):
         return
     if await change_religion(ctx.session, people, old, ctx.epoch, "a movement brought it back to the god of its ancestors"):
-        await note(ctx, f"The movement of the {people.name} brought them back to their old god.", key="revivals.restored", ids=[people.id])
+        await record(
+            ctx,
+            "revivals.restored",
+            roles={IncidentRole.ACTOR: people.id, IncidentRole.TARGET: old},
+            facts={"goal": row.goal},
+            steps=(StepDraft(StepAction.CONVERT, actor=people.id, target=old),),
+        )
 
 
 async def put_down(ctx: TickContext, row: RevivalRow, people: EntityRow, tally: RevivalTally) -> bool:
@@ -191,12 +204,12 @@ async def put_down(ctx: TickContext, row: RevivalRow, people: EntityRow, tally: 
         row.ended_epoch = ctx.epoch
     tally.suppressed += 1
     await change_relation(ctx, people.id, row.dominant_entity_id, -2 * ctx.rules.revivals.expel_opinion, MemoryKind.ILL_WILL, note="put down our movement")
-    realm = await ctx.session.get(EntityRow, row.dominant_entity_id)
-    await note(
+    await record(
         ctx,
-        f"The movement of the {people.name} was put down by {realm.name if realm is not None else 'those who pressed on them'}.",
-        key="revivals.suppressed",
-        ids=[people.id, row.dominant_entity_id],
+        "revivals.suppressed",
+        roles={IncidentRole.VICTIM: people.id, IncidentRole.ACTOR: row.dominant_entity_id},
+        facts={"aim": row.aim, "goal": row.goal},
+        steps=(StepDraft(StepAction.PUNISH, actor=row.dominant_entity_id, target=people.id),),
     )
     return True
 
@@ -218,7 +231,13 @@ async def advance(ctx: TickContext, row: RevivalRow, tally: RevivalTally) -> Non
         if row.stage is RevivalStage.NEW_STEADY and "ended_epoch" not in row.locked:
             row.ended_epoch = ctx.epoch
             tally.settled += 1
-            await note(ctx, f"The movement of the {people.name} settled into a new way of life.", key="revivals.settled", ids=[people.id])
+            await record(
+                ctx,
+                "revivals.settled",
+                roles={IncidentRole.ACTOR: people.id},
+                facts={"aim": row.aim, "goal": row.goal},
+                steps=(StepDraft(StepAction.SETTLE, actor=people.id),),
+            )
 
 
 async def keep_revivals(ctx: TickContext, tally: RevivalTally) -> None:

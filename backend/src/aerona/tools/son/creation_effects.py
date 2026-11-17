@@ -170,7 +170,6 @@ async def _vessel_route(call: SonCall, args: CreationInput, created: EntityRow) 
             created,
             Commission(
                 frame=args.option("frame"),
-                armament=args.option("armament"),
                 hull_material=args.option("hull_material"),
                 fabric_material=args.option("fabric_material"),
                 home_port_id=args.option("home_port_id"),

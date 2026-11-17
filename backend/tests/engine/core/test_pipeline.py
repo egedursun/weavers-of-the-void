@@ -9,7 +9,6 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.context import TickContext, phase_window
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import (
     POST_TRANSITION_ORDER,
@@ -26,16 +25,16 @@ from aerona.engine.pipeline import (
     run_tick,
 )
 from aerona.events.kinds import EventKind
-from tests.engine.core.factories import seed_core_world
+from tests.engine.core.factories import seed_core_world, tell_history
 
 
 async def chatter(ctx: TickContext) -> None:
     for index in range(4):
-        await note(ctx, f"A bell rang {index} times in the hills.", key="test.bells", ids=[])
+        await tell_history(ctx, f"A bell rang {index} times in the hills.", ids=[])
 
 
 async def broken(ctx: TickContext) -> None:
-    await note(ctx, "This line must roll back.", key="test.broken")
+    await tell_history(ctx, "This line must roll back.")
     raise RuntimeError("boom")
 
 
@@ -44,7 +43,7 @@ async def seeded(database: Database) -> None:
         await seed_core_world(session)
 
 
-async def test_tick_folds_repeated_lines_and_records_timing(database: Database) -> None:
+async def test_tick_groups_repeated_lines_as_a_view_and_records_timing(database: Database) -> None:
     await seeded(database)
     events: list[EventKind] = []
     environment = await current_environment(database, lambda kind, payload: events.append(kind))
@@ -54,10 +53,9 @@ async def test_tick_folds_repeated_lines_and_records_timing(database: Database) 
     assert EventKind.ENGINE_NOTE in events and EventKind.ENGINE_PHASE in events
     async with database.read() as session:
         rows = list(await session.scalars(select(ChronicleRow).order_by(ChronicleRow.id)))
-    raw = [row for row in rows if row.kind is ChronicleKind.ENGINE_RAW]
-    visible = [row for row in rows if row.kind is ChronicleKind.WORLD]
-    assert len(raw) == 4
-    assert len(visible) == 1 and visible[0].text.endswith("3 more events of the same kind happened this epoch.")
+    rang = [row for row in rows if row.template_key == "player.history"]
+    assert len(rang) == 4 and all(row.visible and row.kind is not ChronicleKind.ENGINE_RAW for row in rang)
+    assert not any("more events of the same kind" in row.text for row in rows)
 
 
 async def test_failing_phase_names_the_step_and_rolls_back(database: Database) -> None:

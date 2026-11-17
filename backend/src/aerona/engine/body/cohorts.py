@@ -6,16 +6,17 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyReading, MaimedKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import ensure_customs, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import blocked
-from aerona.engine.notes import note
 from aerona.engine.phases.remembrance import MemorialForm, memorial
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import apportion, clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import MaimedRules
 
@@ -135,7 +136,12 @@ async def _festival(ctx: TickContext, custom: BodyCustomRow, veterans: int) -> N
     await connect(ctx.session, people.id, tradition.id, BondKind.CELEBRATES, ctx.epoch)
     custom.scar_festivals = True
     custom.tradition_entity_id = tradition.id
-    await note(ctx, f"The maimed veterans of {people.name} became a festival: {tradition.name}.", key="cohort.scar_festival", ids=[people.id, tradition.id])
+    await record(
+        ctx,
+        "cohort.scar_festival",
+        roles={IncidentRole.SUBJECT: people.id, IncidentRole.PRODUCT: tradition.id},
+        facts={"veterans": veterans, "reading": custom.reading},
+    )
 
 
 async def tend_cohorts(ctx: TickContext) -> None:

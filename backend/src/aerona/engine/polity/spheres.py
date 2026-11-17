@@ -6,19 +6,20 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import RegionalStanding
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.crises import GREAT, open_crisis, power_of
 from aerona.engine.polity.regard import borders, shift_regard
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 
@@ -62,12 +63,12 @@ async def draw(ctx: TickContext, book: RealmBook, power: Realm, strength: Milita
             continue
         ctx.session.add(SphereRow(power_entity_id=power.entity.id, client_entity_id=client, strength=PERCENT * 3 // 10, since_epoch=ctx.epoch))
         tally.drawn += 1
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name} fell into the sphere of {power.entity.name}.",
-            key="statecraft.sphere",
-            ids=[power.entity.id, client],
-            kind=ChronicleKind.CIVILIZATION,
+            "statecraft.sphere",
+            roles={IncidentRole.AUTHORITY: power.entity.id, IncidentRole.SUBJECT: client},
+            facts={"strength": PERCENT * 3 // 10},
+            place=realm.profile.capital_entity_id,
         )
     await ctx.session.flush()
 
@@ -132,12 +133,12 @@ async def summit(ctx: TickContext, book: RealmBook, tally: SphereTally) -> None:
                 if first.entity.id != second.entity.id:
                     await shift_regard(ctx, first.entity.id, second.entity.id, trust=table.summit_trust, threat=-table.summit_trust)
         tally.summits += 1
-        await note(
+        await record(
             ctx,
-            f"The great powers {', '.join(realm.entity.name for realm in powers)} met in a summit.",
-            key="statecraft.summit",
-            ids=[realm.entity.id for realm in powers],
-            kind=ChronicleKind.CIVILIZATION,
+            "statecraft.summit",
+            roles={IncidentRole.MEMBER: [realm.entity.id for realm in powers]},
+            facts={"trust": table.summit_trust},
+            steps=tuple(StepDraft(StepAction.NEGOTIATE, actor=realm.entity.id) for realm in powers),
         )
 
 

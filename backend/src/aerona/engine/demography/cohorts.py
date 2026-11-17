@@ -15,6 +15,7 @@ from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -25,6 +26,7 @@ from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 A = AgeBand
@@ -150,7 +152,12 @@ async def seed(session: AsyncSession, rules: Rules, community: EntityRow, epoch:
             for social_class, class_share in shares.items():
                 count = round_half_up(population * age_share * sex_share * max(0.0, class_share) / weight)
                 if count > 0:
-                    row_for(session, rows, community.id, (age, sex, social_class, CohortCondition.NONE), epoch).count += count
+                    with explaining():
+                        term("cohorts.seed_population", population, source_node_id=community.id)
+                        term(f"cohorts.age_share.{age.value}", age_share, ModifierOp.MULTIPLY)
+                        term(f"cohorts.sex_share.{sex.value}", sex_share, ModifierOp.MULTIPLY)
+                        term(f"society.class_share.{social_class.value}", class_share / weight, ModifierOp.MULTIPLY)
+                        row_for(session, rows, community.id, (age, sex, social_class, CohortCondition.NONE), epoch).count += count
     await reconcile(session, rules, community, rows, epoch)
     return rows
 
@@ -177,6 +184,14 @@ async def apply_flow(session: AsyncSession, rules: Rules, community: EntityRow, 
     rows = await seed(session, rules, community, epoch)
     if not rows:
         return
+    with explaining():
+        term(f"flows.{category.value}", delta, source_node_id=community.id)
+        await place_flow(session, rules, community, rows, delta, category=category, epoch=epoch)
+
+
+async def place_flow(
+    session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], delta: int, *, category: FlowCategory, epoch: int
+) -> None:
     combat = await combat_weights(session, community) if category in COMBAT_FLOWS else None
     if delta < 0:
         place(rows, weights_for(rows, category, sick_weight=rules.epidemiology.sick_death_weight_pct / PERCENT, combat=combat), -delta, add=False)
@@ -196,10 +211,12 @@ async def apply_flow(session: AsyncSession, rules: Rules, community: EntityRow, 
 async def reconcile(session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], epoch: int) -> int:
     population = stat(community, "population") or 0
     gap = population - total(rows)
-    if gap > 0:
-        place(rows, {key: 1.0 for key in rows if key[3] is CohortCondition.NONE} or {key: 1.0 for key in rows}, gap, add=True)
-    elif gap < 0:
-        place(rows, {key: 1.0 for key in rows}, -gap, add=False)
+    with explaining():
+        term("cohorts.population_gap", gap, source_node_id=community.id)
+        if gap > 0:
+            place(rows, {key: 1.0 for key in rows if key[3] is CohortCondition.NONE} or {key: 1.0 for key in rows}, gap, add=True)
+        elif gap < 0:
+            place(rows, {key: 1.0 for key in rows}, -gap, add=False)
     return gap
 
 
@@ -228,12 +245,22 @@ def age_cohorts(session: AsyncSession, community: EntityRow, rows: dict[CohortKe
         moving = round_half_up(row.count * share)
         if moving > 0:
             moves.append((key, (A.ADULT if band is A.CHILD else A.ELDER, sex, social_class, condition), moving))
-    for source, target, moving in moves:
-        move_amount(rows[source], row_for(session, rows, community.id, target, epoch), "count", moving)
+    with explaining():
+        term("cohorts.maturity_years", maturity, source_node_id=community.id)
+        term("cohorts.adult_years", adult_span, source_node_id=community.id)
+        for source, target, moving in moves:
+            move_amount(rows[source], row_for(session, rows, community.id, target, epoch), "count", moving)
 
 
 async def rebalance_classes(session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], epoch: int) -> None:
     shares = await class_shares(session, rules, community.id)
+    with explaining():
+        for social_class, share in sorted(shares.items(), key=lambda item: item[0].value):
+            term(f"society.class_share.{social_class.value}", share, ModifierOp.MULTIPLY, source_node_id=community.id)
+        place_classes(session, community, rows, shares, epoch)
+
+
+def place_classes(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], shares: Mapping[SocialClass, float], epoch: int) -> None:
     present = {key[1] for key in rows}
     for band in AgeBand:
         for sex in sorted(present, key=lambda item: item.value):

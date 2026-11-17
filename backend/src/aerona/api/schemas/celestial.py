@@ -24,6 +24,7 @@ class WorldWiki(ApiModel):
     peoples: list[PeopleBrief]
     sky_events: list[SkyEventRecord]
     timeline: list[ChronicleLineRecord]
+    timeline_total: int
     images: list[ImageRecord]
 
 
@@ -42,4 +43,5 @@ class StarWiki(ApiModel):
     worlds: list[OrbitingWorld]
     sky_events: list[SkyEventRecord]
     timeline: list[ChronicleLineRecord]
+    timeline_total: int
     images: list[ImageRecord]

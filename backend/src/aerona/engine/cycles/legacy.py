@@ -19,13 +19,15 @@ from aerona.domain.enums.cycles import LegacyKind
 from aerona.domain.enums.demography import FuneralCustom, MartialStyle
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.lore.art_forms import practise
 from aerona.engine.mind.book import stored_values, write_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.queries import active_bonds, connect
+from aerona.engine.recording.record import StepDraft, record
 
 CULTURE_FIELDS = {LegacyKind.MARTIAL_STYLE: "martial_style", LegacyKind.FUNERAL_RITE: "funeral_rite"}
 CULTURE_ENUMS = {LegacyKind.MARTIAL_STYLE: MartialStyle, LegacyKind.FUNERAL_RITE: FuneralCustom}
@@ -161,7 +163,7 @@ async def remember_in_myth(ctx: TickContext, people: EntityRow, predecessor: Ent
 
 async def inherit(ctx: TickContext, people: EntityRow, predecessor: EntityRow, keep_pct: int, tally: LegacyTally) -> None:
     done = await kept(ctx, people.id, predecessor.id)
-    carried: list[str] = []
+    carried: list[LegacyKind] = []
     for kind in LegacyKind:
         if kind in done or not SeededRandom.for_epoch(people.id, predecessor.id, f"legacy.{kind.value}").chance(keep_pct):
             continue
@@ -170,11 +172,17 @@ async def inherit(ctx: TickContext, people: EntityRow, predecessor: EntityRow, k
             continue
         await apply_legacy(ctx, kind, people, predecessor, key)
         ctx.session.add(LegacyTraitRow(people_entity_id=people.id, kind=kind, key=key, predecessor_entity_id=predecessor.id, since_epoch=ctx.epoch, locked=[]))
-        carried.append(kind.value.replace("_", " "))
+        carried.append(kind)
         tally.kept += 1
     if carried:
         await remember_in_myth(ctx, people, predecessor, tally)
-        await note(ctx, f"{people.name} kept from {predecessor.name} its {', '.join(carried)}.", key="legacy.kept", ids=[people.id, predecessor.id])
+        await record(
+            ctx,
+            "legacy.kept",
+            roles={IncidentRole.HEIR: people.id, IncidentRole.PREDECESSOR: predecessor.id},
+            facts={"legacies": carried},
+            steps=(StepDraft(StepAction.INHERIT, actor=people.id, target=predecessor.id),),
+        )
 
 
 async def keep_legacies(ctx: TickContext, tally: LegacyTally) -> None:

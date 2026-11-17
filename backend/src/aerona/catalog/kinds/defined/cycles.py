@@ -118,7 +118,7 @@ LABOUR_REGIME = total(
                 "services.player.cycles.IndentureDraft",
             ),
         ),
-        LabourRegime.PEONAGE: Defined("Debt peonage", checked_by=("engine.cycles.bondage.bind_debtors",), used_by=("engine.cycles.bondage.bind_debtors",)),
+        LabourRegime.PEONAGE: Defined("Debt peonage", checked_by=(), used_by=("engine.cycles.bondage.bind_debtors",)),
     },
 )
 
@@ -151,7 +151,9 @@ MANUMISSION_PATH = total(
     ManumissionPath,
     {
         ManumissionPath.PURCHASE: Defined(
-            "Bought their freedom", checked_by=(), used_by=("engine.cycles.indenture.SKILLED_PATHS", "engine.cycles.indenture.manumission_path")
+            "Bought their freedom",
+            checked_by=("engine.cycles.indenture.bought_freedom",),
+            used_by=("engine.cycles.indenture.SKILLED_PATHS", "engine.cycles.indenture.manumission_path"),
         ),
         ManumissionPath.WILL: Defined(
             "By a master's will", checked_by=(), used_by=("engine.cycles.indenture.manumission_path", "engine.demography.society_control.manumit")

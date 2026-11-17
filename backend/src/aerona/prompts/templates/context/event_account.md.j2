@@ -1,0 +1,33 @@
+HAPPENING {{ id }}{% if name %}, called {{ name }}{% endif %}: age {{ epoch }}{% if year is not none %}, year {{ year }}{% endif %}{% if place %}, at {{ place }}{% endif %}
+
+{% if told %}
+AS IT WAS TOLD TO YOU ({{ fidelity }}% true to what happened): {{ told }}
+{% if differences %}This telling differs from the record: {{ differences | join('; ') }}.
+{% endif %}
+{% elif line %}
+{{ line }}
+{% endif %}
+{% if roles %}
+WHO TOOK PART: {% for item in roles %}{{ item.role }}: {{ item.name }}{% if item.id is not none %} (#{{ item.id }}){% endif %}{% if item.seen %}, {{ item.seen }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endif %}
+{% if facts %}
+WHAT IS KNOWN: {% for item in facts %}{{ item.key }}: {{ item.value }}{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endif %}
+{% if steps %}
+HOW IT WENT:
+{% for item in steps %}- {{ item.position + 1 }}.{% if item.round is not none %} Round {{ item.round }}:{% endif %} {{ item.text }}
+{% endfor %}
+{% if more_steps > 0 %}({{ more_steps | several("more step", "more steps") }}; ask again with step_offset {{ step_offset + steps | length }})
+{% endif %}
+{% endif %}
+{% if cause %}
+WHAT CAUSED IT: {{ cause }}
+{% endif %}
+{% if effects %}
+WHAT IT LED TO: {{ effects | join('; ') }}
+{% endif %}
+{% if witnesses > 0 %}
+{{ witnesses | several("witness", "witnesses") }} saw it.
+{% endif %}

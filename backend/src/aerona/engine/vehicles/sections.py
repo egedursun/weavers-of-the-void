@@ -13,9 +13,11 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.collective import DesignComponentKind
 from aerona.domain.enums.integrity import Criticality, SectionHazard, SectionState
 from aerona.domain.enums.military import VesselStatus
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome, StepState
 from aerona.domain.enums.vehicles import VehicleSection
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft
 
 ORDER = (SectionState.SOUND, SectionState.DAMAGED, SectionState.DISABLED, SectionState.DESTROYED)
 LOST_HAZARDS = frozenset({SectionHazard.EXPLOSION, SectionHazard.CRASH})
@@ -26,8 +28,25 @@ CHAIN_LIMIT = 6
 class StrikeResult:
     lost: int = 0
     crew_lost_pct: int = 0
-    events: list[str] = field(default_factory=list)
+    steps: list[StepDraft] = field(default_factory=list)
     hazards: list[SectionHazard] = field(default_factory=list)
+
+
+HAZARD_STEPS = {
+    SectionHazard.FIRE: (StepAction.IGNITE, StepState.BURNING),
+    SectionHazard.EXPLOSION: (StepAction.EXPLODE, StepState.DISABLED),
+    SectionHazard.FLOODING: (StepAction.FLOOD, StepState.FLOODING),
+    SectionHazard.BREACH: (StepAction.VENT, StepState.BREACHED),
+    SectionHazard.CRASH: (StepAction.CRASH, StepState.GROUNDED),
+    SectionHazard.PANIC: (StepAction.ROUT, StepState.ROUTED),
+    SectionHazard.COLLAPSE: (StepAction.COLLAPSE, StepState.DISABLED),
+}
+STATE_OUTCOMES = {
+    SectionState.SOUND: StepOutcome.GLANCED,
+    SectionState.DAMAGED: StepOutcome.DAMAGED,
+    SectionState.DISABLED: StepOutcome.DISABLED,
+    SectionState.DESTROYED: StepOutcome.DESTROYED,
+}
 
 
 def step(state: SectionState) -> SectionState:
@@ -96,6 +115,17 @@ async def lose_vehicle(session: AsyncSession, group: VehicleGroupRow, result: St
     group.count -= 1
     group.crewed = min(group.crewed, group.count)
     result.lost += 1
+    result.steps.append(
+        StepDraft(
+            StepAction.BREAK,
+            target=group.holder_node_id,
+            amount=1,
+            unit=FactUnit.COUNT,
+            outcome=StepOutcome.DESTROYED,
+            record_table="vehicle_groups",
+            record_key=str(group.id),
+        )
+    )
     for row in (await group_sections(session, group.id)).values():
         overflow = row.damaged + row.disabled + row.destroyed - group.count
         for state in (SectionState.DESTROYED, SectionState.DISABLED, SectionState.DAMAGED):
@@ -128,6 +158,19 @@ def state_row(ctx: TickContext, strike: Strike, section: DesignSectionRow) -> Ve
 
 def chain(ctx: TickContext, strike: Strike, section: DesignSectionRow, after: SectionState) -> bool:
     strike.result.hazards.append(section.hazard)
+    action, state = HAZARD_STEPS.get(section.hazard, (StepAction.BREAK, StepState.DISABLED))
+    holder = strike.group.holder_node_id
+    strike.result.steps.append(
+        StepDraft(
+            action,
+            target=holder,
+            locus_kind=StepLocus.VEHICLE_SECTION,
+            locus_key=section.section.value,
+            record_table="vehicle_groups",
+            record_key=str(strike.group.id),
+            states=((holder, state),) if holder is not None else (),
+        )
+    )
     spread, fatal = hazard(ctx, strike.rng, section, after)
     if section.hazard is SectionHazard.BREACH:
         strike.result.crew_lost_pct = min(PERCENT, strike.result.crew_lost_pct + ctx.rules.vehicles.breach_crew_pct)
@@ -147,6 +190,19 @@ async def land_hit(ctx: TickContext, strike: Strike, section: DesignSectionRow) 
     after = step(before)
     shift_tier(row, before, -1)
     shift_tier(row, after, 1)
+    strike.result.steps.append(
+        StepDraft(
+            StepAction.FIRE,
+            target=strike.group.holder_node_id,
+            locus_kind=StepLocus.VEHICLE_SECTION,
+            locus_key=section.section.value,
+            amount=1,
+            unit=FactUnit.COUNT,
+            outcome=STATE_OUTCOMES[after],
+            record_table="vehicle_group_sections",
+            record_key=f"{strike.group.id}:{section.section.value}",
+        )
+    )
     fatal = after is SectionState.DESTROYED and section.criticality is Criticality.CRITICAL
     if after in {SectionState.DISABLED, SectionState.DESTROYED} and section.hazard is not SectionHazard.NONE:
         fatal = chain(ctx, strike, section, after) or fatal

@@ -11,6 +11,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.context import TickContext
@@ -18,8 +19,8 @@ from aerona.engine.cycles.indenture import record_manumission
 from aerona.engine.demography.control import move_cohort
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.demography.wealth import WEALTH_LOCK
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 STANDING_NUMBERS = {"fed_pct": (0, PERCENT), "needs_met_pct": (0, PERCENT), "luxury_pct": (0, PERCENT * 10), WEALTH_LOCK: (0, 10**9)}
 LOYALTY_NUMBERS = {"grievances": (0, 10**4), "benefits": (0, 10**4), "loyalty": (0, PERCENT)}
@@ -98,7 +99,7 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
         if row is not None:
             await ctx.session.delete(row)
             await ctx.session.flush()
-            await note(ctx, f"The corvee on {entity.name} was lifted; the workers went home.", key="labour.corvee_lifted", ids=[entity.id])
+            await record(ctx, "labour.corvee_lifted", roles={IncidentRole.SUBJECT: entity.id}, place=entity.id)
         return None
     if row is None:
         row = CorveeRow(community_entity_id=entity.id, since_epoch=ctx.epoch, by_hand=True)
@@ -111,8 +112,12 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
             raise ValidationFailedError("Forced labour can only be set to a structure.")
     row.work_entity_id = work_id
     await ctx.session.flush()
-    await note(
-        ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its workers must labour on the great works.", key="labour.corvee", ids=[entity.id]
+    await record(
+        ctx,
+        "labour.corvee",
+        roles={IncidentRole.VICTIM: entity.id, IncidentRole.AUTHORITY: polity_id, IncidentRole.SUBJECT: work_id},
+        facts={"share": row.share_pct},
+        place=entity.id,
     )
     return row
 

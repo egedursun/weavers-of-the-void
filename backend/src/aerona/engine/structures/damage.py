@@ -7,21 +7,22 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.integrity import HarmForce
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, StructureKind, StructureSection
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.happenings.effects import scar
 from aerona.engine.means.strength import siege_guard
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import add_flag, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.structures.integrity import StructureStrike, ensure_sections, mend_sections, overall, strike_rows
 from aerona.engine.structures.megastructures import catastrophe
 from aerona.engine.structures.profiles import material_props, refresh, standing_state
@@ -148,10 +149,25 @@ async def harm(
     happened = await consequences(ctx, work, profile, strike)
     await refresh(ctx.session, ctx.rules, work, profile)
     if not quiet or happened:
-        parts = [section.value.replace("_", " ") for section in strike.destroyed]
-        lost = f"; the {', '.join(parts)} fell" if parts else ""
-        tail = " and fell to ruin" if collapsed else f" (condition {before} to {profile.condition}{lost})"
-        await note(ctx, f"{work.name} was damaged by {cause}{tail}.", key="structures.damaged", ids=[work.id], kind=ChronicleKind.CONSTRUCTION)
+        await record(
+            ctx,
+            "structures.collapsed" if collapsed else "structures.damaged",
+            roles={IncidentRole.SUBJECT: work.id, IncidentRole.OWNER: profile.host_entity_id},
+            facts={"force": force, "before": before, "after": profile.condition, "loss": round(loss), "sections_lost": list(strike.destroyed)},
+            steps=tuple(
+                StepDraft(
+                    StepAction.COLLAPSE if collapsed else StepAction.BREAK,
+                    target=work.id,
+                    locus_kind=StepLocus.STRUCTURE_SECTION,
+                    locus_key=section.value,
+                    outcome=StepOutcome.DESTROYED,
+                    record_table="structure_sections",
+                    record_key=f"{work.id}:{section.value}",
+                )
+                for section in strike.destroyed
+            ),
+            place=work.location_id,
+        )
     return collapsed
 
 

@@ -13,6 +13,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -22,6 +23,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft
 from aerona.rules.registry import Rules
 
 SKILLED_PATHS = frozenset({ManumissionPath.PURCHASE, ManumissionPath.SERVICE})
@@ -136,6 +138,12 @@ async def free_mortals(ctx: TickContext, community: EntityRow, count: int, path:
         )
         freed += 1
     return freed
+
+
+def bought_freedom(community_id: int, count: int, path: ManumissionPath | None) -> tuple[StepDraft, ...]:
+    if path is not ManumissionPath.PURCHASE or count <= 0:
+        return ()
+    return (StepDraft(StepAction.BUY_FREEDOM, target=community_id, amount=count, unit=FactUnit.PEOPLE),)
 
 
 async def record_manumission(ctx: TickContext, community: EntityRow, count: int, path: ManumissionPath) -> ManumissionRow | None:

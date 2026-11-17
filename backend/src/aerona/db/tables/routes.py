@@ -92,6 +92,7 @@ class JourneyRow(Base):
     births: Mapped[int] = mapped_column(default=0, server_default="0")
     deaths: Mapped[int] = mapped_column(default=0, server_default="0")
     arrival: Mapped[ArrivalOutcome | None] = mapped_column(enum_type(ArrivalOutcome, "arrival"))
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

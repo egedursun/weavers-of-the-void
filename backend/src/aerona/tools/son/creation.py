@@ -16,7 +16,6 @@ from aerona.catalog.rarities import name_similarity_policy
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
-from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
@@ -29,6 +28,7 @@ from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.ecology import AttackRange
 from aerona.domain.enums.entity import AGENT_TYPES, LIVING_CREATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind, TraitSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.entity_stats import MortalStats
@@ -388,7 +388,12 @@ async def _rewards(call: SonCall, plan: CreationPlan, created: EntityRow) -> str
         land_renown = exploration.land_creation_renown
         son.fame += land_renown
         await call.bump(TurnCounter.LAND_REWARDS)
-        await call.chronicle(ChronicleKind.EXPLORATION, lines.CROWDED_LAND, entity_ids=[created.id], son=son.name, type=plan.spec.noun, name=created.name)
+        await call.record(
+            "tools.son.crowded_land",
+            roles={IncidentRole.SUBJECT: created.id},
+            facts={"son": str(son.name), "type": plan.spec.noun},
+            kind=ChronicleKind.EXPLORATION,
+        )
     fade = fade_pct(call.rules, await same_type_this_epoch(call.session, son.id, created.entity_type, call.epoch, created.id))
     value = creation_value(call.rules, base_cost(call.rules, created.entity_type), power)
     gained_xp, gained_renown = creation_gains(call.rules, value, power, fade)
@@ -398,7 +403,9 @@ async def _rewards(call: SonCall, plan: CreationPlan, created: EntityRow) -> str
     if first_life:
         call.gain_essence(empty.first_people_essence)
         world = await world_name(call, created.world_id)
-        await call.chronicle(ChronicleKind.ASCENSION, lines.FIRST_LIFE, entity_ids=[created.id], son=son.name, world=world, name=created.name)
+        await call.record(
+            "tools.son.first_life", roles={IncidentRole.SUBJECT: created.id}, facts={"son": str(son.name), "world": world}, kind=ChronicleKind.ASCENSION
+        )
     partner = plan.partner
     partner_xp = tools.co_creator_xp_base + power * tools.co_creator_xp_per_power
     if partner is not None:
@@ -491,18 +498,18 @@ async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityT
         plan.thread.progress += 1
         call.session.add(ThreadLinkRow(thread_id=plan.thread.id, entity_id=created.id, role=ThreadLinkRole.ADVANCED, epoch=call.epoch))
     subtype = lines.SUBTYPE_SUFFIX.format(subtype=plan.subtype) if plan.subtype and plan.subtype.casefold() != plan.spec.label.casefold() else ""
-    await call.chronicle(
-        ChronicleKind.CREATION,
-        lines.CREATED,
-        entity_ids=[created.id],
+    await call.record(
+        "tools.son.created",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: created.id},
+        facts={
+            "partner": str(lines.TOGETHER.format(partner=plan.partner.name) if plan.partner is not None else ""),
+            "type": plan.spec.noun,
+            "subtype": str(subtype),
+            "location": str(lines.INSIDE_SUFFIX.format(location=plan.location.name) if plan.location is not None else ""),
+            "effects": str(" " + "; ".join(effect_notes) if effect_notes else ""),
+        },
+        kind=ChronicleKind.CREATION,
         world_id=created.world_id,
-        son=call.son.name,
-        partner=lines.TOGETHER.format(partner=plan.partner.name) if plan.partner is not None else "",
-        type=plan.spec.noun,
-        name=created.name,
-        subtype=subtype,
-        location=lines.INSIDE_SUFFIX.format(location=plan.location.name) if plan.location is not None else "",
-        effects=" " + "; ".join(effect_notes) if effect_notes else "",
     )
     world = await call.session.get(WorldRow, created.world_id)
     sound = _foreign_sounds(created.name, world.phonology if world is not None else None)
@@ -572,17 +579,11 @@ async def make_bond(call: SonCall, args: MakeBondInput) -> str:
     call.target(source.id)
     await BondRepository(call.session).connect(BondDraft(source.id, link.target_id, link.kind, call.epoch, link.description))
     await call.bump(TurnCounter.NARRATIVE_BONDS)
-    target_name = await NodeRepository(call.session).name_of(link.target_id)
-    description = lines.BOND_DESCRIPTION.format(description=link.description) if link.description else ""
-    await call.chronicle(
-        ChronicleKind.CREATION,
-        lines.BOND,
-        entity_ids=[source.id, link.target_id] if link.target_kind is LinkTarget.ENTITY else [source.id],
-        son=call.son.name,
-        source=source.name,
-        relation=BOND_KINDS[link.kind].label,
-        target=target_name,
-        description=description,
+    await call.record(
+        "tools.son.bond",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: source.id, IncidentRole.TARGET: link.target_id},
+        facts={"relation": BOND_KINDS[link.kind].label, "description": link.description or None},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.BOND_MADE)
 

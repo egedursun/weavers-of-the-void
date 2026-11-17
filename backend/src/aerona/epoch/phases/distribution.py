@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.agents.chronicle import ChroniclePhase, write_line
+from aerona.agents.chronicle import ChroniclePhase, record_line
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -15,6 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochStepKind, EpochStepStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery, SonDistribution
 from aerona.engine.cosmos.canon_domains import canon_counts
@@ -31,7 +32,8 @@ INHABITED_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT, En
 class Move:
     son: SonRow
     world: WorldRow
-    text: str
+    godless: bool
+    detail: str
 
 
 async def count_in(session: AsyncSession, world_id: int, types: tuple[EntityType, ...]) -> int:
@@ -99,7 +101,7 @@ async def patronless_moves(session: AsyncSession, rules: Rules, epoch: int, sons
         life = " to bring life there" if peoples == 0 else ""
         reason = f" (its domains {DOMAIN_LABELS[chosen.domain_primary]}/{DOMAIN_LABELS[chosen.domain_secondary]} suit that world)" if fit else ""
         chosen.current_world_id = world.id
-        moves.append(Move(chosen, world, f"{chosen.name} turned to the world {world.name} ({place}){life}{reason}."))
+        moves.append(Move(chosen, world, False, f" ({place}){life}{reason}"))
     return moves
 
 
@@ -118,7 +120,7 @@ async def godless_moves(session: AsyncSession, rules: Rules, epoch: int, sons: l
         ]
         _, chosen = sorted(scored, key=lambda item: (item[0], item[1].id))[0]
         chosen.current_world_id = world.id
-        moves.append(Move(chosen, world, f"{chosen.name} turned to the godless world {world.name}."))
+        moves.append(Move(chosen, world, True, ""))
     return moves
 
 
@@ -141,19 +143,19 @@ async def distribute_sons(ec: EpochContext) -> None:
                 sons = list(await session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id)))
                 worlds = list(await session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
                 for move in await planner(session, rules, ec.epoch, sons, worlds):
-                    await write_line(
+                    text = await record_line(
                         session,
                         rules,
-                        ec.epoch,
-                        ChronicleKind.COSMIC,
-                        move.text,
-                        key="epoch.son_distributed",
+                        "epoch.son_distributed",
+                        roles={IncidentRole.SUBJECT: move.son.id, IncidentRole.DESTINATION: move.world.id},
+                        facts={"kind_of_world": " godless" if move.godless else "", "detail": move.detail},
                         phase=ChroniclePhase.GODS,
+                        kind=ChronicleKind.COSMIC,
                         son_id=move.son.id,
                         world_id=move.world.id,
                     )
-                    moved.append(move.text)
-                    ec.publish(EventKind.SON_DISTRIBUTED, {"son_id": move.son.id, "world_id": move.world.id, "text": move.text})
+                    moved.append(text)
+                    ec.publish(EventKind.SON_DISTRIBUTED, {"son_id": move.son.id, "world_id": move.world.id, "text": text})
         except Exception as error:
             ec.runtime.error(f"Son distribution: {error}")
     if ec.hooks.distribute is not None:

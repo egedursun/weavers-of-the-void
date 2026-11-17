@@ -9,11 +9,11 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import record
 from aerona.services.gods import creator_mood
 from aerona.services.player import guards
-from aerona.services.player.chronicle import tell
-from aerona.services.player.lines import ADDRESS_ORDERED, COMMAND_CLEARED, COMMANDED, DREAM_SENT, SON_PRAYER_ANSWERED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 from aerona.tools.son.kin import SpokenIntent, intent_delta
 from aerona.tools.son.lines import MESSAGE_PHRASES
@@ -61,7 +61,7 @@ async def send_dream(scope: PlayerScope, command: SendDream) -> Effect:
     epoch = await scope.epoch()
     scope.session.add(MessageRow(epoch=epoch, sender_node_id=creator.id, recipient_node_id=target.id, intent=MessageIntent.DREAM, text=text))
     ctx = await scope.context("dream")
-    message = await tell(ctx, DREAM_SENT, ids=[target.id], kind=ChronicleKind.DREAM, creator=creator.name, entity=target.name)
+    message = (await record(ctx, "player.entity.dream", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id}, kind=ChronicleKind.DREAM)).text
     return Effect(message, target.id, essence_spent=spent)
 
 
@@ -76,9 +76,29 @@ async def command_son(scope: PlayerScope, command: CommandSon) -> Effect:
     creator = await scope.creator()
     ctx = await scope.context("command")
     if not text:
-        return Effect(await tell(ctx, COMMAND_CLEARED, son_id=son.id, kind=ChronicleKind.ORDER, creator=creator.name, son=son.name), son.id)
+        return Effect(
+            (
+                await record(
+                    ctx,
+                    "player.son.command_cleared",
+                    roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id},
+                    kind=ChronicleKind.ORDER,
+                    son_id=son.id,
+                )
+            ).text,
+            son.id,
+        )
     scope.session.add(MessageRow(epoch=ctx.epoch, sender_node_id=creator.id, recipient_node_id=son.id, intent=MessageIntent.COMMAND, text=text))
-    message = await tell(ctx, COMMANDED, son_id=son.id, kind=ChronicleKind.ORDER, creator=creator.name, son=son.name, text=text)
+    message = (
+        await record(
+            ctx,
+            "player.son.commanded",
+            roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id},
+            facts={"text": str(text)},
+            kind=ChronicleKind.ORDER,
+            son_id=son.id,
+        )
+    ).text
     return Effect(message, son.id)
 
 
@@ -98,7 +118,16 @@ async def _answer_son(scope: PlayerScope, prayer: MessageRow, son: SonRow, comma
     if text:
         scope.session.add(MessageRow(epoch=ctx.epoch, sender_node_id=creator.id, recipient_node_id=son.id, intent=MessageIntent.ANSWER, text=text))
     detail = f" and gave them {gift} essence" if gift else ""
-    message = await tell(ctx, SON_PRAYER_ANSWERED, son_id=son.id, kind=ChronicleKind.PRAYER, creator=creator.name, son=son.name, gift=detail)
+    message = (
+        await record(
+            ctx,
+            "player.son.prayer",
+            roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id},
+            facts={"gift": str(detail)},
+            kind=ChronicleKind.PRAYER,
+            son_id=son.id,
+        )
+    ).text
     return Effect(message, son.id, essence_spent=gift)
 
 
@@ -139,5 +168,14 @@ async def address_sibling(scope: PlayerScope, command: AddressSibling) -> Effect
     scope.session.add(MessageRow(epoch=epoch, sender_node_id=son.id, recipient_node_id=sibling.id, intent=MessageIntent(command.intent.value), text=text))
     ctx = await scope.context("address_sibling")
     phrase = MESSAGE_PHRASES[command.intent.value]
-    message = await tell(ctx, ADDRESS_ORDERED, son_id=son.id, kind=ChronicleKind.MESSAGE, son=son.name, phrase=phrase, sibling=sibling.name, message=text)
+    message = (
+        await record(
+            ctx,
+            "player.son.address",
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.RECEIVER: sibling.id},
+            facts={"phrase": str(phrase), "message": str(text)},
+            kind=ChronicleKind.MESSAGE,
+            son_id=son.id,
+        )
+    ).text
     return Effect(message, son.id, values={"relation": value, "delta": delta})

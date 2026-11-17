@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import STANCE_ORDER
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import RoleNormRow, SexRatioRow
 from aerona.db.tables.cycles import ManumissionRow
@@ -18,15 +17,17 @@ from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CareerPath
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import caste_of, sexes_fixed, system_of
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.regime.book import credentialed, examined
 from aerona.rules.registry import Rules
 
@@ -208,7 +209,13 @@ async def open_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
             continue
         row.eligibility, row.since_epoch = OPENING[row.eligibility], ctx.epoch
         tally.opened += 1
-        await note(ctx, f"With so few left to fill it, {people.name} opened the {spoken(row.role)} role to all.", key="roles.opened", ids=[people.id])
+        await record(
+            ctx,
+            "roles.opened",
+            roles={IncidentRole.AUTHORITY: people.id},
+            facts={"role": row.role, "eligibility": row.eligibility, "males_per_hundred": ratio.males_per_hundred},
+            steps=(StepDraft(StepAction.DECREE, actor=people.id),),
+        )
         return
 
 

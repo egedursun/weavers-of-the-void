@@ -1,4 +1,5 @@
 from collections import Counter
+from collections.abc import Mapping
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,15 +9,16 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.happenings import EventFootprintRow, RegionGeomorphRow, RiverShiftRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, SoilKind, TerrainKind, WaterSource
 from aerona.domain.enums.happening import RiverShiftCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.environment.profile import RIVER_RANK, Geography, natural_soil, soil_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.rules.registry import Rules
 
 VOLCANIC_WORLDS = frozenset({WorldType.LAVA, WorldType.CHTHONIAN, WorldType.GREENHOUSE})
@@ -98,18 +100,16 @@ def natural_soil_kind(rules: Rules, env: RegionEnvironmentRow, world_type: World
     return SoilKind.SALINE if world_type in SALT_WORLDS else soil_of(rules, geography_of(env), world_type, env.wetland)
 
 
-async def land_line(ctx: TickContext, region: EntityRow | None, key: str, text: str, ids: list[int] | None = None) -> int | None:
+async def land_line(
+    ctx: TickContext,
+    region: EntityRow | None,
+    key: str,
+    facts: Mapping[str, FactInput],
+    roles: Mapping[IncidentRole, RoleValue] | None = None,
+) -> int | None:
     if region is None:
         return None
-    written = await ctx.chronicle(
-        ChronicleKind.CLIMATE,
-        text,
-        template_key=key,
-        entity_ids=ids or [region.id],
-        world_id=region.world_id,
-        place_entity_id=region.id,
-        feed_category=FeedCategory.WORLD,
-    )
+    written = await record(ctx, key, roles=roles or {IncidentRole.SUBJECT: region.id}, facts=facts, place=region.id, world_id=region.world_id)
     return written.incident_id
 
 
@@ -153,14 +153,6 @@ def salt_source(rules: Rules, env: RegionEnvironmentRow, shape: RegionGeomorphRo
     return salted or flat or world_type in SALT_WORLDS
 
 
-LINES = {
-    "land.desertified": "The grass of {region} is gone; sand blows where the herds once grazed.",
-    "land.desert_retreat": "Rest and rain have brought the grass back to {region}; the desert has drawn back.",
-    "land.salted": "Salt has crept into the soil of {region}; little will grow there now.",
-    "land.ash_weathered": "The ash that buried {region} has weathered into dark, rich soil.",
-}
-
-
 async def reshape(ctx: TickContext) -> Counter[str]:
     counts: Counter[str] = Counter()
     rules = ctx.rules
@@ -178,12 +170,13 @@ async def reshape(ctx: TickContext) -> Counter[str]:
             shape.volcanic = is_volcanic(env, world_type)
         if "volcanic_pressure" not in shape.locked:
             shape.volcanic_pressure = clamp_int(shape.volcanic_pressure + table.volcanic_pressure_gain, 0, PERCENT) if shape.volcanic else 0
-        turned = await desertify(ctx, env, shape, droughts)
-        if turned == "land.desert_retreat" and env.soil is SoilKind.SAND and world_type is not None:
+        drift = await desertify(ctx, env, shape, droughts)
+        if drift == "land.desert_retreat" and env.soil is SoilKind.SAND and world_type is not None:
             set_soil(rules, env, natural_soil_kind(rules, env, world_type))
+        turned = drift
         salty = salt_source(rules, env, shape, world_type)
         if salty and set_soil(rules, env, SoilKind.SALINE):
-            turned = turned or "land.salted"
+            turned = drift or "land.salted"
         elif not salty and env.soil is SoilKind.SALINE and world_type is not None and natural_soil_kind(rules, env, world_type) is not SoilKind.SALINE:
             set_soil(rules, env, natural_soil_kind(rules, env, world_type))
         if env.soil is SoilKind.TEPHRA and shape.ash_since_epoch is None:
@@ -191,12 +184,15 @@ async def reshape(ctx: TickContext) -> Counter[str]:
         elif env.soil is SoilKind.TEPHRA and shape.ash_since_epoch is not None and ctx.epoch - shape.ash_since_epoch >= table.ash_weathering_epochs:
             if set_soil(rules, env, SoilKind.VOLCANIC):
                 shape.ash_since_epoch = None
-                await land_line(ctx, region, "land.ash_weathered", LINES["land.ash_weathered"].format(region=region.name))
+                await land_line(ctx, region, "land.ash_weathered", {"soil": SoilKind.VOLCANIC, "epochs": table.ash_weathering_epochs})
                 counts["ash_weathered"] += 1
         elif env.soil is not SoilKind.TEPHRA:
             shape.ash_since_epoch = None
         if turned is not None:
-            await land_line(ctx, region, turned, LINES[turned].format(region=region.name))
+            land_facts: dict[str, FactInput] = (
+                {"soil": env.soil, "soil_base": env.soil_base} if turned == "land.salted" else {"desertification": shape.desertification}
+            )
+            await land_line(ctx, region, turned, land_facts)
             counts[turned.removeprefix("land.")] += 1
     await ctx.session.flush()
     return counts
@@ -251,15 +247,15 @@ async def shift_river(
         shape = await shape_of(ctx.session, ground.entity_id, ground.world_id)
         shape.river_course = course
         shape.course_changed_epoch = ctx.epoch
-    await move_water(ctx.session, source_id, target.entity_id)
     origin = await ctx.session.get(EntityRow, source_id)
-    destination = await ctx.session.get(EntityRow, target.entity_id)
-    label = river.value.replace("_", " ")
-    text = (
-        f"The {label} of {origin.name if origin else 'the land'} broke its banks for good and found a new bed through "
-        f"{destination.name if destination else 'the lowlands'}; old wells ran dry and new fields drank."
+    moved = await move_water(ctx.session, source_id, target.entity_id)
+    incident = await land_line(
+        ctx,
+        origin,
+        "land.river_shift",
+        {"river": river, "cause": cause, "moved": moved},
+        {IncidentRole.ORIGIN: source_id, IncidentRole.DESTINATION: target.entity_id, IncidentRole.SUBJECT: event_id},
     )
-    incident = await land_line(ctx, origin, "land.river_shift", text, [source_id, target.entity_id, *([event_id] if event_id is not None else [])])
     shift = RiverShiftRow(
         world_id=source.world_id,
         from_region_id=source_id,

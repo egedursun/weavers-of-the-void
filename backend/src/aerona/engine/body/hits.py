@@ -9,6 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
+from aerona.domain.enums.records import InstrumentKind
 from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
 from aerona.engine.body.tissues import PLAIN, Hardness, TissueHit, tissue_hit
 from aerona.rules.registry import Rules
@@ -41,6 +42,11 @@ class Harm:
     heft: int | None = None
     venom_pct: int | None = None
     heat: int | None = None
+    step_id: int | None = None
+    incident_id: int | None = None
+    instrument_kind: InstrumentKind | None = None
+    instrument_key: str | None = None
+    instrument_node_id: int | None = None
 
 
 @dataclass(frozen=True)

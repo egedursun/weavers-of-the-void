@@ -5,16 +5,17 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.tables.society_depth import MobilityEventRow
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society_depth import MobilityEvent
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.indenture import bought_freedom
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.houses import HouseBook, found_house
+from aerona.engine.recording.record import record as record_incident
 
 
 async def log_event(
@@ -80,16 +81,17 @@ async def enslaved(ctx: TickContext, community: EntityRow, count: int, *, by_han
             epoch=ctx.epoch,
             note=f"{several(count, 'was', 'were')} put in chains",
         )
-    await note(
+    await record_incident(
         ctx,
-        f"{community.name} put {several(count, 'captive', 'captives')} in chains as slaves.",
-        key="society.enslaved",
-        ids=[community.id, *(item.id for item in kin)],
-        kind=ChronicleKind.WORLD,
+        "society.enslaved",
+        roles={IncidentRole.ACTOR: community.id, IncidentRole.VICTIM: [item.id for item in kin]},
+        facts={
+            "captives": count,
+        },
     )
 
 
-async def freed(ctx: TickContext, community: EntityRow, count: int, *, by_hand: bool = False) -> None:
+async def freed(ctx: TickContext, community: EntityRow, count: int, *, by_hand: bool = False, path: ManumissionPath | None = None) -> None:
     if count <= 0:
         return
     kin = await kin_of(ctx, community)
@@ -105,7 +107,13 @@ async def freed(ctx: TickContext, community: EntityRow, count: int, *, by_hand: 
             epoch=ctx.epoch,
             note=f"{count} of our kin were set free",
         )
-    await note(ctx, f"In {community.name}, {count} of the bound were set free.", key="society.freed", ids=[community.id, *(item.id for item in kin)])
+    await record_incident(
+        ctx,
+        "society.freed",
+        roles={IncidentRole.ACTOR: community.id, IncidentRole.BENEFICIARY: [item.id for item in kin]},
+        facts={"freed": count, "path": path},
+        steps=bought_freedom(community.id, count, path),
+    )
 
 
 async def raise_house(ctx: TickContext, hero: EntityRow) -> EntityRow | None:
@@ -129,8 +137,15 @@ async def ennobled(ctx: TickContext, hero: EntityRow, benefactor: EntityRow | No
             epoch=ctx.epoch,
             note="raised me among the nobles",
         )
-    text = f"For the victory, {hero.name} was raised among the nobles" + (f" and founded {house.name}." if house is not None else ".")
-    await note(ctx, text, key="society.ennobled", ids=[hero.id, *([house.id] if house is not None else []), *([benefactor.id] if benefactor else [])])
+    await record_incident(
+        ctx,
+        "society.ennobled",
+        roles={
+            IncidentRole.SUBJECT: hero.id,
+            IncidentRole.PRODUCT: house.id if house is not None else None,
+            IncidentRole.PATRON: benefactor.id if benefactor else None,
+        },
+    )
     return house
 
 
@@ -148,6 +163,11 @@ async def ruined(ctx: TickContext, member: EntityRow, guild: EntityRow | None, *
             epoch=ctx.epoch,
             note="their debts ruined me",
         )
-    fallen = "the bound" if member.social_class is SocialClass.SERF_OR_SLAVE else "the outcasts"
-    owner = f"{guild.name} could not pay; " if guild is not None else ""
-    await note(ctx, f"{owner}{member.name} lost everything and fell among {fallen}.", key="society.ruined", ids=[member.id, *([guild.id] if guild else [])])
+    await record_incident(
+        ctx,
+        "society.ruined",
+        roles={IncidentRole.VICTIM: member.id, IncidentRole.BORROWER: guild.id if guild else None},
+        facts={
+            "fell_to": member.social_class,
+        },
+    )

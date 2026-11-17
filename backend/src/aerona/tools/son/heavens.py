@@ -13,6 +13,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import DimensionalEventKind, GalacticEventKind, GalacticStructureKind, PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import CosmicFeatureKind
 from aerona.engine.cosmos import control, physics_control
 from aerona.engine.divine.control import open_breach as engine_open_breach
@@ -22,7 +23,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.cosmography import fresh_name, reaches_dimension, reaches_galaxy
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
@@ -147,7 +147,12 @@ async def shape_galactic_structure(call: SonCall, args: ShapeStructureInput) -> 
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.SHAPE_STRUCTURE, son=call.son.name, structure=structure.name, galaxy=galaxy.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_galactic_structure",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: galaxy.id},
+        facts={"structure": structure.name, "reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.STRUCTURE_SHAPED, name=structure.name, galaxy=galaxy.name)
 
 
@@ -166,7 +171,12 @@ async def stir_galaxy(call: SonCall, args: StirGalaxyInput) -> str:
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.STIR_GALAXY, son=call.son.name, galaxy=galaxy.name, reason=args.reason)
+    await call.record(
+        "tools.son.stir_galaxy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: galaxy.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.GALAXY_STIRRED, name=galaxy.name, text=event.text or "")
 
 
@@ -185,7 +195,12 @@ async def stir_dimension(call: SonCall, args: StirDimensionInput) -> str:
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.STIR_DIMENSION, son=call.son.name, dimension=dimension.name, reason=args.reason)
+    await call.record(
+        "tools.son.stir_dimension",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: dimension.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.DIMENSION_STIRRED, name=dimension.name, text=event.text or "")
 
 
@@ -205,8 +220,11 @@ async def bind_law_across_dimension(call: SonCall, args: DimensionLawInput) -> s
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(law.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.BIND_DIMENSION_LAW, entity_ids=[law.id], son=call.son.name, law=law.name, dimension=dimension.name, reason=args.reason
+    await call.record(
+        "tools.son.bind_law_across_dimension",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [law.id, dimension.id]},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.COSMIC,
     )
     return result(SonResult.DIMENSION_LAW_BOUND, law=law.name, dimension=dimension.name)
 
@@ -228,7 +246,12 @@ async def set_cosmic_feature(call: SonCall, args: CosmicFeatureInput) -> str:
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.SET_COSMIC_FEATURE, son=call.son.name, feature=feature.name, reason=args.reason)
+    await call.record(
+        "tools.son.set_cosmic_feature",
+        roles={IncidentRole.ACTOR: call.son.id},
+        facts={"feature": feature.name, "reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.FEATURE_SET, name=feature.name)
 
 
@@ -244,7 +267,9 @@ async def gather_star_system(call: SonCall, args: StarSystemInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(args.star_ids[0])
-    await call.chronicle(ChronicleKind.COSMIC, lines.GATHER_STAR_SYSTEM, son=call.son.name, system=system.name, reason=args.reason)
+    await call.record(
+        "tools.son.gather_star_system", roles={IncidentRole.ACTOR: call.son.id}, facts={"system": system.name, "reason": args.reason}, kind=ChronicleKind.COSMIC
+    )
     return result(SonResult.STAR_SYSTEM_GATHERED, name=system.name, count=len(args.star_ids))
 
 
@@ -260,14 +285,12 @@ async def raise_phenomenon(call: SonCall, args: PhenomenonDraftInput) -> str:
     call.spend_essence(cost)
     call.remember_creation(made.id)
     call.target(made.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC,
-        lines.RAISE_PHENOMENON,
-        entity_ids=[made.id, region.id],
-        son=call.son.name,
-        phenomenon=made.name,
-        place=region.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.raise_phenomenon",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: made.id, IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.COSMIC,
     )
     return result(SonResult.PHENOMENON_RAISED, name=made.name, place=region.name)
 
@@ -284,8 +307,12 @@ async def open_breach(call: SonCall, args: BreachInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(region.id)
-    await call.chronicle(
-        ChronicleKind.DISASTER, lines.OPEN_BREACH, entity_ids=[being.id, region.id], son=call.son.name, being=being.name, place=region.name, reason=args.reason
+    await call.record(
+        "tools.son.open_breach",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: being.id, IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.DISASTER,
     )
     return result(SonResult.BREACH_OPENED, being=being.name, place=region.name)
 

@@ -24,6 +24,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import HeroquestBoon, HeroquestState, MythicRealm, QuestTrial
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.afflictions import active, afflict, cure
@@ -39,13 +40,13 @@ from aerona.engine.lifecycle.wounds import apply_hits, slay
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.names import entitle
 from aerona.engine.mind.book import skill_level
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.transform.bodies import lift_fallen
 
 QUEST_SKILLS = (SkillKind.RITUAL, SkillKind.LORE, SkillKind.PROPHECY, SkillKind.SPELLCRAFT, SkillKind.LEADERSHIP)
@@ -135,8 +136,11 @@ async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfil
     ctx.session.add(row)
     await ctx.session.flush()
     ctx.session.add_all(HeroquestMemberRow(heroquest_id=row.id, entity_id=member) for member in members if member != quester.id)
-    await note(
-        ctx, f"{quester.name} set out on a heroquest into {realm_name or REALM_PHRASES[realm]}.", key="mythic.heroquest_begun", ids=[quester.id, *members]
+    await record(
+        ctx,
+        "mythic.heroquest_begun",
+        roles={IncidentRole.ACTOR: quester.id, IncidentRole.SUBJECT: [*[quester.id, *members]]},
+        facts={"detail": str(realm_name or REALM_PHRASES[realm])},
     )
     return row
 
@@ -303,7 +307,7 @@ async def succeed(ctx: TickContext, row: HeroquestRow, quester: EntityRow, tally
     await free_trapped(ctx, row)
     tally.succeeded += 1
     await lift_fallen(ctx, quester.id, ctx.rules.transform.heroquest_existence)
-    await note(ctx, f"{quester.name} returned from a heroquest with a boon.", key="mythic.heroquest_won", ids=[quester.id], kind=ChronicleKind.WORLD)
+    await record(ctx, "mythic.heroquest_won", roles={IncidentRole.ACTOR: quester.id}, kind=ChronicleKind.WORLD)
 
 
 async def break_myth(ctx: TickContext, row: HeroquestRow, quester: EntityRow) -> None:
@@ -347,7 +351,13 @@ async def fail(ctx: TickContext, row: HeroquestRow, quester: EntityRow, tally: Q
                 await apply_hits(ctx, hero, harm, lethal=False)
         outcome = "the questers did not come back" if doomed else "the questers came back hurt"
     tally.failed += 1
-    await note(ctx, f"{quester.name} fell on a heroquest: {outcome}.", key="mythic.heroquest_lost", ids=[hero.id for hero in party], kind=ChronicleKind.WORLD)
+    await record(
+        ctx,
+        "mythic.heroquest_lost",
+        roles={IncidentRole.ACTOR: quester.id, IncidentRole.SUBJECT: [*[hero.id for hero in party]]},
+        facts={"outcome": str(outcome)},
+        kind=ChronicleKind.WORLD,
+    )
 
 
 async def advance(ctx: TickContext, row: HeroquestRow, tally: QuestTally) -> None:

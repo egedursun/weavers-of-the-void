@@ -130,3 +130,4 @@ class TraitHistoryRow(Base):
     trait: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), primary_key=True)
     epoch: Mapped[int] = mapped_column(primary_key=True)
     value: Mapped[int] = mapped_column(default=0)
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"), index=True)

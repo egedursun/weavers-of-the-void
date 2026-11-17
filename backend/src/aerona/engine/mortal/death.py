@@ -7,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.engine.context import TickContext
 from aerona.engine.mind.memories import remember
@@ -14,10 +15,10 @@ from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.kinship import widow
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 HARM_DEATHS: MappingProxyType[HarmCause, DeathCause] = total(
     HarmCause,
@@ -78,8 +79,12 @@ async def house_prestige(ctx: TickContext, mortal: EntityRow, manner: DeathCause
         house.prestige = clamp_int(house.prestige + change, 0, 100)
         changed += change
     if changed:
-        verb = "raised" if changed > 0 else "shamed"
-        await note(ctx, f"The manner of {mortal.name}'s death {verb} their house.", key="mortal.death_prestige", ids=[mortal.id])
+        await record(
+            ctx,
+            "mortal.death_prestige" if changed > 0 else "mortal.death_shame",
+            roles={IncidentRole.SUBJECT: mortal.id},
+            facts={"manner": manner, "prestige": changed},
+        )
     return changed
 
 

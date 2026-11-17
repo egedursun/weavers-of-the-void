@@ -4,10 +4,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.disease.research import institutions
 from aerona.engine.disease.responses import take_up
 from aerona.engine.mind.book import skill_level
@@ -19,7 +19,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.tongues import realm_of
 
 
@@ -60,8 +59,10 @@ async def answer_sickness(call: MortalCall, args: AnswerSicknessInput) -> str:
     await take_up(call.tick, community, disease.id, args.response)
     call.target(community.id)
     response = args.response.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.ANSWER_SICKNESS, entity_ids=[call.me.id, community.id, disease.id], me=call.me.name, disease=disease.name, response=response
+    await call.record(
+        "tools.mortal.answer_sickness",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: community.id, IncidentRole.TARGET: disease.id},
+        facts={"response": args.response},
     )
     return result(MortalResult.ANSWERED, name=community.name, response=response)
 
@@ -85,7 +86,11 @@ async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
         row.points = (row.points or 0) + max(1, skill // 10) * call.rules.cure_research.per_scholar
     await call.session.flush()
     call.target(seat.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SEEK_CURE, entity_ids=[call.me.id, seat.id, disease.id], me=call.me.name, disease=disease.name)
+    await call.record(
+        "tools.mortal.seek_cure",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.HOST: seat.id, IncidentRole.TARGET: disease.id},
+        facts={"points": row.points},
+    )
     return result(MortalResult.CURE_SOUGHT, name=disease.name, points=row.points, threshold=call.rules.cure_research.threshold)
 
 
@@ -103,9 +108,7 @@ async def find_carrier(call: MortalCall, args: FindCarrierInput) -> str:
     if "identified" not in row.locked:
         row.identified = True
     call.target(suspect.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.FIND_CARRIER, entity_ids=[call.me.id, suspect.id, disease.id], me=call.me.name, mortal=suspect.name, disease=disease.name
-    )
+    await call.record("tools.mortal.find_carrier", roles={IncidentRole.HEALER: call.me.id, IncidentRole.PATIENT: suspect.id, IncidentRole.SUBJECT: disease.id})
     return result(MortalResult.CARRIER_FOUND, name=suspect.name, disease=disease.name)
 
 

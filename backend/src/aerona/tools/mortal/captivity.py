@@ -7,8 +7,9 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome, StepState
 from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.body.book import effective, factor
 from aerona.engine.body.hits import Harm
@@ -17,6 +18,7 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, release_captive
 from aerona.prompts import MortalToolId
@@ -61,12 +63,33 @@ async def escape(call: MortalCall, args: EscapeInput) -> str:
     call.target(captor.id)
     if call.die(PERCENT, "escape") <= chance:
         await release_captive(call.tick, row, CaptiveStatus.ESCAPED)
-        await call.chronicle(ChronicleKind.ESCAPE, lines.ESCAPED, entity_ids=[call.me.id, captor.id], me=call.me.name, captor=captor.name, how=args.how)
+        await call.record(
+            "tools.mortal.escaped",
+            roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OPPONENT: captor.id},
+            facts={"chance": chance, "how": args.how},
+            steps=(StepDraft(StepAction.FLEE, actor=call.me.id, target=captor.id, outcome=StepOutcome.ESCAPED, states=((call.me.id, StepState.FREED),)),),
+        )
         return result(MortalResult.ESCAPED, chance=chance)
     await apply_hits(
         call.tick, call.me, Harm(tools.escape_caught_wound, HarmCause.ESCAPE, "died after a failed escape", source_node_id=captor.id), lethal=False
     )
-    await call.chronicle(ChronicleKind.ESCAPE, lines.ESCAPE_FAILED, entity_ids=[call.me.id, captor.id], me=call.me.name, captor=captor.name)
+    await call.record(
+        "tools.mortal.escape_failed",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OPPONENT: captor.id},
+        facts={"chance": chance, "wound": tools.escape_caught_wound},
+        steps=(
+            StepDraft(StepAction.FLEE, actor=call.me.id, target=captor.id, outcome=StepOutcome.FAILURE),
+            StepDraft(
+                StepAction.PURSUE,
+                actor=captor.id,
+                target=call.me.id,
+                amount=tools.escape_caught_wound,
+                unit=FactUnit.HP,
+                outcome=StepOutcome.CAPTURED,
+                states=((call.me.id, StepState.CAPTURED),),
+            ),
+        ),
+    )
     return result(MortalResult.ESCAPE_FAILED, chance=chance)
 
 
@@ -100,8 +123,14 @@ async def pay_ransom(call: MortalCall, args: RansomInput) -> str:
     await change_relation(call.tick, call.me.id, captor.id, tools.ransom_relation, MemoryKind.FREED_US, note=RANSOM_EVENT)
     await judged(call.tick, captor.id, call.me.id, ActKind.RANSOM, note=RANSOM_EVENT)
     call.target(captive.id)
-    await call.chronicle(
-        ChronicleKind.RANSOM, lines.RANSOMED, entity_ids=[call.me.id, captor.id, captive.id], me=call.me.name, captor=captor.name, captive=captive.name
+    await call.record(
+        "tools.mortal.ransomed",
+        roles={IncidentRole.GIVER: call.me.id, IncidentRole.RECEIVER: captor.id, IncidentRole.SUBJECT: captive.id},
+        facts={"ransom": tools.ransom_amount},
+        steps=(
+            StepDraft(StepAction.PAY, actor=call.me.id, target=captor.id, amount=tools.ransom_amount, unit=FactUnit.WEALTH_POINTS),
+            StepDraft(StepAction.BUY_FREEDOM, actor=call.me.id, target=captive.id, outcome=StepOutcome.SUCCESS),
+        ),
     )
     return result(MortalResult.RANSOMED, name=captive.name)
 
@@ -124,22 +153,32 @@ async def rescue_captive(call: MortalCall, args: RescueInput) -> str:
     call.target(captive.id)
     if mine >= theirs:
         await release_captive(call.tick, row, CaptiveStatus.RESCUED)
-        await call.chronicle(
-            ChronicleKind.RESCUE,
-            lines.RESCUED,
-            entity_ids=[call.me.id, captive.id, captor.id],
-            me=call.me.name,
-            captive=captive.name,
-            captor=captor.name,
-            plan=args.plan,
+        await call.record(
+            "tools.mortal.rescued",
+            roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: captive.id, IncidentRole.OPPONENT: captor.id},
+            facts={"plan": args.plan, "strength": round(mine), "guard": round(theirs)},
+            steps=(
+                StepDraft(
+                    StepAction.RESCUE,
+                    actor=call.me.id,
+                    target=captive.id,
+                    amount=round(mine),
+                    unit=FactUnit.STRENGTH,
+                    outcome=StepOutcome.SUCCESS,
+                    states=((captive.id, StepState.FREED),),
+                ),
+            ),
         )
         return result(MortalResult.RESCUED, name=captive.name, mine=mine, theirs=theirs)
     if not await enemies(call, call.me.id, captor.id):
         await BondRepository(call.session).connect(
             BondDraft(captor.id, call.me.id, BondKind.ENEMY, call.epoch, lines.RAID_BOND.format(captive=captive.name), war_cause=WarCause.GRUDGE)
         )
-    await call.chronicle(
-        ChronicleKind.RESCUE, lines.RESCUE_FAILED, entity_ids=[call.me.id, captive.id, captor.id], me=call.me.name, captive=captive.name, captor=captor.name
+    await call.record(
+        "tools.mortal.rescue_failed",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: captive.id, IncidentRole.OPPONENT: captor.id},
+        facts={"plan": args.plan, "strength": round(mine), "guard": round(theirs)},
+        steps=(StepDraft(StepAction.RESCUE, actor=call.me.id, target=captive.id, amount=round(mine), unit=FactUnit.STRENGTH, outcome=StepOutcome.FAILURE),),
     )
     return result(MortalResult.RESCUE_FAILED, mine=mine, theirs=theirs)
 

@@ -16,14 +16,12 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.rules.registry import Rules
-from aerona.services.chronicle import ChronicleWriter
 from aerona.services.ledger import Ledger, action_label, summarize_inputs
-from aerona.services.notifications import Notifier
 from tests.services.app.factories import Cosmos, bond, make_entity, make_son
 
 
 def make_ledger() -> Ledger:
-    return Ledger(ChronicleWriter(Notifier()))
+    return Ledger()
 
 
 def test_summary_and_labels() -> None:
@@ -61,7 +59,7 @@ async def test_creator_action_captures_and_undoes_insert(session: AsyncSession, 
     assert entry is not None
     assert entry.undone
     lines = list(await session.scalars(select(ChronicleRow).where(ChronicleRow.kind == ChronicleKind.CREATOR_HAND)))
-    assert lines[-1].text.startswith("Aeron's hand: a page was torn from Fate's ledger. Aeron's action (entity create)")
+    assert lines[-1].text == "Aeron undid entity create, done by Aeron; it is held never to have happened."
     with pytest.raises(ConflictError):
         await ledger.undo(session, rules, handle.entry_id, epoch_running=False)
 

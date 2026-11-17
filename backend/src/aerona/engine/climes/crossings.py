@@ -16,16 +16,17 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import ArtMode, SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import ArtFormStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.climes.windows import PHYSICAL, opens, pair
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
 
 DAYS = 365
@@ -125,7 +126,7 @@ async def found_culture(ctx: TickContext, route: RouteRow, tally: CrossingTally)
         )
     tally.cultures += 1
     await found_art(ctx, called, members)
-    await note(ctx, f"The travellers of a busy road between worlds grew into a culture of their own, {called}.", key="cosmopolitan.formed", ids=members[:3])
+    await record_incident(ctx, "cosmopolitan.formed", roles={IncidentRole.MEMBER: list(members)}, facts={"culture": called})
 
 
 async def found_art(ctx: TickContext, called: str, members: list[int]) -> None:

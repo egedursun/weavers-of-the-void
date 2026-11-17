@@ -13,13 +13,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus, PantheonStructure, PantheonTie
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import domains_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 STRUCTURE_TIES: Mapping[PantheonStructure, tuple[PantheonTie, PantheonTie]] = total(
     PantheonStructure,
@@ -136,7 +137,7 @@ async def syncretise(ctx: TickContext) -> int:
                 ctx.session.add(
                     SyncretismRow(foreign_god_id=god.id, son_id=son.id, people_entity_id=people_id, dominant_node_id=dominant, since_epoch=ctx.epoch, locked=[])
                 )
-                await note(ctx, f"{people.name} came to hold {son.name} and {god.name} as one.", key="divine.syncretism", ids=[people_id])
+                await record(ctx, "divine.syncretism", roles={IncidentRole.SUBJECT: [people.id, god.id, people_id], IncidentRole.ACTOR: son.id})
                 merged += 1
     return merged
 
@@ -168,11 +169,11 @@ async def fade_and_return(ctx: TickContext) -> int:
             god.faith = max(0, god.faith - table.fade)
             if god.faith == 0:
                 god.status = ForeignGodStatus.ASLEEP
-                await note(ctx, f"Forgotten by all, {god.name} fell asleep.", key="divine.god_forgotten", world_id=god.world_id)
+                await record(ctx, "divine.god_forgotten", roles={IncidentRole.SUBJECT: god.id}, world_id=god.world_id)
                 moved += 1
         elif god.status is ForeignGodStatus.ASLEEP and len(faithful) >= table.revival_faithful:
             god.status = ForeignGodStatus.AWAKE
-            await note(ctx, f"Called by those who remembered, {god.name} woke again.", key="divine.god_returned", world_id=god.world_id)
+            await record(ctx, "divine.god_returned", roles={IncidentRole.SUBJECT: god.id}, world_id=god.world_id)
             moved += 1
     return moved
 

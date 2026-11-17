@@ -22,7 +22,7 @@ class LimboRecord(ApiModel):
     rationale: str | None
 
 
-class StepState(ApiModel):
+class FateStepState(ApiModel):
     step: EpochStepKind
     status: EpochStepStatus
     error: str | None
@@ -39,7 +39,7 @@ class FateControlsView(ApiModel):
     last_epoch: int | None
     fate_debt_epoch: int | None
     limbo: list[LimboRecord]
-    steps: list[StepState]
+    steps: list[FateStepState]
     failed_births: int
     views: list[HistorianViewItem]
 
@@ -55,11 +55,11 @@ async def fate_controls(services: ServicesDep) -> FateControlsView:
             .join(EntityRow, EntityRow.id == CreationVerdictRow.entity_id)
             .where(CreationVerdictRow.verdict == Verdict.LIMBO)
         )
-        steps: list[StepState] = []
+        steps: list[FateStepState] = []
         views: list[HistorianViewItem] = []
         if last_epoch is not None:
             found = await session.scalars(select(EpochStepRow).where(EpochStepRow.epoch == last_epoch, EpochStepRow.step.in_(CONTROLLED_STEPS)))
-            steps = [StepState(step=row.step, status=row.status, error=row.error) for row in found]
+            steps = [FateStepState(step=row.step, status=row.status, error=row.error) for row in found]
             views = [
                 HistorianViewItem.model_validate(row)
                 for row in await session.scalars(select(HistorianViewRow).where(HistorianViewRow.epoch == last_epoch).order_by(HistorianViewRow.id))

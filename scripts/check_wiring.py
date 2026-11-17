@@ -133,10 +133,20 @@ def controlled_tables(texts: dict[Path, str], names: dict[str, str]) -> set[str]
     return controlled
 
 
+def written_tables(text: str) -> set[str]:
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(text)):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "writes":
+            for arg in node.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and arg.value.startswith("table."):
+                    found.add(arg.value.removeprefix("table."))
+    return found
+
+
 def uncontrolled_tables(texts: dict[Path, str]) -> list[str]:
     names = table_names(texts)
     known = set(names.values())
-    written = {name for path, text in texts.items() if path.is_relative_to(ENGINE) for name in re.findall(r'"table\.([a-z_]+)"', text)}
+    written = {name for path, text in texts.items() if path.is_relative_to(ENGINE) for name in written_tables(text)}
     controlled = controlled_tables(texts, names)
     return [
         f"table {name} is written by the engine but no compliance row gives the god a registered lever to create, edit, hold or delete it"

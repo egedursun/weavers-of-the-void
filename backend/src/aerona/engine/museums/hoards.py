@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -16,13 +15,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.museum import HoardKind, PieceKind
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 
 HALLS = {StructureKind.MUSEUM: HoardKind.MUSEUM, StructureKind.TEMPLE: HoardKind.TEMPLE_TREASURY}
 RELICS = frozenset({ItemClass.HOLY_RELIC, ItemClass.IDOL})
@@ -210,12 +211,15 @@ async def loot(ctx: TickContext, victim_id: int, sacker_id: int) -> int:
             continue
         piece.collection_id, piece.looted_from_entity_id, piece.acquired_epoch = spoils.id, victim_id, ctx.epoch
         moved += 1
-    if moved:
-        victim = await ctx.session.get(EntityRow, victim_id)
-        sacker = await ctx.session.get(EntityRow, sacker_id)
-        if victim is not None and sacker is not None:
-            told = several(moved, "piece", "pieces")
-            await note(ctx, f"{sacker.name} carried off {told} of the collections of {victim.name}.", key="museum.looted", ids=[victim.id, sacker.id])
+    victim, sacker = await ctx.session.get(EntityRow, victim_id), await ctx.session.get(EntityRow, sacker_id)
+    if moved and victim is not None and sacker is not None:
+        await record(
+            ctx,
+            "museum.looted",
+            roles={IncidentRole.ACTOR: sacker_id, IncidentRole.VICTIM: victim_id},
+            facts={"pieces": moved},
+            steps=(StepDraft(StepAction.PILLAGE, actor=sacker_id, target=victim_id, amount=moved, unit=FactUnit.COUNT),),
+        )
     await ctx.session.flush()
     return moved
 

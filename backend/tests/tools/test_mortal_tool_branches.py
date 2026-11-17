@@ -63,7 +63,7 @@ async def test_confiscating_a_resource_sets_its_owner_against_the_claimant(datab
     assert "Red Oars" in claimed
     assert await bonds_between(database, realm.faction_id, realm.people_id, BondKind.ENEMY) == 1
     assert await bonds_between(database, realm.faction_id, realm.resource_id, BondKind.OWNS) == 0
-    assert "tools.mortal.claimed" in await keys(database)
+    assert "tools.mortal.claimed_angered" in await keys(database)
 
 
 async def test_a_caught_saboteur_earns_enmity(database: Database) -> None:
@@ -77,7 +77,7 @@ async def test_a_caught_saboteur_earns_enmity(database: Database) -> None:
     text = await ok(toolkit, "sabotage", {"target_id": realm.settlement_id, "kind": "arson", "how": "torches at the granary"})
     assert "caught" in text.lower()
     assert await bonds_between(database, realm.settlement_id, realm.faction_id, BondKind.ENEMY) == 1
-    assert lines.SABOTAGE_CAUGHT.key in await keys(database)
+    assert "tools.mortal.sabotage_caught" in await keys(database)
 
 
 async def test_poison_can_kill_a_named_mortal(database: Database) -> None:
@@ -98,7 +98,7 @@ async def test_a_people_can_worship_the_creator_directly(database: Database) -> 
     toolkit = await mortal_toolkit(database, realm.people_id, action_points=3)
     await ok(toolkit, "worship", {"son_id": 0, "offering": "the first salt of the year"})
     assert await bonds_between(database, realm.people_id, realm.cosmos.creator_id, BondKind.WORSHIPS) == 1
-    assert lines.WORSHIP_CREATOR.key in await keys(database)
+    assert "tools.mortal.worship_creator" in await keys(database)
 
 
 async def test_a_worshipper_performs_a_resurrection_rite_for_its_dead_god(database: Database) -> None:
@@ -131,7 +131,7 @@ async def test_an_adventurer_seizes_an_item_from_its_owner(database: Database) -
     assert await bonds_between(database, realm.mortal_id, item_id, BondKind.OWNS) == 1
     assert await bonds_between(database, realm.people_id, item_id, BondKind.OWNS) == 0
     assert await bonds_between(database, realm.people_id, realm.mortal_id, BondKind.ENEMY) == 1
-    assert lines.SEIZED.key in await keys(database)
+    assert "tools.mortal.seized" in await keys(database)
 
 
 async def defier(database: Database, realm_son: int, strength: int) -> None:
@@ -153,7 +153,7 @@ async def test_a_mortal_who_crushes_a_fading_god_becomes_a_godslayer(database: D
     assert slain is not None and slain.status is SonStatus.DEAD
     assert me.title == lines.GODSLAYER_TITLE and lines.GODSLAYER_TITLE in text
     assert me.stats.model_dump()["charisma"] == 50 + rules.mortal_tools.godslayer_charisma
-    assert lines.GODSLAYER.key in await keys(database)
+    assert "tools.mortal.godslayer" in await keys(database)
 
 
 async def test_a_mortal_who_wins_without_crushing_wounds_the_god(database: Database) -> None:
@@ -170,7 +170,7 @@ async def test_a_mortal_who_wins_without_crushing_wounds_the_god(database: Datab
         wounded = await session.get(SonRow, realm.son_id)
     assert wounded is not None and wounded.status is SonStatus.ACTIVE and wounded.hp < hp_before
     assert wounded.fame == max(0, fame_before - rules.mortal_tools.god_wound_renown_loss)
-    assert lines.GOD_WOUNDED.key in await keys(database)
+    assert "tools.mortal.god_wounded" in await keys(database)
 
 
 async def test_a_defeated_defier_dies_or_is_cursed(database: Database) -> None:
@@ -180,7 +180,7 @@ async def test_a_defeated_defier_dies_or_is_cursed(database: Database) -> None:
     toolkit = await mortal_toolkit(database, realm.mortal_id, action_points=3, rules=cursed)
     await ok(toolkit, "challenge_god", {"son_id": realm.son_id, "reason": "he drowned my father"})
     assert await has_flag(database, realm.mortal_id, EntityFlag.CURSED)
-    assert lines.DEFIER_CURSED.key in await keys(database)
+    assert "tools.mortal.defier_cursed" in await keys(database)
     async with database.write() as session:
         bold = await make_entity(session, "Bran Holt", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
         son = await session.get(SonRow, realm.son_id)
@@ -193,7 +193,7 @@ async def test_a_defeated_defier_dies_or_is_cursed(database: Database) -> None:
         son_after = await session.get(SonRow, realm.son_id)
     assert (await entity(database, bold_id)).status is EntityStatus.DEAD
     assert son_after is not None and son_after.fame == fame_before + killed.mortal_tools.god_crush_renown
-    assert lines.DEFIER_DIED.key in await keys(database)
+    assert "tools.mortal.defier_died" in await keys(database)
 
 
 async def test_a_searching_people_senses_an_unknown_world_for_the_epoch_end(database: Database) -> None:
@@ -212,7 +212,7 @@ async def test_a_searching_people_senses_an_unknown_world_for_the_epoch_end(data
         deferred = await session.scalar(select(DeferredStepRow))
     assert intuition is not None and intuition.mortal_entity_id == realm.people_id
     assert deferred is not None and deferred.payload == {"intuition_id": intuition.id}
-    assert lines.ROUTE_SENSED.key in await keys(database)
+    assert "tools.mortal.route_sensed" in await keys(database)
 
 
 async def test_pioneers_settle_the_discovered_land(database: Database) -> None:
@@ -252,7 +252,7 @@ async def test_searching_ruins_finds_knowledge_an_item_or_a_curse(database: Data
     await ok(await mortal_toolkit(database, realm.faction_id, rules=curse_rules), "search_ruins", {"target_id": ruin, "how": "breaking the seals"})
     assert await has_flag(database, realm.faction_id, EntityFlag.CURSED)
     recorded = await keys(database)
-    assert {lines.RUIN_KNOWLEDGE.key, lines.RUIN_ITEM.key, lines.RUIN_CURSE.key} <= set(recorded)
+    assert {"tools.mortal.ruin_knowledge", "tools.mortal.ruin_item", "tools.mortal.ruin_curse"} <= set(recorded)
 
 
 async def hold(database: Database, captive: int, captor: int) -> None:
@@ -277,7 +277,7 @@ async def test_a_captive_escapes_or_is_wounded_trying(database: Database) -> Non
     succeeding = tuned_rules(mortal_tools={"escape_min_pct": 100, "escape_max_pct": 100})
     await ok(await mortal_toolkit(database, realm.mortal_id, rules=succeeding), "escape", {"how": "over the wall"})
     assert await captive_status(database) is CaptiveStatus.ESCAPED
-    assert {lines.ESCAPE_FAILED.key, lines.ESCAPED.key} <= set(await keys(database))
+    assert {"tools.mortal.escape_failed", "tools.mortal.escaped"} <= set(await keys(database))
 
 
 async def test_a_rescue_frees_the_captive_or_makes_the_captor_an_enemy(database: Database) -> None:
@@ -297,7 +297,7 @@ async def test_a_rescue_frees_the_captive_or_makes_the_captor_an_enemy(database:
         captor.stats = FactionStats(strength=0, wealth=40, sway=40)
     await ok(await mortal_toolkit(database, realm.settlement_id, rules=rules), "rescue_captive", {"captive_id": realm.mortal_id, "plan": "a bribe at the gate"})
     assert await captive_status(database) is CaptiveStatus.RESCUED
-    assert {lines.RESCUE_FAILED.key, lines.RESCUED.key} <= set(await keys(database))
+    assert {"tools.mortal.rescue_failed", "tools.mortal.rescued"} <= set(await keys(database))
 
 
 async def test_a_new_army_protects_its_people_and_joins_their_war(database: Database) -> None:
@@ -320,7 +320,7 @@ async def test_a_new_army_protects_its_people_and_joins_their_war(database: Data
         row = await session.get(ArmyRow, army_id)
         part_of = await BondRepository(session).outgoing(army_id, BondKind.PART_OF)
     assert row is not None and row.war_id == war_id and part_of
-    assert lines.ARMY.key in await keys(database)
+    assert "tools.mortal.army" in await keys(database)
 
 
 async def weaken(session: AsyncSession, entity_id: int) -> None:

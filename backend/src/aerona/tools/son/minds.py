@@ -27,6 +27,7 @@ from aerona.domain.enums.minds import (
     SoulContinuity,
     WillCause,
 )
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import OutageCause
 from aerona.engine.made import control
 from aerona.engine.minds import law
@@ -42,7 +43,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -110,7 +110,12 @@ async def awaken_mind(call: SonCall, args: AwakenMindInput) -> str:
     change_will(call.tick, row, args.will, WillCause.GIFT)
     row.dormant = False
     call.target(node.id)
-    await call.chronicle(ChronicleKind.FATE, lines.AWAKEN_MIND, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.awaken_mind",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": str(args.reason)},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.MIND_AWAKENED, name=node.name, will=args.will.value.replace("_", " "))
 
 
@@ -121,7 +126,12 @@ async def still_mind(call: SonCall, args: MindNodeInput) -> str:
         fail(SonResult.MIND_STILL_REFUSED, why=f"{node.name} holds no mind to still")
     row.dormant = True
     call.target(node.id)
-    await call.chronicle(ChronicleKind.FATE, lines.STILL_MIND, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.still_mind",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.MIND_STILLED, name=node.name)
 
 
@@ -135,7 +145,12 @@ async def grant_mind(call: SonCall, args: GrantMindInput) -> str:
         fail(SonResult.MIND_GRANT_REFUSED, why=str(error).rstrip("."))
     row.origin = args.origin
     call.target(node.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.GRANT_MIND, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.grant_mind",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": str(args.reason)},
+        kind=ChronicleKind.CREATION,
+    )
     return result(SonResult.MIND_GRANTED, name=node.name)
 
 
@@ -158,7 +173,12 @@ async def grant_soul(call: SonCall, args: SoulInput) -> str:
         fail(SonResult.SOUL_GRANT_REFUSED, why=str(error).rstrip("."))
     call.spend_essence(cost)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.FATE, lines.GRANT_SOUL, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.grant_soul",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.SOUL_GRANTED, name=node.name, cost=cost)
 
 
@@ -166,7 +186,12 @@ async def withhold_soul(call: SonCall, args: SoulInput) -> str:
     node, _ = await soul_target(call, args.mind_id, SonResult.SOUL_WITHHOLD_REFUSED)
     await law.withhold_soul(call.tick, node.id)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.FATE, lines.WITHHOLD_SOUL, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.withhold_soul",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.SOUL_WITHHELD, name=node.name)
 
 
@@ -189,7 +214,12 @@ async def set_mind_law(call: SonCall, args: MindLawInput) -> str:
     row.soul_continuity = args.soul_continuity or row.soul_continuity
     await call.session.flush()
     call.target(world.id)
-    await call.chronicle(ChronicleKind.FATE, lines.SET_MIND_LAW, entity_ids=[world.id], son=call.son.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.set_mind_law",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.MIND_LAW_SET, world=world.name)
 
 
@@ -207,7 +237,12 @@ async def bless_network(call: SonCall, args: NetworkInput) -> str:
     row.security = clamp_percent(row.security + BLESSING)
     row.down_until_epoch = min(row.down_until_epoch, call.tick.epoch)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.BLESS_NETWORK, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.bless_network",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.NETWORK_BLESSED, name=node.name)
 
 
@@ -215,7 +250,12 @@ async def sever_network(call: SonCall, args: NetworkInput) -> str:
     node, _ = await network_target(call, args.network_id, SonResult.NETWORK_SEVER_REFUSED)
     await control.cut_network(call.tick, node.id, OutageCause.DIVINE, SEVERED_EPOCHS, call.tick.rules.intrusion.outage_severity)
     call.target(node.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SEVER_NETWORK, entity_ids=[node.id], son=call.son.name, name=node.name, reason=args.reason)
+    await call.record(
+        "tools.son.sever_network",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: node.id},
+        facts={"name": str(node.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.NETWORK_SEVERED, name=node.name, epochs=SEVERED_EPOCHS)
 
 
@@ -226,7 +266,9 @@ async def halt_replicator(call: SonCall, args: ReplicatorInput) -> str:
     if line.owner_node_id is not None and held(line.owner_node_id):
         fail(SonResult.REPLICATOR_HALT_REFUSED, why="a stronger hand holds it")
     await control.stop_line(call.tick, line.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.HALT_REPLICATOR, entity_ids=[], son=call.son.name, name=line.name, reason=args.reason)
+    await call.record(
+        "tools.son.halt_replicator", roles={IncidentRole.ACTOR: call.son.id}, facts={"name": line.name, "reason": args.reason}, kind=ChronicleKind.WORLD
+    )
     return result(SonResult.REPLICATOR_HALTED, name=line.name)
 
 
@@ -242,14 +284,24 @@ async def realm_target(call: SonCall, realm_id: int, refused: SonResult) -> Made
 async def seal_realm(call: SonCall, args: RealmInput) -> str:
     row = await realm_target(call, args.realm_id, SonResult.REALM_SEAL_REFUSED)
     row.sealed = True
-    await call.chronicle(ChronicleKind.WORLD, lines.SEAL_REALM, entity_ids=[row.dimension_id], son=call.son.name, reason=args.reason)
+    await call.record(
+        "tools.son.seal_realm",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: row.dimension_id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.REALM_SEALED)
 
 
 async def open_realm(call: SonCall, args: RealmInput) -> str:
     row = await realm_target(call, args.realm_id, SonResult.REALM_OPEN_REFUSED)
     row.sealed = False
-    await call.chronicle(ChronicleKind.WORLD, lines.OPEN_REALM, entity_ids=[row.dimension_id], son=call.son.name, reason=args.reason)
+    await call.record(
+        "tools.son.open_realm",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: row.dimension_id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.REALM_OPENED)
 
 

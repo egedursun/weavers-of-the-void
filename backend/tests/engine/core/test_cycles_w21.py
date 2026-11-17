@@ -36,10 +36,12 @@ from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
 from aerona.db.tables.genetics import AllelePoolRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.mind import CultureEthicRow, CultureValueRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.records import IncidentStepRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
@@ -71,6 +73,7 @@ from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
 from aerona.domain.enums.mortal import CareerPath, MarriageEnd
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
@@ -327,6 +330,9 @@ async def test_the_gift_ledger_balances_returns_and_costs_face_when_unanswered(s
     assert balance([gift], first.id) == 100 and balance([gift], second.id) == -100
     answer = await return_gift(ctx, gift)
     assert answer is not None and gift.state is GiftState.RETURNED and answer.value == 100
+    returned = await session.scalar(select(IncidentRow).where(IncidentRow.kind == "gifts.returned"))
+    assert returned is not None
+    assert await session.scalar(select(IncidentStepRow.action).where(IncidentStepRow.incident_id == returned.id)) is StepAction.RETURN_GIFT
     giver = await session.get(PolityProfileRow, first.id)
     receiver = await session.get(PolityProfileRow, second.id)
     assert giver is not None and receiver is not None

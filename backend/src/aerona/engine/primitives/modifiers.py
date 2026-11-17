@@ -7,6 +7,7 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import add_term, explaining_now
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.write_guard import free_rows
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
@@ -107,6 +108,9 @@ def combine(base: float, contributions: Iterable[Contribution]) -> Breakdown:
         if item.op is ModifierOp.MULTIPLY:
             total *= item.magnitude
     ordered = tuple(sorted(applied, key=lambda item: item.modifier_id))
+    if explaining_now():
+        for item in ordered:
+            add_term(f"modifier.{item.source_kind.value}.{item.reason_key}", item.magnitude, item.op, item.source_node_id)
     return Breakdown(base=base, applied=ordered, ignored=tuple(sorted(ignored, key=lambda item: item.modifier_id)), value=total)
 
 

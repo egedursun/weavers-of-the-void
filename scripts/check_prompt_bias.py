@@ -197,6 +197,15 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "assumed day and night",
+        re.compile(r"\b(?:night after night|day after day|every night|each night|every morning|at dawn and dusk)\b", re.IGNORECASE),
+        prose_only=True,
+    ),
+    Pattern(
+        "borrowed end of the world",
+        re.compile(r"\b(?:twilight of the gods|ragnar(?:o|\u00f6)k|g(?:o|\u00f6)tterd(?:a|\u00e4)mmerung|armageddon)\b", re.IGNORECASE),
+    ),
+    Pattern(
         "canned afterlife name",
         re.compile(r"\b(?:blessed fields|the grey plain|the gray plain|the pits|the forgetting|hall of the fallen|house of the ancestors)\b", re.IGNORECASE),
         prose_only=True,
@@ -214,6 +223,10 @@ PATTERNS = (
     Pattern(
         "assumed species",
         re.compile(r"\b(?:tiny |small )?(?:human|humans|mankind|men) (?:figures?|for scale|beings? for scale)\b", re.IGNORECASE),
+    ),
+    Pattern(
+        "assumed species in a deed",
+        re.compile(r"\bhuman (?:sacrifices?|blood|flesh|lives?|souls?)\b|\bmankind\b|\bhumanity\b", re.IGNORECASE),
     ),
     Pattern(
         "assumed carrier",

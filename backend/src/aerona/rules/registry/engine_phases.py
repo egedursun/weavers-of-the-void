@@ -104,6 +104,7 @@ class EnginePhasesRules:
     doom_clock: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: doom clock")
     creator_essence: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: creator essence")
     epoch_statistics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: epoch statistics")
+    record_checkpoints: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: checkpoints of the recorded state")
     creator_mood: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: creator mood")
     god_power: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: god power")
     reputation: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: reputation")

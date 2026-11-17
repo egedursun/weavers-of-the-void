@@ -197,6 +197,11 @@ async def edit_record(ctx: TickContext, kind: str, key: object, values: Values, 
     return row
 
 
+async def drop_transformation(ctx: TickContext, plan_id: int) -> None:
+    await ctx.session.delete(await found(ctx, EcoTransformationRow, plan_id, "transformation"))
+    await ctx.session.flush()
+
+
 async def delete_record(ctx: TickContext, kind: str, key: object) -> None:
     table, _, label = EDITABLE[kind]
     await ctx.session.delete(await found(ctx, table, key, label))

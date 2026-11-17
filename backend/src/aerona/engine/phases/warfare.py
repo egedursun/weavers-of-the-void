@@ -8,7 +8,7 @@ from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import BATTLE_NAME_TEMPLATE, SIEGE_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
-from aerona.core.grammar import agree, several, spoken
+from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
@@ -27,13 +27,12 @@ from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow, WarSi
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, Consciousness, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.military import CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
+from aerona.domain.enums.military import BattlePhase, CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
@@ -41,9 +40,9 @@ from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
-from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import WorldView, world_views
@@ -63,6 +62,7 @@ from aerona.engine.environment.battleground import (
 )
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment, scar_region
 from aerona.engine.environment.years import grant_sub_steps
+from aerona.engine.equipment.field import main_arms
 from aerona.engine.eras.effects import tech_factor
 from aerona.engine.honours.units import HonourTally, disband_units, honour_battle
 from aerona.engine.interconnect.annotations import reads, writes
@@ -89,18 +89,19 @@ from aerona.engine.military.aftermath import (
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
 from aerona.engine.military.alliance import allied_armies, allies_on_side, march_with
 from aerona.engine.military.battle import BattleResult, Field
+from aerona.engine.military.battle_record import battle_steps
 from aerona.engine.military.campaign import bridged, home_news
 from aerona.engine.military.causes import raiders
 from aerona.engine.military.clash import captives_taken, cautious, clash, earn_traits, learn_tactic, log_phases
 from aerona.engine.military.command import command_areas
-from aerona.engine.military.duels import bout, fighter, set_footing
+from aerona.engine.military.duels import bout, crippling, fighter, set_footing, settle_bout
 from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.finance import pay_contracts
 from aerona.engine.military.logistics import March, campaign_season, in_contact, mark_front
 from aerona.engine.military.marshal import keep_templates
 from aerona.engine.military.naval import SeaFight, sea_battle, weather_the_storm
-from aerona.engine.military.occupation import announce_partisans, end_occupations, occupy, partisans, seeks_peace, weary
+from aerona.engine.military.occupation import end_occupations, occupy, partisans, seeks_peace, weary
 from aerona.engine.military.siege import SiegeSeason, breach_bonus, open_siege, sack, siege_season, wall_defence
 from aerona.engine.military.siege_depth import sack_choice
 from aerona.engine.military.standards import capture_standard
@@ -114,7 +115,6 @@ from aerona.engine.military.war_lines import keep_war_lines
 from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.mind.thoughts import think
-from aerona.engine.notes import note
 from aerona.engine.operations.command import CommandTally, issue_orders
 from aerona.engine.operations.supply import Network, SupplyTally, culminate, network, operation_of, supply_season
 from aerona.engine.phase import Phase
@@ -130,6 +130,9 @@ from aerona.engine.primitives.records import RecordSpec, create_record, retire_i
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.moments import incident_moment
+from aerona.engine.recording.record import FactInput, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.records import death_path
 from aerona.engine.renown.currencies import on_victory
 from aerona.engine.renown.deeds import acclaim_deed
@@ -225,7 +228,6 @@ class BattleReport:
     outcome: BattleOutcome
     summary: str
     record: EntityRow | None = None
-    hero_texts: list[str] = field(default_factory=list)
     ids: list[int] = field(default_factory=list)
     settlement: WarSettlement | None = None
     refused: bool = False
@@ -271,9 +273,11 @@ async def redirect_uprisings(ctx: TickContext) -> int:
             continue
         await declare_war(ctx, rebels.id, target.id, bond.description or "uprising", cause=WarCause.UPRISING, world_cap=False, since_epoch=bond.epoch)
         redirected += 1
-        text = f"{rebels.name} defies the rule of {overlord.name}; the revolt is now an open war with {target.name}."
-        await ctx.chronicle(
-            ChronicleKind.WAR, text, template_key="war.uprising_redirected", entity_ids=(rebels.id, overlord.id, target.id), feed_category=FeedCategory.WAR
+        await record(
+            ctx,
+            "war.uprising_redirected",
+            roles={IncidentRole.ACTOR: rebels.id, IncidentRole.AUTHORITY: overlord.id, IncidentRole.TARGET: target.id},
+            place=rebels.location_id,
         )
     return redirected
 
@@ -322,7 +326,8 @@ async def idle_armies(ctx: TickContext) -> int:
         await retire_stacks(ctx.session, army.id)
         home = owner.name if owner is not None else "their homes"
         await retire_in(ctx, army, f"the army without a war stood down; its soldiers went back to {home}", close_bonds=True)
-        await note(ctx, f"{army.name} stood down: soldiers without a war went back to {home}.", key="warfare.army_stood_down", ids=[army.id])
+        roles = {IncidentRole.SUBJECT: army.id, **({IncidentRole.OWNER: owner.id} if owner is not None else {})}
+        await record(ctx, "warfare.army_stood_down", roles=roles, facts={"returned": returning}, place=army.location_id)
         disbanded += 1
     return disbanded
 
@@ -384,8 +389,8 @@ async def heat_toll(ctx: TickContext) -> int:
 @writes("army.size", "settlement.population")
 async def _side_losses(ctx: TickContext, war: WarRow, side_id: int) -> int:
     rows = await ctx.session.scalars(select(BattleRow).where(BattleRow.war_id == war.id, BattleRow.epoch == ctx.epoch - 1))
-    fought = [row for row in rows if side_id in {row.winner_entity_id, row.loser_entity_id}]
-    return sum(row.winner_losses if row.winner_entity_id == side_id else row.loser_losses for row in fought)
+    bouts = [row for row in rows if side_id in {row.winner_entity_id, row.loser_entity_id}]
+    return sum(row.winner_losses if row.winner_entity_id == side_id else row.loser_losses for row in bouts)
 
 
 async def _occupied(ctx: TickContext, atlas: RegionAtlas, side_id: int) -> int:
@@ -435,14 +440,8 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     else:
         await end_war(ctx, war, WarEnding.WHITE_PEACE, reason="war weariness")
     weary_side = await living_entity(ctx.session, side_id)
-    name = weary_side.name if weary_side is not None else "one side"
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{event.name} ended because {name} was worn out by war and sued for peace.",
-        template_key="war.weary_peace",
-        entity_ids=(war.event_entity_id, item.attacker_id, item.defender_id),
-        feed_category=FeedCategory.WAR,
-    )
+    roles = {IncidentRole.OPPONENT: other, **({IncidentRole.ACTOR: weary_side.id} if weary_side is not None else {})}
+    await record(ctx, "war.weary_peace", roles=roles, facts={"war": event.id})
 
 
 @reads(
@@ -603,7 +602,6 @@ async def war_upkeep(ctx: TickContext) -> None:
     ctx.count("blockades_lifted", await clear_blockades(ctx))
     lost = await partisans(ctx)
     ctx.count("partisan_dead", lost)
-    await announce_partisans(ctx, lost)
     ctx.count("occupations_ended", await end_occupations(ctx))
     await campaign_upkeep(ctx)
     ctx.count("weary_peace", await weariness(ctx))
@@ -614,13 +612,13 @@ async def battle_power(ctx: TickContext, theatre: Theatre, community: EntityRow,
     commander = await commander_of(ctx.session, army_row)
     command = 0.0
     if commander is not None:
-        total = (
+        summed = (
             await effective(ctx.session, commander, "strength", rules=ctx.rules)
             + await effective(ctx.session, commander, "intellect", capacity=Capacity.COMMAND, rules=ctx.rules)
             + await effective(ctx.session, commander, "charisma", capacity=Capacity.COMMAND, rules=ctx.rules)
         )
         tactics = await best_effective(ctx.session, commander.id, COMMAND_SKILLS)
-        command = total / campaigns.strength_commander_divisor * (PERCENT + tactics * ctx.rules.skills.commander_tactics_pct / PERCENT) / PERCENT
+        command = summed / campaigns.strength_commander_divisor * (PERCENT + tactics * ctx.rules.skills.commander_tactics_pct / PERCENT) / PERCENT
     burden = max(0.0, 1 - await march_burden(ctx, army) * ctx.rules.materials.march_campaign_pct / PERCENT)
     return burden * (
         await theatre.strength.power(community) * campaigns.strength_community_share_pct / PERCENT
@@ -768,7 +766,7 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
         f"Clash #{sequence} of {event.name}. {winner_army.name} ({winner_soldiers}, morale {stat(winner_army, 'morale') or 0}) "
         f"against {loser_army.name} ({loser_soldiers}, morale {stat(loser_army, 'morale') or 0}). {report.summary}."
     )
-    record = await create_record(
+    made = await create_record(
         ctx,
         RecordSpec(
             name=(SIEGE_NAME_TEMPLATE if besieged else BATTLE_NAME_TEMPLATE).format(root=root),
@@ -786,10 +784,10 @@ async def _record(ctx: TickContext, report: BattleReport, place: EntityRow | Non
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if derived else (),
         ),
     )
-    report.record = record
-    await bonds.connect(BondDraft(record.id, event.id, BondKind.PART_OF, ctx.epoch, "battle", war_id=report.war.id))
-    await bonds.connect(BondDraft(record.id, report.winner.id, BondKind.PARTY_TO, ctx.epoch, "victor", role=BondRole.VICTOR, war_id=report.war.id))
-    await bonds.connect(BondDraft(record.id, report.loser.id, BondKind.PARTY_TO, ctx.epoch, "loser", role=BondRole.LOSER, war_id=report.war.id))
+    report.record = made
+    await bonds.connect(BondDraft(made.id, event.id, BondKind.PART_OF, ctx.epoch, "battle", war_id=report.war.id))
+    await bonds.connect(BondDraft(made.id, report.winner.id, BondKind.PARTY_TO, ctx.epoch, "victor", role=BondRole.VICTOR, war_id=report.war.id))
+    await bonds.connect(BondDraft(made.id, report.loser.id, BondKind.PARTY_TO, ctx.epoch, "loser", role=BondRole.LOSER, war_id=report.war.id))
 
 
 async def duel(
@@ -803,7 +801,8 @@ async def duel(
     context: DuelContext = DuelContext.WAR,
     ground: BattleGround | None = None,
     battle_id: int | None = None,
-) -> str:
+    cause: int | None = None,
+) -> "Duelled":
     campaigns = ctx.rules.campaigns
     bonds = BondRepository(ctx.session)
     event = await war_event(ctx.session, war) if war is not None else None
@@ -829,13 +828,16 @@ async def duel(
     await think(ctx.session, ctx.rules, loser.id, ThoughtKind.LOST_DUEL, ctx.epoch, subject_id=winner.id)
     style = await strike_style(ctx.session, ctx.rules, winner, loser)
     ctx.count(f"duel_{result.end.value}")
+    if stat(loser, "hp") is None:
+        set_stats(loser, hp=campaigns.hero_default_hp)
+    bout_id = await settle_bout(ctx, result, style=style, terrain=terrain, weather=weather, cause=cause, place_id=first.location_id)
     fate = CasualtyFate.KILLED if result.killed else DUEL_FATES[result.end]
     harmed = sum(hit for target_id, hit in result.hits if target_id == loser.id)
     side = theatre.sides.side_of(loser)
     note_casualty(ctx, battle_id, loser, side_id=side, fate=fate, harm=harmed, note=f"fell to {winner.name} in single combat")
     if result.killed:
-        cause = f"fell in a duel with {winner.name} in {label}"
-        await death_path(ctx, loser, cause, winner.id, f"{label} duel", forced=True, event_id=anchor_id, harm=HarmCause.DUEL, style=style)
+        death_cause = f"fell in a duel with {winner.name} in {label}"
+        await death_path(ctx, loser, death_cause, winner.id, f"{label} duel", forced=True, event_id=anchor_id, harm=HarmCause.DUEL, style=style)
         if anchor_id is not None:
             await bonds.connect(BondDraft(anchor_id, loser.id, BondKind.CAUSED, ctx.epoch, "fell in a duel"))
         shift_stat(winner, "charisma", campaigns.duel_winner_charisma)
@@ -844,20 +846,27 @@ async def duel(
             await start_blood_feud(ctx, winner_side, loser_side, f"the blood of {loser.name}")
         await house_feud(ctx, winner.id, loser.id, f"the blood of {loser.name}")
         exchanges_counted = several(result.exchanges, "exchange", "exchanges")
-        return f" In a duel of {exchanges_counted} {winner.name} killed {loser.name}; now there is a blood feud between the two sides."
-    if stat(loser, "hp") is None:
-        set_stats(loser, hp=campaigns.hero_default_hp)
-    for target_id, hit in result.hits:
-        hurt, striker = (loser, winner) if target_id == loser.id else (winner, loser)
-        if hit > 0 and hurt.status is EntityStatus.CANON:
-            harm = Harm(hit, HarmCause.DUEL, "wounded in a duel", source_node_id=striker.id, killer_id=striker.id, style=style)
-            await apply_hits(ctx, hurt, harm, lethal=False)
-    if result.end is DuelEnd.CRIPPLED:
-        crippling = Harm(campaigns.duel_loser_hp_loss, HarmCause.DUEL, "crippled in a duel", source_node_id=winner.id, killer_id=winner.id, style=style)
-        await apply_hits(ctx, loser, crippling, lethal=False)
+        return Duelled(
+            bout_id,
+            winner.id,
+            loser.id,
+            f"In a duel of {exchanges_counted} {winner.name} killed {loser.name}; now there is a blood feud between the two sides.",
+        )
+    if result.end is DuelEnd.CRIPPLED and loser.status is EntityStatus.CANON:
+        await apply_hits(ctx, loser, crippling(ctx.rules, result, style), lethal=False)
     ending = DUEL_ENDINGS[result.end].format(winner=winner.name, loser=loser.name)
     mercy = f" {winner.name} spared the fallen." if result.spared else ""
-    return f" {winner.name} and {loser.name} dueled for {several(result.exchanges, 'exchange', 'exchanges')}; {ending}.{mercy}"
+    return Duelled(
+        bout_id, winner.id, loser.id, f"{winner.name} and {loser.name} dueled for {several(result.exchanges, 'exchange', 'exchanges')}; {ending}.{mercy}"
+    )
+
+
+@dataclass(frozen=True)
+class Duelled:
+    incident_id: int
+    winner_id: int
+    loser_id: int
+    text: str
 
 
 async def injuries_of(ctx: TickContext, mortal_id: int) -> int:
@@ -866,16 +875,20 @@ async def injuries_of(ctx: TickContext, mortal_id: int) -> int:
 
 
 async def ordeals(ctx: TickContext, theatre: Theatre) -> int:
-    fought = 0
+    bouts = 0
     for claimant, ruler, realm_id in await trial_claims(ctx):
         if not ctx.rng(f"trial.{realm_id}.{ctx.epoch}").chance(ctx.rules.duels.trial_chance):
             continue
-        text = (await duel(ctx, theatre, claimant, ruler, war=None, anchor_id=realm_id, context=DuelContext.TRIAL)).strip()
+        fought_out = await duel(ctx, theatre, claimant, ruler, war=None, anchor_id=realm_id, context=DuelContext.TRIAL)
         await settle_trial(ctx, claimant, ruler, realm_id)
-        await ctx.chronicle(
-            ChronicleKind.WAR, text, template_key="war.trial_by_combat", entity_ids=(claimant.id, ruler.id, realm_id), feed_category=FeedCategory.WAR
+        await record(
+            ctx,
+            "war.trial_by_combat",
+            roles={IncidentRole.ACTOR: claimant.id, IncidentRole.OPPONENT: ruler.id},
+            facts={"realm": realm_id, "victor": fought_out.winner_id},
+            cause=fought_out.incident_id,
         )
-        fought += 1
+        bouts += 1
     for item in await ongoing_wars(ctx.session):
         if item.war.cause is not WarCause.HOLY_WAR or not ctx.rng(f"god_duel.{item.war.id}.{ctx.epoch}").chance(ctx.rules.duels.god_duel_chance):
             continue
@@ -883,13 +896,19 @@ async def ordeals(ctx: TickContext, theatre: Theatre) -> int:
         if not first or not second:
             continue
         champion, rival = first[0], second[0]
-        text = (await duel(ctx, theatre, champion, rival, war=item.war, anchor_id=item.war.event_entity_id, context=DuelContext.GOD)).strip()
-        alive_first = champion.status is EntityStatus.CANON
-        item.war.score += ctx.rules.duels.god_duel_score if alive_first else -ctx.rules.duels.god_duel_score
-        ids = (champion.id, rival.id, item.war.event_entity_id)
-        await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.god_duel", entity_ids=ids, feed_category=FeedCategory.WAR)
-        fought += 1
-    return fought
+        fought_out = await duel(ctx, theatre, champion, rival, war=item.war, anchor_id=item.war.event_entity_id, context=DuelContext.GOD)
+        with explaining():
+            moved = ctx.rules.duels.god_duel_score if fought_out.winner_id == champion.id else -ctx.rules.duels.god_duel_score
+            item.war.score += moved
+            await record(
+                ctx,
+                "war.god_duel",
+                roles={IncidentRole.ACTOR: champion.id, IncidentRole.OPPONENT: rival.id},
+                facts={"war": item.war.event_entity_id, "victor": fought_out.winner_id, "score": moved},
+                cause=fought_out.incident_id,
+            )
+        bouts += 1
+    return bouts
 
 
 async def _seasoned(ctx: TickContext, theatre: Theatre, sides: tuple[EntityRow, ...], armies: dict[int, tuple[EntityRow, ArmyRow]]) -> None:
@@ -914,7 +933,7 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, bat
     if winners and losers and ctx.rng("duel_roll").chance(ctx.rules.campaigns.duel_chance):
         first, second = ctx.rng("duelists").pick(winners), ctx.rng("duelists").pick(losers)
         if not await forbidden(ctx, first.id, ActKind.DUELLING):
-            report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground, battle_id=battle_id))
+            await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground, battle_id=battle_id)
             report.ids.extend((first.id, second.id))
     candidates = [hero for hero in theatre.sides.heroes_of(report.loser.id) if hero.status is EntityStatus.CANON]
     fallen = [hero for hero in candidates if await out_cold(ctx.session, hero.id)]
@@ -928,7 +947,6 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, bat
         await take_captive(ctx, report.winner, prisoner, report.war, description=event.name, home_id=report.loser.id)
         theatre.sides.mark_captive(prisoner.id)
         await BondRepository(ctx.session).connect(BondDraft(anchor, prisoner.id, BondKind.CAUSED, ctx.epoch, "was captured"))
-        report.hero_texts.append(f" {prisoner.name} was taken prisoner.")
         report.ids.append(prisoner.id)
         note_casualty(ctx, battle_id, prisoner, side_id=report.loser.id, fate=CasualtyFate.CAPTURED, harm=0, note=f"taken prisoner by {report.winner.name}")
 
@@ -977,6 +995,7 @@ DUEL_FATES: Mapping[DuelEnd, CasualtyFate] = total(
         DuelEnd.CRIPPLED: CasualtyFate.MAIMED,
         DuelEnd.DEATH: CasualtyFate.KILLED,
         DuelEnd.EXHAUSTION: CasualtyFate.WOUNDED,
+        DuelEnd.UNCONSCIOUS: CasualtyFate.WOUNDED,
     },
 )
 DUEL_ENDINGS = {
@@ -985,6 +1004,7 @@ DUEL_ENDINGS = {
     DuelEnd.CRIPPLED: "{loser} was crippled",
     DuelEnd.DEATH: "{loser} died",
     DuelEnd.EXHAUSTION: "both were spent and {winner} stood the steadier",
+    DuelEnd.UNCONSCIOUS: "{loser} lost consciousness",
 }
 HUNGRY = frozenset({StarvationStage.FAMINE, StarvationStage.TABOO_BROKEN})
 GREAT_CLASSES = frozenset({OutcomeClass.DECISIVE, OutcomeClass.MASSACRE, OutcomeClass.ROUT})
@@ -1051,42 +1071,90 @@ async def _refused(
     await ctx.session.flush()
     log_phases(ctx, row.id, result)
     await cautious(ctx, commander_id)
-    text = f"{event.name}: {report.loser.name} saw {report.winner.name} coming and would not give battle."
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        text,
-        template_key="war.battle.refused",
-        entity_ids=(report.war.event_entity_id, report.winner.id, report.loser.id),
-        feed_category=FeedCategory.WAR,
-        year=ground.year,
+    margin = next((log.details.get("margin", 0) for log in result.phases if log.phase is BattlePhase.SCOUTING), 0)
+    await record(
+        ctx,
+        "war.battle.refused",
+        roles={
+            IncidentRole.ACTOR: report.winner.id,
+            IncidentRole.OPPONENT: report.loser.id,
+            IncidentRole.MEMBER: [result.attacker.army.id, result.defender.army.id],
+        },
+        facts={"war": event.id, "margin": int(margin) if isinstance(margin, int) else 0},
+        place=place.id if place is not None else None,
     )
     ctx.count("battles_refused")
     return report
 
 
 async def _announce(
-    ctx: TickContext, report: BattleReport, event: EntityRow, *, ground: BattleGround, place: EntityRow | None, son_id: int | None, taken: int
+    ctx: TickContext,
+    report: BattleReport,
+    result: BattleResult,
+    event: EntityRow,
+    *,
+    armies: dict[int, tuple[EntityRow, ArmyRow]],
+    place: EntityRow | None,
+    son_id: int | None,
+    taken: int,
 ) -> int | None:
     war = report.war
-    ids = [*([report.record.id] if report.record is not None else []), war.event_entity_id, report.winner.id, report.loser.id, *report.ids]
-    setting = ground.describe()
-    lead = f"{event.name}, {setting}" if setting else event.name
-    captives = f" {several(taken, 'soldier', 'soldiers')} {agree(taken, 'was', 'were')} led away captive." if taken else ""
-    text = f"{lead}: {report.summary}.{captives}{''.join(report.hero_texts)}"
+    winner_side, loser_side = (result.winner, result.loser) if result.winner is not None and result.loser is not None else (result.attacker, result.defender)
+    commanders = {side: army.commander_entity_id for side, (_, army) in armies.items()}
     outbreak = await ChronicleRepository(ctx.session).prior_incident([war.event_entity_id], ("war.outbreak", "war.battle."))
-    write = await ctx.chronicle(
-        ChronicleKind.WAR,
-        text,
-        template_key=f"war.battle.{report.outcome.value}",
-        entity_ids=ids,
+    ground = report.ground
+    roles: dict[IncidentRole, int | list[int]] = {
+        IncidentRole.ACTOR: report.winner.id,
+        IncidentRole.OPPONENT: report.loser.id,
+        IncidentRole.MEMBER: sorted({winner_side.army.id, loser_side.army.id}),
+    }
+    leaders = sorted({commander for commander in commanders.values() if commander is not None})
+    if leaders:
+        roles[IncidentRole.LEADER] = leaders
+    witnesses = sorted({node for node in report.ids if node not in leaders})
+    if witnesses:
+        roles[IncidentRole.WITNESS] = witnesses
+    facts: dict[str, FactInput] = {
+        "war": event.id,
+        "winner_start": winner_side.start,
+        "loser_start": loser_side.start,
+        "winner_lost": winner_side.lost,
+        "loser_lost": loser_side.lost,
+        "wounded": sum(result.wounded.values()),
+        "captured": taken,
+        "missing": sum(stack.missing for stack in (*result.attacker.stacks, *result.defender.stacks)),
+        "deserted": sum(stack.deserted for stack in (*result.attacker.stacks, *result.defender.stacks)),
+        "gap": round(result.gap),
+        "outcome_class": result.outcome,
+        "winner_tactic": winner_side.tactic,
+        "loser_tactic": loser_side.tactic,
+    }
+    if report.record is not None:
+        facts["battle"] = report.record.id
+    if ground is not None and ground.terrain is not None:
+        facts["terrain"] = ground.terrain
+    if ground is not None and ground.weather is not None:
+        facts["weather"] = ground.weather.kind
+    write = await record(
+        ctx,
+        f"war.battle.{report.outcome.value}",
+        roles=roles,
+        facts=facts,
+        steps=battle_steps(
+            result, commanders, await main_arms(ctx.session, [stack.row.id for side in (result.attacker, result.defender) for stack in side.stacks])
+        ),
+        place=place.id if place is not None else None,
+        cause=outbreak,
         son_id=son_id,
-        feed_category=FeedCategory.WAR,
-        place_entity_id=place.id if place is not None else None,
-        year=ground.year,
-        cause_incident_id=outbreak,
-        roles={report.winner.id: IncidentRole.ACTOR, report.loser.id: IncidentRole.TARGET},
+        at_moment=await battle_moment(ctx, ground, outbreak),
     )
     return write.incident_id
+
+
+async def battle_moment(ctx: TickContext, ground: BattleGround | None, cause: int | None) -> Moment | None:
+    if ground is None or ground.year is None or ground.season is None:
+        return None
+    return Moment(ground.year, ground.season.position).at_least(await incident_moment(ctx.session, cause))
 
 
 async def _powers(
@@ -1131,7 +1199,7 @@ async def _spoils(
     report: BattleReport,
     result: BattleResult,
     *,
-    field: Field,
+    column: Field,
     armies: dict[int, tuple[EntityRow, ArmyRow]],
     besieged: EntityRow | None,
 ) -> int:
@@ -1140,7 +1208,7 @@ async def _spoils(
     await advance(ctx, war.id, winner.id, ctx.rules.war_aims.battle_score)
     if report.outcome is BattleOutcome.SIEGE_BREACHED and besieged is not None:
         await _siege_won(ctx, theatre, war, winner, besieged)
-    ctx.count("traits_earned", await earn_traits(ctx, result, field, {side: found[1].commander_entity_id for side, found in armies.items()}))
+    ctx.count("traits_earned", await earn_traits(ctx, result, column, {side: found[1].commander_entity_id for side, found in armies.items()}))
     return taken
 
 
@@ -1160,11 +1228,11 @@ def _escalate(ctx: TickContext, war: WarRow, event: EntityRow, gap: float) -> No
 
 
 async def _honours(
-    ctx: TickContext, war: WarRow, result: BattleResult, field: Field, armies: dict[int, tuple[EntityRow, ArmyRow]], *, attacker_id: int
+    ctx: TickContext, war: WarRow, result: BattleResult, column: Field, armies: dict[int, tuple[EntityRow, ArmyRow]], *, attacker_id: int
 ) -> None:
     assert result.winner is not None
     winner = result.winner.entity
-    await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
+    await _toll(ctx, result, column, armies[winner.id][1].commander_entity_id)
     await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
     await capture_standard(ctx, war, result, attacker_id=attacker_id)
     event = await ctx.session.get(EntityRow, war.event_entity_id)
@@ -1176,7 +1244,7 @@ async def _honours(
         await terror(ctx, war.id, winner, result.loser.entity, "massacre")
 
 
-async def _toll(ctx: TickContext, result: BattleResult, field: Field, commander_id: int | None) -> None:
+async def _toll(ctx: TickContext, result: BattleResult, column: Field, commander_id: int | None) -> None:
     assert result.winner is not None and result.loser is not None
     for side in (result.winner, result.loser):
         await return_maimed(ctx, side.entity, side.lost)
@@ -1184,16 +1252,16 @@ async def _toll(ctx: TickContext, result: BattleResult, field: Field, commander_
         ctx.count("dead_raised", await raise_the_dead(ctx, side))
     ctx.count("baggage_taken", await take_baggage(ctx, result.winner, result.loser))
     ctx.count("tactics_learned", await learn_tactic(ctx, result, commander_id))
-    await marsh_fever(ctx, field.terrain, (result.attacker, result.defender))
+    await marsh_fever(ctx, column.terrain, (result.attacker, result.defender))
     await cohesion_after(ctx, result)
 
 
 async def _ground_toll(
-    ctx: TickContext, theatre: Theatre, ground: BattleGround, *, field: Field, place: EntityRow | None, sides: tuple[EntityRow, EntityRow]
+    ctx: TickContext, theatre: Theatre, ground: BattleGround, *, column: Field, place: EntityRow | None, sides: tuple[EntityRow, EntityRow]
 ) -> None:
-    ctx.count("street_dead", await street_toll(ctx, field.terrain, place))
+    ctx.count("street_dead", await street_toll(ctx, column.terrain, place))
     leaders = [hero for side in sides for hero in theatre.sides.heroes_of(side.id)]
-    ctx.count("exotic_shaken", await exotic_toll(ctx, field.terrain, ground.region, leaders))
+    ctx.count("exotic_shaken", await exotic_toll(ctx, column.terrain, ground.region, leaders))
 
 
 async def hail_victor(ctx: TickContext, winner: EntityRow, commander_id: int | None) -> None:
@@ -1222,9 +1290,9 @@ async def fight_battle(
     besieged = _besieged(ctx.rules, defender)
     await _omens(ctx, theatre, ground, (attacker, defender), armies)
     attacker_power, defender_power = await _powers(ctx, theatre, war, (attacker, defender), armies, ground=ground, besieged=besieged)
-    field = battle_field(ctx.rules, ground)
+    column = battle_field(ctx.rules, ground)
     forces = {side.id: [armies[side.id], *await allied_armies(ctx, war, side.id)] for side in (attacker, defender)}
-    result = await clash(ctx, war.id, war.battles + 1, forces, (attacker, defender), powers=(attacker_power, defender_power), ground=field)
+    result = await clash(ctx, war.id, war.battles + 1, forces, (attacker, defender), powers=(attacker_power, defender_power), ground=column)
     assert result.winner is not None and result.loser is not None
     winner, loser = result.winner.entity, result.loser.entity
     gap = result.gap / PERCENT * max(attacker_power, defender_power)
@@ -1242,7 +1310,7 @@ async def fight_battle(
     else:
         outcome = _battle_score(war, ctx.rules, result, attacker_id=attacker.id, gap=gap)
         summary = f"{winner.name} prevailed over {loser.name} ({spoken(result.outcome)}; {spoken(result.winner.tactic)})"
-    await _honours(ctx, war, result, field, armies, attacker_id=attacker.id)
+    await _honours(ctx, war, result, column, armies, attacker_id=attacker.id)
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
@@ -1254,12 +1322,12 @@ async def fight_battle(
     await ctx.session.flush()
     log_phases(ctx, row.id, result)
     record_stacks(ctx, row, result)
-    taken = await _spoils(ctx, theatre, report, result, field=field, armies=armies, besieged=besieged)
+    taken = await _spoils(ctx, theatre, report, result, column=column, armies=armies, besieged=besieged)
     await _mark_ground(ctx, ground, gap, outcome)
-    await _ground_toll(ctx, theatre, ground, field=field, place=place, sides=(attacker, defender))
+    await _ground_toll(ctx, theatre, ground, column=column, place=place, sides=(attacker, defender))
     await _heroics(ctx, theatre, report, row.id)
     await _seasoned(ctx, theatre, (winner, loser), armies)
-    battle_incident = await _announce(ctx, report, event, ground=ground, place=place, son_id=son_id, taken=taken)
+    battle_incident = await _announce(ctx, report, result, event, armies=armies, place=place, son_id=son_id, taken=taken)
     ctx.count("battles")
     ctx.count("battle_captives", taken)
     with caused_by(battle_incident):
@@ -1267,17 +1335,23 @@ async def fight_battle(
     return report
 
 
-async def _salt_earth(ctx: TickContext, war: WarRow, settlement: WarSettlement, loser: EntityRow) -> str:
+async def _salt_earth(ctx: TickContext, war: WarRow, settlement: WarSettlement, victor: EntityRow, loser: EntityRow) -> None:
     settings = ctx.rules.scars
     if settlement.ending is not WarEnding.CONQUEST or (war.violence or 0) < settings.salted_violence:
-        return ""
+        return
     if not ctx.rng(f"salt.{war.id}").chance(settings.salted_chance):
-        return ""
+        return
     ground = await region_environment(ctx.session, loser.id)
     if ground is None:
-        return ""
+        return
     add_scar(ground, ScarKind.MADE_BARREN, settings.salted_depth)
-    return f" The conquerors salted the fields of {loser.name}."
+    await record(
+        ctx,
+        "war.made_barren",
+        roles={IncidentRole.ACTOR: victor.id, IncidentRole.VICTIM: loser.id},
+        facts={"depth": settings.salted_depth},
+        place=ground.entity_id,
+    )
 
 
 async def check_war_end(
@@ -1307,46 +1381,40 @@ async def check_war_end(
     event = await war_event(ctx.session, war)
     if victor is None or loser is None:
         settlement = await end_war(ctx, war, WarEnding.WHITE_PEACE, reason="white peace")
-        text = f"{event.name} ended with no victor; both sides were exhausted."
-        await ctx.chronicle(
-            ChronicleKind.WAR,
-            text,
-            template_key="war.ended_white_peace",
-            entity_ids=(war.event_entity_id, attacker.id, defender.id),
-            feed_category=FeedCategory.WAR,
-            roles={attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.ACTOR},
+        await record(
+            ctx,
+            "war.ended_white_peace",
+            roles={IncidentRole.ACTOR: attacker.id, IncidentRole.OPPONENT: defender.id},
+            facts={"war": event.id, "ending": WarEnding.WHITE_PEACE},
         )
         return settlement
     if routed is None and await fights_on(ctx, war, loser):
         return None
     settlement = await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor.id, loser_id=loser.id)
-    salted = await _salt_earth(ctx, war, settlement, loser)
-    terms = f"conquered {loser.name}" if settlement.ending is WarEnding.CONQUEST else f"{loser.name} will pay tribute"
-    rout = f" {armies[routed][0].name} disbanded." if routed is not None else ""
-    extra = "".join(f" {note}" for note in settlement.notes)
-    text = f"{event.name} ended: {victor.name} won ({terms}).{rout}{extra}{salted}"
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        text,
-        template_key=f"war.ended_{settlement.ending.value}",
-        entity_ids=(war.event_entity_id, attacker.id, defender.id),
-        feed_category=FeedCategory.WAR,
-        roles={victor.id: IncidentRole.ACTOR, loser.id: IncidentRole.TARGET},
-    )
+    await _salt_earth(ctx, war, settlement, victor, loser)
+    roles: dict[IncidentRole, int] = {IncidentRole.ACTOR: victor.id, IncidentRole.OPPONENT: loser.id}
+    if routed is not None:
+        roles[IncidentRole.SUBJECT] = armies[routed][0].id
+    await record(ctx, f"war.ended_{settlement.ending.value}", roles=roles, facts={"war": event.id, "ending": settlement.ending})
     return settlement
 
 
 async def _outbreak(ctx: TickContext, war: WarRow, attacker: EntityRow, defender: EntityRow, armies: dict[int, tuple[EntityRow, ArmyRow]]) -> None:
     first, second = armies[attacker.id][0], armies[defender.id][0]
-    text = (
-        f"War broke out between {attacker.name} and {defender.name}: {first.name} ({several(stat(first, 'size') or 0, 'soldier', 'soldiers')}) "
-        f"faces {second.name} ({several(stat(second, 'size') or 0, 'soldier', 'soldiers')})."
-    )
-    ids = (war.event_entity_id, attacker.id, defender.id, first.id, second.id)
     cause = await war_cause_incident(ctx.session, war.cause, attacker.id, defender.id, ctx.epoch)
-    roles = {attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.TARGET, first.id: IncidentRole.ACTOR, second.id: IncidentRole.TARGET}
-    await ctx.chronicle(
-        ChronicleKind.WAR, text, template_key="war.outbreak", entity_ids=ids, feed_category=FeedCategory.WAR, cause_incident_id=cause, roles=roles
+    await record(
+        ctx,
+        "war.outbreak",
+        roles={IncidentRole.ACTOR: attacker.id, IncidentRole.TARGET: defender.id},
+        facts={
+            "war": war.event_entity_id,
+            "attacker_army": first.id,
+            "defender_army": second.id,
+            "attacker_soldiers": stat_or(first, "size", 0),
+            "defender_soldiers": stat_or(second, "size", 0),
+            "cause": war.cause,
+        },
+        cause=cause,
     )
 
 
@@ -1449,15 +1517,17 @@ async def _manoeuvre(ctx: TickContext, theatre: Theatre, marches: list[March], i
 
 async def _sea_report(ctx: TickContext, fight: SeaFight) -> None:
     lost = fight.sunk.get(fight.loser.army.id, 0)
-    text = (
-        f"At sea the ships of {fight.winner.owner.name} beat those of {fight.loser.owner.name}, sank {several(lost, 'crew', 'crews')} and closed its harbours."
-    )
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        text,
-        template_key="war.sea_battle",
-        entity_ids=(fight.winner.owner.id, fight.loser.owner.id, fight.winner.army.id, fight.loser.army.id),
-        feed_category=FeedCategory.WAR,
+    await record(
+        ctx,
+        "war.sea_battle",
+        roles={
+            IncidentRole.ACTOR: fight.winner.owner.id,
+            IncidentRole.OPPONENT: fight.loser.owner.id,
+            IncidentRole.MEMBER: [fight.winner.army.id, fight.loser.army.id],
+        },
+        facts={"sunk": lost, "winner_fleet": fight.winner.army.id, "loser_fleet": fight.loser.army.id},
+        steps=fight.steps,
+        place=fight.loser.profile.region_entity_id,
     )
     ctx.count("sea_battles")
     ctx.count("ships_sunk", sum(fight.sunk.values()))
@@ -1518,18 +1588,13 @@ async def _surrender(
     homeward = [march for march in marches if march.owner.id == defender.id]
     dead = await sack(ctx, defender, marches[0].profile, homeward=homeward, victor=attacker, siege=siege, choice=choice)
     event = await war_event(ctx.session, war)
-    hunger = "starving" if siege.starvation is not StarvationStage.NONE else "weary"
-    text = (
-        f"{event.name}: {defender.name}, {hunger} after {several(siege.rounds, 'season', 'seasons')} of siege, opened its gates to {attacker.name}; "
-        f"{dead} townsfolk died in the sack."
-    )
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        text,
-        template_key="war.siege.surrender",
-        entity_ids=(war.event_entity_id, attacker.id, defender.id),
-        feed_category=FeedCategory.WAR,
-        place_entity_id=defender.id,
+    await record(
+        ctx,
+        "war.siege.surrender",
+        roles={IncidentRole.ACTOR: attacker.id, IncidentRole.TARGET: defender.id},
+        facts={"war": event.id, "seasons": siege.rounds, "hunger": siege.starvation, "dead": dead},
+        place=defender.id,
+        cause=step.incident_id,
     )
     ctx.count("sieges_surrendered")
     await _siege_won(ctx, None, war, attacker, defender)
@@ -1554,7 +1619,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     years = ctx.rules.time.years_per_epoch
     first_year = rng.below(years)
     base = epoch_start_year(ctx.epoch, years)
-    fought = 0
+    bouts = 0
     lost = 0
     winter_shamed = False
     for index in range(seasons):
@@ -1577,19 +1642,19 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
                 ctx.count("winter_taboo_rest")
                 continue
         suitability = ground.season.campaign if ground.season is not None else PERCENT
-        if not contact or fought >= cap or held(attacker.id, defender.id) or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
+        if not contact or bouts >= cap or held(attacker.id, defender.id) or not (storm or rng.chance(settings.season_engagement_pct * suitability / PERCENT)):
             continue
         if storm:
             ground = replace(ground, urban=True)
         report = await fight_battle(ctx, theatre, item, armies, ground)
-        fought += 1
+        bouts += 1
         if report is None or report.settlement is not None:
             break
-    if fought == 0 and war.status is WarStatus.ONGOING:
+    if bouts == 0 and war.status is WarStatus.ONGOING:
         await check_war_end(ctx, item, attacker, defender, armies)
     ctx.count("campaign_seasons", seasons)
     ctx.count("weather_dead", lost)
-    return fought
+    return bouts
 
 
 @reads(
@@ -1679,7 +1744,6 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.equipment_models",
     "table.equipment_stores",
     "table.event_casualties",
@@ -1705,6 +1769,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
+    "table.incident_step_states",
+    "table.incident_steps",
     "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
@@ -1858,7 +1924,6 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.echelons",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.equipment_models",
     "table.equipment_stores",
     "table.event_casualties",
@@ -1870,7 +1935,10 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.goods_flows",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_step_states",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.learned_tactics",
@@ -2041,9 +2109,15 @@ async def order_duel(ctx: TickContext, first_id: int, second_id: int, war_id: in
         raise ValidationFailedError("Only mortals fight duels.")
     war = (await require_ongoing_war(ctx.session, war_id)).war if war_id is not None else None
     theatre = await Theatre.load(ctx)
-    text = (await duel(ctx, theatre, first, second, war=war, anchor_id=war.event_entity_id if war is not None else None)).strip()
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.duel_decree", entity_ids=(first.id, second.id), feed_category=FeedCategory.WAR)
-    return text
+    fought_out = await duel(ctx, theatre, first, second, war=war, anchor_id=war.event_entity_id if war is not None else None)
+    await record(
+        ctx,
+        "war.duel_decree",
+        roles={IncidentRole.ACTOR: first.id, IncidentRole.OPPONENT: second.id},
+        facts={"victor": fought_out.winner_id, "war": war.event_entity_id if war is not None else None},
+        cause=fought_out.incident_id,
+    )
+    return fought_out.text
 
 
 async def grant_victory(ctx: TickContext, war_id: int, victor_id: int) -> WarSettlement:

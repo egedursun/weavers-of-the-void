@@ -13,15 +13,15 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorMoodLabel, CreatorPassion
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.mood import MoodState, mood_of
 from aerona.engine.gods.reputation import ReputationAxes
+from aerona.engine.recording.record import record
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.gods import creator_mood, reputation
 from aerona.services.player import guards
-from aerona.services.player.chronicle import tell
-from aerona.services.player.lines import CREATOR_EDITED, NOTE_STORED
 from aerona.services.player.ports import ContentJob, ContentJobKind
 from aerona.services.player.runtime import FreeJob, PlayerRuntime, submit_free, unavailable
 from aerona.services.player.scope import ActionOutcome, Command, Effect, PlayerScope, player_action
@@ -120,7 +120,11 @@ async def edit_creator(scope: PlayerScope, command: EditCreator) -> Effect:
     if not changed:
         raise ValidationFailedError("Nothing to change: give a title, appearance, temperament or image prompt.")
     ctx = await scope.context("edit_creator")
-    message = await tell(ctx, CREATOR_EDITED, creator=creator.name, fields=", ".join(changed))
+    message = (
+        await record(
+            ctx, "player.creator.edited", roles={IncidentRole.ACTOR: creator.id}, facts={"fields": str(", ".join(changed))}, kind=ChronicleKind.CREATOR_HAND
+        )
+    ).text
     return Effect(message, creator.id)
 
 
@@ -131,7 +135,11 @@ async def set_creator_note(scope: PlayerScope, command: CreatorNote) -> Effect:
     if creator.note is None:
         return Effect("The standing note was cleared.", creator.id)
     ctx = await scope.context("creator_note")
-    return Effect(await tell(ctx, NOTE_STORED, creator=creator.name), creator.id, values={"length": len(creator.note)})
+    return Effect(
+        (await record(ctx, "player.creator.note", roles={IncidentRole.ACTOR: creator.id}, kind=ChronicleKind.CREATOR_HAND)).text,
+        creator.id,
+        values={"length": len(creator.note)},
+    )
 
 
 @player_action("creator:passions", ActionKind.SET_PASSIONS)
@@ -177,12 +185,7 @@ async def creator_profile(scope: PlayerScope) -> CreatorProfile:
     views = await scope.session.execute(
         select(FolkBeliefRow, EntityRow.name).join(EntityRow, EntityRow.id == FolkBeliefRow.people_entity_id).where(FolkBeliefRow.god_node_id == creator.id)
     )
-    traces = await scope.session.scalars(
-        select(ChronicleRow)
-        .where(ChronicleRow.kind.in_(PROFILE_TRACE_KINDS), shown_lines())
-        .order_by(ChronicleRow.id.desc())
-        .limit(scope.rules.server.god_traces)
-    )
+    traces = await scope.session.scalars(select(ChronicleRow).where(ChronicleRow.kind.in_(PROFILE_TRACE_KINDS), shown_lines()).order_by(ChronicleRow.id.desc()))
     return CreatorProfile(
         name=creator.name,
         title=creator.title,

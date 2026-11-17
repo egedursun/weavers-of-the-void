@@ -19,6 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import PowerEffect, Stat
@@ -29,6 +30,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
@@ -47,8 +49,6 @@ FEAR = "Becoming mortal again"
 DEATH_CAUSE = "was taken up into the sky by {creator}; now a god among the sons"
 MORTAL_PAST = "mortal past"
 OLD_FAITH = "they believed in them when mortal too"
-ASCENSION_LINE_KEY = "gods.deify.ascended"
-ASCENSION_LINE = "{creator} took the mortal {mortal} into the sky: they joined the pantheon as a son of {rarity} class."
 
 
 @dataclass(frozen=True)
@@ -165,11 +165,12 @@ async def deify(ctx: TickContext, creator: CreatorRow, mortal: EntityRow, kind: 
     for follower in followers:
         if follower != son.id:
             await connect(ctx.session, follower, son.id, BondKind.WORSHIPS, ctx.epoch, description=OLD_FAITH)
-    await ctx.chronicle(
-        ChronicleKind.ASCENSION,
-        ASCENSION_LINE.format(creator=creator.name, mortal=mortal.name, rarity=rarity.value),
-        template_key=ASCENSION_LINE_KEY,
-        entity_ids=[mortal.id],
+    await record(
+        ctx,
+        "gods.deify.ascended",
+        roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: mortal.id, IncidentRole.PRODUCT: son.id},
+        facts={"rarity": rarity},
+        kind=ChronicleKind.ASCENSION,
         son_id=son.id,
     )
     await record_transformation(ctx, kind, mortal.id, son.id)

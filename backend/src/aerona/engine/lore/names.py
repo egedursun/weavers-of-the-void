@@ -12,19 +12,21 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
+from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import TreatyStatus
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.lore.research_depth import trade_partners
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.tongues.grammar import compounds, head_first, misread_factor
 from aerona.language.generator import NameKind
@@ -219,7 +221,13 @@ async def entitle(ctx: TickContext, mortal: EntityRow, meaning: str, namer: Name
         ctx.session.add(row)
     row.epithet, row.gloss, row.deed = word.capitalize(), f"the one of {meaning}", meaning
     row.language_entity_id, row.epoch = language.id if language is not None else None, ctx.epoch
-    await note(ctx, f"The world began to call {mortal.name} {word.capitalize()}.", key="names.epithet", ids=[mortal.id], kind=ChronicleKind.CULTURE)
+    await record(
+        ctx,
+        "names.epithet",
+        roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.INSTRUMENT: row.language_entity_id},
+        facts={"epithet": row.epithet, "deed": meaning},
+        steps=(StepDraft(StepAction.HONOUR, target=mortal.id),),
+    )
     return row
 
 

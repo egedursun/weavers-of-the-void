@@ -7,8 +7,8 @@ from aerona.db.tables.customs import CooperativeRow, MembershipRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.customs import Membership, Naturalisation
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.prompts import MortalToolId
@@ -17,7 +17,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class JoinCooperativeInput(ToolInput):
@@ -46,7 +45,9 @@ async def join_cooperative(call: MortalCall, args: JoinCooperativeInput) -> str:
         fail(MortalResult.COOPERATIVE_DECLINED, why="your means are pooled there already")
     await connect(call.session, call.me.id, faction.id, BondKind.MEMBER_OF, call.tick.epoch, description="pooled their means")
     call.target(faction.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.JOIN_COOPERATIVE, entity_ids=[call.me.id, faction.id], me=call.me.name, faction=faction.name)
+    await call.record(
+        "tools.mortal.join_cooperative", roles={IncidentRole.MEMBER: call.me.id, IncidentRole.TARGET: faction.id}, facts={"purpose": pool.purpose}
+    )
     return result(MortalResult.COOPERATIVE_JOINED, faction=faction.name, purpose=pool.purpose.value)
 
 
@@ -61,7 +62,11 @@ async def seek_citizenship(call: MortalCall, args: SeekCitizenshipInput) -> str:
     row.category, row.path, row.since_epoch = Membership.CITIZEN, Naturalisation.PURCHASE, call.tick.epoch
     realm = await living_entity(call.session, row.polity_entity_id)
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.SEEK_CITIZENSHIP, entity_ids=[call.me.id], me=call.me.name)
+    await call.record(
+        "tools.mortal.seek_citizenship",
+        roles={IncidentRole.BUYER: call.me.id, IncidentRole.AUTHORITY: row.polity_entity_id},
+        facts={"fee": call.tick.rules.citizenship.purchase_cost, "path": Naturalisation.PURCHASE},
+    )
     return result(MortalResult.CITIZENSHIP_GRANTED, realm=realm.name if realm is not None else "the realm")
 
 

@@ -5,14 +5,15 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow
 from aerona.db.tables.regime import CoalitionMemberRow, ExaminationRow, PatronageTieRow, RegimeRow, SchoolLineageRow, SchoolMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.regime import ClientRole, CredentialKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.regime import ClientRole, CoupProofing, CredentialKind
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import definite
 from aerona.engine.regime import control
@@ -25,7 +26,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.cycles import ruled_realm
 
 NAME = 200
@@ -82,7 +82,7 @@ async def seek_patron(call: MortalCall, args: SeekPatronInput) -> str:
         fail(MortalResult.PATRON_REFUSED, why="you already serve them")
     await control.bind_client(call.tick, patron.id, call.me.id, ClientRole.RETAINER, CLIENT_STRENGTH)
     call.target(patron.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SEEK_PATRON, entity_ids=[call.me.id, patron.id], me=call.me.name, patron=patron.name)
+    await call.record("tools.mortal.seek_patron", roles={IncidentRole.MEMBER: call.me.id, IncidentRole.PATRON: patron.id}, facts={"role": ClientRole.RETAINER})
     return result(MortalResult.PATRON_FOUND, name=patron.name)
 
 
@@ -100,9 +100,12 @@ async def buy_office(call: MortalCall, args: BuyOfficeInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.OFFICE_REFUSED, why=str(error).rstrip("."))
     call.target(office.polity_entity_id)
-    seat = office.kind.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORLD, lines.BUY_OFFICE, entity_ids=[call.me.id, office.polity_entity_id], me=call.me.name, seat=seat)
-    return result(MortalResult.OFFICE_BOUGHT, seat=seat, price=price)
+    await call.record(
+        "tools.mortal.buy_office",
+        roles={IncidentRole.BUYER: call.me.id, IncidentRole.SELLER: office.polity_entity_id},
+        facts={"office": office.kind, "price": price},
+    )
+    return result(MortalResult.OFFICE_BOUGHT, seat=spoken(office.kind), price=price)
 
 
 async def sit_examination(call: MortalCall, args: SitExaminationInput) -> str:
@@ -116,7 +119,7 @@ async def sit_examination(call: MortalCall, args: SitExaminationInput) -> str:
         fail(MortalResult.EXAM_REFUSED, why="your learning in law, letters and lore falls short of the mark")
     await control.confer(call.tick, call.me.id, CredentialKind.EXAMINATION, realm_id, best[0])
     call.target(realm_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SIT_EXAMINATION, entity_ids=[call.me.id, realm_id], me=call.me.name)
+    await call.record("tools.mortal.sit_examination", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm_id})
     return result(MortalResult.EXAM_PASSED, skill=best[0].value)
 
 
@@ -130,7 +133,7 @@ async def join_school(call: MortalCall, args: JoinSchoolInput) -> str:
     if master is not None and await call.session.get(SchoolMemberRow, (school.id, master)) is None:
         master = None
     await control.admit(call.tick, school.id, call.me.id, master)
-    await call.chronicle(ChronicleKind.WORLD, lines.JOIN_SCHOOL, entity_ids=[call.me.id], me=call.me.name, school=definite(school.name))
+    await call.record("tools.mortal.join_school", roles={IncidentRole.ACTOR: call.me.id}, facts={"school": school.name})
     return result(MortalResult.SCHOOL_JOINED, name=definite(school.name))
 
 
@@ -146,7 +149,7 @@ async def purge_circle(call: MortalCall, args: PurgeCircleInput) -> str:
         fail(MortalResult.PURGE_REFUSED, why="a stronger hand holds them")
     await control.purge(call.tick, realm.id, victim.id)
     call.target(realm.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.PURGE_CIRCLE, entity_ids=[call.me.id, victim.id], me=call.me.name, victim=victim.name)
+    await call.record("tools.mortal.purge_circle", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.VICTIM: victim.id, IncidentRole.AUTHORITY: realm.id})
     return result(MortalResult.CIRCLE_PURGED, name=victim.name)
 
 
@@ -158,7 +161,11 @@ async def guard_throne(call: MortalCall, args: GuardThroneInput) -> str:
     row: RegimeRow = await control.set_regime(call.tick, realm.id, values)
     taken = [name.replace("_", " ") for name, value in values.items() if value]
     call.target(realm.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.GUARD_THRONE, entity_ids=[call.me.id, realm.id], me=call.me.name, realm=realm.name)
+    await call.record(
+        "tools.mortal.guard_throne",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.id},
+        facts={"measures": [CoupProofing(name) for name, value in values.items() if value], "loyalty": row.coalition_loyalty},
+    )
     return result(MortalResult.THRONE_GUARDED, measures=", ".join(taken) if taken else "none", loyalty=row.coalition_loyalty)
 
 
@@ -181,7 +188,11 @@ async def steer_marriages(call: MortalCall, args: SteerMarriagesInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.MARRIAGES_REFUSED, why=str(error).rstrip("."))
     call.target(house_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.STEER_MARRIAGES, entity_ids=[call.me.id, house_id], me=call.me.name, plan=args.name)
+    await call.record(
+        "tools.mortal.steer_marriages",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.MEMBER: house_id, IncidentRole.AUTHORITY: args.claim_polity_id},
+        facts={"plan": args.name, "target_share": args.target_share, "generations": args.steps},
+    )
     return result(MortalResult.MARRIAGES_STEERED, name=args.name, id=plan.plan_id)
 
 

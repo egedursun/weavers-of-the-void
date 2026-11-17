@@ -5,7 +5,6 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -13,12 +12,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import effective, strike_style
@@ -38,7 +38,6 @@ from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
 from aerona.engine.mind.memories import remember
 from aerona.engine.mythic.ballads import carry_legend, sing_of_slaying, tell_legend
 from aerona.engine.nature.sleepers import lair_factor
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -46,9 +45,10 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, close, connect, living_entity
 from aerona.engine.primitives.records import retire
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import equipment, species_trait_bonus, weapon_power
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 from aerona.engine.services.war import declare_war
 
 VICTORY_KINDS = (BondKind.KILLED, BondKind.BEAT)
@@ -129,9 +129,20 @@ async def _reward_weapon(ctx: TickContext, hero: EntityRow, monster: EntityRow) 
     victories = len(await active_bonds(ctx.session, VICTORY_KINDS, sources=[weapon.id]))
     if victories >= hunt.legendary_weapon_victories and await add_flag(ctx.session, weapon.id, EntityFlag.LEGENDARY, ctx.epoch):
         weapon.power_level = min(hunt.power_cap, weapon.power_level + 1)
-        await note(
-            ctx, f"{weapon.name} became legendary after {several(victories, 'victory', 'victories')}.", key="heroism.legendary_weapon", ids=[weapon.id, hero.id]
-        )
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: weapon.id, IncidentRole.OWNER: hero.id, IncidentRole.OPPONENT: monster.id}
+        await record(ctx, "heroism.legendary_weapon", roles=roles, facts={"victories": victories, "might": stat_or(weapon, "might", 0)})
+
+
+async def tell_victory(
+    ctx: TickContext, hero: EntityRow, monster: EntityRow, patron: SonRow | None, *, slain: bool, ballad: EntityRow | None, danger: int
+) -> None:
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: hero.id, IncidentRole.OPPONENT: monster.id, IncidentRole.PATRON: patron.id if patron else None}
+    if ballad is not None:
+        roles[IncidentRole.PRODUCT] = ballad.id
+    blow = StepAction.FINISH if slain else StepAction.STRIKE
+    steps = (StepDraft(blow, actor=hero.id, target=monster.id, outcome=StepOutcome.KILLED if slain else StepOutcome.WOUNDED),)
+    facts: dict[str, FactInput] = {"danger": danger, "charisma_gain": ctx.rules.world_hunt.victory_charisma}
+    await record(ctx, "heroism.victory" if slain else "heroism.drove_back", roles=roles, facts=facts, steps=steps, son_id=patron.id if patron else None)
 
 
 async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patron: SonRow | None, context: str) -> EncounterResult:
@@ -144,7 +155,9 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
     if slain and CreatureTrait.TIME_REWINDER in await repository.traits(monster.id) and EntityFlag.TIME_RETURNED not in monster_flags:
         set_stats(monster, danger=clamp_int(danger + hunt.rewind_danger_gain, 0, PERCENT))
         await add_flag(ctx.session, monster.id, EntityFlag.TIME_RETURNED, ctx.epoch)
-        await note(ctx, f"{monster.name} died but rewound time; {hero.name} will see it once more.", key="heroism.rewind", ids=[monster.id, hero.id])
+        await record(
+            ctx, "heroism.rewind", roles={IncidentRole.SUBJECT: monster.id, IncidentRole.OPPONENT: hero.id}, facts={"trait": CreatureTrait.TIME_REWINDER}
+        )
         slain = False
         rewound = True
     else:
@@ -199,13 +212,8 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
             subjects=[hero, monster],
         )
         await carry_legend(ctx, hero, epic, "tells their epic")
-        await note(
-            ctx,
-            f"{hero.name} slew the megafauna {monster.name}. The balance of its world changed.",
-            key="heroism.age_change",
-            ids=[hero.id, monster.id, epic.id],
-            kind=ChronicleKind.AGE_CHANGE,
-        )
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: hero.id, IncidentRole.VICTIM: monster.id, IncidentRole.PRODUCT: epic.id}
+        await record(ctx, "heroism.age_change", roles=roles, facts={"flag": EntityFlag.MEGAFAUNA, "power": hero.power_level})
     set_stats(hero, charisma=clamp_int((stat(hero, "charisma") or 0) + hunt.victory_charisma, 0, PERCENT))
     if slain and not hero.title:
         hero.title = f"{monster.name} Slayer"
@@ -217,9 +225,7 @@ async def _hero_wins(ctx: TickContext, hero: EntityRow, monster: EntityRow, patr
     ballad: EntityRow | None = None
     if slain:
         ballad = await sing_of_slaying(ctx, hero, monster, context)
-    deed = "killed it" if slain else "drove it back"
-    ids = [hero.id, monster.id] + ([ballad.id] if ballad is not None else [])
-    await note(ctx, f"{hero.name}, {context}, faced {monster.name} and {deed}.", key="heroism.victory", ids=ids, son_id=patron.id if patron else None)
+    await tell_victory(ctx, hero, monster, patron, slain=slain, ballad=ballad, danger=danger)
     ctx.count("hero_victories")
     if rewound:
         return EncounterResult(EncounterOutcome.REWOUND)
@@ -246,13 +252,9 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         )
         set_stats(armor, protection=clamp_int(protection - hunt.armor_save_wear, 0, PERCENT))
         await declare_war(ctx, monster.id, hero.id, context, cause=WarCause.BEAST, world_cap=False)
-        await note(
-            ctx,
-            f"{hero.name} was defeated by {monster.name} but {armor.name} saved them from death; they withdrew gravely wounded.",
-            key="heroism.armor_save",
-            ids=[hero.id, monster.id, armor.id],
-            son_id=son_id,
-        )
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: hero.id, IncidentRole.OPPONENT: monster.id, IncidentRole.INSTRUMENT: armor.id}
+        facts: dict[str, FactInput] = {"hp_lost": hunt.armor_save_hp_loss, "protection_before": protection, "protection_after": stat_or(armor, "protection", 0)}
+        await record(ctx, "heroism.armor_save", roles=roles, facts=facts, son_id=son_id)
         return EncounterResult(EncounterOutcome.WOUNDED)
     style = await strike_style(ctx.session, ctx.rules, monster, hero)
     await fatal_injury(ctx, hero, Harm(hunt.armor_save_hp_loss, HarmCause.MONSTER, f"fell before {monster.name}", style=style, killer_id=monster.id))
@@ -267,7 +269,14 @@ async def _hero_loses(ctx: TickContext, hero: EntityRow, monster: EntityRow, pat
         subjects=[hero],
     )
     await carry_legend(ctx, hero, lament, "sings their lament")
-    await note(ctx, f"{hero.name}, {context}, fell before {monster.name}.", key="heroism.defeat", ids=[hero.id, monster.id, lament.id], son_id=son_id)
+    fell: dict[IncidentRole, RoleValue] = {
+        IncidentRole.VICTIM: hero.id,
+        IncidentRole.OPPONENT: monster.id,
+        IncidentRole.PRODUCT: lament.id,
+        IncidentRole.PATRON: son_id,
+    }
+    steps = (StepDraft(StepAction.DIE, actor=hero.id, target=monster.id, outcome=StepOutcome.KILLED),)
+    await record(ctx, "heroism.defeat", roles=fell, facts={"cause": DeathCause.MONSTER}, steps=steps, son_id=son_id)
     ctx.count("hero_defeats")
     return EncounterResult(EncounterOutcome.FELL, lament)
 
@@ -309,7 +318,6 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.house_members",
     "table.injuries",
@@ -348,7 +356,6 @@ async def encounter(ctx: TickContext, hero: EntityRow, monster: EntityRow, conte
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -409,7 +416,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
+    "table.foreign_gods",
     "table.geasa",
     "table.goods_flows",
     "table.holder_levels",
@@ -418,6 +425,8 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.incidents",
     "table.incorporeal_rights",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.language_profiles",
     "table.law_jurisdictions",
     "table.lexemes",
@@ -440,11 +449,14 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.routes",
     "table.sacraments",
     "table.skills",
+    "table.sons",
     "table.species_profiles",
     "table.spirit_profiles",
     "table.tradition_profiles",
     "table.traits",
     "table.transform_prospects",
+    "table.war_sides",
+    "table.wars",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
@@ -465,9 +477,10 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.deeds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.memories",

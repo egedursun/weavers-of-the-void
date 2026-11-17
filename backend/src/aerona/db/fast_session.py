@@ -12,6 +12,7 @@ from sqlalchemy.sql.selectable import ForUpdateParameter
 from sqlalchemy.util import EMPTY_DICT
 
 from aerona.db.read_memo import KEEP_KEY, memo_of, pending_tables, read_tables, register_index, table_names, track_dirty
+from aerona.db.record_context import stamp_row
 
 PREFIX_KEYS = 2
 PRIME_CHUNK = 500
@@ -45,6 +46,7 @@ class FastSession(AsyncSession):
         if instance_state(instance).pending:
             self.sync_session.expunge(instance)
             return
+        stamp_row(instance)
         await super().delete(instance)
 
     async def get[O](

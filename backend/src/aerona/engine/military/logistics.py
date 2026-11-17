@@ -236,7 +236,7 @@ def feed(
     log: Season,
     *,
     season: WorldSeasonRow | None = None,
-    thrift: float = 1.0,
+    saving: float = 1.0,
 ) -> int:
     table = ctx.rules.logistics
     profile = march.profile
@@ -244,7 +244,7 @@ def feed(
     if home is not None and profile.region_entity_id == home:
         profile.supply_days = table.supply_days
         return 0
-    profile.supply_days = max(0, profile.supply_days - round_half_up(table.season_days * thrift))
+    profile.supply_days = max(0, profile.supply_days - round_half_up(table.season_days * saving))
     if region is None:
         return 0
     fed = supply_limit(ctx.rules, region, season)
@@ -490,7 +490,7 @@ async def campaign_season(
     sanitation = await sanitation_of(ctx, march.owner)
     fever = summer(season_row, ground.seasons_of(march.owner.world_id))
     peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
-    dead = feed(ctx, march, region, home, log, season=season_row, thrift=thrift(ctx.rules, areas)) + camp_sickness(
+    dead = feed(ctx, march, region, home, log, season=season_row, saving=thrift(ctx.rules, areas)) + camp_sickness(
         ctx, march, region, sanitation=sanitation, fever=fever
     )
     if log.eaten_out:

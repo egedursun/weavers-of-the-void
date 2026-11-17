@@ -11,7 +11,6 @@ from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.agrarian import IntensificationRow, LandRingRow
@@ -25,12 +24,12 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
@@ -104,6 +103,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import base_stat, set_base_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.engine.structures.readers import regions_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -139,8 +139,8 @@ def fallback_geography(rules: Rules, region: EntityRow) -> Geography:
     )
 
 
-def mapped_geography(record: RegionRecord) -> Geography | None:
-    found = record.geography
+def mapped_geography(entry: RegionRecord) -> Geography | None:
+    found = entry.geography
     if found is None:
         return None
     return Geography(
@@ -559,7 +559,7 @@ async def environment_survey(ctx: TickContext) -> None:
     by_id = {world.id: world for world in worlds}
     for world in unheld(worlds):
         calendars += int(await ensure_world_calendar(ctx, world, moons[world.id], root_of(by_id, world).orbit))
-    records = {record.id: record for world_records in (await stored_regions(ctx.session)).values() for record in world_records}
+    records = {stored.id: stored for world_records in (await stored_regions(ctx.session)).values() for stored in world_records}
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     regions = unheld(await canon(ctx.session, [EntityType.REGION]))
     contexts = await region_contexts(ctx, book, regions)
@@ -570,9 +570,9 @@ async def environment_survey(ctx: TickContext) -> None:
         context = contexts.get(region.id)
         if context is None:
             continue
-        record = records.get(region.id)
-        mapped = mapped_geography(record) if record is not None else None
-        coast = record.geography.coast_kind if record is not None and record.geography is not None else CoastKind.NONE
+        stored = records.get(region.id)
+        mapped = mapped_geography(stored) if stored is not None else None
+        coast = stored.geography.coast_kind if stored is not None and stored.geography is not None else CoastKind.NONE
         env = book.regions.get(region.id)
         if env is None:
             env = new_region_environment(ctx, region, mapped or fallback_geography(ctx.rules, region), coast, context)
@@ -837,17 +837,17 @@ class LandMark:
     cleared: int
 
 
-def land_turns(rules: Rules, env: RegionEnvironmentRow, before: LandMark) -> list[tuple[str, str]]:
+def land_turns(rules: Rules, env: RegionEnvironmentRow, before: LandMark) -> list[tuple[str, dict[str, FactInput]]]:
     settings = rules.land_use
-    turns: list[tuple[str, str]] = []
+    turns: list[tuple[str, dict[str, FactInput]]] = []
     if before.erosion < settings.erosion_noted <= env.erosion:
-        turns.append(("land.erosion", "The cleared land of {region} is eroding; its soil runs off to the rivers."))
+        turns.append(("land.erosion", {"erosion": env.erosion}))
     if before.farmed <= settings.overfarm_threshold < env.farmed:
-        turns.append(("land.overfarmed", "Every field of {region} is worked year after year without rest."))
+        turns.append(("land.overfarmed", {"farmed": env.farmed}))
     if before.soil >= settings.exhausted_soil_below > env.soil_fertility:
-        turns.append(("land.soil_exhausted", "The soil of {region} is worn out; it yields little."))
+        turns.append(("land.soil_exhausted", {"fertility": env.soil_fertility}))
     if before.cleared > 0 == env.cleared:
-        turns.append(("land.rewilded", "Wild growth has taken back the empty fields of {region}."))
+        turns.append(("land.rewilded", {"forest": env.forest_cover}))
     return turns
 
 
@@ -855,19 +855,8 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     turns = land_turns(ctx.rules, env, before)
     if not turns:
         return
-    region = await ctx.session.get(EntityRow, env.entity_id)
-    if region is None:
-        return
-    for key, text in turns:
-        await ctx.chronicle(
-            ChronicleKind.CLIMATE,
-            text.format(region=region.name),
-            template_key=key,
-            entity_ids=[region.id],
-            world_id=region.world_id,
-            place_entity_id=region.id,
-            feed_category=FeedCategory.WORLD,
-        )
+    for key, facts in turns:
+        await record(ctx, key, roles={IncidentRole.SUBJECT: env.entity_id}, facts=facts, place=env.entity_id, world_id=env.world_id)
 
 
 @reads(
@@ -882,7 +871,6 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.galactic_structures",
     "table.galaxies",
@@ -901,7 +889,7 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.world_seasons",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.region_environment")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.region_environment")
 async def land_use(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.land_use
@@ -982,20 +970,28 @@ class Notable:
     year: YearHarvest
     magnitude: int
     name: str
-    text: str
 
 
-async def record_notable(ctx: TickContext, world: WorldRow, region: EntityRow | None, notable: Notable) -> NotableYearRow:
-    written = await ctx.chronicle(
-        ChronicleKind.CLIMATE,
-        notable.text,
-        template_key=f"year.{notable.kind.value}",
-        entity_ids=[region.id] if region is not None else [],
+async def record_notable(ctx: TickContext, key: str, world: WorldRow, region: EntityRow | None, notable: Notable) -> NotableYearRow:
+    roles: dict[IncidentRole, RoleValue] = (
+        {IncidentRole.SUBJECT: region.id if region is not None else world.id, IncidentRole.PLACE: region.id if region is not None else None}
+        if notable.kind is NotableYearKind.WEATHER
+        else {IncidentRole.PLACE: region.id if region is not None else None}
+    )
+    written = await record(
+        ctx,
+        key,
+        roles=roles,
+        facts={
+            "name": notable.name,
+            "year": notable.year.year,
+            "harvest": notable.year.harvest,
+            "weather": notable.year.weather,
+            "magnitude": notable.magnitude,
+        },
+        place=region.id if region is not None else None,
         world_id=world.id,
-        feed_category=FeedCategory.WORLD,
-        place_entity_id=region.id if region is not None else None,
         magnitude=notable.magnitude,
-        year=notable.year.year,
     )
     row = NotableYearRow(
         world_id=world.id,
@@ -1119,9 +1115,7 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
     worst = min(results, key=lambda item: (item.harvest, item.offset))
     if worst.harvest < settings.notable_threshold:
         name = f"the Hungry Year in {region.name}"
-        weather = WEATHER[worst.weather].label.lower()
-        text = f"In the year {worst.year} the harvest of {region.name} failed under {weather}: {name} was never forgotten."
-        await record_notable(ctx, world, region, Notable(NotableYearKind.HUNGER, worst, PERCENT - worst.harvest, name, text))
+        await record_notable(ctx, "year.hunger", world, region, Notable(NotableYearKind.HUNGER, worst, PERCENT - worst.harvest, name))
         if worst.harvest < settings.famine_event_below:
             await famine_event(ctx, region, season.loads[("region", env.entity_id)].communities, name, PERCENT - worst.harvest)
         found += 1
@@ -1138,8 +1132,8 @@ async def plenty_year(ctx: TickContext, world: WorldRow, season: HarvestSeason) 
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
-    text = f"The stores of {region.name} overflowed in the year {best.year}."
-    await record_notable(ctx, world, region, Notable(NotableYearKind.PLENTY, best, best.harvest - PERCENT, f"the Year of Plenty in {region.name}", text))
+    plenty = Notable(NotableYearKind.PLENTY, best, best.harvest - PERCENT, f"the Year of Plenty in {region.name}")
+    await record_notable(ctx, "year.plenty", world, region, plenty)
     return 1
 
 
@@ -1150,13 +1144,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     region = await ctx.session.get(EntityRow, env.entity_id)
     label = WEATHER[year.weather].label
     name = f"the Year of {label}"
-    where = f" over {region.name}" if region is not None else ""
-    await record_notable(
-        ctx,
-        world,
-        region,
-        Notable(NotableYearKind.WEATHER, year, clamp_int(severity, 0, PERCENT), name, f"{label} fell{where} in the year {year.year}: {name}."),
-    )
+    await record_notable(ctx, "year.weather", world, region, Notable(NotableYearKind.WEATHER, year, clamp_int(severity, 0, PERCENT), name))
     if year.weather is WeatherKind.ASH_FALL and env.soil is not SoilKind.VOLCANIC and "soil" not in env.locked:
         env.soil = SoilKind.TEPHRA
         if "soil_base" not in env.locked:
@@ -1176,7 +1164,6 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.dominions",
     "table.ecosystem_services",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.famine_lore",
     "table.forced_weather",
     "table.galactic_structures",
@@ -1212,7 +1199,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.notable_years",
@@ -1253,7 +1240,6 @@ async def harvest(ctx: TickContext) -> None:
     "table.bonds",
     "table.calendars",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.language_profiles",
     "table.lexemes",
@@ -1275,7 +1261,6 @@ async def harvest(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -1287,18 +1272,18 @@ async def calendars(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.calendars
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
-    records = [record for record in await canon(ctx.session, [EntityType.KNOWLEDGE]) if record.knowledge_branch is KnowledgeBranch.ASTRONOMY]
+    lores = [lore for lore in await canon(ctx.session, [EntityType.KNOWLEDGE]) if lore.knowledge_branch is KnowledgeBranch.ASTRONOMY]
     adopted = commemorated = 0
     hallowed = await backfill_holy_days(ctx)
     rng = ctx.rng("adopt")
-    for record in records:
-        knowers = [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=[record.id])]
-        calendar = book.calendars.get(record.id)
+    for lore in lores:
+        knowers = [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.KNOWS], targets=[lore.id])]
+        calendar = book.calendars.get(lore.id)
         if calendar is None:
-            if not knowers or knowledge_level(rules, record) < settings.min_astronomy_level or not rng.chance(settings.adoption_chance):
+            if not knowers or knowledge_level(rules, lore) < settings.min_astronomy_level or not rng.chance(settings.adoption_chance):
                 continue
-            calendar = await adopt_calendar(ctx, record, knowers[0])
-            book.calendars[record.id] = calendar
+            calendar = await adopt_calendar(ctx, lore, knowers[0])
+            book.calendars[lore.id] = calendar
             adopted += 1
         regions = {region for knower in knowers if (region := book.atlas.top_region(knower)) is not None}
         commemorated += await commemorate_hard_years(ctx, calendar, regions)
@@ -1318,27 +1303,25 @@ async def month_names(ctx: TickContext, seasons: list[WorldSeasonRow], speaker_i
     return names
 
 
-async def adopt_calendar(ctx: TickContext, record: EntityRow, holder_id: int) -> CalendarRow:
-    book_seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == record.world_id).order_by(WorldSeasonRow.position)))
+async def adopt_calendar(ctx: TickContext, lore: EntityRow, holder_id: int) -> CalendarRow:
+    book_seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == lore.world_id).order_by(WorldSeasonRow.position)))
     calendar = CalendarRow(
-        knowledge_entity_id=record.id,
-        world_id=record.world_id,
+        knowledge_entity_id=lore.id,
+        world_id=lore.world_id,
         adopted_epoch=ctx.epoch,
         anchor_year=epoch_start_year(ctx.epoch, ctx.rules.time.years_per_epoch),
         anchor_incident_id=None,
-        month_names=await month_names(ctx, book_seasons, holder_id, record.id),
+        month_names=await month_names(ctx, book_seasons, holder_id, lore.id),
         holy_days=[],
     )
     ctx.session.add(calendar)
-    holder = await ctx.session.get(EntityRow, holder_id)
-    who = holder.name if holder is not None else "its keepers"
     first = calendar.month_names[0] if calendar.month_names else "the first"
-    written = await ctx.chronicle(
-        ChronicleKind.CULTURE,
-        f"{who} began to count the year by {record.name}: {several(len(calendar.month_names), 'month', 'months')}, from {first}.",
-        template_key="season.calendar_adopted",
-        entity_ids=[record.id, holder_id],
-        world_id=record.world_id,
+    written = await record(
+        ctx,
+        "season.calendar_adopted",
+        roles={IncidentRole.ACTOR: holder_id, IncidentRole.SUBJECT: lore.id},
+        facts={"months": len(calendar.month_names), "first": first, "anchor_year": calendar.anchor_year},
+        world_id=lore.world_id,
     )
     calendar.anchor_incident_id = written.incident_id
     await ctx.session.flush()
@@ -1390,13 +1373,12 @@ async def weave_lines(ctx: TickContext, web: LeyWeb, regions: dict[int, EntityRo
             ctx.session.add(line)
             web.lines.append(line)
             formed += 1
-            first, second = regions[key[0]], regions[key[1]]
-            await ctx.chronicle(
-                ChronicleKind.CLIMATE,
-                f"A ley line formed between {first.name} and {second.name}.",
-                template_key="environment.ley_line_formed",
-                entity_ids=[first.id, second.id],
-                world_id=first.world_id,
+            await record(
+                ctx,
+                "environment.ley_line_formed",
+                roles={IncidentRole.ORIGIN: key[0], IncidentRole.DESTINATION: key[1]},
+                facts={"strength": strength},
+                world_id=regions[key[0]].world_id,
             )
         line.strength = max(strength, line.strength) if line.forged else strength
         held = line.severed_until_epoch is not None and line.severed_until_epoch >= ctx.epoch
@@ -1424,8 +1406,8 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
             ground.magic_density = clamp_int(ground.magic_density + degree[region_id] * settings.ley_convergence, 0, PERCENT)
         candidates = by_region.get(region_id, [])
         chosen: PlaceEnvironmentRow | None = None
+        mystery: dict[int, int] = {}
         if degree[region_id] >= settings.nexus_lines and candidates:
-            mystery: dict[int, int] = {}
             for place in candidates:
                 entity = await ctx.session.get(EntityRow, place.entity_id)
                 mystery[place.entity_id] = (stat(entity, "mystery") or 0) if entity is not None else 0
@@ -1436,15 +1418,13 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
             becomes = place is chosen
             if becomes and not place.nexus:
                 crowned += 1
-                entity = await ctx.session.get(EntityRow, place.entity_id)
-                if entity is not None:
-                    await ctx.chronicle(
-                        ChronicleKind.CLIMATE,
-                        f"{degree[region_id]} ley lines meet at {entity.name}: a nexus of power.",
-                        template_key="environment.nexus_formed",
-                        entity_ids=[entity.id, region_id],
-                        world_id=entity.world_id,
-                    )
+                await record(
+                    ctx,
+                    "environment.nexus_formed",
+                    roles={IncidentRole.SUBJECT: place.entity_id, IncidentRole.PLACE: region_id},
+                    facts={"lines": degree[region_id], "mystery": mystery.get(place.entity_id, 0) if chosen is not None else 0},
+                    place=region_id,
+                )
             place.nexus = becomes
     return crowned
 
@@ -1455,7 +1435,6 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "structure.function",
     "table.applied_fixups",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.ley_lines",
     "table.nodes",
     "table.place_environment",
@@ -1471,7 +1450,6 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.ley_lines",

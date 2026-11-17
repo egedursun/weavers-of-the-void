@@ -9,6 +9,7 @@ from aerona.catalog.knowledge import ENGINE_UNDISCOVERABLE_BRANCHES, KNOWLEDGE_B
 from aerona.catalog.techniques import BRANCH_GRAPH, Gate
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
@@ -17,15 +18,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.load import DiseaseLoads, endemic_regions
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import gate_open, holder_levels, raise_holder, research_factor
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.knowledge import knowledge_level
@@ -36,6 +36,7 @@ from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -199,14 +200,11 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         if reached is None and level is None:
             continue
         deepened += 1
-        shown = level if level is not None else reached
-        frontier = " and pushed the frontier" if level is not None else ""
-        await note(
+        await record_incident(
             ctx,
-            f"The masters of {community.name} deepened their knowledge of {chosen.name}{frontier}; they now stand at level {shown}.",
-            key="knowledge.deepened",
-            ids=[community.id, chosen.id],
-            kind=ChronicleKind.KNOWLEDGE,
+            "knowledge.deepened",
+            roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: chosen.id},
+            facts={"level": level if level is not None else reached, "frontier_level": level, "chance": chance},
         )
     return deepened
 
@@ -287,13 +285,15 @@ async def discovery_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         scene.knowledge[knowledge.id] = knowledge
         scene.held[discoverer.id].append(knowledge.id)
         found += 1
-        ids = [discoverer.id, knowledge.id, *([option.base.id] if option.base is not None else [])]
-        await note(
+        await record_incident(
             ctx,
-            f"{discoverer.name} reached a knowledge never known in its world: {branch_label(option.branch)} ({knowledge.name}).",
-            key="knowledge.discovered",
-            ids=ids,
-            kind=ChronicleKind.KNOWLEDGE,
+            "knowledge.discovered",
+            roles={
+                IncidentRole.ACTOR: discoverer.id,
+                IncidentRole.PRODUCT: knowledge.id,
+                IncidentRole.PREDECESSOR: option.base.id if option.base is not None else None,
+            },
+            facts={"branch": option.branch},
         )
     return found
 
@@ -317,12 +317,12 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         if level is None:
             continue
         declined += 1
-        await note(
+        await record_incident(
             ctx,
-            f"Ruin and famine scattered the masters of {knowledge.name}; its finer arts were forgotten and it fell to level {level}.",
-            key="knowledge.declined",
-            ids=[knowledge.id, *(item.id for item in holders)],
-            kind=ChronicleKind.KNOWLEDGE,
+            "knowledge.declined",
+            roles={IncidentRole.SUBJECT: knowledge.id, IncidentRole.MEMBER: [item.id for item in holders]},
+            facts={"level": level},
+            terms=[Term("rules.knowledge.decline_chance", table.decline_chance)],
         )
     return declined
 
@@ -338,7 +338,6 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
     "table.incident_participants",
@@ -374,8 +373,8 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -398,13 +397,7 @@ async def set_knowledge_level(session: AsyncSession, rules: Rules, knowledge_id:
         raise ValidationFailedError(f"{knowledge.name} is {bound}.")
     ctx = await manual_context(session, "knowledge_level", rules, key=str(knowledge_id))
     verb = "deepened" if direction > 0 else "blunted"
-    await note(
-        ctx,
-        f"The Creator {verb} the knowledge of {knowledge.name}; it now stands at level {level}.",
-        key=f"knowledge.creator_{verb}",
-        ids=[knowledge.id],
-        kind=ChronicleKind.CREATOR_HAND,
-    )
+    await record_incident(ctx, f"knowledge.creator_{verb}", roles={IncidentRole.SUBJECT: knowledge.id}, facts={"level": level})
     await session.flush()
     return LevelChange(knowledge, level, direction)
 

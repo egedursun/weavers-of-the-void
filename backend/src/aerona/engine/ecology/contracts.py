@@ -14,16 +14,18 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.constructs import ContractStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import HELD, fall, towns_near
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mythic.ballads import sing_of_slaying
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import RoleValue, StepDraft, record
 
 OPEN = (ContractStatus.POSTED, ContractStatus.TAKEN)
 MIDDLING = 50
@@ -63,7 +65,8 @@ async def post_contracts(ctx: TickContext, tally: ContractTally) -> None:
         town = max(near, key=lambda item: (stat_or(item, "population", 0), -item.id))
         ctx.session.add(MonsterContractRow(community_entity_id=town.id, beast_entity_id=beast.id, bounty=table.bounty, posted_epoch=ctx.epoch, locked=[]))
         tally.posted += 1
-        await note(ctx, f"{town.name} posted a bounty on {beast.name}.", key="contract.posted", ids=[town.id, beast.id])
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: town.id, IncidentRole.TARGET: beast.id}
+        await record(ctx, "contract.posted", roles=roles, facts={"bounty": table.bounty, "raids": row.raids}, place=town.id)
     await ctx.session.flush()
 
 
@@ -105,7 +108,8 @@ async def take_contracts(ctx: TickContext, tally: ContractTally) -> None:
         row.hunter_entity_id, row.status = hunter.id, ContractStatus.TAKEN
         busy.add(hunter.id)
         tally.taken += 1
-        await note(ctx, f"{hunter.name} took the bounty on {beast.name}.", key="contract.taken", ids=[hunter.id, beast.id])
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: hunter.id, IncidentRole.TARGET: beast.id, IncidentRole.GIVER: row.community_entity_id}
+        await record(ctx, "contract.taken", roles=roles, facts={"bounty": row.bounty})
 
 
 def hunt_chance(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, beast: EntityRow) -> int:
@@ -133,7 +137,13 @@ async def slay(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, bea
         profile.renown = clamp_int(profile.renown + table.renown, 0, PERCENT)
     await settle(ctx, row, ContractStatus.SLAIN)
     await sing_of_slaying(ctx, hunter, beast, "hunting for a bounty")
-    await note(ctx, f"{hunter.name} slew {beast.name} and claimed the bounty.", key="contract.slain", ids=[hunter.id, beast.id])
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.ACTOR: hunter.id,
+        IncidentRole.VICTIM: beast.id,
+        IncidentRole.GIVER: town.id if town is not None else None,
+    }
+    steps = (StepDraft(StepAction.FINISH, actor=hunter.id, target=beast.id, outcome=StepOutcome.KILLED),)
+    await record(ctx, "contract.slain", roles=roles, facts={"bounty": row.bounty, "renown": table.renown, "study": row.study}, steps=steps)
 
 
 async def hunt(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, beast: EntityRow, tally: ContractTally) -> None:
@@ -149,7 +159,8 @@ async def hunt(ctx: TickContext, row: MonsterContractRow, hunter: EntityRow, bea
     if hp - table.wound <= 1:
         await settle(ctx, row, ContractStatus.FAILED)
         tally.failed += 1
-        await note(ctx, f"{hunter.name} gave up the hunt for {beast.name}, badly hurt.", key="contract.failed", ids=[hunter.id, beast.id])
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: hunter.id, IncidentRole.TARGET: beast.id}
+        await record(ctx, "contract.failed", roles=roles, facts={"wound": table.wound, "study": row.study, "bounty": row.bounty})
 
 
 async def keep_hunts(ctx: TickContext, tally: ContractTally) -> None:

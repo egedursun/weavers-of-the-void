@@ -14,8 +14,8 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveTrigger, DesignComponentKind, StoryletStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, record, strike
@@ -33,7 +33,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 MAX_CHOICE = 3
 MAX_NAMED = 8
@@ -81,7 +80,7 @@ async def choose_storylet(call: MortalCall, args: StoryletChoiceInput) -> str:
     known = await names(call.session, cast_of(run))
     text = choices[args.choice].text.format(**known)
     await resolve(call.tick, run, args.choice, StoryletTally(), by="agent")
-    await call.chronicle(ChronicleKind.WORLD, lines.CHOOSE_STORYLET, entity_ids=[call.me.id], me=call.me.name, choice=text)
+    await call.record("tools.mortal.choose_storylet", roles={IncidentRole.ACTOR: call.me.id}, facts={"storylet": run.storylet, "choice": text})
     return result(MortalResult.STORYLET_CHOSEN, choice=text)
 
 
@@ -92,8 +91,12 @@ async def rouse_crowd(call: MortalCall, args: RouseInput) -> str:
         fail(MortalResult.ROUSE_REFUSED, why="there is no town about you to rouse")
     shift(mood, "agitation", stat_or(call.me, "charisma", PERCENT // 2) / 2)
     call.target(town.id)
-    grievance = args.grievance.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORLD, lines.ROUSE_CROWD, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name, grievance=grievance)
+    await call.record(
+        "tools.mortal.rouse_crowd",
+        roles={IncidentRole.LEADER: call.me.id, IncidentRole.PLACE: town.id},
+        facts={"grievance": args.grievance, "agitation": mood.agitation},
+        place=town.id,
+    )
     return result(MortalResult.CROWD_ROUSED, name=town.name, anger=mood.anger, anxiety=mood.anxiety, fervour=mood.fervour, agitation=mood.agitation)
 
 
@@ -121,7 +124,11 @@ async def commission_account(call: MortalCall, args: AccountInput) -> str:
     )
     if written is None:
         fail(MortalResult.ACCOUNT_REFUSED, why="the realm's records are held by a god")
-    await call.chronicle(ChronicleKind.WORLD, lines.COMMISSION_ACCOUNT, entity_ids=[call.me.id, realm.id], me=call.me.name, realm=realm.name, event=event.name)
+    await call.record(
+        "tools.mortal.commission_account",
+        roles={IncidentRole.PATRON: call.me.id, IncidentRole.AUTHORITY: realm.id, IncidentRole.SUBJECT: sorted(stances)},
+        facts={"event": event.name, "fidelity": written.fidelity},
+    )
     return result(MortalResult.ACCOUNT_WRITTEN, name=event.name, fidelity=written.fidelity)
 
 
@@ -136,7 +143,7 @@ async def strike_memory(call: MortalCall, args: StrikeInput) -> str:
     if await strike(call.tick, realm.id, figure.id, HistoryTally()) is None:
         fail(MortalResult.STRIKE_REFUSED, why="a god holds that memory fast")
     call.target(figure.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.STRIKE_MEMORY, entity_ids=[call.me.id, figure.id], me=call.me.name, figure=figure.name, realm=realm.name)
+    await call.record("tools.mortal.strike_memory", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: figure.id, IncidentRole.AUTHORITY: realm.id})
     return result(MortalResult.MEMORY_STRUCK, name=figure.name)
 
 
@@ -164,7 +171,11 @@ async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
     sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
     skill = stat_or(call.me, "intellect", PERCENT // 2)
     design = await draw_design(call.tick, owner, args.frame, sizes=sizes, quality=skill, designer_id=call.me.id, knowledge=knowledge)
-    await call.chronicle(ChronicleKind.WORLD, lines.DRAW_DESIGN, entity_ids=[call.me.id, owner.id], me=call.me.name, design=design.name)
+    await call.record(
+        "tools.mortal.draw_design",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.OWNER: owner.id, IncidentRole.PRODUCT: design.entity_id},
+        facts={"frame": args.frame, "emphasis": args.emphasis, "quality": skill},
+    )
     return result(
         MortalResult.DESIGN_DRAWN, name=design.name, speed=design.speed, reach=design.range, cargo=design.cargo, arms=design.armament, crew=design.crew
     )

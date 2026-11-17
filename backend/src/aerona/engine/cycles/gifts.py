@@ -19,6 +19,8 @@ from aerona.domain.enums.cycles import GiftOccasion, GiftState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.unions import UnionExchange
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import shift
@@ -33,10 +35,10 @@ from aerona.engine.ecology.beasts import hand_over
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.lore.items import material_key
 from aerona.engine.mind.preferences import fit, prefs_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import relation
 from aerona.engine.unions.customs import payer
 
@@ -169,11 +171,15 @@ async def refuse(ctx: TickContext, gift: GiftRow) -> None:
     gift.state = GiftState.REFUSED
     gift.settled_epoch = ctx.epoch
     await regard(ctx, (gift.giver_node_id, gift.receiver_node_id), -table.refusal_insult, MemoryKind.HUMILIATED_ME, "refused a gift")
-    await note(
+    await record(
         ctx,
-        f"{await name_of(ctx, gift.receiver_node_id)} refused the gift of {await name_of(ctx, gift.giver_node_id)}, a grave insult.",
-        key="gifts.refused",
-        ids=[gift.giver_node_id, gift.receiver_node_id],
+        "gifts.refused",
+        roles={IncidentRole.GIVER: gift.giver_node_id, IncidentRole.RECEIVER: gift.receiver_node_id},
+        facts={"value": gift.value, "occasion": gift.occasion, "insult": table.refusal_insult},
+        steps=(
+            StepDraft(StepAction.REFUSE, actor=gift.receiver_node_id, target=gift.giver_node_id, outcome=StepOutcome.REFUSED),
+            StepDraft(StepAction.INSULT, actor=gift.receiver_node_id, target=gift.giver_node_id, amount=table.refusal_insult, unit=FactUnit.STANDING),
+        ),
     )
 
 
@@ -197,8 +203,25 @@ async def return_gift(ctx: TickContext, gift: GiftRow, *, value: int | None = No
     if "state" not in gift.locked:
         gift.state = GiftState.RETURNED
         gift.settled_epoch = ctx.epoch
-    if answer.value >= gift.value:
+    in_kind = answer.value >= gift.value
+    if in_kind:
         await regard(ctx, (gift.giver_node_id, gift.receiver_node_id), table.return_regard, MemoryKind.GOODWILL, "returned a gift in kind")
+    await record(
+        ctx,
+        "gifts.returned",
+        roles={IncidentRole.GIVER: gift.giver_node_id, IncidentRole.RECEIVER: gift.receiver_node_id},
+        facts={"value": gift.value, "answered": answer.value, "occasion": gift.occasion, "in_kind": int(in_kind)},
+        steps=(
+            StepDraft(
+                StepAction.RETURN_GIFT,
+                actor=gift.receiver_node_id,
+                target=gift.giver_node_id,
+                amount=answer.value,
+                unit=FactUnit.COIN,
+                outcome=StepOutcome.SUCCESS if in_kind else StepOutcome.PARTIAL,
+            ),
+        ),
+    )
     return answer
 
 
@@ -209,13 +232,17 @@ async def lapse(ctx: TickContext, gift: GiftRow) -> None:
     weight = await obligation(ctx, gift.receiver_node_id)
     await raise_standing(ctx, gift.receiver_node_id, -gift.value * table.lapse_prestige / PERCENT * weight)
     await raise_standing(ctx, gift.giver_node_id, gift.value * table.lapse_prestige / PERCENT * weight)
-    ruined = gift.occasion in COMPETITIVE or gift.state is GiftState.DESTROYED
-    await note(
+    await record(
         ctx,
-        f"{await name_of(ctx, gift.receiver_node_id)} could not answer the gift of {await name_of(ctx, gift.giver_node_id)} and lost face"
-        + (", spent out in the rivalry." if ruined else "."),
-        key="gifts.lapsed",
-        ids=[gift.giver_node_id, gift.receiver_node_id],
+        "gifts.lapsed",
+        roles={IncidentRole.GIVER: gift.giver_node_id, IncidentRole.RECEIVER: gift.receiver_node_id},
+        facts={
+            "value": gift.value,
+            "occasion": gift.occasion,
+            "prestige_lost": round_half_up(gift.value * table.lapse_prestige / PERCENT * weight),
+            "in_rivalry": int(gift.occasion in COMPETITIVE),
+        },
+        steps=(StepDraft(StepAction.DEFAULT, actor=gift.receiver_node_id, target=gift.giver_node_id, outcome=StepOutcome.FAILURE),),
     )
 
 
@@ -278,12 +305,13 @@ async def potlatch(ctx: TickContext, tally: GiftTally) -> None:
         if gift is None:
             continue
         tally.potlatches += 1
-        verb = "burned" if destroyed else "heaped"
-        await note(
+        await record(
             ctx,
-            f"At the feast {host.name} {verb} wealth of {gift.value:d} before {await name_of(ctx, rival)} to claim the higher rank.",
-            key="potlatch.claimed",
-            ids=[host.id, rival],
+            "potlatch.claimed",
+            roles={IncidentRole.HOST: host.id, IncidentRole.OPPONENT: rival},
+            facts={"value": gift.value, "destroyed": int(destroyed)},
+            steps=(StepDraft(StepAction.SACRIFICE if destroyed else StepAction.GIVE, actor=host.id, target=rival, amount=gift.value, unit=FactUnit.COIN),),
+            place=host.location_id,
         )
 
 
@@ -311,8 +339,11 @@ async def pass_circuit(ctx: TickContext, circuit: CircuitRow, tally: GiftTally) 
     await raise_standing(ctx, there, table.holder_prestige)
     await regard(ctx, (here, there), table.bond_regard, MemoryKind.GOODWILL, circuit.name)
     tally.passes += 1
-    await note(
-        ctx, f"The treasure of {circuit.name} passed from {await name_of(ctx, here)} to {await name_of(ctx, there)}.", key="circuits.passed", ids=[here, there]
+    await record(
+        ctx,
+        "circuits.passed",
+        roles={IncidentRole.GIVER: here, IncidentRole.RECEIVER: there, IncidentRole.INSTRUMENT: circuit.item_entity_id},
+        facts={"circuit": circuit.name, "passes": circuit.passes, "value": table.pass_value},
     )
     return True
 

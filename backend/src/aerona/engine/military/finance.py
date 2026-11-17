@@ -7,17 +7,18 @@ from aerona.db.tables.military import MercenaryContractRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.military import ContractStatus
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin, wealth_points
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 
@@ -74,12 +75,11 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
             )
             shift_stat(lender, "wealth", -wealth_points(ctx.rules, table.war_loan_principal // 2))
             realm.war_chest += table.war_loan_principal
-            await ctx.chronicle(
-                ChronicleKind.DEBT,
-                f"{owner.name} borrowed from {lender.name} to keep its soldiers paid.",
-                template_key="war.loan",
-                entity_ids=(owner.id, lender.id),
-                feed_category=FeedCategory.WAR,
+            await record(
+                ctx,
+                "war.loan",
+                roles={IncidentRole.BORROWER: owner.id, IncidentRole.LENDER: lender.id},
+                facts={"principal": table.war_loan_principal, "lent_wealth": wealth_points(ctx.rules, table.war_loan_principal // 2)},
             )
             ctx.count("war_loans")
             return True
@@ -97,12 +97,17 @@ async def debase(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow) ->
     currency.supply += round_half_up(currency.supply * table.debase_supply_pct / PERCENT)
     currency.debased_epoch = ctx.epoch
     realm.war_chest += table.war_loan_principal // 2
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"{owner.name} clipped its coin to pay its soldiers; {currency.name} is worth less and prices climb.",
-        template_key="war.debasement",
-        entity_ids=(owner.id,),
-        feed_category=FeedCategory.WAR,
+    await record(
+        ctx,
+        "war.debasement",
+        roles={IncidentRole.ACTOR: owner.id},
+        facts={
+            "currency": currency.name,
+            "purity_lost": table.debase_purity,
+            "trust_lost": table.debase_trust,
+            "added": round_half_up(currency.supply * table.debase_supply_pct / (PERCENT + table.debase_supply_pct)),
+            "raised": table.war_loan_principal // 2,
+        },
     )
     ctx.count("war_debasements")
     return True
@@ -158,13 +163,10 @@ async def turn_company(ctx: TickContext, row: MercenaryContractRow, army: Entity
         army_row.owner_entity_id = enemy_id or row.company_entity_id or army_row.owner_entity_id
     if row.company_entity_id is not None:
         await change_relation(ctx, row.company_entity_id, employer.id, -ctx.rules.war_finance.mercenary_loyalty_loss, MemoryKind.CHEATED_US, note="left unpaid")
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{army.name}, left unpaid by {employer.name}, broke its contract and left.",
-        template_key="war.mercenaries_turned",
-        entity_ids=(army.id, employer.id),
-        feed_category=FeedCategory.WAR,
-    )
+    roles = {IncidentRole.ACTOR: army.id, IncidentRole.VICTIM: employer.id}
+    if army_row is not None and army_row.owner_entity_id not in {None, employer.id}:
+        roles[IncidentRole.RECEIVER] = army_row.owner_entity_id
+    await record(ctx, "war.mercenaries_turned", roles=roles)
 
 
 def mercenary_pay(rules_pay_per_100: int, soldiers: int) -> int:

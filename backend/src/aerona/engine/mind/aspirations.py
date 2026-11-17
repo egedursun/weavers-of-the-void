@@ -41,8 +41,9 @@ from aerona.domain.enums.mind import (
     ValueHolder,
     WantKind,
 )
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.kinds.culture_life import aims_held, fears_held
 from aerona.engine.mind.book import Values, is_locked, mind_of, needs_of, stored_values
@@ -52,13 +53,13 @@ from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mortal.kin import children_of, partners_of, spouses_of
 from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.profile import ensure_profile, is_held
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 ASPIRATION_LOCK = "aspirations"
@@ -775,8 +776,13 @@ async def set_out(ctx: TickContext, mortal: EntityRow) -> bool:
     if not options:
         return False
     mortal.location_id = want.target_node_id = ctx.rng(seed_of("journey", mortal.id, ctx.epoch)).pick(options)
-    place = await ctx.session.get(EntityRow, mortal.location_id)
-    await note(ctx, f"{mortal.name} set out to see the world and came to {place.name if place else 'a far place'}.", key="aspiration.journey", ids=[mortal.id])
+    await record(
+        ctx,
+        "aspiration.journey",
+        roles={IncidentRole.ACTOR: mortal.id, IncidentRole.DESTINATION: mortal.location_id},
+        steps=(StepDraft(StepAction.DEPART, actor=mortal.id), StepDraft(StepAction.ARRIVE, actor=mortal.id, target=mortal.location_id)),
+        place=mortal.location_id,
+    )
     return True
 
 

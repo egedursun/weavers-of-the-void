@@ -484,6 +484,7 @@ ENTITY_FLAG = total(
                 "engine.phases.creatures.danger_reversion",
                 "engine.phases.creatures.megafauna",
                 "engine.phases.ecology.ecology",
+                "engine.phases.heroism._hero_wins",
                 "engine.phases.production._slain_beasts",
                 "engine.phases.production.species_products",
                 "services.player.assignments.ASSIGNABLE_FLAGS",
@@ -556,7 +557,7 @@ ENTITY_FLAG = total(
             used_by=(
                 "engine.phases.afterlife.cosmic_court",
                 "engine.phases.afterlife.pardon",
-                "engine.polity.oaths.break_oath",
+                "engine.polity.oaths.broken_oath",
                 "engine.polity.standing.legitimacy",
                 "services.player.assignments.ASSIGNABLE_FLAGS",
                 "services.player.cosmic.pardon",

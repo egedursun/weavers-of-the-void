@@ -5,29 +5,24 @@ from sqlalchemy import or_, select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, PolityRegardRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.intrigue import HookDemand
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import RegionalStanding
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.leverage import leaned_on
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import StepDraft, record
 
 CRISIS_CAUSES: dict[WarCause, CrisisDemand] = {
     WarCause.CLAIM: CrisisDemand.CEDE_REGION,
     WarCause.HOLY_WAR: CrisisDemand.CONVERT,
     WarCause.DEBT: CrisisDemand.PAY,
-}
-DEMAND_TEXT: dict[CrisisDemand, str] = {
-    CrisisDemand.CEDE_REGION: "cede a land",
-    CrisisDemand.RELEASE_VASSAL: "release a vassal",
-    CrisisDemand.CONVERT: "take up its faith",
-    CrisisDemand.PAY: "pay what it owes",
 }
 GREAT = frozenset({RegionalStanding.GREAT_POWER, RegionalStanding.HEGEMON})
 ESCALATION = "escalation"
@@ -93,12 +88,13 @@ async def open_crisis(ctx: TickContext, demander: Realm, target: Realm, demand: 
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(
+    await record(
         ctx,
-        f"{demander.entity.name} demanded that {target.entity.name} {DEMAND_TEXT[demand]}, and a crisis began.",
-        key="statecraft.crisis",
-        ids=[demander.entity.id, target.entity.id],
-        kind=ChronicleKind.WAR,
+        f"statecraft.crisis_opened_{demand.value}",
+        roles={IncidentRole.ACCUSER: demander.entity.id, IncidentRole.TARGET: target.entity.id},
+        facts={"subject": subject_id, "amount": amount},
+        steps=(StepDraft(StepAction.THREATEN, actor=demander.entity.id, target=target.entity.id),),
+        place=target.profile.capital_entity_id,
     )
     return row
 

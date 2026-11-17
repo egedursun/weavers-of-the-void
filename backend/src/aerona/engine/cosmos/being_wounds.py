@@ -11,18 +11,19 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import BeingPhase
 from aerona.domain.enums.economy import MaterialOrigin
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.body.book import ensure_body
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.deposits import new_substance
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 
 VAST = (EntityType.COSMIC_BEING, EntityType.OUTER_BEING)
 FORCE_MAX = 10
@@ -65,7 +66,17 @@ async def wound_being(ctx: TickContext, being: EntityRow, damage: float, cause: 
     scaled = damage * ctx.rules.cosmic_wounds.damage_pct / PERCENT
     wounding = await apply_hits(ctx, being, Harm(scaled, cause, why, killer_id=killer_id, source_node_id=killer_id))
     if wounding.outcome is WoundOutcome.DIED:
-        await note(ctx, f"{being.name} was slain: {why}.", key="cosmic_wounds.slain", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.MIRACLE)
+        await record(
+            ctx,
+            "cosmic_wounds.slain",
+            roles={IncidentRole.VICTIM: being.id, IncidentRole.ACTOR: killer_id},
+            facts={"cause": cause, "damage": scaled},
+            steps=(
+                StepDraft(StepAction.STRIKE, actor=killer_id, target=being.id, amount=scaled, unit=FactUnit.HP, outcome=StepOutcome.KILLED),
+                StepDraft(StepAction.DIE, actor=being.id),
+            ),
+            world_id=being.world_id,
+        )
     return wounding.outcome
 
 

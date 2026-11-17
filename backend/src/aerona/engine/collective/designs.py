@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.vehicles import FAMILY_TECHNIQUES, FRAMES, FUELS, MOUNTS, SIZE_SCALE, FrameSpec, frame_layout
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.collective import ComponentWearRow, DesignComponentRow, DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -20,15 +19,16 @@ from aerona.domain.enums.collective import DesignComponentKind, DesignKind
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.integrity import SectionHazard, SectionState
 from aerona.domain.enums.military import VesselStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import mount_model
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 from aerona.engine.vehicles.sections import strike_vessel
 from aerona.rules.registry import Rules
 
@@ -38,27 +38,6 @@ X = VehicleSection
 FULL_SIZE = 10
 TOUGH = 50
 HALF = PERCENT // 2
-FAILURE_TEXT = total(
-    DesignComponentKind,
-    {
-        C.HULL: "sprang a leak",
-        C.PROPULSION: "lost its means of moving",
-        C.HOLD: "lost part of its cargo",
-        C.QUARTERS: "lost crew to sickness and cold",
-        C.NAVIGATION: "lost its way",
-        C.ARMOUR: "had its armour give way",
-        C.WEAPON: "had its weapons fail",
-        C.WARD: "had its wards falter",
-        C.FRAME: "had its frame crack",
-        C.COUNTERWEIGHT: "lost its counterweight",
-        C.STEERING: "lost its steering",
-        C.LIFT: "lost lift",
-        C.POWER: "lost power",
-        C.TROOPS: "had its troop deck give way",
-        C.COMMAND: "lost its command post",
-        C.LIFE_SUPPORT: "had its life support falter",
-    },
-)
 MOUNT_SECTIONS: MappingProxyType[MountKind, VehicleSection] = total(
     MountKind,
     {
@@ -240,7 +219,7 @@ async def derive(session: AsyncSession, rules: Rules, design: DesignRow) -> Desi
         return fmean(found) if found else 1.0
 
     firepower = await mount_firepower(session, await mounts_of(session, design.id))
-    armed = firepower / ARMAMENT_NORM * aim(design.fire_control) if firepower > 0 else len(spec.armament) * 15 * of(C.WEAPON)
+    armed = firepower / ARMAMENT_NORM * aim(design.fire_control) if firepower > 0 else spec.slots * 15 * of(C.WEAPON)
     fixed = set(design.locked or [])
     derived = {
         "mass": round_half_up(mass),
@@ -417,8 +396,6 @@ def apply_design(row: VesselProfileRow, design: DesignRow) -> None:
             setattr(row, column, value)
     if design.frame is not None and "frame" not in row.locked:
         row.frame = design.frame
-    if design.frame is not None and "armament" not in row.locked:
-        row.armament = [item.value for item in FRAMES[design.frame].armament]
 
 
 async def wear_of(session: AsyncSession, vessel_id: int, part: DesignComponentKind) -> ComponentWearRow:
@@ -431,6 +408,8 @@ async def wear_of(session: AsyncSession, vessel_id: int, part: DesignComponentKi
 
 
 async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part: DesignComponentKind) -> SectionHazard | None:
+    before = {"condition": row.condition, "cargo": row.cargo_capacity, "crew": row.crew}
+    region = row.region_entity_id
     if part is C.HULL:
         shift(row, "condition", -HULL_DAMAGE)
     elif part is C.PROPULSION and "status" not in row.locked:
@@ -446,11 +425,18 @@ async def fail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, part:
         section = next((item for item in await sections_of(ctx.session, row.design_id) if item.function is part), None)
         if section is not None and await strike_vessel(ctx, vessel, row, section.section, 1) is SectionState.DESTROYED:
             wrecked = section.hazard
-    await note(
+    await record(
         ctx,
-        f"{vessel.name} {FAILURE_TEXT[part]} when its {spoken(part)} failed.",
-        key=f"designs.failure_{part.value}",
-        ids=[vessel.id],
+        f"designs.failure_{part.value}",
+        roles={IncidentRole.SUBJECT: vessel.id, IncidentRole.LEADER: row.captain_entity_id},
+        facts={
+            "part": part,
+            "condition_lost": before["condition"] - row.condition,
+            "cargo_lost": before["cargo"] - row.cargo_capacity,
+            "crew_lost": before["crew"] - row.crew,
+            "wrecked": wrecked,
+        },
+        place=region,
     )
     return wrecked
 
@@ -516,7 +502,17 @@ async def refit(ctx: TickContext, tally: DesignTally) -> None:
         design.obsolete = True
         await settle(ctx.session, design)
         tally.refits += 1
-        await note(ctx, f"{owner.name} drew {newer.name}, an improvement on {design.name}.", key="designs.refit", ids=[owner.id])
+        await record(
+            ctx,
+            "designs.refit",
+            roles={
+                IncidentRole.OWNER: owner.id,
+                IncidentRole.MAKER: design.designer_entity_id,
+                IncidentRole.PRODUCT: newer.entity_id,
+                IncidentRole.PREDECESSOR: design.entity_id,
+            },
+            facts={"frame": design.frame},
+        )
         for vessel in await ctx.session.scalars(
             select(VesselProfileRow).where(VesselProfileRow.design_id == design.id, VesselProfileRow.status == VesselStatus.DOCKED)
         ):

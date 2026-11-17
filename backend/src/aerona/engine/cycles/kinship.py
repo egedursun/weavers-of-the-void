@@ -8,8 +8,10 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ResidenceRule
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import MarriageEnd
 from aerona.domain.enums.polity import TreatyKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.engine.collective.book import realm_of_town
 from aerona.engine.context import TickContext
@@ -19,10 +21,10 @@ from aerona.engine.cycles.standing import raise_standing, regard
 from aerona.engine.demography.kinship import may_wed
 from aerona.engine.mortal.kin import parents_of, siblings_of
 from aerona.engine.mortal.kinship import marry
-from aerona.engine.notes import note
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.customs import sides
 
 
@@ -127,11 +129,12 @@ async def remarry(ctx: TickContext, marriage: MarriageRow, tally: KinshipTally) 
         tally.sibling_union_first += 1
     else:
         tally.sibling_union_second += 1
-    await note(
+    await record(
         ctx,
-        f"By the custom of their people, {survivor.name} wed {spouse.name}, kin of the departed {dead.name}.",
-        key=f"kinship.{custom}",
-        ids=[survivor.id, spouse.id, dead.id],
+        f"kinship.{custom}",
+        roles={IncidentRole.SPOUSE: [survivor.id, spouse.id], IncidentRole.PREDECESSOR: dead.id},
+        steps=(StepDraft(StepAction.MOURN, actor=survivor.id, target=dead.id), StepDraft(StepAction.MARRY, actor=survivor.id, target=spouse.id)),
+        place=survivor.location_id,
     )
 
 
@@ -160,7 +163,18 @@ async def pact(ctx: TickContext, row: MarriageAllianceRow, tally: KinshipTally) 
         return
     row.treaty_id = treaty.id
     tally.pacts += 1
-    await note(ctx, f"Their many marriages bound {giver.name} and {taker.name} in {treaty.name}.", key="kinship.pact", ids=[giver.id, taker.id, treaty.id])
+    await record(
+        ctx,
+        "kinship.pact",
+        roles={
+            IncidentRole.GIVER: giver.id,
+            IncidentRole.RECEIVER: taker.id,
+            IncidentRole.PRODUCT: treaty.id,
+            IncidentRole.AUTHORITY: [first.polity_entity_id, second.polity_entity_id],
+        },
+        facts={"marriages": row.marriages, "until": ctx.epoch + table.pact_epochs},
+        steps=(StepDraft(StepAction.SIGN, actor=first.polity_entity_id, target=second.polity_entity_id),),
+    )
 
 
 async def ally_lines(ctx: TickContext, marriage: MarriageRow, tally: KinshipTally) -> None:

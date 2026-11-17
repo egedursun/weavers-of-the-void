@@ -6,7 +6,9 @@ FOSSIL_READING = total(
     FossilReading,
     {
         FossilReading.UNREAD: Defined(
-            "Unread", checked_by=("engine.ecology.fossils.reveal",), used_by=("db.tables.fossils.FossilBedRow", "engine.ecology.fossils.reading_of")
+            "Unread",
+            checked_by=("catalog.incident_kinds.nature_kinds.LIVING", "engine.ecology.fossils.reveal"),
+            used_by=("db.tables.fossils.FossilBedRow", "engine.ecology.fossils.reading_of"),
         ),
         FossilReading.LEGEND: Defined("Remains of legend", checked_by=("engine.ecology.fossils.told",), used_by=("engine.ecology.fossils.READINGS",)),
         FossilReading.RELIC: Defined("Sacred relics", checked_by=("engine.ecology.fossils.told",), used_by=("engine.ecology.fossils.READINGS",)),

@@ -14,15 +14,15 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.economy.purse import give_coin
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.integrity import integrity_share
@@ -192,5 +192,16 @@ async def catastrophe(ctx: TickContext, work: EntityRow, profile: StructureProfi
         if star is not None and not held(star.id) and "brightness" not in (star.locked or []):
             star.brightness = clamp_int(star.brightness + ctx.rules.megastructures.collector_flare, 0, PERCENT)
             found.append("star flared")
-    await note(ctx, f"The control core of {work.name} failed.", key="megastructures.catastrophe", ids=[work.id], kind=ChronicleKind.DISASTER)
+    await record(
+        ctx,
+        "megastructures.catastrophe",
+        roles={
+            IncidentRole.SUBJECT: work.id,
+            IncidentRole.VICTIM: [
+                node for node in (planet.id if planet is not None else None, world.star_id if world is not None else None) if node is not None
+            ],
+        },
+        facts={"structure": profile.kind, "orbit_thrown": int("orbit thrown" in found), "star_flared": int("star flared" in found)},
+        place=work.location_id,
+    )
     return found

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import agree, several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import AgeEchoRow, AgeRow, ArcRow
 from aerona.db.tables.celestial import WorldRow
@@ -16,11 +15,12 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import AccountKind
 from aerona.domain.enums.cosmography import ApocalypseVariant
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.phases.civilization import reveal_previous_creation
 from aerona.engine.primitives.queries import add_flag, connect
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.storyteller.arcs import open_arc
 
 CARRIED_KINDS = (EntityType.LEGEND, EntityType.PROPHECY)
@@ -126,12 +126,11 @@ async def turn_age(ctx: TickContext, variant: ApocalypseVariant | None) -> AgeRo
     lore = await carry_lore(ctx, carried)
     lost = await lose_knowledge(ctx, [world.id for world in worlds], carried)
     echoes = await seed_echoes(ctx, ended, opened)
-    remembered = f"{several(lore, 'tale', 'tales')} {agree(lore, 'was', 'were')} half-remembered"
-    forgotten = f"{several(lost, 'art', 'arts')} {agree(lost, 'was', 'were')} lost"
-    await note(
+    await record_incident(
         ctx,
-        f"The age turned and age {opened.number} began. {remembered}, {forgotten} and {several(echoes, 'great life', 'great lives')} will echo.",
-        key="ages.turned",
+        "ages.turned",
+        roles={IncidentRole.SUBJECT: tuple(world.id for world in worlds)},
+        facts={"age": opened.number, "tales": lore, "arts_lost": lost, "echoes": echoes},
     )
     return opened
 
@@ -161,7 +160,14 @@ async def rebirth(ctx: TickContext, age: AgeRow, tally: AgeTally) -> None:
         if echo.source_node_id is not None and echo.source_node_id != born.id:
             await connect(ctx.session, echo.source_node_id, born.id, BondKind.SOUL_DESCENDED_TO, ctx.epoch, description="echoed into a new age")
         tally.reborn += 1
-        await note(ctx, f"{born.name} was born to echo a great life of the age before.", key="ages.echo", ids=[born.id])
+        await record_incident(
+            ctx,
+            "ages.echo",
+            roles={IncidentRole.SUBJECT: born.id, IncidentRole.PREDECESSOR: echo.source_node_id},
+            facts={
+                "template": echo.template,
+            },
+        )
 
 
 async def keep_ages(ctx: TickContext, tally: AgeTally) -> None:

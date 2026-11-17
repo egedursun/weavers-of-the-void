@@ -55,10 +55,10 @@ ROUTINISATION = total(
             checked_by=("engine.regime.rule.routinise",),
             used_by=("agents.context.regime_lines.son_regime_lines", "engine.regime.rule.routinise"),
         ),
-        Routinisation.DYNASTY: Defined("Turned into a dynasty", checked_by=(), used_by=("engine.regime.rule.turn_charisma",)),
-        Routinisation.INSTITUTION: Defined("Turned into rules and offices", checked_by=(), used_by=("engine.regime.rule.turn_charisma",)),
+        Routinisation.DYNASTY: Defined("Turned into a dynasty", checked_by=(), used_by=("engine.regime.rule.charisma_turned",)),
+        Routinisation.INSTITUTION: Defined("Turned into rules and offices", checked_by=(), used_by=("engine.regime.rule.charisma_turned",)),
         Routinisation.SCHISM: Defined(
-            "Split by schism", checked_by=(), used_by=("agents.context.regime_lines.son_regime_lines", "engine.regime.rule.turn_charisma")
+            "Split by schism", checked_by=(), used_by=("agents.context.regime_lines.son_regime_lines", "engine.regime.rule.charisma_turned")
         ),
     },
 )

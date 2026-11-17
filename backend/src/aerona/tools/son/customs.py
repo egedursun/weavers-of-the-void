@@ -12,6 +12,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.customs import MemberRight, Membership, RevivalAim, RevivalGoal
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.customs import control
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -20,7 +21,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -60,8 +60,11 @@ async def stir_revival(call: SonCall, args: StirRevivalInput) -> str:
     )
     call.target(people.id)
     told = args.goal.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.CULTURE, lines.STIR_REVIVAL, entity_ids=[people.id], son=call.son.name, people=people.name, goal=told, reason=args.reason
+    await call.record(
+        "tools.son.stir_revival",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"goal": str(told), "reason": args.reason},
+        kind=ChronicleKind.CULTURE,
     )
     return result(SonResult.REVIVAL_STIRRED, people=people.name, goal=told)
 
@@ -76,8 +79,11 @@ async def proclaim_right(call: SonCall, args: ProclaimRightInput) -> str:
     await control.grant_right(call.tick, realm.id, args.category, args.right, granted=args.granted)
     call.target(realm.id)
     told = f"{spoken(args.right)} for {spoken(args.category)}s"
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.PROCLAIM_RIGHT, entity_ids=[realm.id], son=call.son.name, realm=realm.name, right=told, reason=args.reason
+    await call.record(
+        "tools.son.proclaim_right",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"right": str(told), "reason": args.reason},
+        kind=ChronicleKind.CIVILIZATION,
     )
     return result(SonResult.RIGHT_PROCLAIMED, realm=realm.name, right=told, granted=args.granted)
 

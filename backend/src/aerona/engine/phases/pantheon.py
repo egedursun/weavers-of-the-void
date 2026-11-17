@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.gates import Gate, passes_gate
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -20,12 +19,13 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.enums.war import WarCause
@@ -38,13 +38,13 @@ from aerona.engine.cosmos.worlds import declare_holy_world
 from aerona.engine.divine.decrees import truce_in_force
 from aerona.engine.divine.foreign import pact_between
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
 from aerona.engine.primitives.stats import has_stat, headcount_value, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.conflict import foreign_god_war
 from aerona.engine.services.war import declare_war, is_community
 from aerona.rules.registry import Rules
@@ -95,8 +95,14 @@ async def defeated_waking(ctx: TickContext) -> int:
         god.stance = max(RELATION_MIN, god.stance - pantheon.foreign_wake_grudge)
         world = await ctx.session.get(WorldRow, god.world_id)
         cause = "its worshippers' faith raised it again" if by_faith else "epochs passed over the defeat and the wound closed"
-        text = f"{world.name if world else 'A world'}'s defeated god {god.name} woke again: {cause}. It has not forgotten the grudge of defeat."
-        await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.defeated_woke", world_id=god.world_id)
+        await record(
+            ctx,
+            "pantheon.defeated_woke",
+            roles={IncidentRole.SUBJECT: god.id, IncidentRole.PLACE: world.id if world else None},
+            facts={"cause": cause},
+            kind=ChronicleKind.FOREIGN_GOD,
+            world_id=god.world_id,
+        )
         woken += 1
     return woken
 
@@ -187,8 +193,14 @@ async def sleep_waking(ctx: TickContext) -> int:
         top = [key for key, value in sorted(weighted.items(), key=lambda item: -item[1]) if value > 0][:2]
         causes = " and ".join(WAKE_PHRASES[key] for key in top) or "something unseen"
         world = await ctx.session.get(WorldRow, god.world_id)
-        text = f"{world.name if world else 'A world'}'s sleeping god {god.name} woke: {causes} pulled it from its sleep."
-        await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.sleeper_woke", world_id=god.world_id)
+        await record(
+            ctx,
+            "pantheon.sleeper_woke",
+            roles={IncidentRole.SUBJECT: god.id, IncidentRole.PLACE: world.id if world else None},
+            facts={"causes": causes},
+            kind=ChronicleKind.FOREIGN_GOD,
+            world_id=god.world_id,
+        )
         woken += 1
     return woken
 
@@ -216,21 +228,21 @@ async def auto_holy_worlds(ctx: TickContext) -> int:
         protector = await ctx.session.get(SonRow, world.patron_son_id) if world.patron_son_id is not None else None
         if protector is None or protector.status is SonStatus.DEAD:
             open_worlds.add(world.id)
-    held = Counter(world.patron_son_id for world in worlds if world.patron_automatic and world.patron_son_id is not None)
+    patronages = Counter(world.patron_son_id for world in worlds if world.patron_automatic and world.patron_son_id is not None)
     pairs = sorted(
         ((count, world_id, son_id) for (world_id, son_id), count in (await _son_worshippers(ctx.session)).items() if world_id in open_worlds),
         key=lambda item: (-item[0], item[1]),
     )
     claimed: set[int] = set()
     for count, world_id, son_id in pairs:
-        if count < pantheon.auto_holy_world_worshippers or world_id in claimed or held[son_id] >= pantheon.auto_holy_world_per_son:
+        if count < pantheon.auto_holy_world_worshippers or world_id in claimed or patronages[son_id] >= pantheon.auto_holy_world_per_son:
             continue
         son, holy = await ctx.session.get(SonRow, son_id), await ctx.session.get(WorldRow, world_id)
         if son is None or holy is None:
             continue
         await declare_holy_world(ctx, son, holy, automatic=True)
         claimed.add(world_id)
-        held[son_id] += 1
+        patronages[son_id] += 1
     return len(claimed)
 
 
@@ -274,8 +286,7 @@ async def rival_clashes(ctx: TickContext) -> int:
         attacker = rng.weighted([first, second], weights)
         defender = second if attacker.id == first.id else first
         stat = rng.weighted(list(ARENA_STATS), [(attacker.stat(item) + defender.stat(item)) / 2 + 1 for item in ARENA_STATS])
-        result = await son_duel(ctx, attacker, defender, stat, "old feud")
-        await note(ctx, result.text, key="pantheon.rival_clash", son_id=attacker.id)
+        await son_duel(ctx, attacker, defender, stat, "old feud", key="pantheon.rival_clash")
         clashes += 1
         await _loss_streak(ctx, first, second)
     return clashes
@@ -290,9 +301,14 @@ async def _loss_streak(ctx: TickContext, first: SonRow, second: SonRow) -> None:
     winner_id = winners.pop()
     loser, winner = (second, first) if winner_id == first.id else (first, second)
     await SonRepository(ctx.session).change_relation(first.id, second.id, pantheon.rival_withdraw_relation)
-    times_counted = several(pantheon.rival_defeat_streak, "time", "times")
-    text = f"{loser.name}, beaten {times_counted} in a row by {winner.name}, withdrew; the feud between them calmed for a while."
-    await ctx.chronicle(ChronicleKind.CHALLENGE, text, template_key="pantheon.rival_withdrew", son_id=loser.id)
+    await record(
+        ctx,
+        "pantheon.rival_withdrew",
+        roles={IncidentRole.SUBJECT: loser.id, IncidentRole.OPPONENT: winner.id},
+        facts={"streak": pantheon.rival_defeat_streak},
+        kind=ChronicleKind.CHALLENGE,
+        son_id=loser.id,
+    )
 
 
 def power_share(rules: Rules, god: ForeignGodRow) -> float:
@@ -320,8 +336,11 @@ async def attract(ctx: TickContext, god: ForeignGodRow, natives: list[EntityRow]
         if rng.chance(chance * power_share(ctx.rules, god)):
             index.add(await BondRepository(ctx.session).connect(BondDraft(native.id, god.id, BondKind.WORSHIPS, ctx.epoch, "old god")))
             world = await ctx.session.get(WorldRow, god.world_id)
-            await note(
-                ctx, f"{native.name} began to worship {world.name if world else 'its world'}'s old god {god.name}.", key="pantheon.attracted", ids=[native.id]
+            await record(
+                ctx,
+                "pantheon.attracted",
+                roles={IncidentRole.SUBJECT: [god.id, native.id]},
+                facts={"native": str(native.name), "detail": str(world.name if world else "its world")},
             )
             drawn += 1
     return drawn
@@ -352,11 +371,16 @@ async def first_contact(ctx: TickContext, god: ForeignGodRow, book: RouteBook) -
     )
     creator = await CosmosRepository(ctx.session).creator()
     world = await ctx.session.get(WorldRow, god.world_id)
-    title = f", {god.title}" if god.title else ""
-    owner = creator.name if creator else "the creator"
-    text = f"First contact: {world.name if world else 'A world'}'s old god {god.name}{title} noticed {owner}'s pantheon. {tone}"
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.first_contact", son_id=son.id if son else None, world_id=god.world_id)
-    await note(ctx, f"{god.name} noticed the pantheon.", key="pantheon.noticed")
+    await record(
+        ctx,
+        "pantheon.first_contact",
+        roles={IncidentRole.SUBJECT: god.id, IncidentRole.TARGET: creator.id if creator else None, IncidentRole.PLACE: world.id if world else None},
+        facts={"title": f", {god.title}" if god.title else "", "tone": tone, "stance": god.stance},
+        kind=ChronicleKind.FOREIGN_GOD,
+        son_id=son.id if son else None,
+        world_id=god.world_id,
+    )
+    await record(ctx, "pantheon.noticed", roles={IncidentRole.SUBJECT: god.id})
     return True
 
 
@@ -374,12 +398,16 @@ async def steal_worshipper(ctx: TickContext, god: ForeignGodRow, victim: EntityR
     await bonds.deactivate(bond, ctx.epoch, "stolen by a foreign god")
     await bonds.connect(BondDraft(victim.id, god.id, BondKind.WORSHIPS, ctx.epoch, "stolen"))
     son = await ctx.session.get(SonRow, bond.target_node_id)
-    name = son.name if son else "a son"
     if son is not None:
         son.wrath = min(PERCENT, son.wrath + ctx.rules.pantheon.foreign_steal_wrath)
-    text = f"{god.name} turned {name}'s worshipper {victim.name} to itself."
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.worshipper_stolen", entity_ids=[victim.id], son_id=son.id if son else None)
-    return text
+    written = await record(
+        ctx,
+        "pantheon.worshipper_stolen",
+        roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: victim.id, IncidentRole.PREDECESSOR: son.id if son else None},
+        kind=ChronicleKind.FOREIGN_GOD,
+        son_id=son.id if son else None,
+    )
+    return written.text
 
 
 async def incite_holy_war(ctx: TickContext, god: ForeignGodRow, victim: EntityRow) -> str | None:
@@ -463,9 +491,7 @@ async def awake_god_turn(ctx: TickContext, god: ForeignGodRow, book: RouteBook, 
     if not await first_contact(ctx, god, book):
         return
     if god.stance < 0:
-        text = await hostile_act(ctx, god, powers)
-        if text is not None:
-            await note(ctx, text, key="pantheon.hostile")
+        await hostile_act(ctx, god, powers)
     if god.stance >= ctx.rules.pantheon.foreign_friend_min_attitude:
         await friendly_help(ctx, god, powers)
     await attitude_drift(ctx, god, natives)
@@ -492,8 +518,7 @@ async def spontaneous_god_war(ctx: TickContext, book: RouteBook) -> str | None:
     champion = max(sons, key=lambda son: (son.strength + son.will + son.level, -son.id))
     if not ctx.rng("god_war_roll").chance(pantheon.son_war_chance):
         return None
-    result = await foreign_god_war(ctx, champion.id, target.id)
-    await note(ctx, result.text, key="pantheon.spontaneous_god_war", son_id=champion.id)
+    result = await foreign_god_war(ctx, champion.id, target.id, key="pantheon.spontaneous_god_war")
     return result.text
 
 
@@ -502,10 +527,10 @@ async def outer_gnaw(ctx: TickContext) -> int:
     beings = await canon(ctx.session, [EntityType.OUTER_BEING])
     gnaw = sum(round(stat_or(being, INFLUENCE_KEY, pantheon.outer_default_influence) / pantheon.outer_gnaw_divisor) for being in beings)
     creator = await CosmosRepository(ctx.session).creator()
-    if creator is None or gnaw <= 0:
+    if creator is None or gnaw <= 0 or held(creator.id):
         return 0
     creator.essence = max(0, creator.essence - gnaw)
-    await note(ctx, f"What is outside the cosmos drained {gnaw} from {creator.name}'s essence.", key="pantheon.outer_gnaw")
+    await record(ctx, "pantheon.outer_gnaw", roles={IncidentRole.ACTOR: creator.id}, facts={"gnaw": str(gnaw)})
     return gnaw
 
 
@@ -520,7 +545,6 @@ async def outer_gnaw(ctx: TickContext) -> int:
     "table.creator",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_god_powers",
     "table.foreign_gods",
     "table.god_conflicts",
@@ -544,7 +568,6 @@ async def outer_gnaw(ctx: TickContext) -> int:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.god_conflicts",
     "table.incident_participants",

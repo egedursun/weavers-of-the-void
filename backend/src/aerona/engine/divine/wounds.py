@@ -16,13 +16,14 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceMode, SonDeathCause
 from aerona.domain.models.profiles import ExistenceProfile
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import record
 
 W = DivineWoundKind
 WOUND_LABELS: Mapping[DivineWoundKind, str] = total(
@@ -108,12 +109,13 @@ async def inflict(
         await scatter(ctx.session, god, row)
         await ctx.session.flush()
     tail = f" ({row.domain.value})" if row.domain is not None else ""
-    await note(
+    await record(
         ctx,
-        f"{god.name} suffered a divine wound: {WOUND_LABELS[kind].lower()}{tail}.",
-        key=f"divine.wound_{kind.value}",
-        son_id=god.id if isinstance(god, SonRow) else None,
+        f"divine.wound_{kind.value}",
+        roles={IncidentRole.SUBJECT: god.id},
+        facts={"wound": kind, "wound_label": WOUND_LABELS[kind].lower(), "tail": tail},
         kind=ChronicleKind.CHALLENGE,
+        son_id=god.id if isinstance(god, SonRow) else None,
     )
     return row
 
@@ -219,12 +221,13 @@ async def heal_wounds(ctx: TickContext) -> int:
             if row.healed >= PERCENT:
                 closed += 1
                 await gather(ctx.session, row)
-                await note(
+                await record(
                     ctx,
-                    f"{god.name}'s {WOUND_LABELS[row.kind].lower()} healed.",
-                    key="divine.wound_healed",
-                    son_id=god.id if isinstance(god, SonRow) else None,
+                    "divine.wound_healed",
+                    roles={IncidentRole.SUBJECT: god.id},
+                    facts={"wound": row.kind, "wound_label": WOUND_LABELS[row.kind].lower()},
                     kind=ChronicleKind.CHALLENGE,
+                    son_id=god.id if isinstance(god, SonRow) else None,
                 )
     return closed
 

@@ -15,13 +15,14 @@ from aerona.domain.enums.collective import FormativeKind
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.gathering import CollectionRole
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import population_of, shift, towns
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values, write_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 VALUE_SPAN = 100
 
@@ -115,8 +116,13 @@ async def come_of_age(ctx: TickContext, town: EntityRow, tally: GenerationTally)
         return
     await lean_culture(ctx, town, previous.value_shifts, 1.0)
     tally.formed += 1
-    words = ", ".join(kind.replace("_", " ") for kind in previous.formative)
-    await note(ctx, f"A generation of {town.name} shaped by {words} came of age.", key="generations.came_of_age", ids=[town.id])
+    await record(
+        ctx,
+        "generations.came_of_age",
+        roles={IncidentRole.PLACE: town.id},
+        facts={"formative": [FormativeKind(kind) for kind in previous.formative], "born": previous.generation_epoch, "alive": previous.alive},
+        place=town.id,
+    )
 
 
 async def pass_on(ctx: TickContext, town: EntityRow, profile: SettlementProfileRow, tally: GenerationTally) -> None:
@@ -136,8 +142,12 @@ async def pass_on(ctx: TickContext, town: EntityRow, profile: SettlementProfileR
             shift(profile, "unrest", table.turnover_unrest)
             tally.passed += 1
             if row.formative:
-                await note(
-                    ctx, f"The last of the generation of {town.name} that lived through its old trials has passed.", key="generations.passed", ids=[town.id]
+                await record(
+                    ctx,
+                    "generations.passed",
+                    roles={IncidentRole.PLACE: town.id},
+                    facts={"formative": [FormativeKind(kind) for kind in row.formative], "born": row.generation_epoch, "unrest": table.turnover_unrest},
+                    place=town.id,
                 )
         else:
             row.alive = round_half_up(row.alive * remaining / (remaining + 1))

@@ -4,6 +4,7 @@ from aerona.catalog.kinds.life_stages import LIFE_STAGES
 from aerona.catalog.mind import CAREER_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.core.total import partial
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -20,8 +21,10 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.genetics import GeneticEffect
 from aerona.domain.enums.mind import Attribute, MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageEnd
 from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.engine.body.bands import banded
@@ -48,13 +51,13 @@ from aerona.engine.mortal.kinship import betroth, end_marriage, foster, marriage
 from aerona.engine.mortal.life import adult, assign_sex, refresh_life, stage_rank
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.axes import spousing_of
 from aerona.engine.unions.customs import divorce_rule
 
@@ -96,6 +99,11 @@ SCHOOL_KINDS = frozenset({EngineKind.SCHOOL, EngineKind.LIBRARY})
 TEMPLE_KINDS = frozenset({EngineKind.TEMPLE})
 DEATH_FIXUP = "mortal.death_causes"
 FULL = PERCENT
+LIFE_KEYS = partial(
+    LifeStage,
+    {LifeStage.ADULT: "life.adult", LifeStage.ELDER: "life.elder"},
+    without=tuple(stage for stage in LifeStage if LIFE_STAGES[stage].reached is None),
+)
 
 
 def class_for(mortal: EntityRow) -> SocialClass:
@@ -198,9 +206,14 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
             kind = rng.pick((ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS))
             await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
-    reached = LIFE_STAGES[stage].reached
-    if stage is not before and stage_rank(stage) > stage_rank(before) and reached is not None:
-        await note(ctx, f"{mortal.name} came into {reached}.", key=f"life.{stage.value}", ids=[mortal.id])
+    key = LIFE_KEYS.get(stage)
+    if stage is not before and stage_rank(stage) > stage_rank(before) and key is not None:
+        await record(
+            ctx,
+            key,
+            roles={IncidentRole.SUBJECT: mortal.id},
+            facts={"stage": stage, "age": stat_or(mortal, "age", 0), "health": profile.health},
+        )
     return stage
 
 
@@ -328,11 +341,12 @@ async def patronise(ctx: TickContext, mortal: EntityRow, profile: MortalProfileR
         set_stats(artwork, renown=clamp_int((stat(artwork, "renown") or 0) + table.patronage_renown, 0, FULL))
     profile.wealth = clamp_int(profile.wealth - table.patronage_cost, 0, FULL)
     await add_renown(ctx.session, mortal.id, table.patronage_renown, ctx.epoch, rules=ctx.rules)
-    await note(
+    await record(
         ctx,
-        f"{mortal.name} became the patron of {artwork.name if artwork else 'a work of art'}.",
-        key="standing.patronage",
-        ids=[mortal.id, work.artwork_entity_id],
+        "standing.patronage",
+        roles={IncidentRole.PATRON: mortal.id, IncidentRole.PRODUCT: work.artwork_entity_id},
+        facts={"cost": table.patronage_cost, "renown": table.patronage_renown},
+        steps=(StepDraft(StepAction.PAY, actor=mortal.id, target=work.artwork_entity_id, amount=table.patronage_cost, unit=FactUnit.WEALTH_POINTS),),
     )
     return True
 
@@ -349,25 +363,33 @@ async def end_marriages(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) 
         view = await opinion(ctx.session, ctx.rules, ctx.epoch, mortal.id, spouse_id)
         if custom != "forbidden" and view.value < table.divorce_opinion_below and rng.chance(table.divorce_chance * (2 if custom == "free" else 1)):
             await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.DIVORCE)
-            spouse = await ctx.session.get(EntityRow, spouse_id)
-            await note(ctx, f"{mortal.name} and {spouse.name if spouse else 'their spouse'} parted.", key="kin.divorce", ids=[mortal.id, spouse_id])
+            await record(
+                ctx,
+                "kin.divorce",
+                roles={IncidentRole.SPOUSE: [mortal.id, spouse_id]},
+                facts={"opinion": view.value},
+                steps=(StepDraft(StepAction.SEPARATE, actor=mortal.id, target=spouse_id),),
+            )
             return "divorced"
         if await parted_by_war(ctx, mortal, spouse_id) and rng.chance(table.war_parting_chance):
             await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.WAR)
-            spouse = await ctx.session.get(EntityRow, spouse_id)
-            await note(
+            await record(
                 ctx,
-                f"War between their realms parted {mortal.name} and {spouse.name if spouse else 'their spouse'}.",
-                key="kin.war_parted",
-                ids=[mortal.id, spouse_id],
+                "kin.war_parted",
+                roles={IncidentRole.SPOUSE: [mortal.id, spouse_id]},
+                steps=(StepDraft(StepAction.SEPARATE, actor=mortal.id, target=spouse_id),),
             )
             return "parted by war"
         cold = custom == "forbidden" and view.value < table.divorce_opinion_below
         if cold and await childless(ctx, mortal.id, spouse_id) and rng.chance(table.annulment_chance):
             await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.ANNULMENT)
-            spouse = await ctx.session.get(EntityRow, spouse_id)
-            text = f"The marriage of {mortal.name} and {spouse.name if spouse else 'their spouse'} was declared void, as if it had never been."
-            await note(ctx, text, key="kin.annulment", ids=[mortal.id, spouse_id])
+            await record(
+                ctx,
+                "kin.annulment",
+                roles={IncidentRole.SPOUSE: [mortal.id, spouse_id]},
+                facts={"opinion": view.value},
+                steps=(StepDraft(StepAction.SEPARATE, actor=mortal.id, target=spouse_id, outcome=StepOutcome.REVERSED),),
+            )
             return "annulled"
     return None
 
@@ -387,7 +409,14 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
             and rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal))
         ):
             await marry(ctx.session, mortal, partner, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="as they were promised")
-            await note(ctx, f"{mortal.name} and {partner.name} were wed as they had been promised.", key="kin.marriage", ids=[mortal.id, partner.id])
+            await record(
+                ctx,
+                "kin.marriage",
+                roles={IncidentRole.SPOUSE: [mortal.id, partner.id]},
+                facts={"form": UnionForm.PAIR, "purpose": UnionPurpose.ALLIANCE},
+                steps=(StepDraft(StepAction.MARRY, actor=mortal.id, target=partner.id),),
+                place=mortal.location_id,
+            )
             return "married"
     married = bool(await partners_of(ctx.session, mortal.id))
     for bond in await active_bonds(ctx.session, [BondKind.LOVES], sources=[mortal.id]):
@@ -403,7 +432,14 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         await marry(
             ctx.session, mortal, lover, ctx.epoch, form=UnionForm.PLURAL if married else UnionForm.PAIR, purpose=UnionPurpose.LOVE, description="for love"
         )
-        await note(ctx, f"{mortal.name} and {lover.name} were wed.", key="kin.marriage", ids=[mortal.id, lover.id])
+        await record(
+            ctx,
+            "kin.marriage",
+            roles={IncidentRole.SPOUSE: [mortal.id, lover.id]},
+            facts={"form": UnionForm.PLURAL if married else UnionForm.PAIR, "purpose": UnionPurpose.LOVE},
+            steps=(StepDraft(StepAction.COURT, actor=mortal.id, target=lover.id), StepDraft(StepAction.MARRY, actor=mortal.id, target=lover.id)),
+            place=mortal.location_id,
+        )
         return "married"
     return await end_marriages(ctx, mortal, rng)
 
@@ -446,7 +482,12 @@ async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:
             if other.id in kin or await betrothed_of(ctx.session, other.id):
                 continue
             await betroth(ctx.session, child, other, ctx.epoch, description="promised by their families")
-            await note(ctx, f"{child.name} was promised to {other.name}.", key="kin.betrothal", ids=[child.id, other.id])
+            await record(
+                ctx,
+                "kin.betrothal",
+                roles={IncidentRole.SPOUSE: [child.id, other.id]},
+                steps=(StepDraft(StepAction.AGREE, target=child.id),),
+            )
             return True
     return False
 
@@ -468,7 +509,12 @@ async def foster_orphan(ctx: TickContext, mortal: EntityRow, profile: MortalProf
     if fosterer is None:
         return False
     await foster(ctx.session, mortal.id, fosterer.id, ctx.epoch, description="taken in as a ward")
-    await note(ctx, f"The orphaned {mortal.name} was taken in as a ward by {fosterer.name}.", key="kin.fostered", ids=[mortal.id, fosterer.id])
+    await record(
+        ctx,
+        "kin.fostered",
+        roles={IncidentRole.CHILD: mortal.id, IncidentRole.PARENT: fosterer.id},
+        steps=(StepDraft(StepAction.FOSTER, actor=fosterer.id, target=mortal.id),),
+    )
     return True
 
 
@@ -486,6 +532,12 @@ async def swear_kinship(ctx: TickContext, mortal: EntityRow) -> bool:
             continue
         await connect(ctx.session, mortal.id, friend.id, BondKind.SWORN_KIN, ctx.epoch, description="sworn kinship")
         await swear(ctx, mortal, OathKind.SWORN_KINSHIP, recipient_id=friend.id, note_text="sworn kin")
-        await note(ctx, f"{mortal.name} and {friend.name} swore themselves kin by blood.", key="kin.sworn", ids=[mortal.id, friend.id])
+        await record(
+            ctx,
+            "kin.sworn",
+            roles={IncidentRole.ACTOR: mortal.id, IncidentRole.CO_ACTOR: friend.id},
+            facts={"affection": view.components[OpinionComponent.AFFECTION]},
+            steps=(StepDraft(StepAction.SWEAR, actor=mortal.id, target=friend.id),),
+        )
         return True
     return False

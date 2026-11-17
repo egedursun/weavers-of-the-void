@@ -7,6 +7,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.folkways import CharmPower, PurityState
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.folkways.mishaps import make_charm
 from aerona.engine.folkways.purity import PurityTally, methods_of, purify, purity_of
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class PurifySelfInput(ToolInput):
@@ -48,7 +48,7 @@ async def purify_self(call: MortalCall, args: PurifySelfInput) -> str:
     tally = PurityTally()
     await purify(call.tick, call.me, row, methods, tally)
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.PURIFY_SELF, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.purify_self", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.WORSHIP)
     return result(MortalResult.PURIFIED if tally.purified else MortalResult.STILL_IMPURE, state=row.state.value)
 
 
@@ -65,7 +65,9 @@ async def accuse_of_witchcraft(call: MortalCall, args: AccuseOfWitchcraftInput) 
     if row is None:
         fail(MortalResult.WITCH_ACCUSATION_DECLINED, why="no court would hear it")
     call.target(accused.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.ACCUSE_OF_WITCHCRAFT, entity_ids=[call.me.id, accused.id], me=call.me.name, accused=accused.name)
+    await call.record(
+        "tools.mortal.accuse_of_witchcraft", roles={IncidentRole.ACCUSER: call.me.id, IncidentRole.ACCUSED: accused.id}, place=accused.location_id
+    )
     return result(MortalResult.WITCH_ACCUSED, accused=accused.name)
 
 
@@ -76,7 +78,7 @@ async def make_a_charm(call: MortalCall, args: MakeCharmInput) -> str:
     item = await living_entity(call.session, row.item_entity_id)
     name = item.name if item is not None else "your item"
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.MAKE_CHARM, entity_ids=[call.me.id], me=call.me.name, item=name)
+    await call.record("tools.mortal.make_charm", roles={IncidentRole.ACTOR: call.me.id}, facts={"item": str(name)}, kind=ChronicleKind.CULTURE)
     return result(MortalResult.CHARM_MADE, item=name, power=args.power.value, real=row.real)
 
 

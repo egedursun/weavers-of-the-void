@@ -11,11 +11,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, MessageRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.standing import standing_of_pair
@@ -27,6 +29,7 @@ from aerona.engine.phases.disasters import apply_disaster, disaster_phrase, reco
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 SINNER_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 ESTRANGED_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT)
@@ -84,12 +87,12 @@ async def wrath_sign(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
     impact = await apply_disaster(ctx, place, kind, rules.wrath_disaster_severity / PERCENT)
     event = await record_disaster_event(ctx, place, kind, rules.wrath_event_severity_base + rng.die(rules.wrath_event_severity_die), impact)
     creator.mood_anger = clamp_percent(creator.mood_anger - rules.wrath_discharge)
-    line = god_lines.WRATH_SIGN
-    await ctx.chronicle(
-        ChronicleKind.DIVINE_SIGN,
-        line.render(creator=creator.name, place=place.name, disaster=disaster_phrase(kind)),
-        template_key=line.key,
-        entity_ids=[place.id, event.id],
+    await record(
+        ctx,
+        "gods.mood.wrath",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: [place.id, event.id]},
+        facts={"place_detail": str(place.name), "disaster": disaster_phrase(kind)},
+        kind=ChronicleKind.DIVINE_SIGN,
     )
     ctx.count("wrath_signs")
     return place
@@ -108,21 +111,19 @@ async def grace_sign(ctx: TickContext, creator: CreatorRow, target: EntityRow | 
     if target is None:
         return None
     await apply_abundance(ctx, target)
-    line = god_lines.GRACE_SIGN
-    await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name, place=target.name), template_key=line.key, entity_ids=[target.id])
+    await record(ctx, "gods.mood.grace", roles={IncidentRole.ACTOR: creator.id, IncidentRole.PLACE: target.id}, place=target.id, kind=ChronicleKind.DIVINE_SIGN)
     ctx.count("grace_signs")
     return target
 
 
 async def silence(ctx: TickContext, creator: CreatorRow, announce: bool) -> list[SonRow]:
     rules = ctx.rules.creator
-    affected = await active_sons(ctx.session)
+    affected = unheld(await active_sons(ctx.session))
     for son in affected:
         son.loyalty = clamp_percent(son.loyalty - rules.indifferent_loyalty_loss)
         son.ambition = clamp_percent(son.ambition + rules.indifferent_ambition_gain)
-    if announce:
-        line = god_lines.SILENCE_SIGN
-        await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name), template_key=line.key)
+    if announce and not held(creator.id):
+        await record(ctx, "gods.mood.silence", roles={IncidentRole.ACTOR: creator.id}, kind=ChronicleKind.DIVINE_SIGN)
         ctx.count("silence_signs")
     await ctx.session.flush()
     return affected
@@ -144,12 +145,11 @@ async def lonely_dream(ctx: TickContext, creator: CreatorRow, target: EntityRow 
             sender_node_id=creator.id,
             recipient_node_id=target.id,
             intent=MessageIntent.DREAM,
-            text=god_lines.LONELY_DREAM.text,
+            text=god_lines.LONELY_DREAM,
         )
     )
     creator.mood_loneliness = clamp_percent(creator.mood_loneliness - rules.lonely_discharge)
-    line = god_lines.LONELINESS_SIGN
-    await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(creator=creator.name, mortal=target.name), template_key=line.key, entity_ids=[target.id])
+    await record(ctx, "gods.mood.loneliness", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id}, kind=ChronicleKind.DIVINE_SIGN)
     ctx.count("lonely_dreams")
     return target
 
@@ -173,8 +173,9 @@ async def estranged_turn(ctx: TickContext, creator: CreatorRow) -> EntityRow | N
         warmth = await standing_of_pair(ctx, entity.id, creator.id)
         lift = (warmth.love - warmth.fear) * ctx.rules.divine_standing.creator_turn_pct / PERCENT if warmth is not None else 0
         if rng.chance(rules.estranged_turn_chance + bonus + lift) and await worship_creator(ctx.session, entity, ctx.epoch, god_lines.ESTRANGED_VOW):
-            line = god_lines.ESTRANGED_TURN
-            await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(entity=entity.name, creator=creator.name), template_key=line.key, entity_ids=[entity.id])
+            await record(
+                ctx, "gods.mood.estranged_turn", roles={IncidentRole.TARGET: entity.id, IncidentRole.ACTOR: creator.id}, kind=ChronicleKind.DIVINE_SIGN
+            )
             ctx.count("estranged_turned")
             return entity
     return None

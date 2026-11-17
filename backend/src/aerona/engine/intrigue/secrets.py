@@ -5,16 +5,16 @@ from aerona.catalog.intrigue import SECRETS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.intrigue import HookRow, SecretRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_infamy
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 KNOWN = "known_by"
 
@@ -100,5 +100,11 @@ async def expose(ctx: TickContext, secret: SecretRow, *, by_id: int | None = Non
             await ctx.session.delete(hook)
     holder = await living_entity(ctx.session, secret.holder_node_id)
     if holder is not None:
-        await note(ctx, f"It came out that {holder.name} kept {spec.label.lower()}.", key="intrigue.exposed", ids=[holder.id], kind=ChronicleKind.WORLD)
+        await record(
+            ctx,
+            f"intrigue.exposed_{secret.kind.value}",
+            roles={IncidentRole.SUBJECT: holder.id, IncidentRole.ACTOR: by_id, IncidentRole.TARGET: secret.about_node_id},
+            facts={"severity": secret.severity},
+            place=holder.location_id,
+        )
     return True

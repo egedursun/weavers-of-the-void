@@ -141,11 +141,15 @@ def mortal_frame(rules: Rules, bearer: EntityRow, plan: BodyPlan) -> tuple[Heigh
     if rng.chance(rules.anatomy.height_shift_chance):
         index = heights.index(height) + (1 if rng.chance(rules.anatomy.height_shift_up_pct) else -1)
         height = heights[max(0, min(len(heights) - 2, index))] if height is not HeightClass.GIANT else height
-    strength = stat_or(bearer, "strength", DEFAULT_STAT)
+    frame_strength = stat_or(bearer, "strength", DEFAULT_STAT)
     build = spec.build
     if spec.build is not BodyBuild.GIANT:
         build = (
-            BodyBuild.HEAVY if strength >= rules.anatomy.heavy_build_strength else BodyBuild.SLIGHT if strength < rules.anatomy.slight_build_strength else build
+            BodyBuild.HEAVY
+            if frame_strength >= rules.anatomy.heavy_build_strength
+            else BodyBuild.SLIGHT
+            if frame_strength < rules.anatomy.slight_build_strength
+            else build
         )
     return height, build
 

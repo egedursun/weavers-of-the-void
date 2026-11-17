@@ -1,9 +1,10 @@
+from collections.abc import Mapping
+
 from sqlalchemy import select
 
 from aerona.catalog.law_depth import METHOD_HARM, METHOD_SEEMING, METHOD_TEXT
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
-from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import CurrencyRow
@@ -14,13 +15,13 @@ from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementP
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import Commodity
@@ -64,6 +65,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
+from aerona.engine.recording.record import FactInput, record
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war, has_truce, uprising_target
@@ -72,8 +74,12 @@ SABOTAGED_STATS = ("defense", "strength", "wealth")
 PRESSURE_STATS = ("influence", "sway", "defense")
 
 
-async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:
-    await ctx.chronicle(ChronicleKind.INTRIGUE, text, template_key=key, entity_ids=ids)
+async def told(ctx: TickContext, key: str, actor: EntityRow, target: EntityRow, *, facts: Mapping[str, FactInput] | None = None, **others: int) -> str:
+    roles: dict[IncidentRole, int] = {IncidentRole.ACTOR: actor.id, IncidentRole.TARGET: target.id}
+    for name, node in others.items():
+        roles[IncidentRole(name)] = node
+    written = await record(ctx, key, roles=roles, facts=facts, place=target.id)
+    return written.text
 
 
 async def _targets(ctx: TickContext, faction: EntityRow) -> list[tuple[bool, int, EntityRow]]:
@@ -123,7 +129,7 @@ async def found_networks(ctx: TickContext) -> int:
         await ctx.session.flush()
         await recruit(ctx, network)
         founded += 1
-        await _note(ctx, f"{owner.name} began building a secret agent network inside {target.name}.", "espionage.network_founded", (owner.id, target.id))
+        await told(ctx, "espionage.network_founded", owner, target)
     return founded
 
 
@@ -148,51 +154,45 @@ async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netwo
     secret = await steal_technique(ctx, spymaster.location_id or spymaster.id, target.id)
     design = await steal_design(ctx, spymaster.location_id or spymaster.id, target.id)
     if design is not None:
-        await _note(
-            ctx, f"The agents of {spymaster.name} carried off {design.name.lower()} from {target.name}.", "espionage.stole_design", (spymaster.id, target.id)
-        )
+        await told(ctx, "espionage.stole_design", spymaster, target, facts={"design": design.name})
     if secret is not None:
-        text = f"The agents of {spymaster.name} carried off the secret of {spoken(secret)} from {target.name}."
-        await _note(ctx, text, "espionage.stole_technique", (spymaster.id, target.id))
-        return text
+        return await told(ctx, "espionage.stole_technique", spymaster, target, facts={"technique": secret})
     loot = await _stealable(ctx, spymaster, target)
     if not loot:
         return None
     knowledge = ctx.rng("loot").pick(loot)
     await teach(ctx, spymaster.id, knowledge, f"stolen from {target.name}")
-    text = f"The agents of {spymaster.name} stole the knowledge of {knowledge.name} from {target.name}."
-    await _note(ctx, text, "espionage.stole_knowledge", (spymaster.id, target.id, knowledge.id))
-    return text
+    return await told(ctx, "espionage.stole_knowledge", spymaster, target, facts={"knowledge": knowledge.id})
 
 
 async def sabotage(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     kind = await sabotage_kind(ctx, target)
     rules = ctx.rules.espionage
+    facts: dict[str, FactInput] = {"sabotage": kind}
     if kind in WIDER_SABOTAGE:
-        line = await WIDER_SABOTAGE[kind][0](ctx, spymaster, target)
-        text = f"The agents of {spymaster.name} sabotaged {target.name}: {line}."
-        await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
-        return text
+        await WIDER_SABOTAGE[kind][0](ctx, spymaster, target)
+        return await told(ctx, f"espionage.sabotage.{kind.value}", spymaster, target, facts=facts)
     if kind is SabotageKind.GRANARY_FIRE:
         society = await ctx.session.get(CommunitySocietyRow, target.id)
         burned = round_half_up((society.stock_food if society is not None else 0) * rules.granary_fire_pct / PERCENT)
         await shift_stock(ctx.session, ctx.rules, target.id, Commodity.FOOD, -burned, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
+        facts["food_burned"] = burned
     elif kind is SabotageKind.WALL_WEAKENING:
         walls = await ctx.session.get(SettlementInfrastructureRow, target.id)
         if walls is not None:
             walls.walls_condition = clamp_int(walls.walls_condition - rules.wall_damage, 0, PERCENT)
+            facts["wall_damage"] = rules.wall_damage
     elif kind is SabotageKind.POISON_WELLS:
         await strike_plague(ctx, target, rules.poison_severity, path=SpreadPath.LOOSED)
+        facts["severity"] = rules.poison_severity
     else:
         for key in SABOTAGED_STATS:
             shift_stat(target, key, -rules.spy_sabotage_damage)
-        line = await burn_district(ctx, target)
-        text = f"The agents of {spymaster.name} set fires in {target.name}: {line}."
-        await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
-        return text
-    text = f"The agents of {spymaster.name} sabotaged {target.name}: {SABOTAGE_LINES[kind]}."
-    await _note(ctx, text, f"espionage.sabotage.{kind.value}", (spymaster.id, target.id))
-    return text
+        facts["harm"] = rules.spy_sabotage_damage
+        district = await burn_district(ctx, target)
+        if district is not None:
+            facts["district"] = district
+    return await told(ctx, f"espionage.sabotage.{kind.value}", spymaster, target, facts=facts)
 
 
 async def sabotage_kind(ctx: TickContext, target: EntityRow) -> SabotageKind:
@@ -218,21 +218,15 @@ async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
         return None
     if network.depth < ctx.rules.espionage.assassinate_depth:
         await wound_ruler(ctx, victim, spymaster)
-        text = f"An assassin of {spymaster.name} struck at {victim.name}, ruler of {target.name}, and left them wounded."
-        await _note(ctx, text, "espionage.assassination_wounded", (spymaster.id, target.id, victim.id))
-        return text
+        return await told(ctx, "espionage.assassination_wounded", spymaster, target, victim=victim.id)
     method = await choose_method(ctx, spymaster, network, victim)
     killing = await examine(ctx, victim, spymaster.id, method)
     manner = DeathCause.MURDER if killing.recognised else METHOD_SEEMING[method]
     await death_path(ctx, victim, f"died {METHOD_TEXT[method]}", spymaster.id, "assassination", forced=True, harm=METHOD_HARM[method], manner=manner)
     if not killing.recognised:
-        text = f"{victim.name}, ruler of {target.name}, died, and no one saw the hand of {spymaster.name} in it."
-        await _note(ctx, text, "espionage.assassination_hidden", (target.id, victim.id))
-        return text
+        return await told(ctx, "espionage.assassination_hidden", spymaster, target, facts={"method": method}, victim=victim.id)
     await answer_murder(ctx, network, victim, target)
-    text = f"Agents of {spymaster.name} reached {victim.name}, ruler of {target.name}, and killed them {METHOD_TEXT[method]}."
-    await _note(ctx, text, "espionage.assassination", (spymaster.id, target.id, victim.id))
-    return text
+    return await told(ctx, "espionage.assassination", spymaster, target, facts={"method": method}, victim=victim.id)
 
 
 async def answer_murder(ctx: TickContext, network: SpyNetworkRow, victim: EntityRow, target: EntityRow) -> None:
@@ -255,10 +249,9 @@ async def incite(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netw
     town.unrest = clamp_int(town.unrest + rules.incite_unrest, 0, PERCENT)
     risen = town.unrest >= rules.incite_uprising_unrest and await incite_uprising_quietly(ctx, target)
     claimant = await plant_claimant(ctx, spymaster, target)
-    planted = f"; they claimed that {claimant.name} was the rightful ruler" if claimant is not None else ""
-    text = f"Agents of {spymaster.name} stirred the streets of {target.name}{planted}" + (" until the townsfolk rose against their rulers." if risen else ".")
-    await _note(ctx, text, "espionage.incite", (spymaster.id, target.id))
-    return text
+    others = {"subject": claimant.id} if claimant is not None else {}
+    key = "espionage.incite_uprising" if risen else "espionage.incite"
+    return await told(ctx, key, spymaster, target, facts={"unrest": town.unrest}, **others)
 
 
 async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> bool:
@@ -272,8 +265,7 @@ async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, netw
     gain = cover_access(network, ctx.rules.espionage.intel_gain) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH) * shield
     network.intel = clamp_int(network.intel + round_half_up(gain), 0, PERCENT)
     aims = await reveal_aims(ctx, network, target)
-    tail = f"; {len(aims)} of its war aims lie open" if aims else ""
-    return f"The agents of {spymaster.name} learned the secrets of {target.name}{tail}."
+    return await told(ctx, "espionage.intel", spymaster, target, facts={"intel": network.intel, "aims": len(aims)})
 
 
 async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
@@ -282,11 +274,12 @@ async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, n
         return None
     network.intel = clamp_int(network.intel - rules.intel_gain, 0, PERCENT)
     bent = await blackmail_office(ctx, spymaster, target, network)
+    facts: dict[str, FactInput] = {"intel_spent": rules.intel_gain}
     if bent is None:
         move_stat(target, spymaster, "wealth", rules.blackmail_wealth)
-    text = (bent + ".") if bent is not None else f"{spymaster.name} held the secrets of {target.name}'s rulers over them and was paid to keep quiet."
-    await _note(ctx, text, "espionage.blackmail", (spymaster.id, target.id))
-    return text
+        facts["paid"] = rules.blackmail_wealth
+    others = {"victim": bent} if bent is not None else {}
+    return await told(ctx, "espionage.blackmail", spymaster, target, facts=facts, **others)
 
 
 async def counterfeit(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
@@ -294,9 +287,7 @@ async def counterfeit(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
     if coin is None:
         return None
     coin.trust = clamp_int(coin.trust - ctx.rules.espionage.counterfeit_trust, 0, PERCENT)
-    text = f"False coins of {coin.name} from the agents of {spymaster.name} spread through the markets of {target.name}."
-    await _note(ctx, text, "espionage.counterfeit", (spymaster.id, target.id))
-    return text
+    return await told(ctx, "espionage.counterfeit", spymaster, target, facts={"currency": coin.name, "trust_lost": ctx.rules.espionage.counterfeit_trust})
 
 
 OPERATIONS = {
@@ -307,12 +298,6 @@ OPERATIONS = {
     SpyOperation.INTEL: gather,
     SpyOperation.BLACKMAIL: blackmail,
     SpyOperation.COUNTERFEIT: counterfeit,
-}
-SABOTAGE_LINES = {
-    SabotageKind.GRANARY_FIRE: "the granaries burned",
-    SabotageKind.WALL_WEAKENING: "the walls were undermined",
-    SabotageKind.POISON_WELLS: "the wells were poisoned",
-    SabotageKind.ARSON: "fires were set",
 }
 WAR_OPERATIONS = (SpyOperation.SABOTAGE, SpyOperation.ASSASSINATE, SpyOperation.INTEL)
 PEACE_OPERATIONS = (SpyOperation.STEAL_KNOWLEDGE, SpyOperation.BLACKMAIL, SpyOperation.COUNTERFEIT, SpyOperation.INCITE, SpyOperation.INTEL)
@@ -417,13 +402,13 @@ async def run_networks(ctx: TickContext) -> None:
         if rng.chance(await caught_chance(ctx, network, target) / max(guile, MIN_GUILE)):
             caught = await catch_agent(ctx, network, target)
             await change_relation(ctx, spymaster.id, target.id, -rules.spy_caught_relation_loss, MemoryKind.SPIED_ON_US, note="caught spies")
-            war = rng.chance(rules.spy_war_chance) and await declare_war(ctx, target.id, spymaster.id, "espionage", cause=WarCause.ESPIONAGE)
+            if rng.chance(rules.spy_war_chance):
+                await declare_war(ctx, target.id, spymaster.id, "espionage", cause=WarCause.ESPIONAGE)
             rolled = not await agents_of(ctx, network) and network.exposure >= rules.roll_up_exposure
             if rolled:
                 await ctx.session.delete(network)
-            who = f"{caught.name}, a spy of {spymaster.name}," if caught is not None else f"The spies of {spymaster.name}"
-            tail = f"; {target.name} declared them its enemy" if war else "; the network was rolled up" if rolled else ""
-            await _note(ctx, f"{who} were caught in {target.name}{tail}.", "espionage.caught", (spymaster.id, target.id))
+            others = {"subject": caught.id} if caught is not None else {}
+            await told(ctx, "espionage.caught", spymaster, target, facts={"exposure": network.exposure}, **others)
             ctx.count("spies_caught")
             continue
         if not rng.chance(rules.spy_action_chance * guile):
@@ -455,7 +440,6 @@ async def run_networks(ctx: TickContext) -> None:
     "table.currencies",
     "table.districts",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.feuds",
     "table.goods",
     "table.held_identities",
@@ -516,7 +500,6 @@ async def run_networks(ctx: TickContext) -> None:
     "table.currencies",
     "table.districts",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.feuds",
     "table.goods",
     "table.house_members",

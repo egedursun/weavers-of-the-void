@@ -15,6 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.dominion import CreatureDeed, CreatureLesson
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -23,13 +24,20 @@ from aerona.engine.divine.standing import standing_row
 from aerona.engine.dominion.core import patrons
 from aerona.engine.ecology.control import NewBeast, create_beast
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import has_stat, shift_stat
+from aerona.engine.recording.record import record
 
 DEEDS = tuple(CreatureDeed)
+
+
+@dataclass(frozen=True)
+class Acted:
+    target: int | None
+
+
 START_WEIGHT = 10
 CREATURE_POWER = 6
 
@@ -72,10 +80,10 @@ async def teach(ctx: TickContext, row: DivineCreatureRow, deed: CreatureDeed, le
     if "weights" not in row.locked:
         row.weights = taught(table.lesson_shift, row.weights, deed, lesson, low=table.weight_min, high=table.weight_max)
     row.neglect_epochs = 0
-    record = CreatureLessonRow(creature_entity_id=row.creature_entity_id, deed=deed, lesson=lesson, strength=table.lesson_shift, epoch=ctx.epoch)
-    ctx.session.add(record)
+    entry = CreatureLessonRow(creature_entity_id=row.creature_entity_id, deed=deed, lesson=lesson, strength=table.lesson_shift, epoch=ctx.epoch)
+    ctx.session.add(entry)
     await ctx.session.flush()
-    return record
+    return entry
 
 
 def choose(ctx: TickContext, row: DivineCreatureRow) -> CreatureDeed:
@@ -130,7 +138,7 @@ class Scene:
         return self.ctx.rng(f"creature.deed.{self.beast.id}.{self.ctx.epoch}")
 
 
-async def hunt(scene: Scene) -> str | None:
+async def hunt(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     if not scene.folk:
         return None
@@ -139,10 +147,10 @@ async def hunt(scene: Scene) -> str | None:
     await apply_hits(scene.ctx, victim, harm)
     for town in scene.towns:
         await sway(scene.ctx, town.id, scene.god, fear=table.fear_per_deed)
-    return f"{scene.beast.name} hunted {victim.name}"
+    return Acted(victim.id)
 
 
-async def strike(scene: Scene) -> str | None:
+async def strike(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     foes = [mortal for mortal in scene.folk if scene.faithful.get(mortal.id) not in {None, scene.god}]
     if not foes:
@@ -150,20 +158,20 @@ async def strike(scene: Scene) -> str | None:
     victim = scene.rng().pick(foes)
     harm = Harm(table.harm, HarmCause.GOD, f"was struck down by {scene.beast.name}", source_node_id=scene.beast.id, killer_id=scene.beast.id)
     await apply_hits(scene.ctx, victim, harm)
-    return f"{scene.beast.name} struck at {victim.name}, who keeps another faith"
+    return Acted(victim.id)
 
 
-async def tend(scene: Scene) -> str | None:
+async def tend(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     if not scene.towns:
         return None
     town = scene.rng().pick(scene.towns)
     await add_stock(scene.ctx, town, FOOD_KINDS[0], table.tend_food)
     await sway(scene.ctx, town.id, scene.god, love=table.love_per_deed)
-    return f"{scene.beast.name} tended the fields of {town.name}"
+    return Acted(town.id)
 
 
-async def heal(scene: Scene) -> str | None:
+async def heal(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     if not scene.folk:
         return None
@@ -172,17 +180,17 @@ async def heal(scene: Scene) -> str | None:
         shift_stat(patient, "hp", table.heal)
     for town in scene.towns:
         await sway(scene.ctx, town.id, scene.god, love=table.love_per_deed)
-    return f"{scene.beast.name} tended {patient.name}"
+    return Acted(patient.id)
 
 
-async def guard(scene: Scene) -> str | None:
+async def guard(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     for town in scene.towns:
         await sway(scene.ctx, town.id, scene.god, love=table.love_per_deed // 2, fear=table.fear_per_deed // 2)
-    return f"{scene.beast.name} kept watch over the holy places"
+    return Acted(scene.region)
 
 
-async def wreck(scene: Scene) -> str | None:
+async def wreck(scene: Scene) -> Acted | None:
     table = scene.ctx.rules.divine_creatures
     works = await scene.ctx.session.execute(
         select(EntityRow, StructureProfileRow)
@@ -198,21 +206,22 @@ async def wreck(scene: Scene) -> str | None:
         profile.condition = clamp_int(profile.condition - table.wreck, 0, PERCENT)
     for town in scene.towns:
         await sway(scene.ctx, town.id, scene.god, fear=table.fear_per_deed)
-    return f"{scene.beast.name} wrecked {work.name}"
+    return Acted(work.id)
 
 
-async def wander(scene: Scene) -> str | None:
+async def wander(scene: Scene) -> Acted | None:
     neighbours = scene.atlas.neighbour_regions(scene.region) if scene.region is not None else []
-    if neighbours:
-        scene.beast.location_id = scene.rng().pick(neighbours)
+    if not neighbours:
+        return None
+    scene.beast.location_id = scene.rng().pick(neighbours)
+    return Acted(scene.beast.location_id)
+
+
+async def rest(scene: Scene) -> Acted | None:
     return None
 
 
-async def rest(scene: Scene) -> str | None:
-    return None
-
-
-DEED_ACTS: dict[CreatureDeed, Callable[[Scene], Awaitable[str | None]]] = {
+DEED_ACTS: dict[CreatureDeed, Callable[[Scene], Awaitable[Acted | None]]] = {
     CreatureDeed.HUNT_FOLK: hunt,
     CreatureDeed.STRIKE_FOES: strike,
     CreatureDeed.TEND_FIELDS: tend,
@@ -224,7 +233,7 @@ DEED_ACTS: dict[CreatureDeed, Callable[[Scene], Awaitable[str | None]]] = {
 }
 
 
-async def perform(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: DivineCreatureRow, faithful: dict[int, int]) -> str | None:
+async def perform(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: DivineCreatureRow, faithful: dict[int, int]) -> Acted | None:
     region = atlas.top_region(beast.id)
     scene = Scene(ctx, atlas, beast, row.god_node_id, region, await folk_near(ctx, atlas, region), await communities_near(ctx, atlas, region), faithful)
     return await DEED_ACTS[row.last_deed or CreatureDeed.REST](scene)
@@ -243,7 +252,7 @@ async def act_creatures(ctx: TickContext, tally: CreatureTally) -> None:
             tally.drifted += 1
         if "last_deed" not in row.locked:
             row.last_deed = deed
-        told = await perform(ctx, atlas, beast, row, faithful)
+        acted = await perform(ctx, atlas, beast, row, faithful)
         if "hunger" not in row.locked:
             row.hunger = 0 if deed in FEEDING_DEEDS else clamp_int(row.hunger + table.hunger_gain, 0, PERCENT)
         if "neglect_epochs" not in row.locked:
@@ -253,6 +262,11 @@ async def act_creatures(ctx: TickContext, tally: CreatureTally) -> None:
         tally.helped += deed in HELPFUL_DEEDS
         tally.harmed += deed in HARMFUL_DEEDS
         await presence(ctx, row.god_node_id, atlas.top_region(beast.id))
-        if told:
-            await note(ctx, f"{told}.", key=f"dominion.creature_{deed.value}", ids=[beast.id, row.god_node_id])
+        if acted is not None:
+            await record(
+                ctx,
+                f"dominion.creature_{deed.value}",
+                roles={IncidentRole.ACTOR: beast.id, IncidentRole.PATRON: row.god_node_id, IncidentRole.TARGET: acted.target},
+                facts={"deed": deed},
+            )
     await ctx.session.flush()

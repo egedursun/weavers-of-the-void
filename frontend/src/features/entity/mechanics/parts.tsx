@@ -17,7 +17,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Medallion, TimelineItem, Paged } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { named } from '@/features/entity/environment/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { INCIDENT_ROLE } from '@/features/records/labels'
+import { roleTimelineTone } from '@/features/records/tones'
 import { NamedRecord } from '../NamedRecord'
 import { humanize } from '../actions/schema'
 import { MindPicker } from '../mind/parts'
@@ -29,21 +32,6 @@ type Acting = components['schemas']['ActingMechanic']
 type Incident = components['schemas']['IncidentRecord']
 
 const DEFAULT_EPOCHS = 1
-const ROLE_LABEL: Record<string, string> = {
-  subject: 'About it',
-  actor: 'It acted',
-  target: 'It was struck',
-  witness: 'It witnessed',
-  place: 'It happened here',
-}
-const ROLE_TONE = {
-  subject: 'primary',
-  actor: 'success',
-  target: 'destructive',
-  witness: 'default',
-  place: 'default',
-} as const
-
 function shift(modifier: Modifier): string {
   if (modifier.op === 'multiply') return `× ${modifier.magnitude}`
   return `${modifier.magnitude > 0 ? '+' : ''}${modifier.magnitude}`
@@ -379,7 +367,7 @@ export function IncidentEntry({
   return (
     <TimelineItem
       icon={ScrollText}
-      tone={ROLE_TONE[incident.role]}
+      tone={roleTimelineTone(incident.role)}
       title={
         incident.text ??
         humanize(incident.kind.split('.').pop() ?? incident.kind)
@@ -394,7 +382,7 @@ export function IncidentEntry({
       <div className='flex min-w-0 flex-col gap-1.5'>
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Badge size='sm' variant='outline'>
-            {ROLE_LABEL[incident.role] ?? humanize(incident.role)}
+            {named(INCIDENT_ROLE, incident.role).label}
           </Badge>
           {incident.magnitude > 0 && (
             <Badge

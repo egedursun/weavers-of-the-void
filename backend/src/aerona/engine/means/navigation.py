@@ -13,11 +13,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import InstrumentKind, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 
@@ -52,7 +54,13 @@ async def equip_ports(ctx: TickContext, tally: NavigationTally) -> None:
                 continue
             ctx.session.add(NavigationKitRow(holder_entity_id=town.id, aid=aid, quality=table.seed_quality, since_epoch=ctx.epoch, locked=[]))
             tally.equipped += 1
-            await note(ctx, f"The pilots of {town.name} took up the {spec.label.lower()}.", key="navigation.aid", ids=[town.id])
+            await record(
+                ctx,
+                "navigation.aid",
+                roles={IncidentRole.LEARNER: town.id},
+                facts={"aid": aid, "quality": table.seed_quality},
+                steps=(StepDraft(StepAction.LEARN, actor=town.id, instrument_kind=InstrumentKind.TOOL_KIND, instrument_key=aid.value),),
+            )
     await ctx.session.flush()
 
 

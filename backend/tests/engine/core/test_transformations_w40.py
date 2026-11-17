@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.bonds import endpoints_valid
 from aerona.catalog.entity_types import can_contain
-from aerona.catalog.transform_lines import LINES
+from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.transformations import ENGINE_KINDS, TRANSFORMS, WARNED_KINDS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
@@ -72,8 +72,7 @@ Builder = Callable[[TickContext, RichCosmos], Awaitable[int]]
 
 def test_every_transformation_has_its_registry_entry_its_line_and_its_engine() -> None:
     assert set(TRANSFORMS) == set(TransformKind)
-    assert set(LINES) == set(TransformKind)
-    assert all(LINES[kind].key == f"transform.{kind.value}" for kind in TransformKind)
+    assert all(f"transform.{kind.value}" in INCIDENT_KINDS and not INCIDENT_KINDS[f"transform.{kind.value}"].draft for kind in TransformKind)
     assert set(KINDS) == set(ENGINE_KINDS)
     assert {K.FALL, K.CORRUPTION} == WARNED_KINDS
     assert all(not TRANSFORMS[kind].existing for kind in ENGINE_KINDS | HOOKED)

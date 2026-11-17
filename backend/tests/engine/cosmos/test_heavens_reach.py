@@ -194,9 +194,9 @@ async def test_rites_tear_rifts_beings_tear_toward_home_and_wards_seal_them(ctx:
     rift = await tear_toward(ctx, cosmos.home, region, RiftCause.BEING, home_id=plane.id)
     assert rift is not None and rift.dimension_id == plane.id and rift.cause is RiftCause.BEING
     veil = plane.veil
-    sealed = await seal_near(ctx, region.id, "a warden")
+    sealed = await seal_near(ctx, region.id, None)
     assert sealed is not None and sealed.state is RiftState.SEALED and plane.veil == min(100, veil + ctx.rules.rifts.ward_veil)
-    assert await seal_near(ctx, region.id, "a warden") is None
+    assert await seal_near(ctx, region.id, None) is None
 
 
 async def test_a_banished_being_goes_home_and_a_bound_one_serves_its_binder(ctx: TickContext, cosmos: Cosmos) -> None:

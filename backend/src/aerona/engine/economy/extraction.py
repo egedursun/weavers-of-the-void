@@ -7,7 +7,6 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.production import EXTRACTION, EXTRACTION_OF
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import ProductionRunRow, ResourceProfileRow, ResourceWorkerRow
@@ -17,7 +16,6 @@ from aerona.db.tables.made import SalvageSiteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause, MaimedKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.dominion import DivineScale
@@ -27,6 +25,7 @@ from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
@@ -59,6 +58,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
@@ -445,30 +445,23 @@ async def strike_hazard(
         if await active_seal(ctx.session, resource.id) is None and ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
             cavern = await _open_cavern(ctx, resource)
             await seal_after_breach(ctx, resource, community)
-    woodcutters_counted = several(killed, "woodcutter", "woodcutters")
-    words = {
-        HazardKind.CAVE_IN: f"The galleries of {resource.name} caved in on the miners of {community.name}: {killed} died and "
-        + several(maimed, "was", "were")
-        + " maimed",
-        HazardKind.FLOODED_SHAFT: f"Water broke into the shafts of {resource.name}: {killed} of {community.name} drowned",
-        HazardKind.FELLING_ACCIDENT: f"Falling trees at {resource.name} killed {woodcutters_counted} of {community.name} and crippled {maimed}",
-        HazardKind.DROWNING: f"Rough water at {resource.name} took {several(killed, 'fisher', 'fishers')} of {community.name}",
-        HazardKind.GORING: f"The herds of {resource.name} gored {several(killed, 'herder', 'herders')} of {community.name}",
-        HazardKind.BLOWOUT: f"A blowout at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.EXPLOSION: f"An explosion at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.TOXIC_RELEASE: f"Fumes released at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.DECOMPRESSION: f"A loss of pressure at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.RADIATION_EXPOSURE: f"Radiation at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.SUBSIDENCE: f"The ground sank under {resource.name} and killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.BEAST_ATTACK: f"The beasts kept at {resource.name} killed {several(killed, 'keeper', 'keepers')} of {community.name}",
-        HazardKind.SOURCE_BACKLASH: f"The source drawn on at {resource.name} struck back and killed {several(killed, 'worker', 'workers')} of {community.name}",
-        HazardKind.MACHINE_ACCIDENT: f"Machinery at {resource.name} killed {several(killed, 'worker', 'workers')} of {community.name}",
-    }[hazard]
-    tail = f"; the collapse broke into a cavern and {cavern.name} came out" if cavern is not None else ""
-    sealed = "; the mine is sealed" if hazard is HazardKind.CAVE_IN else ""
-    ids = [resource.id, community.id, *hurt, *([cavern.id] if cavern is not None else [])]
-    await ctx.chronicle(
-        ChronicleKind.DISASTER, f"{words}{sealed}{tail}.", template_key=f"mining.{hazard.value}", entity_ids=ids, place_entity_id=resource.location_id
+    await record(
+        ctx,
+        f"mining.{hazard.value}",
+        roles={
+            IncidentRole.SUBJECT: resource.id,
+            IncidentRole.OWNER: community.id,
+            IncidentRole.VICTIM: hurt,
+            IncidentRole.PRODUCT: cavern.id if cavern is not None else None,
+        },
+        facts={
+            "hazard": hazard,
+            "workers": workers,
+            "killed": killed,
+            "maimed": maimed,
+            "sealed_epochs": table.seal_epochs if hazard is HazardKind.CAVE_IN and not profile.held else 0,
+        },
+        place=resource.location_id,
     )
 
 

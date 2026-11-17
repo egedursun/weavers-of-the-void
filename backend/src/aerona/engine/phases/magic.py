@@ -1,5 +1,4 @@
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -7,6 +6,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EventStats
@@ -14,10 +14,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.rites import beyond_reach, cast, choose, spellcraft
+from aerona.engine.lore.rites import beyond_reach, cast, casting_steps, choose, spellcraft
 from aerona.engine.mind.skills import practise_any
 from aerona.engine.mortal.equipment import focus_pct
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -27,6 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 
 MAGIC_STORM_SUBTYPE = "magic storm"
 WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
@@ -39,7 +39,6 @@ WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
     "resource.might",
     "table.bonds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.ley_lines",
     "table.name_registry",
     "table.nodes",
@@ -53,7 +52,6 @@ WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -94,11 +92,11 @@ async def magic_storms(ctx: TickContext) -> None:
         )
         along = [regions[other].name for other in reached[1:] if other in regions]
         spread = f" It ran down the ley lines into {', '.join(along)}." if along else ""
-        await note(
+        await record(
             ctx,
-            f"A magic storm broke out in {region.name}; {several(len(touched), 'resource', 'resources')} and items grew stronger.{spread}",
-            key="magic.storm",
-            ids=[region.id, event.id, *reached[1:]],
+            "magic.storm",
+            roles={IncidentRole.SUBJECT: [*[region.id, event.id, *reached[1:]]]},
+            facts={"region": str(region.name), "count": len(touched), "spread": str(spread)},
         )
 
 
@@ -138,7 +136,6 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
     "table.cult_tenets",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.genomes",
     "table.holder_levels",
@@ -179,7 +176,6 @@ async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRo
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.region_pollution",
@@ -210,7 +206,7 @@ async def wizards(ctx: TickContext) -> None:
         holy = 2 if churches.holds(mortal.location_id or 0, TenetKind.SANCTIFIED_MAGIC) else 1
         if not await has_flag(ctx.session, mortal.id, EntityFlag.WIZARD):
             await add_flag(ctx.session, mortal.id, EntityFlag.WIZARD, ctx.epoch)
-            await note(ctx, f"{mortal.name} deciphered the language of magic; now a wizard.", key="magic.wizard", ids=[mortal.id])
+            await record(ctx, "magic.wizard", roles={IncidentRole.SUBJECT: mortal.id})
         ley = rules.environment.ley_wizard_pct / PERCENT if web.on_line(atlas.top_region(mortal.id)) else 1
         if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy * await focus_pct(ctx.session, rules, mortal.id)):
             continue
@@ -230,7 +226,13 @@ async def wizards(ctx: TickContext) -> None:
             continue
         worked += 1
         targets = [enemy.id] if hostile and enemy is not None else [home.id]
-        await note(ctx, f"Wizard {mortal.name} worked {rite.name}: {casting.effect}.", key="magic.rite", ids=[mortal.id, rite.id, *targets])
+        await record(
+            ctx,
+            "magic.rite",
+            roles={IncidentRole.SUBJECT: [mortal.id, *[mortal.id, rite.id, *targets]]},
+            facts={"rite": str(rite.name), "effect": casting.effect},
+            steps=await casting_steps(ctx, casting),
+        )
 
 
 @reads(

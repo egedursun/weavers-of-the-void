@@ -2,21 +2,20 @@ from dataclasses import dataclass
 
 from aerona.catalog.tongues import SCRIPT_CHAIN, SCRIPT_SIGNS, WRITABLE
 from aerona.constants.schema import NAME_MAX_LENGTH
-from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.tongues import ScriptRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, WritingSystem
+from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.tongues import ScriptChangeCause
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import speakers, standardisation_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import canon, has_flag
 from aerona.engine.primitives.society import class_shares
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.tongues.sounds import contacts_of
-from aerona.language.writing import WRITING_SYSTEM_PHRASES
 
 
 @dataclass
@@ -87,13 +86,7 @@ async def evolve(ctx: TickContext, language: EntityRow, profile: LanguageProfile
         return None
     row = await record_script(ctx, language, profile, following, cause=cause, parent=current)
     tally.evolved += 1
-    await note(
-        ctx,
-        f"The script of {language.name} became {WRITING_SYSTEM_PHRASES[following]} through {spoken(cause)}.",
-        key="tongues.script_evolved",
-        ids=[language.id],
-        kind=ChronicleKind.CULTURE,
-    )
+    await record_incident(ctx, "tongues.script_evolved", roles={IncidentRole.SUBJECT: language.id}, facts={"system": following, "cause": cause})
     return row
 
 
@@ -109,12 +102,11 @@ async def borrow(ctx: TickContext, language: EntityRow, profile: LanguageProfile
             continue
         row = await record_script(ctx, language, profile, source.system, cause=ScriptChangeCause.BORROWING, parent=source, extra_signs=table.borrowed_signs)
         tally.borrowed += 1
-        await note(
+        await record_incident(
             ctx,
-            f"{language.name} came to be written in the script of {lender.name if lender is not None else 'a neighbour'}, with signs added for its own sounds.",
-            key="tongues.script_borrowed",
-            ids=[language.id, lender_id],
-            kind=ChronicleKind.CULTURE,
+            "tongues.script_borrowed",
+            roles={IncidentRole.LEARNER: language.id, IncidentRole.TEACHER: lender_id},
+            facts={"system": source.system, "signs_added": table.borrowed_signs},
         )
         return row
     return None

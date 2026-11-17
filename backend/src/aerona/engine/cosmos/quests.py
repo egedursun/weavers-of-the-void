@@ -8,6 +8,7 @@ from aerona.catalog.quests import LEGENDARY_AIMS, OBSTACLE_EPOCHS, REWARD_WORDS,
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.core.total import total
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -17,18 +18,21 @@ from aerona.db.tables.lore import LegendaryQuestRow, ThreadRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestOutcome, ThreadStatus
+from aerona.domain.enums.chronicle import LegendaryQuestOutcome, ThreadStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestTargetKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import forgotten_world_ids, world_name
-from aerona.engine.notes import note
 from aerona.engine.primitives.doom import advance_doom
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 
 T = QuestTargetKind
 
@@ -109,6 +113,10 @@ async def quest_target(session: AsyncSession, target_kind: QuestTargetKind) -> Q
     return await finder(session)
 
 
+def quest_target_node(quest: LegendaryQuestRow) -> int | None:
+    return quest.target_entity_id if quest.target_entity_id is not None else quest.target_star_id
+
+
 def legendary_name(quest: LegendaryQuestRow) -> str:
     return quest_name(quest.aim, quest.target_kind)
 
@@ -143,7 +151,23 @@ async def open_quest(ctx: TickContext, draft: LegendaryDraft, by: str, opened_by
         prior_journey_ids=list(target.prior),
     )
     ctx.session.add(quest)
-    await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, f"{by} opened a legendary quest: {name}, {target.text}.", template_key="beyond.quest_opened")
+    scope = current_scope()
+    await record(
+        ctx,
+        "beyond.quest_opened",
+        roles={
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None and opened_by is not ActorKind.FATE else None,
+            IncidentRole.TARGET: target.entity_id if target.entity_id is not None else target.star_id,
+        },
+        facts={
+            "aim": draft.aim,
+            "target_kind": draft.target_kind,
+            "obstacle": draft.obstacle,
+            "reward": draft.reward,
+            "opened_by": opened_by,
+            "deadline_epoch": quest.deadline_epoch,
+        },
+    )
     await ctx.session.flush()
     return quest
 
@@ -256,25 +280,46 @@ async def succeeded(ctx: TickContext, quest: LegendaryQuestRow) -> bool | None:
 
 
 async def settle_quest(ctx: TickContext, quest: LegendaryQuestRow, thread: ThreadRow) -> LegendaryQuestOutcome | None:
-    name = legendary_name(quest)
     reason = await _invalid_reason(ctx.session, quest)
     if reason is not None:
         _close(thread, quest, ctx.epoch, LegendaryQuestOutcome.INVALIDATED, f"Legendary quest fell: {reason}.")
-        text = f"Legendary quest fell: {name}. Its target vanished ({reason}); no one was rewarded, nor did the cosmos pay a price."
-        await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, text, template_key="beyond.quest_invalid")
+        await record(
+            ctx, "beyond.quest_invalid", roles={IncidentRole.TARGET: quest_target_node(quest)}, facts={"aim": quest.aim, "target_kind": quest.target_kind}
+        )
         return LegendaryQuestOutcome.INVALIDATED
     result = await succeeded(ctx, quest)
     if result:
         _close(thread, quest, ctx.epoch, LegendaryQuestOutcome.COMPLETED, "completed successfully")
-        await _reward(ctx, quest.reward)
-        text = f"Legendary quest completed: {name}. Doom receded and it brought {REWARD_WORDS[quest.reward]}."
-        await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, text, template_key="beyond.quest_completed")
+        with explaining():
+            await _reward(ctx, quest.reward)
+            await record(
+                ctx,
+                "beyond.quest_completed",
+                roles={IncidentRole.TARGET: quest_target_node(quest)},
+                facts={
+                    "aim": quest.aim,
+                    "target_kind": quest.target_kind,
+                    "reward": quest.reward,
+                    "doom_change": -ctx.rules.beyond.expedition_reward_apocalypse_push * REWARD_WEIGHT[quest.reward][2],
+                },
+                steps=(StepDraft(StepAction.COMPLETE, target=quest_target_node(quest), outcome=StepOutcome.SUCCESS),),
+            )
         return LegendaryQuestOutcome.COMPLETED
     if result is False:
         _close(thread, quest, ctx.epoch, LegendaryQuestOutcome.FAILED, "failed")
-        await _punish(ctx)
-        text = f"Legendary quest failed: {name}. Doom came closer and leakage rose in every world."
-        await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, text, template_key="beyond.quest_failed")
+        with explaining():
+            await _punish(ctx)
+            await record(
+                ctx,
+                "beyond.quest_failed",
+                roles={IncidentRole.TARGET: quest_target_node(quest)},
+                facts={
+                    "aim": quest.aim,
+                    "target_kind": quest.target_kind,
+                    "doom_change": ctx.rules.beyond.expedition_fail_apocalypse,
+                    "leak_gain": ctx.rules.beyond.expedition_fail_leak,
+                },
+            )
         return LegendaryQuestOutcome.FAILED
     return None
 
@@ -288,10 +333,12 @@ async def legendary_quests(ctx: TickContext) -> None:
         for target_kind, aim in rng.shuffled(pairs):
             draft = LegendaryDraft(aim, target_kind, rng.pick(list(QuestObstacle)), rng.pick(list(QuestReward)))
             try:
-                await open_quest(ctx, draft, "Fate", ActorKind.FATE)
+                opened = await open_quest(ctx, draft, "Fate", ActorKind.FATE)
             except ValidationFailedError:
                 continue
-            await note(ctx, "Fate opened a new legendary quest.", key="beyond.fate_quest")
+            await record(
+                ctx, "beyond.fate_quest", roles={IncidentRole.TARGET: quest_target_node(opened)}, facts={"aim": draft.aim, "target_kind": draft.target_kind}
+            )
             break
     for quest, thread in await open_quests(ctx.session):
         await settle_quest(ctx, quest, thread)
@@ -304,9 +351,15 @@ async def abandon_quest(ctx: TickContext, thread_id: int, by: str) -> str:
     if quest is None or thread is None or thread.status is not ThreadStatus.OPEN:
         raise NotFoundError("No such open legendary quest.")
     _close(thread, quest, ctx.epoch, LegendaryQuestOutcome.INVALIDATED, f"abandoned by {by}")
-    text = f"{by} let the legendary quest go: {legendary_name(quest)}. No one was rewarded, nor did the cosmos pay a price."
-    await ctx.chronicle(ChronicleKind.LEGENDARY_QUEST, text, template_key="beyond.quest_abandoned")
-    return text
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "beyond.quest_abandoned",
+        roles={IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None, IncidentRole.TARGET: quest_target_node(quest)},
+        facts={"aim": quest.aim, "target_kind": quest.target_kind},
+        steps=(StepDraft(StepAction.ABANDON, actor=scope.actor_node_id if scope is not None else None),),
+    )
+    return written.text
 
 
 async def worlds_known(session: AsyncSession) -> int:

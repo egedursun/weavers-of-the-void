@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.divine.creator import autonomy
@@ -23,6 +24,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import roll_top
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 
 @dataclass(frozen=True)
@@ -183,10 +185,13 @@ async def curse_newborns(ctx: TickContext) -> None:
     for child in newborns:
         await curse(ctx, child)
     if newborns:
-        line = god_lines.BLOODLINE_NEWBORNS
         names = ", ".join(child.name for child in newborns[: ctx.rules.god_power.bloodline_curse_depth])
-        await ctx.chronicle(
-            ChronicleKind.DIVINE_SIGN, line.render(count=len(newborns), names=names), template_key=line.key, entity_ids=[child.id for child in newborns]
+        await record(
+            ctx,
+            "gods.power.bloodline_newborns",
+            roles={IncidentRole.SUBJECT: [*[child.id for child in newborns]]},
+            facts={"count": len(newborns), "names": str(names)},
+            kind=ChronicleKind.DIVINE_SIGN,
         )
 
 
@@ -201,27 +206,17 @@ async def prophet_conversions(ctx: TickContext, creator: CreatorRow) -> None:
         if community is None or not rng.chance(rules.prophet_convert_chance):
             continue
         if await worship_creator(ctx.session, community, ctx.epoch, god_lines.PROPHET_COMMUNITY_VOW.format(prophet=prophet.name)):
-            line = god_lines.PROPHET_COMMUNITY
-            await ctx.chronicle(
-                ChronicleKind.DIVINE_SIGN,
-                line.render(community=community.name, creator=creator.name, prophet=prophet.name),
-                template_key=line.key,
-                entity_ids=[community.id, prophet.id],
+            await record(
+                ctx,
+                "gods.power.prophet_community",
+                roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.ACTOR: prophet.id, IncidentRole.SUBJECT: community.id},
+                facts={"community": str(community.name)},
+                kind=ChronicleKind.DIVINE_SIGN,
             )
 
 
-@reads(
-    "table.bonds",
-    "table.creator",
-    "table.entities",
-    "table.entity_flags",
-    "table.epoch_year_cursors",
-    "table.nodes",
-    "table.son_relations",
-    "table.sons",
-    "table.world_attention",
-)
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.son_relations", "table.sons")
+@reads("table.bonds", "table.creator", "table.entities", "table.entity_flags", "table.nodes", "table.son_relations", "table.sons", "table.world_attention")
+@writes("table.chronicle", "table.incident_participants", "table.incidents", "table.son_relations", "table.sons")
 async def god_power(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
     if creator is None:

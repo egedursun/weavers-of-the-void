@@ -115,7 +115,7 @@ CYCLE_MECHANICS = (
         phases=("reciprocity",),
         surface=Surface(drawer=DRAWER),
         backfill="none: the ledger opens with the first gifts given after the upgrade",
-        templates=("gifts.refused", "gifts.lapsed"),
+        templates=("gifts.refused", "gifts.lapsed", "gifts.returned"),
         tables=(GiftRow.__tablename__,),
         exposure=Exposure.TOOL,
         tools=("bestow_gift", "answer_gift", "refuse_gift", "give_gift"),

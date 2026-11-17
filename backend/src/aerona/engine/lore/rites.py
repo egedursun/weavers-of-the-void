@@ -34,6 +34,7 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, RiftCause
+from aerona.domain.enums.couplings import RiteComponent
 from aerona.domain.enums.culture import (
     BacklashKind,
     CalendarSlot,
@@ -57,9 +58,10 @@ from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignme
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.mythic import GeasLayer, GeasMode
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.structure import ConstructionState
@@ -80,7 +82,7 @@ from aerona.engine.cosmos.omens import celestial_rite_pct
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
-from aerona.engine.couplings.rite_body import component_bar
+from aerona.engine.couplings.rite_body import component_bar, components_of
 from aerona.engine.crafts.haunting import bind_spirit
 from aerona.engine.crafts.linking import affinity_boost, link_boost, link_strength
 from aerona.engine.divine.decrees import outlawed_schools
@@ -116,7 +118,6 @@ from aerona.engine.mortal.learning import practise_subject, school_level
 from aerona.engine.mythic.geasa import lay_geas
 from aerona.engine.mythic.offices import office_power
 from aerona.engine.mythic.servitors import bind_summoned
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
@@ -129,6 +130,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.tongues.divine import rite_factor
 
 S = MagicSchool
@@ -315,7 +317,7 @@ async def pay_blood(ctx: TickContext, caster: EntityRow, amount: int) -> bool:
         taken = min(cohort.count, max(1, amount // ctx.rules.rites.hp_per_captive))
         cohort.count -= taken
         if cohort.origin_entity_id is not None:
-            await judged(ctx, caster.id, cohort.origin_entity_id, ActKind.HUMAN_SACRIFICE, note="blood of captives for a rite")
+            await judged(ctx, caster.id, cohort.origin_entity_id, ActKind.SACRIFICE_OF_PEOPLE, note="captives killed for a rite")
         return True
     harm = Harm(damage=amount, cause=HarmCause.SACRIFICE, death_cause="bled out working a blood rite", source_node_id=caster.id)
     await apply_hits(ctx, caster, harm, lethal=False)
@@ -627,7 +629,7 @@ async def do_ward(ctx: TickContext, work: Working) -> str | None:
     driven = await banish_near(ctx, region, work.caster.name)
     if driven is not None:
         done.append(f"drove {driven} back to its dimension")
-    sealed = await seal_near(ctx, region, work.caster.name)
+    sealed = await seal_near(ctx, region, work.caster.id)
     if sealed is not None:
         done.append("sealed the rift there")
     return " and ".join(done)
@@ -971,7 +973,7 @@ async def phenomenon(ctx: TickContext, region: EntityRow) -> None:
             stacking_group="eternal_storm",
         ),
     )
-    await note(ctx, f"A rite gone wrong left a storm over {region.name} that will not die.", key="magic.eternal_storm", ids=[region.id])
+    await record(ctx, "magic.eternal_storm", roles={IncidentRole.PLACE: region.id}, place=region.id)
     await form_phenomenon(ctx, PhenomenonKind.LASTING_STORM, region, PhenomenonCause.RITE_BACKLASH)
 
 
@@ -1018,13 +1020,13 @@ async def infamy(ctx: TickContext, caster: EntityRow, row: RiteProfileRow, targe
     caster.importance = max(0, (caster.importance or 0) - ctx.rules.rites.dark_infamy)
     victim = target.id if target is not None else caster.location_id
     if victim is not None and victim != caster.id:
-        await judged(ctx, caster.id, victim, ActKind.HUMAN_SACRIFICE, note="a dark rite")
+        await judged(ctx, caster.id, victim, ActKind.SACRIFICE_OF_PEOPLE, note="a rite that took a life")
     school, source = row.school.value.replace("_", " "), row.source.value.replace("_", " ")
-    await note(
+    await record(
         ctx,
-        f"{caster.name} worked a rite of the {school} school drawing on {source}, and lost standing for it.",
-        key="magic.dark_rite",
-        ids=[caster.id, *([victim] if victim else [])],
+        "magic.dark_rite",
+        roles={IncidentRole.ACTOR: caster.id, IncidentRole.SUBJECT: [*[caster.id, *([victim] if victim else [])]]},
+        facts={"school": str(school), "source": str(source)},
     )
     return True
 
@@ -1251,6 +1253,47 @@ async def enchant(ctx: TickContext, caster: EntityRow, rite: EntityRow, row: Rit
     return found
 
 
+async def casting_steps(ctx: TickContext, casting: CastingRow) -> tuple[StepDraft, ...]:
+    steps: list[StepDraft] = []
+    if RiteComponent.INSCRIBED in await components_of(ctx, casting.rite_entity_id):
+        steps.append(
+            StepDraft(
+                StepAction.INSCRIBE,
+                actor=casting.caster_entity_id,
+                target=casting.target_entity_id,
+                instrument_kind=InstrumentKind.RITE,
+                instrument_node=casting.rite_entity_id,
+                instrument_key=RiteComponent.INSCRIBED.value,
+            )
+        )
+    worked = len(steps)
+    steps.append(
+        StepDraft(
+            StepAction.CAST,
+            actor=casting.caster_entity_id,
+            target=casting.target_entity_id,
+            instrument_kind=InstrumentKind.RITE,
+            instrument_node=casting.rite_entity_id,
+            record_table=CastingRow.__tablename__,
+            record_key=str(casting.id),
+            outcome=StepOutcome.SUCCESS if casting.succeeded else StepOutcome.FAILURE,
+        )
+    )
+    if casting.backlash is not None:
+        steps.append(
+            StepDraft(
+                StepAction.BACKLASH,
+                actor=casting.caster_entity_id,
+                target=casting.caster_entity_id,
+                instrument_kind=InstrumentKind.RITE,
+                instrument_node=casting.rite_entity_id,
+                instrument_key=casting.backlash.value,
+                parent=worked,
+            )
+        )
+    return tuple(steps)
+
+
 async def warded(ctx: TickContext, settlement_id: int) -> float:
     rites = select(RiteEffectRow.rite_entity_id).where(RiteEffectRow.effect == E.WARD)
     statement = select(CastingRow).where(CastingRow.rite_entity_id.in_(rites), CastingRow.succeeded.is_(True), CastingRow.caster_entity_id.is_not(None))
@@ -1333,11 +1376,12 @@ async def war_mages(ctx: TickContext, realms: RealmBook) -> int:
         casting = await cast(ctx, army, rite, row, target=target, realms=realms)
         if casting is not None:
             worked += 1
-            await note(
+            await record(
                 ctx,
-                f"The war mages of {army.name} worked {rite.name} against {target.name}: {casting.effect}.",
-                key="magic.war_mages",
-                ids=[army.id, rite.id, target.id],
+                "magic.war_mages",
+                roles={IncidentRole.SUBJECT: [army.id, target.id, rite.id]},
+                facts={"rite": str(rite.name), "effect": casting.effect},
+                steps=await casting_steps(ctx, casting),
             )
     return worked
 
@@ -1356,8 +1400,29 @@ async def enchantments(ctx: TickContext) -> int:
         )
         rite = await living_entity(ctx.session, owned)
         row = await ctx.session.get(RiteProfileRow, owned) if owned is not None else None
-        if rite is not None and row is not None and await enchant(ctx, caster, rite, row) is not None:
-            bound += 1
+        laid = await enchant(ctx, caster, rite, row) if rite is not None and row is not None else None
+        if laid is None or rite is None:
+            continue
+        bound += 1
+        await record(
+            ctx,
+            "magic.item_enchanted",
+            roles={IncidentRole.MAKER: caster.id, IncidentRole.SUBJECT: laid.item_entity_id, IncidentRole.INSTRUMENT: rite.id},
+            facts={"effect": laid.effect, "strength": laid.strength},
+            steps=(
+                StepDraft(
+                    StepAction.ENCHANT,
+                    actor=caster.id,
+                    target=laid.item_entity_id,
+                    instrument_kind=InstrumentKind.RITE,
+                    instrument_node=rite.id,
+                    amount=laid.strength,
+                    unit=FactUnit.PERCENT,
+                    record_table=ItemEnchantmentRow.__tablename__,
+                    record_key=f"{laid.item_entity_id}.{laid.effect.value}",
+                ),
+            ),
+        )
     return bound
 
 

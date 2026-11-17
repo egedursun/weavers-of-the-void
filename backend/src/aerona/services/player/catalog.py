@@ -127,6 +127,7 @@ from aerona.services.player import (
     prehistory,
     profiles,
     realms,
+    record_levers,
     record_rows,
     regime,
     regions,
@@ -144,6 +145,7 @@ from aerona.services.player import (
     statecraft,
     structures,
     technology,
+    tellings,
     theories,
     thin_b,
     thin_sections,
@@ -1338,8 +1340,8 @@ FATE_ACTIONS = (
 
 
 def end_cost_text(rules: Rules) -> str:
-    cycles = rules.life_cycles
-    return f"{cycles.end_cost} + power x {cycles.end_cost_per_power} essence"
+    rounds = rules.life_cycles
+    return f"{rounds.end_cost} + power x {rounds.end_cost_per_power} essence"
 
 
 LIFE_CYCLE_ACTIONS = (
@@ -2977,13 +2979,20 @@ ECONOMY_ACTIONS = (
         Meta("vessel:create", "Lay down a new vessel to a hull design", G.WARFARE), military_depth.vessel_create, military_depth.VesselOrder, free, ("S7.3",)
     ),
     _sync(
-        Meta("vessel:refit", "Refit a vessel to another hull, arms and materials", G.WARFARE),
+        Meta("vessel:refit", "Refit a vessel to another hull and materials", G.WARFARE),
         military_depth.vessel_refit,
         military_depth.VesselRefit,
         free,
         ("S7.3",),
     ),
     _sync(Meta("vessel:repair", "Repair a vessel at its home shipyard", G.WARFARE), military_depth.vessel_repair, military_depth.VesselTarget, free, ("S7.3",)),
+    _sync(
+        Meta("engagement:force", "Set two vessels on each other: a full engagement in their own domain, told round by round", G.WARFARE),
+        military_depth.engagement_force,
+        military_depth.EngagementOrder,
+        free,
+        ("S49.3",),
+    ),
     _sync(Meta("captive:take", "Take a named mortal captive", G.WARFARE), military_depth.captive_take, military_depth.CaptiveTake, free, ("S5.7",)),
     _sync(
         Meta("war:ordeal", "Order an ordeal: an honour duel, a trial by combat or a duel of gods' champions", G.WARFARE),
@@ -3542,6 +3551,77 @@ MECHANIC_ACTIONS = (
     _sync(Meta("incident:link_cause", "Link an incident to its cause", G.SETTINGS), incidents.link_cause, incidents.LinkCause, free, ("F10",)),
     _sync(Meta("incident:unlink_cause", "Cut an incident from its cause", G.SETTINGS), incidents.unlink_cause, incidents.IncidentRef, free, ("F10",)),
     _sync(Meta("incident:delete", "Strike an incident from history", G.SETTINGS), incidents.delete_incident, incidents.IncidentRef, free, ("F10",)),
+    _sync(
+        Meta("incident:hold", "Hold the parts of a happening as they are told", G.SETTINGS),
+        record_levers.hold_incident,
+        record_levers.HoldIncident,
+        free,
+        ("F58.10",),
+    ),
+    _sync(Meta("incident_fact:create", "Set down a fact of a happening", G.SETTINGS), record_levers.add_fact, record_levers.AddFact, free, ("F58.3",)),
+    _sync(Meta("incident_fact:edit", "Rewrite a fact of a happening", G.SETTINGS), record_levers.edit_fact, record_levers.EditFact, free, ("F58.3",)),
+    _sync(Meta("incident_fact:delete", "Strike a fact from a happening", G.SETTINGS), record_levers.delete_fact, record_levers.FactRef, free, ("F58.3",)),
+    _sync(Meta("incident_step:create", "Add a step to how a happening unfolded", G.SETTINGS), record_levers.add_step, record_levers.AddStep, free, ("F58.4",)),
+    _sync(Meta("incident_step:edit", "Rewrite a step of a happening", G.SETTINGS), record_levers.edit_step, record_levers.EditStep, free, ("F58.4",)),
+    _sync(Meta("incident_step:delete", "Strike a step from a happening", G.SETTINGS), record_levers.delete_step, record_levers.StepRef, free, ("F58.4",)),
+    _sync(
+        Meta("incident_witness:create", "Name a witness or teller of a happening", G.SETTINGS),
+        record_levers.add_witness,
+        record_levers.AddWitness,
+        free,
+        ("F58.9",),
+    ),
+    _sync(
+        Meta("incident_witness:edit", "Change how a witness saw or told a happening", G.SETTINGS),
+        record_levers.edit_witness,
+        record_levers.EditWitness,
+        free,
+        ("F58.9",),
+    ),
+    _sync(
+        Meta("incident_witness:delete", "Strike a witness or teller from a happening", G.SETTINGS),
+        record_levers.delete_witness,
+        record_levers.WitnessRef,
+        free,
+        ("F58.9",),
+    ),
+    _sync(
+        Meta("rumour_distortion:create", "Change how a rumour tells a happening", G.SETTINGS),
+        tellings.add_distortion,
+        tellings.AddDistortion,
+        free,
+        ("F58.9",),
+    ),
+    _sync(
+        Meta("rumour_distortion:edit", "Rewrite a change in a rumour's telling", G.SETTINGS),
+        tellings.edit_distortion,
+        tellings.EditDistortion,
+        free,
+        ("F58.9",),
+    ),
+    _sync(
+        Meta("rumour_distortion:delete", "Set a rumour's telling right on one point", G.SETTINGS),
+        tellings.delete_distortion,
+        tellings.DistortionRef,
+        free,
+        ("F58.9",),
+    ),
+    _sync(Meta("incident_name:set", "Give a happening its name", G.SETTINGS), tellings.set_name, tellings.SetName, free, ("F58.10",)),
+    _sync(Meta("incident_name:delete", "Take away a happening's name", G.SETTINGS), tellings.delete_name, tellings.NameRef, free, ("F58.10",)),
+    _sync(
+        Meta("state_change:revert", "Set a changed value back as it was", G.SETTINGS),
+        record_levers.revert_change,
+        record_levers.ChangeRef,
+        free,
+        ("F58.5", "F58.11"),
+    ),
+    _sync(
+        Meta("state_change:delete", "Erase a change from the record of the world", G.SETTINGS),
+        record_levers.delete_change,
+        record_levers.ChangeRef,
+        free,
+        ("F58.5",),
+    ),
     _sync(
         Meta("profile:set", "Set and hold any value of a record's profile", G.SETTINGS),
         profiles.set_profile_value,
@@ -5595,6 +5675,27 @@ COUNCIL_ORDER_ACTIONS = (
     _sync(Meta("council_violation:create", "Charge a breach", G.CREATOR), council_order.violation_create, council_order.ViolationMake, free, ("S47.5.5",)),
     _sync(Meta("council_violation:edit", "Set a breach of a ruling", G.CREATOR), council_order.violation_edit, council_order.ViolationEdit, free, ("S47.5.5",)),
     _sync(Meta("council_violation:delete", "Strike a breach", G.CREATOR), council_order.violation_delete, council_order.ViolationTarget, free, ("S47.5.5",)),
+    _sync(
+        Meta("council_record:create", "Set down a council of the gods", G.CREATOR),
+        council_order.council_record_create,
+        council_order.CouncilRecordMake,
+        free,
+        ("F58.5",),
+    ),
+    _sync(
+        Meta("council_record:edit", "Rewrite a council's topic or outcome", G.CREATOR),
+        council_order.council_record_edit,
+        council_order.CouncilRecordEdit,
+        free,
+        ("F58.5",),
+    ),
+    _sync(
+        Meta("council_record:delete", "Strike a council from the record", G.CREATOR),
+        council_order.council_record_delete,
+        council_order.CouncilRecordTarget,
+        free,
+        ("F58.5",),
+    ),
     _sync(
         Meta("council:veto", "Veto a ruling", G.CREATOR),
         council_order.veto,

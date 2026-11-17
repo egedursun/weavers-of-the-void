@@ -15,8 +15,9 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind
-from aerona.domain.enums.regime import LeadershipMode, LegitimacyType, Routinisation, SelectorateKind
+from aerona.domain.enums.regime import CoupProofing, LeadershipMode, LegitimacyType, Routinisation, SelectorateKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.book import shift
@@ -26,7 +27,6 @@ from aerona.engine.factions.balance import power_balance
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mortal.kin import children_of, siblings_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.polity.governance import spend
@@ -36,6 +36,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import has_flag, living_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import FactInput, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.regime.book import HALF, PROOFING, dominant, strongest_threat
 from aerona.engine.relations.book import relation
 
@@ -243,12 +245,23 @@ async def sway_members(ctx: TickContext, realm: Realm, row: RegimeRow, members: 
 
 
 async def purge_coalition(ctx: TickContext, realm: Realm, row: RegimeRow, members: list[CoalitionMemberRow], tally: RegimeTally) -> int | None:
+    with explaining():
+        return await coalition_purged(ctx, realm, row, members, tally)
+
+
+async def coalition_purged(ctx: TickContext, realm: Realm, row: RegimeRow, members: list[CoalitionMemberRow], tally: RegimeTally) -> int | None:
     table = ctx.rules.selectorate
     open_members = [member for member in members if not member.locked and not held(member.mortal_entity_id)]
     if row.coalition_loyalty >= table.purge_at or not open_members or not ctx.rng(f"regime.purge.{realm.entity.id}.{ctx.epoch}").chance(table.purge_pct):
         return None
     victim = min(open_members, key=lambda member: (member.loyalty, member.mortal_entity_id))
     return await purge_member(ctx, realm, victim, tally)
+
+
+async def told(ctx: TickContext, key: str, realm: Realm, **facts: FactInput) -> None:
+    await record(
+        ctx, key, roles={IncidentRole.SUBJECT: realm.entity.id, IncidentRole.LEADER: realm.ruler_id}, facts=facts, place=realm.profile.capital_entity_id
+    )
 
 
 async def purge_member(ctx: TickContext, realm: Realm, victim: CoalitionMemberRow, tally: RegimeTally) -> int:
@@ -258,12 +271,12 @@ async def purge_member(ctx: TickContext, realm: Realm, victim: CoalitionMemberRo
         if office.holder_entity_id == mortal_id and office.kind is not OfficeKind.RULER and "holder" not in office.locked:
             await appoint(ctx, realm, office, None, by_id=realm.ruler_id, reason="purged from the ruling circle")
     tally.purged += 1
-    mortal = await ctx.session.get(EntityRow, mortal_id)
-    await note(
+    await record(
         ctx,
-        f"{realm.entity.name} cast {mortal.name if mortal else 'a courtier'} out of the ruling circle.",
-        key="regime.purged",
-        ids=[realm.entity.id, mortal_id],
+        "regime.purged",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.VICTIM: mortal_id, IncidentRole.ACTOR: realm.ruler_id},
+        facts={"loyalty": victim.loyalty, "reward": victim.reward},
+        place=realm.profile.capital_entity_id,
     )
     await ctx.session.flush()
     return mortal_id
@@ -339,14 +352,17 @@ async def routinise(ctx: TickContext, book: RealmBook, realm: Realm, row: Regime
     if dead and previous == row.founder_entity_id and dominant(row) is LegitimacyType.CHARISMATIC and unsettled:
         row.routinisation = Routinisation.PENDING
         row.crisis_epoch = ctx.epoch
-        await note(
-            ctx, f"The founder of {realm.entity.name} is dead; the realm must find what will hold it together now.", key="regime.crisis", ids=[realm.entity.id]
-        )
+        await told(ctx, "regime.crisis", realm, founder=previous, charismatic=row.charismatic)
     if dead and row.leadership is LeadershipMode.ACHIEVED:
         await fragment(ctx, book, realm, tally)
 
 
 async def rival_claim(ctx: TickContext, realm: Realm, founder_id: int | None) -> int | None:
+    with explaining():
+        return await claimed_by_kin(ctx, realm, founder_id)
+
+
+async def claimed_by_kin(ctx: TickContext, realm: Realm, founder_id: int | None) -> int | None:
     kin = await living_kin(ctx, founder_id)
     claimant = next((mortal for mortal in kin if mortal.id != realm.ruler_id and not held(mortal.id)), None)
     if claimant is None:
@@ -355,11 +371,12 @@ async def rival_claim(ctx: TickContext, realm: Realm, founder_id: int | None) ->
         await grant_claim(ctx, claimant.id, realm.entity.id, strength=ctx.rules.charisma_routinisation.schism_claim, basis=ClaimBasis.INHERITANCE)
     except (NotFoundError, ValidationFailedError):
         return None
-    await note(
+    await record(
         ctx,
-        f"{claimant.name} claimed {realm.entity.name} for the founder's line against the heir.",
-        key="regime.rival_claim",
-        ids=[realm.entity.id, claimant.id],
+        "regime.rival_claim",
+        roles={IncidentRole.ACTOR: claimant.id, IncidentRole.TARGET: realm.entity.id, IncidentRole.OPPONENT: realm.ruler_id},
+        facts={"founder": founder_id, "strength": ctx.rules.charisma_routinisation.schism_claim, "basis": ClaimBasis.INHERITANCE},
+        place=claimant.location_id,
     )
     return claimant.id
 
@@ -376,6 +393,11 @@ async def living_kin(ctx: TickContext, founder_id: int | None) -> list[EntityRow
 
 
 async def turn_charisma(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
+    with explaining():
+        await charisma_turned(ctx, realm, row, tally)
+
+
+async def charisma_turned(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
     table = ctx.rules.charisma_routinisation
     founder_id = row.founder_entity_id
     converted = row.charismatic * table.convert_pct / PERCENT
@@ -384,20 +406,15 @@ async def turn_charisma(ctx: TickContext, realm: Realm, row: RegimeRow, tally: R
         shift(realm.profile, "stability", -table.schism_stability)
         tally.schisms += 1
         await rival_claim(ctx, realm, founder_id)
-        await note(
-            ctx,
-            f"The death of its founder split {realm.entity.name}: the faithful of the founder would not follow the heir.",
-            key="regime.schism",
-            ids=[realm.entity.id],
-        )
+        await told(ctx, "regime.schism", realm, founder=founder_id, stability_lost=table.schism_stability, chance=table.schism_pct)
     elif await realm_allows(ctx.session, realm, Technique.BUREAUCRACY) or await realm_allows(ctx.session, realm, Technique.WRITTEN_LAW):
         row.routinisation = Routinisation.INSTITUTION
         shift(row, "rational", converted)
-        await note(ctx, f"{realm.entity.name} turned its founder's charisma into offices and written rules.", key="regime.institution", ids=[realm.entity.id])
+        await told(ctx, "regime.institution", realm, founder=founder_id, converted=converted)
     else:
         row.routinisation = Routinisation.DYNASTY
         shift(row, "traditional", converted)
-        await note(ctx, f"{realm.entity.name} turned its founder's charisma into the right of a dynasty.", key="regime.dynasty", ids=[realm.entity.id])
+        await told(ctx, "regime.dynasty", realm, founder=founder_id, converted=converted)
     shift(row, "charismatic", -converted)
     if "founder_entity_id" not in row.locked:
         row.founder_entity_id = None
@@ -405,6 +422,11 @@ async def turn_charisma(ctx: TickContext, realm: Realm, row: RegimeRow, tally: R
 
 
 async def fragment(ctx: TickContext, book: RealmBook, realm: Realm, tally: RegimeTally) -> None:
+    with explaining():
+        await fragmented(ctx, book, realm, tally)
+
+
+async def fragmented(ctx: TickContext, book: RealmBook, realm: Realm, tally: RegimeTally) -> None:
     capital = realm.profile.capital_entity_id
     members = [member for member in book.members(realm) if member.id != capital and not held(member.id)]
     leaving = members[: round_half_up(len(members) * ctx.rules.charisma_routinisation.fragment_pct / PERCENT)]
@@ -412,11 +434,12 @@ async def fragment(ctx: TickContext, book: RealmBook, realm: Realm, tally: Regim
         await secede(ctx, book, realm, member)
     if leaving:
         tally.fragmented += len(leaving)
-        await note(
+        await record(
             ctx,
-            f"With its leader of renown dead, {len(leaving)} of the following of {realm.entity.name} went their own way.",
-            key="regime.fragmented",
-            ids=[realm.entity.id],
+            "regime.fragmented",
+            roles={IncidentRole.SUBJECT: realm.entity.id, IncidentRole.MEMBER: [member.id for member in leaving]},
+            facts={"left": len(leaving), "share": ctx.rules.charisma_routinisation.fragment_pct},
+            place=capital,
         )
 
 
@@ -444,6 +467,11 @@ async def reckon_horizon(ctx: TickContext, realm: Realm, row: RegimeRow, ruler: 
 
 
 async def proof_against_coups(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
+    with explaining():
+        await coups_proofed(ctx, realm, row, tally)
+
+
+async def coups_proofed(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
     table = ctx.rules.coup_proofing
     danger = max(await psi_of(ctx.session, realm.entity.id), await strongest_threat(ctx.session, realm.entity.id))
     if danger >= table.insecure_at and ctx.rng(f"regime.proof.{realm.entity.id}.{ctx.epoch}").chance(table.adopt_pct):
@@ -451,7 +479,7 @@ async def proof_against_coups(ctx: TickContext, realm: Realm, row: RegimeRow, ta
         if field is not None:
             setattr(row, field, True)
             tally.measures += 1
-            await note(ctx, f"{realm.entity.name} guarded its throne against the army: {field.replace('_', ' ')}.", key="regime.proofed", ids=[realm.entity.id])
+            await told(ctx, "regime.proofed", realm, measure=CoupProofing(field), danger=danger)
     elif danger < table.secure_at:
         field = next((field for field in reversed(PROOFING) if getattr(row, field) and field not in row.locked), None)
         if field is not None:
@@ -461,6 +489,11 @@ async def proof_against_coups(ctx: TickContext, realm: Realm, row: RegimeRow, ta
 
 
 async def lead(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
+    with explaining():
+        await led(ctx, realm, row, tally)
+
+
+async def led(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:
     table = ctx.rules.leadership_modes
     if "leadership" in row.locked:
         return
@@ -477,7 +510,7 @@ async def lead(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTall
         if row.horizon >= table.chief_horizon and ctx.rng(f"regime.chief.{realm.entity.id}.{ctx.epoch}").chance(table.chief_pct):
             row.leadership = LeadershipMode.ASCRIBED
             tally.chiefdoms += 1
-            await note(ctx, f"The following of {realm.entity.name} became a chiefdom that passes by descent.", key="regime.chiefdom", ids=[realm.entity.id])
+            await told(ctx, "regime.chiefdom", realm, horizon=row.horizon, chance=table.chief_pct)
 
 
 async def keep_regimes(ctx: TickContext, tally: RegimeTally) -> None:

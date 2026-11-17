@@ -4,15 +4,14 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.structures import BOOK_HOUSES
-from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.church import holy_peace
@@ -29,6 +28,7 @@ from aerona.engine.primitives.faith import change_religion, faith_dominance, fai
 from aerona.engine.primitives.levies import stand_down
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, remember_relation
 from aerona.engine.services.war import (
     ACTIVE_WAR_STATUSES,
@@ -299,17 +299,12 @@ async def settle_peace(ctx: TickContext, first: int, second: int, ending: WarEnd
 
 
 async def _note_cap_closure(ctx: TickContext, item: OngoingWar, idle_since: int) -> None:
-    first, second = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
-    names = (first.name if first else "one side", second.name if second else "the other")
     idle = ctx.epoch - idle_since
+    roles = {IncidentRole.ACTOR: item.attacker_id, IncidentRole.OPPONENT: item.defender_id}
     if idle >= ctx.rules.diplomacy.cap_close_idle_epochs:
-        epochs_counted = several(idle, "epoch", "epochs")
-        text = f"The war between {names[0]} and {names[1]}, with no battle fought for {epochs_counted}, ended in exhaustion; the two sides made a truce."
-        key = "war.cap_closed_idle"
+        await record(ctx, "war.cap_closed_idle", roles=roles, facts={"war": item.war.event_entity_id, "idle": idle})
     else:
-        text = f"The war between {names[0]} and {names[1]} ended in exhaustion as the fronts multiplied; the two sides made a truce."
-        key = "war.cap_closed_fronts"
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key=key, entity_ids=(item.war.event_entity_id, *item.sides), feed_category=FeedCategory.WAR)
+        await record(ctx, "war.cap_closed_fronts", roles=roles, facts={"war": item.war.event_entity_id})
 
 
 async def close_wars_over_caps(ctx: TickContext) -> int:

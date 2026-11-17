@@ -17,7 +17,9 @@ from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.demography import AgeBand, Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.unions import PluralSide, UnionForm
 from aerona.engine.body.customs import people_id_of, people_of
@@ -28,10 +30,10 @@ from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
 from aerona.engine.cycles.sides import first_sex, system_of_people
 from aerona.engine.demography.cohorts import cohort_rows
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 THIRD = PERCENT // 3
@@ -250,7 +252,18 @@ async def raise_quarter(ctx: TickContext, row: DiasporaRow, town: EntityRow, tal
     tally.quarters += 1
     people = await ctx.session.get(EntityRow, row.people_entity_id)
     if people is not None:
-        await note(ctx, f"The folk of {people.name} living in {town.name} raised a quarter of their own.", key="diaspora.quarter", ids=[people.id, town.id])
+        await record(
+            ctx,
+            "diaspora.quarter",
+            roles={IncidentRole.MAKER: people.id, IncidentRole.PLACE: town.id},
+            facts={"count": row.population},
+            steps=(
+                StepDraft(
+                    StepAction.LAY_FOUNDATION, actor=people.id, target=town.id, locus_kind=StepLocus.DISTRICT, locus_key=DistrictKind.FOREIGN_QUARTER.value
+                ),
+            ),
+            place=town.id,
+        )
 
 
 async def assimilate(ctx: TickContext, row: DiasporaRow, town: EntityRow, tally: DemographyTally) -> None:
@@ -273,7 +286,13 @@ async def assimilate(ctx: TickContext, row: DiasporaRow, town: EntityRow, tally:
     tally.assimilated += 1
     people = await ctx.session.get(EntityRow, row.people_entity_id)
     if people is not None:
-        await note(ctx, f"The folk of {people.name} in {town.name} became one with their hosts.", key="diaspora.assimilated", ids=[people.id, town.id])
+        await record(
+            ctx,
+            "diaspora.assimilated",
+            roles={IncidentRole.SUBJECT: people.id, IncidentRole.PLACE: town.id},
+            facts={"count": row.population, "generations": max(0, ctx.epoch - row.since_epoch)},
+            place=town.id,
+        )
 
 
 async def diaspora_pull(session: AsyncSession, pull_pct: int, people_id: int, town_id: int) -> float:

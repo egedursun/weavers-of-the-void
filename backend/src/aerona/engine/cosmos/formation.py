@@ -10,12 +10,14 @@ from aerona.db.tables.physics import ImpactEventRow, StarPhysicsRow, WorldPhysic
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import FormationZone, GiantMigration
 from aerona.domain.enums.cosmography import WorldAge
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import GAS_WORLDS, planet_of
-from aerona.engine.notes import note
+from aerona.engine.lore.history import scope_incident
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 DIVINE_WORLDS = frozenset({WorldType.GODS_PALACE, WorldType.DREAM, WorldType.VOID_POCKET, WorldType.GENERATION_SHIP})
 TENTHS = 10
@@ -83,6 +85,7 @@ async def history_of(ctx: TickContext, world: WorldRow, physics: WorldPhysicsRow
         craters=bombardment // max(1, table.bombardment_per_crater),
         formed_epoch=ctx.epoch,
         locked=[],
+        incident_id=scope_incident(),
     )
     if fresh or physics is None:
         row.core_share = clamp_int(ZONE_CORE[zone] + rng.integer(-5, 5), 0, PERCENT)
@@ -145,7 +148,13 @@ async def form_worlds(ctx: TickContext, tally: FormationTally) -> None:
         if fresh and physics is not None:
             await shape(ctx, world, physics, row)
             tally.shaped += 1
-            await note(ctx, f"{world.name} took its shape from the disc and the bombardment of its youth.", key="formation.shaped", world_id=world.id)
+            await record(
+                ctx,
+                "formation.shaped",
+                roles={IncidentRole.SUBJECT: world.id},
+                facts={"craters": row.craters, "bombardment": row.bombardment},
+                world_id=world.id,
+            )
         await mark_craters(ctx, world, row, tally)
         tally.formed += 1
     await ctx.session.flush()

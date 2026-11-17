@@ -16,12 +16,12 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.honours import VeteranGrant
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.phases.births import homeland_rule
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import towns_of_people
@@ -29,6 +29,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import FactInput, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import every_side, realms_of_side
 from aerona.language.generator import NameKind
@@ -125,8 +126,11 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
     )
     tally.granted += 1
     tally.colonies += colony is not None
-    what = f"land in {region.name}" if colony is not None and region is not None else "pensions" if kind is VeteranGrant.PENSION else "nothing"
-    await note(ctx, f"{realm.name} granted its veterans {what}.", key="veterans.granted", ids=[realm.id, *([colony.id] if colony is not None else [])])
+    roles = {IncidentRole.ACTOR: realm.id, **({IncidentRole.PRODUCT: colony.id} if colony is not None else {})}
+    facts: dict[str, FactInput] = {"grant": kind, "veterans": veterans}
+    if region is not None:
+        facts["region"] = region.id
+    await record(ctx, "veterans.granted", roles=roles, facts=facts, place=colony.id if colony is not None else realm.id)
 
 
 async def grant_after_wars(ctx: TickContext, tally: VeteranTally) -> None:
@@ -187,7 +191,7 @@ async def band_veterans(ctx: TickContext, tally: VeteranTally) -> None:
             continue
         faction = await found_faction(ctx, town, FactionKind.VETERANS)
         tally.associations += 1
-        await note(ctx, f"The veterans of {town.name} banded into {faction.name}.", key="veterans.association", ids=[faction.id, town.id])
+        await record(ctx, "veterans.association", roles={IncidentRole.ACTOR: town.id, IncidentRole.PRODUCT: faction.id}, place=town.id)
 
 
 async def bitter_veterans(ctx: TickContext, tally: VeteranTally) -> None:

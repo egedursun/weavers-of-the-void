@@ -5,9 +5,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.military import PeaceTermKind
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.variants import fear_of
@@ -20,6 +20,8 @@ from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import FactInput
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.book import acclaim
 from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
 from aerona.engine.services.war import OngoingWar
@@ -37,12 +39,8 @@ async def separate_peace(ctx: TickContext, item: OngoingWar, ally: WarSideRow) -
     enemy_name = enemy.name if enemy is not None else "the enemy"
     text = f"{leaver_name} made a separate peace with {enemy_name} and left the war"
     record(ctx, item.war, PeaceTermKind.WHITE_PEACE, victor_id=None, loser_id=None, params={"separate": True, "side_id": ally.entity_id}, note=text)
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        text + ".",
-        template_key="war.separate_peace",
-        entity_ids=(item.war.event_entity_id, ally.entity_id, enemy_id),
-        feed_category=FeedCategory.WAR,
+    await record_incident(
+        ctx, "war.separate_peace", roles={IncidentRole.ACTOR: ally.entity_id, IncidentRole.OPPONENT: enemy_id}, facts={"war": item.war.event_entity_id}
     )
     ctx.count("separate_peaces")
     return True
@@ -55,13 +53,7 @@ async def fights_on(ctx: TickContext, war: WarRow, loser: EntityRow) -> bool:
         return False
     if "weariness" not in side.locked:
         side.weariness = clamp_int(side.weariness + table.refusal_weariness, 0, PERCENT)
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{loser.name} refused the victor's terms and fought on.",
-        template_key="war.fought_on",
-        entity_ids=(war.event_entity_id, loser.id),
-        feed_category=FeedCategory.WAR,
-    )
+    await record_incident(ctx, "war.fought_on", roles={IncidentRole.ACTOR: loser.id}, facts={"war": war.event_entity_id, "weariness": side.weariness})
     ctx.count("peace_refused")
     return True
 
@@ -118,13 +110,12 @@ async def terror(ctx: TickContext, war_id: int, perpetrator: EntityRow, victim: 
         return False
     fearful = await frighten_or_harden(ctx, war_id, perpetrator, victim)
     await backlash(ctx, perpetrator)
-    mood = "fear spread through" if fearful else "it only hardened"
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"After {perpetrator.name}'s {deed}, {mood} {victim.name}; other realms took note of the cruelty.",
-        template_key="war.terror",
-        entity_ids=(perpetrator.id, victim.id),
-        feed_category=FeedCategory.WAR,
+    war = await ctx.session.get(WarRow, war_id)
+    facts: dict[str, FactInput] = {"deed": deed}
+    if war is not None:
+        facts["war"] = war.event_entity_id
+    await record_incident(
+        ctx, "war.terror" if fearful else "war.terror_hardened", roles={IncidentRole.ACTOR: perpetrator.id, IncidentRole.VICTIM: victim.id}, facts=facts
     )
     ctx.count("terror_fearful" if fearful else "terror_hardened")
     return fearful

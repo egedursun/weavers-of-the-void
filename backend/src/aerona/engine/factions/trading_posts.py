@@ -10,12 +10,13 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.urban import TradingPostRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lore.research_depth import trade_partners
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.services.war import foe_realms
 from aerona.engine.structures.construction import Commission, begin
@@ -68,7 +69,7 @@ async def found_posts(ctx: TickContext, tally: PostTally) -> None:
                 continue
             await open_post(ctx, house, host)
             tally.opened += 1
-            await note(ctx, f"{house.name} opened a trading post in {host.name}.", key="trade.trading_post", ids=[house.id, host.id])
+            await record(ctx, "trade.trading_post", roles={IncidentRole.OWNER: house.id, IncidentRole.PLACE: host.id}, place=host.id)
             break
 
 

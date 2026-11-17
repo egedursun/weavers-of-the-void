@@ -2,6 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
+from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.core.grammar import an, several, spoken
 from aerona.db.tables.affairs import CouncilSeatRow, CourtPositionRow, CourtRow, MandateRow, NobleDemandRow, ResolutionRow, TaxPolicyRow
 from aerona.db.tables.bonds import BondRow
@@ -10,7 +11,6 @@ from aerona.db.tables.polity import OfficeRow, PolityProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.statecraft import CrisisState, MandateState, ResolutionState
-from aerona.engine.polity.crises import DEMAND_TEXT
 
 SHOWN = 3
 

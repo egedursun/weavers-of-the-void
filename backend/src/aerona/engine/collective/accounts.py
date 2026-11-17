@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.total import total
+from aerona.db.record_context import Term
 from aerona.db.tables.collective import AccountRow, AccountStanceRow, CommemorationRow, FoundingMythRow, LostLandRow, MemoryStrikeRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -18,13 +19,14 @@ from aerona.db.tables.renown import DeedClaimRow, DeedRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import CasusBelliRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveActKind, CollectiveTrigger
+from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance, CollectiveActKind, CollectiveTrigger, CommemorationFeeling
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.domain.enums.war import CasusBelliKind
@@ -36,13 +38,13 @@ from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import holder_kind
-from aerona.engine.notes import note
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record as record_incident
 
 C = CollectionKind
 R = CollectionRole
@@ -482,9 +484,16 @@ async def expose(ctx: TickContext, revision: AccountRow, original: AccountRow, s
         shift(realm, "legitimacy", -table.debunk_cost / 2)
     if scholar is not None:
         await keep_secret(ctx, scholar, IntrigueSecret.TRUE_HISTORY, about_id=revision.holder_entity_id, source="historiography")
-    holder = await ctx.session.get(EntityRow, revision.holder_entity_id)
-    name = holder.name if holder is not None else "the realm"
-    await note(ctx, f"An older account surfaced that contradicts what {name} now teaches of its past.", key="history.scandal", ids=[revision.holder_entity_id])
+    await record_incident(
+        ctx,
+        "history.scandal",
+        roles={IncidentRole.SUBJECT: revision.holder_entity_id, **({IncidentRole.ACCUSER: scholar} if scholar is not None else {})},
+        facts={"credence_shift": SCANDAL_CREDENCE, **({"legitimacy_lost": table.debunk_cost / 2} if realm is not None else {})},
+        terms=[
+            Term("historiography.scandal_credence", SCANDAL_CREDENCE),
+            *([Term("rules.historiography.debunk_cost", table.debunk_cost / 2)] if realm is not None else []),
+        ],
+    )
     if realm is not None:
         await rally_true_line(ctx, realm, revision, original)
 
@@ -517,9 +526,13 @@ async def rally_true_line(ctx: TickContext, realm: PolityProfileRow, revision: A
             await grant_claim(ctx, heir, realm.polity_entity_id, strength=table.irredentist_claim_at, basis=ClaimBasis.INHERITANCE)
         except (NotFoundError, ValidationFailedError):
             continue
-        claimant = await ctx.session.get(EntityRow, heir)
-        if claimant is not None:
-            await note(ctx, f"{claimant.name} claims the throne of the true line.", key="history.true_line", ids=[heir, realm.polity_entity_id])
+        await record_incident(
+            ctx,
+            "history.true_line",
+            roles={IncidentRole.ACTOR: heir, IncidentRole.TARGET: realm.polity_entity_id},
+            facts={"claim_strength": table.irredentist_claim_at, "basis": ClaimBasis.INHERITANCE},
+            terms=[Term("rules.historiography.irredentist_claim_at", table.irredentist_claim_at)],
+        )
         return
 
 
@@ -572,9 +585,7 @@ async def strike(ctx: TickContext, by_id: int, node_id: int, tally: HistoryTally
             await retire_in(ctx, work, "destroyed to erase the memory of its subject", EntityStatus.DESTROYED)
     await ctx.session.flush()
     tally.struck += 1
-    struck, by = await ctx.session.get(EntityRow, node_id), await ctx.session.get(EntityRow, by_id)
-    if struck is not None and by is not None:
-        await note(ctx, f"{by.name} struck {struck.name} from its records and defaced the inscriptions.", key="history.struck", ids=[by_id, node_id])
+    await record_incident(ctx, "history.struck", roles={IncidentRole.ACTOR: by_id, IncidentRole.TARGET: node_id})
     return row
 
 
@@ -676,7 +687,13 @@ async def debunk(ctx: TickContext, myth: FoundingMythRow, holder: EntityRow, tal
     for town in await town_profiles_of(ctx, holder.id):
         shift(town, "unrest", table.debunk_cost)
     tally.debunked += 1
-    await note(ctx, f"The founding story of {holder.name} was shown to be untrue.", key="history.myth_debunked", ids=[holder.id])
+    await record_incident(
+        ctx,
+        "history.myth_debunked",
+        roles={IncidentRole.SUBJECT: holder.id},
+        facts={"credence": DEBUNKED_CREDENCE, **({"standing_lost": table.debunk_cost} if realm is not None else {})},
+        terms=[Term("rules.historiography.debunk_cost", table.debunk_cost)],
+    )
 
 
 async def mark_anniversaries(ctx: TickContext, tally: HistoryTally) -> None:
@@ -715,10 +732,21 @@ async def keep_anniversary(ctx: TickContext, row: CommemorationRow, collection: 
     if "last_observed_epoch" not in row.locked:
         row.last_observed_epoch = ctx.epoch
     tally.anniversaries += 1
-    holder = await ctx.session.get(EntityRow, row.holder_entity_id)
-    if holder is not None:
-        feeling = "celebrated" if row.pride else "mourned"
-        await note(ctx, f"{holder.name} {feeling} the anniversary of {collection.name}.", key="history.anniversary", ids=[holder.id])
+    if await ctx.session.get(EntityRow, row.holder_entity_id) is not None:
+        change = table.pride_order if row.pride else table.grievance_unrest
+        await record_incident(
+            ctx,
+            "history.anniversary",
+            roles={IncidentRole.SUBJECT: row.holder_entity_id},
+            facts={
+                "feeling": CommemorationFeeling.PRIDE if row.pride else CommemorationFeeling.GRIEF,
+                "happening": collection.name,
+                "years": ctx.epoch - collection.start_epoch,
+                **({"shift": change} if capital is not None else {}),
+            },
+            place=realm.capital_entity_id if realm is not None and realm.capital_entity_id else None,
+            terms=[Term("rules.historiography.pride_order" if row.pride else "rules.historiography.grievance_unrest", change)] if capital is not None else [],
+        )
     return True
 
 
@@ -775,8 +803,12 @@ async def press_lost_lands(ctx: TickContext, tally: HistoryTally) -> None:
         )
         row.claimed_epoch = ctx.epoch
         tally.claims += 1
-        claimant, region = await ctx.session.get(EntityRow, row.claimant_entity_id), await ctx.session.get(EntityRow, row.region_entity_id)
-        if claimant is not None and region is not None:
-            text = f"{claimant.name} remembered {region.name} as its own and claimed it back."
-            await note(ctx, text, key="history.irredentism", ids=[claimant.id, region.id])
+        await record_incident(
+            ctx,
+            "history.irredentism",
+            roles={IncidentRole.ACTOR: row.claimant_entity_id, IncidentRole.TARGET: holder, IncidentRole.PLACE: row.region_entity_id},
+            facts={"claim_strength": row.strength},
+            place=row.region_entity_id,
+            terms=[Term("rules.historiography.irredentist_claim_at", table.irredentist_claim_at)],
+        )
     await ctx.session.flush()

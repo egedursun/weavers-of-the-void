@@ -26,10 +26,6 @@ class EpochRunRow(TimestampMixin, Base):
     started_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
 
-    @property
-    def phase_value(self) -> EpochPhase:
-        return EpochPhase(self.phase)
-
 
 class EpochStepRow(TimestampMixin, Base):
     __tablename__ = "epoch_steps"

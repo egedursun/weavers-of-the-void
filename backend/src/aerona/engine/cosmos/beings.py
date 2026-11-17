@@ -20,12 +20,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingAgenda, BeingKind, BeingPhase, BeingScale, BeingSense, DimensionalEventKind, RiftCause
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.intrigue import IdentityReason
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.models.entity_stats import CosmicBeingStats, CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.being_wounds import can_roam, can_see, effective_might, wound_being
@@ -36,12 +37,13 @@ from aerona.engine.cosmos.rifts import tear_toward
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.interconnect.annotations import reads
 from aerona.engine.intrigue.identities import assume
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, shift_bounded, stat_or
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.scope import recording
 
 
 async def create_being(
@@ -89,13 +91,19 @@ async def create_being(
         )
     )
     await ctx.session.flush()
-    await note(
+    await record(
         ctx,
-        f"{entity.name} came into {world.name}: {spec.description}",
-        key=f"being.arrived.{kind.value}",
-        ids=[entity.id],
+        f"being.arrived.{kind.value}",
+        roles={
+            IncidentRole.SUBJECT: entity.id,
+            IncidentRole.DESTINATION: world.id,
+            IncidentRole.PLACE: entity.location_id,
+            IncidentRole.PREDECESSOR: mirrored.id if mirrored is not None else None,
+        },
+        facts={"being": kind, "scale": BEING_SCALES[kind], "agenda": agenda or BEING_AGENDAS[kind], "might": might},
+        steps=(StepDraft(StepAction.APPEAR, actor=entity.id, locus_kind=StepLocus.REALM, locus_node=world.id),),
+        place=entity.location_id,
         world_id=world.id,
-        kind=ChronicleKind.COSMIC,
     )
     return entity
 
@@ -155,11 +163,12 @@ async def cross(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pr
     return True
 
 
-async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow, region: EntityRow) -> None:
+async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow, region: EntityRow) -> int:
+    model = BEING_MODEL[profile.being_kind]
+    intensity = await effective_might(ctx.session, being, profile.might) * SENSE_REACH[model.sense] // PERCENT
     dimension = profile.home_dimension_id or cosmography.place_world_id(being.world_id).dimension_id
     if dimension is None:
-        return
-    model = BEING_MODEL[profile.being_kind]
+        return intensity
     ctx.session.add(
         DimensionalEventRow(
             kind=DimensionalEventKind.INCURSION,
@@ -169,10 +178,11 @@ async def record_incursion(ctx: TickContext, cosmography: Cosmography, being: En
             subject_entity_id=being.id,
             epoch=ctx.epoch,
             until_epoch=ctx.epoch,
-            intensity=await effective_might(ctx.session, being, profile.might) * SENSE_REACH[model.sense] // PERCENT,
+            intensity=intensity,
             text=f"{being.name} broke into {region.name}; {SENSE_WORDS[model.sense]}.",
         )
     )
+    return intensity
 
 
 SENSE_WORDS = total(
@@ -215,17 +225,18 @@ async def conquer(scene: Scene) -> None:
         return
     region = scene.rng.pick(scene.regions)
     scene.profile.phase = BeingPhase.INCURSION
-    await apply_disaster(scene.ctx, region, Disaster.EARTHQUAKE, table.incursion_severity / PERCENT)
-    await record_incursion(scene.ctx, scene.cosmography, scene.being, scene.profile, region)
-    await note(
-        scene.ctx,
-        f"{scene.being.name} broke into {region.name}.",
-        key="being.incursion",
-        ids=[scene.being.id, region.id],
-        world_id=scene.world.id,
-        kind=ChronicleKind.COSMIC,
-    )
-    await answer_incursion(scene, region)
+    async with recording(scene.ctx, "being.incursion", place_id=region.id, world_id=scene.world.id):
+        await apply_disaster(scene.ctx, region, Disaster.EARTHQUAKE, table.incursion_severity / PERCENT)
+        intensity = await record_incursion(scene.ctx, scene.cosmography, scene.being, scene.profile, region)
+        await record(
+            scene.ctx,
+            "being.incursion",
+            roles={IncidentRole.ACTOR: scene.being.id, IncidentRole.PLACE: region.id},
+            facts={"sense": BEING_MODEL[scene.profile.being_kind].sense, "intensity": intensity, "severity": table.incursion_severity},
+            place=region.id,
+            world_id=scene.world.id,
+        )
+        await answer_incursion(scene, region)
 
 
 async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
@@ -237,19 +248,31 @@ async def answer_incursion(scene: Scene, region: EntityRow) -> bool:
     soldiers = sum(stat_or(army, "size", 0) for army in armies) * struck // PERCENT
     for army in armies:
         scale_stat(ctx.rules, army, "size", (PERCENT - table.army_answer_pct) / PERCENT)
+    before = profile.might
     if "might" not in profile.locked:
         profile.might = clamp_percent(profile.might - soldiers // table.army_drive_size)
-    await wound_being(ctx, scene.being, soldiers / 1000 * ctx.rules.cosmic_wounds.army_wound, HarmCause.BATTLE, f"the armies of {scene.world.name}")
+    wound = soldiers / 1000 * ctx.rules.cosmic_wounds.army_wound
+    await wound_being(ctx, scene.being, wound, HarmCause.BATTLE, f"the armies of {scene.world.name}")
     driven = soldiers >= max(1, await effective_might(ctx.session, scene.being, profile.might)) * table.army_drive_size
     if driven:
         profile.phase = BeingPhase.ROAMING
         profile.manifest_epochs = 0
-    text = (
-        f"The armies of {scene.world.name} answered {scene.being.name} in {region.name} and drove it back."
-        if driven
-        else f"The armies of {scene.world.name} answered {scene.being.name} in {region.name} but could not drive it back."
+    fighters = [army.id for army in armies]
+    await record(
+        ctx,
+        "being.incursion_repelled" if driven else "being.incursion_answered",
+        roles={IncidentRole.ACTOR: fighters, IncidentRole.TARGET: scene.being.id, IncidentRole.PLACE: region.id},
+        facts={"soldiers": soldiers, "might_lost": before - profile.might, "wound": wound},
+        steps=(
+            StepDraft(StepAction.ADVANCE, target=scene.being.id, locus_kind=StepLocus.REGION, locus_node=region.id),
+            StepDraft(StepAction.STRIKE, target=scene.being.id, amount=wound, unit=FactUnit.HP, outcome=StepOutcome.WOUNDED),
+            StepDraft(
+                StepAction.WITHDRAW if driven else StepAction.HOLD, actor=scene.being.id, outcome=StepOutcome.ESCAPED if driven else StepOutcome.NO_EFFECT
+            ),
+        ),
+        place=region.id,
+        world_id=scene.world.id,
     )
-    await note(ctx, text, key="being.incursion_answered", ids=[scene.being.id, region.id, *[army.id for army in armies]], world_id=scene.world.id)
     return driven
 
 
@@ -274,7 +297,14 @@ async def trade(scene: Scene) -> None:
     if "traffic" not in route.locked:
         route.traffic += moved + ctx.rules.cosmic_beings.trade_traffic
     if moved:
-        await note(ctx, f"{scene.being.name} carried goods along the route from {world.name}.", key="being.traded", ids=[scene.being.id], world_id=world.id)
+        other = route.world_b_id if route.world_a_id == world.id else route.world_a_id
+        await record(
+            ctx,
+            "being.traded",
+            roles={IncidentRole.ACTOR: scene.being.id, IncidentRole.ORIGIN: world.id, IncidentRole.DESTINATION: other},
+            facts={"moved": moved, "traffic": route.traffic},
+            world_id=world.id,
+        )
 
 
 async def seek_worship(scene: Scene) -> None:
@@ -320,7 +350,13 @@ async def found_cult(ctx: TickContext, being: EntityRow, community: EntityRow) -
     )
     await connect(ctx.session, cult.id, being.id, BondKind.WORSHIPS, ctx.epoch, description="its object of worship")
     await connect(ctx.session, cult.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, description="born from within")
-    await note(ctx, f"{cult.name} arose among {community.name}.", key="being.cult_founded", ids=[cult.id, community.id, being.id], world_id=community.world_id)
+    await record(
+        ctx,
+        "being.cult_founded",
+        roles={IncidentRole.PRODUCT: cult.id, IncidentRole.PATRON: being.id, IncidentRole.MEMBER: community.id},
+        facts={"followers": stat_or(cult, "followers", 0), "share": share},
+        world_id=community.world_id,
+    )
     return cult
 
 
@@ -361,11 +397,11 @@ async def mirror(scene: Scene) -> None:
         return
     if scene.rng.chance(ctx.rules.cosmic_beings.echo_replace_chance):
         if await assume(ctx, mortal, IdentityReason.IMPOSTOR, mortal.name, cover_role="its own double") is not None:
-            await note(
+            await record(
                 ctx,
-                f"{scene.being.name} took the place of {mortal.name}.",
-                key="being.echo_replaced",
-                ids=[scene.being.id, mortal.id],
+                "being.echo_replaced",
+                roles={IncidentRole.ACTOR: scene.being.id, IncidentRole.VICTIM: mortal.id},
+                facts={"chance": ctx.rules.cosmic_beings.echo_replace_chance},
                 world_id=mortal.world_id,
             )
         return
@@ -373,7 +409,13 @@ async def mirror(scene: Scene) -> None:
         mortal.id, scene.being.id, BondKind.COMPANION
     ):
         await connect(ctx.session, mortal.id, scene.being.id, BondKind.COMPANION, ctx.epoch, description="befriended its own double")
-        await note(ctx, f"{mortal.name} befriended {scene.being.name}.", key="being.echo_befriended", ids=[scene.being.id, mortal.id], world_id=mortal.world_id)
+        await record(
+            ctx,
+            "being.echo_befriended",
+            roles={IncidentRole.ACTOR: mortal.id, IncidentRole.SUBJECT: scene.being.id},
+            facts={"chance": ctx.rules.cosmic_beings.befriend_chance},
+            world_id=mortal.world_id,
+        )
 
 
 async def act(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow) -> None:
@@ -430,7 +472,13 @@ async def take_rule(ctx: TickContext, cosmography: Cosmography, being: EntityRow
     if not ctx.rng(f"being_rule.{being.id}").chance(ctx.rules.cosmic_beings.rule_chance):
         return False
     home.ruler_node_id = being.id
-    await note(ctx, f"{being.name} took rule of {home.name}.", key="being.took_rule", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.COSMIC)
+    await record(
+        ctx,
+        "being.took_rule",
+        roles={IncidentRole.ACTOR: being.id, IncidentRole.SUBJECT: home.id},
+        facts={"chance": ctx.rules.cosmic_beings.rule_chance},
+        world_id=being.world_id,
+    )
     return True
 
 
@@ -467,7 +515,15 @@ async def roam(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pro
     if rng.chance(table.manifest_chance):
         profile.phase = BeingPhase.MANIFEST
         profile.target_world_id = being.world_id
-        await note(ctx, f"{being.name} showed itself.", key="being.manifest", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.COSMIC)
+        if being.world_id is not None:
+            await record(
+                ctx,
+                "being.manifest",
+                roles={IncidentRole.SUBJECT: being.id, IncidentRole.PLACE: being.world_id},
+                facts={"might": profile.might, "chance": table.manifest_chance},
+                steps=(StepDraft(StepAction.MANIFEST, actor=being.id, locus_kind=StepLocus.REALM, locus_node=being.world_id),),
+                world_id=being.world_id,
+            )
 
 
 async def manifest(ctx: TickContext, cosmography: Cosmography, being: EntityRow, profile: CosmicBeingProfileRow) -> None:
@@ -540,7 +596,14 @@ async def bind_being(ctx: TickContext, entity_id: int, binder_id: int, by: str) 
     profile.bound_by_node_id = binder_id
     await wound_being(ctx, being, ctx.rules.cosmic_wounds.bind_wound, HarmCause.RITUAL, f"bound by {by}", killer_id=binder_id)
     await connect(ctx.session, binder_id, being.id, BondKind.COMMANDS, ctx.epoch, description="bound to serve")
-    await note(ctx, f"{by} bound {being.name}.", key="being.bound", ids=[being.id], world_id=being.world_id, kind=ChronicleKind.MIRACLE)
+    await record(
+        ctx,
+        "being.bound",
+        roles={IncidentRole.ACTOR: binder_id, IncidentRole.TARGET: being.id},
+        facts={"wound": ctx.rules.cosmic_wounds.bind_wound},
+        steps=(StepDraft(StepAction.BIND, actor=binder_id, target=being.id, outcome=StepOutcome.SUCCESS),),
+        world_id=being.world_id,
+    )
     await ctx.session.flush()
     return profile
 
@@ -579,22 +642,23 @@ async def banish_near(ctx: TickContext, region_id: int | None, by: str) -> str |
     return None
 
 
-async def banish_being(ctx: TickContext, entity_id: int, by: str) -> CosmicBeingProfileRow:
+async def banish_being(ctx: TickContext, entity_id: int, by: str, by_id: int | None = None) -> CosmicBeingProfileRow:
     being, profile = await require_being(ctx, entity_id)
     profile.phase = BeingPhase.BANISHED
     profile.bound_by_node_id = None
     profile.target_world_id = None
     profile.rift_id = None
     await send_home(ctx, being, profile)
+    before = profile.might
     profile.might = clamp_percent(profile.might - ctx.rules.cosmic_beings.banish_might)
     await wound_being(ctx, being, ctx.rules.cosmic_wounds.banish_wound, HarmCause.RITUAL, f"banished by {by}")
-    await note(
+    await record(
         ctx,
-        f"{by} banished {being.name} to the dimension it came from.",
-        key="being.banished",
-        ids=[being.id],
+        "being.banished",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.TARGET: being.id, IncidentRole.DESTINATION: being.world_id},
+        facts={"might_lost": before - profile.might, "wound": ctx.rules.cosmic_wounds.banish_wound},
+        steps=(StepDraft(StepAction.RELEASE, actor=by_id, target=being.id, outcome=StepOutcome.SUCCESS),),
         world_id=being.world_id,
-        kind=ChronicleKind.MIRACLE,
     )
     await ctx.session.flush()
     return profile

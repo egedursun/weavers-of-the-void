@@ -21,12 +21,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import LandUseRing, NutrientKind, PreparednessKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import top_region
+from aerona.engine.recording.record import FactInput, record
 from aerona.rules.registry import Rules
 
 P = PreparednessKind
@@ -227,9 +228,12 @@ async def shield_of(ctx: TickContext, town: EntityRow, disaster: Disaster | None
         for row in helped:
             if "averted" not in row.locked and not held(town.id):
                 row.averted += 1
-        what = " and ".join(sorted({row.kind.value.replace("_", " ") + "s" for row in helped}))
-        harm = disaster.value.replace("_", " ") if disaster is not None else "fire"
-        await note(ctx, f"The {what} of {town.name} held: the {harm} did not become a catastrophe.", key="resilience.held", ids=[town.id])
+        works = sorted({row.kind for row in helped})
+        if disaster is not None:
+            facts: dict[str, FactInput] = {"works": works, "disaster": disaster, "shield": cut * PERCENT}
+            await record(ctx, "resilience.held", roles={IncidentRole.SUBJECT: town.id}, facts=facts, place=town.id)
+        else:
+            await record(ctx, "resilience.held_fire", roles={IncidentRole.SUBJECT: town.id}, facts={"works": works, "shield": cut * PERCENT}, place=town.id)
     return cut
 
 
@@ -254,6 +258,5 @@ async def fell_plantings(ctx: TickContext, region: EntityRow, share_pct: int) ->
         row.felled_epoch = ctx.epoch
         felled += 1
     if felled:
-        how = "cut down; it will take generations to grow them again" if share_pct * 2 >= PERCENT else "partly cut down"
-        await note(ctx, f"The plantings of {region.name} were {how}.", key="perennials.felled", ids=[region.id])
+        await record(ctx, "perennials.felled", roles={IncidentRole.PLACE: region.id}, facts={"felled": felled, "share": share_pct}, place=region.id)
     return felled

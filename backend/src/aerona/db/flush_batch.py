@@ -25,15 +25,15 @@ def align_updates(sync: Session, *_: object) -> None:
     for state in list(modified):
         if state in sync._deleted or (shared is not None and state.mapper not in shared):
             continue
-        changed = changed_columns(state)
-        if changed:
-            groups.setdefault(state.mapper, []).append((state, changed))
+        edited = changed_columns(state)
+        if edited:
+            groups.setdefault(state.mapper, []).append((state, edited))
     for rows in groups.values():
         if len(rows) < 2:
             continue
-        union = frozenset().union(*(changed for _, changed in rows))
-        for state, changed in rows:
-            for key in union - changed:
+        union = frozenset().union(*(edited for _, edited in rows))
+        for state, edited in rows:
+            for key in union - edited:
                 if key in state.dict:
                     flag_modified(state.obj(), key)
 

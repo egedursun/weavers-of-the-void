@@ -5,6 +5,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import HouseTrait
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -13,7 +14,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 
@@ -35,8 +35,11 @@ async def bless_bloodline(call: SonCall, args: BloodlineInput) -> str:
         profile.divine_son_id = call.son.id
     call.spend_essence(call.rules.son_tools.bloodline_cost)
     call.target(house.id)
-    await call.chronicle(
-        ChronicleKind.DIVINE_SIGN, lines.BLOODLINE, entity_ids=[house.id], son=call.son.name, house=house.name, trait=args.trait.value.replace("_", " ")
+    await call.record(
+        "tools.son.bloodline",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: house.id},
+        facts={"trait": args.trait},
+        kind=ChronicleKind.DIVINE_SIGN,
     )
     return result(SonResult.BLOODLINE_SET, house=house.name, trait=args.trait.value.replace("_", " "))
 

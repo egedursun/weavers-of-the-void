@@ -3,7 +3,6 @@ from dataclasses import replace
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.lore import MessageRow
@@ -78,7 +77,7 @@ async def test_drift_and_label_chronicle(session: AsyncSession, world: GodsWorld
     assert son.loyalty == 10 - rules.reputation.hated_loyalty_loss
     assert son.manual_fear == round(60 * rules.reputation.manual_push_keep_pct / 100)
     assert son.trace_fear == round(40 * rules.reputation.power_trace_keep_pct / 100)
-    assert god_lines.REPUTATION_CHANGE.key in await chronicle_keys(session)
+    assert "gods.reputation.change" in await chronicle_keys(session)
 
 
 async def test_push_reputation_cap(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -116,7 +115,7 @@ async def test_passions_from_action_kinds(session: AsyncSession, world: GodsWorl
 async def test_manual_passions_and_phase(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     view = await set_passions(session, rules, [CreatorPassion.ORDER, CreatorPassion.ORDER, CreatorPassion.BEAUTY], automatic=False)
     assert view.passions == (CreatorPassion.ORDER, CreatorPassion.BEAUTY)
-    assert god_lines.PASSIONS_REVEALED.key in await chronicle_keys(session)
+    assert "gods.reputation.passions" in await chronicle_keys(session)
     with pytest.raises(ValidationFailedError):
         await set_passions(session, rules, [], automatic=False)
     await make_son(session, "Velkar", world.world.id)

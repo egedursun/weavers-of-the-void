@@ -13,7 +13,9 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.afflictions import ageless
 from aerona.engine.body.hits import Harm
@@ -26,7 +28,6 @@ from aerona.engine.lifecycle.mortal_death import die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.mortal.life import hazard_chance
 from aerona.engine.mortal.profile import profile_of
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import LawBook
@@ -36,6 +37,7 @@ from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import add_flag, canon
 from aerona.engine.primitives.records import append_sentence
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 
 WOUND_DEATH = "succumbed to their wounds"
 
@@ -67,7 +69,6 @@ async def succumb(ctx: TickContext, mortal: EntityRow) -> None:
     "table.designated_heirs",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -138,11 +139,17 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     if laws.has(NaturalLaw.DEAD_RETURN, mortal.world_id) and rng.chance(rules.world_engine.ghost_chance):
         await add_flag(ctx.session, mortal.id, EntityFlag.GHOST, ctx.epoch)
         mortal.fate_note = append_sentence(mortal.fate_note, f"Epoch {ctx.epoch}, world year {death_year}: died at age {death_age} and returned as a ghost.")
-        await note(
+        steps = (
+            StepDraft(StepAction.AGE, actor=mortal.id, amount=death_age - age, unit=FactUnit.YEARS),
+            StepDraft(StepAction.DIE, actor=mortal.id, outcome=StepOutcome.KILLED),
+            StepDraft(StepAction.RETURN_TO_LIFE, actor=mortal.id, outcome=StepOutcome.SUCCESS),
+        )
+        await record(
             ctx,
-            f"{mortal.name} died but the law of the world called them back: now a ghost.",
-            key="mortals.ghost",
-            ids=[mortal.id],
+            "mortals.ghost",
+            roles={IncidentRole.SUBJECT: mortal.id},
+            facts={"age": death_age, "law": NaturalLaw.DEAD_RETURN, "year": death_year},
+            steps=steps,
             son_id=mortal.creator_son_id,
         )
         return
@@ -158,6 +165,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "mortal.lifespan",
     "mortal.strength",
     "settlement.population",
+    "spirit.unrest",
     "table.afflictions",
     "table.avatars",
     "table.bonds",
@@ -173,7 +181,6 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.doctrine_sacraments",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -232,9 +239,10 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.designated_heirs",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.griefs",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.incorporeal_rights",
     "table.item_history",

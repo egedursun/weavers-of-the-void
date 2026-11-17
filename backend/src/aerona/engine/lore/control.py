@@ -239,10 +239,10 @@ async def learn_branch(ctx: TickContext, holder_id: int, branch: KnowledgeBranch
         EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.knowledge_branch == branch
     )
     local = await ctx.session.scalar(records.where(EntityRow.world_id == (holder.world_id if holder is not None else None)).order_by(EntityRow.id).limit(1))
-    record = local if local is not None else await ctx.session.scalar(records.order_by(EntityRow.id).limit(1))
-    if record is None:
+    entry = local if local is not None else await ctx.session.scalar(records.order_by(EntityRow.id).limit(1))
+    if entry is None:
         raise ValidationFailedError(f"No knowledge of {spoken(branch)} exists yet; make the knowledge first, then set its level.")
-    await connect(ctx.session, holder_id, record, BondKind.KNOWS, ctx.epoch, description="taught by the Creator")
+    await connect(ctx.session, holder_id, entry, BondKind.KNOWS, ctx.epoch, description="taught by the Creator")
 
 
 async def set_technique(ctx: TickContext, holder_id: int, technique: Technique, *, held: bool, secret: bool) -> HolderTechniqueRow | None:

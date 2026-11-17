@@ -14,15 +14,16 @@ from aerona.domain.enums.crafts import CatchGround, CatchRight, Gear
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import LAND_GROUNDS
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 
@@ -123,18 +124,26 @@ async def judge(ctx: TickContext, row: CatchGroundRow, tally: GroundTally) -> No
         row.last_catch = (profile.last_output if profile is not None else range_row.hunted if range_row is not None else 0) or 0
     if left is None or "collapsed" in row.locked:
         return
-    source = await ctx.session.get(EntityRow, row.source_entity_id)
-    name = source.name if source is not None else "a ground"
     if not row.collapsed and left < row.collapse_at:
         row.collapsed = True
         tally.collapsed += 1
-        await note(
-            ctx, f"Worked past bearing, {name} gave out and its catch failed.", key="grounds.collapsed", ids=[row.source_entity_id, row.region_entity_id]
+        await record(
+            ctx,
+            "grounds.collapsed",
+            roles={IncidentRole.SUBJECT: row.source_entity_id, IncidentRole.PLACE: row.region_entity_id},
+            facts={"ground": row.ground, "left": left, "collapse_at": row.collapse_at, "last_catch": row.last_catch},
+            place=row.region_entity_id,
         )
     elif row.collapsed and left >= ctx.rules.grounds.recover_at:
         row.collapsed = False
         tally.recovered += 1
-        await note(ctx, f"{name} grew back and could be worked again.", key="grounds.recovered", ids=[row.source_entity_id, row.region_entity_id])
+        await record(
+            ctx,
+            "grounds.recovered",
+            roles={IncidentRole.SUBJECT: row.source_entity_id, IncidentRole.PLACE: row.region_entity_id},
+            facts={"ground": row.ground, "left": left, "recover_at": ctx.rules.grounds.recover_at},
+            place=row.region_entity_id,
+        )
 
 
 async def workers_of(ctx: TickContext, row: CatchGroundRow) -> list[int]:
@@ -183,9 +192,7 @@ async def poaching(ctx: TickContext, row: CatchGroundRow, workers: list[int], ta
     for community in workers:
         if community == row.owner_node_id or await owner_of(ctx, community) == row.owner_node_id or held(community):
             continue
-        await change_relation(
-            ctx, row.owner_node_id, community, -ctx.rules.grounds.poach_opinion, MemoryKind.ILL_WILL, note="worked our waters and hunting grounds"
-        )
+        await change_relation(ctx, row.owner_node_id, community, -ctx.rules.grounds.poach_opinion, MemoryKind.ILL_WILL, note="took from grounds that were ours")
         tally.poached += 1
         await dispute(ctx, row, community, tally)
 

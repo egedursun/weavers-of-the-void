@@ -303,7 +303,7 @@ MEMORY_THOUGHTS: MappingProxyType[MemoryKind, ThoughtKind] = MappingProxyType(
     }
 )
 
-ATROCITIES = frozenset({ActKind.EXECUTION, ActKind.MUTILATION, ActKind.HUMAN_SACRIFICE, ActKind.GUEST_KILLING})
+ATROCITIES = frozenset({ActKind.EXECUTION, ActKind.MUTILATION, ActKind.SACRIFICE_OF_PEOPLE, ActKind.GUEST_KILLING})
 
 MOOD_ORDER: tuple[MoodState, ...] = (
     MoodState.ELATED,

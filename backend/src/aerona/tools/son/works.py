@@ -9,6 +9,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.industry import Pollutant
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.industry.pollution import shift
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -16,7 +17,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 
@@ -41,14 +41,12 @@ async def tend_land(call: SonCall, args: TendInput) -> str:
         fail(SonResult.LAND_HELD, name=region.name)
     call.spend_essence(cost)
     call.target(region.id)
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.TEND_LAND,
-        entity_ids=[region.id],
-        son=call.son.name,
-        verb="cleansed" if args.cleanse else "fouled",
-        region=region.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.tend_land",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"verb": str("cleansed" if args.cleanse else "fouled"), "reason": str(args.reason)},
+        place=region.id,
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.LAND_TENDED, name=region.name, air=row.air, water=row.water, soil=row.soil)
 

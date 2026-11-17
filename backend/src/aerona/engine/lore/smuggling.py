@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, HolderLevelRow, IdeologyAdherentRow
 from aerona.db.tables.discovery import BannedWorkRow
@@ -10,14 +11,14 @@ from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.lore.theories import faiths_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import move_stat, stat
+from aerona.engine.recording.record import record as record_incident
 
 
 async def holders_of(session: AsyncSession, work: EntityRow) -> set[int]:
@@ -84,11 +85,12 @@ async def smuggle(ctx: TickContext) -> dict[str, int]:
             await deliver(ctx, work, buyer)
             shaken += await stir_heresy(ctx, buyer)
             smuggled += 1
-            await note(
+            await record_incident(
                 ctx,
-                f"Smugglers brought {work.name} into {buyer.name} against the ban.",
-                key="discovery.smuggled",
-                ids=[buyer.id, work.id],
-                kind=ChronicleKind.CIVILIZATION,
+                "discovery.smuggled",
+                roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: seller.id, IncidentRole.TARGET: work.id},
+                facts={"price": price},
+                place=buyer.id,
+                terms=[Term("rules.discovery.black_market_price", price)],
             )
     return {"works_smuggled": smuggled, "faiths_shaken": shaken}

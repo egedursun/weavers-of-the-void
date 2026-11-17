@@ -9,16 +9,17 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.arcana import LawSource, SpellForm
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.models.entity_stats import NaturalLawStats
 from aerona.engine.arcana.vis import burn_for
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 ENCHANTMENT_POWER = 5
@@ -97,8 +98,11 @@ async def keep_law(ctx: TickContext, law: NaturalLawProfileRow) -> bool | None:
         entity = await ctx.session.get(EntityRow, law.law_entity_id)
         if entity is not None and entity.status is EntityStatus.CANON:
             entity.status, entity.end_epoch = EntityStatus.DESTROYED, ctx.epoch
-            await note(
-                ctx, f"{entity.name} lapsed: no one kept paying for it.", key="arcana.enchantment_lapsed", ids=[entity.id], kind=ChronicleKind.COSMIC_LAW
+            await record(
+                ctx,
+                "arcana.enchantment_lapsed",
+                roles={IncidentRole.SUBJECT: entity.id, IncidentRole.OWNER: row.caster_node_id},
+                facts={"unpaid_epochs": row.unpaid_epochs, "lapse_after": ctx.rules.global_enchantments.lapse_after},
             )
     return False
 
@@ -158,7 +162,29 @@ async def lay_enchantment(
         )
     )
     await ctx.session.flush()
-    await note(
-        ctx, f"{law.name} was laid over the world as a global enchantment.", key="arcana.enchantment_laid", ids=[law.id, caster], kind=ChronicleKind.COSMIC_LAW
+    await record(
+        ctx,
+        "arcana.enchantment_laid",
+        roles={IncidentRole.MAKER: caster, IncidentRole.PRODUCT: law.id},
+        facts={
+            "effect": effect,
+            "scope": scope,
+            "strength": profile.strength,
+            "essence_upkeep": essence_upkeep(ctx.rules, strength, LawSource.ENCHANTMENT) if mortal is None else 0,
+            "vis_upkeep": table.vis_upkeep if mortal is not None else 0,
+        },
+        place=region_id,
+        world_id=world_id,
+        steps=(
+            StepDraft(
+                StepAction.ENCHANT,
+                actor=caster,
+                target=law.id,
+                amount=profile.strength,
+                unit=FactUnit.PERCENT,
+                record_table=NaturalLawProfileRow.__tablename__,
+                record_key=str(law.id),
+            ),
+        ),
     )
     return profile

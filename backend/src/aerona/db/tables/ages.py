@@ -53,6 +53,7 @@ class FormationHistoryRow(Base):
     shaped: Mapped[bool] = mapped_column(default=False)
     formed_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"), index=True)
 
 
 class IrregularSeasonRow(Base):

@@ -7,6 +7,7 @@ from aerona.constants.tool_inputs import PLAN_MAX, PLAN_MIN, REASON_MAX, REASON_
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.dedication import may_anchor
 from aerona.engine.primitives.holds import ANCHOR_KEY, is_held
 from aerona.prompts import SonToolId
@@ -15,7 +16,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, no_cost
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 
@@ -58,7 +58,12 @@ async def choose_anchor(call: SonCall, args: ChooseAnchorInput) -> str:
     call.son.anchor_entity_id = entity.id
     call.target(entity.id)
     await call.bump(TurnCounter.ANCHOR_CHOSEN)
-    await call.chronicle(ChronicleKind.EXISTENCE, lines.ANCHOR, entity_ids=[entity.id], son=call.son.name, entity=entity.name, reason=args.reason)
+    await call.record(
+        "tools.son.anchor",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: entity.id},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.EXISTENCE,
+    )
     return result(SonResult.ANCHOR_SET, name=entity.name)
 
 

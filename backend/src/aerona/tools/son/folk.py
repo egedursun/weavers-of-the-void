@@ -11,6 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import FuneralCustom, InheritanceCustom, MartialStyle
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.demography import control
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 FIELD_WORDS = {
@@ -81,8 +81,11 @@ async def shape_folk(call: SonCall, args: ShapeFolkInput) -> str:
     call.spend_essence(cost)
     call.target(people.id)
     changes = ", ".join(spoken(key, value) for key, value in values.items())
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.SHAPE_FOLK, entity_ids=[people.id], son=call.son.name, people=people.name, changes=changes, reason=args.reason
+    await call.record(
+        "tools.son.shape_folk",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
+        facts={"changes": str(changes), "reason": str(args.reason)},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.FOLK_SHAPED, name=people.name, changes=changes)
 

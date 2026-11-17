@@ -1,7 +1,6 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow, NetworkProfileRow
@@ -13,7 +12,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import NetworkRole, OutageCause
+from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
@@ -23,9 +24,10 @@ from aerona.engine.networks.backfill import keep_relays, relay_backfill
 from aerona.engine.networks.book import carrier_days, running, shake_ledger
 from aerona.engine.networks.energy import CARRIER_ENERGY, starved
 from aerona.engine.networks.kinds import ACCESS_REACH, CARRIER_FAILURE, CAUSE_EPOCHS, ROLE_SHOCK
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, shift_stat
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.technology.profiles import family_level
 
@@ -58,7 +60,7 @@ async def cut(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow, 
         profile.down_until_epoch = ctx.epoch + epochs
     ctx.session.add(NetworkOutageRow(network_entity_id=network.id, cause=cause, epoch=ctx.epoch, epochs=epochs, severity=severity))
     await shake_ledger(ctx.session, ctx.rules, network.id)
-    await note(ctx, f"{network.name} went down: {spoken(cause)}.", key="network.outage", ids=[network.id])
+    await record_incident(ctx, "network.outage", roles={IncidentRole.SUBJECT: network.id}, facts={"cause": cause, "epochs": epochs, "severity": severity})
 
 
 async def outage_cause(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> OutageCause | None:
@@ -133,7 +135,27 @@ async def grow(ctx: TickContext, network: EntityRow, profile: NetworkProfileRow,
             locked=[],
         )
     )
-    await note(ctx, f"{network.name} reached {town.name}.", key="network.grew", ids=[network.id, town.id])
+    await record_incident(
+        ctx,
+        "network.grew",
+        roles={IncidentRole.SUBJECT: network.id, IncidentRole.DESTINATION: town.id},
+        steps=(
+            StepDraft(
+                StepAction.CONNECT,
+                actor=owner.polity_entity_id,
+                target=town.id,
+                instrument_kind=InstrumentKind.NETWORK,
+                instrument_node=network.id,
+                locus_kind=StepLocus.NETWORK_NODE,
+                locus_key=NetworkRole.STATION.value,
+                amount=table.growth_cost,
+                unit=FactUnit.COIN,
+                outcome=StepOutcome.SUCCESS,
+                record_table=NetworkNodeRow.__tablename__,
+            ),
+        ),
+        place=town.id,
+    )
 
 
 async def censor(ctx: TickContext, profile: NetworkProfileRow, rows: list[NetworkNodeRow]) -> None:
@@ -170,7 +192,7 @@ async def keep_ledger(ctx: TickContext, network: EntityRow, profile: NetworkProf
         )
         ctx.session.add(ledger)
         await ctx.session.flush()
-        await note(ctx, f"{network.name} began to carry a money of its own.", key="network.ledger", ids=[network.id])
+        await record_incident(ctx, "network.ledger", roles={IncidentRole.SUBJECT: network.id}, facts={"trust": trust})
     elif not ledger.held:
         ledger.trust = clamp_percent(ledger.trust + (trust - ledger.trust) * ctx.rules.money.trust_drift_pct / PERCENT)
     for row in rows:

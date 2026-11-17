@@ -289,6 +289,7 @@ class ScaleWiki(ApiModel):
     cover: str | None
     images: list[ImageRecord]
     timeline: list[ChronicleLineRecord]
+    timeline_total: int
     laws: list[HeldLawRecord] = Field(default_factory=list)
     strata: list[HostedStratumRecord] = Field(default_factory=list)
 

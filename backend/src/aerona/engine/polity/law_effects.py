@@ -2,7 +2,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import agree, several
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, VassalageRow
@@ -10,6 +9,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.economy import LoanStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
@@ -18,13 +18,13 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import descent_heirs, kinship_of
 from aerona.engine.cycles.sides import second_sex
 from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import headcount, set_stats, shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 LABOUR_STEP = 30
@@ -104,11 +104,12 @@ async def jubilee(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
                 freed = society.share_serf_or_slave
                 society.share_serf_or_slave = 0.0
                 society.share_farmer = round(society.share_farmer + freed, 2)
-    await note(
+    await record(
         ctx,
-        f"{realm.entity.name} proclaimed a jubilee: {several(forgiven, 'debt', 'debts')} {agree(forgiven, 'was', 'were')} struck from the ledgers.",
-        key="polity.jubilee",
-        ids=[realm.entity.id, row.law_entity_id],
+        "polity.jubilee",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.INSTRUMENT: row.law_entity_id},
+        facts={"forgiven": forgiven, "every": every},
+        place=realm.profile.capital_entity_id,
     )
     return forgiven
 

@@ -11,7 +11,6 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import DangerHarm, DangerSource
@@ -26,6 +25,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import has_stat, set_stats, shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 MAIMING_SOURCES = frozenset({DangerSource.BEASTS, DangerSource.MONSTERS})
@@ -71,17 +71,15 @@ async def strike_community(ctx: TickContext, community: EntityRow, region: Entit
         tally.dead += lost
         tally.struck += 1
         if spec is not None and source is not None and lost >= table.settlers_noted_deaths:
-            ids = [community.id, region.id, *([source.source_node_id] if source.source_node_id is not None else [])]
-            roles = {community.id: IncidentRole.TARGET, **({source.source_node_id: IncidentRole.ACTOR} if source.source_node_id is not None else {})}
-            await ctx.chronicle(
-                ChronicleKind.WORLD,
-                spec.settlers_line.format(count=lost, community=community.name, region=region.name) + ".",
-                template_key=f"danger.{source.source.value}",
-                entity_ids=ids,
+            danger: DangerSource = source.source
+            await record(
+                ctx,
+                f"danger.{danger.value}",
+                roles={IncidentRole.VICTIM: community.id, IncidentRole.PLACE: region.id, IncidentRole.ACTOR: source.source_node_id},
+                facts={"count": lost, "maimed": maimed},
+                place=region.id,
                 world_id=community.world_id,
-                place_entity_id=region.id,
                 magnitude=clamp_int(lost, 0, PERCENT),
-                roles=roles,
             )
     livestock = weighted(rules, rows, DangerHarm.LIVESTOCK)
     if livestock <= 0:

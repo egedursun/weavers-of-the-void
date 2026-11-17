@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import MERCHANT_HOUSES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.entities import EntityRow
@@ -14,18 +13,17 @@ from aerona.db.tables.urban import MarketPlayRow, TradingPostRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.statecraft import MandateState
 from aerona.domain.enums.urban import MarketPlay
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holdings
 from aerona.engine.factions.book import monopolies_at
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.rules.registry import Rules
-
-PLAY_WORDS = {MarketPlay.CORNER: "cornered the market in", MarketPlay.DUMP: "flooded the market with"}
 
 
 @dataclass
@@ -129,7 +127,11 @@ async def play_markets(ctx: TickContext, tally: PlayTally) -> None:
             )
         )
         tally.played += 1
-        town = await ctx.session.get(EntityRow, market)
-        if town is not None:
-            await note(ctx, f"{house.name} {PLAY_WORDS[play]} {spoken(commodity)} at {town.name}.", key="trade.market_play", ids=[house.id, town.id])
+        await record(
+            ctx,
+            "trade.market_play",
+            roles={IncidentRole.ACTOR: house.id, IncidentRole.PLACE: market},
+            facts={"play": play, "good": commodity, "strength": strength, "until_epoch": ctx.epoch + table.length},
+            place=market,
+        )
     await ctx.session.flush()

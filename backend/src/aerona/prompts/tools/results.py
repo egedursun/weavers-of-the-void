@@ -28,6 +28,9 @@ class CommonResult(StrEnum):
 
 
 class SonResult(StrEnum):
+    EVENT_UNKNOWN = "You know nothing of happening {{ id }}: it is beyond your sight and reach."
+    RETELL_REFUSED = "You cannot tell it so: {{ why }}."
+    RETOLD = "Your telling of happening {{ id }} reached {{ peoples }}{% if changes %}, changed in this way: {{ changes }}{% endif %}."
     CREATION_GAIN = "Gain: +{{ xp }} XP, +{{ renown }} renown{% if faded %} (another {{ kind }} this age: {{ fade }}%){% endif %}."
     EFFECT_CLIPPED = "Event effect on {{ name }} {{ stat }} was bounded: {{ asked }}% to {{ kept }}%."
     CREATION_REPEATS = "Similar earlier creations: {{ names }}."
@@ -271,6 +274,8 @@ class SonResult(StrEnum):
     DISEASE_LOOSED = "#{{ id }} {{ name }} rose in {{ land }} and struck {{ target }} (severity {{ severity }})."
     NOT_A_PLACE = "{{ name }} is not a place; secrets, sanctity and nexus belong to places."
     SECRET_HIDDEN = "A secret now lies hidden in {{ name }}; it waits to be found."
+    SECRET_REVEALED = "The secret of {{ name }} comes to light."
+    NO_SECRET_HERE = "No secret lies hidden in {{ name }}."
     PLACE_SANCTIFIED = "{{ name }} is holier now: sacredness {{ sacredness }}."
     NEXUS_RAISED = "Ley lines now meet at {{ name }}: it is a nexus."
     NEXUS_ALREADY = "{{ name }} is already a nexus."
@@ -640,6 +645,8 @@ class SonResult(StrEnum):
 
 
 class MortalResult(StrEnum):
+    RECOUNT_REFUSED = "You cannot tell of that: {{ why }}."
+    RECOUNTED = "You told {{ place }} what you know of it.\n{{ account }}"
     GIFT_GIVEN = "You gave {{ name }} a gift worth {{ value }} (gift {{ id }}); they owe you one in return by epoch {{ due }}."
     GIFT_SPURNED = "{{ name }} refused your gift, an insult."
     GIFT_REFUSED = "You cannot give that gift: {{ why }}."

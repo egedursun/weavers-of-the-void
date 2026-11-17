@@ -10,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.control_depth import Substance, create_material
 from aerona.prompts import SonToolId
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 NAME_MAX = 60
@@ -75,14 +75,12 @@ async def forge_material(call: SonCall, args: ForgeMaterialInput) -> str:
     call.spend_essence(cost)
     if row.deposit_entity_id is not None:
         call.target(row.deposit_entity_id)
-    await call.chronicle(
-        ChronicleKind.RESOURCE,
-        lines.FORGE_MATERIAL,
-        entity_ids=[row.deposit_entity_id] if row.deposit_entity_id is not None else [],
+    await call.record(
+        "tools.son.forge_material",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [*([row.deposit_entity_id] if row.deposit_entity_id is not None else [])]},
+        facts={"name": str(row.name or ""), "reason": str(args.reason)},
+        kind=ChronicleKind.RESOURCE,
         world_id=world.id,
-        son=call.son.name,
-        name=row.name or "",
-        reason=args.reason,
     )
     return result(SonResult.MATERIAL_FORGED, name=row.name or "", id=row.id, vein=row.deposit_entity_id or 0)
 

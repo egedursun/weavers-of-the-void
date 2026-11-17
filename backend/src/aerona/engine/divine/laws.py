@@ -15,6 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import LawException, LawScope
 from aerona.domain.enums.entity import HERO_ROLES, EntityOrigin, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import keep_law
 from aerona.engine.context import TickContext
@@ -22,10 +23,10 @@ from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.divine.gods import god_of
 from aerona.engine.divine.law_grammar import spared, tend_grammar
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import footprint
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 L = NaturalLaw
@@ -151,11 +152,11 @@ async def tend_laws(ctx: TickContext) -> int:
             row.strength = clamp_int(row.strength - table.strength_decay, 0, PERCENT)
             if row.strength <= 0:
                 law.status, law.end_epoch = EntityStatus.DESTROYED, ctx.epoch
-                await note(
+                await record(
                     ctx,
-                    f"{law.name} was unmade: {NATURAL_LAWS[row.effect].label.lower() if row.effect is not NaturalLaw.NONE else 'its working'} no longer holds.",
-                    key="divine.law_unmade",
-                    ids=[law.id],
+                    "divine.law_unmade",
+                    roles={IncidentRole.SUBJECT: law.id},
+                    facts={"detail": NATURAL_LAWS[row.effect].label.lower() if row.effect is not NaturalLaw.NONE else "its working"},
                     kind=ChronicleKind.COSMIC_LAW,
                 )
         row.updated_epoch = ctx.epoch

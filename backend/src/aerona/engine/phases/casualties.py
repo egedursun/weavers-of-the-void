@@ -13,9 +13,9 @@ from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.military import CommanderTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus
@@ -26,7 +26,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
@@ -36,6 +35,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.records import death_path
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import release_captive, war_event
@@ -85,9 +85,9 @@ async def clashes_of(ctx: TickContext) -> list[Clash]:
         war = await ctx.session.get(WarRow, battle.war_id)
         if war is None:
             continue
-        record = await ctx.session.get(EntityRow, battle.record_entity_id) if battle.record_entity_id is not None else None
-        event = record or await war_event(ctx.session, war)
-        found.append(Clash(event, war.id, battle.winner_entity_id, battle.loser_entity_id, battle.siege_id is not None, record is not None))
+        entry = await ctx.session.get(EntityRow, battle.record_entity_id) if battle.record_entity_id is not None else None
+        event = entry or await war_event(ctx.session, war)
+        found.append(Clash(event, war.id, battle.winner_entity_id, battle.loser_entity_id, battle.siege_id is not None, entry is not None))
     return found
 
 
@@ -95,7 +95,7 @@ async def fated(ctx: TickContext, mortal: EntityRow, dies: bool) -> bool:
     if await remove_flag(ctx.session, mortal.id, EntityFlag.DOOMED):
         return True
     if dies and await remove_flag(ctx.session, mortal.id, EntityFlag.FATE_SHIELDED):
-        await note(ctx, f"{mortal.name} came back from the edge of death; their fate was shielded.", key="casualties.fate_shielded", ids=[mortal.id])
+        await record(ctx, "casualties.fate_shielded", roles={IncidentRole.SUBJECT: mortal.id}, facts={"flag": EntityFlag.FATE_SHIELDED})
         return False
     return dies
 
@@ -315,11 +315,9 @@ async def raise_commander(ctx: TickContext, army: EntityRow, row: ArmyRow) -> En
     war = await ctx.session.get(WarRow, row.war_id)
     if war is not None:
         await bonds.connect(BondDraft(war.event_entity_id, commander.id, BondKind.PARTY_TO, ctx.epoch, "commander", role=BondRole.COMMANDER, war_id=war.id))
-    await note(
-        ctx,
-        f"{commander.name} rose from the ranks of {community.name} to lead {army.name}.",
-        key="casualties.commander_risen",
-        ids=[commander.id, army.id, community.id],
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: commander.id, IncidentRole.INSTRUMENT: army.id, IncidentRole.ORIGIN: community.id}
+    await record(
+        ctx, "casualties.commander_risen", roles=roles, facts={"role": commander.mortal_role or MortalRole.WARRIOR, "warfare": warfare}, place=community.id
     )
     return commander
 
@@ -340,12 +338,8 @@ async def army_experience(ctx: TickContext, clashes: list[Clash]) -> int:
             if veterans > after:
                 after = veterans
                 inherited += 1
-                await note(
-                    ctx,
-                    f"Veterans of old wars joined {army.name}; the army was seasoned from its first day.",
-                    key="casualties.veterans",
-                    ids=[army.id, row.owner_entity_id],
-                )
+                roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: army.id, IncidentRole.OWNER: row.owner_entity_id}
+                await record(ctx, "casualties.veterans", roles=roles, facts={"experience_before": before, "experience_after": after})
         elif row.war_id is not None and row.war_id in fought:
             commander = await living_entity(ctx.session, row.commander_entity_id)
             if (
@@ -407,7 +401,6 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.geasa",
     "table.genomes",
     "table.griefs",
@@ -458,8 +451,8 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.griefs",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -525,7 +518,6 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.geasa",
     "table.griefs",
     "table.holder_levels",
@@ -574,7 +566,6 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.deeds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.griefs",
     "table.house_profiles",
     "table.incident_participants",
@@ -621,6 +612,7 @@ async def disaster_casualties(ctx: TickContext) -> None:
         severity = (stat(event, "severity") or 0) / 100
         rng = ctx.rng(seed_of("disaster_dead", event.id))
         this_event = 0
+        fallen: list[int] = []
         for community in struck:
             base = (
                 losses.plague_death * (losses.medicine_kept_pct / 100 if knowledge.knows(community.id, KnowledgeBranch.MEDICINE) else 1)
@@ -635,10 +627,14 @@ async def disaster_casualties(ctx: TickContext) -> None:
                 if not await fated(ctx, mortal, rng.chance(base * severity)):
                     continue
                 if await fall(ctx, mortal, phrase, event.id, event=None, flag=flag):
+                    fallen.append(mortal.id)
                     this_event += 1
                     dead += 1
         if this_event:
-            await note(ctx, f"{event.name} took {this_event} more named lives.", key="casualties.disaster_dead", ids=[event.id], feed=FeedCategory.DISASTER)
+            roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: event.id, IncidentRole.VICTIM: fallen}
+            await record(
+                ctx, "casualties.disaster_dead", roles=roles, facts={"disaster": disaster, "dead": this_event, "severity": stat(event, "severity") or 0}
+            )
     ctx.count("dead", dead)
     await session.flush()
 

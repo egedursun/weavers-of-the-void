@@ -2,7 +2,6 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRow, LivingProfileRow, SymbiontRow
@@ -13,14 +12,15 @@ from aerona.domain.enums.ecology import Temperament
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.living import CultivationMethod, Fertility, GrowthStage, HostPlacement, HostRelation, LineTrait, Metabolism
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerOrigin, PowerState, PowerVisibility
 from aerona.engine.context import TickContext
 from aerona.engine.living.kin import line_of
 from aerona.engine.living.lines import LineDraft, make_line, run_wild
 from aerona.engine.living.traits import scaled, traits_of
-from aerona.engine.notes import note
 from aerona.engine.powers.control import PowerDraft, create_power
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import record
 
 FEED_OF = {Metabolism.FEEDING: CommodityKind.FODDER, Metabolism.CHEMICAL: CommodityKind.ORE}
 
@@ -68,7 +68,9 @@ async def give_life(ctx: TickContext, thing_id: int, *, line_id: int | None, met
     await ctx.session.flush()
     if traits.get(LineTrait.GIFT, 0) >= ctx.rules.living.gift_at:
         await born_gift(ctx, thing.id, traits[LineTrait.GIFT])
-    await note(ctx, f"{thing.name} came alive.", key="living.profile_made", ids=[thing.id])
+    await record(
+        ctx, "living.profile_made", roles={IncidentRole.SUBJECT: thing.id}, facts={"lifespan": row.lifespan_years, "gift": traits.get(LineTrait.GIFT, 0)}
+    )
     return row
 
 
@@ -137,7 +139,7 @@ async def release(ctx: TickContext, line: LivingLineRow) -> LivingLineRow:
         raise ValidationFailedError("A line with no species behind it has nowhere wild to go.")
     if not await run_wild(ctx, line):
         line.escaped = True
-    await note(ctx, f"{line.name} was let loose into the wild.", key="living.released", ids=[line.species_entity_id])
+    await record(ctx, "living.released", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "escaped": int(line.escaped)})
     return line
 
 
@@ -164,5 +166,5 @@ async def contain(ctx: TickContext, line: LivingLineRow) -> LivingLineRow:
                 await ctx.session.delete(row)
                 culled += 1
     line.escaped = False
-    await note(ctx, f"{line.name} was hunted down and held in again, out of {several(culled, 'land', 'lands')}.", key="living.contained", ids=[])
+    await record(ctx, "living.contained", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "lands": culled})
     return line

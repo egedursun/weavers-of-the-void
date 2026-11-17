@@ -28,7 +28,6 @@ class VesselProfileRow(Base):
     hull_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     fabric_material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     condition: Mapped[int] = mapped_column(default=100)
-    armament: Mapped[list[str]] = mapped_column(JSON, default=list)
     seaworthiness: Mapped[int] = mapped_column(default=50)
     cargo_capacity: Mapped[int] = mapped_column(default=0)
     crew: Mapped[int] = mapped_column(default=0)

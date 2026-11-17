@@ -7,6 +7,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.fortune import FortuneSourceKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -15,7 +16,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -35,8 +35,12 @@ async def judge(call: SonCall, args: FortuneInput, sign: int) -> str:
     kind = FortuneSourceKind.DIVINE_FAVOUR if sign > 0 else FortuneSourceKind.DIVINE_DISFAVOUR
     await shift_fortune(call.tick, target.id, strength, kind, call.son.id)
     call.target(target.id)
-    line = lines.BLESS_FORTUNE if sign > 0 else lines.CURSE_FORTUNE
-    await call.chronicle(ChronicleKind.FATE, line, entity_ids=[target.id], son=call.son.name, name=target.name, reason=args.reason)
+    await call.record(
+        "tools.son.bless_fortune" if sign > 0 else "tools.son.curse_fortune",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id},
+        facts={"reason": args.reason, "strength": abs(strength)},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.FORTUNE_BLESSED if sign > 0 else SonResult.FORTUNE_CURSED, name=target.name)
 
 

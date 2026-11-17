@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow
@@ -11,7 +12,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import (
@@ -25,7 +25,9 @@ from aerona.domain.enums.faction import (
     FactionScale,
 )
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import LawKind, OfficeKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import CoupCause, LawKind, OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -34,7 +36,6 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.finance.contraband import OUTLAWS, smuggle_books
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import consider
 from aerona.engine.polity.laws import LawBook
@@ -44,6 +45,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import restraint
 from aerona.engine.services.war import ongoing_wars
 
@@ -321,7 +324,7 @@ async def lobby(move: Move) -> bool:
     realm = await realm_for(realms, profile)
     target = await holder_of(realm, OfficeKind.CHANCELLOR, OfficeKind.RULER)
     if realm is None or target is None or profile.treasury < table.lobby_cost:
-        log(ctx, profile.faction_entity_id, A.LOBBY, goal=goal, success=False, note="no ear at court")
+        log(ctx, profile.faction_entity_id, A.LOBBY, goal=goal, success=False, note="no hearing at court")
         return False
     profile.treasury -= table.lobby_cost
     gain_influence(profile, realm.entity.id, table.lobby_influence)
@@ -341,7 +344,6 @@ async def lobby(move: Move) -> bool:
 
 async def bribe(move: Move) -> bool:
     ctx, realms, profile, goal = move.ctx, move.realms, move.profile, move.goal
-    factions = move.factions
     table = ctx.rules.factions
     realm = await realm_for(realms, profile)
     target = await holder_of(realm, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.RULER)
@@ -358,11 +360,11 @@ async def bribe(move: Move) -> bool:
         kind=MemoryKind.GIFTED_ME,
         magnitude=table.bribe_opinion,
         epoch=ctx.epoch,
-        note="a purse in the dark",
+        note="a secret bribe",
     )
     if goal.kind is G.MONOPOLY_ON and goal.target_key is not None and "monopoly" not in profile.locked:
         profile.monopoly = goal.target_key
-    await exposed(ctx, factions, profile, "bribed the officers of the realm")
+    await exposed(ctx, profile, A.BRIBE, target)
     log(ctx, profile.faction_entity_id, A.BRIBE, target=target, goal=goal, amount=table.bribe_cost)
     return True
 
@@ -412,7 +414,6 @@ def petition_terms(laws: LawBook, realm: Realm, profile: FactionProfileRow, goal
 
 async def strike(move: Move) -> bool:
     ctx, realms, profile, goal = move.ctx, move.realms, move.profile, move.goal
-    factions = move.factions
     table = ctx.rules.factions
     town = await ctx.session.get(SettlementProfileRow, profile.home_entity_id or -1)
     place = await living_entity(ctx.session, profile.home_entity_id) if profile.home_entity_id is not None else None
@@ -425,18 +426,20 @@ async def strike(move: Move) -> bool:
     if realm is not None:
         gain_influence(profile, realm.entity.id, table.lobby_influence)
     log(ctx, profile.faction_entity_id, A.STRIKE, target=place.id, goal=goal)
-    await note(
+    await record_incident(
         ctx,
-        f"{factions.entities[profile.faction_entity_id].name} laid down its tools; {place.name} stood still.",
-        key="faction.strike",
-        ids=[profile.faction_entity_id, place.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "faction.strike",
+        roles={IncidentRole.ACTOR: profile.faction_entity_id, IncidentRole.PLACE: place.id},
+        facts={"unrest": table.strike_unrest, "prosperity_lost": table.strike_prosperity},
+        place=place.id,
+        terms=[Term("rules.factions.strike_unrest", table.strike_unrest), Term("rules.factions.strike_prosperity", -table.strike_prosperity)],
+        steps=(StepDraft(StepAction.STRIKE_WORK, actor=profile.faction_entity_id, target=place.id, amount=table.strike_prosperity, unit=FactUnit.PERCENT),),
     )
     return True
 
 
 async def riot(move: Move) -> bool:
-    ctx, factions, profile, goal = move.ctx, move.factions, move.profile, move.goal
+    ctx, profile, goal = move.ctx, move.profile, move.goal
     table = ctx.rules.factions
     town = await ctx.session.get(SettlementProfileRow, profile.home_entity_id or -1)
     if town is None:
@@ -445,12 +448,13 @@ async def riot(move: Move) -> bool:
         town.public_order = clamp_int(town.public_order - table.riot_order, 0, PERCENT)
     profile.reputation = clamp_int(profile.reputation - table.reputation_step, 0, PERCENT) if "reputation" not in profile.locked else profile.reputation
     log(ctx, profile.faction_entity_id, A.RIOT, target=profile.home_entity_id, goal=goal)
-    await note(
+    await record_incident(
         ctx,
-        f"{factions.entities[profile.faction_entity_id].name} took to the streets.",
-        key="faction.riot",
-        ids=[profile.faction_entity_id],
-        kind=ChronicleKind.CIVILIZATION,
+        "faction.riot",
+        roles={IncidentRole.ACTOR: profile.faction_entity_id, IncidentRole.PLACE: profile.home_entity_id},
+        facts={"order_lost": table.riot_order},
+        place=profile.home_entity_id,
+        terms=[Term("rules.factions.riot_order", -table.riot_order)],
     )
     return True
 
@@ -469,7 +473,7 @@ async def coup(move: Move) -> bool:
         log(ctx, faction.id, A.COUP, target=claimant.id, goal=goal, success=False, note="the guard held")
         shift_stat(faction, "strength", -table.coup_strength // 2, ctx.rules.society.default_stat)
         return False
-    seized = await seize_throne(ctx, realm, claimant, f"{faction.name} raised its swords for {claimant.name}", backer_id=faction.id)
+    seized = await seize_throne(ctx, realm, claimant, CoupCause.FACTION, backer_id=faction.id)
     log(ctx, faction.id, A.COUP, target=claimant.id, goal=goal, success=seized)
     if seized:
         goal.progress = PERCENT
@@ -494,11 +498,11 @@ async def assassinate(move: Move) -> bool:
             Harm(
                 table.assassinate_hp,
                 HarmCause.POISON,
-                f"slain by the knives of {factions.entities[profile.faction_entity_id].name}",
+                f"killed by the assassins of {factions.entities[profile.faction_entity_id].name}",
                 killer_id=profile.faction_entity_id,
             ),
         )
-    await exposed(ctx, factions, profile, f"plotted the death of {mark.name}")
+    await exposed(ctx, profile, A.ASSASSINATE, mark.id)
     log(ctx, profile.faction_entity_id, A.ASSASSINATE, target=mark.id, goal=goal, success=struck)
     return struck
 
@@ -518,7 +522,6 @@ async def smuggle(move: Move) -> bool:
 
 async def raid(move: Move) -> bool:
     ctx, realms, profile, goal = move.ctx, move.realms, move.profile, move.goal
-    factions = move.factions
     table = ctx.rules.banditry
     charter = profile.chartered_by_entity_id
     victim = await living_entity(ctx.session, goal.target_node_id or profile.home_entity_id) if (goal.target_node_id or profile.home_entity_id) else None
@@ -530,12 +533,13 @@ async def raid(move: Move) -> bool:
     shift_stat(victim, "prosperity", -table.raid_prosperity, ctx.rules.society.default_stat)
     profile.treasury += table.raid_loot
     log(ctx, profile.faction_entity_id, A.RAID, target=victim.id, goal=goal, amount=table.raid_loot)
-    await note(
+    await record_incident(
         ctx,
-        f"{factions.entities[profile.faction_entity_id].name} raided {victim.name}.",
-        key="faction.raid",
-        ids=[profile.faction_entity_id, victim.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "faction.raid",
+        roles={IncidentRole.ACTOR: profile.faction_entity_id, IncidentRole.VICTIM: victim.id},
+        facts={"loot": table.raid_loot, "prosperity_lost": table.raid_prosperity},
+        place=victim.id,
+        terms=[Term("rules.banditry.raid_loot", table.raid_loot)],
     )
     return True
 
@@ -592,19 +596,19 @@ async def recruit(move: Move) -> bool:
     return True
 
 
-async def exposed(ctx: TickContext, factions: FactionBook, profile: FactionProfileRow, deed: str) -> bool:
+async def exposed(ctx: TickContext, profile: FactionProfileRow, deed: FactionActionKind, target: int | None) -> bool:
     table = ctx.rules.intrigue
     chance = table.exposure_pct * (PERCENT - profile.secrecy) / PERCENT
     if not ctx.rng(f"exposed.{profile.faction_entity_id}.{ctx.epoch}").chance(chance):
         return False
     if "reputation" not in profile.locked:
         profile.reputation = clamp_int(profile.reputation - table.exposure_reputation, 0, PERCENT)
-    await note(
+    await record_incident(
         ctx,
-        f"It came out that {factions.entities[profile.faction_entity_id].name} {deed}.",
-        key="faction.exposed",
-        ids=[profile.faction_entity_id],
-        kind=ChronicleKind.CIVILIZATION,
+        "faction.exposed",
+        roles={IncidentRole.ACCUSED: profile.faction_entity_id, IncidentRole.TARGET: target},
+        facts={"deed": deed, "reputation_lost": table.exposure_reputation},
+        terms=[Term("rules.intrigue.exposure_pct", chance)],
     )
     return True
 
@@ -624,7 +628,7 @@ async def schisms(ctx: TickContext, factions: FactionBook) -> int:
             RecordSpec(
                 entity_type=EntityType.FACTION,
                 name=f"the true {parent.name.removeprefix('the ')}",
-                body=f"Those who left {parent.name}, saying it had lost its way.",
+                body=f"Those who left {parent.name}, saying it had strayed from its aims.",
                 stats=FactionStats(
                     strength=(stat(parent, "strength") or 0) // 2, wealth=(stat(parent, "wealth") or 0) // 2, sway=(stat(parent, "sway") or 0) // 2
                 ),
@@ -663,12 +667,13 @@ async def schisms(ctx: TickContext, factions: FactionBook) -> int:
         for row in members[len(members) // 2 :]:
             row.faction_entity_id = child.id
         log(ctx, faction_id, A.SCHISM, target=child.id)
-        await note(
+        await record_incident(
             ctx,
-            f"{parent.name} split; the discontented founded {child.name}.",
-            key="faction.schism",
-            ids=[faction_id, child.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "faction.schism",
+            roles={IncidentRole.PREDECESSOR: faction_id, IncidentRole.PRODUCT: child.id},
+            facts={
+                "members_left": len(members) - len(members) // 2,
+            },
         )
         split += 1
     return split

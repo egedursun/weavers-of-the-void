@@ -12,6 +12,8 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.ecology import GROWN, KEPT_STAGES, AnimalRole, BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.context import TickContext
@@ -19,10 +21,10 @@ from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.mind.grief import start_grief
 from aerona.engine.mind.hooks import practised
 from aerona.engine.mind.thoughts import think
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 
 PET_USES = frozenset({AnimalRole.COMPANION, AnimalRole.GUARD, AnimalRole.WAR, AnimalRole.PEST_CONTROL})
 HUNTING_USES = frozenset({AnimalRole.GUARD, AnimalRole.WAR})
@@ -128,9 +130,16 @@ async def adopt_pets(ctx: TickContext) -> int:
         rng = ctx.rng(f"pet.{mortal.id}.{ctx.epoch}")
         if not kinds or not rng.chance(table.pet_chance):
             continue
-        pet = await take_pet(ctx, mortal, rng.pick(kinds))
+        species = rng.pick(kinds)
+        pet = await take_pet(ctx, mortal, species)
         taken += 1
-        await note(ctx, f"{mortal.name} took {pet.name} as a companion.", key="pets.taken", ids=[mortal.id, pet.id])
+        await record(
+            ctx,
+            "pets.taken",
+            roles={IncidentRole.OWNER: mortal.id, IncidentRole.SUBJECT: pet.id, IncidentRole.ORIGIN: species.id},
+            steps=(StepDraft(StepAction.BEFRIEND, actor=mortal.id, target=pet.id),),
+            place=mortal.location_id,
+        )
     return taken
 
 

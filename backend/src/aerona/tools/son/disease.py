@@ -10,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseTarget, DiseaseVector
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.control import DiseaseDesign, ProfileValue, land_of, loose
 from aerona.prompts import SonToolId
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 PERCENT = 100
@@ -68,14 +68,11 @@ async def loose_disease(call: SonCall, args: LooseDiseaseInput) -> str:
     call.remember_creation(disease.id)
     call.spend_essence(cost)
     call.target(target.id)
-    await call.chronicle(
-        ChronicleKind.DISASTER,
-        lines.LOOSE_DISEASE,
-        entity_ids=[disease.id, target.id],
-        son=call.son.name,
-        disease=disease.name,
-        target=target.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.loose_disease",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: disease.id},
+        facts={"disease": str(disease.name), "reason": str(args.reason)},
+        kind=ChronicleKind.DISASTER,
     )
     return result(SonResult.DISEASE_LOOSED, id=disease.id, name=disease.name, land=land.name, target=target.name, severity=args.severity)
 

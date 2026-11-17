@@ -3,6 +3,7 @@ from collections import Counter
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import agree, several
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
@@ -59,11 +60,12 @@ async def record_fire(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
         Happening(
             EngineKind.FIRE,
             tag(ctx, f"the Great Fire of {town.name}"),
-            f"A great fire swept through {town.name}; {dead} died in the flames.",
-            "",
+            f"A great fire in {town.name} in which {several(dead, 'person', 'people')} died.",
             town,
             clamp_int(20 + dead * PERCENT // max(1, stat_or(town, "population", 0) + dead) * 4, 0, PERCENT),
             {town.id: IncidentRole.TARGET},
+            told=False,
+            dead=dead,
             feed=FeedCategory.DISASTER,
         ),
         atlas,
@@ -81,11 +83,11 @@ async def record_sack(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
         Happening(
             EngineKind.SACK,
             tag(ctx, f"the Sack of {town.name}"),
-            f"{town.name} was sacked; its storehouses were emptied and {dead} of its people were put to the sword.",
-            f"The sack of {town.name} was remembered in every ballad of the war.",
+            f"The sack of {town.name}, in which its stores were taken and {several(dead, 'person', 'people')} {agree(dead, 'was', 'were')} killed.",
             town,
             clamp_int(40 + dead * PERCENT // max(1, stat_or(town, "population", 0) + dead) * 4, 0, PERCENT),
             {town.id: IncidentRole.TARGET},
+            dead=dead,
             feed=FeedCategory.WAR,
             chronicle=ChronicleKind.WAR,
         ),
@@ -118,8 +120,7 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.FESTIVAL_OF_NOTE,
                 name,
-                f"For days {town.name} feasted, danced and gave thanks; the festival was spoken of for a generation.",
-                f"{town.name} held a festival that was spoken of for a generation.",
+                f"A festival held by {town.name}.",
                 town,
                 30,
                 {town.id: IncidentRole.ACTOR},
@@ -153,8 +154,7 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.CORONATION,
                 name,
-                f"{ruler.name} was crowned ruler of {realm.name} before the gathered great of the realm.",
-                f"{ruler.name} was crowned ruler of {realm.name}.",
+                f"The crowning of {ruler.name} as ruler of {realm.name}.",
                 realm,
                 35,
                 {ruler.id: IncidentRole.ACTOR, realm.id: IncidentRole.TARGET},
@@ -193,8 +193,7 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.WEDDING,
                 name,
-                f"The houses of {first.name} and {second.name} were joined in a wedding feast that lasted many days.",
-                f"A wedding feast joined the houses of {first.name} and {second.name}.",
+                f"The wedding that joined the houses of {first.name} and {second.name}.",
                 first,
                 25,
                 {first.id: IncidentRole.ACTOR, second.id: IncidentRole.ACTOR},
@@ -230,11 +229,11 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.MASSACRE,
                 name,
-                f"After the battle at {where.name}, {victor} gave no quarter; {battle.loser_losses} of {loser.name} fell in the rout.",
-                f"No quarter was given at {where.name}; {loser.name} was put to the sword.",
+                f"The killing after the battle at {where.name}: {victor} spared none of {loser.name}.",
                 where,
                 clamp_int(50 + battle.loser_losses // 100, 0, PERCENT),
                 {loser.id: IncidentRole.TARGET, **({winner.id: IncidentRole.ACTOR} if winner is not None else {})},
+                dead=battle.loser_losses,
                 feed=FeedCategory.WAR,
                 chronicle=ChronicleKind.WAR,
             ),
@@ -264,8 +263,7 @@ async def riots(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.RIOT,
                 tag(ctx, f"the Riots of {town.name}"),
-                f"The streets of {town.name} filled with an angry crowd; shops burned and the watch was driven back.",
-                f"Riots broke out in {town.name}.",
+                f"Riots in {town.name}.",
                 town,
                 clamp_int(profile.unrest, 0, PERCENT),
                 {town.id: IncidentRole.SUBJECT},
@@ -297,8 +295,7 @@ async def schism_councils(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.SCHISM_COUNCIL,
                 name,
-                f"The elders of {parent.name} met in council and could not agree; those who would not yield walked out as {sect.name}.",
-                f"A council of {parent.name} broke apart; {sect.name} walked out.",
+                f"The council of {parent.name} at which {sect.name} split away.",
                 where or parent,
                 40,
                 {parent.id: IncidentRole.SUBJECT, sect.id: IncidentRole.ACTOR},
@@ -333,8 +330,7 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.ECLIPSE_WATCH,
                 name,
-                f"The sun went dark over {host.name}, and the people gathered to watch it.",
-                f"The people of {host.name} gathered to watch the sun go dark.",
+                f"An eclipse watched by the people of {host.name}.",
                 host,
                 30,
                 {host.id: IncidentRole.WITNESS},

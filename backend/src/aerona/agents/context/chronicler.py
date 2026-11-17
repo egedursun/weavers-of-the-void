@@ -15,6 +15,7 @@ from aerona.agents.context.world_header import world_header
 from aerona.agents.text import sentences
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.core.grammar import spoken
+from aerona.db.repositories.chronicle import kept_lines
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import ChronicleEntityRow
@@ -57,8 +58,7 @@ async def epoch_event_rows(scope: Scope, epoch: int) -> list[EventRow]:
             select(ChronicleRecord)
             .where(
                 ChronicleRecord.epoch == epoch,
-                ChronicleRecord.kind != ChronicleKind.ENGINE_RAW,
-                ChronicleRecord.visible.is_(True),
+                kept_lines(),
                 or_(ChronicleRecord.kind == ChronicleKind.FATE, ChronicleRecord.id.not_in(tainted)),
             )
             .order_by(ChronicleRecord.id)

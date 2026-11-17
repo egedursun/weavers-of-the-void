@@ -11,21 +11,24 @@ from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.concealment import KeeperRole, SeekerAim
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.powers import PowerState
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.concealment.truths import knowledge
+from aerona.engine.minds.continuity import link_step
 from aerona.engine.powers.effects import seen_ahead
 from aerona.engine.powers.society import test_people
 from aerona.engine.powers.use import use
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import EnactLawInput
 from aerona.tools.mortal.ruler import enact_law, throne_of
 
@@ -78,8 +81,11 @@ async def use_power_tool(call: MortalCall, args: UsePowerInput) -> str:
     if target is not None:
         call.target(target.id)
     done = outcome.done or "nothing came of it"
-    await call.chronicle(
-        ChronicleKind.CULTURE, lines.USE_POWER, entity_ids=[call.me.id, *([target.id] if target is not None else [])], me=call.me.name, done=done
+    await call.record(
+        "tools.mortal.use_power",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: [*[call.me.id, *([target.id] if target is not None else [])]]},
+        facts={"done": str(done)},
+        kind=ChronicleKind.CULTURE,
     )
     return result(MortalResult.POWER_USED, done=done, strain=power.strain)
 
@@ -92,7 +98,7 @@ async def train_power(call: MortalCall, args: PowerInput) -> str:
         power.control = clamp_percent(power.control + call.rules.powers.control_gain * TRAINING)
     if power.state is PowerState.LATENT and "state" not in power.locked:
         power.state = PowerState.EMERGING
-    await call.chronicle(ChronicleKind.CULTURE, lines.TRAIN_POWER, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.train_power", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.CULTURE)
     return result(MortalResult.POWER_TRAINED, control=power.control)
 
 
@@ -102,7 +108,7 @@ async def test_for_gifts(call: MortalCall, _args: ToolInput) -> str:
     if town is None or held(realm.entity.id):
         fail(MortalResult.TESTING_DECLINED, why="you have no town to test")
     found = await test_people(call.tick, town)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.TEST_FOR_GIFTS, entity_ids=[call.me.id, town], me=call.me.name)
+    await call.record("tools.mortal.test_for_gifts", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: town}, kind=ChronicleKind.CIVILIZATION)
     return result(MortalResult.GIFTS_TESTED, count=found)
 
 
@@ -114,9 +120,11 @@ async def link_minds(call: MortalCall, args: LinkInput) -> str:
     theirs = await call.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id == partner.id, PowerRow.state == PowerState.ACTIVE).limit(1))
     if mine is None or theirs is None:
         fail(MortalResult.MIND_LINK_DECLINED, why="both of you need a waking power to link")
-    await connect(call.session, call.me.id, partner.id, BondKind.LINKED_WITH, call.tick.epoch, description="linked by their powers")
+    bond = await connect(call.session, call.me.id, partner.id, BondKind.LINKED_WITH, call.tick.epoch, description="linked by their powers")
     call.target(partner.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.LINK_MINDS, entity_ids=[call.me.id, partner.id], me=call.me.name, name=partner.name)
+    await call.record(
+        "tools.mortal.link_minds", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.CO_ACTOR: partner.id}, steps=(link_step(call.me.id, partner.id, bond),)
+    )
     return result(MortalResult.MINDS_LINKED, name=partner.name)
 
 
@@ -131,7 +139,7 @@ async def foresee_tool(call: MortalCall, args: PowerInput) -> str:
     row.strain_cost = power.strength * call.rules.powers.strain_per_use
     if "strain" not in power.locked:
         power.strain += row.strain_cost
-    await call.chronicle(ChronicleKind.FATE, lines.FORESEE, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.foresee", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.FATE)
     return result(MortalResult.FORESEEN, certainty=row.certainty)
 
 
@@ -157,19 +165,23 @@ async def keep_secret_of(call: MortalCall, args: TruthInput) -> str:
     if exists is not None:
         fail(MortalResult.KEEPING_DECLINED, why="you already keep it")
     call.session.add(TruthKeeperRow(truth_id=truth.id, keeper_node_id=call.me.id, role=KeeperRole.MEMBER, locked=[]))
-    await call.chronicle(ChronicleKind.FATE, lines.KEEP_SECRET_OF, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.keep_secret_of", roles={IncidentRole.ACTOR: call.me.id})
     return result(MortalResult.SECRET_KEPT, title=truth.title)
 
 
 async def investigate(call: MortalCall, args: InvestigateInput) -> str:
     truth = await known_truth(call, args.truth_id, MortalResult.INVESTIGATION_DECLINED)
     seeker = await call.session.scalar(select(TruthSeekerRow).where(TruthSeekerRow.truth_id == truth.id, TruthSeekerRow.seeker_node_id == call.me.id))
+    steps = [StepDraft(StepAction.INVESTIGATE, actor=call.me.id)]
     if seeker is None:
         seeker = TruthSeekerRow(truth_id=truth.id, seeker_node_id=call.me.id, aim=args.aim, progress=0, began_epoch=call.tick.epoch, locked=[])
         call.session.add(seeker)
     elif "progress" not in seeker.locked:
+        before = seeker.progress
         seeker.progress = clamp_percent(seeker.progress + call.rules.concealment.seeker_gain)
-    await call.chronicle(ChronicleKind.FATE, lines.INVESTIGATE, entity_ids=[call.me.id], me=call.me.name)
+        if seeker.progress > before:
+            steps.append(StepDraft(StepAction.FIND_EVIDENCE, actor=call.me.id, amount=seeker.progress - before, unit=FactUnit.PERCENT))
+    await call.record("tools.mortal.investigate", roles={IncidentRole.ACTOR: call.me.id}, facts={"aim": seeker.aim, "progress": seeker.progress}, steps=steps)
     return result(MortalResult.INVESTIGATED, title=truth.title, progress=seeker.progress)
 
 
@@ -181,7 +193,7 @@ async def cover_up(call: MortalCall, args: TruthInput) -> str:
     row = await knowledge(call.tick, truth.id, call.me.location_id)
     if "believe_pct" not in row.locked:
         row.believe_pct = clamp_percent(row.believe_pct - row.believe_pct * call.rules.concealment.cover_cut_pct // PERCENT)
-    await call.chronicle(ChronicleKind.FATE, lines.COVER_UP, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.cover_up", roles={IncidentRole.ACTOR: call.me.id}, facts={"believe": row.believe_pct}, place=call.me.location_id)
     return result(MortalResult.COVERED_UP, title=truth.title, believe=row.believe_pct)
 
 

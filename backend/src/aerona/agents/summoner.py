@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import ChroniclePhase, write_line
+from aerona.agents.chronicle import ChroniclePhase, record_line
 from aerona.agents.context.briefs import son_brief
 from aerona.agents.context.recent_chronicle import recent_chronicle
 from aerona.agents.context.scope import Scope, load_scope
@@ -36,6 +36,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import MIN_STARS
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.world import Discovery
@@ -256,27 +257,32 @@ async def after_birth(session: AsyncSession, rules: Rules, son: SonRow, parentag
     label = f"{son.name}, {son.title} ({RARITY_LABELS[son.rarity]}; {DOMAIN_LABELS[son.domain_primary]}/{DOMAIN_LABELS[son.domain_secondary]})"
     parent = await session.get(SonRow, parentage.parent_id) if parentage.parent_id is not None else None
     if parent is None:
-        await write_line(
+        await record_line(
             session,
             rules,
-            epoch,
-            ChronicleKind.BIRTH,
-            f"{creator_name} summoned a new son: {label}.",
-            key="son.summoned",
+            "son.summoned",
+            roles={IncidentRole.PRODUCT: son.id},
+            facts={"creator_name": creator_name, "label": label},
             phase=ChroniclePhase.GODS,
+            kind=ChronicleKind.BIRTH,
             son_id=son.id,
         )
         return
     note = (parentage.inspiration or "")[:INSPIRATION_SUMMARY_CHARS] or None
     await bonds.connect(BondDraft(son.id, parent.id, BondKind.DESCENDS_FROM, epoch, note))
-    names = parent.name
     co_parent = await session.get(SonRow, parentage.co_parent_id) if parentage.co_parent_id is not None else None
     if co_parent is not None:
         await bonds.connect(BondDraft(son.id, co_parent.id, BondKind.DESCENDS_FROM, epoch, note))
         await repository.change_relation(son.id, co_parent.id, summoning.other_parent_relation)
-        names = f"{parent.name} and {co_parent.name}"
-    await write_line(
-        session, rules, epoch, ChronicleKind.BIRTH, f"{names} gave birth to a child: {label}.", key="son.born", phase=ChroniclePhase.GODS, son_id=parent.id
+    await record_line(
+        session,
+        rules,
+        "son.born",
+        roles={IncidentRole.PARENT: [parent.id, *([co_parent.id] if co_parent is not None else [])], IncidentRole.CHILD: son.id},
+        facts={"label": label},
+        phase=ChroniclePhase.GODS,
+        kind=ChronicleKind.BIRTH,
+        son_id=parent.id,
     )
 
 

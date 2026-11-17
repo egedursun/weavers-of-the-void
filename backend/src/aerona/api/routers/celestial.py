@@ -12,19 +12,18 @@ from aerona.api.schemas.common import JobAccepted
 from aerona.api.schemas.cosmos import SkyEventRecord
 from aerona.api.schemas.records import EntitySummary, StarRecord, WorldRecord
 from aerona.api.views.celestial import population, world_counts
-from aerona.api.views.common import chronicle_lines, foreign_god_record, images_of, node_ref, route_records
+from aerona.api.views.common import foreign_god_record, images_of, node_ref, route_records
+from aerona.api.views.scoped_lines import scoped_lines
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.api import WIKI_PEOPLES_SHOWN, WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
-from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.son import SonStatus
@@ -79,11 +78,7 @@ async def world_wiki(services: ServicesDep, world_id: int = Path(ge=1)) -> World
         peoples.sort(key=lambda people: stat(people, "population") or 0, reverse=True)
         shown = peoples[:WIKI_PEOPLES_SHOWN]
         covers = await covers_of(session, [people.id for people in shown])
-        lines = list(
-            await session.scalars(
-                select(ChronicleRow).where(shown_lines(), ChronicleRow.world_id == world.id).order_by(ChronicleRow.id.desc()).limit(WIKI_TIMELINE_LINES)
-            )
-        )
+        timeline, timeline_total = await scoped_lines(session, ChronicleScope.WORLD, world.id, offset=0, limit=WIKI_TIMELINE_LINES)
         return WorldWiki(
             world=WorldRecord.model_validate(world),
             type_label=WORLD_TYPES[world.world_type].label,
@@ -100,7 +95,8 @@ async def world_wiki(services: ServicesDep, world_id: int = Path(ge=1)) -> World
                 for people in shown
             ],
             sky_events=await sky_events(session, world_ids=[world.id], star_id=None),
-            timeline=await chronicle_lines(session, lines),
+            timeline=timeline,
+            timeline_total=timeline_total,
             images=await images_of(session, world.id),
         )
 
@@ -115,14 +111,7 @@ async def star_wiki(services: ServicesDep, star_id: int = Path(ge=1)) -> StarWik
             )
         )
         covers = await covers_of(session, [world.id for world in worlds])
-        lines = list(
-            await session.scalars(
-                select(ChronicleRow)
-                .where(shown_lines(), ChronicleRow.kind == ChronicleKind.STAR, ChronicleRow.text.contains(star.name))
-                .order_by(ChronicleRow.id.desc())
-                .limit(WIKI_TIMELINE_LINES)
-            )
-        )
+        timeline, timeline_total = await scoped_lines(session, ChronicleScope.STAR, star.id, offset=0, limit=WIKI_TIMELINE_LINES)
         return StarWiki(
             star=StarRecord.model_validate(star),
             type_label=STAR_TYPE_LABELS[star.star_type],
@@ -138,7 +127,8 @@ async def star_wiki(services: ServicesDep, star_id: int = Path(ge=1)) -> StarWik
                 for world in worlds
             ],
             sky_events=await sky_events(session, world_ids=[world.id for world in worlds], star_id=star.id),
-            timeline=await chronicle_lines(session, lines),
+            timeline=timeline,
+            timeline_total=timeline_total,
             images=await images_of(session, star.id),
         )
 

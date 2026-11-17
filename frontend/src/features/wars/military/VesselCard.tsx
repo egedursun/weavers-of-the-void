@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   Anchor,
   Compass,
+  Crosshair,
   Crown,
   Flag,
   Gauge,
@@ -11,6 +12,7 @@ import {
   Ship,
   ShipWheel,
   Sparkles,
+  Swords,
   Users,
   Waves,
 } from 'lucide-react'
@@ -29,13 +31,19 @@ import {
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
+import { DAMAGE } from '@/features/entity/body/labels'
 import { useFrames } from '@/features/madeKinds/api'
-import { frameTable } from '@/features/madeKinds/labels'
+import {
+  MOUNT,
+  familyLabel,
+  frameTable,
+  sectionLabel,
+} from '@/features/madeKinds/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { ReportSteps } from '@/features/records/ReportSteps'
 import { EntityPicker, Held, RecordButtons, TextField } from './controls'
 import {
-  ARMAMENT,
   MATERIAL,
   type Vessel,
   VESSEL_STATUS,
@@ -51,7 +59,6 @@ import {
   NumberField,
   Panel,
   Tag,
-  ToggleField,
 } from './parts'
 import { type Values, numbersOf, useRecordActions } from './recordHooks'
 
@@ -211,33 +218,36 @@ function Berth({
 }
 
 type Frame = components['schemas']['VehicleFrame']
-type Arm = components['schemas']['VesselArmament']
+type Weapon = components['schemas']['VesselWeaponView']
 
-function Arms({
-  value,
-  onChange,
-  blocked,
-}: {
-  value: string[]
-  onChange: (next: string[]) => void
-  blocked: string | null
-}) {
+function Weapons({ weapons }: { weapons: Weapon[] }) {
+  if (weapons.length === 0)
+    return (
+      <Muted variant='caption'>
+        No weapons are mounted; the type of this frame carries none yet.
+      </Muted>
+    )
   return (
-    <FieldGrid>
-      {Object.entries(ARMAMENT).map(([key, item]) => (
-        <ToggleField
-          key={key}
-          item={item}
-          checked={value.includes(key)}
-          disabled={blocked !== null}
-          onChange={(next) =>
-            onChange(
-              next ? [...value, key] : value.filter((entry) => entry !== key)
-            )
-          }
-        />
-      ))}
-    </FieldGrid>
+    <div className='flex min-w-0 flex-col gap-1'>
+      <Paged items={weapons}>
+        {(weapon) => (
+          <div
+            key={`${weapon.mount}-${weapon.model_id}-${weapon.section ?? ''}`}
+            className='flex min-w-0 flex-wrap items-center gap-1.5'
+          >
+            <Tag item={nameOf(MOUNT, weapon.mount)} />
+            <Text as='span' variant='caption'>
+              {`${weapon.count} × ${weapon.model_name} (${familyLabel(weapon.family)}, ${DAMAGE[weapon.damage_type]})`}
+            </Text>
+            {weapon.section && (
+              <Muted variant='caption'>
+                on the {sectionLabel(weapon.section)}
+              </Muted>
+            )}
+          </div>
+        )}
+      </Paged>
+    </div>
   )
 }
 
@@ -252,7 +262,6 @@ export function VesselCard({
   const frames = useFrames()
   const FRAMES = frameTable(frames.data ?? [])
   const [hull, setHull] = useState<string>('')
-  const [arms, setArms] = useState<string[] | null>(null)
   const vessel = query.data
   const invalidate = [depthKeys.vessel(vesselId) as unknown as unknown[]]
   const refit = useGodAction({
@@ -262,11 +271,21 @@ export function VesselCard({
           body: {
             vessel_id: vesselId,
             frame: (hull || vessel?.frame.frame || 'boat') as Frame,
-            armament: (arms ?? vessel?.armament ?? []) as Arm[],
           },
         })
       ),
     invalidate,
+  })
+  const [foe, setFoe] = useState<number | null>(null)
+  const engage = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/engagement:force', {
+          body: { vessel_id: vesselId, foe_vessel_id: foe ?? 0 },
+        })
+      ),
+    invalidate,
+    onDone: () => setFoe(null),
   })
   const repair = useGodAction({
     run: () =>
@@ -287,7 +306,7 @@ export function VesselCard({
         />
         <Adjust
           title='Fit it out as a ship'
-          note='Give it a hull and arms; the shipwrights make it seaworthy.'
+          note='Give it a hull; the shipwrights make it seaworthy and mount the weapons of its type.'
           label='Fit out as a ship'
         >
           <FieldGrid>
@@ -300,7 +319,6 @@ export function VesselCard({
               onPick={setHull}
             />
           </FieldGrid>
-          <Arms value={arms ?? []} onChange={setArms} blocked={blocked} />
           <Button
             size='sm'
             className='self-start'
@@ -316,7 +334,19 @@ export function VesselCard({
     )
   if (!vessel) return <LoadingBlock label='Reading the ship’s log' />
   const status = nameOf(VESSEL_STATUS, vessel.status)
-  const busy = busyOf(blocked, refit.isPending, repair.isPending)
+  const busy = busyOf(
+    blocked,
+    refit.isPending,
+    repair.isPending,
+    engage.isPending
+  )
+  const engageReason =
+    busy ??
+    (foe === null
+      ? 'Choose the vessel it engages'
+      : foe === vesselId
+        ? 'A vessel cannot engage itself'
+        : null)
   return (
     <Panel
       title='Vessel'
@@ -328,10 +358,8 @@ export function VesselCard({
         <Tag item={nameOf(FRAMES, vessel.frame.frame)} />
         <Tag item={status} />
         <Held locked={vessel.locked} />
-        <Paged items={vessel.armament}>
-          {(arm) => <Tag key={arm} item={nameOf(ARMAMENT, arm)} />}
-        </Paged>
       </div>
+      <Weapons weapons={vessel.weapons} />
       <StatBar
         label='Frame'
         value={vessel.condition}
@@ -431,8 +459,34 @@ export function VesselCard({
         </Button>
         <Berth vessel={vessel} vesselId={vesselId} blocked={blocked} />
         <Adjust
+          title='Force an engagement'
+          note='Set this vessel on another in their own domain; every round, hit and loss is written into its history.'
+          label='Force an engagement'
+        >
+          <FieldGrid>
+            <EntityPicker
+              label='Vessel it engages'
+              icon={Crosshair}
+              types={['vessel']}
+              value={foe}
+              onChange={setFoe}
+              blocked={blocked}
+            />
+          </FieldGrid>
+          <Button
+            size='sm'
+            className='self-start'
+            disabled={engageReason !== null}
+            disabledReason={engageReason ?? undefined}
+            onClick={() => engage.mutate()}
+          >
+            <Swords />
+            Engage
+          </Button>
+        </Adjust>
+        <Adjust
           title='Refit'
-          note='Rebuild the ship to another hull and arms.'
+          note='Rebuild the ship to another hull; its weapons follow the type of that frame, edited on the vehicle type.'
           label='Refit'
         >
           <FieldGrid>
@@ -445,11 +499,6 @@ export function VesselCard({
               onPick={setHull}
             />
           </FieldGrid>
-          <Arms
-            value={arms ?? vessel.armament}
-            onChange={setArms}
-            blocked={blocked}
-          />
           <Button
             size='sm'
             className='self-start'
@@ -462,6 +511,11 @@ export function VesselCard({
           </Button>
         </Adjust>
       </div>
+      <ReportSteps
+        nodeId={vesselId}
+        kind='seafaring'
+        label='How its last engagement unfolded'
+      />
     </Panel>
   )
 }
@@ -477,7 +531,6 @@ export function LayDownVessel({
   const FRAMES = frameTable(frames.data ?? [])
   const [name, setName] = useState('')
   const [hull, setHull] = useState('boat')
-  const [arms, setArms] = useState<string[]>([])
   const create = useGodAction({
     run: () =>
       unwrap(
@@ -486,7 +539,6 @@ export function LayDownVessel({
             owner_id: ownerId,
             name: name.trim(),
             frame: hull as Frame,
-            armament: arms as Arm[],
           },
         })
       ),
@@ -496,7 +548,7 @@ export function LayDownVessel({
   return (
     <Adjust
       title='Lay down a vessel'
-      note='Choose a hull and its arms; the shipwrights do the rest.'
+      note='Choose a hull; the shipwrights build it to its type and mount its weapons.'
       label='Lay down a vessel'
     >
       <FieldGrid>
@@ -540,7 +592,6 @@ export function LayDownVessel({
           />
         </div>
       )}
-      <Arms value={arms} onChange={setArms} blocked={blocked} />
       <Button
         size='sm'
         className='self-start'
@@ -571,7 +622,7 @@ export function VesselSection({
     <Section
       id='section-vessel'
       title='Vessel'
-      description='Hull, arms, crew, renown and the sea.'
+      description='Hull, mounted weapons, crew, renown and the waters it sails.'
       icon={Ship}
     >
       <div className='@container/mil min-w-0'>

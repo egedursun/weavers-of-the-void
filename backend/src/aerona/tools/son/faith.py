@@ -10,6 +10,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import ReincarnationGate, TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.faith import control
 from aerona.engine.faith.book import FaithBook
 from aerona.prompts import SonToolId
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 REFUSALS = (ConflictError, NotFoundError, ValidationFailedError)
@@ -54,7 +54,9 @@ async def reveal_tenet(call: SonCall, args: RevealTenetInput) -> str:
     call.spend_essence(table.reveal_cost)
     call.target(cult.id)
     label = (row.name if row is not None and row.name else None) or args.tenet.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORSHIP, lines.TENET, entity_ids=[cult.id], son=call.son.name, cult=cult.name, tenet=label)
+    await call.record(
+        "tools.son.tenet", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cult.id}, facts={"tenet": str(label)}, kind=ChronicleKind.WORSHIP
+    )
     return result(SonResult.TENET_REVEALED, cult=cult.name, tenet=label, cost=table.reveal_cost)
 
 
@@ -74,7 +76,9 @@ async def open_rebirth_gate(call: SonCall, args: RebirthGateInput) -> str:
         fail(SonResult.REBIRTH_REFUSED, reason=str(error))
     call.spend_essence(table.rebirth_gate_cost)
     call.target(child.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.REBORN, entity_ids=[spirit.id, child.id], son=call.son.name, spirit=spirit.name, child=child.name)
+    await call.record(
+        "tools.son.reborn", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: spirit.id, IncidentRole.CHILD: child.id}, kind=ChronicleKind.WORSHIP
+    )
     return result(SonResult.REBIRTH_DONE, spirit=spirit.name, child=child.name, cost=table.rebirth_gate_cost)
 
 

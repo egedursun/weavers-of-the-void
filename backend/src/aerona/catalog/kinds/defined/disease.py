@@ -52,7 +52,7 @@ SPREAD_PATH = total(
         SpreadPath.SIEGE: Defined("Siege", checked_by=(), used_by=("engine.disease.vectors.CONTACT_PATHS", "engine.settlement.life.endure_siege")),
         SpreadPath.LOOSED: Defined(
             "Loosed",
-            checked_by=("engine.disease.emergence.ORIGIN_KEYS", "engine.disease.emergence.mark_origin"),
+            checked_by=("engine.disease.emergence.mark_origin",),
             used_by=(
                 "engine.disease.control.create_disease",
                 "engine.disease.control.loose",

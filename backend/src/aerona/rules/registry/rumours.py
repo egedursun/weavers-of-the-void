@@ -32,3 +32,5 @@ class RumoursRules:
     context_lines: int = rule(8, 0, 100, C, "Rumours a mortal keeps in mind when it thinks and acts")
     backfill_epochs: int = rule(3, 0, 100, C, "Epochs of past happenings an old world remembers as rumour when the rumour mill first turns")
     cap: int = rule(600, 0, 100000, C, "Most rumours passed on in one epoch")
+    renown_spread_pct: int = rule(20, 0, 100, C, "Extra chance, at the full renown of the doer, that word of a deed is passed on (%)")
+    contradiction_trust_loss: int = rule(3, 0, 100, C, "Trust in what is told that a community loses on hearing a happening told otherwise than it knew it")

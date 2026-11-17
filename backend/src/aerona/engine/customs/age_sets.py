@@ -3,7 +3,6 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
-from aerona.core.grammar import spoken
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -12,16 +11,18 @@ from aerona.domain.enums.customs import AgeGrade, MarkMeaning
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.customs.marks import MarkTally, customs_of, place
 from aerona.engine.customs.naming import NamingTally, initiate_name
 from aerona.engine.gatherings.hold import plan
 from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation
 from aerona.engine.relations.book import shift as shift_relation
 
@@ -121,7 +122,13 @@ async def promote(ctx: TickContext, people: EntityRow, sets: list[AgeSetRow], ta
         tally.promoted += 1
         await bond_mates(ctx, row)
         await hold_promotion(ctx, people, row)
-        await note(ctx, f"The {row.name} of the {people.name} rose to the grade of {spoken(nxt)}.", key="age_sets.promoted", ids=[people.id])
+        await record(
+            ctx,
+            "age_sets.promoted",
+            roles={IncidentRole.MEMBER: people.id},
+            facts={"age_set": row.name, "before": GRADES[index], "after": nxt},
+            steps=(StepDraft(StepAction.CELEBRATE, actor=people.id),),
+        )
 
 
 async def keep_age_sets(ctx: TickContext, tally: AgeSetTally) -> None:

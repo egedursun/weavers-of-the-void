@@ -11,11 +11,12 @@ from aerona.db.tables.means import WaterLiftRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import WaterLift
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -64,7 +65,7 @@ async def build_lifts(ctx: TickContext, tally: WaterTally) -> None:
         row = await ctx.session.get(WaterLiftRow, (town.id, lift))
         if row is None:
             ctx.session.add(WaterLiftRow(settlement_entity_id=town.id, device=lift, count=1, since_epoch=ctx.epoch, locked=[]))
-            await note(ctx, f"{town.name} raised its first {LIFTS[lift].label.lower()} to lift water.", key="water.lift", ids=[town.id])
+            await record(ctx, "water.lift", roles={IncidentRole.MAKER: town.id}, facts={"device": lift, "for_mine": int(deep and not dry)}, place=town.id)
         elif "count" not in row.locked and row.count < table.most_devices:
             row.count += 1
         else:

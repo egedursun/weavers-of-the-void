@@ -5,7 +5,7 @@ from pydantic import Field
 from aerona.core.grammar import an, several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import DuelContext, PeaceTermKind, VesselArmament, WarAimKind
+from aerona.domain.enums.military import DuelContext, PeaceTermKind, WarAimKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause
 from aerona.engine.military import orders, records
@@ -94,7 +94,6 @@ class VesselOrder(Command):
     owner_id: int
     name: str = Field(min_length=1, max_length=120)
     frame: VehicleFrame = VehicleFrame.BOAT
-    armament: list[VesselArmament] | None = None
     hull_material: MaterialKind | None = None
     fabric_material: MaterialKind | None = None
     home_port_id: int | None = None
@@ -105,13 +104,17 @@ class VesselOrder(Command):
 class VesselRefit(Command):
     vessel_id: int
     frame: VehicleFrame
-    armament: list[VesselArmament] | None = None
     hull_material: MaterialKind | None = None
     fabric_material: MaterialKind | None = None
 
 
 class VesselTarget(Command):
     vessel_id: int
+
+
+class EngagementOrder(Command):
+    vessel_id: int
+    foe_vessel_id: int
 
 
 class CaptiveTake(Command):
@@ -204,7 +207,6 @@ async def peace(scope: PlayerScope, command: PeaceBuild) -> Effect:
 async def vessel_create(scope: PlayerScope, command: VesselOrder) -> Effect:
     order = Commission(
         frame=command.frame,
-        armament=command.armament,
         hull_material=command.hull_material,
         fabric_material=command.fabric_material,
         home_port_id=command.home_port_id,
@@ -221,7 +223,7 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
     vessel = await living_entity(ctx.session, command.vessel_id)
     if vessel is None:
         return Effect("No such vessel afloat.", command.vessel_id)
-    order = Commission(frame=command.frame, armament=command.armament, hull_material=command.hull_material, fabric_material=command.fabric_material)
+    order = Commission(frame=command.frame, hull_material=command.hull_material, fabric_material=command.fabric_material)
     await commission(ctx.session, ctx.rules, vessel, order)
     return Effect(f"{vessel.name} is refitted as {an(spoken(command.frame))}.", vessel.id)
 
@@ -230,6 +232,12 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
 async def vessel_repair(scope: PlayerScope, command: VesselTarget) -> Effect:
     gain = await orders.repair_vessel(await scope.context("vessel_repair"), command.vessel_id)
     return Effect(f"The shipwrights restored {several(gain, 'point', 'points')} of the hull.", command.vessel_id)
+
+
+@player_action("engagement:force", ActionKind.EDIT_RECORD)
+async def engagement_force(scope: PlayerScope, command: EngagementOrder) -> Effect:
+    winner = await orders.force_engagement(await scope.context("engagement_force"), command.vessel_id, command.foe_vessel_id)
+    return Effect(f"The vessels engaged, and {winner.name} had the better of it.", command.vessel_id)
 
 
 @player_action("captive:take", ActionKind.EDIT_RECORD)
@@ -245,5 +253,5 @@ async def ordeal(scope: PlayerScope, command: Ordeal) -> Effect:
     if first is None or second is None or command.context not in DUEL_CONTEXTS:
         return Effect("A duel needs two living fighters.", command.first_id)
     theatre = await Theatre.load(ctx)
-    text = (await duel(ctx, theatre, first, second, war=None, anchor_id=None, context=command.context)).strip()
-    return Effect(text, first.id)
+    fought_out = await duel(ctx, theatre, first, second, war=None, anchor_id=None, context=command.context)
+    return Effect(fought_out.text, first.id)

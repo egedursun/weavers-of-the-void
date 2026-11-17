@@ -22,7 +22,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import shift_stat
 
-Strike = Callable[[TickContext, EntityRow, EntityRow], Awaitable[str]]
+Strike = Callable[[TickContext, EntityRow, EntityRow], Awaitable[None]]
 Fits = Callable[[TickContext, EntityRow], Awaitable[bool]]
 
 
@@ -40,7 +40,7 @@ async def food_of(ctx: TickContext, target: EntityRow) -> int:
     return society.stock_food if society is not None else 0
 
 
-async def attack_network(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def attack_network(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     rules = ctx.rules.espionage
     for network in await networks_at(ctx, target):
         if not held(network):
@@ -53,58 +53,50 @@ async def attack_network(ctx: TickContext, _spymaster: EntityRow, target: Entity
                     severity=rules.sabotage_outage_severity,
                 )
             )
-    return "its networks went dark"
 
 
-async def break_bridges(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def break_bridges(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     profile = await ctx.session.get(SettlementProfileRow, target.id)
     if profile is not None and "hauling_capacity" not in profile.locked:
         profile.hauling_capacity = max(0, profile.hauling_capacity - ctx.rules.espionage.haul_damage)
-    return "its bridges and crossings were brought down"
 
 
-async def release_blight(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def release_blight(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     lost = round_half_up(await food_of(ctx, target) * ctx.rules.espionage.blight_pct / PERCENT)
     await shift_stock(ctx.session, ctx.rules, target.id, Commodity.FOOD, -lost, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
     shift_stat(target, "prosperity", -ctx.rules.espionage.spy_sabotage_damage, 0)
-    return "a blight was loosed on its fields"
 
 
-async def steal_supplies(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> str:
+async def steal_supplies(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> None:
     taken = round_half_up(await food_of(ctx, target) * ctx.rules.espionage.theft_pct / PERCENT)
     await shift_stock(ctx.session, ctx.rules, target.id, Commodity.FOOD, -taken, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
     if not held(spymaster.id):
         shift_stat(spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage, 0)
-    return "its stores were carried off"
 
 
-async def incite_mutiny(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def incite_mutiny(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     profile = await ctx.session.get(SettlementProfileRow, target.id)
     if profile is not None:
         if "militia" not in profile.locked:
             profile.militia = max(0, profile.militia - ctx.rules.espionage.mutiny_militia)
         if "unrest" not in profile.locked:
             profile.unrest = clamp_int(profile.unrest + ctx.rules.espionage.mutiny_unrest, 0, PERCENT)
-    return "its guard was stirred to mutiny"
 
 
-async def disrupt_rites(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def disrupt_rites(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     shift_stat(target, "piety", -ctx.rules.espionage.rite_piety, 0)
-    return "its rites were broken off"
 
 
-async def poison_sources(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> str:
+async def poison_sources(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     for source in await sources_at(ctx, target):
         if "stability" not in source.locked:
             source.stability = clamp_int(source.stability - ctx.rules.espionage.source_damage, 0, PERCENT)
-    return "the sources of power it draws on were fouled"
 
 
-async def seize_machines(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> str:
+async def seize_machines(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> None:
     shift_stat(target, "prosperity", -ctx.rules.espionage.spy_sabotage_damage, 0)
     if not held(spymaster.id):
         shift_stat(spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage // 2, 0)
-    return "its machines were seized"
 
 
 async def has_networks(ctx: TickContext, target: EntityRow) -> bool:

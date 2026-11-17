@@ -3,7 +3,6 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
@@ -58,7 +57,7 @@ async def test_addiction_and_withdrawal_recovery(session: AsyncSession, world: G
     await resource_mechanics(make_context(session, tuned, 1 + rules.economy.addiction_epochs, "resource_mechanics"))
     row = await session.get(AddictionRow, (people.id, resource.id))
     assert row is not None and row.addicted_since_epoch is not None
-    assert god_lines.ECONOMY_ADDICTED.key in await chronicle_keys(session)
+    assert "gods.economy.addicted" in await chronicle_keys(session)
 
     await BondRepository(session).close_between(people.id, resource.id, [BondKind.OWNS], 4)
     await resource_mechanics(make_context(session, tuned, 5, "resource_mechanics"))

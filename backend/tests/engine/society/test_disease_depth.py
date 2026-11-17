@@ -90,7 +90,7 @@ async def test_a_forged_disease_keeps_its_design_its_locks_and_its_origin(realm:
     assert profile.target_functions == ["breath", "sight"]
     assert set(profile.locked) == {"virulence", "lethality", "vector", "target_functions", "incubation", "climate_affinity"}
     incident = await realm.session.get(IncidentRow, profile.origin_incident_id or 0)
-    assert incident is not None and incident.kind == "disease.loosed"
+    assert incident is not None and incident.kind in {"disease.loosed", "disease.loosed_host"}
     await edit_disease(context(realm.session), disease.id, {}, release=["vector"])
     assert "vector" not in profile.locked
 

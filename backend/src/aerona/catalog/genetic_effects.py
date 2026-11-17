@@ -229,6 +229,24 @@ HOUSE_TRAIT_LABELS: Mapping[HouseTrait, str] = total(
     },
 )
 
+HOUSE_TRAIT_SOURCES: Mapping[HouseTrait, str] = total(
+    HouseTrait,
+    {
+        HouseTrait.SEER_GIFT: "a seer was born to the line",
+        HouseTrait.GIANT_BLOODED: "the line bore giants",
+        HouseTrait.LONG_LIVED: "its elders lived long",
+        HouseTrait.FERTILE: "its line was fertile",
+        HouseTrait.CURSED: "a curse fell on the line",
+        HouseTrait.GOD_BLOODED: "it carries a god's descent",
+        HouseTrait.STRONG_BLOODED: "its members are born strong",
+        HouseTrait.SWIFT: "its members are born quick of reflex",
+        HouseTrait.QUICK_HEALING: "its members heal quickly",
+        HouseTrait.SHARP_SENSED: "its members are born sharp-sighted",
+        HouseTrait.STEADY: "its members stay calm under strain",
+        HouseTrait.QUICK_MINDED: "its members are born with long memories",
+    },
+)
+
 EFFECT_POINTS = frozenset({G.COLD, G.HEAT})
 
 ATTRIBUTE_WORDS: Mapping[Attribute, str] = total(

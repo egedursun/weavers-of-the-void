@@ -13,6 +13,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.son import PowerEffect, SonDeathCause, SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import effective
@@ -22,6 +24,7 @@ from aerona.engine.lifecycle.wounds import apply_hits, slay
 from aerona.engine.mythic.mantling import replace, replacement_for
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive
 from aerona.prompts import MortalToolId
@@ -41,7 +44,7 @@ async def _hunt(call: MortalCall, species: EntityRow, goal: str) -> str:
     if not await near(call, species):
         fail(MortalResult.CREATURE_TOO_FAR)
     await BondRepository(call.session).connect(BondDraft(call.me.id, species.id, BondKind.HUNTS, call.epoch, goal))
-    await call.chronicle(ChronicleKind.ADVENTURE, lines.HUNT, entity_ids=[call.me.id, species.id], me=call.me.name, species=species.name, goal=goal)
+    await call.record("tools.mortal.hunt", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: species.id}, facts={"goal": goal})
     return result(MortalResult.HUNT_BEGUN)
 
 
@@ -66,13 +69,14 @@ async def _seize(call: MortalCall, item: EntityRow, goal: str) -> str:
         await bonds.connect(BondDraft(call.me.id, item.id, BondKind.OWNS, call.epoch, lines.SEIZE_BOND.format(goal=goal)))
         if owner is not None:
             await bonds.connect(BondDraft(owner.id, call.me.id, BondKind.ENEMY, call.epoch, lines.STOLEN.format(item=item.name), war_cause=WarCause.GRUDGE))
-        holder = lines.ITEM_OWNER.format(owner=owner.name) if owner is not None else ""
-        await call.chronicle(ChronicleKind.ADVENTURE, lines.SEIZED, entity_ids=[call.me.id, item.id], me=call.me.name, item=item.name, owner=holder, goal=goal)
+        roles = {IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: item.id, **({IncidentRole.VICTIM: owner.id} if owner is not None else {})}
+        await call.record("tools.mortal.seized", roles=roles, facts={"mine": mine, "theirs": theirs})
         return result(MortalResult.ITEM_SEIZED, name=item.name, mine=mine, theirs=theirs)
     cause = HarmCause.DUEL if owner is not None else HarmCause.ACCIDENT
     harm = Harm(tools.seize_item_fail_wound, cause, "died seizing a treasure", source_node_id=owner.id if owner is not None else item.id)
     await apply_hits(call.tick, call.me, harm, lethal=False)
-    await call.chronicle(ChronicleKind.ADVENTURE, lines.SEIZE_FAILED, entity_ids=[call.me.id, item.id], me=call.me.name, item=item.name)
+    roles = {IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: item.id, **({IncidentRole.OWNER: owner.id} if owner is not None else {})}
+    await call.record("tools.mortal.seize_failed", roles=roles, facts={"mine": mine, "theirs": theirs})
     return result(MortalResult.SEIZE_FAILED, mine=mine, theirs=theirs)
 
 
@@ -105,16 +109,12 @@ async def _slay(call: MortalCall, son: SonRow, args: DefyInput, mine: int, their
     plan = await replacement_for(call.tick, call.me, son)
     await god_death(call.tick, son, lines.SLAIN_BY.format(me=call.me.name), SonDeathCause.OTHER)
     await BondRepository(call.session).connect(BondDraft(call.me.id, son.id, BondKind.KILLED, call.epoch, args.reason))
-    await call.chronicle(
-        ChronicleKind.WAR_OF_GODS,
-        lines.GODSLAYER,
-        entity_ids=[call.me.id],
+    await call.record(
+        "tools.mortal.godslayer",
+        roles={IncidentRole.CO_ACTOR: call.me.id, IncidentRole.ACTOR: son.id},
+        facts={"mine": mine, "theirs": theirs, "reason": args.reason},
+        kind=ChronicleKind.WAR_OF_GODS,
         about=son.id,
-        me=call.me.name,
-        son=son.name,
-        mine=mine,
-        theirs=theirs,
-        reason=args.reason,
     )
     if plan is not None and await replace(call.tick, call.me, plan) is not None:
         return result(MortalResult.GOD_REPLACED, son=son.name)
@@ -132,16 +132,12 @@ async def _wound_god(call: MortalCall, son: SonRow, args: DefyInput, mine: int, 
     await BondRepository(call.session).connect(
         BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DEFEAT_BOND.format(reason=args.reason), war_cause=WarCause.DIVINE_GRUDGE)
     )
-    await call.chronicle(
-        ChronicleKind.WAR_OF_GODS,
-        lines.GOD_WOUNDED,
-        entity_ids=[call.me.id],
+    await call.record(
+        "tools.mortal.god_wounded",
+        roles={IncidentRole.CO_ACTOR: call.me.id, IncidentRole.ACTOR: son.id},
+        facts={"mine": mine, "theirs": theirs, "reason": args.reason},
+        kind=ChronicleKind.WAR_OF_GODS,
         about=son.id,
-        me=call.me.name,
-        son=son.name,
-        mine=mine,
-        theirs=theirs,
-        reason=args.reason,
     )
     return result(MortalResult.GOD_WOUNDED, title=title)
 
@@ -157,14 +153,22 @@ async def _defeated(call: MortalCall, son: SonRow, args: DefyInput, mine: int, t
         )
         son.fame += tools.god_crush_renown
         call.died = True
-        await call.chronicle(
-            ChronicleKind.WAR_OF_GODS, lines.DEFIER_DIED, entity_ids=[call.me.id], about=son.id, me=call.me.name, son=son.name, reason=args.reason
+        await call.record(
+            "tools.mortal.defier_died",
+            roles={IncidentRole.CO_ACTOR: call.me.id, IncidentRole.ACTOR: son.id},
+            facts={"reason": args.reason},
+            kind=ChronicleKind.WAR_OF_GODS,
+            about=son.id,
         )
         return result(MortalResult.DEFIER_DIED, mine=mine, theirs=theirs)
     await EntityRepository(call.session).add_flag(call.me.id, EntityFlag.CURSED, call.epoch)
     await BondRepository(call.session).connect(BondDraft(son.id, call.me.id, BondKind.CURSED, call.epoch, lines.INSOLENCE))
-    await call.chronicle(
-        ChronicleKind.WAR_OF_GODS, lines.DEFIER_CURSED, entity_ids=[call.me.id], about=son.id, me=call.me.name, son=son.name, reason=args.reason
+    await call.record(
+        "tools.mortal.defier_cursed",
+        roles={IncidentRole.CO_ACTOR: call.me.id, IncidentRole.ACTOR: son.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WAR_OF_GODS,
+        about=son.id,
     )
     return result(MortalResult.DEFIER_CURSED)
 
@@ -215,7 +219,12 @@ async def adopt(call: MortalCall, args: AdoptInput) -> str:
     await change_relation(call.tick, call.me.id, child.id, call.rules.civilization.adoption_relation, MemoryKind.GOODWILL, note=lines.ADOPTION_EVENT)
     await call.bump(TurnCounter.ADOPTIONS)
     call.target(child.id)
-    await call.chronicle(ChronicleKind.LINEAGE, lines.ADOPTED, entity_ids=[call.me.id, child.id], me=call.me.name, child=child.name, reason=args.reason)
+    await call.record(
+        "tools.mortal.adopted",
+        roles={IncidentRole.PARENT: call.me.id, IncidentRole.CHILD: child.id},
+        facts={"reason": args.reason},
+        steps=(StepDraft(StepAction.ADOPT, actor=call.me.id, target=child.id),),
+    )
     return result(MortalResult.ADOPTED, name=child.name)
 
 

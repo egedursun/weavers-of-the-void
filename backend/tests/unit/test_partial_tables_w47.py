@@ -4,6 +4,7 @@ from typing import Any, cast
 import pytest
 
 from aerona.catalog.estates import ESTATE_CLASSES, ESTATE_LAWS, ESTATE_NAMES, PRIVILEGE_WISHES
+from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.laws import LAW_PARAMS
 from aerona.catalog.materials import SPECIES_GOODS, SPECIES_GROUNDS
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -20,7 +21,6 @@ from aerona.engine.collective.armory import along
 from aerona.engine.economy import deposits, household
 from aerona.engine.economy.extraction import KIND_JOBS, labour_pool
 from aerona.engine.economy.provenance import HULLS, wanted_slots
-from aerona.engine.eras.progress import STAGE_WORDS
 from aerona.engine.mortal.equipment import fits_slot
 from aerona.engine.phases import travel
 from aerona.engine.polity import offices
@@ -73,8 +73,8 @@ def test_the_engine_still_founds_only_its_own_estate_classes() -> None:
     assert set(ESTATE_CLASSES) < set(SocialClass)
 
 
-def test_every_stage_of_a_programme_has_words() -> None:
-    assert set(STAGE_WORDS) == set(ProgrammeStage) and all(STAGE_WORDS.values())
+def test_every_stage_of_a_programme_has_a_kind_that_tells_it() -> None:
+    assert all(INCIDENT_KINDS[f"programmes.{stage.value}"].template for stage in ProgrammeStage)
 
 
 def test_a_straight_partition_line_keeps_its_points() -> None:

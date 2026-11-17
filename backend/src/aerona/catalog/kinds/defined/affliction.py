@@ -14,7 +14,9 @@ CURE_KIND = total(
             used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.other_cures"),
         ),
         CureKind.MEDICINE: Defined(
-            "Medicine", checked_by=("engine.body.afflictions.try_cures",), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.try_cures")
+            "Medicine",
+            checked_by=("engine.body.afflictions.cure_steps", "engine.body.afflictions.try_cures"),
+            used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.try_cures"),
         ),
         CureKind.TIME: Defined(
             "Time",

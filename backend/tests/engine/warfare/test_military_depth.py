@@ -6,9 +6,11 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.military import ArmyUnitRow, FeudRow, PeaceTermRow, SpyNetworkRow, UnitDesignRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.military import (
     FeudParty,
     FeudStatus,
@@ -17,11 +19,10 @@ from aerona.domain.enums.military import (
     SpyOwnerKind,
     UnitFamily,
     UnitKind,
-    VesselArmament,
     VesselStatus,
     WarAimKind,
 )
-from aerona.domain.enums.vehicles import VehicleFrame
+from aerona.domain.enums.vehicles import MountKind, VehicleFrame
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.military import orders, records
 from aerona.engine.military.campaign import march_budget, mutiny_outcome, step_cost
@@ -30,6 +31,7 @@ from aerona.engine.military.shipyard import Commission
 from aerona.engine.military.spycraft import cover_access, cover_exposure, migrate_bonds
 from aerona.engine.military.units import reconcile_sizes, resize, stacks_of
 from aerona.engine.military.vessels import frame_value, storm_damage, vessel_power
+from aerona.engine.operations.engagement import Weapon
 from aerona.engine.primitives.stats import stat
 from aerona.engine.services.community_relations import close_feud, feud_between, open_feud, start_blood_feud
 from aerona.engine.services.war import open_war
@@ -141,14 +143,16 @@ async def test_bond_spy_networks_become_typed_rows_with_owner_kinds(session: Asy
 async def test_vessels_are_laid_down_with_hull_performance(session: AsyncSession, world_id: int) -> None:
     ctx = make_ctx(session)
     port = await make(session, "Gull Harbour", EntityType.SETTLEMENT, world_id, population=900, wealth=50)
-    order = Commission(frame=VehicleFrame.WARSHIP, armament=[VesselArmament.RAMS, VesselArmament.MISSILES])
+    order = Commission(frame=VehicleFrame.WARSHIP)
     vessel = await orders.create_vessel(ctx, port.id, "Iron Gull", order)
     row = await session.get(VesselProfileRow, vessel.id)
     assert row is not None and row.frame is VehicleFrame.WARSHIP and row.seaworthiness == frame_value(ctx.rules, VehicleFrame.WARSHIP, "seaworthiness")
-    assert row.status is VesselStatus.DOCKED and row.armament == ["rams", "missiles"]
-    raft = VesselProfileRow(entity_id=0, frame=VehicleFrame.RAFT, condition=100, armament=[], seaworthiness=10, seamanship=0, crew=4)
+    assert row.status is VesselStatus.DOCKED
+    raft = VesselProfileRow(entity_id=0, frame=VehicleFrame.RAFT, condition=100, seaworthiness=10, seamanship=0, crew=4)
     assert storm_damage(ctx.rules, raft) > storm_damage(ctx.rules, row)
-    assert vessel_power(ctx.rules, row, None) > vessel_power(ctx.rules, raft, None)
+    guns = [Weapon(MountKind.BROADSIDE, EquipmentFamily.CANNON, None, None, DamageType.BALLISTIC, 4, 1.0)]
+    assert vessel_power(ctx.rules, row, None, guns) > vessel_power(ctx.rules, raft, None, [])
+    assert vessel_power(ctx.rules, row, None, guns) > vessel_power(ctx.rules, row, None, [])
 
 
 def test_marches_slow_in_snow_and_floods_and_mutinies_escalate() -> None:

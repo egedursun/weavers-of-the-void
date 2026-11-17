@@ -81,7 +81,7 @@ def template_written(template: str, source: str) -> bool:
 
 
 def fixup_keys() -> set[str]:
-    return set(re.findall(r'_FIXUP = "([a-z_.]+)"', backend_source()))
+    return set(re.findall(r'_FIXUP = "([a-z0-9_.]+)"', backend_source()))
 
 
 def backfill_known(text: str) -> bool:
@@ -124,7 +124,7 @@ def fixup_files() -> dict[str, str]:
         if "alembic" in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
-        for key in re.findall(r'_FIXUP = "([a-z_.]+)"', text):
+        for key in re.findall(r'_FIXUP = "([a-z0-9_.]+)"', text):
             found[key] = text
     return found
 

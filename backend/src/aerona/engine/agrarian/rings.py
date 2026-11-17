@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -15,13 +14,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CentralityRank, LandUseRing
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
 MARKET_RANKS = frozenset({CentralityRank.WEEKLY, CentralityRank.RARE})
@@ -270,15 +270,13 @@ async def draw_rings(ctx: TickContext, atlas: RegionAtlas, ways: Ways, *, world:
             tally.gaps += 1
         if before is not None and before is not row.ring and RING_ORDER.index(row.ring) < RING_ORDER.index(before) and row.market_entity_id is not None:
             tally.moved += 1
-            region = await ctx.session.get(EntityRow, region_id)
-            market = await ctx.session.get(EntityRow, row.market_entity_id)
-            if region is not None and market is not None:
-                await note(
-                    ctx,
-                    f"{region.name} now lies closer to the market of {market.name} and turns from {spoken(before)} to {spoken(row.ring)}.",
-                    key="thunen.ring_moved",
-                    ids=[region.id, market.id],
-                )
+            await record(
+                ctx,
+                "thunen.ring_moved",
+                roles={IncidentRole.SUBJECT: region_id},
+                facts={"market": row.market_entity_id, "before": before, "after": row.ring, "distance": row.distance},
+                place=region_id,
+            )
 
 
 async def keep_spatial(ctx: TickContext, tally: SpatialTally) -> None:

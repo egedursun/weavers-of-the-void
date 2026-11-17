@@ -21,6 +21,7 @@ from aerona.domain.enums.ecology import RangeTrend
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.living import CultivationMethod, Fertility, LineOutcome, LineTrait
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
@@ -29,10 +30,10 @@ from aerona.engine.living.society import faith_on_maker
 from aerona.engine.living.traits import traits_of
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import best_skill
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 M = CultivationMethod
@@ -231,7 +232,12 @@ async def make_line(ctx: TickContext, draft: LineDraft, *, forced: bool = False)
             carried.add(trait)
             ctx.session.add(LivingLineTraitRow(line_id=line.id, trait=trait, strength=strength, side_effect=False, locked=[]))
     await ctx.session.flush()
-    await note(ctx, f"{maker.name} made a living line: {line.name}.", key="living.line_made", ids=[maker.id])
+    await record(
+        ctx,
+        "living.line_made",
+        roles={IncidentRole.MAKER: maker.id, IncidentRole.SUBJECT: line.species_entity_id},
+        facts={"line": line.name, "method": line.method, "traits": len(carried)},
+    )
     return line
 
 
@@ -271,7 +277,7 @@ async def run_wild(ctx: TickContext, line: LivingLineRow) -> bool:
     line.escaped = True
     if "outcome" not in line.locked:
         line.outcome = LineOutcome.ESCAPED
-    await note(ctx, f"{line.name} got loose into the wild.", key="living.escaped", ids=[region])
+    await record(ctx, "living.escaped", roles={IncidentRole.PLACE: region}, facts={"line": line.name}, place=region)
     return True
 
 
@@ -305,7 +311,7 @@ async def drift(ctx: TickContext, line: LivingLineRow) -> LivingLineRow | None:
     await ctx.session.flush()
     for trait in list(await ctx.session.scalars(select(LivingLineTraitRow).where(LivingLineTraitRow.line_id == line.id))):
         ctx.session.add(LivingLineTraitRow(line_id=child.id, trait=trait.trait, strength=trait.strength // 2, side_effect=trait.side_effect, locked=[]))
-    await note(ctx, f"{line.name} drifted into a line of its own.", key="living.drifted", ids=[])
+    await record(ctx, "living.drifted", roles={IncidentRole.SUBJECT: line.species_entity_id}, facts={"line": line.name, "new_line": child.name})
     return child
 
 

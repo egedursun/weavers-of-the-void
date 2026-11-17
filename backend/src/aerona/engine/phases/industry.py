@@ -1,7 +1,8 @@
-from aerona.catalog.methods import ENERGY_LABELS
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import unheld
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.industry import EnergyKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.finance.access import gauge_access
@@ -12,10 +13,8 @@ from aerona.engine.industry.pollution import PollutionTally, tend_pollution
 from aerona.engine.industry.stores import StoreTally, burn_fuel, kindle, noble_taste, pour_drink, preserve, spoil, wear_tools
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.networks.energy import draw_networks
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
-
-NOTE_CAP = 6
+from aerona.engine.recording.record import StepDraft, record
 
 
 @reads(
@@ -34,7 +33,6 @@ NOTE_CAP = 6
     "table.community_stocks",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_goals",
     "table.faction_profiles",
     "table.forced_weather",
@@ -92,10 +90,11 @@ NOTE_CAP = 6
     "table.community_methods",
     "table.community_stocks",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_goals",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.production_runs",
 )
@@ -121,18 +120,30 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     told = 0
     for community in unheld(book.communities):
         row = book.industry.get(community.id)
-        if row is None or told >= NOTE_CAP:
+        if row is None:
             continue
         worst = max(EnergyKind, key=lambda kind: (unmet_pct(row, kind), kind.value))
         if unmet_pct(row, worst) < ctx.rules.energy.shortfall_note_pct:
             continue
         told += 1
-        await note(
+        await record(
             ctx,
-            f"The works of {community.name} slowed for want of {ENERGY_LABELS[worst].lower()} power.",
-            key="industry.energy_short",
-            ids=[community.id],
-            kind=ChronicleKind.PRODUCTION,
+            "industry.energy_short",
+            roles={IncidentRole.SUBJECT: community.id},
+            facts={"energy": worst, "unmet": unmet_pct(row, worst), "short": row.short.get(worst.value, 0)},
+            place=community.id,
+            steps=(
+                StepDraft(
+                    StepAction.WORK,
+                    actor=community.id,
+                    instrument_key=worst.value,
+                    amount=row.spent.get(worst.value, 0),
+                    unit=FactUnit.ENERGY,
+                    outcome=StepOutcome.PARTIAL,
+                    record_table=CommunityIndustryRow.__tablename__,
+                    record_key=str(community.id),
+                ),
+            ),
         )
     return told
 
@@ -153,7 +164,6 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     "table.divine_wounds",
     "table.entities",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.foreign_gods",
     "table.goods_flows",
@@ -203,9 +213,10 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
     "table.community_relations",
     "table.community_societies",
     "table.community_stocks",
-    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.production_runs",

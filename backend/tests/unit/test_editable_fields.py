@@ -125,7 +125,7 @@ EDITORS: tuple[tuple[type[Base], tuple[str, ...], frozenset[str]], ...] = (
     (ServitorRow, SERVITOR_FIELDS, frozenset()),
     (GeasRow, GEAS_FIELDS, frozenset({"bearer_entity_id"})),
     (CosmicOfficeRow, OFFICE_FIELDS, frozenset()),
-    (SoundChangeRow, SOUND_CHANGE_FIELDS, frozenset({"language_entity_id"})),
+    (SoundChangeRow, SOUND_CHANGE_FIELDS, frozenset({"language_entity_id", "incident_id"})),
     (LanguageGrammarRow, TONGUE_GRAMMAR_FIELDS, frozenset()),
     (ScriptRow, SCRIPT_FIELDS, frozenset()),
     (DecipherWorkRow, DECIPHER_FIELDS, frozenset()),

@@ -17,6 +17,7 @@ from aerona.domain.enums.culture import LegendArchetype, ProphecyConsequence, Pr
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.war import WarStatus
@@ -29,11 +30,11 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.legends import resonance
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 P = ProphecyPredicate
@@ -473,7 +474,7 @@ async def threatened_ruler(ctx: TickContext, row: ProphecyConditionRow) -> str |
                 epoch=ctx.epoch,
                 note=f"moved against {child.name}",
             )
-    await note(ctx, f"{ruler.name} moved against {child.name}, the child a prophecy named.", key="lore.infanticide", ids=[ruler.id, child.id, house])
+    await record(ctx, "lore.infanticide", roles={IncidentRole.AUTHORITY: ruler.id, IncidentRole.CHILD: child.id, IncidentRole.SUBJECT: house})
     return f"{ruler.name} moved against {child.name}, the child the prophecy named"
 
 

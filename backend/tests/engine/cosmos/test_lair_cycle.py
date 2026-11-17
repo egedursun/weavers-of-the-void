@@ -55,10 +55,10 @@ async def test_an_old_beast_dies_of_age_and_a_tamed_one_guards_its_keeper(ctx: T
     _, town, row, beast = await lair(ctx, cosmos)
     atlas = await RegionAtlas.load(ctx.session)
     row.age, row.lifespan = 200, 100
-    assert await lair_cycle(ctx, atlas, beast, row) == "old age"
+    assert await lair_cycle(ctx, atlas, beast, row) is True
     row.age = 0
     row.temper, row.bound_to_node_id = BeastTemper.TAMED, town.id
-    assert await lair_cycle(ctx, atlas, beast, row) is None
+    assert await lair_cycle(ctx, atlas, beast, row) is False
     assert (stat(town, "defense") or 0) > 20
 
 
@@ -79,9 +79,9 @@ async def test_a_woken_beast_raids_the_town_near_its_lair(ctx: TickContext, cosm
     atlas = await RegionAtlas.load(ctx.session)
     assert town in await towns_near(ctx, atlas, row)
     waking = tick(ctx.session, tuned(rules, "beasts", wake_chance=100, vengeance_chance=0, slayer_shun_pct=0))
-    text = await lair_cycle(waking, atlas, beast, row)
+    aged = await lair_cycle(waking, atlas, beast, row)
     assert row.woke_epoch == waking.epoch and row.temper in {BeastTemper.HUNGRY, BeastTemper.SLEEPING, BeastTemper.ENRAGED}
-    assert text is not None
+    assert aged is False and row.updated_epoch == waking.epoch
 
 
 async def test_digging_war_and_theft_disturb_a_sleeping_beast(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
@@ -115,14 +115,14 @@ async def test_a_wounded_beast_hunts_the_home_of_its_wounder_and_shuns_slayers(c
 async def test_a_dreaded_beast_comes_to_be_worshipped(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     _, town, row, beast = await lair(ctx, cosmos)
     atlas = await RegionAtlas.load(ctx.session)
-    assert await deify(ctx, atlas, beast, row) is None
+    assert await deify(ctx, atlas, beast, row) is False
     set_stats(beast, renown=100, terror=100)
     worship = tick(ctx.session, tuned(rules, "beasts", deify_chance=100))
-    assert await deify(worship, atlas, beast, row) is not None
+    assert await deify(worship, atlas, beast, row) is True
     assert await deified(ctx, beast.id)
     prayers = await ctx.session.scalar(select(BondRow).where(BondRow.source_node_id == town.id, BondRow.kind == BondKind.WORSHIPS))
     assert prayers is not None
-    assert await deify(worship, atlas, beast, row) is None
+    assert await deify(worship, atlas, beast, row) is False
 
 
 async def test_a_thief_carries_off_part_of_the_hoard(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:

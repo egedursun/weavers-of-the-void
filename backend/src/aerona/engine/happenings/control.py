@@ -7,14 +7,15 @@ from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.record_context import current_scope
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.demography import AgeBand, Sex
 from aerona.domain.enums.entity import LOCATION_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
@@ -26,6 +27,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.recording.record import StepDraft, record
 
 EVENT_KINDS = ENTITY_TYPES[EntityType.EVENT].engine_kinds
 PROFILE_FIELDS = frozenset({"start_year", "start_season", "end_year", "end_season", "phase"})
@@ -101,16 +103,21 @@ async def create_event(ctx: TickContext, draft: EventDraft) -> tuple[EntityRow, 
         ),
     )
     partner = await ctx.session.get(EntityRow, draft.partner_id) if draft.partner_id is not None else None
-    roles = {event.id: IncidentRole.SUBJECT, where.id: IncidentRole.TARGET, **({partner.id: IncidentRole.ACTOR} if partner is not None else {})}
-    written = await ctx.chronicle(
-        ChronicleKind.WORLD,
-        f"By the Creator's will, {event.name[:1].lower() + event.name[1:]} came to pass in {where.name}.",
-        template_key=f"event.{draft.kind.value}",
-        entity_ids=list(roles),
+    scope = current_scope()
+    footprint = sorted({region for region in [await region_of(ctx.session, atlas, where.id), *draft.footprint] if region is not None})
+    written = await record(
+        ctx,
+        f"event.{draft.kind.value}",
+        roles={
+            IncidentRole.SUBJECT: event.id,
+            IncidentRole.PLACE: where.id,
+            IncidentRole.ACTOR: partner.id if partner is not None else None,
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None,
+        },
+        facts={"severity": clamp_int(draft.severity, 0, PERCENT), "regions": len(footprint)},
+        steps=(StepDraft(StepAction.BEGIN, target=event.id),),
+        place=where.id,
         world_id=where.world_id,
-        feed_category=FeedCategory.WORLD,
-        place_entity_id=where.id if where.entity_type in LOCATION_TYPES else None,
-        roles=roles,
     )
     profile = await open_profile(ctx, event, incident_id=written.incident_id)
     if draft.start_year is not None:

@@ -16,15 +16,17 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.learning import practise_subject
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.language.generator import NameKind
 
 
@@ -117,7 +119,13 @@ async def invent(ctx: TickContext, people: EntityRow, tally: GameTally) -> None:
     await ctx.session.flush()
     ctx.session.add(made_by(game, people.id, ctx.epoch))
     tally.invented += 1
-    await note(ctx, f"The {people.name} took to a new game, {name}.", key="games.invented", ids=[people.id])
+    await record(
+        ctx,
+        "games.invented",
+        roles={IncidentRole.MAKER: people.id},
+        facts={"game": name, "category": game.category},
+        steps=(StepDraft(StepAction.SHAPE, actor=people.id),),
+    )
 
 
 async def neighbours(ctx: TickContext, people_id: int) -> list[int]:

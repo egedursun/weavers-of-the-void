@@ -20,7 +20,7 @@ NAMES OF PREVIOUS AGES (this age takes a name of its own): {{ previous_names[-f.
 {% if not continuity.current %}
 Put the mortal who writes this narrative in the "chronicler" field.
 {% elif continuity.streak >= f.chronicler_min_tenure %}
-CHRONICLER: {{ continuity.current.name }} has been writing for {{ continuity.streak }} ages; this age they may hand the pen to a successor (the successor introduces themselves and whom they took over from in one sentence) or keep writing. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
+CHRONICLER: {{ continuity.current.name }} has been writing for {{ continuity.streak | several("age", "ages") }}; this age they may hand the pen to a successor (the successor introduces themselves and whom they took over from in one sentence) or keep writing. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
 
 {% else %}
 CHRONICLER: this age too is written by {{ continuity.current.name }} ({{ continuity.current.who }}): write the SAME name and identity in the "chronicler" field; do not introduce yourself again, do not say the previous record was lost. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}

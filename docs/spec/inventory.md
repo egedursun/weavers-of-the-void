@@ -6,14 +6,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 856 |
-| enum | 1222 |
-| step | 449 |
-| incident | 1042 |
-| tool | 552 |
-| lever | 2234 |
-| screen | 1304 |
-| text | 193 |
+| table | 864 |
+| enum | 1259 |
+| step | 450 |
+| incident | 2 |
+| tool | 556 |
+| lever | 2255 |
+| screen | 1334 |
+| text | 195 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
 |---|---|---|---|
@@ -280,7 +280,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | epoch_stats | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | epoch_steps | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | epoch_world_narratives | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
-| table | epoch_year_cursors | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | epochs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | equipment_models | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | equipment_stores | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -390,7 +389,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | impact_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | impurity_sources | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | incident_collections | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | incident_facts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | incident_names | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | incident_participants | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | incident_step_states | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | incident_steps | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | incident_terms | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | incidents | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | incorporeal_rights | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | incubating_ideas | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -690,6 +694,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | routes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | rule_overrides | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | ruler_currencies | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | rumour_distortions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | rumours | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | sacraments | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | salvage_sites | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -764,6 +769,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | star_physics | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | star_systems | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | stars | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | state_change_terms | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | state_changes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | state_checkpoints | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | storylet_runs | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | storytellers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | stress_readings | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -894,6 +902,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | catalog.powers.PowerParam | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | constants.llm.ClaudeAuth | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | constants.media.MediaBackend | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | db.ledger_capture.ValueKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | db.tables.motifs.MotifOverrideMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.action.ActionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.action.ActionPolarity | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -984,6 +993,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.bond.PseudoLinkKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.ChronicleAuditKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.ChronicleKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.chronicle.ChronicleScope | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.FeedCategory | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.LegendaryQuestOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.MajorEventCategory | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -992,6 +1002,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.chronicle.ThreadLinkRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.ThreadStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.chronicle.WritingSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.civilization.DebtTiming | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.civilization.IndependenceAnswer | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.civilization.TierCapability | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.climes.CirculationBand | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.climes.OscillationPhase | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1004,6 +1016,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.collective.ChargeArrangement | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.collective.CollectiveActKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.collective.CollectiveTrigger | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.collective.CommemorationFeeling | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.collective.DatingSystemKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.collective.DesignComponentKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.collective.DesignKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1042,6 +1055,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.concealment.SeekerAim | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.concealment.TruthAttitude | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.CommandToken | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.constructs.ConstructEnd | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.ContractStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.InstructionBinding | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.constructs.MindWill | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1099,6 +1113,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.crafts.InsuranceCover | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.crafts.LinkToken | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.crafts.Notation | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.crafts.NumberMilestone | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.crafts.RightAcquired | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.crafts.RightKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.creator.ChosenFavour | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1122,6 +1137,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.culture.CurseKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.CustomCatalog | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.IdeologyTenet | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.culture.ItemCategory | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.ItemClass | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.ItemDeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.culture.LanguageRegister | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1173,6 +1189,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.cycles.LongPlanStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cycles.ManumissionPath | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cycles.MobilityMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.cycles.PlanOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cycles.ReproductiveCaste | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cycles.ReproductiveSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.cycles.ResidenceRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1282,6 +1299,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.entity.LegendCategory | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.entity.MortalRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.entity.ProphecyReading | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.environment.ClimateTurn | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.environment.CoastKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.environment.LandUse | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.environment.MovementMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1408,6 +1426,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.intrigue.IntrigueSecret | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intrigue.PlotKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.intrigue.SchemePhase | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.intrigue.TrueNameCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.job.JobKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.job.JobStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.justice.CaseStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1453,9 +1472,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.law_grammar.LawExceptionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawOperator | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawTarget | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.lifecycle_end.DisbandReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.lifecycle_end.ForgettingCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.LifecycleCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.LifecycleKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.LifecycleState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.lifecycle_end.RepealReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.living.CultivationMethod | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.living.Fertility | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.living.GrowthStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1516,6 +1538,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.military.CommandArea | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.CommanderTrait | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.ContractStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.military.CovertSabotage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.DefenderAction | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.DuelContext | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.DuelEnd | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1542,7 +1565,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.military.TargetClass | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.UnitFamily | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.UnitKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | domain.enums.military.VesselArmament | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.VesselStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.military.WarAimKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.ActKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1557,6 +1579,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.mind.FacetGroup | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.FearKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.FocusKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mind.GratitudeDeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.GriefStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.HonourModel | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.IdeaKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1586,8 +1609,10 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.mind.TraitSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.ValueAxis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.ValueHolder | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.mind.ValuePole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.mind.WantKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.minds.ArchiveAccess | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.minds.DisputeOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.minds.MadeMindSouls | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.minds.MadeMindsLaw | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.minds.MakingOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1690,15 +1715,20 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.place.SecretOrigin | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.ClaimBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.ClauseKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.CoupCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.DebtRemedy | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.DecisionRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.DiplomacyOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.GenderRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.GovernmentKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.HouseEnd | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.HouseTrait | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.InterworldTreatyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.Jurisdiction | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.LawArea | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.LawKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.LegitimacyBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.OathBreach | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.OathKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.OathPenalty | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.OathStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1708,6 +1738,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.polity.RegionalStanding | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.RevoltKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.SuccessionRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.polity.TreatyBreach | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.TreatyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.polity.TreatyStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.powers.BloodlineRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1741,7 +1772,21 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.quests.QuestScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestTargetKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.rarity.Rarity | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.FactUnit | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.FactValue | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.IncidentTier | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.InstrumentKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.PlaceRule | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.ProcessClock | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.ProcessGroup | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.RumourDistortion | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.StepAction | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.StepLocus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.StepOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.StepState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.records.WitnessMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.ClientRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.regime.CoupProofing | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.CredentialKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.LeadershipMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.regime.LegitimacyType | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1853,6 +1898,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.storyteller.SpontaneousKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.storyteller.StorytellerProfile | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.storyteller.TensionBand | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.structure.AbandonCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.BuildScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.BuilderKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.BuildingForm | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1860,6 +1906,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.structure.ConstructionState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.ConstructionStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.EffectTarget | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.structure.RuinCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.SectionRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.StaffScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.structure.StructureEffect | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1878,6 +1925,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.tongues.MorphologyType | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.NumberSystem | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.ScriptChangeCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.tongues.ScriptFate | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.SenseShift | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.SoundChangeCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.tongues.SoundChangeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1893,10 +1941,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.transform.TransformTrigger | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.ArrivalOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.EncounterEffect | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.travel.ExplorationReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.HorizonStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.JourneyEventKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.JourneyIntent | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.JourneyStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.travel.RefugeeCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RouteClosure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RouteEnvironment | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.travel.RouteState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1974,7 +2024,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.world_view.SettleMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.world_view.WarTerrain | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.world_view.WorldLight | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | engine.cosmos.climate.ClimateTurn | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.environment.shaping.LandOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.gods.devotion.RiteKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.gods.devotion.SchemeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1989,7 +2038,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | engine.lifecycle.wounds.WoundOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.parallel.effects.EffectKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.phases.casualties.FateWrit | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | engine.phases.exploration.Reason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.phases.exploration.SearchStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.phases.heroism.EncounterOutcome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | engine.phases.horror.SanityBand | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2081,10 +2129,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | tools.mortal.hearth.HomeChoice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.mortal.inputs.CultureKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.mortal.inputs.DiplomacyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | tools.mortal.inputs.ItemCategory | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.mortal.inputs.LandKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.mortal.inputs.RiteKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | tools.mortal.inputs.SabotageKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.cosmos.TalkIntent | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.death.PlotPath | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.kin.ArenaStat | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2093,7 +2139,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | tools.son.mortals.Stir | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.mortals.Touch | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.prayer.CreatorRequest | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | tools.son.war.TreatyKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.son.world_works.HostAspect | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | step | abundance | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | admiralty | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2409,6 +2454,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | putting_out | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | rebel_theft | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | reciprocity | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | record_checkpoints | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refining | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refugees | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | regimes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -2544,1048 +2590,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | worship_views | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | writing_systems | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | written_media | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
-| incident | admiralty.commissioned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | admiralty.fleet_exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affair.discovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affairs.court_talent | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affairs.election | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affairs.leak | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affairs.mandate_failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affairs.revolution | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | affliction.cured | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | afterlife.exorcism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | afterlife.possession | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | afterlife.reborn | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | age_sets.promoted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ages.echo | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ages.turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arcana.enchantment_laid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arcana.enchantment_lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arcs.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arcs.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arcs.payoff | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art.canonised | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art.commissioned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art.forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art.translated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art_forms.fused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art_forms.invented | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | art_forms.lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.canonised | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.forged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.lured | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.movement | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.orthodox | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.scandal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | arts.sold | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | asabiyya.softened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | asabiyya.surge | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | aspiration.journey | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | augment.installed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | augment.rejected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | augment.removed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.default | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.jubilee | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.realm_jubilee | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.realm_loan | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | banking.war_loan | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | battlefield.haunted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beasts.deed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beasts.fallen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beasts.risen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beasts.worshipped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.banished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.bound | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.cult_founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.echo_befriended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.echo_replaced | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.incursion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.incursion_answered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.manifest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.took_rule | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | being.traded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.archive_appeared | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.archive_burned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.archive_burned_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.archive_read | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.cosmic_court | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.cosmic_plague | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.fate_quest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.immortal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.mirror_birth | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.pardon | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.planet_acts | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.planet_worship | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.quest_abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.quest_completed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.quest_failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.quest_invalid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.quest_opened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.soul_bound | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.soul_harvest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | beyond.void_storm | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.child | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.ethnogenesis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.notable | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.ruler | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.sapience | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.stillborn | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.twins | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.village | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | births.village_ruin | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | body.maimed_cult | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | body.reader_taken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | body.ruler_set_aside | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | boserup.intensified | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | brands.earned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | breeding.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | breeding.love | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | captives.fates | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | carrion.restless | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | casualties.commander_risen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | casualties.disaster_dead | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | casualties.fate_shielded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | casualties.veterans | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | celestial.returned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | chains.bought | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | challenge.civic | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | challenge.collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | challenge.response | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | chemistry.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | circle.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | circuits.guest_killing | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | circuits.passed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.adoption | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.adoption_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.barter | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.barter_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.debt_late | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.debt_paid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.declined | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.federation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.federation_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.independence | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.independence_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.loan | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.loan_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.previous_creation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.rose | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.tier | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.treaty | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | civilization.treaty_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | claim.exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.cold_snap | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.era | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.imposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.region_turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.seas_fell | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.seas_rose | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.town_moved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | climate.water_cycle | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | clocks.built | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cohort.scar_festival | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | collective.lynching | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | collective.movement_armed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | collective.movement_faded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | colours.repealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | colours.restricted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | commons.council | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | commons.enclosed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | communication.cipher_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | companies.collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | companies.conquest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | companies.dominion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | company.capture | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | company.enclave | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | company.sovereign | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.freed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.seal_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.seized | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | construct.will | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | consumption.cold_deaths | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | consumption.herd_loss | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | consumption.sickness | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contest.famous | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contest.won | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contraband.books | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contraband.slaves | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contract.failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contract.posted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contract.slain | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | contract.taken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cooperatives.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | corvee.laid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | corvee.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | corvee.suffering | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmic_wounds.slain | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmopolitan.formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.gate_sealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.holy_world | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.leak_cleansed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.old_god | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.outer_bargain | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.world_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.world_discovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cosmos.world_forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | council.engine_held | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | council.violation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creator.covenant_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creator.covenant_sealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.hybrid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.megafauna | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.megafauna_trail | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.merged_escaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.migration | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.mutation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.people_mutation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.predation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.prey_extinct | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.rebellion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.soul_eaten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.soul_spared | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.speciation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.species_merged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | creatures.starving | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | crime.informer_killed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | crime.turf_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cuisine.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cuisine.fused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cuisine.invented | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | cuisine.substituted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | culture.contact | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | culture.knowledge_diffusion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | culture.language_spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | culture.shift | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | currents.carried | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | curses.lifted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | curses.spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dark_ages.forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dark_ages.lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dark_ages.rediscovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dating.reform | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | designs.refit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dialects.split | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | diaspora.assimilated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | diaspora.quarter | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dimension.cult_risen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disasters.city_plague | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disasters.plague_spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.breakthrough | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.design_drawn | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.great_person | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.refitted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.reverse_engineered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.smuggled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.work_banned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | discovery.world_era | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.army_carried | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.carrier_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.carrier_seeded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.cure_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.cure_sold | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.endemic | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.expelled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.hospital | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.immune_escape | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.plague_response | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.quarantine_riot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.spillover | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.strain | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | disease.tradition | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.ascended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.avatar_converts | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.avatar_manifest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.battle_contest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.battle_hand | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.goal_set | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.god_forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.god_returned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.law_unmade | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.league | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.pact | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.power_incident | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.ruling_lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.spy_secret | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.syncretism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | divine.wound_healed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dominion.image_turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dominion.magic_site_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dominion.ruled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dominion.throne_passed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.apocalypse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.calling | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.dimensional_collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.galactic_death | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.outer_descent | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | doom.twilight | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dream.reading | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dream.recurring | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | dress.revival | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | drink.derived | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | drink.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | duel.honour | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.abundance_set | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.animal_god | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.craft_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.domestication | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.endangered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.extinct | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.feral_breed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.herd_feral | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.keystone_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.lineage_blessed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.lineage_cursed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.lineage_tainted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.niche_excluded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.niche_radiation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.rewound | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ecology.sacred_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.centre_collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.holding_transferred | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.order_set | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.plan_shortfall | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.transition_begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.transition_done | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.transition_failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.transition_resisted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | economy.transition_stage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | enactment.failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | environment.ley_line_formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | environment.nexus_formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | espionage.defected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | essence.overflow | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | essence.poured | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | estates.granted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | estates.revoked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ethics.schism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | examinations.held | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | excavation.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | exchange.shock | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | expedition.lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | expedition.returned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | expedition.set_out | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | exploration.land_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | exploration.sensed_world_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | extraction.deposit_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.hired | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.raid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.riot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.schism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.strike | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.suppressed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.turncoat | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | faction.turned_bandit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | famine.foods_learned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | fashion.revival | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | feature.comet_returned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | feature.rogue_arrived | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | feature.slingshot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | feature.wormhole_window | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | fishery.closed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | flora.cultivar | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | flora.sown | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | formation.shaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | galaxy.aged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | galaxy.arm_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | galaxy.cult_risen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | galaxy.star_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | game.poachers_punished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | game.reserved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | games.invented | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | gathering.massacre | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | generations.came_of_age | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | generations.passed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | genetics.order_recruits | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | genetics.resemblance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | geography.place_seeded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | gifts.lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | gifts.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | grounds.collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | grounds.recovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | grudges.holy_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | healing.amputated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | healing.prosthesis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | healing.reattached | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heraldry.cadet | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heraldry.quartered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroes.apprentice | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroes.birth | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroes.companions | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroes.quest_start | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroes.recalled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.age_change | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.armor_save | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.defeat | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.legendary_weapon | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.rewind | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | heroism.victory | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.anniversary | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.irredentism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.myth_debunked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.scandal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.struck | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | history.true_line | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | honours.disbanded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | honours.nicknamed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | honours.reconstituted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.clouding | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.madness_epidemic | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.outer_entered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.route_cooled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.route_resealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.route_stitched | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.son_clouded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.son_mad | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | horror.whisperers | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | households.abandon | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.branch | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.dispute_split | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.divine_line_ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.extinct | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.fabricated_claim | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.relic_quest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | houses.trait | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | idea.internalised | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | idea.rejected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.called | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.deflected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.fled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.foreseen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.missed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | impact.struck | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | indenture.bound | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | indenture.contracted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | indenture.released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | industry.blight | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | industry.energy_short | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | industry.method_changed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | inspiration.masterwork | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.cult_disbanded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.cult_merged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.item_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.people_union | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.place_swallowed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.repealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | institutions.work_forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | insurance.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | insurance.ruined | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | intoxication.brawl | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | intrigue.exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | intrigue.scheme_done | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | intrigue.scheme_exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | intrigue.true_name_changed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.masterwork | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.reforge_quest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.reforged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.regalia_seized | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | item.transferred | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | keystone.designated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.annulment | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.betrothal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.divorce | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.fostered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.marriage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.sworn | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kin.war_parted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kinds.fused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kinds.substituted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | kinship.pact | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | knowledge.declined | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | knowledge.deepened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | knowledge.discovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | labour.corvee | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | labour.corvee_lifted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | land.forest_fire | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | language.signed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | language_contact.creator_creole | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | language_contact.loans | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | languages.died | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | languages.liturgical | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | languages.revived | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.amnesty | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.appeal_upheld | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.bounty_claimed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.jurisdiction_crushed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.land_dispute | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.natural_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.natural_set | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.outlawed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.pardon | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.remade | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.remade_rose | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | law.settled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | learning.migrated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | legacy.kept | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life.native_people | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life.native_species | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.desolate | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.looted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.razed_by_hand | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.resettled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | life_cycles.siege_razed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.blight | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.clone_people | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.cloned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.contained | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.cure_cultured | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.died | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.disease_designed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.disease_loosed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.drifted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.escaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.licensed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.line_blessed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.line_cursed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.line_made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.mutated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.organ_grown | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.partner_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.profile_made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.rising | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.sample_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.sapience | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.sapience_shaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living.works_lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living_stats.mocked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living_stats.mystery_knowledge | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living_stats.pilgrims | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | living_stats.work_knowledge | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | logistics.collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | logistics.culminated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | logistics.depot_founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | logistics.field_depot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.commemoration | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.commemoration_miracle | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.commemoration_year | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.constitution_written | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.creed_founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.creed_merged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.creed_split | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.festival_absorbed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.godless_miracle | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.godless_persecuted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.guest_killing | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.infanticide | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.legend_consequence | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.legend_drift | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.legend_memory | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.memory_died | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.propaganda | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.prophecy_exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.prophecy_forged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.prophecy_fulfilled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.prophecy_pressure | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.prophecy_rivals | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.revolution | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | lore.taboo_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | loyalty.wavering | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | made_people.formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.dark_rite | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.eternal_storm | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.rite | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.storm | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.war_mages | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic.wizard | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | magic_system.created | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | manumission.equal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | manumission.freed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | manumission.revolt | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.credit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.credit_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.depleting | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.exhausted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.exhausted_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.famine_grain | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.refilled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | market.written_off | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | markets.district | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | material.crumbled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | material.weapons_forged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mechanics.law | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mechanics.resource | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | megastructures.catastrophe | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.fairy_tale | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.gratitude | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.legend_revived | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.legendification | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.manifestation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.prophecy_forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.tradition_forgotten | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.vengeance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | memory.year_legend | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | migration.famine | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.archive_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.archived_at_death | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.awakened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.conversion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.copied | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.departed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.disillusioned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.disputed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.divided | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.dormant | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.exceeding | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.facet_trait | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.famine_aid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.merged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.movement | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.plot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.plot_uncovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.restored | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.saved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.seat_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.soul_withheld | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.souled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.transferred | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mind.will_grew | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.adopted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.debased | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.hoard | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.minted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.reformed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | money.temple_loot | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | monsoons.failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | monsters.emerged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | monsters.herd_raid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | monsters.raid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | monsters.void_roamed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mortal.death_prestige | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mortal.inheritance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mortal.mourning | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mortal.spirit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mortals.ghost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | movements.revolt | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | museum.looted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.geas_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.hero_cult | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.heroquest_begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.heroquest_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.heroquest_won | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.mantled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.office_conquered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.replaced | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.servitor_fell | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | mythic.servitor_guarded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | names.epithet | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | native_faith.returned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | native_faith.returned_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | native_faith.syncretized | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | native_faith.turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | native_faith.turned_note | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | navigation.aid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | necromancy.host | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | necromancy.siege | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | necromancy.tower | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | need.despair | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | network.cut | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | network.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | network.grew | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | network.ledger | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | network.outage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.camp | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.confederation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.fragmented | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.raid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.rerouted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.settled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.trade | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nomads.tribute | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | numbers.milestone | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nutrients.recovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | nutrients.salted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | oaths.broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | oaths.wrath | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | office.abolished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | office.created | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | order.feud | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | order.outlawed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | order.tribunal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | orders.holy_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | orders.vows | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | oscillations.turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | outer.incursion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.attracted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.defeated_woke | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.duel | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.first_contact | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.god_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.hostile | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.local_god_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.noticed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.outer_gnaw | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | pantheon.rival_clash | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.rival_withdrew | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.sleeper_woke | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | incident | pantheon.spontaneous_god_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.temple_destroyed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pantheon.worshipper_stolen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | parley.broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | parley.exchange | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | parley.held | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | peoples.funeral_rite | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | peoples.martial_style | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | perennials.felled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | perennials.planted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | perennials.replanted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | pets.taken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | phenomenon.contained | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | phenomenon.faded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | place.became_battlefield | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | place.secret_opened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | place.secret_released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.carried | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.completed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.disrupted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.eco_sabotage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | plans.exposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.coup | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.cult_law | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.debt_default | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.jubilee | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.law_enacted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.law_proposed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.law_rejected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.secession | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.succession_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.tier_fell | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.tier_rose | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.usurper_accepted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | polity.works | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | potlatch.claimed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.band | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.breach | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.emerged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.exhausted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.gestalt | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.granted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.hazard | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.hive_mind | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.revoked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.used | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.vow_broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power.wild | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power_bases.extorted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power_bases.married | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power_bases.purged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | power_bases.split | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | prehistory.lost_origin | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | prison.escaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | prison.released | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | putting_out.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.entered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.escape | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.frozen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | realm.withdrawal | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | reconstruction.seized | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | records.inheritance | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | refining.bottleneck | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | refining.workshop_built | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | refugees.ruin | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | refugees.sheltered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.chiefdom | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.crisis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.dynasty | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.fragmented | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.institution | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.proofed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.purged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.rival_claim | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | regime.schism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | relations.ethnic_strife | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | relic.collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | relic.recovered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | relief.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | relief.sent | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | religion.godless | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | religion.schism | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.disaster | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.hero | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.plague_clung | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.plague_estranged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.plague_turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | remembrance.war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.drifted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.extinct | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.spread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.stopped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.voyage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | replicator.woke | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | reproduction.budded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | reproduction.changed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | research.boosted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | research.institution_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | research.institution_embraced | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | resilience.built | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | resilience.held | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | revivals.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | revivals.restored | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | revivals.settled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | revivals.suppressed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rift.claimed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rift.closed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rift.collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rift.sealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rights.bought | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rights.infringed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rite.restrained | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | roles.opened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ruins.abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ruins.sheltered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | ruler.silenced | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rumour.alarm | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | rumour.legend | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.divination | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.forecast | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.godless | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.millenarian | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.mystic | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.mystic_founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.office_rogue | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.redated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.spirit_bound | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.theodicy | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sacred.theodicy_resolved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | salvage.exhausted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sanctuary.claimed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sanctuary.law | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sanctuary.violated | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | satire.punished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | saving.hoard_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | schools.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seafaring.ghost_ship | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seafaring.prize_taken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seafaring.sea_fight | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seafaring.storm | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seafaring.wreck | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seal.broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seal.made | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seal.unsealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | season.calendar_adopted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seasons.irregular | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seasons.settled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seasons.summer | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | seasons.winter | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settlement.abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settlement.fire_wind | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settlement.homeless_mob | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settlement.tier | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settlements.resettled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settling.creator_faith | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settling.primitive_language | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | settling.seeking_god | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sign.fostered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | site.delved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | site.mind_woken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | site.realm_gate | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | skill.career_beggar | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.echo_prophecy | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.star_extinguished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.star_hung | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.star_rekindled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.supernova | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.time_traveller | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.two_timed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sky.world_drift | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | slave_markets.opened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | slave_markets.sold | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.bankruptcy | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.class_uprising | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.desertion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.ennobled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.enslaved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.famine | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.freed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.love | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.plenty | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.poverty_uprising | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | society.ruined | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sons.existence | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sons.rebel_theft | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sons.woke | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | source.created | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | source.depleted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | speculation.bust | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | spirits.born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | spirits.ghost_legend | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | spirits.haunting | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | spirits.laid_to_rest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | spirits.rest | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sport.bought | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sport.champion | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sport.club | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | sport.league | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | standing.bribe | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | standing.patronage | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.binary_born | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.crisis_of_faith | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.cult_risen | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.died | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.divine_lapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | star.swelled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | statecraft.coalition | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | statecraft.crisis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | statecraft.sphere | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | statecraft.summit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | statecraft.terms | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | storyteller.recovery | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | storyteller.region_crisis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | stress.counter_elites | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | stress.crisis | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | stress.elites_fell | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.abandoned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.burned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.damaged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.duel | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.finished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.generation | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.repaired | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | structures.ruined | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | terraform.begun | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | terraform.finished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | theatres.misjudged | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | theories.founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | theories.paradigm_shift | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | thunen.ring_moved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | titles.created | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | titles.partition | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | titles.restored | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | titles.seat_founded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | titles.usurped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tolls.diverted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.creolised | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.deciphered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.misread | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.official | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.pidgin | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.place_renamed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.revealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.revived | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.script_borrowed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.script_evolved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | tongues.taboo | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.barter | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.convoy_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.convoy_raided | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.decree | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.market_play | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.seize_resource | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade.trading_post | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_policy.smuggled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.beast_raid | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.blockade | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.chokepoint_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.legend | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.orphaned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.shipwreck | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trade_route.weather_loss | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | transform.star_god_death | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | transition.epoch_began | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.ark_founding | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.arrival | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.bridge_collapsed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.cargo_delivered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.colony_failed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.colony_unfit | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.expedition_ordered | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.expedition_sent | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.herds_lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.hidden_revealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.journey_recalled | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.journey_vanished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.no_land | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.pilgrimage_site | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.route_knowledge | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.route_revealed_by_hand | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.route_severed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.route_stitched | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.sick_arrival | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.stowaway | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.vanished | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | travel.waiting | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | treaty.broken | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | treaty.champions | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | treaty.misread_breach | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | trust.forgery_found | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | truth.breached | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | truth.hidden | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | truth.revealed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | truth.revealed_by_hand | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | union.term | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | unit_types.drawn | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | venality.sinecure | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | venality.sold | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | vendetta.faded | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | vendetta.outlawed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | veterans.association | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | veterans.granted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.battle.refused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.call_betrayed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.debasement | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.duel_decree | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.ended_white_peace | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.fought_on | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.god_duel | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.incitement_reaped | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.loan | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.mercenaries_hired | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.mercenaries_turned | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.outbreak | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.partisans | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.sea_battle | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.separate_peace | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.siege.relieved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.siege.surrender | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.terror | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.trial_by_combat | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.uprising_redirected | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | war.weary_peace | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | warfare.army_stood_down | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | water.lift | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | witchcraft.accused | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | witchcraft.hunt | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | witchcraft.hunt_over | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | wonders.envy_war | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | wonders.promoted | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.biosphere_collapse | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.consciousness_closed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.consciousness_opened | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.life_grew | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.mood_quake | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.ring_formed | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.scorched | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world.tidally_locked | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_age.epoch_turning | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_age.golden_age | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_age.golden_age_ended | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_age.old_world | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_balance.cult | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_balance.faction | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_balance.son_moved | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_balance.tradition | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | world_views.short | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | writing.lost | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
-| incident | writing.script | check_canned_lines.py | roles, facts, steps, template, place and clock: F58.1 |
 | tool | mortal:accept_treaty | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:accuse | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:accuse_of_witchcraft | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3781,6 +2787,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | mortal:raise_sapience | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:read_the_sky | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reckon_years | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | mortal:recount | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:refit_section | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:reform_script | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | mortal:refuse_gift | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -4026,6 +3033,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:raise_throne | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:read_dreams | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:rebel | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:recall_event | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:redirect_river | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:rekindle_star | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:release_creature | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -4034,6 +3042,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:reshape_land | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:resign_office | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:resurrect_sibling | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:retell_event | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:reveal_secret | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tenet | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_tongue | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:reveal_true_history | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -4567,6 +3577,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | council:veto | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | council_procedure:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | council_procedure:reset | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | council_record:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | council_record:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | council_record:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | council_violation:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | council_violation:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | council_violation:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -4827,6 +3840,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | enchantment:lay | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | endemic:remove | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | endemic:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | engagement:force | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | engine:run_phase | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | entity:agent | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | entity:move | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -5100,9 +4114,21 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | incident:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incident:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incident:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident:hold | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incident:link_cause | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incident:roles | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incident:unlink_cause | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_fact:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_fact:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_fact:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_name:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_name:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_step:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_step:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_step:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_witness:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_witness:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | incident_witness:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incorporeal_right:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incorporeal_right:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | incorporeal_right:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -5832,6 +4858,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | rumour:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | rumour:plant | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | rumour:suppress | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | rumour_distortion:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | rumour_distortion:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | rumour_distortion:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | sacrament:create | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | sacrament:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | sacrament:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -6069,6 +5098,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | star_system:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | star_system:edit | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | star_system:move | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | state_change:delete | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | state_change:revert | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | stock:grant | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | stock:release | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | stock:set | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
@@ -6527,6 +5558,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/chronicle/EpochNarrative | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/EpochStrip | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/EpochTraces | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/chronicle/FeedLines | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/chronicle/OlderLinesButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/chronicle/RecordSearch | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/YearStrip | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/city/BuildForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/city/BuildingPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6724,6 +5758,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/cosmos/scene3d/World3D | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/council/CouncilBlock | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/council/CouncilRecord | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/council/CouncilRecordControls | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/council/CouncilRecordForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/council/CouncilScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/couplings/CouplingsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/crafts/ArcanePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6965,6 +6001,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/entity/lore/panels/RitePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/lore/panels/TheoryPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/lore/panels/TraditionPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/entity/lore/rumours/RumourTellings | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/lore/rumours/RumoursSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/mechanics/ActingMechanics | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/mechanics/CausalChain | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7220,6 +6257,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/folkways/WitchcraftPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/foreign-god/AttitudeBar | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/foreign-god/ForeignGodCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/foreign-god/ForeignGodChronicle | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/foreign-god/ForeignGodDepth | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/foreign-god/ForeignGodEditForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/foreign-god/ForeignGodHero | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7513,6 +6551,29 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/pursuits/OrdersPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/PursuitsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/pursuits/RemadePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/AccountDigest | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/AtlasAtMoment | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/ChangeControls | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/ChangeList | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/ChangeSide | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/EventPage | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/FactEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/FactForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/FactValueText | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/HistorySection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/HoldBar | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/IncidentEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/IncidentNameForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/NodeRef | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/ReportSteps | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/StepEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/StepForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/Steps | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/StruckButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/ThenAndNow | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/TimelineScrubber | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/WitnessEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/records/WitnessForge | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/ConstitutionSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/CosmosRegimeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/regime/LearningPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7703,6 +6764,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | text | prompts/templates/context/dialect_block.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/context/entity_detail.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/context/entity_line.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/context/event_account.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/context/event_records.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/context/geography_lines.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/context/inspect_sibling.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/context/language_lines.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |

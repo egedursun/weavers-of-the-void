@@ -9,9 +9,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.kinds.acts import categories_told, category_named, hold_kind, kind_of, make_kind, spec_of
 from aerona.engine.primitives.queries import active_bonds
@@ -22,7 +22,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 KindName = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
 KindDescription = Annotated[str, Field(min_length=SHORT_DESCRIPTION_MIN, max_length=SHORT_DESCRIPTION_MAX)]
@@ -70,8 +69,10 @@ async def invent_kind(call: MortalCall, args: InventKindInput) -> str:
     )
     call.target(people.id)
     told, sort = spec.label.lower(), spec.category_labels[category.value].lower()
-    await call.chronicle(
-        ChronicleKind.CULTURE, lines.INVENTED_KIND, entity_ids=[call.me.id, people.id], me=call.me.name, concept=told, people=people.name, name=row.name
+    await call.record(
+        "tools.mortal.invented_kind",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: people.id},
+        facts={"concept": args.concept, "kind_name": row.name},
     )
     return result(MortalResult.KIND_INVENTED, people=people.name, name=row.name, concept=told, category=sort)
 
@@ -88,7 +89,11 @@ async def adopt_kind(call: MortalCall, args: KindChoiceInput) -> str:
         call.tick, args.concept, row.id, people.id, stance=KindStance.USES, strength=call.tick.rules.kinds.adoption_strength, spread=KindSpread.CONTACT
     )
     call.target(people.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.ADOPTED_KIND, entity_ids=[call.me.id, people.id], me=call.me.name, name=row.name, people=people.name)
+    await call.record(
+        "tools.mortal.adopted_kind",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: people.id},
+        facts={"concept": args.concept, "kind_name": row.name},
+    )
     return result(MortalResult.KIND_ADOPTED, people=people.name, name=row.name)
 
 
@@ -119,7 +124,11 @@ async def forbid_kind(call: MortalCall, args: KindChoiceInput) -> str:
         call.tick, args.concept, row.id, body.id, stance=KindStance.FORBIDS, strength=call.tick.rules.kinds.adoption_strength, spread=KindSpread.DECREE
     )
     call.target(body.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.FORBADE_KIND, entity_ids=[call.me.id, body.id], me=call.me.name, name=row.name, realm=body.name)
+    await call.record(
+        "tools.mortal.forbade_kind",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: body.id},
+        facts={"concept": args.concept, "kind_name": row.name},
+    )
     return result(MortalResult.KIND_BANNED, name=row.name, realm=body.name)
 
 

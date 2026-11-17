@@ -12,10 +12,10 @@ from aerona.db.tables.polity import OfficeHistoryRow, OfficeRow, PolityMemberRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import Tincture
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.statecraft import SubjectKind
@@ -24,7 +24,6 @@ from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.civics import holders_know
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.faith import living_patron
@@ -33,6 +32,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.transform.record import record_transformation
 
 COMMUNITIES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
@@ -314,12 +314,12 @@ async def refresh_realms(ctx: TickContext, book: RealmBook) -> dict[str, int]:
             realm = await found_polity(ctx, book, core)
             counts["founded"] += 1
             if not surveying:
-                await note(
+                await record(
                     ctx,
-                    f"{core.name} and those who answer to it became {realm.entity.name}.",
-                    key="polity.founded",
-                    ids=[realm.entity.id, core.id],
-                    kind=ChronicleKind.CIVILIZATION,
+                    "polity.founded",
+                    roles={IncidentRole.PRODUCT: realm.entity.id, IncidentRole.ACTOR: core.id},
+                    facts={"population": population, "members": len(member_ids)},
+                    place=core.id,
                 )
         live.add(realm.entity.id)
         joined, left = await sync_members(ctx, book, realm, set(member_ids))

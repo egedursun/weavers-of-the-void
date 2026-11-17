@@ -6,7 +6,6 @@ from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
@@ -26,6 +25,7 @@ from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.statecraft import MandateKind, MandateState
@@ -44,7 +44,6 @@ from aerona.engine.intrigue.favours import owe
 from aerona.engine.lore.research import steal_technique
 from aerona.engine.mind.ethics import honour_of
 from aerona.engine.mortal.standing import add_honour
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.primitives.distance import RegionAtlas
@@ -53,6 +52,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import relation
 from aerona.engine.settlement.book import ledger, town_of
 from aerona.engine.structures.construction import best_architect
@@ -182,12 +182,7 @@ async def prepare(ctx: TickContext, atlas: RegionAtlas, tally: ResilienceTally) 
         put(work, "condition", PERCENT)
         work.built_epoch = ctx.epoch
         tally.raised += 1
-        await note(
-            ctx,
-            f"{town.name} raised its {spoken(kind)}s to level {level} against the disasters it remembers.",
-            key="resilience.built",
-            ids=[town.id],
-        )
+        await record(ctx, "resilience.built", roles={IncidentRole.SUBJECT: town.id}, facts={"work": kind, "level": level}, place=town.id)
 
 
 async def struck_towns(ctx: TickContext) -> list[tuple[EntityRow, EntityRow]]:
@@ -251,7 +246,7 @@ async def refuse_aid(ctx: TickContext, giver: EntityRow, town: EntityRow, receiv
         people = await people_of(ctx.session, town)
         model = await honour_of(ctx.session, people.id if people is not None else None)
         await add_honour(ctx.session, ruler_id, -table.face_loss * HONOUR_MODELS[model].face_loss_pct // PERCENT, ctx.epoch)
-    await note(ctx, f"{town.name} turned away the aid of {giver.name}, a rival it would not owe.", key="relief.refused", ids=[town.id, giver.id])
+    await record(ctx, "relief.refused", roles={IncidentRole.SUBJECT: town.id, IncidentRole.GIVER: giver.id}, facts={"face": table.face_loss}, place=town.id)
 
 
 @dataclass(frozen=True)
@@ -406,12 +401,11 @@ async def aid_from(
         standing = await standing_row(ctx, town.id, god)
         shift(standing, "love", table.love)
     tally.aid += 1
-    await note(
-        ctx,
-        f"{giver.name} sent {spoken(kind)} to {town.name}{f' after the {event.name}' if event is not None else ''}.",
-        key="relief.sent",
-        ids=[giver.id, town.id, *([event.id] if event is not None else [])],
-    )
+    sent = {IncidentRole.GIVER: giver.id, IncidentRole.RECEIVER: town.id}
+    if event is not None:
+        await record(ctx, "relief.sent_after", roles={**sent, IncidentRole.SUBJECT: event.id}, facts={"aid": kind, "amount": amount}, place=town.id)
+    else:
+        await record(ctx, "relief.sent", roles=sent, facts={"aid": kind, "amount": amount}, place=town.id)
     return row
 
 
@@ -466,11 +460,12 @@ async def seize(ctx: TickContext, row: ReconstructionRow, town: EntityRow, profi
     shift(profile, "unrest", table.seize_unrest)
     await give_coin(ctx.session, ctx.rules, elite, table.seize_coin)
     tally.seized += 1
-    await note(
+    await record(
         ctx,
-        f"{elite.name} seized the burned land of {town.name}; {several(row.seized, 'person', 'people')} lost their homes to it.",
-        key="reconstruction.seized",
-        ids=[elite.id, town.id],
+        "reconstruction.seized",
+        roles={IncidentRole.ACTOR: elite.id, IncidentRole.PLACE: town.id},
+        facts={"seized": row.seized, "coin": table.seize_coin},
+        place=town.id,
     )
 
 
@@ -499,8 +494,13 @@ async def finish(ctx: TickContext, row: ReconstructionRow, town: EntityRow, prof
         shift(profile, "fire_risk", -table.fire_cut)
         shift(built.infrastructure, "roads", 1, high=MOST_LEVEL)
     row.finished_epoch = ctx.epoch
-    how = "on a new plan, sturdier and with wider streets" if row.plan is RebuildPlan.PLANNED else "in haste, as it stood before"
-    await note(ctx, f"{town.name} was rebuilt {how}.", key=f"reconstruction.{row.plan.value}", ids=[town.id])
+    await record(
+        ctx,
+        f"reconstruction.{row.plan.value}",
+        roles={IncidentRole.SUBJECT: town.id, IncidentRole.MAKER: row.planner_entity_id},
+        facts={"cost": row.cost},
+        place=town.id,
+    )
 
 
 async def rebuild(ctx: TickContext, tally: ResilienceTally) -> None:

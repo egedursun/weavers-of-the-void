@@ -8,10 +8,10 @@ from aerona.db.tables.orders import ExchangeRateRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import AllocationMode, Compensation, DistributionRule, OrderLabour, OwnershipRegime, TransitionKind
 from aerona.engine.orders.economy import axes_of, changed_axes, locked_axes, open_transition, order_of, set_order, transition_target
 from aerona.engine.orders.economy import begin_transition as proclaim
@@ -22,7 +22,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import Reason
 
 
@@ -67,8 +66,10 @@ async def set_economic_order(call: MortalCall, args: SetEconomicOrderInput) -> s
         fail(MortalResult.ORDER_REFUSED, why=f"the {' and '.join(fast)} of {realm.name} is held fast")
     await set_order(call.tick, realm.id, args.sector, axes)
     call.target(realm.id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.SET_ECONOMIC_ORDER, entity_ids=[call.me.id, realm.id], me=call.me.name, realm=realm.name, reason=args.reason
+    await call.record(
+        "tools.mortal.set_economic_order",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: realm.id},
+        facts={"ownership": args.ownership, "allocation": args.allocation, "labour": args.labour, "distribution": args.distribution, "reason": args.reason},
     )
     return result(MortalResult.ORDER_SET, realm=realm.name, allocation=args.allocation.value.replace("_", " "))
 
@@ -87,8 +88,10 @@ async def begin_transition(call: MortalCall, args: BeginTransitionInput) -> str:
         fail(MortalResult.TRANSITION_REFUSED, why=f"the {' and '.join(fast)} of {realm.name} is held fast")
     row = await proclaim(call.tick, realm.id, args.sector, args.kind, args.compensation)
     call.target(realm.id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.BEGIN_TRANSITION, entity_ids=[call.me.id, realm.id], me=call.me.name, realm=realm.name, reason=args.reason
+    await call.record(
+        "tools.mortal.begin_transition",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.id},
+        facts={"transition": args.kind, "compensation": args.compensation, "sector": args.sector, "reason": args.reason},
     )
     return result(MortalResult.TRANSITION_BEGUN, realm=realm.name, kind=args.kind.value.replace("_", " "), id=row.id)
 
@@ -108,7 +111,12 @@ async def change_money(call: MortalCall, args: ChangeMoneyInput) -> str:
     for row in taken:
         row.changer_node_id = call.me.id
     call.target(call.me.location_id)
-    await call.chronicle(ChronicleKind.TRADE, lines.CHANGE_MONEY, entity_ids=[call.me.id, call.me.location_id], me=call.me.name)
+    await call.record(
+        "tools.mortal.change_money",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: call.me.location_id},
+        facts={"rates": len(taken)},
+        place=call.me.location_id,
+    )
     return result(MortalResult.MONEY_CHANGED, rates=len(taken))
 
 

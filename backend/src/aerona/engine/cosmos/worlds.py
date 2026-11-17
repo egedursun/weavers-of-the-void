@@ -13,8 +13,8 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, WorldType
 from aerona.engine.context import TickContext
@@ -23,6 +23,7 @@ from aerona.engine.cosmos.routes import JourneyView, RouteBook, RouteStatus, Sky
 from aerona.engine.cosmos.world_types import is_mirror
 from aerona.engine.cosmos.world_views import world_views
 from aerona.engine.primitives.physics import WorldPhysics, world_physics
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 LIVING_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL, EntityType.SPECIES})
@@ -100,14 +101,23 @@ async def declare_holy_world(ctx: TickContext, son: SonRow, world: WorldRow, *, 
         await SonRepository(ctx.session).change_relation(son.id, previous.id, -ctx.rules.pantheon.holy_world_take_relation)
     world.patron_son_id = son.id
     world.patron_automatic = automatic
-    suffix = f"; trampling {previous.name}'s claim" if trampled and previous is not None else ""
-    text = f"{son.name} declared {world.name} their holy world{suffix}."
-    await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="cosmos.holy_world", son_id=son.id, world_id=world.id, feed_category=FeedCategory.WORLD)
+    if trampled and previous is not None:
+        written = await record(
+            ctx,
+            "cosmos.holy_world_taken",
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: world.id, IncidentRole.PREDECESSOR: previous.id},
+            facts={"relation_loss": ctx.rules.pantheon.holy_world_take_relation},
+            son_id=son.id,
+            world_id=world.id,
+        )
+    else:
+        written = await record(ctx, "cosmos.holy_world", roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: world.id}, son_id=son.id, world_id=world.id)
+    text = written.text
     await ctx.session.flush()
     return text
 
 
-async def forget_world(ctx: TickContext, world_id: int, by: str) -> str:
+async def forget_world(ctx: TickContext, world_id: int, by_id: int) -> str:
     session = ctx.session
     cosmos = await CosmosRepository(session).require_cosmos()
     primary = cosmos.primary_world_id or await CosmosRepository(session).first_world_id()
@@ -116,12 +126,19 @@ async def forget_world(ctx: TickContext, world_id: int, by: str) -> str:
     world = await require_world(session, world_id)
     repository = WorldRepository(session)
     await repository.set_discovery(world, Discovery.FORGOTTEN)
-    for route in await repository.routes_touching(world.id, active_only=True):
+    closed = await repository.routes_touching(world.id, active_only=True)
+    for route in closed:
         route.active = False
     for son in await session.scalars(select(SonRow).where(SonRow.current_world_id == world.id)):
         son.current_world_id = primary
-    text = f"{by} forgot {world.name}. Its routes closed, and it survives only in tales."
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="cosmos.world_forgotten", world_id=world.id, feed_category=FeedCategory.WORLD)
+    written = await record(
+        ctx,
+        "cosmos.world_forgotten",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.SUBJECT: world.id},
+        facts={"routes": len(closed)},
+        world_id=world.id,
+    )
+    text = written.text
     await session.flush()
     return text
 

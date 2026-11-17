@@ -6,14 +6,15 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.gods.economy import mechanics_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.mechanics import assign_mechanics, resource_weighed
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 WEIGHED_TYPES = (EntityType.RESOURCE, EntityType.NATURAL_LAW)
@@ -40,14 +41,14 @@ async def _announce(ctx: TickContext, entity: EntityRow) -> None:
         mechanics = sorted(await mechanics_of(ctx.session, entity))
         if mechanics:
             rules_text = " ".join(RESOURCE_MECHANICS[item].effect for item in mechanics)
-            await note(ctx, f"{entity.name} follows a rule of its own: {rules_text}", key="mechanics.resource", ids=[entity.id], kind=ChronicleKind.RESOURCE)
+            await record(ctx, "mechanics.resource", roles={IncidentRole.SUBJECT: entity.id}, facts={"rules_text": str(rules_text)}, kind=ChronicleKind.RESOURCE)
         return
     if entity.natural_law is not None and entity.natural_law is not NaturalLaw.NONE:
-        await note(
+        await record(
             ctx,
-            f"{entity.name} became part of the workings of the world: {NATURAL_LAWS[entity.natural_law].effect}",
-            key="mechanics.law",
-            ids=[entity.id],
+            "mechanics.law",
+            roles={IncidentRole.SUBJECT: entity.id},
+            facts={"effect": str(NATURAL_LAWS[entity.natural_law].effect)},
             kind=ChronicleKind.COSMIC_LAW,
         )
 
@@ -63,22 +64,13 @@ async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> 
     return weighed
 
 
-@reads(
-    "table.bonds",
-    "table.entities",
-    "table.entity_flags",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-    "table.nodes",
-    "table.resource_mechanics",
-)
+@reads("table.bonds", "table.entities", "table.entity_flags", "table.incident_participants", "table.incidents", "table.nodes", "table.resource_mechanics")
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
 )

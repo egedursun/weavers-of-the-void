@@ -84,7 +84,7 @@ async def test_soul_binding_animates_a_work(ctx: TickContext, cosmos: Cosmos) ->
     soul = await make_entity(ctx.session, "Shade", EntityType.SPIRIT, SpiritStats(), world_id=cosmos.home.id, location_id=region.id)
     work = await make_entity(ctx.session, "Stone Gate", EntityType.STRUCTURE, StructureStats(), world_id=cosmos.home.id, location_id=region.id, power=6)
     ctx.session.add(NodeMaterialRow(node_id=work.id, slot=MaterialSlot.BODY, material=MaterialKind.STONE))
-    animated = await soul_bind(ctx, soul.id, work.id, "Aeron")
+    animated = await soul_bind(ctx, soul.id, work.id)
     assert animated.engine_kind is EngineKind.ANIMATED_WORK and soul.status is EntityStatus.DEAD
     assert CreatureTrait.STONESKIN in await EntityRepository(ctx.session).traits(animated.id)
 
@@ -94,7 +94,7 @@ async def test_a_soft_work_moves_without_a_hard_skin(ctx: TickContext, cosmos: C
     soul = await make_entity(ctx.session, "Shade", EntityType.SPIRIT, SpiritStats(), world_id=cosmos.home.id, location_id=region.id)
     work = await make_entity(ctx.session, "Thatched Hall", EntityType.STRUCTURE, StructureStats(), world_id=cosmos.home.id, location_id=region.id, power=6)
     ctx.session.add(NodeMaterialRow(node_id=work.id, slot=MaterialSlot.BODY, material=MaterialKind.THATCH))
-    animated = await soul_bind(ctx, soul.id, work.id, "Aeron")
+    animated = await soul_bind(ctx, soul.id, work.id)
     assert CreatureTrait.STONESKIN not in await EntityRepository(ctx.session).traits(animated.id)
 
 

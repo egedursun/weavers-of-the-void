@@ -297,6 +297,11 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("fortune", "fortune_sources"): "fortune.legacy_backfill: every blessing and curse of a god becomes a source of fortune",
     ("fortune", "fortune_laws"): "none: every world runs by the personal law until it is set",
     ("fortune", "cohort_mishap_rates"): "none: towns count their accidents from the next epoch",
+    ("record_of_events", "state_change_terms"): "none: the reasons of each change are kept from the upgrade on",
+    ("record_of_events", "incident_facts"): "records_legacy_w49: every older happening keeps its line and its links as facts",
+    ("record_of_events", "incident_steps"): "none: older happenings were never told step by step; steps are kept from the upgrade on",
+    ("record_of_events", "incident_step_states"): "none: states are kept with the steps from the upgrade on",
+    ("record_of_events", "incident_terms"): "none: the reasons of each happening are kept from the upgrade on",
 }
 
 

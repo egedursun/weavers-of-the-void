@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.law_depth import CLAIM_TEXT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -12,14 +11,14 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.urban import TradingPostRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import GUILD_KINDS
 from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 STRENGTH = "strength"
@@ -88,12 +87,11 @@ async def struggle(ctx: TickContext, row: JurisdictionRow, tally: JurisdictionTa
     tally.crushed += 1
     realm, claimant = await ctx.session.get(EntityRow, row.holder_entity_id), await ctx.session.get(EntityRow, row.claimant_entity_id)
     if realm is not None and claimant is not None:
-        await note(
+        await record(
             ctx,
-            f"{realm.name} took back its courts and denied {claimant.name} {CLAIM_TEXT[row.claim]}.",
-            key="law.jurisdiction_crushed",
-            ids=[realm.id, claimant.id],
-            kind=ChronicleKind.CIVILIZATION,
+            f"law.jurisdiction_crushed_{row.claim.value}",
+            roles={IncidentRole.AUTHORITY: realm.id, IncidentRole.VICTIM: claimant.id},
+            facts={"chance": table.crown_pct * stability / PERCENT},
         )
 
 

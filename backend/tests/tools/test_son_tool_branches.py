@@ -33,7 +33,6 @@ from aerona.domain.models.phonology import Phonology
 from aerona.domain.models.profiles import TravelResource
 from aerona.rules.registry import Rules
 from aerona.tools.framework.ports import ToolPorts
-from aerona.tools.son import lines
 from tests.engine.core.factories import tuned_rules
 from tests.tools.factories import DESCRIPTION, add_world, connect, make_entity, seed_realm, son_toolkit
 from tests.tools.test_son_tools import entity, ok, rejected, son
@@ -109,7 +108,7 @@ async def test_losing_a_god_war_wounds_drains_and_puts_the_son_to_sleep(database
     assert after.hp == 0 and after.status is SonStatus.ASLEEP and after.sleep_epochs_left == rules.son_tools.foreign_war_sleep_epochs
     assert fallen is not None and fallen.stance == 10 - rules.son_tools.foreign_war_attitude_loss
     assert after.essence == 100 - rules.son_tools.foreign_war_cost - rules.son_tools.foreign_war_essence_loss
-    assert "but lost" in text and "fell asleep" in text and "Remaining actions: 0" in text
+    assert "and lost" in text and "fell asleep" in text and "Remaining actions: 0" in text
     async with database.read() as session:
         turn = await session.get(AgentTurnRow, realm.son_id)
     assert turn is not None and turn.action_points_left == 0
@@ -151,7 +150,7 @@ async def test_a_refused_community_gift_stays_with_its_old_god(database: Databas
     refused = await ok(refusing, "give_gift", {"son_id": other.sibling_id, "worshipper_id": other.cult_id, "words": "go to my sister"})
     assert "refused to leave you" in refused
     assert other.son_id in await outgoing(database, other.cult_id, BondKind.WORSHIPS)
-    assert lines.GIFT_REFUSED.key in await keys(database)
+    assert "tools.son.gift_refused" in await keys(database)
 
 
 async def test_creation_advances_an_open_thread_and_notes_a_closed_one(database: Database) -> None:
@@ -230,7 +229,7 @@ async def test_the_first_life_on_an_empty_world_rewards_the_son(database: Databa
     after = await son(database, realm.son_id)
     empty_rules = Rules().empty_world
     assert after.fame >= before.fame + empty_rules.first_people_renown
-    assert lines.FIRST_LIFE.key in await keys(database)
+    assert "tools.son.first_life" in await keys(database)
 
 
 async def test_names_with_foreign_sounds_are_warned_not_refused(database: Database) -> None:
@@ -443,7 +442,7 @@ async def test_healing_restores_sanity_and_an_unclaimed_target_turns_to_the_son(
     assert (await entity(database, realm.mortal_id)).sanity == 20 + gain
     assert "came to their senses" in healed
     assert await outgoing(database, realm.settlement_id, BondKind.WORSHIPS) == [realm.son_id]
-    assert lines.MIRACLE.key in await keys(database)
+    assert "tools.son.miracle" in await keys(database)
 
 
 async def test_a_failed_take_life_returns_part_of_the_essence(database: Database) -> None:

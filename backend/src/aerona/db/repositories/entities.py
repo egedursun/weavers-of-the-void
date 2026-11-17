@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, inspect, select
 
 from aerona.catalog.entity_types import can_contain, engine_kind_owner
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
@@ -162,7 +162,14 @@ class EntityRepository(Repository):
             moved += 1
         return moved
 
+    async def load_columns(self, entity: EntityRow) -> None:
+        state = inspect(entity)
+        missing = sorted(state.unloaded & set(state.mapper.column_attrs.keys()))
+        if missing and state.persistent:
+            await self.session.refresh(entity, missing)
+
     async def set_status(self, entity: EntityRow, status: EntityStatus, epoch: int, fate_note: str | None = None) -> EntityRow:
+        await self.load_columns(entity)
         previous = entity.status
         if previous is status:
             return entity

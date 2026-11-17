@@ -4,7 +4,6 @@ from sqlalchemy import func, select
 
 from aerona.catalog.sacred import DIVINATION_LAWS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.dominion import MiracleRecordRow
@@ -26,6 +25,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.minds import MindPurpose
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, DivinationValidity, ForesightSource, ForesightStatus, OmenVerdict
 from aerona.domain.enums.society import Commodity
@@ -39,13 +39,13 @@ from aerona.engine.divine.laws import binds
 from aerona.engine.lore.prophecy import Foretelling, met, seer_power, typed_condition
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import members_of, ruler_of_realm
 from aerona.engine.sacred.astrology import real_sky
 from aerona.engine.sacred.places import patron_of, realm_of_town, region_of
@@ -120,7 +120,7 @@ async def take_up(ctx: TickContext, people: EntityRow, kind: DivinationKind) -> 
     row.validity = await validity_of(ctx, row)
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{people.name} took up {spoken(kind)} to read what is to come.", key="sacred.divination", ids=[people.id])
+    await record(ctx, "sacred.divination", roles={IncidentRole.SUBJECT: people.id}, facts={"kind": kind})
     return row
 
 
@@ -541,11 +541,11 @@ async def model_realm(ctx: TickContext, order_id: int, realm_id: int, archive: i
     await ctx.session.flush()
     realm = await ctx.session.get(EntityRow, realm_id)
     order = await ctx.session.get(EntityRow, order_id)
-    await note(
+    await record(
         ctx,
-        f"{order.name if order else 'An order'} began to forecast the course of {realm.name if realm else 'a realm'}.",
-        key="sacred.forecast",
-        ids=[order_id, realm_id],
+        "sacred.forecast",
+        roles={IncidentRole.SUBJECT: [order_id, realm_id]},
+        facts={"detail": str(order.name if order else "An order"), "detail_2": str(realm.name if realm else "a realm")},
     )
     return row
 

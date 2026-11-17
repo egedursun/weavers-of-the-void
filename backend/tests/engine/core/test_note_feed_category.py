@@ -3,16 +3,15 @@ from typing import Any
 from aerona.db.session import Database
 from aerona.domain.enums.chronicle import FeedCategory
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import current_environment, run_tick
 from aerona.events.kinds import EventKind
-from tests.engine.core.factories import seed_core_world
+from tests.engine.core.factories import seed_core_world, tell_history
 
 
 async def war_line(ctx: TickContext) -> None:
-    await note(ctx, "Two clans clash over the salt fields.", key="test.war", feed=FeedCategory.WAR)
-    await note(ctx, "The wind turns.", key="test.wind")
+    await tell_history(ctx, "Two clans clash over the salt fields.", feed=FeedCategory.WAR)
+    await tell_history(ctx, "The wind turns.")
 
 
 async def test_engine_notes_carry_their_feed_category(database: Database) -> None:

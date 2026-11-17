@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.renown import GLORIOUS
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
-from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.museums import MuseumPieceRow
@@ -17,13 +16,14 @@ from aerona.domain.enums.faction import OUTLAW_KINDS, FactionKind
 from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.renown import Currency, ReputationAxis
 from aerona.engine.context import TickContext
 from aerona.engine.loops.delay import lagged
 from aerona.engine.museums.reading import grandeur
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 from aerona.engine.renown.book import among
 
 FEARSOME = frozenset({ActKind.EXECUTION, ActKind.MUTILATION, ActKind.TORTURE})
@@ -129,9 +129,12 @@ async def silence(ctx: TickContext, row: RulerCurrencyRow, members: list[int], t
         return
     bump(row, Currency.DREAD, -table.silence_cost)
     row.silenced_until = ctx.epoch + table.silence_epochs
-    ruler = await ctx.session.get(EntityRow, row.subject_node_id)
-    if ruler is not None:
-        await note(ctx, f"Fear of {ruler.name} silenced those who would rise.", key="ruler.silenced", ids=[ruler.id])
+    await record(
+        ctx,
+        "ruler.silenced",
+        roles={IncidentRole.ACTOR: row.subject_node_id},
+        facts={"dread_spent": table.silence_cost, "epochs": table.silence_epochs},
+    )
     tally.silenced += 1
 
 

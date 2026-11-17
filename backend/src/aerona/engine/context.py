@@ -1,19 +1,17 @@
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
-from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository, ChronicleWrite
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.epoch import EpochPhase
-from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.calendar import YearWindow
 from aerona.engine.divine.book import DivineBook
 from aerona.engine.primitives.knowledge import LawBook
+from aerona.engine.recording.terms import rules_for
 from aerona.engine.stats import TickStats
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
@@ -81,7 +79,7 @@ class TickContext:
 
     @property
     def rules(self) -> Rules:
-        return self.environment.rules
+        return rules_for(self.environment.rules)
 
     @property
     def epoch(self) -> int:
@@ -95,44 +93,3 @@ class TickContext:
 
     def publish(self, kind: EventKind, payload: dict[str, Any]) -> None:
         self.environment.publish(kind, payload)
-
-    async def chronicle(
-        self,
-        kind: ChronicleKind,
-        text: str,
-        *,
-        template_key: str,
-        entity_ids: Sequence[int] = (),
-        son_id: int | None = None,
-        world_id: int | None = None,
-        feed_category: FeedCategory | None = None,
-        window: YearWindow | None = None,
-        cause_incident_id: int | None = None,
-        place_entity_id: int | None = None,
-        magnitude: int = 0,
-        year: int | None = None,
-        roles: Mapping[int, IncidentRole] | None = None,
-    ) -> ChronicleWrite:
-        years = self.rules.time.years_per_epoch
-        clock = ChronicleClock(
-            years_per_epoch=years,
-            window=window or self.environment.window or YearWindow(start=0, end=years),
-            pace_divisor=1,
-            rng=self.rng("chronicle_year"),
-        )
-        draft = ChronicleDraft(
-            epoch=self.epoch,
-            kind=kind,
-            text=text,
-            entity_ids=entity_ids,
-            son_id=son_id,
-            world_id=world_id,
-            feed_category=feed_category,
-            template_key=template_key,
-            cause_incident_id=cause_incident_id,
-            place_entity_id=place_entity_id,
-            magnitude=magnitude,
-            year=year,
-            roles=roles or {},
-        )
-        return await ChronicleRepository(self.session).append(draft, clock)

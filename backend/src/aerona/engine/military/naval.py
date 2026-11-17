@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aerona.constants.units import PERCENT
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.context import TickContext
@@ -11,6 +12,7 @@ from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of
 from aerona.engine.military.vessels import batter_fleet, fleet_bonus, fleet_of, renown_fleet
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.vehicles.fleet import AIRBORNE, NAVAL, afloat, batter_groups, readings
 
 STORMS = frozenset({WeatherKind.STORM, WeatherKind.MAGIC_STORM, WeatherKind.BLIZZARD, WeatherKind.SANDSTORM})
@@ -23,6 +25,7 @@ class SeaFight:
     winner: March
     loser: March
     sunk: dict[int, int]
+    steps: list[StepDraft] = field(default_factory=list)
 
 
 async def crew_quality(ctx: TickContext, army_id: int) -> float:
@@ -60,14 +63,15 @@ async def sea_battle(ctx: TickContext, marches: list[March], weather: WeatherKin
     ratio = powers[loser] / max(1.0, powers[winner])
     loser_share = min(0.6, 0.15 + (1 - ratio) / 2)
     winner_share = 0.1 * ratio
-    lost_loser, _ = await batter_groups(ctx, marches[loser].army.id, loser_share, f"sea.{slot}", NAVAL)
-    lost_winner, _ = await batter_groups(ctx, marches[winner].army.id, winner_share, f"sea.{slot}", NAVAL)
+    lost_loser, _, loser_steps = await batter_groups(ctx, marches[loser].army.id, loser_share, f"sea.{slot}", NAVAL)
+    lost_winner, _, winner_steps = await batter_groups(ctx, marches[winner].army.id, winner_share, f"sea.{slot}", NAVAL)
     marches[winner].profile.blockade_entity_id = marches[loser].owner.id
     marches[loser].profile.blockade_entity_id = None
     await batter_fleet(ctx, marches[loser].army.id, loser_share, region_id=marches[loser].profile.region_entity_id)
     await batter_fleet(ctx, marches[winner].army.id, winner_share, region_id=marches[winner].profile.region_entity_id)
     await renown_fleet(ctx, marches[winner].army.id)
-    return SeaFight(marches[winner], marches[loser], {marches[loser].army.id: lost_loser, marches[winner].army.id: lost_winner})
+    sunk = {marches[loser].army.id: lost_loser, marches[winner].army.id: lost_winner}
+    return SeaFight(marches[winner], marches[loser], sunk, [*loser_steps, *winner_steps])
 
 
 async def weather_the_storm(ctx: TickContext, march: March, weather: WeatherKind | None, knowledge: KnowledgeMap) -> int:
@@ -75,6 +79,17 @@ async def weather_the_storm(ctx: TickContext, march: March, weather: WeatherKind
         return 0
     table = ctx.rules.naval
     skill = min(SEAMANSHIP_LEVELS, knowledge.level(march.owner.id, KnowledgeBranch.SEAFARING))
-    lost, _ = await batter_groups(ctx, march.army.id, table.storm_sink_pct / PERCENT * (1 - skill / SEAMANSHIP_LEVELS), f"storm.{march.army.id}", NAVAL)
-    flown, _ = await batter_groups(ctx, march.army.id, table.sky_storm_pct / PERCENT, f"sky_storm.{march.army.id}", AIRBORNE)
+    lost, _, sea_steps = await batter_groups(
+        ctx, march.army.id, table.storm_sink_pct / PERCENT * (1 - skill / SEAMANSHIP_LEVELS), f"storm.{march.army.id}", NAVAL
+    )
+    flown, _, sky_steps = await batter_groups(ctx, march.army.id, table.sky_storm_pct / PERCENT, f"sky_storm.{march.army.id}", AIRBORNE)
+    if sea_steps or sky_steps:
+        await record(
+            ctx,
+            "war.fleet_storm",
+            roles={IncidentRole.SUBJECT: march.army.id, IncidentRole.OWNER: march.owner.id},
+            facts={"weather": weather, "lost": lost + flown},
+            steps=[*sea_steps, *sky_steps],
+            place=march.profile.region_entity_id,
+        )
     return lost + flown

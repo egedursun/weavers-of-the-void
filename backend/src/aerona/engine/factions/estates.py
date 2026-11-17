@@ -11,15 +11,14 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import EstatePrivilege, FactionKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.civics import polity_allows
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
 from aerona.engine.polity.policy import approval_of
@@ -28,6 +27,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 
 LOYALTY = "loyalty"
 INFLUENCE = "influence"
@@ -137,24 +137,24 @@ async def bargain(ctx: TickContext, realm: Realm, row: EstateProfileRow, tally: 
     wishes = [privilege for privilege in PRIVILEGE_WISHES[row.social_class] if privilege not in privileges]
     if row.loyalty <= table.grant_below and row.influence >= table.grant_influence and wishes:
         if await grant(ctx, row, wishes[0]):
-            await note(
+            await record(
                 ctx,
-                f"{realm.entity.name} granted its {ESTATE_NAMES[row.social_class].lower()} a privilege to keep their loyalty.",
-                key="estates.granted",
-                ids=[realm.entity.id, row.faction_entity_id],
-                kind=ChronicleKind.CIVILIZATION,
+                "estates.granted",
+                roles={IncidentRole.GIVER: realm.entity.id, IncidentRole.RECEIVER: row.faction_entity_id},
+                facts={"estate": row.social_class, "privilege": wishes[0], "loyalty": row.loyalty, "influence": row.influence},
+                place=realm.profile.capital_entity_id,
             )
             tally.granted += 1
         return
     needy = realm.profile.treasury < table.revoke_treasury
     exempt = EstatePrivilege.TAX_EXEMPTION in privileges
     if needy and row.loyalty >= table.revoke_above and exempt and await revoke(ctx, row, EstatePrivilege.TAX_EXEMPTION):
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name}, short of coin, took back the tax exemption of its {ESTATE_NAMES[row.social_class].lower()}.",
-            key="estates.revoked",
-            ids=[realm.entity.id, row.faction_entity_id],
-            kind=ChronicleKind.CIVILIZATION,
+            "estates.revoked",
+            roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.VICTIM: row.faction_entity_id},
+            facts={"estate": row.social_class, "privilege": EstatePrivilege.TAX_EXEMPTION, "treasury": realm.profile.treasury},
+            place=realm.profile.capital_entity_id,
         )
         tally.revoked += 1
 

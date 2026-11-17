@@ -10,18 +10,19 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import PetitionKind, PetitionStatus
 from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
 from aerona.engine.divine.standing import present, standing_row
 from aerona.engine.mind.thoughts import think
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.spirits import rank_above, rank_below
 
 OPEN = (PetitionStatus.FILED, PetitionStatus.DELAYED, PetitionStatus.APPEALED)
@@ -246,8 +247,8 @@ async def tend_office(ctx: TickContext, office: SpiritOfficeRow, tally: BureauTa
             office.superior_spirit_id = None
             tally.rogue += 1
             spirit = await ctx.session.get(EntityRow, office.spirit_entity_id)
-            await note(
-                ctx, f"{spirit.name if spirit else 'A spirit'} went rogue, answering to no one.", key="sacred.office_rogue", ids=[office.spirit_entity_id]
+            await record(
+                ctx, "sacred.office_rogue", roles={IncidentRole.SUBJECT: office.spirit_entity_id}, facts={"detail": str(spirit.name if spirit else "A spirit")}
             )
         community = await living_entity(ctx.session, office.jurisdiction_entity_id)
         if office.overseer_node_id is not None and community is not None and not held(community.id):

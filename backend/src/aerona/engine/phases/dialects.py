@@ -5,16 +5,17 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, close, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.tongues.sounds import inherit
 from aerona.language.dialect import dialect_should_split, plan_engine_dialect
 from aerona.language.lexicon import LexiconEntry
@@ -53,26 +54,22 @@ async def found_dialect(ctx: TickContext, settlement: EntityRow, parent: EntityR
     await connect(ctx.session, settlement.id, dialect.id, BondKind.SPEAKS, ctx.epoch, description="dialect")
     await store_words(ctx, dialect, plan.inherited_words, settlement.id)
     await inherit(ctx, parent.id, dialect.id)
-    await note(ctx, plan.note, key="dialects.split", ids=[settlement.id, parent.id, dialect.id])
+    await record_incident(
+        ctx,
+        "dialects.split",
+        roles={IncidentRole.SUBJECT: settlement.id, IncidentRole.PREDECESSOR: parent.id, IncidentRole.PRODUCT: dialect.id},
+        facts={"words": len(plan.inherited_words)},
+        place=settlement.id,
+    )
     return dialect
 
 
-@reads(
-    "table.bonds",
-    "table.entities",
-    "table.epoch_year_cursors",
-    "table.language_profiles",
-    "table.lexemes",
-    "table.name_registry",
-    "table.nodes",
-    "table.world_maps",
-)
+@reads("table.bonds", "table.entities", "table.language_profiles", "table.lexemes", "table.name_registry", "table.nodes", "table.world_maps")
 @writes(
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",

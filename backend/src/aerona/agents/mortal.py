@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import delete, select, update
 
-from aerona.agents.chronicle import ChroniclePhase, write_line
+from aerona.agents.chronicle import ChroniclePhase, record_line
 from aerona.agents.context.mortal import mortal_context
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.metrics import metrics_turn
@@ -33,9 +33,9 @@ from aerona.db.tables.storyteller import StorytellerRow
 from aerona.domain.enums.agent import AgentKind, MessageIntent
 from aerona.domain.enums.body import Consciousness
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitEffect, TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.book import bedridden
@@ -341,9 +341,13 @@ async def finish_mortal_turn(runtime: AgentRuntime, started: StartedMortalTurn, 
             await session.execute(update(MessageRow).where(MessageRow.id.in_(started.messages)).values(is_read=True))
         await session.execute(delete(EntityFlagRow).where(EntityFlagRow.entity_id == entity.id, EntityFlagRow.flag == EntityFlag.AGENT_SELECTED))
         if word:
-            text = f'{entity.name}: "{word[:MORTAL_WORD_CHRONICLE_CHARS]}"'
-            await write_line(
-                session, rules, started.epoch, ChronicleKind.SPEECH, text, key="mortal.word", phase=ChroniclePhase.MORTALS, entity_ids=[entity.id, *creations]
+            await record_line(
+                session,
+                rules,
+                "mortal.word",
+                roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PRODUCT: tuple(creations)},
+                facts={"word": word[:MORTAL_WORD_CHRONICLE_CHARS]},
+                phase=ChroniclePhase.MORTALS,
             )
     return MortalTurnResult(started.entity_id, started.name, word, creations, outcome.status.value)
 

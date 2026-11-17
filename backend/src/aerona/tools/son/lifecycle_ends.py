@@ -8,6 +8,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.lifecycle.end_control import wake_now
 from aerona.engine.lifecycle.ends import KIND_OF_TYPE
 from aerona.engine.primitives.queries import living_entity
@@ -17,7 +18,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -43,7 +43,12 @@ async def wake_lore(call: SonCall, args: WakeLoreInput) -> str:
         fail(SonResult.WAKE_REFUSED, why=str(error).rstrip("."))
     call.spend_essence(cost)
     call.target(lore.id)
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.WAKE_LORE, entity_ids=[lore.id], son=call.son.name, lore=lore.name, reason=args.reason)
+    await call.record(
+        "tools.son.wake_lore",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: lore.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.LORE_WOKEN, lore=lore.name, state=row.state.value.replace("_", " "))
 
 

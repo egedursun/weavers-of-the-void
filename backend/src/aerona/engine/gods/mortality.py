@@ -18,6 +18,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityOrigin, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import LegendStats
@@ -29,6 +30,7 @@ from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.primitives.faith import patron_son
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 NOTABLE_ROLES = frozenset(HERO_ROLES | {MortalRole.RULER})
@@ -177,7 +179,7 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
     killer_son = await ctx.session.get(SonRow, killer.node_id) if killer.kind is ActorKind.SON and killer.node_id is not None else None
     chance = await kill_chance(ctx.session, ctx.rules, victim, killer_son)
     if not certain and any([await has_flag(ctx.session, victim.id, flag) for flag in UNKILLABLE_FLAGS]):
-        return KillOutcome(False, god_lines.KILL_IMMORTAL.render(victim=victim.name), chance.percent, immortal=True)
+        return KillOutcome(False, god_lines.KILL_IMMORTAL.format(victim=victim.name), chance.percent, immortal=True)
     rng = ctx.rng("take_life")
     if certain or rng.chance(chance.percent):
         reason = god_lines.KILL_REASON.format(killer=killer.name, how=f" ({how})" if how else "")
@@ -194,7 +196,7 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
             await _sour_relation(ctx, killer_son.id, victim.creator_son_id, note)
             if patron is not None and patron.id != victim.creator_son_id:
                 await _sour_relation(ctx, killer_son.id, patron.id, note)
-        return KillOutcome(True, god_lines.KILL_DIED.render(victim=victim.name, reason=reason), chance.percent)
+        return KillOutcome(True, god_lines.KILL_DIED.format(victim=victim.name, reason=reason), chance.percent)
     story = survival_story(rng, victim.name, killer.name, creator_name, chance)
     add_trait(victim, Trait.CHARISMA, ctx.rules.death.survivor_charisma_gain)
     entities = EntityRepository(ctx.session)
@@ -218,8 +220,15 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
     patron_protector = next((protector for protector in chance.protectors if protector.kind is ProtectorKind.PATRON), None)
     if killer_son is not None and patron_protector is not None:
         await _sour_relation(ctx, killer_son.id, patron_protector.node_id, god_lines.KILL_PROTECT_NOTE.format(victim=victim.name))
-    line = god_lines.KILL_FAILED
-    text = line.render(killer=killer.name, victim=victim.name, story=story)
-    await ctx.chronicle(ChronicleKind.ESCAPE, text, template_key=line.key, entity_ids=[victim.id, legend.id], son_id=killer_son.id if killer_son else None)
+    text = (
+        await record(
+            ctx,
+            "gods.death.kill_failed",
+            roles={IncidentRole.VICTIM: victim.id, IncidentRole.SUBJECT: legend.id},
+            facts={"killer": killer.name, "story": story},
+            kind=ChronicleKind.ESCAPE,
+            son_id=killer_son.id if killer_son else None,
+        )
+    ).text
     ctx.count("failed_kills")
     return KillOutcome(False, text, chance.percent, legend.id)

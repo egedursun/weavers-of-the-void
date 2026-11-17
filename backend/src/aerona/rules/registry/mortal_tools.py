@@ -29,9 +29,6 @@ class MortalToolsRules:
     debt_max_term: int = rule(12, 1, 100, RuleGroup.MORTAL_AGENTS, "Longest debt term (epochs)")
     adopt_ap: int = rule(1, 1, 5, RuleGroup.MORTAL_AGENTS, "adopt (evlat_edin) action cost")
     discover_resource_per_epoch: int = rule(1, 0, 20, RuleGroup.MORTAL_AGENTS, "discover_resource (kaynak_kesfet): maximum discoveries by one mortal per epoch")
-    chronicle_named_communities: int = rule(
-        4, 1, 100, RuleGroup.CONTEXT_BUDGETS, 'Maximum communities named in a chronicle line (the rest as "and N more communities")'
-    )
     seizure_relation_loss: int = rule(25, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Relation loss of a community whose resource is seized toward the seizer")
     ctx_character_chars: int = rule(12000, 100, 50000, RuleGroup.CONTEXT_BUDGETS, "Mortal context: character and way-of-life section (characters)")
     ctx_event_lines: int = rule(48, 1, 200, RuleGroup.CONTEXT_BUDGETS, "Mortal context: lines of recent events")

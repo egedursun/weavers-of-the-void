@@ -4,17 +4,17 @@ from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.chronicle import WritingSystem
+from aerona.domain.enums.chronicle import ChronicleKind, WritingSystem
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.models.phonology import LanguageSignature
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.naming import Namer, seed_of
+from aerona.engine.recording.record import record
 from aerona.epoch.phases.transition import add_epoch_words
 from aerona.language.alphabet import fold_word, is_consonant
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import EPOCH_WORDS_ADDED, LANGUAGE_EDITED, SIGNATURE_REDRAWN, WORDS_ADDED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 from aerona.tools.framework.shared_inputs import WordInput, add_words
 
@@ -89,7 +89,15 @@ async def edit_language(scope: PlayerScope, command: EditLanguage) -> Effect:
     if not fields:
         raise ValidationFailedError(f"Nothing to change on {language.name}.")
     ctx = await scope.context("edit_language")
-    message = await hand(ctx, await scope.creator(), LANGUAGE_EDITED, ids=[language.id], language=language.name, fields=", ".join(fields))
+    message = (
+        await record(
+            ctx,
+            "player.language.edited",
+            roles={IncidentRole.SUBJECT: language.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"fields": str(", ".join(fields))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, language.id)
 
 
@@ -103,7 +111,14 @@ async def regenerate_signature(scope: PlayerScope, command: LanguageTarget) -> E
         raise ValidationFailedError(f"{language.name} has too few sounds to carry a signature.")
     profile.signature = signature
     ctx = await scope.context("language_signature")
-    message = await hand(ctx, await scope.creator(), SIGNATURE_REDRAWN, ids=[language.id], language=language.name)
+    message = (
+        await record(
+            ctx,
+            "player.language.signature",
+            roles={IncidentRole.SUBJECT: language.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, language.id, values={"consonants": signature.consonants, "ending": signature.ending})
 
 
@@ -112,7 +127,15 @@ async def run_epoch_words(scope: PlayerScope, command: EpochWords) -> Effect:
     current = await scope.epoch()
     count = await add_epoch_words(scope.session, scope.rules, command.epoch or current)
     ctx = await scope.context("epoch_words")
-    message = await hand(ctx, await scope.creator(), EPOCH_WORDS_ADDED, count=count)
+    message = (
+        await record(
+            ctx,
+            "player.language.epoch_words",
+            roles={IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"count": count},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"words": count})
 
 
@@ -124,5 +147,13 @@ async def add_lexicon_words(scope: PlayerScope, command: AddWords) -> Effect:
     if not added:
         raise ValidationFailedError(f"{language.name} already knows these words, or they carry no meaning.")
     ctx = await scope.context("add_words")
-    message = await hand(ctx, creator, WORDS_ADDED, ids=[language.id], language=language.name, words=", ".join(added))
+    message = (
+        await record(
+            ctx,
+            "player.language.words",
+            roles={IncidentRole.SUBJECT: language.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"words": str(", ".join(added))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, language.id, values={"added": len(added), "skipped": len(command.words) - len(added)})

@@ -1,19 +1,19 @@
 from typing import Any
 
+from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.engine.polity.book import RealmBook
-from aerona.engine.polity.crises import DEMAND_TEXT, nearest_land, open_crisis
+from aerona.engine.polity.crises import nearest_land, open_crisis
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.ruler import throne_of
 
 
@@ -51,7 +51,7 @@ async def issue_demand(call: MortalCall, args: DemandInput) -> str:
         fail(MortalResult.DEMAND_REFUSED, why="a crisis between you already runs, or a god holds one of you")
     text = DEMAND_TEXT[args.demand]
     call.target(target.entity.id)
-    await call.chronicle(ChronicleKind.WAR, lines.DEMAND, entity_ids=[call.me.id, target.entity.id], me=call.me.name, realm=target.entity.name, demand=text)
+    await call.record(f"tools.mortal.demand_{args.demand.value}", roles={IncidentRole.ACCUSER: call.me.id, IncidentRole.TARGET: target.entity.id})
     return result(MortalResult.DEMAND_ISSUED, realm=target.entity.name, demand=text, steps=call.rules.statecraft.crisis_steps)
 
 
@@ -72,7 +72,7 @@ async def back_crisis(call: MortalCall, args: BackInput) -> str:
     await call.session.flush()
     lead = row.demander_entity_id if args.side is CrisisSide.DEMANDER else row.target_entity_id
     call.target(lead)
-    await call.chronicle(ChronicleKind.WAR, lines.BACKED, entity_ids=[call.me.id, lead], me=call.me.name, side=args.side.value)
+    await call.record("tools.mortal.backed", roles={IncidentRole.ALLY: call.me.id, IncidentRole.BENEFICIARY: lead}, facts={"side": args.side})
     return result(MortalResult.CRISIS_BACKED, side=args.side.value)
 
 

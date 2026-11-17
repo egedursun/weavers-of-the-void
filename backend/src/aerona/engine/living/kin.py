@@ -16,18 +16,19 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.living import HostPlacement, HostRelation
 from aerona.domain.enums.mind import MemoryKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.mind.book import set_skill
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 from aerona.rules.registry.living import SymbiontRules
 
@@ -64,7 +65,7 @@ async def keep_banks(ctx: TickContext) -> int:
         if oldest is not None and not oldest.locked:
             await ctx.session.delete(oldest)
             lost += 1
-            await note(ctx, "An unkept bank of life lost a sample.", key="living.sample_lost", ids=[bank.structure_entity_id])
+            await record(ctx, "living.sample_lost", roles={IncidentRole.SUBJECT: bank.structure_entity_id}, facts={"lost": lost})
     return lost
 
 
@@ -104,7 +105,12 @@ async def spread(ctx: TickContext, row: SymbiontRow, host: EntityRow) -> int:
             locked=[],
         )
     )
-    await note(ctx, f"What lived in {host.name} spread to {other.name}.", key="living.spread", ids=[host.id, other.id])
+    await record(
+        ctx,
+        "living.spread",
+        roles={IncidentRole.ORIGIN: host.id, IncidentRole.DESTINATION: other.id},
+        facts={"strength": row.strength // 2, "relation": row.relation},
+    )
     return 1
 
 
@@ -133,7 +139,7 @@ async def lose_partner(ctx: TickContext, host: EntityRow) -> None:
     loss = ctx.rules.symbionts.partner_loss
     shift_stat(host, "prosperity", -loss, 0)
     shift_stat(host, "craft", -loss, 0)
-    await note(ctx, f"{host.name} lost the partner that lived with them.", key="living.partner_lost", ids=[host.id])
+    await record(ctx, "living.partner_lost", roles={IncidentRole.SUBJECT: host.id}, facts={"loss": loss})
 
 
 async def generation_of(ctx: TickContext, source_id: int) -> int:
@@ -183,7 +189,12 @@ async def clone(ctx: TickContext, source_id: int, maker_id: int | None, *, force
     await connect(ctx.session, copy.id, source.id, BondKind.CLONE_OF, ctx.epoch, description="grown from this body")
     if maker_id is not None:
         await connect(ctx.session, maker_id, copy.id, BondKind.PRODUCED, ctx.epoch, description="grew this clone")
-    await note(ctx, f"A clone of {source.name} was grown.", key="living.cloned", ids=[source.id, copy.id])
+    await record(
+        ctx,
+        "living.cloned",
+        roles={IncidentRole.ORIGIN: source.id, IncidentRole.PRODUCT: copy.id, IncidentRole.MAKER: maker_id},
+        facts={"generation": await generation_of(ctx, source.id)},
+    )
     return copy
 
 

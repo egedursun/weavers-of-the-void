@@ -9,10 +9,11 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.tables.storyteller_depth import RegionalTensionRow, SubsystemTensionRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 HOPS = 4
@@ -78,8 +79,7 @@ async def measure_parts(ctx: TickContext, world_id: int) -> int:
         was = row.crisis
         row.crisis, row.updated_epoch = row.tension >= ctx.rules.storyteller_depth.region_crisis_at, ctx.epoch
         if row.crisis and not was:
-            region = await ctx.session.get(EntityRow, region_id)
-            await note(ctx, f"{region.name if region is not None else 'A region'} is in crisis.", key="storyteller.region_crisis", ids=[region_id])
+            await record_incident(ctx, "storyteller.region_crisis", roles={IncidentRole.SUBJECT: region_id}, facts={"tension": row.tension}, place=region_id)
         crises += row.crisis
     known = set(await ctx.session.scalars(select(SubsystemTensionRow.subsystem).where(SubsystemTensionRow.world_id == world_id)))
     for subsystem in sorted(known | set(by_subsystem)):

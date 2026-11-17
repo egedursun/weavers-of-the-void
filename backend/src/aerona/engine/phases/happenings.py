@@ -10,7 +10,6 @@ from aerona.engine.primitives.distance import RegionAtlas
 
 @reads(
     "table.entities",
-    "table.epoch_year_cursors",
     "table.event_footprints",
     "table.incident_participants",
     "table.incidents",
@@ -20,13 +19,7 @@ from aerona.engine.primitives.distance import RegionAtlas
     "table.worlds",
 )
 @writes(
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-    "table.region_environment",
-    "table.region_geomorphology",
+    "table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.region_environment", "table.region_geomorphology"
 )
 async def geomorphology(ctx: TickContext) -> None:
     for key, value in sorted((await reshape(ctx)).items()):
@@ -51,7 +44,6 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.cosmos",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
@@ -93,11 +85,12 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.community_relations",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.name_registry",

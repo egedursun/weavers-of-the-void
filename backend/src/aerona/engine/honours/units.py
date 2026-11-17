@@ -13,14 +13,15 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.honours import UnitHonourKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore.history import record
 from aerona.engine.lore.items import standard_item
 from aerona.engine.military.battle import BattleResult, Side
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
 
 
@@ -51,7 +52,7 @@ async def reconstitute(ctx: TickContext, row: ArmyUnitRow, owner: int | None) ->
     old.unit_id, old.disbanded_epoch = row.id, None
     if "esprit" not in old.locked:
         old.esprit = round_half_up(old.esprit * ctx.rules.unit_honours.reconstitute_pct / PERCENT)
-    await note(ctx, f"{old.name} was raised again from its veterans.", key="honours.reconstituted", ids=[row.army_entity_id])
+    await record_incident(ctx, "honours.reconstituted", roles={IncidentRole.SUBJECT: row.army_entity_id}, facts={"unit": old.name, "esprit": old.esprit})
     return old
 
 
@@ -143,7 +144,8 @@ async def earn_nickname(ctx: TickContext, named: NamedUnitRow, tally: HonourTall
         return
     named.nickname = word
     tally.nicknamed += 1
-    await note(ctx, f"{named.name} came to be called {word}.", key="honours.nicknamed", ids=[node for node in (named.owner_entity_id,) if node is not None])
+    owner = {IncidentRole.OWNER: named.owner_entity_id} if named.owner_entity_id is not None else {}
+    await record_incident(ctx, "honours.nicknamed", roles=owner, facts={"unit": named.name, "nickname": word, "honours": earned or 0})
 
 
 async def honour_battle(ctx: TickContext, result: BattleResult, place: str, tally: HonourTally) -> None:
@@ -186,7 +188,12 @@ async def disband_units(ctx: TickContext, army_id: int, tally: HonourTally) -> N
         owner = await ctx.session.get(EntityRow, named.owner_entity_id) if named.owner_entity_id is not None else None
         if honours and owner is not None and not held(owner.id):
             shift_stat(owner, "renown", -table.disband_renown, 0)
-            await note(ctx, f"{owner.name} disbanded {named.name}, whose standard bore honours.", key="honours.disbanded", ids=[owner.id])
+            await record_incident(
+                ctx,
+                "honours.disbanded",
+                roles={IncidentRole.ACTOR: owner.id},
+                facts={"unit": named.name, "honours": len(honours), "renown_lost": table.disband_renown},
+            )
 
 
 async def esprit_morale(ctx: TickContext, rows: list[ArmyUnitRow]) -> int:

@@ -1,13 +1,11 @@
 from collections import defaultdict
-from collections.abc import Mapping
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.collective import HERALDIC_NAMES
-from aerona.catalog.genetic_effects import HOUSE_TRAIT_LABELS
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -19,13 +17,13 @@ from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import Tincture
 from aerona.domain.enums.entity import HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
-from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseEnd, HouseTrait, LawKind, OathBreach, OathKind, OfficeKind, OfficePower
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -50,7 +48,6 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
 from aerona.engine.mortal.kinship import marriages_of, marry
-from aerona.engine.notes import note
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.society_support.quests import QuestOption
 from aerona.engine.polity.book import RealmBook, sex_of
@@ -63,6 +60,7 @@ from aerona.engine.primitives.queries import add_flag, connect, has_flag, living
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 from aerona.engine.unions.axes import Spousing, spousing_of
 from aerona.engine.unions.customs import CONSENTS_NEEDED, line_house
 from aerona.engine.unions.purpose import purpose_gain
@@ -332,7 +330,7 @@ async def tend(ctx: TickContext, book: HouseBook, realms: RealmBook) -> dict[str
             continue
         alive = await living(ctx, {member for member in book.members[house_id] if member in book.house_of and book.house_of[member] == house_id})
         if not alive:
-            await extinguish(ctx, book, house_id, "its last member died")
+            await extinguish(ctx, book, house_id, HouseEnd.LAST_MEMBER_DIED)
             counts["extinct"] += 1
             continue
         if "head" not in profile.locked:
@@ -423,25 +421,6 @@ async def earn(ctx: TickContext, profile: HouseProfileRow, alive: list[EntityRow
     profile.wealth = max(0, profile.wealth + income - round_half_up(profile.wealth * table.wealth_decay_pct / PERCENT))
 
 
-TRAIT_SOURCES: Mapping[HouseTrait, str] = total(
-    HouseTrait,
-    {
-        HouseTrait.SEER_GIFT: "a seer was born to the line",
-        HouseTrait.GIANT_BLOODED: "the line bore giants",
-        HouseTrait.LONG_LIVED: "its elders lived long",
-        HouseTrait.FERTILE: "its line was fertile",
-        HouseTrait.CURSED: "a curse fell on the line",
-        HouseTrait.GOD_BLOODED: "it carries a god's descent",
-        HouseTrait.STRONG_BLOODED: "its members are born strong",
-        HouseTrait.SWIFT: "its members are born quick of reflex",
-        HouseTrait.QUICK_HEALING: "its members heal quickly",
-        HouseTrait.SHARP_SENSED: "its members are born sharp-sighted",
-        HouseTrait.STEADY: "its members stay calm under strain",
-        HouseTrait.QUICK_MINDED: "its members are born with long memories",
-    },
-)
-
-
 async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRow, alive: list[EntityRow]) -> None:
     if "traits" in profile.locked:
         return
@@ -470,15 +449,12 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
         if not ctx.rng(f"house_trait.{profile.house_entity_id}.{trait.value}.{ctx.epoch}").chance(table.trait_chance):
             continue
         profile.traits = [*profile.traits, trait]
-        house = book.houses.get(profile.house_entity_id)
-        why = TRAIT_SOURCES[trait]
-        if house is not None:
-            await note(
+        if profile.house_entity_id in book.houses:
+            await record(
                 ctx,
-                f"{house.name} became known as {HOUSE_TRAIT_LABELS[trait]}: {why}.",
-                key="houses.trait",
-                ids=[house.id],
-                kind=ChronicleKind.CIVILIZATION,
+                f"houses.trait_{trait.value}",
+                roles={IncidentRole.SUBJECT: profile.house_entity_id, IncidentRole.MEMBER: [mortal.id for mortal in alive]},
+                facts={"chance": table.trait_chance, "members": len(alive)},
             )
 
 
@@ -567,12 +543,12 @@ async def disputes(ctx: TickContext, book: HouseBook) -> int:
             child = await living_entity(ctx.session, member_id)
             if child is not None:
                 await join(ctx, book, cadet.id, child, by_marriage=False)
-        await note(
+        await record(
             ctx,
-            f"The dispute over the throne split {book.houses[house_id].name}: {claimant.name} founded {cadet.name} against the crowned kin.",
-            key="houses.dispute_split",
-            ids=[cadet.id, house_id, claimant.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "houses.dispute_split",
+            roles={IncidentRole.ACTOR: claimant.id, IncidentRole.PREDECESSOR: house_id, IncidentRole.PRODUCT: cadet.id, IncidentRole.OPPONENT: ruler},
+            facts={"realm": claim.polity_entity_id, "claim": claim.strength, "kin": len(down & book.members[house_id])},
+            place=claimant.location_id,
         )
         split += 1
     return split
@@ -613,16 +589,16 @@ async def branch(ctx: TickContext, book: HouseBook, house_id: int, alive: list[E
                 since_epoch=ctx.epoch,
             )
         )
-    await note(
+    await record(
         ctx,
-        f"{founder.name} split from {book.houses[house_id].name} and founded {cadet.name}, keeping a claim against the elder line.",
-        key="houses.branch",
-        ids=[cadet.id, house_id, founder.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "houses.branch",
+        roles={IncidentRole.ACTOR: founder.id, IncidentRole.PREDECESSOR: house_id, IncidentRole.PRODUCT: cadet.id},
+        facts={"kin": count, "claim_on": profile.polity_entity_id},
+        place=founder.location_id,
     )
 
 
-async def extinguish(ctx: TickContext, book: HouseBook, house_id: int, reason: str) -> None:
+async def extinguish(ctx: TickContext, book: HouseBook, house_id: int, reason: HouseEnd, *, occasion: int | None = None) -> None:
     house = book.houses.pop(house_id)
     profile = book.profiles.get(house_id)
     if profile is not None:
@@ -643,21 +619,25 @@ async def extinguish(ctx: TickContext, book: HouseBook, house_id: int, reason: s
             await relic_quest(ctx, item, house)
             lost += 1
         await ctx.session.delete(heirloom)
-    await retire_in(ctx, house, reason, status=EntityStatus.DESTROYED)
+    await retire_in(ctx, house, spoken(reason), status=EntityStatus.DESTROYED)
     if profile is not None and profile.divine_son_id is not None and HouseTrait.GOD_BLOODED in profile.traits:
         son = await ctx.session.get(SonRow, profile.divine_son_id)
         if son is not None and son.status is SonStatus.ACTIVE:
             son.existence = clamp_int(son.existence - ctx.rules.houses.anchor_loss, 0, PERCENT)
-            await note(
+            await record(
                 ctx,
-                f"With {house.name} the blood of {son.name} faded from the world.",
-                key="houses.divine_line_ended",
-                ids=[house.id],
+                "houses.divine_line_ended",
+                roles={IncidentRole.SUBJECT: house.id, IncidentRole.PATRON: son.id},
+                facts={"existence_lost": ctx.rules.houses.anchor_loss},
                 son_id=son.id,
-                kind=ChronicleKind.CIVILIZATION,
             )
-    fate = f"its treasures passed to {book.houses[heir_house].name}" if heir_house is not None and heir_house in book.houses else "its treasures were lost"
-    await note(ctx, f"{house.name} died out; {reason}. {fate.capitalize()}.", key="houses.extinct", ids=[house.id], kind=ChronicleKind.CIVILIZATION)
+    heir = heir_house if heir_house is not None and heir_house in book.houses else None
+    await record(
+        ctx,
+        "houses.extinct" if heir is not None else "houses.extinct_lost",
+        roles={IncidentRole.SUBJECT: house.id, IncidentRole.HEIR: heir},
+        facts={"end": reason, "occasion": occasion, "passed": passed, "lost": lost},
+    )
     ctx.count("heirlooms_passed", passed)
     ctx.count("heirlooms_lost", lost)
 
@@ -684,8 +664,11 @@ async def relic_quest(ctx: TickContext, item: EntityRow, house: EntityRow) -> No
     seeker = next(iter(seekers), None)
     if seeker is not None and not await active_quest(ctx.session, seeker.id):
         await start_quest(ctx, seeker, QuestOption(QuestAim.FIND, QuestTargetKind.ITEM, item.id, 1.0, f"to find {item.name}, lost with {house.name}"))
-        await note(
-            ctx, f"{seeker.name} set out to find {item.name}, lost when {house.name} died out.", key="houses.relic_quest", ids=[seeker.id, item.id, house.id]
+        await record(
+            ctx,
+            "houses.relic_quest",
+            roles={IncidentRole.ACTOR: seeker.id, IncidentRole.INSTRUMENT: item.id, IncidentRole.PREDECESSOR: house.id},
+            place=seeker.location_id,
         )
 
 
@@ -838,7 +821,7 @@ async def union_portion(ctx: TickContext, book: HouseBook, house_id: int, spouse
 async def break_celibacy(ctx: TickContext, *mortals: EntityRow) -> None:
     for mortal in mortals:
         for oath in await oaths_of(ctx, mortal.id, OathKind.CELIBACY):
-            await break_oath(ctx, oath, "a marriage was made")
+            await break_oath(ctx, oath, OathBreach.MARRIAGE_MADE)
 
 
 DYNASTY_FIXUP = "houses_dynasty_ancestors"
@@ -943,12 +926,12 @@ async def fabricate_claims(ctx: TickContext, realms: RealmBook) -> int:
                 locked=[],
             )
         )
-        await note(
+        await record(
             ctx,
-            f"The forgers of {realm.entity.name} found an old claim to {target.entity.name}.",
-            key="houses.fabricated_claim",
-            ids=[realm.entity.id, target.entity.id, ruler.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "houses.fabricated_claim",
+            roles={IncidentRole.SUBJECT: realm.entity.id, IncidentRole.TARGET: target.entity.id, IncidentRole.ACTOR: ruler.id},
+            facts={"strength": round_half_up(table.fabricated_claim * spy), "chance": table.fabricate_chance * spy, "basis": ClaimBasis.FABRICATED},
+            place=realm.profile.capital_entity_id,
         )
         made += 1
     return made

@@ -5,18 +5,20 @@ from aerona.catalog.commodities import STRATEGIC_KINDS
 from aerona.catalog.materials import COIN_MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.economy import CurrencyRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
@@ -28,7 +30,6 @@ from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.industry.owners import owners_starved
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -37,6 +38,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon
 from aerona.engine.primitives.stats import headcount, set_stats, stat
 from aerona.engine.primitives.strength import military_strength
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
 
@@ -181,13 +183,16 @@ async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resourc
         return False
     if not await declare_war(ctx, hungry.id, holder.id, f"to seize {resource.name}", cause=WarCause.RESOURCE):
         return False
-    await note(
+    await record(
         ctx,
-        f"{hungry.name} went to war against {holder.name} to seize {resource.name}, which it could not do without.",
-        key="trade.seize_resource",
-        ids=[hungry.id, holder.id, resource.id],
-        feed=FeedCategory.WAR,
-        kind=ChronicleKind.WORLD,
+        "trade.seize_resource",
+        roles={IncidentRole.ACTOR: hungry.id, IncidentRole.OPPONENT: holder.id, IncidentRole.SUBJECT: resource.id},
+        facts={"pressed": round(pressed * 100), "leaning": round(leaning * 100)},
+        terms=(
+            Term("trade.rivalry_war_chance", ctx.rules.trade.rivalry_war_chance),
+            Term("ownership.war_owner_pct", pressed, ModifierOp.MULTIPLY, source_node_id=hungry.id),
+            Term("biases.war", leaning, ModifierOp.MULTIPLY, source_node_id=hungry.id),
+        ),
     )
     return True
 
@@ -199,7 +204,13 @@ async def _barter(ctx: TickContext, first: EntityRow, second: EntityRow, entitie
     wanted = ", ".join(entities[item].name for item in sorted(goods[1]))
     if not await open_trade_route(ctx, first, second, f"{offered} in exchange for {wanted}"):
         return False
-    await note(ctx, f"Resource barter began between {first.name} and {second.name}.", key="trade.barter", ids=[first.id, second.id], kind=ChronicleKind.TRADE)
+    await record(
+        ctx,
+        "trade.barter",
+        roles={IncidentRole.GIVER: first.id, IncidentRole.RECEIVER: second.id, IncidentRole.PRODUCT: sorted(goods[0] | goods[1])},
+        facts={"offered": len(goods[0]), "wanted": len(goods[1])},
+        steps=(StepDraft(StepAction.OFFER, actor=first.id, target=second.id), StepDraft(StepAction.AGREE, actor=second.id, target=first.id)),
+    )
     return True
 
 
@@ -242,7 +253,6 @@ async def _seize_from_neighbours(
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -250,6 +260,7 @@ async def _seize_from_neighbours(
     "table.network_nodes",
     "table.nodes",
     "table.offices",
+    "table.personality_values",
     "table.polity_members",
     "table.relationships",
     "table.resource_profiles",
@@ -260,15 +271,7 @@ async def _seize_from_neighbours(
     "table.world_maps",
     "table.worlds",
 )
-@writes(
-    "table.bias_weights",
-    "table.bonds",
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-)
+@writes("table.bias_weights", "table.bonds", "table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def barter_and_rivalry(ctx: TickContext) -> None:
     session = ctx.session
     entities = {entity.id: entity for entity in await canon(session)}
@@ -315,7 +318,6 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.currencies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.herds",
     "table.holder_levels",
@@ -355,7 +357,6 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.currencies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -383,9 +384,7 @@ async def impose_trade(ctx: TickContext, first_id: int, second_id: int) -> bool:
         raise ValidationFailedError("Trade routes join communities.")
     opened = await open_trade_route(ctx, first, second, "by decree")
     if opened:
-        await note(
-            ctx, f"A trade route opened between {first.name} and {second.name}.", key="trade.decree", ids=[first.id, second.id], kind=ChronicleKind.TRADE
-        )
+        await record(ctx, "trade.decree", roles={IncidentRole.ORIGIN: first.id, IncidentRole.DESTINATION: second.id})
     return opened
 
 

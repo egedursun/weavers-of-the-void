@@ -125,3 +125,8 @@ class WillCause(StrEnum):
     DAMAGE = "damage"
     OATH = "oath"
     EXCEEDING = "exceeding"
+
+
+class DisputeOutcome(StrEnum):
+    SOURCE_KEPT = "source_kept"
+    COPY_WON = "copy_won"

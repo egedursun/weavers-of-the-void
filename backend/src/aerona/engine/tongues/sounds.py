@@ -21,15 +21,17 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.tongues import SoundChangeCause, SoundChangeKind, SoundEnvironment, WordRegister
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.context import TickContext
+from aerona.engine.lore.history import scope_incident
 from aerona.engine.lore.language import speakers, tongues_of
 from aerona.engine.networks.book import networked_with
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import canon, has_flag
+from aerona.engine.recording.record import record as record_incident
 
 FIXED_REGISTERS = frozenset({WordRegister.ARCHAIC, WordRegister.SACRED, WordRegister.POETIC})
 SHORTEST = 2
@@ -296,7 +298,9 @@ async def weather_names(ctx: TickContext, language_id: int, change: Change, vowe
         meaning.name = form
         meaning.gloss = clipped_gloss(f"{meaning.gloss}; once called {old}".lstrip("; "))
         renamed += 1
-        await note(ctx, f"In the mouths of its folk, {old} became {form}.", key="tongues.place_renamed", ids=[place.id, language_id])
+        await record_incident(
+            ctx, "tongues.place_renamed", roles={IncidentRole.PLACE: place.id, IncidentRole.SUBJECT: language_id}, facts={"old_name": old, "new_name": form}
+        )
     return renamed
 
 
@@ -315,6 +319,7 @@ async def add_change(ctx: TickContext, language_id: int, change: Change, cause: 
         cause=cause,
         position=position,
         epoch=ctx.epoch,
+        incident_id=scope_incident(),
         locked=[],
     )
     ctx.session.add(row)
@@ -375,6 +380,7 @@ async def inherit(ctx: TickContext, parent_id: int, child_id: int) -> int:
                 target=row.target,
                 environment=row.environment,
                 cause=SoundChangeCause.INHERITED,
+                incident_id=scope_incident(),
                 position=row.position,
                 epoch=row.epoch,
                 locked=[],

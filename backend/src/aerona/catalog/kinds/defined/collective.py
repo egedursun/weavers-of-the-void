@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.collective import HeraldryHolderKind, MobTarget, SocialBias
+from aerona.domain.enums.collective import HeraldryHolderKind, MobEnd, MobTarget, SocialBias
 
 HERALDRY_HOLDER_KIND = total(
     HeraldryHolderKind,
@@ -23,6 +23,17 @@ HERALDRY_HOLDER_KIND = total(
         HeraldryHolderKind.COMPANY: Defined("A company", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),
         HeraldryHolderKind.ORDER: Defined("An order", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),
         HeraldryHolderKind.PEOPLE: Defined("A people", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),
+    },
+)
+
+MOB_END = total(
+    MobEnd,
+    {
+        MobEnd.FATIGUE: Defined(
+            "Tired and went home", checked_by=(), used_by=("engine.collective.crowds.rage_mobs", "services.integrity.collective_links.mend_collective_links")
+        ),
+        MobEnd.FORCE: Defined("Broken by force", checked_by=(), used_by=("engine.collective.crowds.rage_mobs",)),
+        MobEnd.CONCESSION: Defined("Given its demands", checked_by=(), used_by=("engine.collective.crowds.concede", "services.player.collective.MobDisperse")),
     },
 )
 

@@ -46,7 +46,7 @@ async def ship(ctx: TickContext, world_id: int, name: str, hull: VehicleFrame = 
 async def test_a_fresh_ship_takes_its_hull_and_the_best_hull_follows_knowledge(session: AsyncSession, world_id: int) -> None:
     ctx = make_ctx(session)
     _, row = await ship(ctx, world_id, "Gull")
-    assert row.frame is VehicleFrame.WARSHIP and row.condition == PERCENT and row.crew > 0 and row.armament
+    assert row.frame is VehicleFrame.WARSHIP and row.condition == PERCENT and row.crew > 0
     knowledge = await KnowledgeMap.load(session)
     assert best_hull(knowledge, None, 0) is VehicleFrame.BOAT
     assert best_hull(knowledge, 1, 0) in set(VehicleFrame)

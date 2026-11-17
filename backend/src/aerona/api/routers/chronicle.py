@@ -1,18 +1,23 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
-from aerona.api.schemas.chronicle import ChronicleEpoch, ChroniclePage, PerspectiveLine
+from aerona.api.schemas.chronicle import ChronicleEpoch, ChronicleFeedGroup, ChroniclePage, PerspectiveLine
 from aerona.api.schemas.records import ThreadRecord
 from aerona.api.views.common import chronicle_lines, node_refs
+from aerona.api.views.scoped_lines import scoped_lines
+from aerona.constants.api import SCOPED_PAGE, SCOPED_PAGE_MAX
 from aerona.db.repositories.chronicle import feed_lines, in_world
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import ChronicleRow, HistorianViewRow, ThreadLinkRow
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.services.codex import CosmicEpoch, cosmic_chronicle
 from aerona.services.threads import list_threads
 
@@ -22,6 +27,14 @@ ALIASES = (
     Alias("POST", "/threads", "thread:open"),
     Alias("POST", "/threads/{thread_id}/close", "thread:close", path_fields={"thread_id": "thread_id"}),
 )
+
+
+def feed_groups(rows: list[ChronicleRow], threshold: int) -> list[ChronicleFeedGroup]:
+    found: dict[tuple[int, str], list[int]] = {}
+    for row in rows:
+        if row.template_key:
+            found.setdefault((row.epoch, row.template_key), []).append(row.id)
+    return [ChronicleFeedGroup(epoch=epoch, size=len(ids), line_ids=ids) for (epoch, _), ids in found.items() if len(ids) >= threshold]
 
 
 async def primary_world(session: AsyncSession) -> int:
@@ -55,7 +68,21 @@ async def read_chronicle(
             size = total
         rows = list(await session.scalars(statement.order_by(ChronicleRow.id.desc()).limit(size)))
         rows.reverse()
-        return ChroniclePage(items=await chronicle_lines(session, rows), total=total)
+        return ChroniclePage(items=await chronicle_lines(session, rows), total=total, groups=feed_groups(rows, rules.world_engine.chronicle_fold_threshold))
+
+
+@router.get("/chronicle/scope", response_model=ChroniclePage)
+async def read_scoped_chronicle(
+    services: ServicesDep,
+    *,
+    scope: Annotated[ChronicleScope, Query()],
+    scope_id: Annotated[int | None, Query(ge=1)] = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=SCOPED_PAGE_MAX)] = SCOPED_PAGE,
+) -> ChroniclePage:
+    async with reader(services) as session:
+        items, total = await scoped_lines(session, scope, scope_id, offset=offset, limit=limit)
+        return ChroniclePage(items=items, total=total)
 
 
 @router.get("/chronicle/epochs", response_model=list[ChronicleEpoch])

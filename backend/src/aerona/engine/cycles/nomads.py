@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.cycles import CampRow, ConfederationRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +13,9 @@ from aerona.domain.enums.cycles import MobilityMode
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import PlantDefence
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.settlement import SizeTier
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import population_of, shift
@@ -22,12 +23,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.nature.cover import cover_of, grazing
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import active_tribute, impose_tribute
 
@@ -97,21 +98,26 @@ async def found_camps(ctx: TickContext, atlas: RegionAtlas, tally: NomadTally) -
             continue
         mode = MobilityMode.NOMADIC if share >= table.nomadic_pct else MobilityMode.TRANSHUMANT
         ground = await ctx.session.get(RegionEnvironmentRow, region)
-        ctx.session.add(
-            CampRow(
-                settlement_entity_id=town.id,
-                mode=mode,
-                circuit=await circuit_for(ctx, atlas, region, mode, round_half_up(population_of(town) * table.herd_per_dweller / PERCENT)),
-                season_index=0,
-                herd=round_half_up(population_of(town) * table.herd_per_dweller / PERCENT),
-                grazing=await pasture(ctx, ground),
-                water=water_of(ground),
-                last_moved_epoch=None,
-                locked=[],
-            )
+        camp = CampRow(
+            settlement_entity_id=town.id,
+            mode=mode,
+            circuit=await circuit_for(ctx, atlas, region, mode, round_half_up(population_of(town) * table.herd_per_dweller / PERCENT)),
+            season_index=0,
+            herd=round_half_up(population_of(town) * table.herd_per_dweller / PERCENT),
+            grazing=await pasture(ctx, ground),
+            water=water_of(ground),
+            last_moved_epoch=None,
+            locked=[],
         )
+        ctx.session.add(camp)
         tally.camps += 1
-        await note(ctx, f"{town.name} took to the move with its herds, following the pastures.", key="nomads.camp", ids=[town.id])
+        await record(
+            ctx,
+            "nomads.camp",
+            roles={IncidentRole.ACTOR: town.id},
+            facts={"mode": camp.mode, "pastures": len(camp.circuit), "herd": camp.herd},
+            steps=(StepDraft(StepAction.DEPART, actor=town.id, amount=camp.herd or None, unit=FactUnit.COUNT if camp.herd else None),),
+        )
 
 
 async def graze(ctx: TickContext, camp: CampRow, region: RegionEnvironmentRow | None) -> None:
@@ -137,11 +143,12 @@ async def reroute(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: C
     camp.circuit = fresh
     camp.season_index = 0
     tally.rerouted += 1
-    await note(
+    await record(
         ctx,
-        f"With its pastures grazed bare, {town.name} set out on a new round of {several(len(fresh), 'pasture', 'pastures')}.",
-        key="nomads.rerouted",
-        ids=[town.id],
+        "nomads.rerouted",
+        roles={IncidentRole.ACTOR: town.id},
+        facts={"pastures": len(fresh), "herd": camp.herd},
+        steps=(StepDraft(StepAction.DEPART, actor=town.id),),
     )
 
 
@@ -165,7 +172,13 @@ async def settle_or_roam(ctx: TickContext, town: EntityRow, camp: CampRow, tally
     if camp.mode in MOVING and share < table.settle_pct:
         camp.mode = MobilityMode.SEDENTARY
         tally.settled += 1
-        await note(ctx, f"{town.name} put down roots and wandered no more.", key="nomads.settled", ids=[town.id])
+        await record(
+            ctx,
+            "nomads.settled",
+            roles={IncidentRole.ACTOR: town.id},
+            facts={"herding_share": share},
+            steps=(StepDraft(StepAction.SETTLE, actor=town.id),),
+        )
     elif camp.mode is MobilityMode.SEDENTARY and share >= table.pastoral_pct:
         camp.mode = MobilityMode.NOMADIC if share >= table.nomadic_pct else MobilityMode.TRANSHUMANT
 
@@ -224,7 +237,13 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
         if might >= guard * table.tribute_ratio and await active_tribute(ctx.session, other.id, town.id) is None:
             await impose_tribute(ctx, other, town, None, "tribute to the herders of the pastures")
             tally.tributes += 1
-            await note(ctx, f"{other.name} bowed to the herders of {town.name} and paid them tribute.", key="nomads.tribute", ids=[other.id, town.id])
+            await record(
+                ctx,
+                "nomads.tribute",
+                roles={IncidentRole.GIVER: other.id, IncidentRole.RECEIVER: town.id},
+                facts={"might": might, "guard": guard},
+                steps=(StepDraft(StepAction.YIELD, actor=other.id, target=town.id), StepDraft(StepAction.PAY, actor=other.id, target=town.id)),
+            )
             continue
         if might >= guard and ctx.rng(f"nomads.raid.{town.id}.{other.id}.{ctx.epoch}").chance(table.raid_pct):
             taken = min(await coin_of(ctx.session, ctx.rules, other), round_half_up(might * table.raid_take / PERCENT))
@@ -232,7 +251,13 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
                 await receive_coin(ctx.session, ctx.rules, town, taken)
             await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by herders")
             tally.raids += 1
-            await note(ctx, f"Riders of {town.name} raided {other.name} and rode off with {taken} in plunder.", key="nomads.raid", ids=[town.id, other.id])
+            await record(
+                ctx,
+                "nomads.raid",
+                roles={IncidentRole.ACTOR: town.id, IncidentRole.VICTIM: other.id},
+                facts={"taken": taken, "might": might, "guard": guard},
+                steps=(StepDraft(StepAction.PILLAGE, actor=town.id, target=other.id, amount=taken or None, unit=FactUnit.COIN if taken else None),),
+            )
             continue
         if ctx.rng(f"nomads.trade.{town.id}.{other.id}.{ctx.epoch}").chance(table.trade_pct):
             await trade(ctx, town, camp, other, tally)
@@ -246,7 +271,16 @@ async def trade(ctx: TickContext, town: EntityRow, camp: CampRow, other: EntityR
     await receive_coin(ctx.session, ctx.rules, town, worth)
     await change_relation(ctx, other.id, town.id, table.trade_regard, MemoryKind.TRADED_WITH, note="trade with the herders")
     tally.trades += 1
-    await note(ctx, f"The camp of {town.name} traded the yield of its herds with {other.name} for {worth}.", key="nomads.trade", ids=[town.id, other.id])
+    await record(
+        ctx,
+        "nomads.trade",
+        roles={IncidentRole.SELLER: town.id, IncidentRole.BUYER: other.id},
+        facts={"worth": worth, "herd": camp.herd},
+        steps=(
+            StepDraft(StepAction.DELIVER, actor=town.id, target=other.id),
+            StepDraft(StepAction.PAY, actor=other.id, target=town.id, amount=worth, unit=FactUnit.COIN),
+        ),
+    )
 
 
 async def charismatic(ctx: TickContext, town: EntityRow) -> EntityRow | None:
@@ -280,11 +314,12 @@ async def confederate(
         for member in joined:
             leagues[member] = row
         tally.confederations += 1
-        await note(
+        await record(
             ctx,
-            f"{leader.name} gathered {several(len(joined), 'wandering camp', 'wandering camps')} under one rule.",
-            key="nomads.confederation",
-            ids=[leader.id, *joined],
+            "nomads.confederation",
+            roles={IncidentRole.LEADER: leader.id, IncidentRole.MEMBER: sorted(joined)},
+            facts={"confederation": row.name, "camps": len(joined)},
+            steps=(StepDraft(StepAction.SWEAR, actor=leader.id),),
         )
 
 
@@ -297,7 +332,13 @@ async def fragment(ctx: TickContext, tally: NomadTally) -> None:
             continue
         row.dissolved_epoch = ctx.epoch
         tally.fragmented += 1
-        await note(ctx, f"With its leader gone, {row.name} broke apart into its camps.", key="nomads.fragmented", ids=list(row.members))
+        await record(
+            ctx,
+            "nomads.fragmented",
+            roles={IncidentRole.MEMBER: list(row.members), IncidentRole.PREDECESSOR: row.leader_entity_id},
+            facts={"confederation": row.name, "camps": len(row.members)},
+            steps=(StepDraft(StepAction.SEPARATE),),
+        )
 
 
 async def keep_nomads(ctx: TickContext, tally: NomadTally) -> None:

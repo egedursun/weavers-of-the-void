@@ -109,9 +109,9 @@ async def stocks_of(ctx: TickContext, town_id: int) -> tuple[dict[CommodityKind,
 async def derive_diet(ctx: TickContext, town: EntityRow, row: DietRow) -> None:
     goods, preserved = await stocks_of(ctx, town.id)
     weights = {share: sum(goods.get(kind, 0) for kind in kinds) for share, kinds in GROUPS.items()}
-    total = sum(weights.values())
+    summed = sum(weights.values())
     food = sum(goods.get(kind, 0) for kinds in GROUPS.values() for kind in kinds)
-    shares = {share: round_half_up(weight * PERCENT / total) for share, weight in weights.items()} if total else {"staple": PERCENT}
+    shares = {share: round_half_up(weight * PERCENT / summed) for share, weight in weights.items()} if summed else {"staple": PERCENT}
     for share in SHARES:
         if share not in row.locked:
             setattr(row, share, clamp_int(shares.get(share, 0), 0, PERCENT))

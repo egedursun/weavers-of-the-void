@@ -8,7 +8,6 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import agree, several
 from aerona.db.repositories.chronicle import CAUSE_SCOPE
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -26,6 +25,7 @@ from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
@@ -47,13 +47,14 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of
-from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft
+from aerona.engine.recording.record import record as record_happening
 from aerona.engine.relations.passions import bereaved
 from aerona.engine.sacred.guards import unrest_shift
 from aerona.engine.transform.record import blocked, record_transformation
@@ -94,7 +95,9 @@ async def die(
     session = ctx.session
     if mortal.entity_type is not EntityType.MORTAL or mortal.status not in LIVING_DEATH_STATUSES or held(mortal.id):
         return None
-    flags = await EntityRepository(session).flags(mortal.id)
+    entities = EntityRepository(session)
+    await entities.load_columns(mortal)
+    flags = await entities.flags(mortal.id)
     if not forced and immortal(flags):
         return None
     rng = ctx.rng(seed_of("death", mortal.id))
@@ -129,17 +132,23 @@ async def die(
         ctx.count("rights_inherited", await pass_rights(session, mortal.id, heir.id, ctx.epoch))
     if await claim(session, mortal.id, InsuranceCover.LIFE, ctx.rules.insurance.life_payout):
         ctx.count("lives_insured_paid")
-    if natural:
-        tail = "; an heir took their place" if heir is not None else ". Their name now lives only in the tales"
-        text = f"{mortal.name} died at age {age_text}{tail}."
-    else:
-        text = f"{mortal.name} {cause}{'; an heir took their place' if heir is not None else ''}."
-    ids = [mortal.id] + ([heir.id] if heir is not None else []) + ([killer_id] if killer_id is not None and killer_kind is NodeKind.ENTITY else [])
     son_id = killer_id if killer_kind is NodeKind.SON else mortal.creator_son_id
-    roles = {mortal.id: IncidentRole.TARGET, **({killer_id: IncidentRole.ACTOR} if killer_id is not None else {})}
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.VICTIM: mortal.id, IncidentRole.HEIR: heir.id if heir is not None else None}
+    if killer_id is not None and killer_kind is not None:
+        roles[IncidentRole.ACTOR] = killer_id
     cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
-    key = "mortal.death.natural" if natural else "mortal.death.cause"
-    await note(ctx, text, key=key, ids=ids, son_id=son_id, roles=roles, cause_incident_id=cause_id)
+    key = "mortal.death.natural" if natural else "mortal.death.slain" if IncidentRole.ACTOR in roles else "mortal.death.cause"
+    facts: dict[str, FactInput] = {"manner": manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN), "age": age or 0, "year": death_year}
+    steps = (
+        StepDraft(
+            StepAction.DIE,
+            actor=mortal.id,
+            target=killer_id if killer_kind is not None else None,
+            outcome=StepOutcome.KILLED,
+        ),
+    )
+    written = await record_happening(ctx, key, roles=roles, facts=facts, steps=steps, son_id=son_id, cause=cause_id, place=mortal.location_id)
+    text = written.text
     await after_death(ctx, mortal)
     await fallen_body_died(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
@@ -215,16 +224,10 @@ async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:
         for item_id in item_ids:
             if await session.get(ItemProfileRow, item_id) is not None:
                 record(ctx, item_id, *left_behind(mortal))
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PREDECESSOR: mortal.id, IncidentRole.INSTRUMENT: item_ids}
     if receiver is not None:
-        text = f"{several(len(items), 'item', 'items')} of {mortal.name} passed to {', '.join(heir.name for heir in heirs)}."
-        ids = [mortal.id, *item_ids, *(heir.id for heir in heirs)]
-    else:
-        text = (
-            f"{several(len(items), 'item', 'items')} of {mortal.name} {agree(len(items), 'was', 'were')} left ownerless; "
-            f"{agree(len(items), 'it waits', 'they wait')} in the grave or on the battlefield."
-        )
-        ids = [mortal.id, *item_ids]
-    await note(ctx, text, key="mortal.inheritance", ids=ids)
+        roles[IncidentRole.HEIR] = [heir.id for heir in heirs] or [receiver.id]
+    await record_happening(ctx, "mortal.inheritance" if receiver is not None else "mortal.inheritance_lost", roles=roles, facts={"items": len(items)})
 
 
 async def _born_this_epoch(session: AsyncSession, entity_type: EntityType, subtypes: tuple[str, ...], epoch: int) -> int:
@@ -308,8 +311,14 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     await record_transformation(ctx, TransformKind.SPIRIT_RISING, mortal.id, spirit.id)
     profile = await profile_for(ctx, spirit, mortal)
     profile.alignment = SpiritAlignment.VENGEFUL if restless else SpiritAlignment.GUARDIAN
-    manner = "as a restless spirit" if restless else "among the ancestors"
-    await note(ctx, f"The spirit of {mortal.name} found no rest; it wanders {manner}.", key="mortal.spirit", ids=[mortal.id, spirit.id])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PREDECESSOR: mortal.id, IncidentRole.PRODUCT: spirit.id}
+    await record_happening(
+        ctx,
+        "mortal.spirit_restless" if restless else "mortal.spirit",
+        roles=roles,
+        facts={"alignment": profile.alignment, "unrest": stat_or(spirit, "unrest", 0)},
+        place=place_id,
+    )
 
 
 async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
@@ -341,7 +350,8 @@ async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
     await connect(session, tradition.id, mortal.id, BondKind.TELLS_OF, ctx.epoch)
     if place.entity_type in MOURNING_HOME_TYPES:
         await connect(session, place.id, tradition.id, BondKind.CELEBRATES, ctx.epoch)
-    await note(ctx, f"{place.name} began a mourning tradition for {mortal.name}.", key="mortal.mourning", ids=[mortal.id, place.id, tradition.id])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: place.id, IncidentRole.SUBJECT: mortal.id, IncidentRole.PRODUCT: tradition.id}
+    await record_happening(ctx, "mortal.mourning", roles=roles, facts={"spread": effects.mourning_spread}, place=place.id)
 
 
 async def after_death(ctx: TickContext, mortal: EntityRow) -> None:

@@ -1,23 +1,24 @@
-from aerona.core.grammar import an, spoken
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.faith.spirit_bonds import keep_bound_spirits
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.means.water import lifted_water
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.services.war import ongoing_war_count
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import (
@@ -85,7 +86,6 @@ JUSTICE_FULL = 100
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.estate_privileges",
     "table.estate_profiles",
     "table.event_casualties",
@@ -168,12 +168,14 @@ JUSTICE_FULL = 100
     "table.districts",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
+    "table.incident_terms",
     "table.incidents",
     "table.injuries",
     "table.mortal_profiles",
@@ -231,17 +233,21 @@ async def settlement_life(ctx: TickContext) -> None:
         await endure_siege(ctx, town, values)
         await prestige(ctx, town)
         ctx.count("structures_serving", await serve_town(ctx, settlement, town.profile, town.infrastructure, fires=burned))
-        tier = await retier(ctx, town)
-        if tier is not None:
-            await note(
-                ctx,
-                f"{settlement.name} is now {an(spoken(tier))}.",
-                key="settlement.tier",
-                ids=[settlement.id],
-                kind=ChronicleKind.CIVILIZATION,
+        before = town.profile.size_tier
+        with explaining():
+            tier = await retier(ctx, town)
+            told = (
+                await record(
+                    ctx,
+                    "settlement.tier",
+                    roles={IncidentRole.SUBJECT: settlement.id},
+                    facts={"tier": tier, "before": before, "population": stat_or(settlement, "population", 0)},
+                )
+                if tier is not None
+                else None
             )
         town.profile.updated_epoch = ctx.epoch
-        remember(ctx, town)
+        remember(ctx, town, told.incident_id if told is not None else None)
     ctx.count("bound_spirits_kept", await keep_bound_spirits(ctx))
     await ctx.session.flush()
 

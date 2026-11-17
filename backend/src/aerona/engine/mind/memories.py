@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.key_index import index_spec, keyed_rows
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
@@ -23,6 +24,7 @@ from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
 
 MEMORY_LOCK = "memories"
+PHASE_PREFIX = "phase."
 
 
 @dataclass(frozen=True)
@@ -83,6 +85,7 @@ async def remember(
     inherited_from: int | None = None,
     forced: bool = False,
     merge: bool = True,
+    step_id: int | None = None,
 ) -> MemoryRow | None:
     size = clamp_int(magnitude, RELATION_MIN, RELATION_MAX)
     if holder_id == subject_id or size == 0 or write_blocked(holder_id, MEMORIES_KEY):
@@ -105,12 +108,33 @@ async def remember(
         epoch=epoch,
         note=note,
         event_entity_id=event_id,
-        incident_id=incident_for(session, holder_id, epoch) or incident_for(session, subject_id, epoch) if inherited_from is None else None,
+        incident_id=remembered_incident() or incident_for(session, holder_id, epoch) or incident_for(session, subject_id, epoch)
+        if inherited_from is None
+        else None,
+        step_id=step_id if step_id is not None else remembered_step() if inherited_from is None else None,
         inherited_from_node_id=inherited_from,
     )
     session.add(row)
     await session.flush()
     return row
+
+
+def remembered_incident() -> int | None:
+    scope = current_scope()
+    while scope is not None:
+        if scope.incident_id is not None and not scope.key.startswith(PHASE_PREFIX):
+            return scope.incident_id
+        scope = scope.parent
+    return None
+
+
+def remembered_step() -> int | None:
+    scope = current_scope()
+    while scope is not None:
+        if scope.step_id is not None:
+            return scope.step_id
+        scope = scope.parent
+    return None
 
 
 async def memories_about(session: AsyncSession, holder_id: int, subject_id: int) -> list[MemoryRow]:

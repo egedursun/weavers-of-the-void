@@ -8,9 +8,9 @@ from aerona.db.tables.law_depth import OutlawRow, PrisonerRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.law_depth import RegistryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.law.appeals import file_appeal
 from aerona.engine.law.outlawry import OutlawTally, caught, hunter_for, post_bounty
@@ -24,7 +24,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import EmptyInput, ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 DEED_MAX = 100000
 
@@ -70,7 +69,9 @@ async def register_deed(call: MortalCall, args: DeedInput) -> str:
         fail(MortalResult.DEED_REFUSED, why="no town or realm with a registry holds you")
     await register(call.tick, holder, args.kind, owner_id=call.me.id, counterparty_id=other.id, amount=args.amount)
     call.target(other.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.REGISTER_DEED, entity_ids=[call.me.id, other.id], me=call.me.name, other=other.name)
+    await call.record(
+        "tools.mortal.register_deed", roles={IncidentRole.OWNER: call.me.id, IncidentRole.CO_ACTOR: other.id}, facts={"deed": args.kind, "amount": args.amount}
+    )
     return result(MortalResult.DEED_REGISTERED, kind=args.kind.value.replace("_", " "), name=other.name)
 
 
@@ -86,7 +87,7 @@ async def appeal_conviction(call: MortalCall, args: EmptyInput) -> str:
     row = await file_appeal(call.tick, case, call.me)
     if row is None:
         fail(MortalResult.APPEAL_REFUSED, why="there is no higher court, the appeal is filed already, or you cannot pay its fee")
-    await call.chronicle(ChronicleKind.WORLD, lines.APPEAL, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.appeal", roles={IncidentRole.ACCUSED: call.me.id}, facts={"court": row.to_court, "fee": row.fee})
     return result(MortalResult.APPEAL_FILED, court=row.to_court.value.replace("_", " "), fee=row.fee)
 
 
@@ -100,7 +101,7 @@ async def claim_bounty(call: MortalCall, args: OutlawInput) -> str:
         fail(MortalResult.BOUNTY_REFUSED, why="the realm that outlawed them has a better hunter than you")
     await caught(call.tick, row, outlaw, call.me, OutlawTally())
     call.target(outlaw.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.CLAIM_BOUNTY, entity_ids=[call.me.id, outlaw.id], me=call.me.name, outlaw=outlaw.name)
+    await call.record("tools.mortal.claim_bounty", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: outlaw.id}, facts={"bounty": row.bounty})
     return result(MortalResult.BOUNTY_CLAIMED, name=outlaw.name, bounty=row.bounty)
 
 
@@ -112,7 +113,7 @@ async def post_a_bounty(call: MortalCall, args: BountyInput) -> str:
     if not await post_bounty(call.tick, row, call.me, args.amount):
         fail(MortalResult.BOUNTY_POST_REFUSED, why="you cannot pay so much")
     call.target(outlaw.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.POST_BOUNTY, entity_ids=[call.me.id, outlaw.id], me=call.me.name, outlaw=outlaw.name)
+    await call.record("tools.mortal.post_bounty", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: outlaw.id}, facts={"amount": args.amount})
     return result(MortalResult.BOUNTY_POSTED, amount=args.amount, name=outlaw.name, total=row.bounty + row.private_bounty)
 
 
@@ -127,7 +128,10 @@ async def grant_mercy(call: MortalCall, args: PardonInput) -> str:
         fail(MortalResult.PARDON_REFUSED, why="they are neither in prison nor outlawed")
     pardon = await grant_pardon(call.tick, call.me, mortal, polity_id=office.polity_entity_id, case_id=jailed.case_id if jailed is not None else None)
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.GRANT_PARDON, entity_ids=[call.me.id, mortal.id], me=call.me.name, name=mortal.name)
+    await call.record(
+        "tools.mortal.grant_pardon_corrupt" if pardon.corrupt else "tools.mortal.grant_pardon",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: mortal.id},
+    )
     return result(MortalResult.PARDONED, name=mortal.name, corrupt="a favour to a friend" if pardon.corrupt else "mercy")
 
 
@@ -137,7 +141,11 @@ async def hunt_moles(call: MortalCall, args: EmptyInput) -> str:
         fail(MortalResult.HUNT_REFUSED, why="no realm has made you its spymaster")
     tally = MoleTally()
     await hunt(call.tick, office.polity_entity_id, call.me, tally, forced=True)
-    await call.chronicle(ChronicleKind.WORLD, lines.HUNT_MOLES, entity_ids=[call.me.id], me=call.me.name)
+    await call.record(
+        "tools.mortal.hunt_moles",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: office.polity_entity_id},
+        facts={"caught": tally.caught, "purged": tally.purged + tally.defected, "cleared": tally.cleared},
+    )
     return result(MortalResult.HUNTED, caught=tally.caught, purged=tally.purged + tally.defected, cleared=tally.cleared)
 
 

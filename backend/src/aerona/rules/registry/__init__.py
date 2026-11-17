@@ -241,6 +241,7 @@ from aerona.rules.registry.ecology import EcologyRules
 from aerona.rules.registry.economy import EconomyRules
 from aerona.rules.registry.effect_packages import EffectPackageRules
 from aerona.rules.registry.empty_world import EmptyWorldRules
+from aerona.rules.registry.engagement import EngagementRules
 from aerona.rules.registry.engine_phases import EnginePhasesRules
 from aerona.rules.registry.environment import (
     CalendarsRules,
@@ -533,6 +534,7 @@ from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
+from aerona.rules.registry.records import RecordsRules
 from aerona.rules.registry.regime import (
     AcademicFreedomRules,
     BreedingPlanRules,
@@ -966,6 +968,7 @@ class Rules:
     theatres: TheatreRules = field(default_factory=TheatreRules)
     lanchester: LanchesterRules = field(default_factory=LanchesterRules)
     age_of_sail: AgeOfSailRules = field(default_factory=AgeOfSailRules)
+    engagement: EngagementRules = field(default_factory=EngagementRules)
     admiralty: AdmiraltyRules = field(default_factory=AdmiraltyRules)
     expeditions: ExpeditionRules = field(default_factory=ExpeditionRules)
     genius_loci: GeniusLociRules = field(default_factory=GeniusLociRules)
@@ -1239,6 +1242,7 @@ class Rules:
     technique_effects: TechniqueEffectsRules = field(default_factory=TechniqueEffectsRules)
     item_renown: ItemRenownRules = field(default_factory=ItemRenownRules)
     regalia: RegaliaRules = field(default_factory=RegaliaRules)
+    records: RecordsRules = field(default_factory=RecordsRules)
     relics: RelicsRules = field(default_factory=RelicsRules)
     rumours: RumoursRules = field(default_factory=RumoursRules)
     item_powers: ItemPowersRules = field(default_factory=ItemPowersRules)

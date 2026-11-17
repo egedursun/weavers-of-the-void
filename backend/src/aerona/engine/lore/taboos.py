@@ -8,10 +8,11 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.hospitality import circuit_partners
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 
 PERCENT = 100
 
@@ -86,11 +87,11 @@ async def violated(ctx: TickContext, actor_id: int, act: ActKind) -> int:
         shamed += found
         if found and actor is not None:
             tradition = await ctx.session.get(EntityRow, tradition_id)
-            await note(
+            await record(
                 ctx,
-                f"{actor.name} broke the taboo of {tradition.name if tradition else 'the keepers'} against {label}, and the keepers named it infamy.",
-                key="lore.taboo_broken",
-                ids=[actor_id, *[keeper for keeper in keepers if keeper != actor_id]],
+                "lore.taboo_broken",
+                roles={IncidentRole.SUBJECT: [actor.id, *[actor_id, *[keeper for keeper in keepers if keeper != actor_id]]]},
+                facts={"detail": str(tradition.name if tradition else "the keepers"), "label": str(label)},
             )
     if shamed:
         ctx.count(f"taboo_broken_{act.value}")
@@ -125,11 +126,11 @@ async def guest_killed(ctx: TickContext, killer_id: int | None, victim: EntityRo
     keepers = sorted({keeper for law in laws for keeper in await keepers_of(ctx.session, law)} | ({host} if host is not None else set()))
     shamed = await shame(ctx, killer_id, keepers, ctx.rules.traditions.guest_killing_infamy, f"killed {victim.name}, a guest under the law of hospitality")
     killer = await ctx.session.get(EntityRow, killer_id)
-    await note(
+    await record(
         ctx,
-        f"{killer.name if killer else 'A host'} slew {victim.name}, a guest under the law of hospitality: a grave infamy that will not be forgotten.",
-        key="lore.guest_killing",
-        ids=[killer_id, victim.id, *keepers],
+        "lore.guest_killing",
+        roles={IncidentRole.VICTIM: victim.id, IncidentRole.SUBJECT: [*[killer_id, victim.id, *keepers]]},
+        facts={"detail": str(killer.name if killer else "A host")},
     )
     ctx.count("guests_killed")
     return shamed
@@ -142,12 +143,12 @@ async def circuit_guest_killed(ctx: TickContext, killer_id: int, victim: EntityR
         return 0
     keepers = sorted({host, *partners})
     shamed = await shame(ctx, killer_id, keepers, ctx.rules.traditions.guest_killing_infamy, f"killed {victim.name}, a guest under the duty of the circuit")
-    killer = await ctx.session.get(EntityRow, killer_id)
-    await note(
+    await record(
         ctx,
-        f"{killer.name if killer else 'A host'} slew {victim.name}, a guest come along the ceremonial circuit: the stops of the circuit named it infamy.",
-        key="circuits.guest_killing",
-        ids=[killer_id, victim.id, *keepers],
+        "circuits.guest_killing",
+        roles={IncidentRole.ACTOR: killer_id, IncidentRole.VICTIM: victim.id, IncidentRole.ACCUSER: keepers},
+        facts={"infamy": ctx.rules.traditions.guest_killing_infamy, "shamed": shamed},
+        place=host,
     )
     ctx.count("guests_killed")
     return shamed

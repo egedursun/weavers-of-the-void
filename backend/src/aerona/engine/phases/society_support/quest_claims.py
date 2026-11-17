@@ -21,6 +21,8 @@ from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat_or
 from aerona.engine.records import death_path
 
+ClaimFacts = Mapping[str, int]
+
 
 @dataclass(frozen=True)
 class Claim:
@@ -30,88 +32,88 @@ class Claim:
     side: EntityRow
 
 
-async def find(ctx: TickContext, claim: Claim) -> str:
+async def find(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await BondRepository(ctx.session).connect(BondDraft(claim.hero.id, claim.target.id, BondKind.OWNS, ctx.epoch, "found by quest"))
-    return f"{claim.hero.name} found {claim.target.name} and took it up."
+    return {}
 
 
-async def learn(ctx: TickContext, claim: Claim) -> str:
+async def learn(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await teach(ctx, claim.side.id, claim.target, f"{claim.hero.name} recovered it")
     await EntityRepository(ctx.session).remove_flag(claim.target.id, EntityFlag.LOST)
-    return f"{claim.hero.name} recovered {claim.target.name} and brought it back to {claim.side.name}."
+    return {}
 
 
-async def avenge(ctx: TickContext, claim: Claim) -> str:
+async def avenge(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await death_path(ctx, claim.target, f"killed by {claim.hero.name} in vengeance", claim.hero.id, "vengeance", harm=HarmCause.DUEL)
-    return f"{claim.hero.name} took vengeance: {claim.target.name} is dead."
+    return {}
 
 
-async def resolve(ctx: TickContext, claim: Claim) -> str:
+async def resolve(ctx: TickContext, claim: Claim) -> ClaimFacts:
     thread = await ctx.session.get(ThreadRow, claim.quest.thread_id) if claim.quest.thread_id is not None else None
     if thread is not None and thread.status is ThreadStatus.OPEN:
         thread.status, thread.closed_epoch, thread.closing_text = ThreadStatus.CLOSED, ctx.epoch, f"resolved by {claim.hero.name}"
-    return f"{claim.hero.name} resolved the open incident arc around {claim.target.name}."
+    return {}
 
 
-async def hunt(ctx: TickContext, claim: Claim) -> str:
+async def hunt(ctx: TickContext, claim: Claim) -> ClaimFacts:
     shift_stat(claim.target, "population", -1, 0)
-    return f"{claim.hero.name} brought down one of {claim.target.name}."
+    return {}
 
 
-async def destroy(ctx: TickContext, claim: Claim) -> str:
+async def destroy(ctx: TickContext, claim: Claim) -> ClaimFacts:
     if claim.target.entity_type is EntityType.MORTAL:
         await death_path(ctx, claim.target, f"destroyed by {claim.hero.name}", claim.hero.id, "quest", harm=HarmCause.DUEL)
     else:
         await retire(ctx.session, claim.target, ctx.epoch, f"Epoch {ctx.epoch}: destroyed by {claim.hero.name}.", status=EntityStatus.DESTROYED)
-    return f"{claim.hero.name} destroyed {claim.target.name}."
+    return {}
 
 
-async def restore(ctx: TickContext, claim: Claim) -> str:
+async def restore(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await EntityRepository(ctx.session).remove_flag(claim.target.id, EntityFlag.LOST)
     shift_stat(claim.target, "prosperity", ctx.rules.heroes.quest_charisma_gain, 0)
-    return f"{claim.hero.name} restored {claim.target.name}."
+    return {}
 
 
-async def free(ctx: TickContext, claim: Claim) -> str:
+async def free(ctx: TickContext, claim: Claim) -> ClaimFacts:
     bonds = BondRepository(ctx.session)
     for bond in await bonds.incoming(claim.target.id, BondKind.HOLDS_CAPTIVE):
         await bonds.deactivate(bond, ctx.epoch, f"freed by {claim.hero.name}")
-    return f"{claim.hero.name} freed {claim.target.name}."
+    return {}
 
 
-async def bind(ctx: TickContext, claim: Claim) -> str:
+async def bind(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await BondRepository(ctx.session).connect(BondDraft(claim.side.id, claim.target.id, BondKind.HOLDS_CAPTIVE, ctx.epoch, f"bound by {claim.hero.name}"))
-    return f"{claim.hero.name} bound {claim.target.name} for {claim.side.name}."
+    return {}
 
 
-async def reach(ctx: TickContext, claim: Claim) -> str:
+async def reach(ctx: TickContext, claim: Claim) -> ClaimFacts:
     claim.hero.location_id = claim.target.location_id if claim.target.location_id is not None else claim.target.id
     if claim.quest.target_kind is QuestTargetKind.PLACE:
         await EntityRepository(ctx.session).remove_flag(claim.target.id, EntityFlag.LOST)
-    return f"{claim.hero.name} reached {claim.target.name}."
+    return {}
 
 
-async def deliver(ctx: TickContext, claim: Claim) -> str:
+async def deliver(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await BondRepository(ctx.session).connect(BondDraft(claim.side.id, claim.target.id, BondKind.OWNS, ctx.epoch, f"brought by {claim.hero.name}"))
-    return f"{claim.hero.name} brought {claim.target.name} to {claim.side.name}."
+    return {}
 
 
-async def protect(ctx: TickContext, claim: Claim) -> str:
+async def protect(ctx: TickContext, claim: Claim) -> ClaimFacts:
     await BondRepository(ctx.session).connect(BondDraft(claim.hero.id, claim.target.id, BondKind.PROTECTS, ctx.epoch, "sworn by quest"))
-    return f"{claim.hero.name} kept {claim.target.name} safe."
+    return {}
 
 
-async def reconcile(ctx: TickContext, claim: Claim) -> str:
+async def reconcile(ctx: TickContext, claim: Claim) -> ClaimFacts:
     closed = await BondRepository(ctx.session).close_between(claim.side.id, claim.target.id, [BondKind.ENEMY, BondKind.RIVAL], ctx.epoch, "reconciled")
-    return f"{claim.hero.name} reconciled {claim.side.name} with {claim.target.name}" + ("." if closed else ", though no quarrel stood between them.")
+    return {"quarrels_closed": int(bool(closed))}
 
 
-async def prove(ctx: TickContext, claim: Claim) -> str:
+async def prove(ctx: TickContext, claim: Claim) -> ClaimFacts:
     set_stats(claim.hero, charisma=clamp_int(stat_or(claim.hero, "charisma", 0) + ctx.rules.heroes.quest_charisma_gain, 0, PERCENT))
-    return f"{claim.hero.name} proved themself against {claim.target.name}."
+    return {}
 
 
-CLAIMS: Mapping[QuestAim, Callable[[TickContext, Claim], Awaitable[str]]] = total(
+CLAIMS: Mapping[QuestAim, Callable[[TickContext, Claim], Awaitable[ClaimFacts]]] = total(
     QuestAim,
     {
         QuestAim.FIND: find,

@@ -17,6 +17,7 @@ from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.entity import LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.models.calendar import epoch_start_year
@@ -29,6 +30,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import apportion, clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import StepDraft, record
 
 MULTI_SEASON = frozenset({EngineKind.FAMINE, EngineKind.PLAGUE, EngineKind.SIEGE})
 KIND_RAIN: Mapping[EngineKind, int] = {
@@ -252,11 +254,12 @@ class Happening:
     kind: EngineKind
     name: str
     body: str
-    text: str
     where: EntityRow
     severity: int
     participants: Mapping[int, IncidentRole] = field(default_factory=dict)
     regions: Sequence[int] = ()
+    told: bool = True
+    dead: int | None = None
     feed: FeedCategory = FeedCategory.WORLD
     chronicle: ChronicleKind = ChronicleKind.WORLD
 
@@ -280,18 +283,26 @@ async def happen(
             engine_kind=happening.kind,
         ),
     )
-    roles = {event.id: IncidentRole.SUBJECT, **happening.participants}
-    if happening.text:
-        written = await ctx.chronicle(
-            happening.chronicle,
-            happening.text,
-            template_key=f"event.{happening.kind.value}",
-            entity_ids=list(roles),
+    regions = sorted({region for region in [await region_of(ctx.session, atlas, where.id), *happening.regions] if region is not None})
+    if happening.told:
+        cast: dict[IncidentRole, list[int]] = {}
+        for node, role in happening.participants.items():
+            cast.setdefault(role, []).append(node)
+        written = await record(
+            ctx,
+            f"event.{happening.kind.value}",
+            roles={
+                IncidentRole.SUBJECT: event.id,
+                IncidentRole.PLACE: where.id,
+                **{role: nodes for role, nodes in cast.items() if role is not IncidentRole.SUBJECT},
+            },
+            facts={"severity": clamp_int(happening.severity, 0, PERCENT), "dead": happening.dead, "regions": len(regions)},
+            steps=(StepDraft(StepAction.BEGIN, target=event.id),),
+            place=where.id,
             world_id=where.world_id,
-            feed_category=happening.feed,
-            place_entity_id=where.id if where.entity_type in LOCATION_TYPES else None,
             magnitude=clamp_int(happening.severity, 0, PERCENT),
-            roles=roles,
+            kind=happening.chronicle,
+            feed=happening.feed,
         )
         incident_id = written.incident_id
     elif incident_id is not None and await ctx.session.get(IncidentRow, incident_id) is not None:

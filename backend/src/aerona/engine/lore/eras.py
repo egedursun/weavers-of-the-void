@@ -3,7 +3,6 @@ from collections import defaultdict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.discovery import AGES, era_name
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -14,14 +13,14 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import AgeKind, EraDeed
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.lore.learning import realm_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 SCORE_FLOOR, SCORE_CEILING = -1000, 1000
@@ -166,7 +165,7 @@ async def settle_ages(ctx: TickContext) -> int:
                     row.lowest = row.score
                 row.age, row.since_epoch = age, ctx.epoch
                 changed += 1
-                await note(ctx, f"{AGES[age]} began for {polity.name}.", key=f"discovery.age_{age.value}", ids=[polity.id], kind=ChronicleKind.CIVILIZATION)
+                await record_incident(ctx, f"discovery.age_{age.value}", roles={IncidentRole.SUBJECT: polity.id}, facts={"age": age, "score": row.score})
         profile = await ctx.session.get(PolityProfileRow, polity.id)
         if profile is not None and "stability" not in profile.locked:
             if row.age in {AgeKind.GOLDEN, AgeKind.HEROIC}:
@@ -217,7 +216,7 @@ async def advance_worlds(ctx: TickContext) -> int:
         if await leaders_share(ctx.session, world.id, row.era + 1, table.era_leaders) * PERCENT >= table.era_advance_pct:
             row.era, row.since_epoch = row.era + 1, ctx.epoch
             advanced += 1
-            await note(ctx, f"The world entered the {era_name(row.era).lower()}.", key="discovery.world_era", world_id=world.id, kind=ChronicleKind.KNOWLEDGE)
+            await record_incident(ctx, "discovery.world_era", roles={IncidentRole.SUBJECT: world.id}, facts={"era": row.era}, world_id=world.id)
     await ctx.session.flush()
     return advanced
 

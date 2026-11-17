@@ -1,1 +1,1 @@
-TOOL YOU OVERUSE: you used {{ line.tool }} {{ line.uses }} times in the last {{ line.epochs }} ages; vary your deeds.
+TOOL YOU OVERUSE: you used {{ line.tool }} {{ line.uses | several("time", "times") }} in the last {{ line.epochs | several("age", "ages") }}; vary your deeds.

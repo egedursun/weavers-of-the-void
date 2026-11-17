@@ -20,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.tiers import tier_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.vehicles.groups import GroupReading, groups_of, move_vehicles, read, salvage, take_prizes
 from aerona.engine.vehicles.sections import strike_group
 from aerona.rules.registry import Rules
@@ -71,7 +72,7 @@ def fits(role: UnitKind, spec: FrameSpec) -> bool:
 
 
 def fighting_worth(spec: FrameSpec) -> int:
-    return spec.structure + spec.armour + len(spec.armament) * 20 + spec.speed // 2 + spec.troops // 4
+    return spec.structure + spec.armour + spec.slots * 20 + spec.speed // 2 + spec.troops // 4
 
 
 SIZE_ORDER = tuple(VehicleSize)
@@ -192,9 +193,10 @@ async def crew_specs(session: AsyncSession, rows: list[ArmyUnitRow], specs: dict
 
 async def batter_groups(
     ctx: TickContext, army_id: int, share: float, slot: str, domains: frozenset[VehicleDomain] | None = None
-) -> tuple[int, list[VehicleGroupRow]]:
+) -> tuple[int, list[VehicleGroupRow], list[StepDraft]]:
     lost = 0
     struck: list[VehicleGroupRow] = []
+    steps: list[StepDraft] = []
     for reading in await readings(ctx.session, army_id):
         if domains is not None and reading.design.domain not in domains:
             continue
@@ -203,25 +205,31 @@ async def batter_groups(
             hits = 1
         result = await strike_group(ctx, reading.group, hits, slot)
         lost += result.lost
+        steps.extend(result.steps)
         if reading.group.status is not VehicleStatus.WRECKED and "status" not in (reading.group.locked or []):
             reading.group.status = VehicleStatus.ENGAGED
         struck.append(reading.group)
-    return lost, struck
+    return lost, struck, steps
 
 
-async def after_battle(ctx: TickContext, loser_ids: list[int], winner_ids: list[int], shares: tuple[float, float], victor_id: int | None) -> dict[str, int]:
+async def after_battle(
+    ctx: TickContext, loser_ids: list[int], winner_ids: list[int], shares: tuple[float, float], victor_id: int | None
+) -> tuple[dict[str, int], list[StepDraft]]:
     loser_share, winner_share = shares
     found = {"vehicles_lost": 0, "salvaged": 0, "prizes": 0}
+    steps: list[StepDraft] = []
     for army_id in loser_ids:
-        lost, struck = await batter_groups(ctx, army_id, loser_share, f"battle.{army_id}")
+        lost, struck, landed = await batter_groups(ctx, army_id, loser_share, f"battle.{army_id}")
+        steps.extend(landed)
         found["vehicles_lost"] += lost
         for group in struck:
             found["salvaged"] += await salvage(ctx, group, lost, victor_id)
             found["prizes"] += await take_prizes(ctx, group, victor_id)
     for army_id in winner_ids:
-        lost, _ = await batter_groups(ctx, army_id, winner_share, f"battle.{army_id}")
+        lost, _, landed = await batter_groups(ctx, army_id, winner_share, f"battle.{army_id}")
+        steps.extend(landed)
         found["vehicles_lost"] += lost
-    return found
+    return found, steps
 
 
 async def afloat(session: AsyncSession, army_id: int) -> bool:

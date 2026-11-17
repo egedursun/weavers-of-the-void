@@ -3,20 +3,20 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import several
 from aerona.db.read_memo import memoized
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.statecraft import PolityRegardRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import declare_war
 
 AGAINST = "against"
@@ -101,12 +101,12 @@ async def band(ctx: TickContext, book: RealmBook, target: Realm, tally: Coalitio
         clauses=[Clause(ClauseKind.CALL_TO_ARMS, core, None, {AGAINST: target_core}) for core in cores],
     )
     tally.formed += 1
-    await note(
+    await record(
         ctx,
-        f"Fearing {target.entity.name}, {several(len(cores), 'realm', 'realms')} bound themselves into a coalition against it.",
-        key="statecraft.coalition",
-        ids=[target.entity.id, *fearful],
-        kind=ChronicleKind.WAR,
+        "statecraft.coalition",
+        roles={IncidentRole.TARGET: target.entity.id, IncidentRole.MEMBER: fearful},
+        facts={"members": len(cores)},
+        steps=tuple(StepDraft(StepAction.SIGN, actor=core) for core in cores),
     )
 
 

@@ -3,7 +3,6 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.db.repositories.foreign_gods import ForeignGodDraft, ForeignGodRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -44,7 +43,7 @@ async def test_bargain_hands_the_faithful_community_to_the_foreign_god(session: 
     by_target = {item.target_node_id: item.state for item in bonds}
     assert by_target[son.id] is not BondState.ACTIVE
     assert BondState.ACTIVE in {state for target, state in by_target.items() if target != son.id}
-    assert god_lines.SCHEME.key in await chronicle_keys(session)
+    assert "gods.death.scheme" in await chronicle_keys(session)
 
 
 async def test_close_sibling_schemes_on_their_own(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -60,7 +59,7 @@ async def test_close_sibling_schemes_on_their_own(session: AsyncSession, world: 
     assert friend.essence == essence - tuned.death.sibling_descent_cost
     state = await resurrection_state(session, tuned, dead, 4)
     assert state is not None and state.devotion - first.devotion >= tuned.death.sibling_descent_devotion
-    assert god_lines.SCHEME.key in await chronicle_keys(session)
+    assert "gods.death.scheme" in await chronicle_keys(session)
 
 
 async def test_unaffordable_scheme_is_skipped(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -71,7 +70,7 @@ async def test_unaffordable_scheme_is_skipped(session: AsyncSession, world: Gods
     await god_death(make_context(session, tuned, 3), dead, "fell", SonDeathCause.OTHER)
     await death_engine(make_context(session, tuned, 4, "death_engine"))
     assert friend.essence == 1
-    assert god_lines.SCHEME.key not in await chronicle_keys(session)
+    assert "gods.death.scheme" not in await chronicle_keys(session)
 
 
 async def test_hostile_sibling_scatters_the_bones_on_their_own(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -90,5 +89,5 @@ async def test_hostile_sibling_scatters_the_bones_on_their_own(session: AsyncSes
     after = await resurrection_state(session, tuned, dead, 4)
     assert after is not None and after.devotion == before - tuned.death.hinder_return_devotion_loss
     assert rival.essence == 500 - tuned.death.hinder_return_cost
-    assert god_lines.HINDERED.key in await chronicle_keys(session)
+    assert "gods.death.return_hindered" in await chronicle_keys(session)
     assert rival.status is SonStatus.ACTIVE

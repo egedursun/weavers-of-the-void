@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.core.total import partial
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -46,11 +46,12 @@ from aerona.engine.means.containers import read_marks
 from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.orders.savings import unearth_hoards
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import FactInput
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
 
 RISKS = (ExcavationRisk.CURSE, ExcavationRisk.SPIRIT, ExcavationRisk.COLLAPSE)
@@ -155,12 +156,8 @@ async def begin(ctx: TickContext, site: EntityRow, leader: EntityRow, sponsor_id
     members = {leader.id: CollectionRole.LEADER, **({sponsor_id: CollectionRole.MEMBER} if sponsor_id is not None and sponsor_id != leader.id else {})}
     collection = await open_collection(ctx, CollectionKind.EXCAVATION, world_id=site.world_id, members=members, places=[site.id], source_key=f"dig.{dig.id}")
     dig.collection_id = collection.id if collection is not None else None
-    await note(
-        ctx,
-        f"{leader.name} began to dig at {site.name}{' at the word of the gods' if by_player else ''}.",
-        key="excavation.begun",
-        ids=[leader.id, site.id],
-        roles={leader.id: IncidentRole.ACTOR, site.id: IncidentRole.PLACE},
+    await record_incident(
+        ctx, "excavation.begun", roles={IncidentRole.ACTOR: leader.id, IncidentRole.PLACE: site.id, IncidentRole.PATRON: sponsor_id}, place=site.id
     )
     return dig
 
@@ -266,32 +263,32 @@ async def raise_spirit(ctx: TickContext, place: EntityRow, *, origin: str) -> En
     return spirit
 
 
-async def suffer(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, site: EntityRow, leader: EntityRow) -> str:
+async def suffer(ctx: TickContext, dig: ExcavationRow, risk: ExcavationRisk, site: EntityRow, leader: EntityRow) -> dict[str, FactInput]:
     table = ctx.rules.excavations
     if risk is ExcavationRisk.CURSE:
         package = ctx.rng(f"dig.curse.{dig.id}.{dig.stage.value}").pick(list(CURSES))
         await afflict(ctx, leader, package, Transmission.CURSE, source_node_id=site.id)
-        return f"; a curse fell on {leader.name}"
+        return {"risk": risk, "cursed": leader.id}
     if risk is ExcavationRisk.SPIRIT:
         spirit = await raise_spirit(ctx, site, origin="loosed by a dig")
-        return f"; {spirit.name} was loosed"
+        return {"risk": risk, "spirit": spirit.id}
     if risk is ExcavationRisk.COLLAPSE:
         await apply_hits(ctx, leader, Harm(table.collapse_hp, HarmCause.ACCIDENT, f"was buried when the dig at {site.name} fell in"))
         if ctx.rng(f"dig.collapse.{dig.id}.{dig.stage.value}").chance(table.collapse_end_pct) and "status" not in dig.locked:
             dig.status, dig.ended_epoch = ExcavationStatus.COLLAPSED, ctx.epoch
-        return "; the shaft fell in"
-    return ""
+        return {"risk": risk, "harm": table.collapse_hp}
+    return {}
 
 
-async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRow, site: EntityRow, leader: EntityRow) -> str:
+async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRow, site: EntityRow, leader: EntityRow) -> dict[str, FactInput]:
     hoard = await unearth_hoards(ctx, [place for place in (site.id, site.location_id) if place is not None], leader)
     marked = await read_marks(ctx, site)
-    found = (f"; they found a buried hoard worth {hoard} coin" if hoard else "") + ("; stamped jars told of the trade that once passed there" if marked else "")
+    found: dict[str, FactInput] = {**({"hoard": hoard} if hoard else {}), **({"marks": int(marked)} if marked else {})}
     if stage.find is ExcavationFind.NOTHING:
         return found
     if stage.find is ExcavationFind.WAKING:
         woken = await wake_sleepers(ctx, site, leader)
-        return (f"; {several(woken, 'mind', 'minds')} long still in the ruin woke" if woken else "") + found
+        return {**found, **({"find": stage.find, "woken": woken} if woken else {})}
     keeper = dig.sponsor_node_id or leader.id
     technique = ctx.rng(f"dig.technique.{dig.id}.{stage.id}").pick(list(LOST_TECHNIQUES))
     if stage.find is ExcavationFind.TECHNIQUE:
@@ -316,8 +313,8 @@ async def unearth(ctx: TickContext, dig: ExcavationRow, stage: ExcavationStageRo
             select(RouteRow.id).where(RouteRow.known.is_(False), (RouteRow.world_a_id == site.world_id) | (RouteRow.world_b_id == site.world_id)).limit(1)
         )
         if hidden is not None:
-            await reveal_hidden_route(ctx, int(hidden), f"A map unearthed at {site.name}")
-    return f"; they found {item.name}{found}"
+            await reveal_hidden_route(ctx, int(hidden), site.id)
+    return {**found, "find": stage.find, "item": item.id}
 
 
 async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
@@ -347,7 +344,7 @@ async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
         return
     tally.advanced += 1
     stage.resolved_epoch = ctx.epoch
-    told = await suffer(ctx, dig, stage.risk, site, leader)
+    harmed = await suffer(ctx, dig, stage.risk, site, leader)
     tally.risks += stage.risk is not ExcavationRisk.NONE
     found = await unearth(ctx, dig, stage, site, leader)
     tally.finds += bool(found)
@@ -363,12 +360,12 @@ async def dig_on(ctx: TickContext, dig: ExcavationRow, tally: DigTally) -> None:
             tally.finished += 1
         else:
             dig.stage = order[order.index(dig.stage) + 1]
-    await note(
+    await record_incident(
         ctx,
-        f"The dig at {site.name} passed its {spoken(stage.stage)}{told}{found}.",
-        key=f"excavation.{stage.stage.value}",
-        ids=[leader.id, site.id, *([stage.find_entity_id] if stage.find_entity_id else [])],
-        roles={leader.id: IncidentRole.ACTOR, site.id: IncidentRole.PLACE},
+        f"excavation.{stage.stage.value}",
+        roles={IncidentRole.ACTOR: leader.id, IncidentRole.PLACE: site.id, IncidentRole.PATRON: dig.sponsor_node_id},
+        facts={"stage": stage.stage, **harmed, **found},
+        place=site.id,
     )
 
 
@@ -427,7 +424,7 @@ async def tend_battlefields(ctx: TickContext, tally: DigTally) -> None:
         if row.feature is BattlefieldFeature.MASS_GRAVE and ctx.rng(f"grave.{row.id}.{ctx.epoch}").chance(table.grave_haunt_pct * row.strength / PERCENT):
             spirit = await raise_spirit(ctx, place, origin="risen from the mass grave")
             tally.haunted += 1
-            await note(ctx, f"{spirit.name} rose from the mass grave of {place.name}.", key="battlefield.haunted", ids=[spirit.id, place.id])
+            await record_incident(ctx, "battlefield.haunted", roles={IncidentRole.SUBJECT: spirit.id}, facts={"battlefield": place.id}, place=place.id)
         if row.feature is BattlefieldFeature.EARTHWORKS and place.location_id is not None:
             region = await ctx.session.get(RegionEnvironmentRow, place.location_id)
             if region is not None and not held(place.location_id):

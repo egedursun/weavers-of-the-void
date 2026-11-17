@@ -2,11 +2,9 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
-from aerona.catalog.ethics import ACT_LABELS
-from aerona.catalog.mind import MELEE_SKILLS, MEMORIES, TRAITS
-from aerona.catalog.mind_split import IDEAS, derived_axes
+from aerona.catalog.mind import MELEE_SKILLS, MEMORIES
+from aerona.catalog.mind_split import derived_axes
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, several, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -32,8 +30,10 @@ from aerona.domain.enums.mind import (
     ValueAxis,
     ValueHolder,
 )
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import Commodity
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
@@ -84,7 +84,6 @@ from aerona.engine.mind.thoughts import forget_faded as forget_faded_thoughts
 from aerona.engine.mind.thoughts import settle_mood, think
 from aerona.engine.mind.traits import seed_traits
 from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.phases.heroes import active_quest, start_quest
@@ -97,6 +96,8 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, living_entity
 from aerona.engine.primitives.society import move_stock, stock
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation, lend_settlement_values, refresh_relations
 from aerona.engine.services.war import ongoing_wars
 
@@ -240,7 +241,6 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.gardens",
     "table.gathering_guests",
@@ -304,9 +304,10 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.community_relations",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.mind_attributes",
@@ -511,7 +512,6 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.incubating_ideas",
@@ -543,7 +543,6 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -578,14 +577,14 @@ async def mind_skills(ctx: TickContext) -> None:
                 mind.career_ended_epoch = ctx.epoch
             if move.new is MortalRole.COMMONER and await left_to_beg(ctx, mortal):
                 await EntityRepository(ctx.session).add_tags(mortal.id, [BEGGAR_TAG])
-                await note(ctx, f"With no calling left and no one to keep them, {mortal.name} begs for a living.", key="skill.career_beggar", ids=[mortal.id])
+                await record(ctx, "skill.career_beggar", roles={IncidentRole.SUBJECT: mortal.id}, facts={"before": move.old})
         if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
-            text = (
-                f"{mortal.name} could no longer live as {an(spoken(move.old))} and became {an(spoken(move.new))}."
-                if move.reason is CareerChange.INJURED
-                else f"{mortal.name} gave up the life of {an(spoken(move.old))} to become {an(spoken(move.new))}."
+            await record(
+                ctx,
+                f"skill.career_{move.reason.value}",
+                roles={IncidentRole.SUBJECT: mortal.id},
+                facts={"reason": move.reason, "before": move.old, "after": move.new},
             )
-            await note(ctx, text, key=f"skill.career_{move.reason.value}", ids=[mortal.id])
     await ctx.session.flush()
     ctx.count("skills_rusted", rusted)
     ctx.count("sparring_wounds", sparred)
@@ -612,7 +611,7 @@ async def vengeance(ctx: TickContext) -> int:
             continue
         reason = row.note or MEMORIES[row.kind].label.lower()
         await start_quest(ctx, avenger, QuestOption(QuestAim.AVENGE, QuestTargetKind.PERSON, target.id, 1.0, f"to avenge {reason} on {target.name}"))
-        await note(ctx, f"{avenger.name} swore vengeance on {target.name} for {reason}.", key="memory.vengeance", ids=[avenger.id, target.id])
+        await record_incident(ctx, "memory.vengeance", roles={IncidentRole.ACTOR: avenger.id, IncidentRole.TARGET: target.id}, facts={"memory": row.kind})
         if ctx.rng(seed_of("vengeance_oath", row.id)).chance(ctx.rules.oaths.vengeance_chance):
             await swear(ctx, avenger, OathKind.VENGEANCE, recipient_id=target.id, note_text=reason)
         sworn += 1
@@ -624,7 +623,6 @@ async def vengeance(ctx: TickContext) -> int:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.hero_quests",
     "table.incident_participants",
     "table.incidents",
@@ -662,7 +660,6 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.gardens",
     "table.gathering_guests",
@@ -704,8 +701,9 @@ async def mind_memories(ctx: TickContext) -> None:
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.needs",
     "table.pressures",
@@ -813,7 +811,7 @@ async def mind_split(ctx: TickContext) -> None:
         weathered += 1 if await weather_attributes(ctx.session, ctx.rules, node, ctx.epoch) else 0
         for trait in await temper_facets(ctx.session, ctx.rules, node, ctx.epoch):
             tempered += 1
-            await note(ctx, f"{node.name} has grown {TRAITS[trait].label.lower()}.", key="mind.facet_trait", ids=[node.id])
+            await record_incident(ctx, "mind.facet_trait", roles={IncidentRole.SUBJECT: node.id}, facts={"trait": trait})
     ctx.count("attributes_weathered", weathered)
     ctx.count("facet_traits", tempered)
 
@@ -870,9 +868,21 @@ async def mind_ideas(ctx: TickContext) -> None:
         taken, internalised, rejected = taken + tally.taken, internalised + tally.internalised, rejected + tally.rejected
         for row in await ideas_of(ctx.session, mortal.id):
             if before.get(row.id) is IdeaState.INCUBATING and row.state is IdeaState.INTERNALISED:
-                await note(ctx, f"{mortal.name} took {IDEAS[row.idea].label.lower()} to heart.", key="idea.internalised", ids=[mortal.id])
+                await record(
+                    ctx,
+                    "idea.internalised",
+                    roles={IncidentRole.LEARNER: mortal.id},
+                    facts={"idea": row.idea},
+                    steps=(StepDraft(StepAction.LEARN, actor=mortal.id),),
+                )
             elif before.get(row.id) is IdeaState.INCUBATING and row.state is IdeaState.REJECTED:
-                await note(ctx, f"{mortal.name} let go of {IDEAS[row.idea].label.lower()}.", key="idea.rejected", ids=[mortal.id])
+                await record(
+                    ctx,
+                    "idea.rejected",
+                    roles={IncidentRole.SUBJECT: mortal.id},
+                    facts={"idea": row.idea},
+                    steps=(StepDraft(StepAction.REFUSE, actor=mortal.id),),
+                )
     ctx.count("ideas_taken", taken)
     ctx.count("ideas_internalised", internalised)
     ctx.count("ideas_rejected", rejected)
@@ -1007,7 +1017,6 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.dreams",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -1051,7 +1060,7 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.conditions",
     "table.dreams",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -1155,11 +1164,12 @@ async def mind_ethics(ctx: TickContext) -> None:
         if call is None or await split_already(ctx, people):
             continue
         faction = await found_faction(ctx, people, SCHISM_FACTION)
-        await note(
+        await record(
             ctx,
-            f"{faction.name} broke from the {people.name} over {ACT_LABELS[call.act].lower()}.",
-            key="ethics.schism",
-            ids=[faction.id, people.id],
+            "ethics.schism",
+            roles={IncidentRole.PRODUCT: faction.id, IncidentRole.ORIGIN: people.id},
+            facts={"act": call.act},
+            steps=(StepDraft(StepAction.SEPARATE, actor=faction.id, target=people.id),),
         )
         schisms += 1
     for mortal in mortals:
@@ -1187,7 +1197,6 @@ async def split_already(ctx: TickContext, people: EntityRow) -> bool:
     "table.conditions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.fear_kinds",
     "table.fears",
     "table.house_profiles",
@@ -1220,9 +1229,9 @@ async def split_already(ctx: TickContext, people: EntityRow) -> bool:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.fears",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.life_dreams",
     "table.memories",
@@ -1265,7 +1274,6 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.deed_claims",
     "table.deeds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.geasa",
     "table.goods_flows",
     "table.held_identities",
@@ -1293,7 +1301,6 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.community_stocks",
     "table.deed_claims",
     "table.deeds",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -1324,13 +1331,13 @@ async def famine_aid(ctx: TickContext) -> None:
             continue
         await move_stock(ctx.session, ctx.rules, donor.id, community.id, Commodity.FOOD, index=sent, epoch=ctx.epoch, flow=GoodsFlow.AID)
         await change_relation(
-            ctx, community.id, donor.id, table.famine_aid_relation, MemoryKind.FAMINE_AID, note="grain in the hungry year", reverse=MemoryKind.GOODWILL
+            ctx, community.id, donor.id, table.famine_aid_relation, MemoryKind.FAMINE_AID, note="food sent in a time of hunger", reverse=MemoryKind.GOODWILL
         )
-        await note(
+        await record_incident(
             ctx,
-            f"{donor.name} sent {several(sent, 'load', 'loads')} of grain to starving {community.name}.",
-            key="mind.famine_aid",
-            ids=[donor.id, community.id],
+            "mind.famine_aid",
+            roles={IncidentRole.GIVER: donor.id, IncidentRole.RECEIVER: community.id},
+            facts={"loads": sent, "relation": table.famine_aid_relation},
         )
         given += 1
     ctx.count("famine_aid", given)

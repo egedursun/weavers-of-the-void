@@ -12,3 +12,13 @@ class TierCapability(StrEnum):
     LOAN = "loan"
     EXPLORATION = "exploration"
     DEPOSIT_CLAIM = "deposit_claim"
+
+
+class DebtTiming(StrEnum):
+    ON_TIME = "on_time"
+    OVERDUE = "overdue"
+
+
+class IndependenceAnswer(StrEnum):
+    WAR = "war"
+    RELEASED = "released"

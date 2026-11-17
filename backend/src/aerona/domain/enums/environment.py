@@ -155,3 +155,10 @@ class WaterSource(StrEnum):
     RIVER = "river"
     LAKE = "lake"
     SEA = "sea"
+
+
+class ClimateTurn(StrEnum):
+    WARMER = "warmer"
+    COLDER = "colder"
+    WETTER = "wetter"
+    DRIER = "drier"

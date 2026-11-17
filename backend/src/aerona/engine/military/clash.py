@@ -577,12 +577,13 @@ async def spoils(ctx: TickContext, result: BattleResult, armies: dict[int, Armie
     dropped = await drop_to_losses(ctx, rows[loser.entity.id])
     models = list({item.model.id: item.model for items in carried.values() for item in items}.values())
     ctx.count("equipment_captured", await capture(ctx, winner.entity.id, dropped, models))
-    found = await after_battle(
+    found, landed = await after_battle(
         ctx,
         [army.id for army, _ in armies[loser.entity.id]],
         [army.id for army, _ in armies[winner.entity.id]],
         (loss_share(loser), loss_share(winner)),
         winner.entity.id,
     )
+    result.vehicle_steps.extend(landed)
     for key, value in found.items():
         ctx.count(key, value)

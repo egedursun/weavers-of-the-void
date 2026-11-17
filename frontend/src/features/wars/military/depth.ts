@@ -153,13 +153,6 @@ export const RECORD_ICON: Record<string, LucideIcon> = {
   war_production: Factory,
 }
 
-export const ARMAMENT: Record<string, Named> = {
-  rams: { label: 'Rams', icon: Axe, tone: 'warning' },
-  missiles: { label: 'Missiles', icon: Target, tone: 'info' },
-  siege_engines: { label: 'Siege engines', icon: KeySquare, tone: 'danger' },
-  rites: { label: 'Rites', icon: Sparkles, tone: 'verdigris' },
-}
-
 export const VESSEL_STATUS: Record<string, Named> = {
   docked: { label: 'Docked', icon: Anchor, tone: 'muted' },
   afloat: { label: 'Afloat', icon: Sailboat, tone: 'success' },

@@ -19,18 +19,20 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.kind_crafts import GameCategory
 from aerona.domain.enums.kinds import KindConcept
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
-from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
 from aerona.engine.structures.readers import working
 
@@ -142,7 +144,14 @@ async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
             continue
         club = await found_club(ctx, town, kind)
         tally.clubs += 1
-        await note(ctx, f"A club formed in {town.name}.", key="sport.club", ids=[club.faction_entity_id, town.id])
+        await record(
+            ctx,
+            "sport.club",
+            roles={IncidentRole.PRODUCT: club.faction_entity_id, IncidentRole.PLACE: town.id},
+            facts={"game": kind},
+            steps=(StepDraft(StepAction.FOUND, target=club.faction_entity_id),),
+            place=town.id,
+        )
 
 
 async def form_leagues(ctx: TickContext, tally: SportTally) -> None:
@@ -165,7 +174,13 @@ async def form_leagues(ctx: TickContext, tally: SportTally) -> None:
             league = LeagueRow(faction_entity_id=faction.id, polity_entity_id=realm_id, season_epoch=ctx.epoch, locked=[])
             ctx.session.add(league)
             tally.leagues += 1
-            await note(ctx, f"The clubs of the realm formed {faction.name}.", key="sport.league", ids=[faction.id, realm_id])
+            await record(
+                ctx,
+                "sport.league",
+                roles={IncidentRole.PRODUCT: faction.id, IncidentRole.AUTHORITY: realm_id, IncidentRole.MEMBER: [club.faction_entity_id for club in clubs]},
+                facts={"clubs": len(clubs)},
+                steps=(StepDraft(StepAction.FOUND, target=faction.id),),
+            )
         for club in clubs:
             if "league_entity_id" not in club.locked:
                 club.league_entity_id = league.faction_entity_id
@@ -293,13 +308,12 @@ async def play_seasons(ctx: TickContext, tally: SportTally) -> None:
                 league.champion_entity_id = champion.faction_entity_id
             league.season_epoch = ctx.epoch
             tally.champions += 1
-            named = await ctx.session.get(EntityRow, champion.faction_entity_id)
-            circuit = await ctx.session.get(EntityRow, league.faction_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"{named.name if named else 'A club'} were named champions of {circuit.name if circuit else 'the league'}.",
-                key="sport.champion",
-                ids=[league.faction_entity_id, champion.faction_entity_id],
+                "sport.champion",
+                roles={IncidentRole.BENEFICIARY: champion.faction_entity_id, IncidentRole.AUTHORITY: league.faction_entity_id},
+                facts={"wins": champion.wins, "losses": champion.losses, "rating": champion.rating},
+                steps=(StepDraft(StepAction.WIN, actor=champion.faction_entity_id),),
             )
 
 
@@ -339,7 +353,13 @@ async def buy_favour(ctx: TickContext, tally: SportTally) -> None:
             await receive_coin(ctx.session, ctx.rules, backers, table.buy_cost)
         club.bought_by_entity_id = realm.id
         tally.bought += 1
-        await note(ctx, f"{ruler.name} bought the favour of a club of {realm.name}.", key="sport.bought", ids=[ruler.id, club.faction_entity_id])
+        await record(
+            ctx,
+            "sport.bought",
+            roles={IncidentRole.BUYER: ruler.id, IncidentRole.TARGET: club.faction_entity_id, IncidentRole.AUTHORITY: realm.id},
+            facts={"cost": table.buy_cost},
+            steps=(StepDraft(StepAction.PAY, actor=realm.id, target=club.faction_entity_id, amount=table.buy_cost, unit=FactUnit.COIN),),
+        )
     for club in list(await ctx.session.scalars(select(ClubRow).where(ClubRow.bought_by_entity_id.is_not(None)).order_by(ClubRow.faction_entity_id))):
         ruler = await living_entity(ctx.session, await ruler_of(ctx.session, club.bought_by_entity_id))
         profile = await ctx.session.get(MortalProfileRow, ruler.id) if ruler is not None else None

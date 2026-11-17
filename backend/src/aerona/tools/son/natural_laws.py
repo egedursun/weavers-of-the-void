@@ -8,9 +8,9 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.law_grammar import LawCondition, LawOperator
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.divine.law_grammar import grammar_of, set_grammar
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -19,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -53,7 +52,11 @@ async def set_natural_law(call: SonCall, args: NaturalLawInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.LAW_REFUSED, why=str(error).rstrip("."))
     call.target(law.id)
-    await call.chronicle(ChronicleKind.COSMIC_LAW, lines.SET_NATURAL_LAW, entity_ids=[law.id], son=call.son.name, name=law.name, reason=args.reason)
+    await call.record(
+        "law.natural_reshaped",
+        roles={IncidentRole.PATRON: call.son.id, IncidentRole.SUBJECT: law.id},
+        facts={"operator": args.operator, "value": args.value, "reason": args.reason},
+    )
     return result(SonResult.LAW_SET, name=law.name, operator=args.operator.value.replace("_", " "), value=args.value)
 
 

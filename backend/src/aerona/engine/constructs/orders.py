@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -15,12 +16,13 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.constructs import CommandToken, MindWill, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, ConstructEnd, MindWill, OrderCondition, OrderKind
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.minds import WillCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.constructs.making import Design, make_construct, skilled_makers
@@ -32,12 +34,12 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.minds.crimes import erasure_crime, mind_crime
 from aerona.engine.minds.phase import change_will
 from aerona.engine.minds.profiles import law_for, profile_of, will_allowed
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import heir_of, retire_in, valid_location
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import at_war, realm_for, realm_of_town, region_of, ruler_of, town_of
 
 PER_MILLE = 1000
@@ -101,7 +103,12 @@ async def resolve_holder(ctx: TickContext, construct: EntityRow, rules: Instruct
     if found != rules.holder_node_id and "holder_node_id" not in rules.locked:
         if found is not None and rules.holder_node_id is not None:
             tally.seized += 1
-            await note(ctx, f"{construct.name} answers a new holder.", key="construct.seized", ids=[construct.id, found])
+            await record(
+                ctx,
+                "construct.seized",
+                roles={IncidentRole.SUBJECT: construct.id, IncidentRole.OWNER: found, IncidentRole.PREDECESSOR: rules.holder_node_id},
+                place=construct.location_id,
+            )
         rules.holder_node_id = found
     return await living_entity(ctx.session, rules.holder_node_id)
 
@@ -332,7 +339,7 @@ async def target_for(ctx: TickContext, rules: InstructionSetRow, order: Instruct
 
 async def obey(ctx: TickContext, construct: EntityRow, row: ConstructRow, rules: InstructionSetRow, tally: OrderTally) -> None:
     if refuses(ctx, await ctx.session.get(LivingProfileRow, construct.id)):
-        await note(ctx, f"{construct.name} would not obey a handler it no longer trusts.", key="living.refused", ids=[construct.id])
+        await record(ctx, "living.refused", roles={IncidentRole.SUBJECT: construct.id}, facts={"literalness": rules.literalness})
         return
     holder = await resolve_holder(ctx, construct, rules, tally)
     beast = await ctx.session.get(BeastProfileRow, construct.id)
@@ -375,10 +382,10 @@ async def grow_will(ctx: TickContext, construct: EntityRow, row: ConstructRow, t
         return
     change_will(ctx, profile, grown, WillCause.GIFT)
     tally.woke += 1
-    await note(ctx, f"{construct.name} grew in will.", key="construct.will", ids=[construct.id])
+    await record(ctx, "construct.will", roles={IncidentRole.SUBJECT: construct.id}, facts={"will": grown, "cause": WillCause.GIFT}, place=construct.location_id)
     if grown is MindWill.EXCEEDING:
         tally.freed += 1
-        await note(ctx, f"{construct.name} slipped every order it was given.", key="construct.freed", ids=[construct.id])
+        await record(ctx, "construct.freed", roles={IncidentRole.SUBJECT: construct.id, IncidentRole.MAKER: row.maker_entity_id}, place=construct.location_id)
 
 
 async def will_of(ctx: TickContext, construct_id: int) -> MindWill:
@@ -391,14 +398,14 @@ async def pull_switch(ctx: TickContext, construct: EntityRow, row: ConstructRow,
     keeper = await owner_of_item(ctx, rules.kill_token_entity_id) if rules.kill_token_entity_id is not None else rules.holder_node_id
     if keeper is None or held(keeper) or await living_entity(ctx.session, keeper) is None:
         return False
-    await unmake(ctx, construct, "stilled by its kill switch")
+    await unmake(ctx, construct, ConstructEnd.STILLED_BY_KILL_SWITCH)
     tally.killed += 1
     return True
 
 
-async def unmake(ctx: TickContext, construct: EntityRow, why: str) -> None:
-    await retire_in(ctx, construct, why, close_bonds=True)
-    await note(ctx, f"{construct.name} was {why}.", key="construct.ended", ids=[construct.id])
+async def unmake(ctx: TickContext, construct: EntityRow, end: ConstructEnd) -> None:
+    await retire_in(ctx, construct, spoken(end), close_bonds=True)
+    await record(ctx, "construct.ended", roles={IncidentRole.SUBJECT: construct.id}, facts={"end": end}, place=construct.location_id)
 
 
 async def renew(ctx: TickContext, row: ConstructRow, maker: EntityRow | None) -> int:
@@ -444,7 +451,7 @@ async def wear(ctx: TickContext, construct: EntityRow, row: ConstructRow, tally:
         row.decay = clamp_int(row.decay + max(1, round_half_up(table.wear * (PERCENT - hardness) / PERCENT * 2)), 0, PERCENT)
     if row.power > 0 and row.decay < PERCENT:
         return False
-    await unmake(ctx, construct, "run down" if row.power == 0 else "worn away")
+    await unmake(ctx, construct, ConstructEnd.RUN_DOWN if row.power == 0 else ConstructEnd.WORN_AWAY)
     tally.ran_down += 1
     return True
 

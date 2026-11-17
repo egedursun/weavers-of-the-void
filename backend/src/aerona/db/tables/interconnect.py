@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String, Text
+from sqlalchemy import JSON, CheckConstraint, Float, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
@@ -6,6 +6,7 @@ from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
+from aerona.domain.enums.records import IncidentTier, WitnessMode
 
 
 class ModifierRow(CreatedAtMixin, Base):
@@ -40,6 +41,8 @@ class IncidentRow(CreatedAtMixin, Base):
         at_least("magnitude", 0),
         Index("ix_incidents_epoch_kind", "epoch", "kind"),
         Index("ix_incidents_cause", "cause_incident_id"),
+        Index("ix_incidents_moment", "world_id", "year", "season", "day", "hour"),
+        Index("ix_incidents_place", "place_entity_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -53,12 +56,22 @@ class IncidentRow(CreatedAtMixin, Base):
     thread_id: Mapped[int | None] = mapped_column(ForeignKey("threads.id", ondelete="SET NULL"))
     note: Mapped[str | None] = mapped_column(Text)
     magnitude: Mapped[int] = mapped_column(default=0)
+    season: Mapped[int | None]
+    day: Mapped[int | None]
+    hour: Mapped[int | None]
+    origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    destination_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    tier: Mapped[IncidentTier] = mapped_column(enum_type(IncidentTier, "tier"), default=IncidentTier.LINE, server_default=IncidentTier.LINE.value)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
 
 
 class IncidentParticipantRow(Base):
     __tablename__ = "incident_participants"
+    __table_args__ = (nullable_between("fidelity", PERCENT_MIN, PERCENT_MAX),)
 
     incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"), primary_key=True)
     node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True, index=True)
     role: Mapped[IncidentRole] = mapped_column(enum_type(IncidentRole, "role"), primary_key=True)
     position: Mapped[int] = mapped_column(default=0)
+    witness_mode: Mapped[WitnessMode | None] = mapped_column(enum_type(WitnessMode, "witness_mode"))
+    fidelity: Mapped[int | None]

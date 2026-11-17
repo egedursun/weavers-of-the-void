@@ -14,13 +14,14 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.customs import CoopPurpose
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 POOLING = frozenset({CoopPurpose.INSURANCE, CoopPurpose.BURIAL})
@@ -59,7 +60,13 @@ async def found_insurers(ctx: TickContext, tally: InsuranceTally) -> None:
             continue
         ctx.session.add(InsurerRow(insurer_entity_id=faction.id, pool=table.seed_pool, locked=[]))
         tally.founded += 1
-        await note(ctx, f"{faction.name} began to insure cargoes, houses and lives.", key="insurance.founded", ids=[faction.id])
+        await record(
+            ctx,
+            "insurance.founded",
+            roles={IncidentRole.ACTOR: faction.id},
+            facts={"pool": table.seed_pool, "pooled": int(faction.id in pooling)},
+            place=faction.location_id,
+        )
     await ctx.session.flush()
 
 
@@ -148,7 +155,13 @@ async def judge(ctx: TickContext, row: InsurerRow, claims: int, tally: Insurance
         if not held(holder_id):
             await change_relation(ctx, holder_id, row.insurer_entity_id, -table.ruin_opinion, MemoryKind.ILL_WILL, note="could not pay what it had promised")
     if insurer is not None:
-        await note(ctx, f"Claims beyond its means ruined {insurer.name}; what it insured is left unprotected.", key="insurance.ruined", ids=[insurer.id])
+        await record(
+            ctx,
+            "insurance.ruined",
+            roles={IncidentRole.SUBJECT: insurer.id, IncidentRole.VICTIM: sorted(holders)},
+            facts={"pool": row.pool, "holders": len(holders)},
+            place=insurer.location_id,
+        )
 
 
 async def claims_total(ctx: TickContext, insurer_id: int) -> int:

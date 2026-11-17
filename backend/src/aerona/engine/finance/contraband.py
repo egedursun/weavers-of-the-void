@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import BookContentRow, ItemProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -11,19 +10,20 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 
 OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
 BOOKS = (ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK)
@@ -85,13 +85,12 @@ async def smuggle_books(ctx: TickContext, gang: FactionProfileRow) -> int:
         await crime_at(ctx, home, ctx.rules.contraband.book_crime)
         carried += 1
     if carried:
-        town = await ctx.session.get(EntityRow, home)
-        await note(
+        await record(
             ctx,
-            f"Smugglers passed {carried} forbidden {'book' if carried == 1 else 'books'} from hand to hand in {town.name if town else 'the town'}.",
-            key="contraband.books",
-            ids=[gang.faction_entity_id, home],
-            kind=ChronicleKind.TRADE,
+            "contraband.books",
+            roles={IncidentRole.ACTOR: gang.faction_entity_id, IncidentRole.PLACE: home},
+            facts={"carried": carried, "value": carried * ctx.rules.contraband.book_value},
+            place=home,
         )
     return carried
 
@@ -123,13 +122,13 @@ async def traffic(ctx: TickContext, captor: EntityRow, count: int, origin_id: in
     await crime_at(ctx, captor.id, table.slave_crime)
     if origin_id is not None:
         await judged(ctx, gang.faction_entity_id, origin_id, ActKind.SLAVERY)
-    gang_entity = await ctx.session.get(EntityRow, gang.faction_entity_id)
-    seller = gang_entity.name if gang_entity else "Outlaws"
-    await note(
+    await record(
         ctx,
-        f"{seller} bought {several(count, 'captive', 'captives')} in {captor.name}, where slavery is banned, and sold them in {market.name}.",
-        key="contraband.slaves",
-        ids=[gang.faction_entity_id, captor.id, market.id],
-        kind=ChronicleKind.TRADE,
+        "contraband.slaves",
+        roles={IncidentRole.ACTOR: gang.faction_entity_id, IncidentRole.SELLER: captor.id, IncidentRole.DESTINATION: market.id, IncidentRole.ORIGIN: origin_id},
+        facts={"count": count, "earned": round_half_up(count * table.slave_value_per_10 / TENTH)},
+        steps=(StepDraft(StepAction.SMUGGLE, actor=gang.faction_entity_id, target=market.id, amount=count, unit=FactUnit.PEOPLE),),
+        origin=captor.id,
+        destination=market.id,
     )
     return market

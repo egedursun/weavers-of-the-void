@@ -17,6 +17,7 @@ from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.powers import (
     PowerDeviceEffect,
@@ -34,7 +35,6 @@ from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.fortune.profiles import shift_fortune
 from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.standing import add_infamy, add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.powers import effects
 from aerona.engine.powers.devices import devices_of
@@ -44,6 +44,7 @@ from aerona.engine.primitives.augment_bonus import bonus
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 WITNESSES = 5
 MADE_SEATS = frozenset({MindSeat.OBJECT, MindSeat.NETWORK, MindSeat.STRUCTURE, MindSeat.MEDIUM})
@@ -216,12 +217,12 @@ RESISTANCE_READERS: Mapping[str, Callable[[TickContext, EntityRow, EntityRow], A
 async def resistance(ctx: TickContext, target: EntityRow | None, kinds: list[ResistanceKind], user: EntityRow) -> float:
     if target is None or target.id == user.id or target.entity_type is not EntityType.MORTAL or kinds == [ResistanceKind.NONE]:
         return 0.0
-    total = 0
+    summed = 0
     for kind in kinds:
-        total += await bonus(ctx.session, target.id, EffectTarget.RESISTANCE, kind.value)
+        summed += await bonus(ctx.session, target.id, EffectTarget.RESISTANCE, kind.value)
         spec = RESISTANCES[kind]
-        total += await RESISTANCE_READERS[spec.reads](ctx, target, user) * spec.share_pct // PERCENT
-    return min(1.0, total / (PERCENT * 2))
+        summed += await RESISTANCE_READERS[spec.reads](ctx, target, user) * spec.share_pct // PERCENT
+    return min(1.0, summed / (PERCENT * 2))
 
 
 async def system_factor(ctx: TickContext, power: PowerRow, target: EntityRow | None) -> float:
@@ -290,7 +291,7 @@ async def strain(ctx: TickContext, user: EntityRow, power: PowerRow, strength: i
             power.state = PowerState.STRAINED
     if power.strain * PERCENT >= power.strain_cap * table.burnout_at_pct and "state" not in power.locked:
         power.state = PowerState.EXHAUSTED
-        await note(ctx, f"The power of {user.name} gave out.", key="power.exhausted", ids=[user.id])
+        await record(ctx, "power.exhausted", roles={IncidentRole.SUBJECT: user.id})
     return over
 
 

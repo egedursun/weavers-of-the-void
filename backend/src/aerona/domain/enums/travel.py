@@ -51,6 +51,21 @@ class JourneyStatus(StrEnum):
     STRANDED = "stranded"
 
 
+class RefugeeCause(StrEnum):
+    WAR = "war"
+    DISASTER = "disaster"
+    DECREE = "decree"
+
+
+class ExplorationReason(StrEnum):
+    NARROW = "narrow"
+    HUNGER = "hunger"
+    POVERTY = "poverty"
+    EXPLORER = "explorer"
+    KNOWLEDGE = "knowledge"
+    SPIRIT = "spirit"
+
+
 class JourneyEventKind(StrEnum):
     PIRATES = "pirates"
     VOID_STORM = "void_storm"

@@ -1,16 +1,15 @@
 from sqlalchemy import select
 
-from aerona.catalog.transform_lines import LINES
 from aerona.catalog.transformations import TRANSFORMS
+from aerona.core.grammar import spoken
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.transform import TransformationRow, TransformProspectRow
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.transform import ProspectStance, TransformKind, TransformTrigger
 from aerona.engine.context import TickContext
+from aerona.engine.recording.record import record
 from aerona.engine.transform.ledger import Ledger
-
-TRANSFORM_MAGNITUDE = 60
 
 
 async def name_of(ctx: TickContext, node_id: int | None) -> str | None:
@@ -36,16 +35,14 @@ async def record_transformation(
 ) -> TransformationRow:
     subject = await name_of(ctx, subject_id) or ""
     result = await name_of(ctx, result_id)
-    line = LINES[kind]
     ids = [node for node in (subject_id, result_id) if node is not None]
     sons = [node for node in ids if await ctx.session.get(SonRow, node) is not None]
-    write = await ctx.chronicle(
-        ChronicleKind.WORLD,
-        line.render(subject=subject or TRANSFORMS[kind].source.value, result=result or TRANSFORMS[kind].target.value),
-        template_key=line.key,
-        entity_ids=ids,
+    write = await record(
+        ctx,
+        f"transform.{kind.value}",
+        roles={IncidentRole.SUBJECT: subject_id, IncidentRole.PRODUCT: result_id},
+        facts={"subject_name": subject or spoken(TRANSFORMS[kind].source), "result_name": result or spoken(TRANSFORMS[kind].target)},
         son_id=sons[0] if sons else None,
-        magnitude=TRANSFORM_MAGNITUDE,
     )
     row = TransformationRow(
         kind=kind,

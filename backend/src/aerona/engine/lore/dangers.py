@@ -1,8 +1,9 @@
 from sqlalchemy import select
 
-from aerona.catalog.discovery import ACCIDENT_BRANCHES, DANGEROUS_BRANCHES, DANGEROUS_TECHNIQUES, INCIDENTS
+from aerona.catalog.discovery import ACCIDENT_BRANCHES, DANGEROUS_BRANCHES, DANGEROUS_TECHNIQUES
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, ResearchProgressRow
 from aerona.db.tables.discovery import ResearchIncidentRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -10,11 +11,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.discovery import ResearchIncident
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -27,12 +28,12 @@ from aerona.engine.lore.research import SCHOLARLY, has_technique
 from aerona.engine.lore.research_depth import add_progress, neighbours
 from aerona.engine.lore.rites import phenomenon
 from aerona.engine.mind.ethics import BAD, culture_of, ethics_of
-from aerona.engine.notes import note
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import ruler_of_realm
 from aerona.engine.services.community_relations import change_relation
 
@@ -116,13 +117,19 @@ async def strike(
         await loose(ctx, site.id, disease_id=None, severity=severity, son_id=None)
     if kind is ResearchIncident.BACKLASH and region is not None:
         await phenomenon(ctx, region)
-    subject = TECHNIQUES[technique].label.lower() if technique is not None else (branch.value.replace("_", " ") if branch is not None else "their work")
-    await note(
+    await record_incident(
         ctx,
-        f"{INCIDENTS[kind]} in {holder.name} while its scholars worked at {subject}.",
-        key=f"discovery.incident_{kind.value}",
-        ids=[holder.id],
-        kind=ChronicleKind.KNOWLEDGE,
+        f"discovery.incident_{kind.value}",
+        roles={IncidentRole.SUBJECT: holder.id},
+        facts={
+            "incident": kind,
+            "severity": severity,
+            "dead": row.dead,
+            **({"technique": technique} if technique is not None else {}),
+            **({"branch": branch} if branch is not None else {}),
+        },
+        place=holder.id,
+        terms=[Term("rules.discovery.incident_severity", table.incident_severity)],
     )
     return row
 

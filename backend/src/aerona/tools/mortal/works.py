@@ -12,11 +12,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.industry import MethodKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.finance.policy import lay
 from aerona.engine.finance.speculation import hunger_at, open_hoard
@@ -29,7 +29,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.mortal import lines
 
 
 class MethodInput(ToolInput):
@@ -75,13 +74,10 @@ async def choose_method(call: MortalCall, args: MethodInput) -> str:
         fail(MortalResult.METHOD_REFUSED, name=community.name, method=spec.label.lower(), why=why)
     await adopt(call.tick, book, community, spec, MethodTally())
     call.target(community.id)
-    await call.chronicle(
-        ChronicleKind.PRODUCTION,
-        lines.METHOD_CHOSEN,
-        entity_ids=[call.me.id, community.id],
-        me=call.me.name,
-        method=spec.label.lower(),
-        process=PROCESS_LABELS[spec.process].lower(),
+    await call.record(
+        "tools.mortal.method_chosen",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: community.id},
+        facts={"method": args.method, "process": spec.process},
     )
     return result(MortalResult.METHOD_CHOSEN, name=community.name, method=spec.label.lower(), process=PROCESS_LABELS[spec.process].lower())
 
@@ -100,8 +96,11 @@ async def buy_workshop(call: MortalCall, args: BuyInput) -> str:
     if price is None:
         fail(MortalResult.WORKSHOP_REFUSED, workshop=label, why="you own it already or cannot pay its price")
     call.target(community.id)
-    await call.chronicle(
-        ChronicleKind.TRADE, lines.WORKSHOP_BOUGHT, entity_ids=[call.me.id, community.id], me=call.me.name, workshop=label, place=community.name, price=price
+    await call.record(
+        "tools.mortal.workshop_bought",
+        roles={IncidentRole.BUYER: call.me.id, IncidentRole.PLACE: community.id},
+        facts={"workshop": args.kind, "price": price},
+        place=community.id,
     )
     return result(MortalResult.WORKSHOP_BOUGHT, workshop=label, place=community.name, price=price)
 
@@ -126,7 +125,11 @@ async def lay_trade_policy(call: MortalCall, args: PolicyInput) -> str:
     row.rate_pct = 100 if args.kind is TradePolicyKind.EMBARGO else args.rate_pct
     good = COMMODITIES[args.commodity].label.lower() if args.commodity is not None else "every good"
     call.target(realm)
-    await call.chronicle(ChronicleKind.TRADE, lines.POLICY_LAID, entity_ids=[call.me.id, realm], me=call.me.name, policy=label, good=good)
+    await call.record(
+        "tools.mortal.policy_laid",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.OWNER: realm, IncidentRole.TARGET: args.partner_id},
+        facts={"policy": args.kind, "good": args.commodity, "rate": row.rate_pct},
+    )
     return result(MortalResult.POLICY_LAID, policy=label, good=good, rate=row.rate_pct)
 
 
@@ -148,7 +151,12 @@ async def speculate(call: MortalCall, args: SpeculateInput) -> str:
     if row is None:
         fail(MortalResult.HOARD_REFUSED, good=label, why="there is too little to buy or you cannot pay")
     call.target(market.id)
-    await call.chronicle(ChronicleKind.TRADE, lines.HOARD_OPENED, entity_ids=[call.me.id, market.id], me=call.me.name, good=label, place=market.name)
+    await call.record(
+        "tools.mortal.hoard_opened",
+        roles={IncidentRole.BUYER: call.me.id, IncidentRole.PLACE: market.id},
+        facts={"good": args.commodity, "units": row.units, "price": price, "famine": int(famine)},
+        place=market.id,
+    )
     return result(MortalResult.HOARD_OPENED, units=row.units, good=label, place=market.name, price=price)
 
 

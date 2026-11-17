@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import lay_enchantment
 from aerona.engine.arcana.longevity import begin_longevity
@@ -24,7 +25,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 STRENGTH_MAX = 100
 
@@ -56,7 +56,7 @@ async def undertake_heroquest(call: MortalCall, args: QuestInput) -> str:
     if isinstance(party, str):
         fail(MortalResult.QUEST_REFUSED, why=party)
     row = await begin_quest(call.tick, call.me, legend, party)
-    await call.chronicle(ChronicleKind.WORLD, lines.HEROQUEST, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.heroquest", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.WORLD)
     return result(MortalResult.QUEST_BEGUN, id=row.id, steps=row.steps)
 
 
@@ -79,7 +79,12 @@ async def found_enchantment(call: MortalCall, args: FoundEnchantmentInput) -> st
         call.tick, call.me.id, name=args.name, effect=args.effect, world_id=call.me.world_id, region_id=None, strength=args.strength, vis_form=args.form
     )
     call.target(law.law_entity_id)
-    await call.chronicle(ChronicleKind.COSMIC_LAW, lines.ENCHANTMENT, entity_ids=[call.me.id, law.law_entity_id], me=call.me.name, name=args.name)
+    await call.record(
+        "tools.mortal.enchantment",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: law.law_entity_id},
+        facts={"name": str(args.name)},
+        kind=ChronicleKind.COSMIC_LAW,
+    )
     return result(MortalResult.ENCHANTMENT_FOUNDED, id=law.law_entity_id, name=args.name)
 
 

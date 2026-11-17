@@ -7,9 +7,9 @@ from aerona.db.tables.entities import LanguageProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.tongues import LanguagePolicy, ScriptChangeCause
 from aerona.engine.mind.book import skill_level
@@ -24,7 +24,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 PROCLAIMED = 60
 
@@ -50,7 +49,7 @@ async def decipher_script(call: MortalCall, args: DecipherInput) -> str:
         fail(MortalResult.DECIPHER_REFUSED, why="you know nothing of languages")
     work = await study(call.tick, language, call.me, DecipherTally())
     call.target(language.id)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.DECIPHER, entity_ids=[call.me.id, language.id], me=call.me.name, language=language.name)
+    await call.record("tools.mortal.decipher", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: language.id})
     return result(MortalResult.DECIPHERED, name=language.name, progress=work.progress)
 
 
@@ -70,8 +69,10 @@ async def proclaim_tongue(call: MortalCall, args: ProclaimInput) -> str:
         fail(MortalResult.PROCLAIM_REFUSED, why="that is not a tongue")
     await set_policy(call.tick, realm, language.id, args.policy, PROCLAIMED)
     call.target(realm)
-    await call.chronicle(
-        ChronicleKind.LANGUAGE, lines.PROCLAIM, entity_ids=[call.me.id, language.id, realm], me=call.me.name, language=language.name, policy=args.policy.value
+    await call.record(
+        "tools.mortal.proclaim",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm, IncidentRole.SUBJECT: language.id},
+        facts={"policy": args.policy},
     )
     return result(MortalResult.PROCLAIMED, name=language.name, policy=args.policy.value)
 
@@ -89,7 +90,7 @@ async def reform_script(call: MortalCall, args: ReformInput) -> str:
         fail(MortalResult.REFORM_REFUSED, why="the script can be made no simpler")
     row = await record_script(call.tick, language, profile, following, cause=ScriptChangeCause.REFORM, parent=current)
     call.target(language.id)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.REFORM, entity_ids=[call.me.id, language.id], me=call.me.name, language=language.name)
+    await call.record("tools.mortal.reform", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: language.id}, facts={"script": following})
     return result(MortalResult.REFORMED, name=row.name)
 
 

@@ -9,21 +9,22 @@ from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfi
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, RegionEnvironmentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, PhenomenonPersistence
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.models.entity_stats import PhenomenonStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
 from aerona.engine.environment.control import force_weather
 from aerona.engine.interconnect.annotations import reads
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.recording.record import StepDraft, record
 
 WARD_KINDS = frozenset({EngineKind.TEMPLE, EngineKind.WALL})
 
@@ -78,7 +79,15 @@ async def form_phenomenon(
     )
     ctx.session.add(PhenomenonFootprintRow(phenomenon_entity_id=entity.id, region_entity_id=region.id, intensity=strength))
     await ctx.session.flush()
-    await note(ctx, f"{entity.name} formed: {spec.description}", key=f"phenomenon.formed.{kind.value}", ids=[entity.id, region.id], world_id=region.world_id)
+    await record(
+        ctx,
+        f"phenomenon.formed.{kind.value}",
+        roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: region.id, IncidentRole.ACTOR: cause_node_id},
+        facts={"phenomenon": kind, "cause": cause, "intensity": strength, "danger": clamp_percent(mechanics.danger(ctx.rules))},
+        steps=(StepDraft(StepAction.APPEAR, actor=entity.id, locus_kind=StepLocus.REGION, locus_node=region.id),),
+        place=region.id,
+        world_id=region.world_id,
+    )
     ctx.count("phenomena_formed")
     return entity
 
@@ -110,10 +119,17 @@ async def spread(ctx: TickContext, atlas: RegionAtlas, entity: EntityRow, profil
     return 1
 
 
-async def fade(ctx: TickContext, entity: EntityRow) -> None:
+async def fade(ctx: TickContext, entity: EntityRow, profile: PhenomenonProfileRow, regions: int) -> None:
     await ctx.session.execute(delete(PhenomenonFootprintRow).where(PhenomenonFootprintRow.phenomenon_entity_id == entity.id))
     await retire_in(ctx, entity, "faded away", status=EntityStatus.DESTROYED)
-    await note(ctx, f"{entity.name} faded away.", key="phenomenon.faded", ids=[entity.id], world_id=entity.world_id)
+    await record(
+        ctx,
+        "phenomenon.faded",
+        roles={IncidentRole.SUBJECT: entity.id},
+        facts={"regions": regions, "intensity": profile.intensity},
+        steps=(StepDraft(StepAction.WANE, actor=entity.id), StepDraft(StepAction.END, actor=entity.id)),
+        world_id=entity.world_id,
+    )
 
 
 async def effects(ctx: TickContext, profile: PhenomenonProfileRow, prints: list[PhenomenonFootprintRow]) -> None:
@@ -168,14 +184,14 @@ async def phenomena_cycles(ctx: TickContext) -> None:
         for row in prints:
             row.intensity = clamp_percent(min(profile.intensity, row.intensity + max(0, round(growth))))
         if profile.intensity <= table.fade_at and (persistence is not PhenomenonPersistence.PERMANENT or profile.containment >= PERCENT):
-            await fade(ctx, entity)
+            await fade(ctx, entity, profile, len(prints))
             continue
         ctx.count("phenomena_spread", await spread(ctx, atlas, entity, profile, prints))
         await effects(ctx, profile, prints)
     await ctx.session.flush()
 
 
-async def contain(ctx: TickContext, entity_id: int, amount: int, by: str) -> PhenomenonProfileRow:
+async def contain(ctx: TickContext, entity_id: int, amount: int, by_id: int) -> PhenomenonProfileRow:
     profile = await ctx.session.get(PhenomenonProfileRow, entity_id)
     entity = await ctx.session.get(EntityRow, entity_id)
     if profile is None or entity is None:
@@ -183,7 +199,14 @@ async def contain(ctx: TickContext, entity_id: int, amount: int, by: str) -> Phe
     profile.containment = clamp_percent(profile.containment + amount)
     if profile.containment >= PERCENT:
         profile.intensity = clamp_percent(profile.intensity - amount)
-    await note(ctx, f"{by} bound {entity.name} with a ward.", key="phenomenon.contained", ids=[entity.id], world_id=entity.world_id, kind=ChronicleKind.MIRACLE)
+    await record(
+        ctx,
+        "phenomenon.contained",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.SUBJECT: entity.id},
+        facts={"containment": profile.containment, "amount": amount},
+        steps=(StepDraft(StepAction.BIND, actor=by_id, target=entity.id, outcome=StepOutcome.SUCCESS),),
+        world_id=entity.world_id,
+    )
     await ctx.session.flush()
     return profile
 

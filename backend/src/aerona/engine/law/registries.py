@@ -2,27 +2,27 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.law_depth import OWED, PAID_IN_WORK, REGISTRY_TEXT
+from aerona.catalog.law_depth import OWED, PAID_IN_WORK
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.law.records import record_events
 from aerona.engine.law.systems import realm_code, written_code
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.justice import community_ruler
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -90,8 +90,12 @@ async def dispute(ctx: TickContext, title: RegistryRow, claimant: EntityRow, tow
     if town is not None and "unrest" not in (town.locked or []):
         town.unrest = clamp_int(town.unrest + table.dispute_unrest, 0, PERCENT)
     tally.disputes += 1
-    await note(
-        ctx, f"{owner.name} disputed the land of {claimant.name}, whose title the court now records.", key="law.land_dispute", ids=[owner.id, claimant.id]
+    await record(
+        ctx,
+        "law.land_dispute",
+        roles={IncidentRole.ACCUSER: owner.id, IncidentRole.OWNER: claimant.id},
+        facts={"land": town_id, "unrest": ctx.rules.registries.dispute_unrest},
+        place=town_id,
     )
 
 
@@ -145,13 +149,12 @@ async def enforce(ctx: TickContext, tally: RegistryTally) -> None:
         if row.amount == 0:
             await ctx.session.delete(row)
             tally.settled += 1
-            who = debtor.name if debtor is not None else "the debtor"
-            await note(
+            settled: RegistryKind = row.kind
+            await record(
                 ctx,
-                f"The {REGISTRY_TEXT[row.kind]} owed by {who} to {owner.name} was settled.",
-                key="law.settled",
-                ids=[owner.id],
-                kind=ChronicleKind.CIVILIZATION,
+                f"law.settled_{settled.value}",
+                roles={IncidentRole.LENDER: owner.id, IncidentRole.BORROWER: debtor.id if debtor is not None else None},
+                facts={"paid": paid},
             )
     await ctx.session.flush()
 

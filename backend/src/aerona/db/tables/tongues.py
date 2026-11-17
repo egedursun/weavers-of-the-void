@@ -39,6 +39,7 @@ class SoundChangeRow(Base):
     cause: Mapped[SoundChangeCause] = mapped_column(enum_type(SoundChangeCause, "cause"), default=SoundChangeCause.DRIFT)
     position: Mapped[int] = mapped_column(default=0)
     epoch: Mapped[int] = mapped_column(default=0)
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"), index=True)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

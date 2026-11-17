@@ -3095,7 +3095,7 @@ Every kind declares its roles, so every participant of every happening is stored
 
 Typed fields of a happening, one row per value: `incident_id`, `key` (declared by the kind), `position` (for lists), and exactly one value: `node_id`, `number` with `unit`, `enum_name` with `enum_value` (two text columns validated against the declared enum, never a JSON column claiming enums), or `name` (only for a name the world itself produced).
 
-`FactUnit`: `count`, `people`, `coin` (treasury units, through `engine/economy/purse.py`), `wealth_points`, `percent`, `hp`, `severity`, `years`, `seasons`, `days`, `hours`, `distance`, `area`, `mass`, `volume`, `tons`, `essence`, `renown`, `standing`, `knowledge`, `strength`, `speed`, `temperature`, `energy`, `none`.
+`FactUnit`: `count`, `people`, `coin` (treasury units, through `engine/economy/purse.py`), `wealth_points`, `percent`, `hp`, `severity`, `years`, `seasons`, `days`, `hours`, `distance`, `area`, `mass`, `tons`, `essence`, `renown`, `standing`, `knowledge`, `strength`, `speed`, `temperature`, `energy`, `none`.
 
 Each kind's schema says what it holds. The kind lists its minimum fields; the rule is that every value the engine computed for the happening (amounts, prices, counts, scores, rolls with their thresholds, chosen options, qualities, durations, distances) is a fact.
 
@@ -3176,7 +3176,7 @@ The record answers questions like "why did the prosperity of X fall from 60 to 4
 
 #### F58.9 Witnesses, tellings and memory
 
-- **Witnesses.** Participants with role `witness` are chosen by presence at the place and moment (`present_among`, `folk_among` in `engine/primitives/folk.py`), within the rules radius. Each has a `WitnessMode` (`saw`, `heard`, `took_part`, `was_told`) and a fidelity.
+- **Witnesses.** Participants with role `witness` are chosen by presence at the place and moment (`present_among`, `folk_among` in `engine/primitives/folk.py`), within the rules radius. A happening lighter than the weight at which happenings are told (`rumours.min_magnitude`) is seen only where it happened, by the community there and the mortals present; a weightier one is also heard by the communities within the radius. Each has a `WitnessMode` (`saw`, `heard`, `took_part`, `was_told`) and a fidelity.
 - **Rumours** (spec 13 F11) take their content from facts and steps and keep `incident_id`. Their distortions are typed (`RumourDistortion`: `doer_swapped`, `target_swapped`, `amount_changed`, `outcome_changed`, `cause_changed`, `place_changed`, `moment_changed`, `step_added`, `step_dropped`, `role_changed`), each naming the fact or step it changes.
 - **Memories** (spec 13 F7) point at the incident and the step they remember.
 - **Tellers.** Bards, chroniclers, the model and gods that spread an account are stored with role `teller`.
@@ -7370,6 +7370,71 @@ Generated on 2026-11-14 from every template key written literally in `backend/sr
 | `society.*` | 16 (peoples, societies and history) | 11 | `bankruptcy`, `class_uprising`, `desertion`, `ennobled`, `enslaved`, `famine`, `freed`, `love`, `plenty`, `poverty_uprising`, `ruined` | `demography/events`, `demography/mobility`, `phases/society`, `phases/society_economy` |
 | `storyteller.*` | 16 (peoples, societies and history) | 1 | `recovery` | `phases/gatherings` |
 
+Families added by W44–W48 after this appendix was generated (found on 2026-11-17 by the same scan; 60 families, 155 write sites). Each joins the process group named here and follows F58 like the rest.
+
+| Family | Process group | Count | Keys | Written by |
+|---|---|---|---|---|
+| `agents.*` | 15 (gods, sons and Fate) | 1 | `long_job_refund` | `agents/turns/long_jobs` |
+| `assembly.*` | 7 (law, rule and offices) | 1 | `{…}` | `polity/assembly` |
+| `augment.*` | 4 (body, birth, health and death) | 3 | `installed`, `rejected`, `removed` | `augments` |
+| `awakening.*` | 16 (peoples, societies and history) | 1 | `people` | `agents/awakening` |
+| `carrion.*` | 9 (faith, rites, powers and the uncanny) | 1 | `restless` | `couplings/carrion` |
+| `chains.*` | 6 (exchange, money and labour) | 1 | `bought` | `orders/putting_out` |
+| `colours.*` | 11 (social, family and cultural life) | 2 | `repealed`, `restricted` | `kinds/crafts_life` |
+| `company.*` | 6 (exchange, money and labour) | 3 | `capture`, `enclave`, `sovereign` | `made/company_power` |
+| `cosmopolitan.*` | 16 (peoples, societies and history) | 1 | `formed` | `climes/crossings` |
+| `creator.*` | 15 (gods, sons and Fate) | 3 | `covenant_broken`, `covenant_sealed`, `revelation` | `agents/revelation`, `divine/creator_bonds` |
+| `currents.*` | 13 (nature, land and seasons) | 1 | `carried` | `climes/seasons` |
+| `dress.*` | 11 (social, family and cultural life) | 1 | `revival` | `kinds/crafts_life` |
+| `drink.*` | 11 (social, family and cultural life) | 2 | `derived`, `founded` | `cuisine/drinks` |
+| `economy.*` | 6 (exchange, money and labour) | 9 | `centre_collapsed`, `holding_transferred`, `order_set`, `plan_shortfall`, `transition_begun`, `transition_done`, `transition_failed`, `transition_resisted`, `transition_stage` | `orders/economy` |
+| `epoch.*` | 15 (gods, sons and Fate) | 1 | `son_distributed` | `epoch/phases/distribution` |
+| `exchange.*` | 6 (exchange, money and labour) | 1 | `shock` | `orders/exchange` |
+| `fashion.*` | 11 (social, family and cultural life) | 1 | `revival` | `couplings/novelty` |
+| `fate.*` | 15 (gods, sons and Fate) | 6 | `fixed`, `prophecy_fulfilled`, `rejected`, `reward`, `thread_advanced`, `thread_closed` | `agents/fate/apply` |
+| `fishery.*` | 13 (nature, land and seasons) | 1 | `closed` | `couplings/fisheries` |
+| `fossil.*` | 13 (nature, land and seasons) | 1 | `{…}` | `ecology/fossils` |
+| `genesis.*` | 14 (cosmos and the great scales) | 3 | `layer`, `son`, `world` | `agents/genesis` |
+| `honours.*` | 2 (battles, sieges and war) | 3 | `disbanded`, `nicknamed`, `reconstituted` | `honours/units` |
+| `intrusion.*` | 12 (knowledge, language and minds) | 1 | `{…}` | `made/intrusion` |
+| `kinds.*` | 5 (making, building and things) | 2 | `fused`, `substituted` | `kinds/derive` |
+| `language.*` | 12 (knowledge, language and minds) | 1 | `signed` | `couplings/registers` |
+| `lifecycle.*` | 16 (peoples, societies and history) | 1 | `{…}` | `lifecycle/ends` |
+| `living.*` | 4 (body, birth, health and death) | 27 | `blight`, `clone_people`, `cloned`, `contained`, `cure_cultured`, `died`, `disease_designed`, `disease_loosed`, `drifted`, `escaped`, `licensed`, `line_blessed`, `line_cursed`, `line_made`, `mutated`, `organ_grown`, `partner_lost`, `profile_made`, `refused`, `released`, `rising`, `sample_lost`, `sapience`, `sapience_shaped`, `spread`, `turned`, `works_lapsed` | `constructs/orders`, `living/blessing`, `living/control`, `living/disease`, `living/grown`, `living/kin`, `living/lines`, `living/production`, `living/profiles`, `living/society`, `living/world` |
+| `made_people.*` | 16 (peoples, societies and history) | 1 | `formed` | `made/peoples` |
+| `magic_system.*` | 9 (faith, rites, powers and the uncanny) | 1 | `created` | `powers/control` |
+| `monsoons.*` | 13 (nature, land and seasons) | 1 | `failed` | `climes/seasons` |
+| `museum.*` | 6 (exchange, money and labour) | 1 | `looted` | `museums/hoards` |
+| `navigation.*` | 10 (movement and settling) | 1 | `aid` | `means/navigation` |
+| `network.*` | 12 (knowledge, language and minds) | 5 | `cut`, `founded`, `grew`, `ledger`, `outage` | `made/control`, `networks/phase` |
+| `office.*` | 7 (law, rule and offices) | 2 | `abolished`, `created` | `couplings/offices` |
+| `oscillations.*` | 13 (nature, land and seasons) | 1 | `turned` | `climes/seasons` |
+| `parley.*` | 8 (diplomacy and plans) | 3 | `broken`, `exchange`, `held` | `couplings/field` |
+| `power.*` | 9 (faith, rites, powers and the uncanny) | 12 | `band`, `breach`, `emerged`, `exhausted`, `gestalt`, `granted`, `hazard`, `hive_mind`, `revoked`, `used`, `vow_broken`, `wild` | `powers/control`, `powers/kinds`, `powers/phase`, `powers/society`, `powers/use`, `powers/war` |
+| `prehistory.*` | 16 (peoples, societies and history) | 1 | `lost_origin` | `prehistory/digest` |
+| `programmes.*` | 12 (knowledge, language and minds) | 1 | `{…}` | `eras/progress` |
+| `putting_out.*` | 6 (exchange, money and labour) | 1 | `founded` | `orders/putting_out` |
+| `realm.*` | 14 (cosmos and the great scales) | 6 | `ended`, `entered`, `escape`, `frozen`, `made`, `withdrawal` | `made/control`, `made/realms` |
+| `relic.*` | 5 (making, building and things) | 2 | `collapse`, `recovered` | `made/relics` |
+| `replicator.*` | 5 (making, building and things) | 7 | `drifted`, `extinct`, `founded`, `spread`, `stopped`, `voyage`, `woke` | `made/control`, `made/replicators` |
+| `rite.*` | 9 (faith, rites, powers and the uncanny) | 1 | `restrained` | `couplings/rite_body` |
+| `salvage.*` | 5 (making, building and things) | 1 | `exhausted` | `made/relics` |
+| `sanctuary.*` | 7 (law, rule and offices) | 3 | `claimed`, `law`, `violated` | `belonging/sanctuary` |
+| `satire.*` | 7 (law, rule and offices) | 1 | `punished` | `belonging/satire` |
+| `saving.*` | 6 (exchange, money and labour) | 1 | `hoard_found` | `orders/savings` |
+| `seal.*` | 9 (faith, rites, powers and the uncanny) | 3 | `broken`, `made`, `unsealed` | `couplings/deep` |
+| `son.*` | 15 (gods, sons and Fate) | 3 | `born`, `summoned`, `word` | `agents/son`, `agents/summoner` |
+| `source.*` | 9 (faith, rites, powers and the uncanny) | 2 | `created`, `depleted` | `powers/control`, `powers/sources` |
+| `teaching.*` | 12 (knowledge, language and minds) | 1 | `{…}` | `couplings/teachers` |
+| `transform.*` | 15 (gods, sons and Fate) | 1 | `star_god_death` | `transform/anchors` |
+| `trust.*` | 12 (knowledge, language and minds) | 1 | `forgery_found` | `made/trust` |
+| `truth.*` | 12 (knowledge, language and minds) | 4 | `breached`, `hidden`, `revealed`, `revealed_by_hand` | `concealment/truths`, `powers/control` |
+| `union.*` | 11 (social, family and cultural life) | 1 | `term` | `unions/keep` |
+| `veterans.*` | 2 (battles, sieges and war) | 2 | `association`, `granted` | `honours/veterans` |
+| `water.*` | 5 (making, building and things) | 1 | `lift` | `means/water` |
+| `world_end.*` | 14 (cosmos and the great scales) | 1 | `{…}` | `cosmos/world_ends` |
+| `world_views.*` | 14 (cosmos and the great scales) | 1 | `short` | `cosmos/world_views` |
+
 ### Appendix 50.A — Every OCM subcategory, its status and its closure
 
 Generated on 2026-11-14 from the OCM 2025 edition (HRAF, `ocm-2025.pdf`): 689 world-content subcategories, matched against the code and both specs as described in 50.0. "Own state and behaviour" means a table or typed columns with an engine module and god or agent control; "some typed state" means typed columns or a module without full behaviour; "a label only" means one enum value or flag. W44 step 0 copies this table to `docs/spec/ocm-coverage.md` for `scripts/check_ocm_coverage.py`.
@@ -8093,7 +8158,7 @@ Generated on 2026-11-14 from the interconnection registry (572 mechanics). Each 
 | `legacy_traits` | culture | 1 | war: martial styles carry into the successor's armies; faith: rites and beliefs carry into its cults |
 | `legend_memories` | culture | 0 | mind: false memories move opinions; polity: legends support claims and legitimacy |
 | `route_renown` | culture | 0 | economy: renowned roads draw traffic and inns (50.3); faith: renowned roads become pilgrim ways |
-| `human_sacrifice_deaths` | demography | 1 | polity: other peoples' horror moves relations and war causes; faith: sacrifice feeds the god's essence where doctrine says |
+| `sacrifice_of_people_deaths` | demography | 1 | polity: other peoples' horror moves relations and war causes; faith: sacrifice feeds the god's essence where doctrine says |
 | `rebirth_paths` | demography | 1 | household: reborn souls return to houses with memories where doctrine says; faith: rebirth success moves piety |
 | `hunting_grounds` | ecology | 1 | social: hunting rights and poaching drive disputes; body: hunting carries exposures (47.10) |
 | `life_classes` | ecology | 0 | demography: peoples arise only where life is complex; economy: life classes set the species products available |

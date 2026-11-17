@@ -13,6 +13,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Attribute, IdeaKind, IdeaSource, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.relations import PassionKind, PassionSource
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.unions import UnionPurpose
@@ -24,6 +26,7 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kinship import betroth, foster, marry
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress
 from aerona.engine.primitives.queries import connect
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.relations.passions import kindle
 from aerona.engine.renown.book import acclaim
@@ -33,7 +36,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 FULL = 100
@@ -127,15 +129,11 @@ async def bind_mortals(call: SonCall, args: BindInput) -> str:
     else:
         await connect(call.session, first.id, second.id, BondKind.SWORN_KIN, call.epoch, description=args.reason)
     call.target(first.id)
-    await call.chronicle(
-        ChronicleKind.LINEAGE,
-        lines.BIND_MORTALS,
-        entity_ids=[first.id, second.id],
-        son=call.son.name,
-        first=first.name,
-        second=second.name,
-        binding=args.binding.value.replace("_", " "),
-        reason=args.reason,
+    await call.record(
+        "tools.son.bind_mortals",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={"binding": str(args.binding.value.replace("_", " ")), "reason": str(args.reason)},
+        kind=ChronicleKind.LINEAGE,
     )
     return result(SonResult.MORTALS_BOUND, first=first.name, second=second.name, binding=args.binding.value.replace("_", " "))
 
@@ -164,14 +162,11 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
         raised = await stored_attribute(call.session, mortal, args.attribute) + tools.touch_amount
         await store_attributes(call.session, mortal, {**await attributes_of(call.session, mortal.id), args.attribute: raised})
     call.target(mortal.id)
-    await call.chronicle(
-        ChronicleKind.INTRIGUE,
-        lines.TOUCH_MORTAL,
-        entity_ids=[mortal.id],
-        son=call.son.name,
-        mortal=mortal.name,
-        touch=args.touch.value.replace("_", " "),
-        reason=args.reason,
+    await call.record(
+        "tools.son.touch_mortal",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id},
+        facts={"touch": str(args.touch.value.replace("_", " ")), "reason": str(args.reason)},
+        kind=ChronicleKind.INTRIGUE,
     )
     return result(SonResult.MORTAL_TOUCHED, name=mortal.name, touch=args.touch.value.replace("_", " "))
 
@@ -186,8 +181,11 @@ async def plant_idea(call: SonCall, args: PlantIdeaInput) -> str:
         fail(SonResult.IDEA_KNOWN, name=mortal.name, idea=label)
     call.spend_essence(cost)
     call.target(mortal.id)
-    await call.chronicle(
-        ChronicleKind.INTRIGUE, lines.PLANT_IDEA, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, idea=label, reason=args.reason
+    await call.record(
+        "tools.son.plant_idea",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id},
+        facts={"idea": label, "reason": str(args.reason)},
+        kind=ChronicleKind.INTRIGUE,
     )
     return result(SonResult.IDEA_PLANTED, name=mortal.name, idea=label)
 
@@ -203,14 +201,12 @@ async def spread_word(call: SonCall, args: SpreadInput) -> str:
         fail(SonResult.WORD_HELD, name=subject.name, community=community.name)
     call.spend_essence(cost)
     call.target(subject.id)
-    await call.chronicle(
-        ChronicleKind.INTRIGUE,
-        lines.SPREAD_WORD,
-        entity_ids=[subject.id, community.id],
-        son=call.son.name,
-        subject=subject.name,
-        community=community.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.spread_word",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [subject.id, community.id]},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.INTRIGUE,
+        steps=(StepDraft(StepAction.SPREAD_WORD, actor=call.son.id, target=community.id, amount=amount, unit=FactUnit.RENOWN),),
     )
     return result(SonResult.WORD_SPREAD, name=subject.name, community=community.name, axis=AXIS_LABELS[args.axis].lower(), value=row.value)
 
@@ -234,15 +230,11 @@ async def stir_hearts(call: SonCall, args: StirInput) -> str:
     call.spend_essence(cost)
     call.target(first.id)
     stir = args.stir.value
-    await call.chronicle(
-        ChronicleKind.INTRIGUE,
-        lines.STIR_HEARTS,
-        entity_ids=[first.id, second.id],
-        son=call.son.name,
-        first=first.name,
-        second=second.name,
-        stir=stir,
-        reason=args.reason,
+    await call.record(
+        "tools.son.stir_hearts",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={"stir": str(stir), "reason": str(args.reason)},
+        kind=ChronicleKind.INTRIGUE,
     )
     return result(SonResult.HEARTS_STIRRED, first=first.name, second=second.name, stir=stir)
 

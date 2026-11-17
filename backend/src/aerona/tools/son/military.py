@@ -10,7 +10,8 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.military import ArmourType, Formation, PeaceTermKind, ShieldType, SpyCover, UnitKind, VesselArmament, WarAimKind
+from aerona.domain.enums.military import ArmourType, Formation, PeaceTermKind, ShieldType, SpyCover, UnitKind, WarAimKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause
 from aerona.engine.divine.control import apply
@@ -29,7 +30,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, label_of, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 PERCENT = 100
@@ -79,7 +79,6 @@ class CommissionVesselInput(ToolInput):
     owner_id: int
     name: Annotated[str, Field(min_length=1, max_length=NAME_MAX)]
     frame: VehicleFrame = VehicleFrame.BOAT
-    armament: list[VesselArmament] = Field(default_factory=list)
     captain_id: int | None = None
 
 
@@ -130,14 +129,11 @@ async def wage_war(call: SonCall, args: WageWarInput) -> str:
     aims = list(dict.fromkeys(args.aims))[: call.rules.son_military.max_aims]
     war = await declare_with_cause(call.tick, attacker.id, defender.id, args.cause, reason=args.reason, aims=[(aim, {}) for aim in aims])
     pay(call, call.rules.son_military.wage_war_cost, attacker.id)
-    await call.chronicle(
-        ChronicleKind.WAR,
-        lines.WAGE_WAR,
-        entity_ids=[attacker.id, defender.id],
-        son=call.son.name,
-        attacker=attacker.name,
-        defender=defender.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.wage_war",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.CO_ACTOR: attacker.id, IncidentRole.TARGET: defender.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WAR,
     )
     return result(
         SonResult.WAR_WAGED,
@@ -155,7 +151,11 @@ async def raise_host(call: SonCall, args: RaiseHostInput) -> str:
     soldiers = min(args.soldiers, call.rules.son_military.raise_host_max)
     army = await raise_standing_army(call.tick, raiser.id, soldiers, commander_id=args.commander_id, war_id=args.war_id)
     pay(call, call.rules.son_military.raise_host_cost, army.id)
-    await call.chronicle(ChronicleKind.WAR, lines.RAISE_HOST, entity_ids=[raiser.id, army.id], son=call.son.name, community=raiser.name, army=army.name)
+    await call.record(
+        "tools.son.raise_host",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: raiser.id, IncidentRole.INSTRUMENT: army.id},
+        kind=ChronicleKind.WAR,
+    )
     return result(SonResult.HOST_RAISED, community=raiser.name, army=army.name, id=army.id, soldiers=soldiers)
 
 
@@ -172,7 +172,12 @@ async def disband_host(call: SonCall, args: DisbandHostInput) -> str:
     require_essence(call, call.rules.son_military.disband_cost)
     await disband_army(call.tick, army.id)
     pay(call, call.rules.son_military.disband_cost, army.id)
-    await call.chronicle(ChronicleKind.WAR, lines.DISBAND_HOST, entity_ids=[army.id], son=call.son.name, army=army.name, reason=args.reason)
+    await call.record(
+        "tools.son.disband_host",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.INSTRUMENT: army.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WAR,
+    )
     return result(SonResult.HOST_DISBANDED, army=army.name)
 
 
@@ -183,7 +188,12 @@ async def lay_siege(call: SonCall, args: LaySiegeInput) -> str:
     require_essence(call, call.rules.son_military.siege_cost)
     siege = await start_siege(call.tick, args.war_id, army.id, city.id)
     pay(call, call.rules.son_military.siege_cost, city.id)
-    await call.chronicle(ChronicleKind.WAR, lines.LAY_SIEGE, entity_ids=[army.id, city.id], son=call.son.name, army=army.name, city=city.name)
+    await call.record(
+        "tools.son.lay_siege",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.INSTRUMENT: army.id, IncidentRole.PLACE: city.id},
+        place=city.id,
+        kind=ChronicleKind.WAR,
+    )
     return result(SonResult.SIEGE_LAID, army=army.name, city=city.name, id=siege.id)
 
 
@@ -194,7 +204,12 @@ async def offer_peace(call: SonCall, args: OfferPeaceInput) -> str:
     pay(call, call.rules.son_military.peace_cost, sides[0] if sides else args.war_id)
     named = [await living_entity(call.session, side) for side in sides]
     names = [entity.name for entity in named if entity is not None] or ["both sides", "the other"]
-    await call.chronicle(ChronicleKind.WAR, lines.OFFER_PEACE, entity_ids=sides, son=call.son.name, first=names[0], second=names[-1])
+    await call.record(
+        "tools.son.offer_peace",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [*sides]},
+        facts={"first": str(names[0]), "second": str(names[-1])},
+        kind=ChronicleKind.WAR,
+    )
     return result(SonResult.PEACE_MADE, outcome="; ".join([label_of(settlement.ending), *settlement.notes]))
 
 
@@ -202,12 +217,15 @@ async def commission_vessel(call: SonCall, args: CommissionVesselInput) -> str:
     owner = await require_canon(call.session, args.owner_id)
     await ensure_in_reach(call, owner)
     require_essence(call, call.rules.son_military.vessel_cost)
-    order = Commission(frame=args.frame, armament=list(dict.fromkeys(args.armament)) or None, captain_id=args.captain_id)
+    order = Commission(frame=args.frame, captain_id=args.captain_id)
     vessel = await create_vessel(call.tick, owner.id, args.name, order)
     pay(call, call.rules.son_military.vessel_cost, vessel.id)
     hull = label_of(args.frame)
-    await call.chronicle(
-        ChronicleKind.WAR, lines.COMMISSION_VESSEL, entity_ids=[owner.id, vessel.id], son=call.son.name, owner=owner.name, hull=hull, name=vessel.name
+    await call.record(
+        "tools.son.commission_vessel",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: owner.id, IncidentRole.SUBJECT: vessel.id},
+        facts={"hull": hull},
+        kind=ChronicleKind.WAR,
     )
     return result(SonResult.VESSEL_LAID, owner=owner.name, name=vessel.name, id=vessel.id, hull=hull)
 
@@ -221,7 +239,9 @@ async def design_unit(call: SonCall, args: DesignUnitInput) -> str:
     for model_id in dict.fromkeys(args.equipment_ids):
         await set_loadout(call.tick, design.id, model_id, 1)
     pay(call, call.rules.son_military.design_cost, owner.id)
-    await call.chronicle(ChronicleKind.WAR, lines.DESIGN_UNIT, entity_ids=[owner.id], son=call.son.name, owner=owner.name, name=design.name)
+    await call.record(
+        "tools.son.design_unit", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: owner.id}, facts={"name": design.name}, kind=ChronicleKind.WAR
+    )
     return result(SonResult.UNIT_DESIGNED, owner=owner.name, name=design.name, id=design.id, base=label_of(args.base_kind))
 
 
@@ -234,7 +254,11 @@ async def plant_spies(call: SonCall, args: PlantSpiesInput) -> str:
     await call.session.flush()
     await recruit(call.tick, network)
     pay(call, call.rules.son_military.spies_cost, target.id)
-    await call.chronicle(ChronicleKind.INTRIGUE, lines.PLANT_SPIES, entity_ids=[owner.id, target.id], son=call.son.name, owner=owner.name, target=target.name)
+    await call.record(
+        "tools.son.plant_spies",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: owner.id, IncidentRole.TARGET: target.id},
+        kind=ChronicleKind.INTRIGUE,
+    )
     return result(SonResult.SPIES_PLANTED, owner=owner.name, target=target.name, id=network.id, cover=label_of(args.cover))
 
 

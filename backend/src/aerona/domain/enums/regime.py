@@ -64,3 +64,10 @@ class CredentialKind(StrEnum):
     DEGREE = "degree"
     LICENCE = "licence"
     COMMISSION = "commission"
+
+
+class CoupProofing(StrEnum):
+    ROTATION = "rotation"
+    PARALLEL_GUARD = "parallel_guard"
+    LOYALTY_PROMOTION = "loyalty_promotion"
+    HOSTAGES = "hostages"

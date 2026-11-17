@@ -1,0 +1,24 @@
+{{ title }}:
+{% if accounts %}
+{% for item in accounts %}- happening {{ item.id }} (age {{ item.age }}{% if item.how %}, {{ item.how }}{% endif %}) {{ item.text }}
+{% endfor %}
+{% if more_accounts > 0 %}({{ more_accounts | several("more happening", "more happenings") }}; read any of them with {{ tool }})
+{% endif %}
+{% else %}
+(none set down)
+{% endif %}
+{% if steps %}
+WHAT YOU DID AND WHAT WAS DONE TO YOU:
+{% for item in steps %}- happening {{ item.id }} (age {{ item.age }}) {{ item.text }}
+{% endfor %}
+{% if more_steps > 0 %}({{ more_steps | several("more step", "more steps") }}; read them with {{ tool }})
+{% endif %}
+{% endif %}
+{% if changes %}
+WHAT CHANGED FOR YOU:
+{% for item in changes %}- age {{ item.age }}: {{ item.text }}{% if item.how %} ({{ item.how }}){% endif %}
+
+{% endfor %}
+{% if more_changes > 0 %}({{ more_changes | several("more change is", "more changes are") }} set down)
+{% endif %}
+{% endif %}

@@ -6,27 +6,27 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_LOSS_CULPRITS, TRADE_MODES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
 from aerona.core.total import total
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.warfare import ArmyRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, TradeLoss, TradeMode
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherEffect
 from aerona.domain.enums.military import Stance
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.environment.weather import Weather
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 PATROLS = frozenset({Stance.GARRISON, Stance.ENTRENCH})
@@ -127,10 +127,10 @@ def split(lost: int, parts: dict[TradeLoss, int], mode: TradeMode) -> dict[Trade
         return {}
     if not weights:
         return {TradeLoss.SEA if TRADE_MODES[mode].seagoing else TradeLoss.BANDITS: lost}
-    total = sum(weights.values())
-    shares = {cause: lost * value // total for cause, value in weights.items()}
+    summed = sum(weights.values())
+    shares = {cause: lost * value // summed for cause, value in weights.items()}
     rest = lost - sum(shares.values())
-    for cause in sorted(weights, key=lambda item: (-(lost * weights[item] % total), item.value))[:rest]:
+    for cause in sorted(weights, key=lambda item: (-(lost * weights[item] % summed), item.value))[:rest]:
         shares[cause] += 1
     return {cause: units for cause, units in shares.items() if units > 0}
 
@@ -165,7 +165,7 @@ def bandit_danger(rules: Rules, book: EconomyBook, path: list[int], patrolled: f
 
 def beast_danger(rules: Rules, path: list[int], lairs: Lairs) -> tuple[int, int | None]:
     table = rules.route_dangers
-    total = 0.0
+    summed = 0.0
     worst: tuple[float, int] | None = None
     seen: set[int] = set()
     for region in path:
@@ -174,10 +174,10 @@ def beast_danger(rules: Rules, path: list[int], lairs: Lairs) -> tuple[int, int 
                 continue
             seen.add(beast.id)
             threat = (stat(beast, "danger") or 0) * table.beast_danger_pct / PERCENT * TEMPER_WEIGHT[profile.temper](rules) / PERCENT
-            total += threat
+            summed += threat
             if threat > 0 and (worst is None or threat > worst[0]):
                 worst = (threat, beast.id)
-    return clamp_int(round_half_up(total), 0, PERCENT), worst[1] if worst is not None else None
+    return clamp_int(round_half_up(summed), 0, PERCENT), worst[1] if worst is not None else None
 
 
 def harm(weather: Weather, effect: WeatherEffect) -> int:
@@ -206,6 +206,9 @@ def dangers_of(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[
         sea = clamp_int(ctx.rules.route_dangers.sea_danger_base + weather, 0, PERCENT)
         return Dangers(bandits=bandits, beasts=beasts, sea=sea, bandit_id=band, beast_id=beast)
     return Dangers(bandits=bandits, beasts=beasts, weather=weather, bandit_id=band, beast_id=beast)
+
+
+ICE_MODES = frozenset({TradeMode.RIVER, TradeMode.ROAD, TradeMode.CARAVAN})
 
 
 def season_heat(region: RegionEnvironmentRow, season: WorldSeasonRow) -> int:
@@ -240,6 +243,15 @@ def season_loss(rules: Rules, mode: TradeMode, regions: list[RegionEnvironmentRo
     return loss
 
 
+def froze(rules: Rules, book: EconomyBook, mode: TradeMode, path: list[int], world_id: int | None) -> bool:
+    if world_id is None or mode not in ICE_MODES:
+        return False
+    seasons = book.ground.seasons_of(world_id)
+    regions = [row for row in (book.ground.regions.get(region) for region in path) if row is not None]
+    cold = [region for region in regions if any(season_heat(region, season) < rules.route_seasons.freeze_temperature for season in seasons)]
+    return bool(cold) if mode is TradeMode.RIVER else any(high(rules, region) for region in cold)
+
+
 def season_pct_of(rules: Rules, book: EconomyBook, mode: TradeMode, path: list[int], world_id: int | None) -> int:
     if world_id is None:
         return PERCENT
@@ -262,22 +274,25 @@ async def feed_beast(ctx: TickContext, book: EconomyBook, route: EntityRow, comm
         hoard = dict(profile.hoard or {})
         hoard[commodity.value] = hoard.get(commodity.value, 0) + taken
         profile.hoard = hoard
-    if units >= table.beast_note_units:
-        loads_counted = several(units, "load", "loads")
-        await ctx.chronicle(
-            ChronicleKind.DISASTER,
-            f"{beast.name} fell on the traffic of {route.name} and dragged {loads_counted} of {COMMODITIES[commodity].label.lower()} to its lair.",
-            template_key="trade_route.beast_raid",
-            entity_ids=[route.id, beast.id],
+    if units > 0:
+        await record(
+            ctx,
+            "trade_route.beast_raid",
+            roles={IncidentRole.ACTOR: beast.id, IncidentRole.SUBJECT: route.id},
+            facts={"good": commodity, "units": units, "hoarded": taken},
+            steps=(StepDraft(StepAction.SEIZE_GOODS, actor=beast.id, target=route.id, amount=units, unit=FactUnit.COUNT),),
         )
 
 
-async def spoil(ctx: TickContext, route: EntityRow, commodity: CommodityKind, *, units: int, mode: TradeMode) -> None:
-    if units < ctx.rules.route_dangers.weather_note_units:
+async def spoil(ctx: TickContext, route: EntityRow, commodity: CommodityKind, *, units: int, mode: TradeMode, frozen: bool = False) -> None:
+    if units <= 0:
         return
-    await ctx.chronicle(
-        ChronicleKind.DISASTER,
-        f"Foul weather on {route.name} ruined {several(units, 'load', 'loads')} of {COMMODITIES[commodity].label.lower()} carried by {spoken(mode)}.",
-        template_key="trade_route.weather_loss",
-        entity_ids=[route.id],
+    await record(
+        ctx,
+        "trade_route.weather_loss",
+        roles={IncidentRole.SUBJECT: route.id},
+        facts={"good": commodity, "units": units, "mode": mode},
+        steps=(StepDraft(StepAction.FREEZE, target=route.id, locus_kind=StepLocus.ROUTE, locus_node=route.id, amount=units, unit=FactUnit.COUNT),)
+        if frozen
+        else (),
     )

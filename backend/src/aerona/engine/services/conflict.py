@@ -15,7 +15,9 @@ FIGHTING_GOD_STATUSES = frozenset({ForeignGodStatus.AWAKE, ForeignGodStatus.ASLE
 DEFAULT_REASON = "to protect their worshippers and temples"
 
 
-async def foreign_god_war(ctx: TickContext, son_id: int, god_id: int, reason: str = DEFAULT_REASON, allies: Sequence[SonRow] = ()) -> GodWarResult:
+async def foreign_god_war(
+    ctx: TickContext, son_id: int, god_id: int, reason: str = DEFAULT_REASON, allies: Sequence[SonRow] = (), *, key: str = "pantheon.god_war"
+) -> GodWarResult:
     son = await ctx.session.get(SonRow, son_id)
     god = await ctx.session.get(ForeignGodRow, god_id)
     if son is None:
@@ -32,6 +34,6 @@ async def foreign_god_war(ctx: TickContext, son_id: int, god_id: int, reason: st
         raise ConflictError(f"{son.name} and {god.name} are bound by a divine pact.")
     if await truce_in_force(ctx):
         raise ConflictError("A cosmic truce of the council forbids war between gods.")
-    result = await resolve_god_war(ctx, son, god, reason, allies=allies)
+    result = await resolve_god_war(ctx, son, god, reason, allies=allies, key=key)
     ctx.count("god_wars")
     return result

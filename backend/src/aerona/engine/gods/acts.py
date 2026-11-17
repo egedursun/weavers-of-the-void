@@ -23,6 +23,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.limits import RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind, NodeKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery
@@ -36,6 +37,7 @@ from aerona.engine.phases.disasters import apply_disaster, disaster_phrase, reco
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 from aerona.engine.transform.anchors import star_god_died
 from aerona.rules.registry import Rules
 
@@ -70,9 +72,14 @@ async def drain_mortal(ctx: TickContext, creator: CreatorRow, mortal: EntityRow,
         outcome = await attempt_kill(
             ctx, mortal, Killer(ActorKind.CREATOR, creator.name, creator.id), creator.name, certain=True, how=god_lines.DEVOUR_MORTAL_HOW
         )
-        line = god_lines.DEVOUR_MORTAL
-        text = line.render(creator=creator.name, mortal=mortal.name, gained=gained)
-        await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=line.key, entity_ids=[mortal.id])
+        written = await record(
+            ctx,
+            "gods.power.devour_mortal",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: mortal.id},
+            facts={"gained": gained},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+        text = written.text
         return GainResult(gained, f"{text} {outcome.text}")
     drawn = round(life * rules.drain_mortal_pct / PERCENT)
     if drawn <= 0:
@@ -80,9 +87,14 @@ async def drain_mortal(ctx: TickContext, creator: CreatorRow, mortal: EntityRow,
     set_trait(mortal, Trait.HP, max(1, life - drawn))
     gained = gain(creator, drawn / rules.drain_mortal_hp_per_essence)
     await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.ESSENCE_DRAINED, ctx.epoch)
-    line = god_lines.DRAIN_MORTAL
-    text = line.render(creator=creator.name, drawn=drawn, mortal=mortal.name, gained=gained)
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=line.key, entity_ids=[mortal.id])
+    written = await record(
+        ctx,
+        "gods.power.drain_mortal",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: mortal.id},
+        facts={"drawn": drawn, "gained": gained},
+        kind=ChronicleKind.CREATOR_HAND,
+    )
+    text = written.text
     return GainResult(gained, text)
 
 
@@ -106,16 +118,20 @@ async def harvest_community(ctx: TickContext, creator: CreatorRow, community: En
         if son is not None and son.status is not SonStatus.DEAD:
             son.loyalty = clamp_percent(son.loyalty - rules.harvest_patron_loyalty_loss)
             grudging.append(son.name)
-    line = god_lines.HARVEST
-    text = line.render(
-        creator=creator.name,
-        community=community.name,
-        victims=f": {several(victims, 'life', 'lives')} {agree(victims, 'was', 'were')} sacrificed" if victims else "",
-        faith=f", their faith dimmed by {faith_loss}" if faith_loss else "",
-        gained=gained,
-        grudge=f" {', '.join(grudging)} resented the reaping of their worshippers." if grudging else "",
-    )
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=line.key, entity_ids=[community.id])
+    text = (
+        await record(
+            ctx,
+            "gods.power.harvest",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: community.id},
+            facts={
+                "victims": f": {several(victims, 'life', 'lives')} {agree(victims, 'was', 'were')} sacrificed" if victims else "",
+                "faith": f", their faith dimmed by {faith_loss}" if faith_loss else "",
+                "gained": gained,
+                "grudge": f" {', '.join(grudging)} resented the reaping of their worshippers." if grudging else "",
+            },
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return GainResult(gained, text)
 
 
@@ -153,11 +169,14 @@ async def drain_foreign_god(ctx: TickContext, creator: CreatorRow, god: ForeignG
         if defeated:
             god.defeated_epoch = ctx.epoch
     gained = gain(creator, drawn * rules.foreign_essence_per_strength)
-    line = god_lines.FOREIGN_DRAIN
-    text = line.render(
-        creator=creator.name, drawn=drawn, god=god.name, gained=gained, defeated=f"; {god.name} lost its power and fell defeated" if defeated else ""
+    written = await record(
+        ctx,
+        "gods.power.foreign_drain",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: god.id},
+        facts={"drawn": drawn, "gained": gained, "defeated": f"; {god.name} lost its power and fell defeated" if defeated else ""},
+        kind=ChronicleKind.FOREIGN_GOD,
     )
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key=line.key)
+    text = written.text
     return GainResult(gained, text)
 
 
@@ -188,17 +207,20 @@ async def kill_foreign_god(ctx: TickContext, creator: CreatorRow, god: ForeignGo
         else:
             await entities.add_flag(worshipper.id, EntityFlag.GODLESS, ctx.epoch)
             godless += 1
-    line = god_lines.FOREIGN_KILL
-    text = line.render(
-        creator=creator.name,
-        verb="devoured" if devour else "killed",
-        god=god.name,
-        reason=f" ({reason})" if reason else "",
-        gain=f"; its power passed to the creator ({gained} essence)" if gained else "",
-        converted=converted,
-        godless=godless,
+    written = await record(
+        ctx,
+        "gods.power.foreign_kill",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: god.id},
+        facts={
+            "verb": "devoured" if devour else "killed",
+            "reason": f" ({reason})" if reason else "",
+            "gain": f"; its power passed to the creator ({gained} essence)" if gained else "",
+            "converted": converted,
+            "godless": godless,
+        },
+        kind=ChronicleKind.FOREIGN_GOD,
     )
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key=line.key)
+    text = written.text
     return GainResult(gained, text)
 
 
@@ -225,8 +247,7 @@ async def resurrect_mortal(ctx: TickContext, creator: CreatorRow, mortal: Entity
     mortal.end_epoch = None
     mortal.fate_note = (mortal.fate_note or "") + god_lines.RESURRECT_MORTAL_NOTE.format(epoch=ctx.epoch, creator=creator.name)
     await entities.add_flag(mortal.id, EntityFlag.RETURNED_FROM_DEATH, ctx.epoch)
-    line = god_lines.RESURRECT_MORTAL
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, mortal=mortal.name), template_key=line.key, entity_ids=[mortal.id])
+    await record(ctx, "gods.power.resurrect_mortal", roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: mortal.id}, kind=ChronicleKind.CREATOR_HAND)
     return cost
 
 
@@ -243,13 +264,13 @@ async def manifest(ctx: TickContext, creator: CreatorRow, target: EntityRow, wor
     add_trait(target, Trait.PIETY, rules.manifest_piety)
     await EntityRepository(ctx.session).add_flag(target.id, EntityFlag.SAW_THE_CREATOR, ctx.epoch)
     worshipped = ctx.rng("manifest").chance(rules.manifest_worship_chance) and await worship_creator(ctx.session, target, ctx.epoch, god_lines.MANIFEST_VOW)
-    line = god_lines.MANIFEST
     devotion = f" From that day {target.name} worships only {creator.name}." if worshipped else ""
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, entity=target.name, words=text, worship=devotion),
-        template_key=line.key,
-        entity_ids=[target.id],
+    await record(
+        ctx,
+        "gods.power.manifest",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+        facts={"words": str(text), "worship": str(devotion)},
+        kind=ChronicleKind.CREATOR_HAND,
     )
     return worshipped
 
@@ -276,10 +297,13 @@ async def convert_to_creator(ctx: TickContext, creator: CreatorRow, target: Enti
         if son is not None and son.status is not SonStatus.DEAD:
             son.loyalty = clamp_percent(son.loyalty - rules.convert_patron_loyalty_loss)
     await worship_creator(ctx.session, target, ctx.epoch, god_lines.CONVERT_VOW.format(creator=creator.name))
-    line = god_lines.CONVERT
     old = f"; {', '.join(names)} are no longer its gods" if names else ""
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, entity=target.name, old=old), template_key=line.key, entity_ids=[target.id]
+    await record(
+        ctx,
+        "gods.power.convert",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+        facts={"old": str(old)},
+        kind=ChronicleKind.CREATOR_HAND,
     )
     return names
 
@@ -330,13 +354,13 @@ async def wrath(ctx: TickContext, creator: CreatorRow, target: EntityRow, reason
     await entities.transfer_contents(target, ctx.epoch)
     clause = f" ({reason})" if reason else ""
     await entities.set_status(target, EntityStatus.DESTROYED, ctx.epoch, god_lines.WRATH_NOTE.format(epoch=ctx.epoch, creator=creator.name, reason=clause))
-    line = god_lines.WRATH
     deaths = f"; the {several(died, 'named mortal', 'named mortals')} inside also perished" if died else ""
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, entity=target.name, reason=clause, deaths=deaths),
-        template_key=line.key,
-        entity_ids=[target.id],
+    await record(
+        ctx,
+        "gods.power.wrath",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id},
+        facts={"reason": str(clause), "deaths": deaths},
+        kind=ChronicleKind.CREATOR_HAND,
     )
     return KillCount(died)
 
@@ -355,12 +379,12 @@ async def world_wrath(ctx: TickContext, creator: CreatorRow, world: WorldRow, ki
     for region in regions:
         impact = await apply_disaster(ctx, region, kind, rules.world_wrath_severity / PERCENT)
         events.append((await record_disaster_event(ctx, region, kind, rules.world_wrath_severity, impact)).id)
-    line = god_lines.WORLD_WRATH
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, disaster=disaster_phrase(kind), world=world.name, count=len(regions)),
-        template_key=line.key,
-        entity_ids=events,
+    await record(
+        ctx,
+        "gods.power.world_wrath",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.PLACE: world.id, IncidentRole.SUBJECT: [*events]},
+        facts={"disaster": disaster_phrase(kind), "count": len(regions)},
+        kind=ChronicleKind.CREATOR_HAND,
     )
     return events
 

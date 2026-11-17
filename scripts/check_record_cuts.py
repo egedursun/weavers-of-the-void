@@ -1,3 +1,4 @@
+import ast
 import re
 import sys
 from dataclasses import dataclass
@@ -7,7 +8,22 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
 WRITERS = (SOURCE / "engine", SOURCE / "services", SOURCE / "agents", SOURCE / "tools", SOURCE / "api")
 FIXED_CUT = re.compile(r"\[:[0-9]{2,}\]")
-READERS = (SOURCE / "services" / "books", SOURCE / "services" / "codex.py", SOURCE / "services" / "search.py", SOURCE / "services" / "player", SOURCE / "api")
+READERS = (
+    SOURCE / "services" / "books",
+    SOURCE / "services" / "codex.py",
+    SOURCE / "services" / "search.py",
+    SOURCE / "services" / "player",
+    SOURCE / "api",
+    SOURCE / "prompts",
+    SOURCE / "agents" / "context",
+    SOURCE / "engine" / "recording" / "accounts.py",
+    SOURCE / "engine" / "recording" / "then.py",
+    SOURCE / "engine" / "recording" / "search.py",
+)
+RECORD_ROWS = r"(?:IncidentRow|IncidentParticipantRow|IncidentFactRow|IncidentStepRow|IncidentStepStateRow|IncidentTermRow|StateChangeRow|StateChangeTermRow|ChronicleRow|RumourRow)"
+RECORD_SELECT = re.compile(rf"select\({RECORD_ROWS}\b")
+RECORD_KIND_DROP = re.compile(r"IncidentRow\.kind\s*(?:!=|\.not_in\(|\.not_like\(|\.notlike\()")
+RECORD_SLICE = re.compile(r"\b(?:incidents|accounts|facts|steps|changes|witnesses|rumours|records|history|lines)\b\s*\[\s*(?::\s*[^\]\s]|-[^\]:]+:\s*\])")
 CUTS = (
     (
         re.compile(r"ChronicleRow\.visible\b"),
@@ -25,11 +41,40 @@ class Cut:
     reason: str
 
 
+LIMIT_REASON = "limits the records it reads without paging them; page with offset and a show-more, or read them all"
+
+
+def single_row(call: ast.Call) -> bool:
+    return len(call.args) == 1 and isinstance(call.args[0], ast.Constant) and call.args[0].value == 1
+
+
+def limited_reads(text: str) -> list[int]:
+    found: list[int] = []
+    for node in ast.walk(ast.parse(text)):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "limit") or single_row(node):
+            continue
+        chain = ast.unparse(node.func.value)
+        if RECORD_SELECT.search(chain) and ".offset(" not in chain:
+            found.append(node.lineno)
+    return found
+
+
+def record_cuts(line: str) -> list[str]:
+    found: list[str] = []
+    if RECORD_KIND_DROP.search(line):
+        found.append("drops happenings by their kind; every kind is kept and shown")
+    if RECORD_SLICE.search(line):
+        found.append("slices the records it read, so the rest are lost; page them or keep them all")
+    return found
+
+
 def cuts(files: dict[Path, str]) -> list[Cut]:
     found: list[Cut] = []
     for path, text in files.items():
         for number, line in enumerate(text.splitlines(), start=1):
             found.extend(Cut(path, number, reason) for pattern, reason in CUTS if pattern.search(line))
+            found.extend(Cut(path, number, reason) for reason in record_cuts(line))
+        found.extend(Cut(path, number, LIMIT_REASON) for number in limited_reads(text))
     return found
 
 

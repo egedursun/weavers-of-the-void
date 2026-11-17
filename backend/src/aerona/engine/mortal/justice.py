@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.crimes import CRIMES, PENALTY_WORDS, PUNISHMENTS
+from aerona.catalog.crimes import CRIMES, PENALTY_WORDS
 from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.thoughts import THOUGHTS
@@ -12,6 +12,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import MarkKind, MarkMeaning
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import ActKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.belonging.refuge import sheltered
@@ -30,9 +31,9 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.thoughts import think
 from aerona.engine.minds.sentences import MIND_PUNISHMENTS, suffer_in_mind
 from aerona.engine.mortal.standing import add_infamy, add_wealth
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity
+from aerona.engine.recording.record import FactInput, RoleValue, record
 
 JUDGED_CRIMES = frozenset({CrimeKind.THEFT, CrimeKind.BLASPHEMY, CrimeKind.TREASON})
 CODE_PUNISHMENTS = PENALTY_WORDS
@@ -46,7 +47,6 @@ MUTILATION_KINDS: dict[PunishmentKind, InjuryKind] = {
     PunishmentKind.TONGUE: InjuryKind.SEVERED,
     PunishmentKind.EYES: InjuryKind.GOUGED,
 }
-SENTENCE_TEXT = {kind: spec.text for kind, spec in PUNISHMENTS.items()}
 CRIME_TEXT = {kind: spec.text for kind, spec in CRIMES.items()}
 
 
@@ -174,6 +174,7 @@ async def sentence(
         )
     town = culprit.location_id
     await weigh(ctx, punishment, town, (await LawBook.load(ctx.session)).member_of.get(town) if town is not None else None)
-    text = f"{culprit.name} {SENTENCE_TEXT[punishment]} for {CRIME_TEXT[crime]}."
-    await note(ctx, text, key=f"justice.{punishment.value}", ids=[culprit.id, *([judge.id] if judge is not None else [])])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACCUSED: culprit.id, IncidentRole.JUDGE: judge.id if judge is not None else None}
+    facts: dict[str, FactInput] = {"crime": crime, "punishment": punishment, "severity": CRIMES[crime].severity}
+    await record(ctx, f"justice.{punishment.value}", roles=roles, facts=facts, place=town)
     return True

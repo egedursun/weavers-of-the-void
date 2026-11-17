@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
-from aerona.catalog.intrigue import SCHEMES
+from aerona.catalog.intrigue import PLOT_STEPS, SCHEMES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, spoken
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.affairs import CourtPositionRow
 from aerona.db.tables.disease import OutbreakRow
@@ -20,7 +20,6 @@ from aerona.db.tables.settlement import SettlementTreasuryRow
 from aerona.db.tables.warfare import CaptiveRow, SiegeRow
 from aerona.db.write_guard import free_rows, held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -29,8 +28,10 @@ from aerona.domain.enums.environment import ScarKind, WeatherKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import Attribute, MemoryKind, SkillKind, TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
@@ -57,7 +58,6 @@ from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.mortal.standing import add_infamy
 from aerona.engine.mythic.geasa import spring_trap
-from aerona.engine.notes import note
 from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -65,6 +65,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.records import death_path
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.services.war import release_captive, take_captive
@@ -308,12 +309,13 @@ async def unmask(ctx: TickContext, scheme: SchemeRow, target: EntityRow) -> None
         )
     owner = await living_entity(ctx.session, scheme.owner_node_id)
     if owner is not None:
-        await note(
+        await record(
             ctx,
-            f"{target.name} uncovered the {SCHEMES[scheme.kind].label.lower()} {owner.name} plotted against them.",
-            key="intrigue.scheme_exposed",
-            ids=[target.id, owner.id, *scheme.agents],
-            kind=ChronicleKind.WORLD,
+            f"intrigue.scheme_exposed_{scheme.kind.value}",
+            roles={IncidentRole.TARGET: target.id, IncidentRole.ACTOR: owner.id, IncidentRole.CO_ACTOR: list(scheme.agents)},
+            facts={"infamy": SCHEMES[scheme.kind].difficulty // 2, "power": scheme.power},
+            place=target.location_id,
+            steps=(StepDraft(StepAction.FIND_EVIDENCE, actor=target.id, target=owner.id, record_table=SchemeRow.__tablename__, record_key=str(scheme.id)),),
         )
 
 
@@ -338,8 +340,8 @@ async def murder(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: 
 
 
 async def abduct(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
-    await take_captive(ctx, owner, target, None, description="taken by a hidden hand", home_id=target.location_id)
-    return f"{target.name} vanished into captivity"
+    await take_captive(ctx, owner, target, None, description="taken captive in secret", home_id=target.location_id)
+    return f"{target.name} was taken captive"
 
 
 async def seduce(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
@@ -347,14 +349,14 @@ async def seduce(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: 
     if view is not None:
         shift(ctx.rules, view, ctx.epoch, romance=SWAY * 2, friendship=SWAY)
     await keep_secret(ctx, target.id, IntrigueSecret.AFFAIR, about_id=owner.id, known_by=(owner.id,), source="scheme.seduce")
-    return f"{target.name} was drawn into a hidden love"
+    return f"{target.name} began a secret love affair"
 
 
 async def sway(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     view = await ensure_relation(ctx.session, target.id, owner.id, ctx.epoch)
     if view is not None:
         shift(ctx.rules, view, ctx.epoch, friendship=SWAY)
-    return f"{target.name} warmed to {owner.name}"
+    return f"{target.name} came to like {owner.name}"
 
 
 async def fabricate_claim(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
@@ -379,7 +381,7 @@ async def steal_relic(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
         return "there was nothing worth stealing"
     attempt = await attempt_theft(ctx, owner, target, relic)
     if attempt.thwarted:
-        return f"the locks that kept {relic.name} held" + ("; the seal named the thief" if attempt.betrayed else "")
+        return f"the guards of {relic.name} stopped the theft" + ("; the thief was named" if attempt.betrayed else "")
     bonds = BondRepository(ctx.session)
     for bond in await bonds.active_between(target.id, relic.id, [BondKind.OWNS]):
         await bonds.deactivate(bond, ctx.epoch, "stolen")
@@ -501,7 +503,7 @@ async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, ta
 
 async def geas_trap(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     row = await spring_trap(ctx, target, f"scheme.geas.{scheme.id}")
-    return f"{target.name} was forced to break a geas" if row is not None else f"{target.name} slipped the trap"
+    return f"{target.name} was forced to break a geas" if row is not None else f"{target.name} avoided the trap"
 
 
 async def hide_fleet(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
@@ -548,7 +550,7 @@ STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow],
 
 async def strike(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow | None) -> str:
     if target is None:
-        return "it struck at nothing"
+        return "it found no target"
     return await STRIKES[scheme.kind](ctx, scheme, owner, target)
 
 
@@ -578,13 +580,21 @@ async def execute(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target:
     for agent in scheme.agents:
         await owe(ctx, owner.id, agent, FavourOrigin.SCHEME_AID, ctx.rules.intrigue.scheme_favour)
     tally.succeeded += 1
-    await note(
+    await record(
         ctx,
-        f"{an(spec.label.lower(), capital=True)} was carried out: {told}.",
-        key="intrigue.scheme_done",
-        ids=[owner.id, *([target.id] if target else [])],
-        kind=ChronicleKind.WORLD,
+        f"intrigue.scheme_done_{scheme.kind.value}",
+        roles={IncidentRole.ACTOR: owner.id, IncidentRole.TARGET: target.id if target is not None else None, IncidentRole.CO_ACTOR: list(scheme.agents)},
+        facts={"odds": odds, "power": scheme.power, "guard": guard},
+        place=target.location_id if target is not None else owner.location_id,
+        steps=plotted(scheme, owner, target),
     )
+
+
+def plotted(scheme: SchemeRow, owner: EntityRow, target: EntityRow | None) -> tuple[StepDraft, ...]:
+    action = PLOT_STEPS.get(scheme.kind)
+    if action is None:
+        return ()
+    return (StepDraft(action, actor=owner.id, target=target.id if target is not None else None, outcome=StepOutcome.SUCCESS),)
 
 
 async def tend_scheme(ctx: TickContext, scheme: SchemeRow, tally: SchemeTally, atlas: RegionAtlas) -> None:

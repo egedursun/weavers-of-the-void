@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.core.grammar import agree, several
 from aerona.core.total import total
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
@@ -13,23 +12,34 @@ from aerona.db.tables.polity import HouseProfileRow, PolityProfileRow
 from aerona.db.tables.regime import BreedingPlanRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus
+from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus, PlanOutcome
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import HouseTrait
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.collective.book import ruler_id, shift
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.plan_works import fulfil_exploration, fulfil_line, fulfil_megastructure, fulfil_network, fulfil_programme, fulfil_realm, fulfil_reform
+from aerona.engine.cycles.plan_works import (
+    Fulfilled,
+    fulfil_exploration,
+    fulfil_line,
+    fulfil_megastructure,
+    fulfil_network,
+    fulfil_programme,
+    fulfil_realm,
+    fulfil_reform,
+)
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.genetics.pools import shifted_gift
-from aerona.engine.notes import note
 from aerona.engine.polity.seats import faction_leader
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.sacred.forecasts import steer_forecast
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.construction import Commission, begin
@@ -87,8 +97,13 @@ async def pass_on(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None,
         return
     plan.carrier_node_id = heir
     tally.carried += 1
-    heir_row = await ctx.session.get(EntityRow, heir)
-    await note(ctx, f"{heir_row.name if heir_row else 'A new hand'} took up {plan.name} for {holder.name}.", key="plans.carried", ids=[holder.id, heir])
+    await record(
+        ctx,
+        "plans.carried",
+        roles={IncidentRole.SUCCESSOR: heir, IncidentRole.OWNER: holder.id},
+        facts={"plan": plan.name, "plan_kind": plan.kind, "progress": plan.progress, "steps": plan.steps},
+        place=holder.location_id,
+    )
 
 
 async def holder_pays(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None) -> bool:
@@ -120,16 +135,28 @@ async def expose(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None, 
     owner = await owner_of_target(ctx, plan)
     if owner is not None and holder is not None and owner.id != holder.id:
         await change_relation(ctx, owner.id, holder.id, -table.exposed_relation, MemoryKind.BETRAYED_ME, note=plan.name)
-    await note(ctx, f"The long design called {plan.name} came to light.", key="plans.exposed", ids=[plan.holder_node_id, *([owner.id] if owner else [])])
+    await record(
+        ctx,
+        "plans.exposed",
+        roles={IncidentRole.OWNER: plan.holder_node_id, IncidentRole.TARGET: owner.id if owner is not None else None},
+        facts={"plan": plan.name, "plan_kind": plan.kind, "secrecy": plan.secrecy, "chance": chance},
+        place=holder.location_id if holder is not None else None,
+    )
 
 
 async def disrupt(ctx: TickContext, plan: LongPlanRow, tally: PlanTally) -> bool:
     table = ctx.rules.long_plans
     if not plan.exposed or "progress" in plan.locked or not ctx.rng(f"plan.disrupt.{plan.id}.{ctx.epoch}").chance(table.disrupt_pct):
         return False
+    before = plan.progress
     plan.progress = max(0, plan.progress - table.disrupt_steps)
     tally.disrupted += 1
-    await note(ctx, f"Rivals set back {plan.name} by {several(table.disrupt_steps, 'step', 'steps')}.", key="plans.disrupted", ids=[plan.holder_node_id])
+    await record(
+        ctx,
+        "plans.disrupted",
+        roles={IncidentRole.OWNER: plan.holder_node_id},
+        facts={"plan": plan.name, "plan_kind": plan.kind, "lost": before - plan.progress, "progress": plan.progress, "chance": table.disrupt_pct},
+    )
     return True
 
 
@@ -231,33 +258,31 @@ async def raise_wonder(ctx: TickContext, plan: LongPlanRow) -> EntityRow | None:
     return work
 
 
-async def fulfil_ecology(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
-    changed = await transform_land(ctx, plan)
-    return f"{several(changed, 'land', 'lands')} {agree(changed, 'was', 'were')} remade"
+async def fulfil_ecology(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
+    return PlanOutcome.LANDS_REMADE, {"count": await transform_land(ctx, plan)}
 
 
-async def fulfil_bloodline(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+async def fulfil_bloodline(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
     trait = await breed(ctx, plan)
-    found = trait.value.replace("_", " ") if trait is not None else "richer in the gift" if await breed_people(ctx, plan) else "nothing new"
-    return f"the line was bred to be {found}"
+    if trait is not None:
+        return PlanOutcome.LINE_BRED, {"trait": trait}
+    return (PlanOutcome.GIFT_ENRICHED, {}) if await breed_people(ctx, plan) else (PlanOutcome.BRED_NOTHING, {})
 
 
-async def fulfil_conversion(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None) -> str:
-    converted = await convert(ctx, plan, holder)
-    return f"{several(converted, 'town', 'towns')} turned to a new worship"
+async def fulfil_conversion(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None) -> Fulfilled:
+    return PlanOutcome.TOWNS_CONVERTED, {"count": await convert(ctx, plan, holder)}
 
 
-async def fulfil_wonder(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
+async def fulfil_wonder(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
     work = await raise_wonder(ctx, plan)
-    return f"{work.name if work else 'no site'} rose from its saving"
+    return (PlanOutcome.WONDER_RAISED, {"made": work.id}) if work is not None else (PlanOutcome.NO_WONDER_SITE, {})
 
 
-async def fulfil_forecast(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> str:
-    lifted = await steer_forecast(ctx, plan.id)
-    return f"the realm's stress eased by {lifted}"
+async def fulfil_forecast(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
+    return PlanOutcome.STRESS_EASED, {"amount": await steer_forecast(ctx, plan.id)}
 
 
-Fulfil = Callable[[TickContext, LongPlanRow, EntityRow | None], Awaitable[str]]
+Fulfil = Callable[[TickContext, LongPlanRow, EntityRow | None], Awaitable[Fulfilled]]
 FULFIL: Mapping[LongPlanKind, Fulfil] = total(
     LongPlanKind,
     {
@@ -281,9 +306,16 @@ async def complete(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None
     plan.status = LongPlanStatus.COMPLETED
     plan.finished_epoch = ctx.epoch
     tally.completed += 1
-    ids = [plan.holder_node_id, *([plan.target_node_id] if plan.target_node_id is not None else [])]
-    told = await FULFIL[plan.kind](ctx, plan, holder)
-    await note(ctx, f"{plan.name} was fulfilled: {told}.", key="plans.completed", ids=ids)
+    with explaining():
+        outcome: PlanOutcome
+        outcome, facts = await FULFIL[plan.kind](ctx, plan, holder)
+        await record(
+            ctx,
+            f"plans.completed_{outcome.value}",
+            roles={IncidentRole.OWNER: plan.holder_node_id, IncidentRole.TARGET: plan.target_node_id},
+            facts={"plan": plan.name, "plan_kind": plan.kind, "epochs": ctx.epoch - plan.started_epoch, **facts},
+            place=holder.location_id if holder is not None else None,
+        )
 
 
 async def advance_plans(ctx: TickContext, tally: PlanTally) -> None:
@@ -296,7 +328,12 @@ async def advance_plans(ctx: TickContext, tally: PlanTally) -> None:
             plan.status = LongPlanStatus.ABANDONED
             plan.finished_epoch = ctx.epoch
             tally.abandoned += 1
-            await note(ctx, f"{plan.name} was abandoned; none was left to carry it.", key="plans.abandoned", ids=[plan.holder_node_id])
+            await record(
+                ctx,
+                "plans.abandoned",
+                roles={IncidentRole.OWNER: plan.holder_node_id},
+                facts={"plan": plan.name, "plan_kind": plan.kind, "progress": plan.progress, "steps": plan.steps},
+            )
             continue
         await pass_on(ctx, plan, holder, tally)
         await expose(ctx, plan, holder, tally)

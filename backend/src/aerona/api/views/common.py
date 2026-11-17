@@ -169,11 +169,6 @@ async def mentioning(session: AsyncSession, entity_id: int, *, offset: int, limi
     return await chronicle_lines(session, list(reversed(rows))), total
 
 
-async def son_chronicle(session: AsyncSession, son_id: int, limit: int) -> list[ChronicleLineRecord]:
-    rows = list(await session.scalars(select(ChronicleRow).where(ChronicleRow.son_id == son_id, shown_lines()).order_by(ChronicleRow.id.desc()).limit(limit)))
-    return await chronicle_lines(session, list(reversed(rows)))
-
-
 async def images_of(session: AsyncSession, node_id: int) -> list[ImageRecord]:
     rows = await session.scalars(select(ImageRow).where(ImageRow.target_node_id == node_id).order_by(ImageRow.is_cover.desc(), ImageRow.id.desc()))
     return [ImageRecord.model_validate(row) for row in rows]

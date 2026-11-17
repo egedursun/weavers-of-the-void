@@ -14,15 +14,16 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import JudgementDoctrine, TenetKind
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, living_gods
-from aerona.engine.notes import note
 from aerona.engine.polity.accords import sign
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import ensure_relation, relation, shift
 
 OLD_FAITH = "old_faith"
@@ -85,10 +86,10 @@ async def pantheon_leagues(ctx: TickContext) -> int:
             if warm < table.league_friendship or await active_bonds(ctx.session, [BondKind.ALLY], sources=[first.id], targets=[second.id]):
                 continue
             await connect(ctx.session, first.id, second.id, BondKind.ALLY, ctx.epoch, description="leagued against the pantheon")
-            await note(
+            await record(
                 ctx,
-                f"The foreign gods {first.name} and {second.name} leagued together against the pantheon.",
-                key="divine.league",
+                "divine.league",
+                roles={IncidentRole.MEMBER: [first.id, second.id]},
                 kind=ChronicleKind.FOREIGN_GOD,
                 world_id=first.world_id,
             )
@@ -121,7 +122,7 @@ async def seal_pact(ctx: TickContext, son: SonRow, god: ForeignGodRow, epochs: i
     span = epochs if epochs is not None else table.pact_epochs
     treaty = await sign(ctx, TreatyKind.DIVINE_PACT, [(son.id, PartyRole.SIGNATORY), (god.id, PartyRole.SIGNATORY)], until=ctx.epoch + span, witnessed=False)
     god.stance = min(PERCENT, god.stance + table.pact_stance)
-    await note(ctx, f"{son.name} and the foreign god {god.name} sealed a divine pact.", key="divine.pact", son_id=son.id, kind=ChronicleKind.FOREIGN_GOD)
+    await record(ctx, "divine.pact", roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: god.id}, kind=ChronicleKind.FOREIGN_GOD, son_id=son.id)
     return treaty
 
 

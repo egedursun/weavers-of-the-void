@@ -4,14 +4,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import ActKind, MemoryKind
-from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, TreatyBreach
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.military.units import profile_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.treaties import breach, clauses_of, in_force
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 
@@ -59,15 +61,17 @@ async def betrayed_call(ctx: TickContext, ally_id: int, party_id: int) -> bool:
     for profile in await in_force(ctx):
         for clause in await clauses_of(ctx, profile.treaty_entity_id):
             if clause.kind is ClauseKind.CALL_TO_ARMS and clause.obligor_node_id == ally_id and clause.beneficiary_node_id == party_id:
-                await breach(ctx, profile, ally_id, clause=clause, reason="it refused the call to arms")
+                await breach(ctx, profile, ally_id, clause=clause, reason=TreatyBreach.CALL_TO_ARMS_REFUSED)
                 await judged(ctx, party_id, ally_id, ActKind.BETRAYAL, note="refused the call to arms")
                 await change_relation(ctx, party_id, ally_id, -ctx.rules.treaties.refuse_relation_loss, MemoryKind.BETRAYED_ME, note="betrayed the alliance")
-                await ctx.chronicle(
-                    ChronicleKind.DIPLOMACY,
-                    f"{ally.name} would not march when {party.name} called; the alliance is betrayed.",
-                    template_key="war.call_betrayed",
-                    entity_ids=(ally_id, party_id),
-                    feed_category=FeedCategory.WAR,
+                await record(
+                    ctx,
+                    "war.call_betrayed",
+                    roles={IncidentRole.ACTOR: ally_id, IncidentRole.VICTIM: party_id},
+                    steps=(
+                        StepDraft(StepAction.REFUSE, actor=ally_id, target=party_id, outcome=StepOutcome.REFUSED),
+                        StepDraft(StepAction.BETRAY, actor=ally_id, target=party_id),
+                    ),
                 )
                 ctx.count("calls_betrayed")
                 return True

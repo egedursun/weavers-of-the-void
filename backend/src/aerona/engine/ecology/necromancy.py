@@ -13,16 +13,18 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus, WarCause
 from aerona.domain.models.entity_stats import ArmyStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.military.control import add_stack
 from aerona.engine.military.siege import open_siege
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.services.war import open_war
 from aerona.engine.structures.profiles import ensure_profile
 
@@ -162,7 +164,7 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
                 tower = await raise_tower(ctx, necromancer)
                 tally.towers += 1
                 acted += 1
-                await note(ctx, f"{necromancer.name} raised a tower to work the rites of death.", key="necromancy.tower", ids=[necromancer.id, tower.id])
+                await record(ctx, "necromancy.tower", roles={IncidentRole.ACTOR: necromancer.id, IncidentRole.PRODUCT: tower.id}, facts={"power": power})
             continue
         host = await host_of(ctx, necromancer.id)
         if host is None:
@@ -170,7 +172,12 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
                 host = await raise_host(ctx, necromancer, power)
                 tally.hosts += 1
                 acted += 1
-                await note(ctx, f"{necromancer.name} raised {host.name} from their graves.", key="necromancy.host", ids=[necromancer.id, host.id])
+                await record(
+                    ctx,
+                    "necromancy.host",
+                    roles={IncidentRole.ACTOR: necromancer.id, IncidentRole.PRODUCT: host.id},
+                    facts={"power": power, "size": stat_or(host, "size", 0)},
+                )
             continue
         if rng.chance(table.necro_siege_pct):
             siege = await besiege(ctx, atlas, necromancer, host)
@@ -178,5 +185,11 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
                 tally.sieges += 1
                 acted += 1
                 town = await ctx.session.get(EntityRow, siege.besieged_entity_id)
-                await note(ctx, f"{host.name} laid siege to {town.name if town else 'a town'}.", key="necromancy.siege", ids=[necromancer.id, host.id])
+                roles: dict[IncidentRole, RoleValue] = {
+                    IncidentRole.ACTOR: host.id,
+                    IncidentRole.LEADER: necromancer.id,
+                    IncidentRole.TARGET: town.id if town else None,
+                }
+                if town is not None:
+                    await record(ctx, "necromancy.siege", roles=roles, facts={"power": power}, place=town.id)
     return tally

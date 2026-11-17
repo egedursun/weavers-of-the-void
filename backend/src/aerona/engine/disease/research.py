@@ -14,15 +14,16 @@ from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease import CureSource, OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.lore.truth import ruling_truths
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.recording.record import RoleValue, record
 
 SEATS_OF_LEARNING = (StructureKind.HOSPITAL, StructureKind.ACADEMY, StructureKind.MONASTERY)
 PRESTIGE = "prestige"
@@ -77,8 +78,13 @@ async def found_cure(ctx: TickContext, row: CureResearchRow, institution: Entity
     if await ctx.session.get(DiseaseCureRow, (disease.id, holder.id)) is None:
         ctx.session.add(DiseaseCureRow(disease_entity_id=disease.id, community_entity_id=holder.id, source=CureSource.KNOWLEDGE, since_epoch=ctx.epoch))
     shift_bounded(ctx.rules, holder, PRESTIGE, ctx.rules.cure_research.prestige)
-    await note(
-        ctx, f"The learned of {institution.name} found a cure for {disease.name}.", key="disease.cure_found", ids=[institution.id, holder.id, disease.id]
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: institution.id, IncidentRole.BENEFICIARY: holder.id, IncidentRole.TARGET: disease.id}
+    await record(
+        ctx,
+        "disease.cure_found",
+        roles=roles,
+        facts={"points": row.points, "specimens": row.specimens, "prestige": ctx.rules.cure_research.prestige},
+        place=holder.id,
     )
 
 
@@ -142,9 +148,8 @@ async def spread_cures(ctx: TickContext, tally: ResearchTally) -> None:
                 DiseaseCureRow(disease_entity_id=cure.disease_entity_id, community_entity_id=partner_id, source=CureSource.KNOWLEDGE, since_epoch=ctx.epoch)
             )
             tally.passed += 1
-            await note(
-                ctx, f"{buyer.name} bought the cure that {holder.name} holds.", key="disease.cure_sold", ids=[buyer.id, holder.id, cure.disease_entity_id]
-            )
+            roles: dict[IncidentRole, RoleValue] = {IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: holder.id, IncidentRole.TARGET: cure.disease_entity_id}
+            await record(ctx, "disease.cure_sold", roles=roles, facts={"price": table.price})
     await ctx.session.flush()
 
 

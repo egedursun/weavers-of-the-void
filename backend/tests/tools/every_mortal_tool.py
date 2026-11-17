@@ -76,6 +76,7 @@ from tests.tools.every_setup import (
     war_trained,
     wealthy,
     well_housed,
+    witnessed_happening,
     worships_dead_sibling,
 )
 from tests.tools.every_setup_ages import remade_land, sky_scholar, slain_kin
@@ -200,6 +201,7 @@ MORTAL_CASES: dict[str, Case] = {
     "look_at_world": named(plain()),
     "inspect_entity": named(plain(id=people)),
     "search_entities": named(plain(query="Kessar")),
+    "recount": named(plain(incident_id=lambda _realm, ids: ids["incident"]), witnessed_happening),
     "found_language": folk(plain(name="Valen", description=TEXT[:200], words=[{"word": "orin", "meaning": "road"}])),
     "coin_words": folk(plain(words=[{"word": "lumen", "meaning": "lamp"}])),
     "produce_item": folk(plain(name="Road Lamp", description=TEXT[:200], resource_ids=lambda realm, _ids: [realm.resource_id])),

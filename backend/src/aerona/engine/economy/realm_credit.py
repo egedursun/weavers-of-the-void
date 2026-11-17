@@ -7,11 +7,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -20,6 +21,7 @@ from aerona.engine.economy.money import MoneyTally, banks, collapse, gain, owed,
 from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 WAR_PURPOSE = "war"
@@ -103,13 +105,12 @@ async def lend_to_realms(ctx: TickContext, book: EconomyBook, tally: MoneyTally)
         post(ctx, realm, table.polity_principal, f"loan from {lender.name}")
         gain(lender, -bank_share(ctx, table.polity_principal))
         tally.lent += 1
-        reason = "to keep its armies in the field" if at_war else "to carry its debts"
-        await ctx.chronicle(
-            ChronicleKind.DEBT,
-            f"{lender.name} lent the realm of {realm.entity.name} {loan.principal} silver {reason}, "
-            f"at {loan.interest_pct}% interest, due Epoch {loan.due_epoch}.",
-            template_key="banking.realm_loan",
-            entity_ids=[lender.id, realm.entity.id],
+        await record(
+            ctx,
+            "banking.realm_war_loan" if at_war else "banking.realm_loan",
+            roles={IncidentRole.LENDER: lender.id, IncidentRole.BORROWER: realm.entity.id},
+            facts={"principal": loan.principal, "interest": loan.interest_pct, "due_epoch": loan.due_epoch},
+            steps=(StepDraft(StepAction.LEND, actor=lender.id, target=realm.entity.id, amount=loan.principal, unit=FactUnit.COIN),),
         )
 
 
@@ -120,12 +121,7 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
     if law is not None and law.remedy is DebtRemedy.JUBILEE:
         loan.status = LoanStatus.FORGIVEN
         gain(lender, -bank_share(ctx, left))
-        await ctx.chronicle(
-            ChronicleKind.DEBT,
-            f"The jubilee of {realm.entity.name} wiped its loan from {lender.name}; the bank lost {left} silver.",
-            template_key="banking.realm_jubilee",
-            entity_ids=[realm.entity.id, lender.id],
-        )
+        await record(ctx, "banking.realm_jubilee", roles={IncidentRole.BORROWER: realm.entity.id, IncidentRole.LENDER: lender.id}, facts={"left": left})
         return "jubilee"
     loan.status = LoanStatus.DEFAULTED
     await on_default(ctx, realm.entity, lender)
@@ -142,11 +138,12 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
         jailed = await jail_debtor(ctx, realm.entity, lender, f"{left} silver")
         if jailed is not None:
             outcome = "prison"
-    await ctx.chronicle(
-        ChronicleKind.DEBT,
-        f"The realm of {realm.entity.name} could not repay {lender.name}; {left} silver became the realm's standing debt and the bank will remember.",
-        template_key=f"banking.realm_{outcome}",
-        entity_ids=[realm.entity.id, lender.id],
+    await record(
+        ctx,
+        f"banking.realm_{outcome}",
+        roles={IncidentRole.BORROWER: realm.entity.id, IncidentRole.LENDER: lender.id},
+        facts={"left": left},
+        steps=(StepDraft(StepAction.DEFAULT, actor=realm.entity.id, target=lender.id, amount=left, unit=FactUnit.COIN, outcome=StepOutcome.FAILURE),),
     )
     if riches(lender) < table.collapse_wealth:
         await collapse(ctx, book, lender)

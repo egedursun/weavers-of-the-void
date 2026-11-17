@@ -4,10 +4,12 @@ from aerona.db.tables.culture import BookContentRow, ItemHistoryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import ArtMode, ItemDeed
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lore import art, items
-from aerona.engine.notes import note
+from aerona.engine.lore.history import scope_incident
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record as record_incident
 
 NOTE_MAX = 480
 
@@ -24,11 +26,17 @@ async def transfer(ctx: TickContext, item_id: int, receiver_id: int, reason: str
     receiver = await living_entity(ctx.session, receiver_id)
     if receiver is None:
         raise NotFoundError("No such living receiver.")
-    if await items.owner_of(ctx, item.id) == receiver.id:
+    giver = await items.owner_of(ctx, item.id)
+    if giver == receiver.id:
         raise ValidationFailedError(f"{receiver.name} already holds {item.name}.")
     await items.profile_of(ctx, item)
     await items.give(ctx, item, receiver.id, ItemDeed.GIVEN, reason.strip()[:NOTE_MAX] or f"given into the keeping of {receiver.name}")
-    await note(ctx, f"{item.name} passed into the keeping of {receiver.name}.", key="item.transferred", ids=[item.id, receiver.id])
+    await record_incident(
+        ctx,
+        "item.transferred",
+        roles={IncidentRole.SUBJECT: item.id, IncidentRole.RECEIVER: receiver.id, IncidentRole.GIVER: giver},
+        place=receiver.location_id,
+    )
     await ctx.session.flush()
     return receiver
 
@@ -40,7 +48,14 @@ async def add_deed(ctx: TickContext, item_id: int, deed: ItemDeed, *, actor_id: 
         raise NotFoundError("No such record to name in the deed.")
     if epoch is not None and not 0 <= epoch <= ctx.epoch:
         raise ValidationFailedError(f"A deed is set between the first age and age {ctx.epoch}.")
-    row = ItemHistoryRow(item_entity_id=item.id, epoch=ctx.epoch if epoch is None else epoch, deed=deed, actor_entity_id=actor_id, note=text.strip()[:NOTE_MAX])
+    row = ItemHistoryRow(
+        item_entity_id=item.id,
+        epoch=ctx.epoch if epoch is None else epoch,
+        deed=deed,
+        actor_entity_id=actor_id,
+        note=text.strip()[:NOTE_MAX],
+        incident_id=scope_incident(),
+    )
     ctx.session.add(row)
     await ctx.session.flush()
     return row

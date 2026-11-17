@@ -12,6 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import SenseKind, SymbiosisKind
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -21,7 +22,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
@@ -66,15 +66,11 @@ async def bind_species(call: SonCall, args: BindSpeciesInput) -> str:
     await call.session.flush()
     call.target(first.id)
     kind = args.kind.value
-    await call.chronicle(
-        ChronicleKind.CREATION,
-        lines.BIND_SPECIES,
-        entity_ids=[first.id, second.id],
-        son=call.son.name,
-        first=first.name,
-        second=second.name,
-        kind=kind,
-        reason=args.reason,
+    await call.record(
+        "tools.son.bind_species",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={"kind": str(kind), "reason": args.reason},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.SPECIES_BOUND, first=first.name, second=second.name, kind=kind)
 
@@ -98,8 +94,11 @@ async def sharpen_sense(call: SonCall, args: SharpenSenseInput) -> str:
     await call.session.flush()
     call.target(holder.id)
     sense = args.sense.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.CREATION, lines.SHARPEN_SENSE, entity_ids=[holder.id], son=call.son.name, sense=sense, holder=holder.name, reason=args.reason
+    await call.record(
+        "tools.son.sharpen_sense",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: holder.id},
+        facts={"sense": str(sense), "reason": args.reason},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.SENSE_SHARPENED, sense=sense, holder=holder.name, acuity=row.acuity)
 

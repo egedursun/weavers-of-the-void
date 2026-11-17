@@ -19,7 +19,7 @@ async def test_a_son_turns_to_a_world_with_a_people_but_no_god(session: AsyncSes
     son.current_world_id = world.world.id
     moves = await patronless_moves(session, RULES, 5, [son], [world.world, far])
     assert [(move.son.id, move.world.id) for move in moves] == [(son.id, far.id)]
-    assert "has a people but no god" in moves[0].text and son.current_world_id == far.id
+    assert "has a people but no god" in moves[0].detail and son.current_world_id == far.id
 
 
 async def test_an_empty_world_with_land_draws_a_son_to_bring_life_there(session: AsyncSession, world: CoreWorld) -> None:
@@ -28,7 +28,7 @@ async def test_an_empty_world_with_land_draws_a_son_to_bring_life_there(session:
     son = world.son
     son.current_world_id = world.world.id
     moves = await patronless_moves(session, RULES, 5, [son], [empty])
-    assert moves and "where nobody lives" in moves[0].text and "bring life there" in moves[0].text
+    assert moves and "where nobody lives" in moves[0].detail and "bring life there" in moves[0].detail
 
 
 async def test_a_chained_protected_or_lone_son_stays(session: AsyncSession, world: CoreWorld) -> None:

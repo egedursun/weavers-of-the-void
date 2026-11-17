@@ -53,6 +53,7 @@ class PlacesRules:
     cover_defender_light_pct: int = rule(3, 0, 100, G, "Defence bonus of holding ground with light cover (%)")
     cover_defender_heavy_pct: int = rule(8, 0, 100, G, "Defence bonus of holding ground with heavy cover such as forests and ruins (%)")
     hide_secret_essence: int = rule(15, 0, 1000, G, "Essence a son spends to hide a secret in a place")
+    reveal_secret_essence: int = rule(20, 0, 1000, G, "Essence a son spends to bring a place's hidden secret to light")
     sanctify_essence: int = rule(10, 0, 1000, G, "Essence a son spends to sanctify a place")
     sanctify_amount: int = rule(30, 0, 100, G, "Sacredness a son's sanctification adds to a place")
     raise_nexus_essence: int = rule(25, 0, 1000, G, "Essence a son spends to raise a ley nexus at a place")

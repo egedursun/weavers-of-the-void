@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
+from aerona.catalog.stars import STAR_TYPES
 from aerona.constants.cosmos import STAR_MAP_BASE_RADIUS, STAR_MAP_RADIUS_STEP
 from aerona.constants.player import ORBIT_PLANET_BASE
 from aerona.constants.units import PERCENT
@@ -18,9 +18,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -35,6 +36,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import scale_stat, shift_bounded, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 BRIGHTNESS_KEY = "brightness"
@@ -43,10 +45,6 @@ POPULATION_KEY = "population"
 FOLLOWERS_KEY = "followers"
 PIETY_KEY = "piety"
 FLARE_SICKNESS = "was sickened by a flare of its star"
-
-
-def star_label(star_type: StarType) -> str:
-    return STAR_TYPE_LABELS[star_type]
 
 
 async def star_position(session: AsyncSession, rng: SeededRandom, reach: float, galaxy_id: int | None = None) -> tuple[float, float]:
@@ -149,7 +147,23 @@ async def supernova(ctx: TickContext, star: StarRow) -> str:
     sky = ctx.rules.sky
     star.star_type = STAR_TYPES[star.star_type].remnant
     star.brightness = fitted_brightness(ctx.rules, star.star_type, sky.supernova_remnant_brightness)
-    for world in await worlds_of_star(ctx.session, star.id):
+    struck = await worlds_of_star(ctx.session, star.id)
+    await record(
+        ctx,
+        "star.supernova",
+        roles={IncidentRole.SUBJECT: star.id, IncidentRole.VICTIM: [world.id for world in struck]},
+        facts={
+            "star_type": star.star_type,
+            "population": sky.supernova_population_loss_pct,
+            "fertility": sky.supernova_fertility_loss,
+            "leak": sky.supernova_leak,
+        },
+        steps=(
+            StepDraft(StepAction.EXPLODE, actor=star.id, outcome=StepOutcome.DESTROYED),
+            *(StepDraft(StepAction.SPREAD, target=world.id, locus_kind=StepLocus.REALM, locus_node=world.id) for world in struck),
+        ),
+    )
+    for world in struck:
         for entity in await canon(ctx.session, None, world.id):
             scale_stat(ctx.rules, entity, POPULATION_KEY, 1 - sky.supernova_population_loss_pct / PERCENT)
             shift_bounded(ctx.rules, entity, FERTILITY_KEY, -sky.supernova_fertility_loss)
@@ -229,7 +243,7 @@ async def flare(ctx: TickContext, star: StarRow) -> str:
     return text
 
 
-async def extinguish_star(ctx: TickContext, star_id: int, by: str) -> str:
+async def extinguish_star(ctx: TickContext, star_id: int, by: str, by_id: int) -> str:
     pantheon = ctx.rules.pantheon
     star = await require_star(ctx.session, star_id)
     star.star_type = StarType.DEAD_STAR
@@ -241,26 +255,38 @@ async def extinguish_star(ctx: TickContext, star_id: int, by: str) -> str:
             shift_bounded(ctx.rules, region, FERTILITY_KEY, -pantheon.extinguish_fertility_loss, default=pantheon.default_fertility)
     await advance_doom(ctx.session, ctx.rules, pantheon.extinguish_star_apocalypse)
     await snap_sail_routes(ctx, star.id)
-    names = ", ".join(world.name for world in worlds) or "The void around it"
-    text = f"{by} extinguished {star.name}. {names} lost their light; their lands cooled and the leak grew."
-    await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_extinguished", feed_category=FeedCategory.SKY)
+    written = await record(
+        ctx,
+        "sky.star_extinguished",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.SUBJECT: star.id, IncidentRole.VICTIM: [world.id for world in worlds]},
+        facts={"brightness": star.brightness, "leak": pantheon.extinguish_leak, "fertility_loss": pantheon.extinguish_fertility_loss},
+        steps=(StepDraft(StepAction.END, actor=by_id, target=star.id, outcome=StepOutcome.DESTROYED),),
+    )
+    text = written.text
     await ctx.session.flush()
     return text
 
 
-async def rekindle_star(ctx: TickContext, star_id: int, by: str) -> str:
+async def rekindle_star(ctx: TickContext, star_id: int, by: str, by_id: int) -> str:
     hand = ctx.rules.god_hand
     star = await require_star(ctx.session, star_id)
     if star.star_type not in EXTINGUISHED_STAR_TYPES:
         raise ValidationFailedError(f"{star.name} is already burning.")
     star.star_type = StarType.REBORN_STAR
     star.brightness = fitted_brightness(ctx.rules, StarType.REBORN_STAR, hand.rekindle_brightness)
-    for world in await worlds_of_star(ctx.session, star.id):
+    lit = await worlds_of_star(ctx.session, star.id)
+    for world in lit:
         _add_leak(world, -hand.rekindle_leak_drain)
     await restore_sail_routes(ctx.session, star.id)
     await end_black_sun(ctx.session, star.id, ctx.epoch)
-    text = f"{by} rekindled {star.name}; its worlds have light again."
-    await ctx.chronicle(ChronicleKind.SKY, text, template_key="sky.star_rekindled", feed_category=FeedCategory.SKY)
+    written = await record(
+        ctx,
+        "sky.star_rekindled",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.SUBJECT: star.id, IncidentRole.BENEFICIARY: [world.id for world in lit]},
+        facts={"brightness": star.brightness, "leak_drained": hand.rekindle_leak_drain},
+        steps=(StepDraft(StepAction.IGNITE, actor=by_id, target=star.id, outcome=StepOutcome.SUCCESS),),
+    )
+    text = written.text
     await ctx.session.flush()
     return text
 
@@ -269,7 +295,7 @@ async def hang_star(
     ctx: TickContext,
     name: str,
     star_type: StarType,
-    by: str,
+    by_id: int,
     description: str | None = None,
     *,
     galaxy_id: int | None = None,
@@ -299,18 +325,27 @@ async def hang_star(
         ctx.epoch,
         StarSpec(name, star_type, pantheon.star_brightness_base, pantheon.star_brightness_die, description, galaxy_id=galaxy_id, position=position),
     )
-    text = f"{by} set a new star in the sky: {star.name} ({star_label(star_type)})."
-    if world is not None and root is not None:
-        text = f"{by} set a new star in the sky of {world.name}: {star.name} ({star_label(star_type)})."
-        if root.star_id is None and not held(root.id):
-            root.star_id = star.id
-            root.orbit = ORBIT_PLANET_BASE
-            await align_moons(ctx.session)
-            text += f" {root.name} now circles it."
+    circling: int | None = None
+    if world is not None and root is not None and root.star_id is None and not held(root.id):
+        root.star_id = star.id
+        root.orbit = ORBIT_PLANET_BASE
+        await align_moons(ctx.session)
+        circling = root.id
     if maker_son_id is not None:
         physics = (await physics_of_stars(ctx.session, ctx.rules, [star]))[star.id]
         physics.maker_son_id = maker_son_id
-    await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_hung", feed_category=FeedCategory.SKY)
+    await record(
+        ctx,
+        "sky.star_hung",
+        roles={
+            IncidentRole.ACTOR: by_id,
+            IncidentRole.SUBJECT: star.id,
+            IncidentRole.PLACE: world.id if world is not None else None,
+            IncidentRole.BENEFICIARY: circling,
+        },
+        facts={"star_type": star_type, "brightness": star.brightness},
+        steps=(StepDraft(StepAction.APPEAR, actor=by_id, target=star.id, outcome=StepOutcome.SUCCESS),),
+    )
     await ctx.session.flush()
     return star
 

@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestTargetKind
 from aerona.domain.enums.travel import TravelMethod
@@ -39,21 +40,10 @@ from aerona.engine.phases.climate import impose_climate
 from aerona.engine.phases.sky import SkyOrder, sky_event
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import ordinal
+from aerona.engine.recording.record import record
 from aerona.language.generator import NameKind
 from aerona.services.gods import cosmic_economy
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand, tell
-from aerona.services.player.lines import (
-    CLIMATE_COMMANDED,
-    DEPOSIT_OPENED,
-    EXILED_ENTITY,
-    HOSTILITY_SEVERED,
-    RESOURCE_DEFINED,
-    ROUTE_OPENED,
-    STAR_EDITED,
-    STAR_REMOVED,
-    WORLD_RESHAPED,
-)
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 EXILE_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
@@ -176,17 +166,17 @@ async def route_action(scope: PlayerScope, command: RouteCommand) -> Effect:
     tool = f"route:{command.action.value}"
     if command.action is RouteAction.SEVER:
         spent = guards.charge(creator, scope.rules.beyond.sever_route_cost, "beyond.sever_route_cost")
-        result = await sever_route(ctx, route.id, duration=command.duration, by=creator.name)
+        result = await sever_route(ctx, route.id, duration=command.duration, by=creator.name, by_id=creator.id)
         message = f"The route was severed until epoch {result.severed_until}."
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.SEVER_ROUTE, tool=tool, values={"until": result.severed_until})
     if command.action is RouteAction.STITCH:
         spent = guards.charge(creator, scope.rules.beyond.reopen_route_cost, "beyond.reopen_route_cost")
-        message = await repair_route(ctx, route.id, creator.name)
+        message = await repair_route(ctx, route.id)
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.REPAIR_ROUTE, tool=tool)
     if route.known:
         raise ValidationFailedError("This route is not hidden.")
     spent = guards.charge(creator, scope.rules.travel.reveal_route_cost, "travel.reveal_route_cost")
-    message = await reveal_hidden_route(ctx, route.id, creator.name)
+    message = await reveal_hidden_route(ctx, route.id)
     if not route.active:
         message = f"{message} The road is still closed."
     return Effect(message, route.id, essence_spent=spent, kind=ActionKind.REVEAL_ROUTE, tool=tool)
@@ -227,7 +217,7 @@ async def hang_star(scope: PlayerScope, command: HangStar) -> Effect:
     spent = guards.charge(creator, scope.rules.cosmic_costs.ignite_star, "cosmic_costs.ignite_star")
     ctx = await scope.context("hang_star")
     star = await engine_hang_star(
-        ctx, name, command.star_type, creator.name, (command.description or "").strip() or None, galaxy_id=command.galaxy_id, world_id=command.world_id
+        ctx, name, command.star_type, creator.id, (command.description or "").strip() or None, galaxy_id=command.galaxy_id, world_id=command.world_id
     )
     (await scope.cosmos()).map_version += 1
     return Effect(f"{star.name} now takes its place in the sky.", star.id, essence_spent=spent, created_ids=(star.id,), values={"galaxy_id": star.galaxy_id})
@@ -238,7 +228,7 @@ async def seal_gate(scope: PlayerScope, command: RouteTarget) -> Effect:
     route = await guards.route(scope.session, command.route_id)
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.seal_gate, "cosmic_costs.seal_gate")
-    message = await engine_seal_gate(await scope.context("seal_gate"), route.id, creator.name)
+    message = await engine_seal_gate(await scope.context("seal_gate"), route.id, creator.name, creator.id)
     return Effect(message, route.id, essence_spent=spent)
 
 
@@ -247,7 +237,7 @@ async def cleanse_leak(scope: PlayerScope, command: WorldTarget) -> Effect:
     world = await guards.world(scope.session, command.world_id)
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.cleanse_leak, "cosmic_costs.cleanse_leak")
-    message = await engine_cleanse_leak(await scope.context("cleanse_leak"), world.id, creator.name)
+    message = await engine_cleanse_leak(await scope.context("cleanse_leak"), world.id, creator.id)
     return Effect(message, world.id, essence_spent=spent)
 
 
@@ -256,7 +246,7 @@ async def forget(scope: PlayerScope, command: WorldTarget) -> Effect:
     world = await guards.open_world(scope.session, command.world_id)
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.forget_world, "cosmic_costs.forget_world")
-    message = await forget_world(await scope.context("forget_world"), world.id, creator.name)
+    message = await forget_world(await scope.context("forget_world"), world.id, creator.id)
     return Effect(message, world.id, essence_spent=spent)
 
 
@@ -265,7 +255,7 @@ async def rekindle(scope: PlayerScope, command: StarTarget) -> Effect:
     star = await guards.star(scope.session, command.star_id)
     creator = await scope.creator()
     spent = guards.charge(creator, rekindle_cost(scope.rules, star.star_type, scope.rules.cosmic_costs.rekindle_dead_star), "cosmic_costs.rekindle_dead_star")
-    message = await engine_rekindle_star(await scope.context("rekindle"), star.id, creator.name)
+    message = await engine_rekindle_star(await scope.context("rekindle"), star.id, creator.name, creator.id)
     return Effect(message, star.id, essence_spent=spent)
 
 
@@ -276,7 +266,7 @@ async def extinguish(scope: PlayerScope, command: StarTarget) -> Effect:
         raise ValidationFailedError(f"{star.name} is already dark.")
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.extinguish_star, "cosmic_costs.extinguish_star")
-    message = await extinguish_star(await scope.context("extinguish_star"), star.id, creator.name)
+    message = await extinguish_star(await scope.context("extinguish_star"), star.id, creator.name, creator.id)
     return Effect(message, star.id, essence_spent=spent)
 
 
@@ -284,7 +274,7 @@ async def extinguish(scope: PlayerScope, command: StarTarget) -> Effect:
 async def bind_soul(scope: PlayerScope, command: SoulBind) -> Effect:
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.spirit_cloak, "cosmic_costs.spirit_cloak")
-    result = await soul_bind(await scope.context("soul_bind"), command.soul_id, command.target_id, creator.name)
+    result = await soul_bind(await scope.context("soul_bind"), command.soul_id, command.target_id, creator.id)
     return Effect(f"A soul now dwells in {result.name}.", result.id, essence_spent=spent)
 
 
@@ -309,7 +299,9 @@ async def order_sky_event(scope: PlayerScope, command: SkyEvent) -> Effect:
         await guards.route(scope.session, command.route_id)
     creator = await scope.creator()
     spent = guards.charge(creator, scope.rules.cosmic_costs.sky_event, "cosmic_costs.sky_event")
-    order = SkyOrder(world_id=command.world_id, star_id=command.star_id, route_id=command.route_id, duration=command.duration, by=creator.name)
+    order = SkyOrder(
+        world_id=command.world_id, star_id=command.star_id, route_id=command.route_id, duration=command.duration, by=creator.name, by_id=creator.id
+    )
     result = await sky_event(await scope.context("sky_event"), command.kind, order)
     return Effect(result.text, result.world_id, essence_spent=spent)
 
@@ -375,19 +367,19 @@ async def exile(scope: PlayerScope, command: Exile) -> Effect:
     creator = await scope.creator()
     ctx = await scope.context("exile")
     carried = f", carrying {len(moved) - 1} of its own" if len(moved) > 1 else ""
-    message = await tell(
-        ctx,
-        EXILED_ENTITY,
-        ids=[target.id, region.id],
-        kind=ChronicleKind.COSMIC_LAW,
-        creator=creator.name,
-        entity=target.name,
-        region=region.name,
-        world=world.name,
-        carried=carried,
-    )
+    message = (
+        await record(
+            ctx,
+            "player.entity.exiled",
+            roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: target.id, IncidentRole.PLACE: world.id, IncidentRole.SUBJECT: region.id},
+            facts={"region": str(region.name), "carried": str(carried)},
+            kind=ChronicleKind.COSMIC_LAW,
+        )
+    ).text
     if severed:
-        message = f"{message} {await tell(ctx, HOSTILITY_SEVERED, ids=[target.id], kind=ChronicleKind.COSMIC_LAW, entity=target.name)}"
+        message = (
+            f"{message} {(await record(ctx, 'player.entity.hostility_severed', roles={IncidentRole.TARGET: target.id}, kind=ChronicleKind.COSMIC_LAW)).text}"
+        )
     return Effect(message, target.id, values={"severed": severed, "moved": len(moved)})
 
 
@@ -397,8 +389,7 @@ async def pardon(scope: PlayerScope, command: EntityTarget) -> Effect:
     flags = await EntityRepository(scope.session).flags(target.id)
     if not flags & {EntityFlag.OATHBREAKER, EntityFlag.EXILE, EntityFlag.CURSED}:
         raise ValidationFailedError(f"{target.name} carries no oath-breaking, exile or curse to pardon.")
-    creator = await scope.creator()
-    return Effect(await engine_pardon(await scope.context("pardon"), target.id, creator.name), target.id)
+    return Effect(await engine_pardon(await scope.context("pardon"), target.id), target.id)
 
 
 async def _orbit_cycle(scope: PlayerScope, world: WorldRow, parent: WorldRow) -> bool:
@@ -447,7 +438,19 @@ async def set_orbit(scope: PlayerScope, command: Orbit) -> Effect:
         note += f"; {several(moons, 'moon', 'moons')} moved to the new orbit with it"
     (await scope.cosmos()).map_version += 1
     ctx = await scope.context("orbit")
-    return Effect(await tell(ctx, WORLD_RESHAPED, world_id=world.id, world=world.name, notes=f": {note}"), world.id)
+    return Effect(
+        (
+            await record(
+                ctx,
+                "player.world.reshaped",
+                roles={IncidentRole.SUBJECT: world.id},
+                facts={"notes": f": {note}"},
+                kind=ChronicleKind.CREATOR_HAND,
+                world_id=world.id,
+            )
+        ).text,
+        world.id,
+    )
 
 
 @player_action("star:delete", ActionKind.EXTINGUISH_STAR)
@@ -465,7 +468,7 @@ async def delete_star(scope: PlayerScope, command: StarTarget) -> Effect:
     creator = await scope.creator()
     name = star.name
     ctx = await scope.context("delete_star")
-    message = await tell(ctx, STAR_REMOVED, kind=ChronicleKind.COSMIC, creator=creator.name, star=name)
+    message = (await record(ctx, "player.star.removed", roles={IncidentRole.ACTOR: creator.id}, facts={"star": str(name)}, kind=ChronicleKind.COSMIC)).text
     await NameRepository(scope.session).release(star.id)
     await scope.session.execute(delete(StarRow).where(StarRow.id == star.id))
     return Effect(message, None)
@@ -509,7 +512,7 @@ async def edit_star(scope: PlayerScope, command: EditStar) -> Effect:
     if not fields:
         raise ValidationFailedError(f"Nothing to change on {star.name}.")
     ctx = await scope.context("edit_star")
-    return Effect(await tell(ctx, STAR_EDITED, kind=ChronicleKind.COSMIC, star=star.name), star.id)
+    return Effect((await record(ctx, "player.star.edited", roles={IncidentRole.SUBJECT: star.id}, kind=ChronicleKind.COSMIC)).text, star.id)
 
 
 @player_action("route:open", ActionKind.REPAIR_ROUTE)
@@ -527,9 +530,15 @@ async def open_route(scope: PlayerScope, command: OpenRoute) -> Effect:
         scope.session, scope.rules, ctx.rng("open_route"), epoch, RouteSpec(first.id, second.id, command.method, description="a road opened by the god")
     )
     creator = await scope.creator()
-    message = await hand(
-        ctx, creator, ROUTE_OPENED, kind=ChronicleKind.COSMIC, first=first.name, second=second.name, method=command.method.value.replace("_", " ")
-    )
+    message = (
+        await record(
+            ctx,
+            "player.route.opened",
+            roles={IncidentRole.AUTHORITY: creator.id},
+            facts={"first": str(first.name), "second": str(second.name), "method": command.method},
+            kind=ChronicleKind.COSMIC,
+        )
+    ).text
     return Effect(message, route.id, created_ids=(route.id,))
 
 
@@ -555,7 +564,15 @@ async def command_climate(scope: PlayerScope, command: Climate) -> Effect:
         await impose_climate(ctx, world.id, command.era, epochs)
     creator = await scope.creator()
     target = targets[0].name if command.world_id is not None else "all worlds"
-    message = await hand(ctx, creator, CLIMATE_COMMANDED, kind=ChronicleKind.CLIMATE, era=command.era.value.replace("_", " "), target=target, epochs=epochs)
+    message = (
+        await record(
+            ctx,
+            "player.climate.commanded",
+            roles={IncidentRole.AUTHORITY: creator.id},
+            facts={"era": command.era, "target_detail": str(target), "epochs": epochs},
+            kind=ChronicleKind.CLIMATE,
+        )
+    ).text
     return Effect(message, command.world_id)
 
 
@@ -568,7 +585,9 @@ async def define_resource(scope: PlayerScope, command: DefineResource) -> Effect
     await define_cosmic_resource(scope.session, resource, replace=True)
     creator = await scope.creator()
     ctx = await scope.context("cosmic_resource")
-    return Effect(await hand(ctx, creator, RESOURCE_DEFINED, kind=ChronicleKind.COSMIC, name=name))
+    return Effect(
+        (await record(ctx, "player.cosmos.resource", roles={IncidentRole.AUTHORITY: creator.id}, facts={"name": str(name)}, kind=ChronicleKind.COSMIC)).text
+    )
 
 
 @player_action("cosmos:deposit", ActionKind.OPEN_COSMIC_BED)
@@ -581,5 +600,14 @@ async def open_deposit(scope: PlayerScope, command: OpenDeposit) -> Effect:
     resource = cosmos.travel_resource.name if cosmos.travel_resource is not None else deposit.name
     creator = await scope.creator()
     ctx = await scope.context("deposit")
-    message = await hand(ctx, creator, DEPOSIT_OPENED, ids=[deposit.id, place.id], resource=resource, place=place.name)
+    message = (
+        await record(
+            ctx,
+            "player.cosmos.deposit",
+            roles={IncidentRole.PLACE: place.id, IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: deposit.id},
+            facts={"resource": str(resource)},
+            place=place.id,
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, deposit.id, created_ids=(deposit.id,))

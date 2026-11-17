@@ -95,6 +95,10 @@ def guard_imports(tree: ast.Module) -> frozenset[str]:
     return frozenset(names & GUARD_NAMES)
 
 
+COMPREHENSIONS = (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+SHADOW_HOME = Path("backend/src")
+
+
 def shadowed_guards(tree: ast.Module, guards: frozenset[str]) -> list[tuple[int, str]]:
     found: set[tuple[int, str]] = set()
     for scope in ast.walk(tree):
@@ -105,6 +109,37 @@ def shadowed_guards(tree: ast.Module, guards: frozenset[str]) -> list[tuple[int,
                 found.add((node.lineno, node.id))
             if isinstance(node, ast.arg) and node.arg in guards:
                 found.add((node.lineno, node.arg))
+    return sorted(found)
+
+
+def imported_names(tree: ast.Module) -> frozenset[str]:
+    return frozenset(alias.asname or alias.name for node in tree.body if isinstance(node, ast.ImportFrom) for alias in node.names)
+
+
+def own_bindings(scope: ast.AST) -> list[ast.AST]:
+    found: list[ast.AST] = []
+    pending = list(ast.iter_child_nodes(scope))
+    while pending:
+        node = pending.pop()
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef, *COMPREHENSIONS)):
+            continue
+        found.append(node)
+        pending.extend(ast.iter_child_nodes(node))
+    return found
+
+
+def shadowed_imports(tree: ast.Module) -> list[tuple[int, str]]:
+    imported = imported_names(tree)
+    found: set[tuple[int, str]] = set()
+    for scope in ast.walk(tree):
+        if not isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for arg in [*scope.args.posonlyargs, *scope.args.args, *scope.args.kwonlyargs, scope.args.vararg, scope.args.kwarg]:
+            if arg is not None and arg.arg in imported:
+                found.add((arg.lineno, arg.arg))
+        for node in own_bindings(scope):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) and node.id in imported:
+                found.add((node.lineno, node.id))
     return sorted(found)
 
 
@@ -128,6 +163,8 @@ def python_violations(path: Path, text: str) -> list[Violation]:
     tree = ast.parse(text)
     for line, name in shadowed_guards(tree, guard_imports(tree)):
         found.append(Violation(relative, line, f"{name} is bound here and hides the hold guard of the same name; give it a name of its own"))
+    for line, name in shadowed_imports(tree) if relative.is_relative_to(SHADOW_HOME) else []:
+        found.append(Violation(relative, line, f"{name} is bound here and hides the imported {name}; give the local a name of its own"))
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             body = node.body

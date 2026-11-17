@@ -70,6 +70,7 @@ from aerona.services.books.history import HandEpoch, creator_hand, ending_line, 
 from aerona.services.books.kinds import add_kind_sections
 from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
+from aerona.services.books.records import Ledger, add_history_sections, record_tables
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
 from aerona.services.images.records import cover_of
@@ -454,6 +455,7 @@ class BookBuilder:
         self.son_names: dict[int, str] = {}
         self.typed = TypedIndex({})
         self.made: dict[int, KindArticle] = {}
+        self.ledger = Ledger({})
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -477,6 +479,7 @@ class BookBuilder:
         self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
         await add_kind_sections(self.session, self.typed)
+        self.ledger = await add_history_sections(self.session, self.typed)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []
@@ -1170,7 +1173,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         creator_hand=await creator_hand(session),
         wars=await builder.wars(),
         creator_typed=builder.typed.of(creator.id) if creator is not None else [],
-        records=[*builder.typed.records, *await type_tables(session, rules)],
+        records=[*builder.typed.records, *await type_tables(session, rules), *await record_tables(session, builder.ledger)],
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
         creation=creation_facts(cosmos),
     )

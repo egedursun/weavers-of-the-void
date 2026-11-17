@@ -1,35 +1,25 @@
-from enum import StrEnum
-
 from sqlalchemy import select
 
 from aerona.catalog.climate import climate_profile
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
-from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OceanCurrent, WorldAge
-from aerona.domain.enums.environment import CoastKind
+from aerona.domain.enums.environment import ClimateTurn, CoastKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import cycles_by_world, rain_swing
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 SHIFT_LIMIT = PERCENT
 COLD_ERAS = frozenset({ClimateEra.ICE_AGE})
-
-
-class ClimateTurn(StrEnum):
-    WARMER = "warmer"
-    COLDER = "colder"
-    WETTER = "wetter"
-    DRIER = "drier"
 
 
 def current_heat(rules: Rules, current: OceanCurrent) -> int:
@@ -112,36 +102,36 @@ async def regional_climate(ctx: TickContext) -> int:
     return moved
 
 
-async def cold_snap(ctx: TickContext, world_id: int, amount: int, cause: str) -> int:
+async def cold_snap(ctx: TickContext, world_id: int, amount: int) -> int:
     chilled = 0
     for env in await ctx.session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world_id)):
         if held(env.entity_id) or "temperature_shift" in env.locked:
             continue
         env.temperature_shift = clamp_int(env.temperature_shift - amount, -SHIFT_LIMIT, SHIFT_LIMIT)
         chilled += 1
-    if chilled:
-        world = await ctx.session.get(WorldRow, world_id)
-        if world is not None:
-            await note(ctx, f"{cause} cooled {world.name}.", key="climate.cold_snap", kind=ChronicleKind.CLIMATE, world_id=world_id)
     return chilled
 
 
-async def turn_region(ctx: TickContext, region_id: int, turn: ClimateTurn, by: str) -> RegionEnvironmentRow:
+TEMPERATURE_SIGN: dict[ClimateTurn, int] = {ClimateTurn.WARMER: 1, ClimateTurn.COLDER: -1}
+RAINFALL_SIGN: dict[ClimateTurn, int] = {ClimateTurn.WETTER: 1, ClimateTurn.DRIER: -1}
+
+
+async def turn_region(ctx: TickContext, region_id: int, turn: ClimateTurn, by_id: int) -> RegionEnvironmentRow:
     env = await ctx.session.get(RegionEnvironmentRow, region_id)
     region = await ctx.session.get(EntityRow, region_id)
     if env is None or region is None:
         raise NotFoundError("That region has no climate to turn.")
     amount = ctx.rules.world_life.imposed_shift
-    if turn in (ClimateTurn.WARMER, ClimateTurn.COLDER):
-        env.temperature_shift = clamp_int(env.temperature_shift + (amount if turn is ClimateTurn.WARMER else -amount), -SHIFT_LIMIT, SHIFT_LIMIT)
+    if turn in TEMPERATURE_SIGN:
+        env.temperature_shift = clamp_int(env.temperature_shift + TEMPERATURE_SIGN[turn] * amount, -SHIFT_LIMIT, SHIFT_LIMIT)
     else:
-        env.rainfall_shift = clamp_int(env.rainfall_shift + (amount if turn is ClimateTurn.WETTER else -amount), -SHIFT_LIMIT, SHIFT_LIMIT)
-    await note(
+        env.rainfall_shift = clamp_int(env.rainfall_shift + RAINFALL_SIGN[turn] * amount, -SHIFT_LIMIT, SHIFT_LIMIT)
+    await record(
         ctx,
-        f"{by} turned the climate of {region.name} {spoken(turn)}.",
-        key="climate.region_turned",
-        ids=[region.id],
-        kind=ChronicleKind.CLIMATE,
+        "climate.region_turned",
+        roles={IncidentRole.ACTOR: by_id, IncidentRole.PLACE: region.id},
+        facts={"turn": turn, "shift": amount},
+        place=region.id,
         world_id=region.world_id,
     )
     await ctx.session.flush()

@@ -14,16 +14,17 @@ from aerona.domain.enums.couplings import CarrionRest
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 
 MASS_DEATHS = frozenset(
     category.value for category in (FlowCategory.DEATH, FlowCategory.CASUALTY, FlowCategory.FAMINE, FlowCategory.PLAGUE, FlowCategory.DISASTER)
@@ -136,7 +137,9 @@ async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnviron
             subtype=UNBURIED,
         ),
     )
-    await note(ctx, f"The unburied dead of {region.name} did not rest: {spirit.name} walks there.", key="carrion.restless", ids=[region.id, spirit.id])
+    await record(
+        ctx, "carrion.restless", roles={IncidentRole.PLACE: region.id, IncidentRole.SUBJECT: spirit.id}, facts={"spirit": str(spirit.name)}, place=region.id
+    )
 
 
 async def settle_unburied(ctx: TickContext, unburied_regions: set[int]) -> int:
@@ -185,7 +188,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

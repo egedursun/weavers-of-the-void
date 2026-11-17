@@ -5,12 +5,12 @@ from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.industry.methods import refit
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record as record_incident
 
 
 async def date_structures(ctx: TickContext) -> int:
@@ -51,9 +51,7 @@ async def refit_structures(ctx: TickContext) -> int:
         if refit(ctx, host):
             row.obsolete_since, row.built_epoch = None, ctx.epoch
             refitted += 1
-            await note(
-                ctx, f"{host.name} rebuilt {work.name} in the new way.", key="discovery.refitted", ids=[host.id, work.id], kind=ChronicleKind.CIVILIZATION
-            )
+            await record_incident(ctx, "discovery.refitted", roles={IncidentRole.OWNER: host.id, IncidentRole.TARGET: work.id}, place=host.id)
     return refitted
 
 

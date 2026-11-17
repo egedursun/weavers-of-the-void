@@ -57,6 +57,4 @@ class WorldEpochTransitionRules:
     temples_per_apocalypse_push: int = rule(2, 1, 100, RuleGroup.APOCALYPSE, "Number of temples that push the apocalypse back by 1")
     apocalypse_disaster_severity: int = rule(90, 0, 100, RuleGroup.APOCALYPSE, "Severity of the apocalypse's disasters destroying regions (%)")
     apocalypse_event_severity: int = rule(100, 0, 100, RuleGroup.APOCALYPSE, "Severity of the apocalypse event record")
-    apocalypse_chronicle_regions: int = rule(12, 0, 1000, RuleGroup.CHRONICLE, "Maximum regions linked to the apocalypse chronicle entry")
-    folded_chronicle_ids_cap: int = rule(40, 0, 1000, RuleGroup.CHRONICLE, "Maximum entities linked to a folded chronicle line")
     essence_overflow_note: int = rule(20, 0, 100000, RuleGroup.CHRONICLE, "When overflowing essence exceeds this, a note is added to the chronicle")

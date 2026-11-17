@@ -18,6 +18,8 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
 from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
@@ -28,6 +30,7 @@ from aerona.engine.gods.devotion import RiteKind as EngineRite
 from aerona.engine.lore import prophecy as prophecy_engine
 from aerona.engine.primitives.faith import clear_seeking, foreign_patron, living_patron, patron_son, worship_creator
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.relations.persuasion import lift, persuade
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -66,8 +69,8 @@ async def worship(call: MortalCall, args: WorshipInput) -> str:
             fail(MortalResult.ALREADY_WORSHIP_CREATOR)
         await call.bump(TurnCounter.WORSHIP_CHANGES)
         call.target(creator.id)
-        await call.chronicle(
-            ChronicleKind.WORSHIP, lines.WORSHIP_CREATOR, entity_ids=[call.me.id], me=call.me.name, creator=creator.name, offering=args.offering
+        await call.record(
+            "tools.mortal.worship_creator", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PATRON: creator.id}, facts={"offering": args.offering}
         )
         return result(MortalResult.WORSHIP_CREATOR)
     son = await call.session.get(SonRow, args.son_id)
@@ -89,9 +92,11 @@ async def worship(call: MortalCall, args: WorshipInput) -> str:
         await SonRepository(call.session).change_relation(old.id, son.id, -tools.worship_switch_relation)
     await call.bump(TurnCounter.WORSHIP_CHANGES)
     call.target(son.id)
-    abandoned = lines.ABANDONED.format(old=old.name) if old is not None else ""
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.WORSHIP, entity_ids=[call.me.id], about=son.id, me=call.me.name, son=son.name, abandoned=abandoned, offering=args.offering
+    await call.record(
+        "tools.mortal.worship",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PATRON: son.id, IncidentRole.PREDECESSOR: old.id if old is not None and old.id != son.id else None},
+        facts={"offering": args.offering},
+        about=son.id,
     )
     return result(MortalResult.WORSHIPPING, name=son.name)
 
@@ -116,7 +121,9 @@ async def pray_to_creator(call: MortalCall, args: PrayerInput) -> str:
     await call.bump(TurnCounter.PRAYERS)
     call.target(creator.id)
     suffix = lines.PRAYER_REQUEST.format(request=args.request) if args.request else ""
-    await call.chronicle(ChronicleKind.PRAYER, lines.PRAYED, entity_ids=[call.me.id], me=call.me.name, request=suffix, prayer=args.prayer)
+    await call.record(
+        "tools.mortal.prayed", roles={IncidentRole.ACTOR: call.me.id}, facts={"request": str(suffix), "prayer": str(args.prayer)}, kind=ChronicleKind.PRAYER
+    )
     return result(MortalResult.PRAYER_RISEN)
 
 
@@ -142,8 +149,18 @@ async def preach(call: MortalCall, args: PreachInput) -> str:
     sermon = await persuade(call.tick, call.me.id, target.id, AppealKind.BELIEF, PersuasionAim.FAITH, axis=ValueAxis.PIETY, toward=PERCENT, subject_id=god.id)
     chance *= lift(call.rules.persuasion.sermon_pct, sermon)
     call.target(target.id)
+    argued = StepDraft(
+        StepAction.PERSUADE,
+        actor=call.me.id,
+        target=target.id,
+        amount=sermon.score,
+        unit=FactUnit.PERCENT,
+        outcome=StepOutcome.SUCCESS if sermon.success else StepOutcome.FAILURE,
+    )
     if call.die(PERCENT, "sermon") > chance:
-        await call.chronicle(ChronicleKind.WORSHIP, lines.PREACH_FAILED, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name)
+        await call.record(
+            "tools.mortal.preach_failed", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id}, kind=ChronicleKind.WORSHIP, steps=(argued,)
+        )
         return result(MortalResult.NOT_HEARD)
     await _drop_worship(call, target, god.name)
     _lower_stance(old_foreign, tools.worship_foreign_attitude_loss)
@@ -156,16 +173,13 @@ async def preach(call: MortalCall, args: PreachInput) -> str:
         await SonRepository(call.session).change_relation(old.id, god.id, -tools.preach_relation)
     losers = [name for name in (old.name if old else None, old_foreign.name if old_foreign else None) if name]
     lost = lines.LOST_WORSHIPPER.format(names=JOIN.join(losers)) if losers else ""
-    await call.chronicle(
-        ChronicleKind.WORSHIP,
-        lines.PREACHED,
-        entity_ids=[call.me.id, target.id],
+    await call.record(
+        "tools.mortal.preached",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: god.id},
+        facts={"lost": str(lost), "sermon": str(args.sermon)},
+        kind=ChronicleKind.WORSHIP,
         about=god.id,
-        me=call.me.name,
-        target=target.name,
-        god=god.name,
-        lost=lost,
-        sermon=args.sermon,
+        steps=(argued,),
     )
     return result(MortalResult.PREACHED, name=target.name, god=god.name)
 
@@ -188,8 +202,12 @@ async def deny_god(call: MortalCall, args: DenyInput) -> str:
             BondDraft(son.id, call.me.id, BondKind.ENEMY, call.epoch, lines.DENIAL_BOND.format(reason=args.reason), war_cause=WarCause.DIVINE_GRUDGE)
         )
         call.target(son.id)
-    god = son.name if son is not None else foreign.name if foreign is not None else lines.THE_GODS
-    await call.chronicle(ChronicleKind.DENIAL, lines.DENIED, entity_ids=[call.me.id], me=call.me.name, god=god, reason=args.reason)
+    denied = son.id if son is not None else foreign.id if foreign is not None else None
+    await call.record(
+        "tools.mortal.denied" if denied is not None else "tools.mortal.denied_all",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: denied},
+        facts={"reason": args.reason},
+    )
     return result(MortalResult.DENIED)
 
 
@@ -225,7 +243,12 @@ async def prophesy(call: MortalCall, args: ProphesyInput) -> str:
     )
     await prophecy_engine.typed_condition(call.tick, prophecy, told)
     await call.bump(TurnCounter.PROPHECIES)
-    await call.chronicle(ChronicleKind.PROPHECY, lines.PROPHESIED, entity_ids=[call.me.id, prophecy.id], me=call.me.name, name=prophecy.name)
+    await call.record(
+        "tools.mortal.prophesied",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: prophecy.id},
+        facts={"name": str(prophecy.name)},
+        kind=ChronicleKind.PROPHECY,
+    )
     return result(MortalResult.PROPHESIED, id=prophecy.id, name=prophecy.name)
 
 

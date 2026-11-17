@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, PersonalityValueRow, SkillRow, TraitRow
@@ -12,19 +13,22 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.made import MadeMindStance
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.minds import MindOrigin, MindSeat, SoulContinuity, StateMedium
+from aerona.domain.enums.minds import DisputeOutcome, MindOrigin, MindSeat, SoulContinuity, StateMedium
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
 from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.memories import remember
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.souls import soul_law
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 
 RUNNING_SEATS = frozenset(set(MindSeat) - {MindSeat.NONE})
@@ -128,6 +132,30 @@ def mirror(source: MindProfileRow, target: MindProfileRow, *, origin: MindOrigin
     target.copyable, target.restorable, target.mergeable, target.transferable = source.copyable, source.restorable, source.mergeable, source.transferable
 
 
+def mind_step(action: StepAction, mind_id: int, table: str, key: int, fidelity: int, *, actor: int | None = None) -> StepDraft:
+    return StepDraft(
+        action,
+        actor=actor,
+        target=mind_id,
+        amount=float(fidelity),
+        unit=FactUnit.PERCENT,
+        outcome=StepOutcome.SUCCESS,
+        record_table=table,
+        record_key=str(key),
+    )
+
+
+def link_step(actor: int, partner: int, bond: BondRow | None) -> StepDraft:
+    return StepDraft(
+        StepAction.LINK_MINDS,
+        actor=actor,
+        target=partner,
+        outcome=StepOutcome.SUCCESS,
+        record_table=BondRow.__tablename__ if bond is not None else None,
+        record_key=str(bond.id) if bond is not None else None,
+    )
+
+
 async def copy_mind(ctx: TickContext, source_id: int, seat: MindSeat, seat_node_id: int | None, *, forced: bool = False) -> EntityRow:
     source = await living(ctx, source_id)
     profile = await profile_of(ctx.session, ctx.rules, source_id, ctx.epoch)
@@ -170,7 +198,10 @@ async def copy_mind(ctx: TickContext, source_id: int, seat: MindSeat, seat_node_
     if doctrine is not None and doctrine.copy_stance is MadeMindStance.ABOMINATION and "stability" not in target.locked:
         target.stability = clamp_percent(target.stability - ctx.rules.continuity.merge_stress)
     await connect(ctx.session, copy.id, source_id, BondKind.COPY_OF, ctx.epoch, description=f"copied at {fidelity} of 100")
-    await note(ctx, f"The mind of {source.name} was copied.", key="mind.copied", ids=[copy.id, source_id])
+    copied = mind_step(StepAction.COPY_MIND, source_id, MindProfileRow.__tablename__, copy.id, fidelity)
+    await record_incident(
+        ctx, "mind.copied", roles={IncidentRole.SUBJECT: source_id, IncidentRole.PRODUCT: copy.id}, facts={"fidelity": fidelity}, steps=(copied,)
+    )
     return copy
 
 
@@ -206,7 +237,10 @@ async def save_mind(ctx: TickContext, mind_id: int, holder_id: int | None, owner
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"The mind of {entity.name} was saved.", key="mind.saved", ids=[mind_id])
+    saved = mind_step(StepAction.SAVE_MIND, mind_id, MindStateRow.__tablename__, row.id, row.fidelity_pct, actor=owner_id)
+    await record_incident(
+        ctx, "mind.saved", roles={IncidentRole.SUBJECT: mind_id, IncidentRole.OWNER: owner_id}, facts={"fidelity": row.fidelity_pct}, steps=(saved,)
+    )
     return row
 
 
@@ -241,7 +275,14 @@ async def restore_mind(ctx: TickContext, state_id: int, seat: MindSeat, seat_nod
         epoch=ctx.epoch,
         note=f"nothing from epoch {state.taken_epoch} to epoch {ctx.epoch}" if span else "a moment lost",
     )
-    await note(ctx, f"{entity.name} was restored from what was saved in epoch {state.taken_epoch}.", key="mind.restored", ids=[entity.id])
+    restored = mind_step(StepAction.RESTORE_MIND, entity.id, MindStateRow.__tablename__, state.id, fidelity, actor=keeper)
+    await record_incident(
+        ctx,
+        "mind.restored",
+        roles={IncidentRole.SUBJECT: entity.id},
+        facts={"saved_epoch": state.taken_epoch, "epochs_lost": ctx.epoch - state.taken_epoch},
+        steps=(restored,),
+    )
     return entity
 
 
@@ -256,7 +297,14 @@ async def transfer_mind(ctx: TickContext, mind_id: int, seat: MindSeat, seat_nod
     if former is not None and former not in {mind_id, seat_node_id}:
         await connect(ctx.session, mind_id, former, BondKind.TRANSFERRED_FROM, ctx.epoch, description="left this seat")
     await ctx.session.flush()
-    await note(ctx, f"The mind of {entity.name} moved to another seat.", key="mind.transferred", ids=[mind_id])
+    await record_incident(
+        ctx,
+        "mind.transferred",
+        roles={IncidentRole.SUBJECT: mind_id, IncidentRole.ORIGIN: former, IncidentRole.DESTINATION: seat_node_id},
+        facts={"seat": seat, "fidelity": profile.fidelity_pct},
+        terms=[Term("rules.continuity.transfer_fidelity_loss", -ctx.rules.continuity.transfer_fidelity_loss)],
+        steps=(mind_step(StepAction.TRANSFER_MIND, mind_id, MindProfileRow.__tablename__, mind_id, profile.fidelity_pct),),
+    )
     return profile
 
 
@@ -283,7 +331,19 @@ async def merge_minds(ctx: TickContext, first_id: int, second_id: int, *, forced
     keep.origin = MindOrigin.MERGED
     await connect(ctx.session, second_id, first_id, BondKind.MERGED_INTO, ctx.epoch, description="joined into one mind")
     await retire_in(ctx, second, f"merged into the mind of {first.name}")
-    await note(ctx, f"The minds of {second.name} and {first.name} became one.", key="mind.merged", ids=[first_id, second_id])
+    merged = StepDraft(
+        StepAction.MERGE_MINDS,
+        actor=first_id,
+        target=second_id,
+        amount=float(keep.capacity),
+        unit=FactUnit.PERCENT,
+        outcome=StepOutcome.SUCCESS,
+        record_table=MindProfileRow.__tablename__,
+        record_key=str(first_id),
+    )
+    await record_incident(
+        ctx, "mind.merged", roles={IncidentRole.SUBJECT: first_id, IncidentRole.PREDECESSOR: second_id}, facts={"capacity": keep.capacity}, steps=(merged,)
+    )
     return keep
 
 
@@ -310,7 +370,7 @@ async def divide_mind(ctx: TickContext, mind_id: int, seat: MindSeat, seat_node_
     profile.capacity = clamp_percent(profile.capacity - split.capacity)
     await copy_stack(ctx, mind_id, part.id, profile.fidelity_pct)
     await connect(ctx.session, part.id, mind_id, BondKind.DIVIDED_FROM, ctx.epoch, description="divided from this mind")
-    await note(ctx, f"The mind of {entity.name} divided in two.", key="mind.divided", ids=[mind_id, part.id])
+    await record_incident(ctx, "mind.divided", roles={IncidentRole.SUBJECT: mind_id, IncidentRole.PRODUCT: part.id}, facts={"share": share})
     return part
 
 
@@ -333,7 +393,12 @@ async def contest(ctx: TickContext, copy: EntityRow, source: EntityRow) -> bool:
             if "holder_node_id" not in title.locked and not held(title.title_entity_id):
                 title.holder_node_id = winner.id
     await change_relation(ctx, copy.id, source.id, -clamp_int(ctx.rules.continuity.dispute_chance, 1, PERCENT), MemoryKind.BETRAYED_ME)
-    await note(ctx, f"{copy.name} and {source.name} contested what one mind once held.", key="mind.disputed", ids=[copy.id, source.id])
+    await record_incident(
+        ctx,
+        "mind.disputed",
+        roles={IncidentRole.ACTOR: copy.id, IncidentRole.OPPONENT: source.id},
+        facts={"outcome": DisputeOutcome.COPY_WON if winner is copy else DisputeOutcome.SOURCE_KEPT},
+    )
     return True
 
 

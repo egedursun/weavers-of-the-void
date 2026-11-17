@@ -21,15 +21,16 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind, RiverClass
 from aerona.domain.enums.industry import MethodKind, ProcessKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.agrarian.rings import put
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.nature.microbes import microbe_factor, soil_lives
-from aerona.engine.notes import note
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES, CapacityModel
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 N = NutrientKind
 HALF = 50
@@ -71,11 +72,6 @@ async def sown_shares(ctx: TickContext) -> tuple[dict[int, float], dict[int, flo
     return dict(fodder), dict(roots)
 
 
-async def region_name(ctx: TickContext, region_id: int) -> str:
-    region = await ctx.session.get(EntityRow, region_id)
-    return region.name if region is not None else "a land"
-
-
 async def press_land(ctx: TickContext, tally: SoilTally) -> None:
     table = ctx.rules.boserup
     capacity = await CapacityModel.load(ctx.session, ctx.rules)
@@ -102,11 +98,12 @@ async def press_land(ctx: TickContext, tally: SoilTally) -> None:
         tally.pressed += 1
         if before < HALF <= row.intensity:
             tally.intensified += 1
-            await note(
+            await record(
                 ctx,
-                f"The farmers of {await region_name(ctx, region_id)} work every field harder as their numbers press on the land.",
-                key="boserup.intensified",
-                ids=[region_id],
+                "boserup.intensified",
+                roles={IncidentRole.SUBJECT: region_id},
+                facts={"intensity": row.intensity, "pressure": row.pressure},
+                place=region_id,
             )
 
 
@@ -207,19 +204,9 @@ async def feed_soils(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> 
             row.updated_epoch = ctx.epoch
             if nutrient is N.SALINITY and before < ctx.rules.nutrients.noted_salinity <= row.stock:
                 tally.salted += 1
-                await note(
-                    ctx,
-                    f"The watered fields have turned saline in {await region_name(ctx, land.entity_id)}; each harvest there is thinner than the last.",
-                    key="nutrients.salted",
-                    ids=[land.entity_id],
-                )
+                await record(ctx, "nutrients.salted", roles={IncidentRole.SUBJECT: land.entity_id}, facts={"salinity": row.stock}, place=land.entity_id)
             elif nutrient is N.SALINITY and row.stock < ctx.rules.nutrients.noted_salinity // 2 <= before:
-                await note(
-                    ctx,
-                    f"The rains have cleared the saline fields of {await region_name(ctx, land.entity_id)}.",
-                    key="nutrients.recovered",
-                    ids=[land.entity_id],
-                )
+                await record(ctx, "nutrients.recovered", roles={IncidentRole.SUBJECT: land.entity_id}, facts={"salinity": row.stock}, place=land.entity_id)
         tally.soils += 1
 
 
@@ -288,11 +275,11 @@ async def remember_famines(ctx: TickContext, atlas: RegionAtlas, tally: SoilTall
             tally.famine_foods += 1
             people = await ctx.session.get(EntityRow, people_id)
             if people is not None:
-                await note(
+                await record(
                     ctx,
-                    f"{people.name} remember their hungry years: they have learned what the land gives in a failed year, and they store food against the next.",
-                    key="famine.foods_learned",
-                    ids=[people.id],
+                    "famine.foods_learned",
+                    roles={IncidentRole.SUBJECT: people.id},
+                    facts={"memory": row.memory, "storage": row.storage},
                 )
 
 

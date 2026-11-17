@@ -553,3 +553,8 @@ class DesignComponentKind(StrEnum):
     TROOPS = "troops"
     COMMAND = "command"
     LIFE_SUPPORT = "life_support"
+
+
+class CommemorationFeeling(StrEnum):
+    PRIDE = "pride"
+    GRIEF = "grief"

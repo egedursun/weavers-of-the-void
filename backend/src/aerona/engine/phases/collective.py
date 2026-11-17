@@ -5,6 +5,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.collective import CollectiveActKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.gathering import CollectionRole
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.collective.accounts import (
     HistoryTally,
     age_accounts,
@@ -31,10 +33,10 @@ from aerona.engine.collective.storylets import StoryletTally, announce, open_sto
 from aerona.engine.context import TickContext
 from aerona.engine.history.collections import open_collection
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 from aerona.engine.phases.factions import found_faction
+from aerona.engine.recording.record import StepDraft, record
 
 
 @dataclass
@@ -52,7 +54,6 @@ class ArmedTally:
     "table.crowd_moods",
     "table.districts",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.incident_participants",
     "table.incidents",
@@ -76,9 +77,10 @@ class ArmedTally:
     "table.collection_places",
     "table.community_societies",
     "table.crowd_moods",
-    "table.epoch_year_cursors",
     "table.incident_collections",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.mobs",
     "table.movements",
@@ -116,7 +118,14 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
                 members={faction.id: CollectionRole.LEADER, town.id: CollectionRole.PLACE},
                 places=[town.id],
             )
-        await note(ctx, f"The movement in {town.name} became {faction.name}.", key="collective.movement_armed", ids=[faction.id, town.id])
+        await record(
+            ctx,
+            "collective.movement_armed",
+            roles={IncidentRole.PLACE: town.id, IncidentRole.PRODUCT: faction.id},
+            facts={"act": movement.act, "members": movement.members, "strength": movement.strength},
+            steps=(StepDraft(StepAction.FOUND, target=faction.id),),
+            place=town.id,
+        )
     await ctx.session.flush()
 
 
@@ -127,7 +136,6 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.collection_places",
     "table.crowd_moods",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.movements",
@@ -141,10 +149,11 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.collection_members",
     "table.collection_places",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.incident_collections",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.movements",
     "table.name_registry",
@@ -189,7 +198,6 @@ async def social_norms(ctx: TickContext) -> None:
     "table.deed_claims",
     "table.deeds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.held_identities",
     "table.house_members",
     "table.incident_collections",
@@ -206,7 +214,6 @@ async def social_norms(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memory_strikes",
@@ -228,7 +235,6 @@ async def historiography(ctx: TickContext) -> None:
     "table.accounts",
     "table.collection_members",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.founding_myths",
     "table.incident_collections",
     "table.incident_participants",
@@ -244,9 +250,10 @@ async def historiography(ctx: TickContext) -> None:
     "table.accounts",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.founding_myths",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.polity_profiles",
     "table.settlement_profiles",
@@ -287,7 +294,6 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.collection_places",
     "table.community_societies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_collections",
     "table.incident_participants",
     "table.incidents",
@@ -308,8 +314,8 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.claims",
     "table.collection_members",
     "table.designated_heirs",
-    "table.epoch_year_cursors",
     "table.incident_collections",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.storylet_runs",
@@ -396,7 +402,6 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.company_profiles",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.house_members",
     "table.house_profiles",
@@ -411,7 +416,6 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.arms",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
@@ -432,7 +436,6 @@ async def heraldry(ctx: TickContext) -> None:
     "table.design_sections",
     "table.designs",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.equipment_models",
     "table.holder_levels",
     "table.incident_participants",
@@ -449,7 +452,7 @@ async def heraldry(ctx: TickContext) -> None:
     "table.design_sections",
     "table.designs",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

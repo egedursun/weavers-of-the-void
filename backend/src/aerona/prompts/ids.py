@@ -47,6 +47,8 @@ class PromptId(StrEnum):
     GEOGRAPHY_LINES = "geography_lines"
     WORLD_SUMMARY = "world_summary"
     SON_MEMORY = "son_memory"
+    EVENT_ACCOUNT = "event_account"
+    EVENT_RECORDS = "event_records"
     SKY_CALENDAR = "sky_calendar"
     BUDGET_TRAILER = "budget_trailer"
     INSPECT_SIBLING = "inspect_sibling"

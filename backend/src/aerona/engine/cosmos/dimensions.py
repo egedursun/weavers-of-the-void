@@ -10,12 +10,13 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionalEventRow, DimensionRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, BeingPhase, DimensionalEventKind, DimensionKind, RiftCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.aspects import keep_aspects
@@ -25,10 +26,10 @@ from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.recording.record import StepDraft, record
 
 THINNING_DOMAINS = frozenset({Domain.DREAM, Domain.SHADOW, Domain.MADNESS})
 THICKENING_DOMAINS = frozenset({Domain.BORDER})
@@ -65,7 +66,19 @@ async def open_event(
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, text, key=f"dimension.{kind.value}", kind=ChronicleKind.COSMIC, world_id=world.id if world is not None else None)
+    await record(
+        ctx,
+        f"dimension.{kind.value}",
+        roles={
+            IncidentRole.SUBJECT: dimension.id,
+            IncidentRole.CO_ACTOR: other.id if other is not None and not held(other.id) else None,
+            IncidentRole.PLACE: world.id if world is not None and not held(world.id) else None,
+            IncidentRole.ACTOR: subject_id if not held(subject_id) else None,
+        },
+        facts={"event": kind, "intensity": row.intensity, "epochs": ctx.rules.dimensions.event_epochs},
+        steps=(StepDraft(StepAction.BEGIN, target=dimension.id), StepDraft(StepAction.END, target=dimension.id)),
+        world_id=world.id if world is not None else None,
+    )
     ctx.count(f"dimensional_{kind.value}")
     return row
 
@@ -271,13 +284,12 @@ async def dimension_cults(ctx: TickContext, cosmography: Cosmography) -> int:
             if await BondRepository(ctx.session).exists_between(community.id, dimension.id, BondKind.WORSHIPS):
                 continue
             await connect(ctx.session, community.id, dimension.id, BondKind.WORSHIPS, ctx.epoch, description="came to worship it")
-            await note(
+            await record(
                 ctx,
-                f"{community.name} came to worship {dimension.name}.",
-                key="dimension.cult_risen",
-                ids=[community.id],
+                "dimension.cult_risen",
+                roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: dimension.id},
+                facts={"chance": ctx.rules.dimensions.cult_chance},
                 world_id=community.world_id,
-                kind=ChronicleKind.WORSHIP,
             )
             risen += 1
     return risen
@@ -312,8 +324,9 @@ async def dimension_cycles(ctx: TickContext) -> None:
         for dimension in cosmography.dimensions.values():
             if not held(dimension.id) and "veil" not in dimension.locked:
                 dimension.veil = clamp_percent(dimension.veil - table.alignment_loss)
-        first = min(cosmography.dimensions.values(), key=lambda row: row.id)
-        await open_event(ctx, first, DimensionalEventKind.PLANAR_ALIGNMENT, table.alignment_loss)
+        free = unheld(sorted(cosmography.dimensions.values(), key=lambda row: row.id))
+        if free:
+            await open_event(ctx, free[0], DimensionalEventKind.PLANAR_ALIGNMENT, table.alignment_loss)
     for dimension in sorted(cosmography.dimensions.values(), key=lambda row: row.id):
         if held(dimension.id):
             continue

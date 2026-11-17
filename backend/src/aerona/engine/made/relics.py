@@ -8,14 +8,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.made import RelicStance, RelicState, RelicUse
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.made.backfill import keep_made_kinds, legacy_backfill
 from aerona.engine.made.doctrine import doctrine_here
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.technology.profiles import family_level
 
 DECLINE = {RelicState.WORKING: RelicState.FAILING, RelicState.FAILING: RelicState.BROKEN}
@@ -37,6 +38,7 @@ async def holder_of(ctx: TickContext, thing: EntityRow) -> EntityRow | None:
 
 async def mark_collapse(ctx: TickContext) -> int:
     marked = 0
+    things: list[int] = []
     for network in list(
         await ctx.session.scalars(select(NetworkProfileRow).where(NetworkProfileRow.tech_level > 0).order_by(NetworkProfileRow.network_entity_id))
     ):
@@ -58,8 +60,9 @@ async def mark_collapse(ctx: TickContext) -> int:
             )
         )
         marked += 1
+        things.append(network.network_entity_id)
     if marked:
-        await note(ctx, "What its makers could no longer make passed into the keeping of those who only used it.", key="relic.collapse", ids=[])
+        await record(ctx, "relic.collapse", roles={IncidentRole.SUBJECT: things}, facts={"marked": marked})
     return marked
 
 
@@ -81,7 +84,13 @@ async def keep_relic(ctx: TickContext, relic: MadeRelicRow, thing: EntityRow) ->
         relic.understood_pct = clamp_percent(relic.understood_pct + table.study_gain)
     if relic.understood_pct >= table.recovery_at and not repairable and "repair_knowledge" not in relic.locked:
         relic.repair_knowledge = level
-        await note(ctx, f"Those who keep {thing.name} learned how to repair it.", key="relic.recovered", ids=[thing.id])
+        await record(
+            ctx,
+            "relic.recovered",
+            roles={IncidentRole.SUBJECT: thing.id, IncidentRole.OWNER: holder.id if holder is not None else None},
+            facts={"understood": relic.understood_pct, "repair_knowledge": level},
+            place=thing.location_id,
+        )
     if relic.function_state is RelicState.FAILING and relic.use is RelicUse.AS_MADE and holder is not None and not held(holder.id):
         shift_stat(holder, "prosperity", -table.misuse_harm, 0)
     if relic.understood_pct < table.revere_below and holder is not None and "use" not in relic.locked:
@@ -113,7 +122,9 @@ async def salvage(ctx: TickContext) -> int:
         site.last_salvaged_epoch = ctx.epoch
         taken += 1
         if site.yield_left <= 0:
-            await note(ctx, "A salvage site was picked clean.", key="salvage.exhausted", ids=[site.site_entity_id])
+            await record(
+                ctx, "salvage.exhausted", roles={IncidentRole.SUBJECT: site.site_entity_id, IncidentRole.OWNER: holder.id}, facts={"last_yield": amount}
+            )
     return taken
 
 

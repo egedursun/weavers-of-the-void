@@ -46,6 +46,7 @@ from aerona.api.schemas.lore import (
     RiteCard,
     RiteEffectView,
     RumourBoard,
+    RumourDistortionView,
     RumourView,
     ShiftView,
     StudyView,
@@ -130,6 +131,7 @@ from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
 from aerona.engine.lore.research_depth import capabilities_of
 from aerona.engine.lore.rumours import heard_by
+from aerona.engine.lore.tellings import distortions_of
 from aerona.engine.lore.theories import weight_against
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.rules.registry import Rules
@@ -852,9 +854,13 @@ async def rumours(entity_id: Id, services: ServicesDep) -> RumourBoard:
         if incident_ids:
             for incident_id in await session.scalars(select(RumourRow.incident_id).where(RumourRow.incident_id.in_(incident_ids))):
                 spread[incident_id] = spread.get(incident_id, 0) + 1
+        told = await distortions_of(session, [rumour.id for rumour, _, _ in heard])
         refs = await node_refs(
             session,
-            [item for rumour, _, _ in heard for item in (rumour.source_entity_id, rumour.legend_entity_id) if item is not None],
+            [
+                *(item for rumour, _, _ in heard for item in (rumour.source_entity_id, rumour.legend_entity_id) if item is not None),
+                *(row.told_node_id for rows in told.values() for row in rows if row.told_node_id is not None),
+            ],
         )
         return RumourBoard(
             community_id=entity_id,
@@ -877,6 +883,25 @@ async def rumours(entity_id: Id, services: ServicesDep) -> RumourBoard:
                     alarm=is_alarm(incident.kind),
                     carriers=spread.get(incident.id, 1),
                     locked=rumour.locked,
+                    distortions=[
+                        RumourDistortionView(
+                            id=row.id,
+                            distortion=row.distortion,
+                            role=row.role,
+                            fact_key=row.fact_key,
+                            step_id=row.step_id,
+                            told=ref(refs, row.told_node_id),
+                            told_number=row.told_number,
+                            told_enum_value=row.told_enum_value,
+                            told_year=row.told_year,
+                            told_incident_id=row.told_incident_id,
+                            told_action=row.told_action,
+                            told_outcome=row.told_outcome,
+                            epoch=row.epoch,
+                            locked=row.locked,
+                        )
+                        for row in told.get(rumour.id, [])
+                    ],
                 )
                 for rumour, incident, text in heard
             ],

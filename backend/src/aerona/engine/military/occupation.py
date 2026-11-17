@@ -1,15 +1,14 @@
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.folkways.biases import lean_community
@@ -23,6 +22,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 
 ATROCITIES = (MemoryKind.KILLED_KIN, MemoryKind.FOUGHT_US)
 ATROCITY_SCALE = 10
@@ -73,14 +73,18 @@ async def partisans(ctx: TickContext) -> int:
             .where(ArmyProfileRow.region_entity_id == row.region_entity_id, ArmyRow.owner_entity_id == row.occupier_entity_id)
             .where(ArmyRow.disbanded_epoch.is_(None))
         )
+        fallen = 0
         for profile in list(armies):
             army = await living_entity(ctx.session, profile.army_entity_id)
             if army is None:
                 continue
             stacks = await stacks_of(ctx.session, army.id)
-            lost += take(stacks, round_half_up((stat(army, "size") or 0) * table.partisan_losses_pct / PERCENT))
+            fallen += take(stacks, round_half_up((stat(army, "size") or 0) * table.partisan_losses_pct / PERCENT))
             sync(army, stacks, ctx.rules)
         row.control = clamp_int(row.control - table.control_gain // 2, 0, PERCENT)
+        lost += fallen
+        if fallen:
+            await record(ctx, "war.partisans", roles={IncidentRole.VICTIM: row.occupier_entity_id}, facts={"fallen": fallen}, place=row.region_entity_id)
     return lost
 
 
@@ -118,12 +122,6 @@ async def seeks_peace(ctx: TickContext, war: WarRow, side: WarSideRow, *, humili
     if humiliated and (await values_for(ctx.session, side.entity_id)).get(ValueAxis.HONOUR, 0) > 0:
         pressure = round_half_up(pressure * (1 - table.honour_hold_pct / PERCENT))
     return pressure >= table.peace_threshold
-
-
-async def announce_partisans(ctx: TickContext, lost: int) -> None:
-    if lost:
-        text = f"Partisans in occupied lands struck at the occupiers; {several(lost, 'soldier', 'soldiers')} fell."
-        await ctx.chronicle(ChronicleKind.WAR, text, template_key="war.partisans", feed_category=FeedCategory.WAR)
 
 
 async def occupation_over(ctx: TickContext, entity_id: int) -> OccupationRow | None:

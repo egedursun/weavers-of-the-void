@@ -9,15 +9,15 @@ from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import WorldLifeRow, WorldPhysicsRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed, LifeComplexity, LifeEnvironment
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import GAS_WORLDS, LIFELESS_WORLDS
 from aerona.engine.ecology.biochemistry import bearable, tolerated
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 COMPLEXITY_ORDER: tuple[LifeComplexity, ...] = tuple(LifeComplexity)
@@ -145,7 +145,13 @@ async def quicken(ctx: TickContext, worlds: dict[int, WorldRow], physics: dict[i
             continue
         if ctx.rng(f"life_rise.{world_id}.{ctx.epoch}").chance(table.rise_chance):
             life.complexity = COMPLEXITY_ORDER[rank(life.complexity) + 1]
-            await note(ctx, f"The life of {world.name} grew more complex.", key="world.life_grew", world_id=world_id, kind=ChronicleKind.WORLD)
+            await record(
+                ctx,
+                "world.life_grew",
+                roles={IncidentRole.SUBJECT: world_id},
+                facts={"complexity": life.complexity, "chance": table.rise_chance},
+                world_id=world_id,
+            )
             grown += 1
     return grown
 

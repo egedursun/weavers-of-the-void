@@ -11,20 +11,20 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.statecraft import PolityRegardRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CouncilTask
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.intrigue.schemes import OPEN
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.offices import POWER_SKILLS, power_skill, powers_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 from aerona.engine.services.community_relations import change_relation
 
@@ -171,8 +171,11 @@ async def leak(ctx: TickContext, book: RealmBook, realm: Realm, office: OfficeRo
         return
     secret.known_by = [*(secret.known_by or []), rival]
     tally.leaks += 1
-    await note(
-        ctx, f"The spymaster of {realm.entity.name} sold the ruler's secret abroad.", key="affairs.leak", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION
+    await record(
+        ctx,
+        "affairs.leak",
+        roles={IncidentRole.ACTOR: office.holder_entity_id, IncidentRole.VICTIM: ruler, IncidentRole.RECEIVER: rival, IncidentRole.AUTHORITY: realm.entity.id},
+        facts={"severity": secret.severity, "diligence": office.diligence},
     )
 
 

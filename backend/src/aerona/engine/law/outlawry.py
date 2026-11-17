@@ -8,9 +8,9 @@ from aerona.db.tables.law_depth import OutlawRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.context import TickContext
@@ -18,10 +18,10 @@ from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.book import best_skill
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.records import death_path
 
 HUNTING = (SkillKind.TRACKING, SkillKind.HUNTING, SkillKind.BLADE)
@@ -48,9 +48,7 @@ async def declare_outlaw(ctx: TickContext, mortal: EntityRow, polity_id: int | N
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(
-        ctx, f"{mortal.name} was declared an outlaw, outside the protection of the law.", key="law.outlawed", ids=[mortal.id], kind=ChronicleKind.CIVILIZATION
-    )
+    await record(ctx, "law.outlawed", roles={IncidentRole.ACCUSED: mortal.id, IncidentRole.AUTHORITY: row.polity_entity_id}, place=mortal.location_id)
     return row
 
 
@@ -104,8 +102,13 @@ async def caught(ctx: TickContext, row: OutlawRow, outlaw: EntityRow, hunter: En
     if jailed is None:
         await death_path(ctx, outlaw, f"hunted down for the bounty by {hunter.name}", None, "bounty", forced=True, manner=DeathCause.EXECUTION)
     tally.caught += 1
-    fate = "brought in" if jailed is not None else "killed"
-    await note(ctx, f"{hunter.name} {fate} the outlaw {outlaw.name} and claimed the bounty.", key="law.bounty_claimed", ids=[hunter.id, outlaw.id])
+    await record(
+        ctx,
+        "law.bounty_claimed" if jailed is not None else "law.bounty_killed",
+        roles={IncidentRole.ACTOR: hunter.id, IncidentRole.TARGET: outlaw.id, IncidentRole.AUTHORITY: row.polity_entity_id},
+        facts={"bounty": row.bounty, "private_bounty": row.private_bounty},
+        place=outlaw.location_id,
+    )
 
 
 async def shelter(ctx: TickContext, row: OutlawRow, outlaw: EntityRow, tally: OutlawTally) -> None:

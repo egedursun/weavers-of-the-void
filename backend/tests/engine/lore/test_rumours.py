@@ -10,6 +10,7 @@ from aerona.domain.enums.culture import RumourChannel
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import WitnessMode
 from aerona.domain.enums.war import WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.lore import rumours
@@ -48,7 +49,7 @@ async def test_witnesses_carry_word_and_it_travels_the_trade_road_losing_truth(r
     counts = await rumours.spread(ctx, atlas)
     heard = await carried(session, incident.id)
     assert counts["route"] == 1
-    assert heard[home.id].channel is RumourChannel.WITNESS and heard[home.id].fidelity == 100
+    assert heard[home.id].channel is RumourChannel.WITNESS and heard[home.id].fidelity == Rules().records.fidelity_saw
     assert heard[market.id].channel is RumourChannel.ROUTE
     assert heard[market.id].source_entity_id == home.id
     assert heard[market.id].hops == 1
@@ -150,4 +151,18 @@ async def test_old_worlds_remember_recent_happenings_as_rumour_once(realm: Realm
     assert await rumours.backfill(ctx, atlas) == 1
     assert await rumours.backfill(ctx, atlas) == 0
     row = await session.scalar(select(RumourRow))
-    assert row is not None and row.fidelity == 100 - 2 * Rules().rumours.linger_decay
+    assert row is not None and row.fidelity == Rules().records.fidelity_saw - 2 * Rules().rumours.linger_decay
+
+
+async def test_only_those_who_saw_a_happening_carry_its_first_word(realm: Realm) -> None:
+    session = realm.session
+    home = await settlement(realm, "Ashford")
+    distant = await settlement(realm, "Brindle", location_id=realm.far_region.id)
+    incident = await happening(session, "war.battle.field_victory", 3, home.id)
+    session.add(
+        IncidentParticipantRow(incident_id=incident.id, node_id=distant.id, role=IncidentRole.WITNESS, position=5, witness_mode=WitnessMode.HEARD, fidelity=60)
+    )
+    await session.flush()
+    assert await rumours.seed(context(session, SURE, epoch=3), await RegionAtlas.load(session)) == 1
+    heard = await carried(session, incident.id)
+    assert home.id in heard and distant.id not in heard

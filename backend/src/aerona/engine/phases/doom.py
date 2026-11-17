@@ -25,6 +25,8 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.kinds import BEING_MECHANICS
@@ -33,18 +35,20 @@ from aerona.engine.eras.progress import era_doom
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import mean_spread
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
 from aerona.engine.phases.horror import summon_outer_being
 from aerona.engine.phases.world_age import WorldAge, age_of, read_world_age, world_age
 from aerona.engine.primitives.doom import doom_threshold, step_doom
 from aerona.engine.primitives.faith import son_faith
-from aerona.engine.primitives.ledger import DoomItem, LedgerKey, read, record, record_doom
+from aerona.engine.primitives.ledger import DoomItem, LedgerKey, read, record_doom
+from aerona.engine.primitives.ledger import record as record_ledger
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity, living_sons
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.scope import recording
 from aerona.engine.services.war import ongoing_war_count
 from aerona.engine.storyteller.ages import turn_age
 from aerona.engine.transition import cosmos_of, doom_calling, leakiest_world
@@ -52,8 +56,6 @@ from aerona.rules.registry import Rules
 
 DOOM_FORECAST_ACTION = "doom.forecast"
 APOCALYPSE_DISASTERS = (Disaster.EARTHQUAKE, Disaster.FLOOD, Disaster.DROUGHT, Disaster.STORM)
-FIRST_OMEN = "Doom reached its first omen: the end of the world draws near."
-FINAL_OMEN = "Doom reached its final omen: if the gods do nothing, the world will end."
 
 
 @dataclass(frozen=True)
@@ -190,21 +192,37 @@ def dominant_variant(rules: Rules, items: dict[DoomItem, float]) -> ApocalypseVa
 async def end_by(ctx: TickContext, variant: ApocalypseVariant) -> None:
     doom = ctx.rules.apocalypse
     if variant is ApocalypseVariant.END_OF_THE_GODS:
-        for son in await living_sons(ctx.session):
-            if not held(son.id):
-                son.existence = son.existence // doom.twilight_fade_mult
-        await note(ctx, "The twilight of the gods came: every son faded.", key="doom.twilight", kind=ChronicleKind.APOCALYPSE)
+        faded = [son for son in await living_sons(ctx.session) if not held(son.id)]
+        for son in faded:
+            son.existence = son.existence // doom.twilight_fade_mult
+        await record(
+            ctx, "doom.end_of_the_gods", roles={IncidentRole.VICTIM: [son.id for son in faded]}, facts={"variant": variant, "fade": doom.twilight_fade_mult}
+        )
     elif variant is ApocalypseVariant.OUTER_DESCENT:
         target = await leakiest_world(ctx.session)
         if target is not None and not held(target.id):
-            for _ in range(doom.descent_beings):
-                await summon_outer_being(ctx, target)
-            await note(ctx, f"Outer beings descended on {target.name}.", key="doom.outer_descent", kind=ChronicleKind.APOCALYPSE, world_id=target.id)
+            async with recording(ctx, "doom.outer_descent", world_id=target.id):
+                for _ in range(doom.descent_beings):
+                    await summon_outer_being(ctx, target)
+                await record(
+                    ctx,
+                    "doom.outer_descent",
+                    roles={IncidentRole.SUBJECT: target.id},
+                    facts={"variant": variant, "beings": doom.descent_beings},
+                    world_id=target.id,
+                )
     elif variant is ApocalypseVariant.DIMENSIONAL_COLLAPSE:
+        torn: list[int] = []
         for dimension in await ctx.session.scalars(select(DimensionRow).order_by(DimensionRow.id)):
             if not held(dimension.id) and "veil" not in dimension.locked:
                 dimension.veil = max(0, dimension.veil - doom.collapse_veil)
-        await note(ctx, "The veils between the dimensions gave way.", key="doom.dimensional_collapse", kind=ChronicleKind.APOCALYPSE)
+                torn.append(dimension.id)
+        await record(
+            ctx,
+            "doom.dimensional_collapse",
+            roles={IncidentRole.VICTIM: torn},
+            facts={"variant": variant, "dimensions": len(torn), "veil": doom.collapse_veil},
+        )
     elif variant is ApocalypseVariant.GALACTIC_DEATH:
         await galactic_death(ctx)
     await destroy_leakiest_world(ctx)
@@ -222,7 +240,16 @@ async def galactic_death(ctx: TickContext) -> None:
     for star in cosmography.stars_in_galaxy(dimmest.id):
         if not held(star.id) and "brightness" not in star.locked:
             star.brightness = max(0, star.brightness - ctx.rules.apocalypse.galactic_death_dimming)
-    await note(ctx, f"The stars of {dimmest.name} went dark.", key="doom.galactic_death", kind=ChronicleKind.APOCALYPSE)
+    await record(
+        ctx,
+        "doom.galactic_death",
+        roles={IncidentRole.SUBJECT: dimmest.id},
+        facts={
+            "variant": ApocalypseVariant.GALACTIC_DEATH,
+            "dimming": ctx.rules.apocalypse.galactic_death_dimming,
+            "stars": len(cosmography.stars_in_galaxy(dimmest.id)),
+        },
+    )
 
 
 def threshold_of(ctx: TickContext) -> int:
@@ -236,18 +263,23 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     if target is None:
         return
     regions = await canon(ctx.session, [EntityType.REGION], target.id)
-    for region in regions:
-        await apply_disaster(ctx, region, rng.pick(APOCALYPSE_DISASTERS), transition.apocalypse_disaster_severity / PERCENT)
-    if regions:
-        await record_disaster_event(ctx, regions[0], Disaster.EARTHQUAKE, transition.apocalypse_event_severity)
-    await note(
-        ctx,
-        f"APOCALYPSE: {target.name} was shaken. All its regions were destroyed by disasters; the survivors awoke to a new age.",
-        key="doom.apocalypse",
-        ids=[region.id for region in regions[: transition.apocalypse_chronicle_regions]],
-        kind=ChronicleKind.APOCALYPSE,
-        world_id=target.id,
-    )
+    async with recording(ctx, "doom.apocalypse", world_id=target.id):
+        for region in regions:
+            await apply_disaster(ctx, region, rng.pick(APOCALYPSE_DISASTERS), transition.apocalypse_disaster_severity / PERCENT)
+        if regions:
+            await record_disaster_event(ctx, regions[0], Disaster.EARTHQUAKE, transition.apocalypse_event_severity)
+        await record(
+            ctx,
+            "doom.apocalypse",
+            roles={IncidentRole.SUBJECT: target.id, IncidentRole.VICTIM: [region.id for region in regions]},
+            facts={"regions": len(regions), "severity": transition.apocalypse_disaster_severity},
+            steps=(
+                StepDraft(StepAction.BEGIN, locus_kind=StepLocus.REALM, locus_node=target.id),
+                *(StepDraft(StepAction.SPREAD, locus_kind=StepLocus.REGION, locus_node=region.id, outcome=StepOutcome.DESTROYED) for region in regions),
+                StepDraft(StepAction.END, locus_kind=StepLocus.REALM, locus_node=target.id),
+            ),
+            world_id=target.id,
+        )
 
 
 @reads(
@@ -269,7 +301,6 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.dimensional_events",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.galactic_events",
     "table.holder_techniques",
     "table.incident_participants",
@@ -297,7 +328,7 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.cosmos",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
 )
@@ -314,10 +345,11 @@ async def doom_clock(ctx: TickContext) -> None:
     record_doom(ctx, DoomItem.SPEED, round_half_up(step.scaled - raw))
     before = step.before
     clock = step.after
-    for warning, text in ((doom.warning_1_pct, FIRST_OMEN), (doom.warning_2_pct, FINAL_OMEN)):
+    for warning, key in ((doom.warning_1_pct, "doom.omen_first"), (doom.warning_2_pct, "doom.omen_final")):
         point = threshold * warning / PERCENT
-        if before < point <= clock:
-            await note(ctx, text, key=f"doom.omen_{warning}", kind=ChronicleKind.APOCALYPSE)
+        warned = await leakiest_world(ctx.session) if before < point <= clock else None
+        if warned is not None and not held(warned.id):
+            await record(ctx, key, roles={IncidentRole.SUBJECT: warned.id}, facts={"clock": clock, "threshold": threshold}, world_id=warned.id)
     if clock >= threshold:
         variant = cosmos.apocalypse_variant or dominant_variant(rules, items)
         if variant is ApocalypseVariant.WORLD_WAR and await doom_calling(ctx):
@@ -331,7 +363,7 @@ async def doom_clock(ctx: TickContext) -> None:
         clock = reset
         cosmos.doom_fraction = 0.0
     cosmos.doom_clock = clock
-    record(ctx, LedgerKey.DOOM_CLOCK, clock)
+    record_ledger(ctx, LedgerKey.DOOM_CLOCK, clock)
 
 
 async def trigger_apocalypse(ctx: TickContext, calling: bool = False) -> int:
@@ -377,7 +409,7 @@ async def doom_forecast(session: AsyncSession, rules: Rules) -> DoomForecast:
     total = 0
     for son in await living_sons(session):
         total += await son_faith(session, rules, son)
-    record(ctx, LedgerKey.TOTAL_FAITH, total)
+    record_ledger(ctx, LedgerKey.TOTAL_FAITH, total)
     items = await doom_items(ctx, age_of(await read_world_age(ctx, ctx.epoch + 1)))
     cosmos = await cosmos_of(session)
     raw = sum(items.values())

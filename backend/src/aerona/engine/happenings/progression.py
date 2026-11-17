@@ -11,11 +11,12 @@ from aerona.db.tables.happenings import EventProfileRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.happenings.effects import aftermath, famine_onset, peak_harm, plague_active, siege_over, siege_peaked, struck_communities
@@ -32,15 +33,16 @@ from aerona.engine.happenings.profile import (
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 
-PHASE_LINES: Mapping[EventPhase, str] = total(
+PHASE_STEPS: Mapping[EventPhase, StepAction] = total(
     EventPhase,
     {
-        EventPhase.ONSET: "{name} began.",
-        EventPhase.PEAK: "{name} reached its height.",
-        EventPhase.AFTERMATH: "{name} passed its height; its aftermath began.",
-        EventPhase.MEMORY: "{name} is over and passes into memory.",
+        EventPhase.ONSET: StepAction.BEGIN,
+        EventPhase.PEAK: StepAction.PEAK,
+        EventPhase.AFTERMATH: StepAction.WANE,
+        EventPhase.MEMORY: StepAction.END,
     },
 )
 PHASE_HOLD = "phase"
@@ -49,15 +51,15 @@ PHASE_HOLD = "phase"
 async def phase_line(ctx: TickContext, event: EntityRow, step: EventPhase) -> None:
     if event.engine_kind is None:
         return
-    await ctx.chronicle(
-        ChronicleKind.DISASTER if event.engine_kind is not EngineKind.SIEGE else ChronicleKind.WAR,
-        PHASE_LINES[step].format(name=event.name),
-        template_key=f"event.phase.{event.engine_kind.value}.{step.value}",
-        entity_ids=[event.id],
+    await record(
+        ctx,
+        f"event.phase.{event.engine_kind.value}.{step.value}",
+        roles={IncidentRole.SUBJECT: event.id, IncidentRole.PLACE: event.location_id},
+        facts={"phase": step, "severity": stat_or(event, "severity", 0)},
+        steps=(StepDraft(PHASE_STEPS[step], target=event.id),),
+        place=event.location_id,
         world_id=event.world_id,
-        feed_category=FeedCategory.DISASTER,
-        place_entity_id=event.location_id,
-        roles={event.id: IncidentRole.SUBJECT},
+        kind=ChronicleKind.DISASTER if event.engine_kind is not EngineKind.SIEGE else ChronicleKind.WAR,
     )
 
 
@@ -255,8 +257,7 @@ async def siege_events(ctx: TickContext, atlas: RegionAtlas) -> int:
             Happening(
                 EngineKind.SIEGE,
                 f"the Siege of {town.name}",
-                f"{foe} closed the roads around {town.name} and sat down before its walls.",
-                f"{foe} laid siege to {town.name}.",
+                f"The siege of {town.name} by {foe}.",
                 town,
                 min(PERCENT, 40 + siege.rounds * 10),
                 {town.id: IncidentRole.TARGET, **({besieger.id: IncidentRole.ACTOR} if besieger is not None else {})},

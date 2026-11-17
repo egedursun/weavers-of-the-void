@@ -4,13 +4,14 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ConflictError
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import several
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import WoundCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.war import GodConflictOutcome
 from aerona.engine.body.hits import Harm
@@ -21,6 +22,7 @@ from aerona.engine.gods.progress import Progress, cap_gained_essence, grant_prog
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 
 ARENA_STATS = (Stat.STRENGTH, Stat.WISDOM, Stat.CUNNING, Stat.CHARISMA, Stat.WILL)
 
@@ -52,7 +54,7 @@ async def _score(ctx: TickContext, son: SonRow, rival: SonRow, stat: Stat) -> in
 BODILY_STATS = frozenset({Stat.STRENGTH, Stat.ENDURANCE, Stat.AGILITY, Stat.MIGHT})
 
 
-async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat: Stat, reason: str) -> DuelResult:
+async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat: Stat, reason: str, *, key: str = "pantheon.duel") -> DuelResult:
     if await truce_in_force(ctx):
         raise ConflictError("A cosmic truce of the council forbids duels between gods.")
     tools = ctx.rules.son_tools
@@ -67,13 +69,12 @@ async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat:
     if not move_amount(loser, winner, "essence", stolen):
         stolen = 0
     cap_gained_essence(ctx.rules, winner, before)
-    outcome_text = f"{winner.name} won ({first}-{second}); {loser.name} lost {wound} HP and had {stolen} essence snatched."
-    text = f'{challenger.name} challenged {defender.name} to a trial of {spoken(stat)} ("{reason}"). {outcome_text}'
+    collapse = ""
     if loser.hp <= 0:
         loser.status = SonStatus.ASLEEP
         reviving = await _power(ctx.session, loser.id, PowerEffect.REVIVING)
         loser.sleep_epochs_left = tools.reviving_sleep_epochs if reviving else tools.challenge_sleep_epochs
-        text += f" {loser.name} collapsed and fell into a sleep that will last {several(loser.sleep_epochs_left, 'epoch', 'epochs')}."
+        collapse = f" {loser.name} collapsed and fell into a sleep that will last {several(loser.sleep_epochs_left, 'epoch', 'epochs')}."
     outcome = GodConflictOutcome.ATTACKER_WON if winner.id == challenger.id else GodConflictOutcome.DEFENDER_WON
     ctx.session.add(
         GodConflictRow(
@@ -87,7 +88,26 @@ async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat:
         )
     )
     await SonRepository(ctx.session).change_relation(challenger.id, defender.id, -tools.challenge_relation)
-    await ctx.chronicle(ChronicleKind.CHALLENGE, text, template_key="pantheon.duel", son_id=challenger.id)
+    text = (
+        await record(
+            ctx,
+            key,
+            roles={IncidentRole.ACTOR: challenger.id, IncidentRole.OPPONENT: defender.id},
+            facts={
+                "stat": stat,
+                "reason": reason,
+                "winner": winner.id,
+                "loser": loser.id,
+                "first": first,
+                "second": second,
+                "wound": wound,
+                "stolen": stolen,
+                "collapse": collapse,
+            },
+            kind=ChronicleKind.CHALLENGE,
+            son_id=challenger.id,
+        )
+    ).text
     progress = await grant_progress(ctx, winner, xp=tools.challenge_xp, fame=tools.challenge_renown)
     await strike(ctx, loser, winner.id, WoundCause.DUEL, abs(first - second))
     return DuelResult(winner.id, loser.id, first, second, text, progress)

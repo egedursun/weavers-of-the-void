@@ -7,7 +7,6 @@ from sqlalchemy import ColumnElement, Select, distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from aerona.catalog import god_lines
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.bonds import BondRow
@@ -253,7 +252,7 @@ MEASURES: dict[GoalMetric, Measure] = {
     GoalMetric.ASCENDED_MORTALS: _counted(lambda: _rows(MantlingRow.mortal_entity_id).where(MantlingRow.state == MantlingState.ASCENDED)),
     GoalMetric.LIVING_SONS: _counted(lambda: _rows(SonRow.id).where(SonRow.status != SonStatus.DEAD)),
     GoalMetric.HIGHEST_SON_LEVEL: _son_level,
-    GoalMetric.RESURRECTIONS: _counted(lambda: _rows(ChronicleRow.id).where(ChronicleRow.template_key == god_lines.SON_RESURRECTED.key)),
+    GoalMetric.RESURRECTIONS: _counted(lambda: _rows(ChronicleRow.id).where(ChronicleRow.template_key == "gods.death.son_resurrected")),
     GoalMetric.SUPPRESSED_REBELLIONS: _counted(lambda: _rows(ActionRecordRow.id).where(ActionRecordRow.kind == ActionKind.SUPPRESS_REBELLION)),
     GoalMetric.FOREIGN_GODS: _counted(lambda: _rows(ForeignGodRow.id).where(ForeignGodRow.status != ForeignGodStatus.DEAD)),
     GoalMetric.KNOWLEDGE: _canon(EntityType.KNOWLEDGE),

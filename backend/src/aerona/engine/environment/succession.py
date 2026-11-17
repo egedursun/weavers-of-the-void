@@ -4,29 +4,21 @@ from sqlalchemy import select
 
 from aerona.catalog.evolution import FIRE_STAGE, STAGE_COVER, WET_LAND, WOODED, next_stage
 from aerona.constants.units import PERCENT
-from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.evolution import SuccessionStage
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 MILD = 15
 MILD_SPAN = 40
 FUEL_EPOCHS = 10
-STAGE_WORDS = {
-    SuccessionStage.BARE: "bare ground",
-    SuccessionStage.GRASSLAND: "grassland",
-    SuccessionStage.SHRUBLAND: "shrubland",
-    SuccessionStage.YOUNG_FOREST: "young forest",
-    SuccessionStage.OLD_FOREST: "old forest",
-    SuccessionStage.MARSH: "marsh",
-    SuccessionStage.SWAMP_FOREST: "swamp forest",
-}
 
 
 @dataclass
@@ -64,15 +56,24 @@ async def grow_lands(ctx: TickContext, tally: SuccessionTally) -> None:
         if held(env.entity_id, env.world_id) or "succession" in env.locked:
             continue
         rng = ctx.rng(f"succession.{env.entity_id}")
-        if env.succession in FIRE_STAGE and env.rainfall < table.fire_rain and rng.chance(table.fire_pct * fuel(env, ctx.epoch)):
+        chance = table.fire_pct * fuel(env, ctx.epoch)
+        if env.succession in FIRE_STAGE and env.rainfall < table.fire_rain and rng.chance(chance):
             burn_back(env, ctx.epoch)
             add_scar(env, ScarKind.BURNED, table.burn_scar)
             tally.burned += 1
-            region = await ctx.session.get(EntityRow, env.entity_id)
-            if region is not None:
-                await note(
-                    ctx, f"Fire swept the dry woods of {region.name}; {STAGE_WORDS[env.succession]} grows there now.", key="land.forest_fire", ids=[region.id]
-                )
+            await record(
+                ctx,
+                "land.forest_fire",
+                roles={IncidentRole.PLACE: env.entity_id},
+                facts={"stage": env.succession, "scar": table.burn_scar, "chance": chance},
+                place=env.entity_id,
+                world_id=env.world_id,
+                steps=(
+                    StepDraft(StepAction.BEGIN, locus_kind=StepLocus.REGION, locus_node=env.entity_id),
+                    StepDraft(StepAction.BURN_LAND, locus_kind=StepLocus.REGION, locus_node=env.entity_id, amount=table.burn_scar, unit=FactUnit.PERCENT),
+                    StepDraft(StepAction.END, locus_kind=StepLocus.REGION, locus_node=env.entity_id),
+                ),
+            )
             continue
         if env.succession in WOODED and env.farmed > 0 and rng.chance(table.slash_pct * env.farmed / PERCENT):
             env.succession = SuccessionStage.GRASSLAND

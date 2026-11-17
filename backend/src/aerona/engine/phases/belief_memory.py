@@ -14,6 +14,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.environment import NotableYearKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import EntityStats, ItemStats, LegendStats, ResourceStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
@@ -21,14 +22,14 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.legends import believed
 from aerona.engine.lore.prophecy import condition_of
 from aerona.engine.lore.prophecy import fail as fail_prophecy
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.living_stats import mock_prophecy
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, load_entities, remove_flag
-from aerona.engine.primitives.records import RecordSpec, definite, open_record, retire, sentence_case
+from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.transform.record import blocked, record_transformation
 from aerona.rules.registry import Rules
 
@@ -162,12 +163,7 @@ async def traditions(ctx: TickContext) -> None:
         set_stats(tradition, spread=spread)
         if spread <= life.tradition_forget_spread and not count:
             await retire(ctx.session, tradition, ctx.epoch, f"Epoch {ctx.epoch}: no one left to celebrate it; forgotten.", close_bonds=True)
-            await note(
-                ctx,
-                f"{sentence_case(definite(tradition.name))} tradition was forgotten; no one celebrates it any more.",
-                key="memory.tradition_forgotten",
-                ids=[tradition.id],
-            )
+            await record_incident(ctx, "memory.tradition_forgotten", roles={IncidentRole.SUBJECT: tradition.id}, facts={"spread": spread})
 
 
 async def forgotten_tales(ctx: TickContext) -> None:
@@ -190,12 +186,7 @@ async def forgotten_prophecies(ctx: TickContext) -> None:
         await retire(
             ctx.session, prophecy, ctx.epoch, f"Epoch {ctx.epoch}: waited {several(age, 'epoch', 'epochs')} and was forgotten unfulfilled.", close_bonds=True
         )
-        await note(
-            ctx,
-            f"{sentence_case(definite(prophecy.name))} prophecy went unfulfilled for {several(age, 'epoch', 'epochs')}; no one knows it by heart any more.",
-            key="memory.prophecy_forgotten",
-            ids=[prophecy.id],
-        )
+        await record_incident(ctx, "memory.prophecy_forgotten", roles={IncidentRole.SUBJECT: prophecy.id}, facts={"epochs": age})
 
 
 async def legend_place(ctx: TickContext, legend: EntityRow) -> EntityRow | None:
@@ -230,11 +221,8 @@ async def manifest(ctx: TickContext, legend: EntityRow, place: EntityRow) -> Ent
     )
     await connect(ctx.session, legend.id, created.id, BondKind.SOURCE_OF, ctx.epoch, description="born of belief")
     await add_flag(ctx.session, legend.id, EntityFlag.MANIFESTED, ctx.epoch)
-    await note(
-        ctx,
-        f"So many believed {definite(legend.name)} legend that it became real in {place.name}: what was told is now there.",
-        key="memory.manifestation",
-        ids=[legend.id, created.id, place.id],
+    await record_incident(
+        ctx, "memory.manifestation", roles={IncidentRole.SUBJECT: legend.id, IncidentRole.PRODUCT: created.id, IncidentRole.PLACE: place.id}, place=place.id
     )
     ctx.count("manifestations")
     await record_transformation(ctx, TransformKind.MANIFESTATION, legend.id, created.id)
@@ -274,10 +262,7 @@ async def legendify(ctx: TickContext, event: EntityRow) -> EntityRow:
         RecordSpec(
             entity_type=EntityType.LEGEND,
             name=f"Tale of {event.name}",
-            body=(
-                f"{event.name} of Epoch {event.birth_epoch} became a legend through generations of retelling: "
-                "details blurred, heroes grew, culprits changed, numbers were exaggerated."
-            ),
+            body=f"{event.name} of Epoch {event.birth_epoch} became a legend through generations of retelling.",
             stats=LegendStats(spread=clamp_int(life.legend_spread_base + rng.die(life.legend_spread_die), 0, PERCENT)),
             power=max(life.derived_min_power, event.power_level - life.legend_power_gap),
             world_id=event.world_id,
@@ -286,11 +271,8 @@ async def legendify(ctx: TickContext, event: EntityRow) -> EntityRow:
         ),
     )
     await connect(ctx.session, legend.id, event.id, BondKind.TELLS_OF, ctx.epoch, description="distortingly")
-    await note(
-        ctx,
-        f"{event.name} of Epoch {event.birth_epoch} is now a legend no one fully remembers; every teller adds something.",
-        key="memory.legendification",
-        ids=[event.id, legend.id],
+    await record_incident(
+        ctx, "memory.legendification", roles={IncidentRole.SUBJECT: event.id, IncidentRole.PRODUCT: legend.id}, facts={"epoch": event.birth_epoch}
     )
     return legend
 
@@ -332,7 +314,7 @@ async def legendify_year(ctx: TickContext, year: NotableYearRow) -> EntityRow:
         RecordSpec(
             entity_type=EntityType.LEGEND,
             name=f"Tale of {title}",
-            body=f"{title}, the year {year.year}, lived on in the telling long after the last who saw it died; each teller made it greater.",
+            body=f"{title}, the year {year.year}, lived on in the telling after the last who saw it died.",
             stats=LegendStats(spread=clamp_int(life.legend_spread_base + rng.die(life.legend_spread_die), 0, PERCENT)),
             power=life.derived_min_power,
             world_id=year.world_id,
@@ -344,7 +326,12 @@ async def legendify_year(ctx: TickContext, year: NotableYearRow) -> EntityRow:
     if region is not None:
         await connect(ctx.session, legend.id, region.id, BondKind.TELLS_OF, ctx.epoch, description=f"the year {year.year}")
     year.legend_entity_id = legend.id
-    await note(ctx, f"{title} of the year {year.year} became a tale; no one alive saw it, yet everyone knows it.", key="memory.year_legend", ids=[legend.id])
+    await record_incident(
+        ctx,
+        "memory.year_legend",
+        roles={IncidentRole.PRODUCT: legend.id, IncidentRole.PLACE: region.id if region is not None else None},
+        facts={"happening": title, "year": year.year},
+    )
     return legend
 
 
@@ -392,7 +379,7 @@ async def fairy_tales(ctx: TickContext) -> None:
         if not rng.chance(ctx.rules.deep_world.fairy_tale_chance):
             continue
         await add_flag(ctx.session, legend.id, EntityFlag.FAIRY_TALE, ctx.epoch)
-        await note(ctx, f"{legend.name} is now only a tale told to the young; the grown no longer believe it.", key="memory.fairy_tale", ids=[legend.id])
+        await record_incident(ctx, "memory.fairy_tale", roles={IncidentRole.SUBJECT: legend.id})
 
 
 @reads(
@@ -402,7 +389,6 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
@@ -424,7 +410,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
@@ -461,7 +447,7 @@ async def revive_legend(ctx: TickContext, legend_id: int) -> EntityRow:
         legend.end_epoch = None
     await remove_flag(ctx.session, legend.id, EntityFlag.FAIRY_TALE)
     set_stats(legend, spread=max(stat(legend, "spread") or 0, ctx.rules.deep_life.legend_default_spread))
-    await note(ctx, f"{legend.name} is told again.", key="memory.legend_revived", ids=[legend.id])
+    await record_incident(ctx, "memory.legend_revived", roles={IncidentRole.SUBJECT: legend.id})
     return legend
 
 

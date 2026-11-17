@@ -8,11 +8,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.models.entity_stats import TraditionStats
@@ -25,13 +25,13 @@ from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, o
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
 from aerona.engine.loops.delay import lagged
 from aerona.engine.military.units import resize
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.recording.record import RoleValue, record
 from aerona.rules.registry.epidemiology import EpidemiologyRules
 
 ENDEMIC_LOAD = 40
@@ -114,15 +114,10 @@ async def make_endemic(ctx: TickContext, book: DiseaseBook, region_id: int, dise
         disease = book.diseases.get(disease_id)
         region = await ctx.session.get(EntityRow, region_id)
         if disease is not None and region is not None:
-            written = await note(
-                ctx,
-                f"{disease.name.capitalize()} never quite left {region.name}; it became a sickness of the land, and strangers now fear it.",
-                key="disease.endemic",
-                ids=[disease.id, region.id],
-                feed=FeedCategory.DISASTER,
-                kind=ChronicleKind.DISASTER,
+            written = await record(
+                ctx, "disease.endemic", roles={IncidentRole.SUBJECT: disease.id, IncidentRole.PLACE: region.id}, facts={"load": row.load}, place=region.id
             )
-            await caused_by_origin(ctx, written, book.profiles.get(disease_id))
+            await caused_by_origin(ctx, written.row, book.profiles.get(disease_id))
     elif not row.locked:
         row.load = clamp_int(row.load + table.endemic_load, 0, PERCENT)
     return row
@@ -148,14 +143,9 @@ async def plague_tradition(ctx: TickContext, book: DiseaseBook, outbreak: Outbre
             pending=False,
         ),
     )
-    row = await note(
-        ctx,
-        f"The survivors of {disease.name} in {community.name} began to keep {tradition.name}.",
-        key="disease.tradition",
-        ids=[tradition.id, community.id, disease.id],
-        kind=ChronicleKind.WORLD,
-    )
-    await caused_by_origin(ctx, row, profile)
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PRODUCT: tradition.id, IncidentRole.SUBJECT: community.id, IncidentRole.INSTRUMENT: disease.id}
+    written = await record(ctx, "disease.tradition", roles=roles, facts={"dead": outbreak.dead}, place=community.id)
+    await caused_by_origin(ctx, written.row, profile)
 
 
 async def run_course(ctx: TickContext, book: DiseaseBook) -> None:
@@ -279,15 +269,9 @@ async def mutate(ctx: TickContext, book: DiseaseBook) -> int:
         if targets:
             target = max(targets, key=lambda item: (stat(item, "population") or 0, -item.id))
             await strike_plague(ctx, target, home.severity, disease=strain, path=SpreadPath.MUTATION, source=home)
-        written = await note(
-            ctx,
-            f"In {region.name}, {disease.name} changed: {strain.name} struck even those who had survived the old sickness.",
-            key="disease.strain",
-            ids=[strain.id, disease.id, region.id],
-            feed=FeedCategory.DISASTER,
-            kind=ChronicleKind.DISASTER,
-        )
-        await mark_strain_origin(ctx, book.profiles.get(strain.id), written)
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.PRODUCT: strain.id, IncidentRole.PREDECESSOR: disease.id, IncidentRole.PLACE: region.id}
+        written = await record(ctx, "disease.strain", roles=roles, facts={"severity": home.severity, "infected": home.infected}, place=region.id)
+        await mark_strain_origin(ctx, book.profiles.get(strain.id), written.row)
     return made
 
 
@@ -321,14 +305,8 @@ async def carry_by_armies(ctx: TickContext, book: DiseaseBook) -> int:
                 continue
             await strike_plague(ctx, owner, outbreak.severity, disease=disease, path=SpreadPath.ARMY, source=outbreak)
             carried += 1
-            await note(
-                ctx,
-                f"The soldiers of {army.name} came home from the sick lands, and {disease.name} came with them to {owner.name}.",
-                key="disease.army_carried",
-                ids=[army.id, owner.id, disease.id],
-                feed=FeedCategory.DISASTER,
-                kind=ChronicleKind.DISASTER,
-            )
+            carriers: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: army.id, IncidentRole.DESTINATION: owner.id, IncidentRole.INSTRUMENT: disease.id}
+            await record(ctx, "disease.army_carried", roles=carriers, facts={"chance": round_half_up(chance), "severity": outbreak.severity})
             break
     return carried
 

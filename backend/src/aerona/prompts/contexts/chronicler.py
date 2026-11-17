@@ -81,6 +81,12 @@ class FactEvent(ContextItem):
     world: str | None = None
     text: str
     repeats: int = 1
+    name: str | None = None
+    place: str | None = None
+    account: list[str] = Field(default_factory=list)
+    steps: list[str] = Field(default_factory=list)
+    more_steps: int = 0
+    cause: str | None = None
 
 
 class FactTale(ContextItem):
@@ -100,6 +106,7 @@ class FactPayoff(ContextItem):
 class FactVerdict(ContextItem):
     ref: str
     text: str
+    required: bool = True
 
 
 class ChroniclerFactSheet(ContextItem):

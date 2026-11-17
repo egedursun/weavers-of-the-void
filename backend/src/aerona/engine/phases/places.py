@@ -33,11 +33,11 @@ from aerona.engine.environment.places import (
 from aerona.engine.environment.secrets import find_chance, hide, miner_chance, release, release_chance, reveal, seeded_draft
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import best_skill
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.vehicles.wrecks import VOID_DOMAINS
 from aerona.rules.registry import Rules
 
@@ -168,13 +168,7 @@ async def place_profiles(ctx: TickContext) -> None:
         if KIND_LOCK not in profile.locked and profile.kind in BATTLEFIELD_FROM and battles[place.id] >= table.battlefield_battles:
             await write_kind(ctx.session, rules, place.id, PlaceKind.BATTLEFIELD)
             turned += 1
-            await note(
-                ctx,
-                f"So many battles were fought at {place.name} that it is now remembered as a battlefield.",
-                key="place.became_battlefield",
-                ids=[place.id],
-                roles={place.id: IncidentRole.PLACE},
-            )
+            await record(ctx, "place.became_battlefield", roles={IncidentRole.PLACE: place.id}, facts={"battles": battles[place.id]}, place=place.id)
         remade = remade_kind(rules, profile, region_id, wrecks=wrecks, debris=debris, fallen=fallen)
         if KIND_LOCK not in profile.locked and remade is not None:
             await write_kind(ctx.session, rules, place.id, remade)
@@ -245,7 +239,6 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.bonds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.item_profiles",
     "table.name_registry",
     "table.node_materials",
@@ -267,7 +260,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

@@ -96,8 +96,8 @@ async def test_wergild_moves_wealth_and_lays_the_feud_to_rest(session: AsyncSess
     ctx = make_ctx(session)
     first, second = await peoples(session, world_id)
     feud = await burning(ctx, first, second)
-    text = await act(ctx, FeudAction.DEMAND_WERGILD, first, second)
-    assert text is not None and "wergild" in text
+    deed = await act(ctx, FeudAction.DEMAND_WERGILD, first, second)
+    assert deed is not None and deed.facts["wergild"] > 0
     assert (stat(first, "wealth") or 0) > (stat(second, "wealth") or 0)
     assert feud.status is FeudStatus.SETTLED
 
@@ -116,8 +116,8 @@ async def test_an_assassin_kills_the_enemy_ruler_and_the_feud_turns_back(session
     lord = await ruler(session, world_id, second, "Lord Tam")
     await burning(ctx, first, second)
     assert await target_of(ctx, second) is lord
-    text = await act(ctx, FeudAction.ASSASSINATE, first, second)
-    assert text is not None and lord.status is EntityStatus.DEAD
+    deed = await act(ctx, FeudAction.ASSASSINATE, first, second)
+    assert deed is not None and lord.status is EntityStatus.DEAD
 
 
 async def test_an_assassin_finds_no_one_where_the_enemy_has_no_ruler(session: AsyncSession, world_id: int) -> None:

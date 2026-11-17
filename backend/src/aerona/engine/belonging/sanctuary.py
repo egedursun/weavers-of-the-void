@@ -16,6 +16,7 @@ from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.justice import CaseStage
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.belonging.refuge import OPEN_STATES, refuge_of
 from aerona.engine.body.afflictions import desecration_curse
@@ -28,11 +29,11 @@ from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mortal.standing import add_infamy
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 HOLY = (StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY)
@@ -137,7 +138,13 @@ async def seek(ctx: TickContext, tally: SanctuaryTally) -> None:
             continue
         await shelter(ctx, fugitive, *found)
         tally.sought += 1
-        await note(ctx, f"{fugitive.mortal.name} claimed sanctuary in {found[0].name}.", key="sanctuary.claimed", ids=[fugitive.mortal.id, found[0].id])
+        await record(
+            ctx,
+            "sanctuary.claimed",
+            roles={IncidentRole.ACTOR: fugitive.mortal.id, IncidentRole.HOST: found[0].id, IncidentRole.OPPONENT: fugitive.pursuer},
+            facts={"refuge": found[1], "fugitive": fugitive.kind, "chance": ctx.rules.sanctuary.seek_chance},
+            place=found[0].id,
+        )
 
 
 async def asylums(ctx: TickContext, tally: SanctuaryTally) -> None:
@@ -173,7 +180,13 @@ async def violate(ctx: TickContext, row: SanctuaryRow, host: EntityRow, pursuer:
             await desecration_curse(ctx, host, ruler)
     await desecrated(ctx, host.id, pursuer.id, note="broke the sanctuary")
     tally.violated += 1
-    await note(ctx, f"{pursuer.name} broke the sanctuary of {host.name}.", key="sanctuary.violated", ids=[pursuer.id, host.id])
+    await record(
+        ctx,
+        "sanctuary.violated",
+        roles={IncidentRole.ACTOR: pursuer.id, IncidentRole.HOST: host.id, IncidentRole.VICTIM: row.fugitive_entity_id, IncidentRole.LEADER: ruler},
+        facts={"refuge": row.kind, "infamy": ctx.rules.sanctuary.infamy},
+        place=host.id,
+    )
 
 
 async def pay_host(ctx: TickContext, host: EntityRow, amount: int) -> None:
@@ -247,9 +260,12 @@ async def legislate(ctx: TickContext, row: SanctuaryRow, tally: SanctuaryTally) 
     ctx.session.add(SanctuaryLawRow(polity_entity_id=realm, restricted=strict, fee_pct=0 if strict else table.levy_pct, locked=[]))
     await ctx.session.flush()
     tally.laws += 1
-    named = await ctx.session.get(EntityRow, realm)
-    what = "barred its temples from sheltering the hunted" if strict else "took a share of what its refuges are paid"
-    await note(ctx, f"{named.name if named else 'A realm'} {what}.", key="sanctuary.law", ids=[realm])
+    await record(
+        ctx,
+        "sanctuary.law_barred" if strict else "sanctuary.law_levied",
+        roles={IncidentRole.AUTHORITY: realm, IncidentRole.LEADER: ruler},
+        facts={"law_value": values.get(ValueAxis.LAW, 0), "levy": 0 if strict else table.levy_pct},
+    )
 
 
 async def keep_sanctuaries(ctx: TickContext, tally: SanctuaryTally) -> None:

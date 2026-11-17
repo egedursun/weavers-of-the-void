@@ -33,3 +33,20 @@ class LifecycleCause(StrEnum):
     RERELEASED = "rereleased"
     RETURNED = "returned"
     GOD_ACT = "god_act"
+
+
+class RepealReason(StrEnum):
+    SETTLEMENT_GONE = "settlement_gone"
+    CONQUEST = "conquest"
+    INJUSTICE = "injustice"
+    REBELLION = "rebellion"
+
+
+class DisbandReason(StrEnum):
+    ORPHANED = "orphaned"
+    FOLLOWERS_LEFT = "followers_left"
+
+
+class ForgettingCause(StrEnum):
+    LAST_COPY_LOST = "last_copy_lost"
+    LAST_KEEPER_DIED = "last_keeper_died"

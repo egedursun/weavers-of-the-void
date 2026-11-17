@@ -19,6 +19,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory
 from aerona.domain.enums.divine import GoalState, GodGoalKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import MantlingState, OfficeChoice
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.transform import TransformKind
@@ -27,9 +28,9 @@ from aerona.engine.divine.gods import God, domains_of, living_gods
 from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.deification import deify
 from aerona.engine.mythic.heroquests import renown_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, connect
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -118,7 +119,7 @@ async def ascend(ctx: TickContext, mortal: EntityRow, row: MantlingRow) -> SonRo
     deification = await deify(ctx, creator, mortal, TransformKind.MANTLING)
     await carry_cults(ctx, mortal.id, deification.son.id)
     row.state = MantlingState.ASCENDED
-    await note(ctx, f"{mortal.name} walked a god's path to its end and ascended.", key="mythic.mantled", ids=[mortal.id], kind=ChronicleKind.ASCENSION)
+    await record(ctx, "mythic.mantled", roles={IncidentRole.SUBJECT: mortal.id}, kind=ChronicleKind.ASCENSION)
     return deification.son
 
 
@@ -183,7 +184,7 @@ async def gather_cult(ctx: TickContext, mortal: EntityRow) -> int | None:
         if worships is not None or held(community_id) or await patron_node(ctx.session, community_id) is None:
             continue
         await connect(ctx.session, community_id, mortal.id, BondKind.WORSHIPS, ctx.epoch, description="venerates one who walks a god's path")
-        await note(ctx, f"{mortal.name} gained a cult of its own.", key="mythic.hero_cult", ids=[mortal.id, community_id], kind=ChronicleKind.WORLD)
+        await record(ctx, "mythic.hero_cult", roles={IncidentRole.SUBJECT: [mortal.id, community_id]}, kind=ChronicleKind.WORLD)
         return community_id
     return None
 
@@ -266,12 +267,5 @@ async def replace(ctx: TickContext, mortal: EntityRow, plan: Replacement) -> Son
     for office in await ctx.session.scalars(select(CosmicOfficeRow).where(CosmicOfficeRow.holder_node_id == plan.old.id)):
         office.holder_node_id, office.chosen_by, office.since_epoch = son.id, OfficeChoice.MANTLING, ctx.epoch
     row.state = MantlingState.REPLACED
-    await note(
-        ctx,
-        f"{mortal.name} slew {plan.old.name} and took its place among the gods.",
-        key="mythic.replaced",
-        ids=[mortal.id],
-        son_id=son.id,
-        kind=ChronicleKind.ASCENSION,
-    )
+    await record(ctx, "mythic.replaced", roles={IncidentRole.SUBJECT: [mortal.id, plan.old.id]}, kind=ChronicleKind.ASCENSION, son_id=son.id)
     return son

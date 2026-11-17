@@ -10,16 +10,16 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.prehistory.control import configure
 from aerona.engine.prehistory.run import run_prehistory
+from aerona.engine.recording.record import record
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.player import guards, pantheon
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import FOREIGN_GOD_PLACED
 from aerona.services.player.ports import ContentJob, ContentJobKind, WorldCreationRequest
 from aerona.services.player.runtime import CostedJob, FreeJob, PlayerRuntime, submit_costed, submit_free, unavailable
 from aerona.services.player.scope import ActionOutcome, Command, Effect, PlayerScope, player_action
@@ -258,7 +258,16 @@ async def place_foreign_god(scope: PlayerScope, command: PlaceForeignGod) -> Eff
         ),
     )
     creator = await scope.creator()
-    message = await hand(ctx, creator, FOREIGN_GOD_PLACED, world_id=world.id, kind=ChronicleKind.FOREIGN_GOD, world=world.name, name=god.name)
+    message = (
+        await record(
+            ctx,
+            "player.foreign_god.placed",
+            roles={IncidentRole.SUBJECT: god.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"world": str(world.name)},
+            kind=ChronicleKind.FOREIGN_GOD,
+            world_id=world.id,
+        )
+    ).text
     return Effect(message, god.id, created_ids=(god.id,), values={"god_id": god.id})
 
 

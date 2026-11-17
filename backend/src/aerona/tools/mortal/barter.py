@@ -8,9 +8,12 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.war import DebtStatus
 from aerona.engine.phases.civilization import transfer, wealth_key, wealth_of
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -90,30 +93,30 @@ async def barter(call: MortalCall, args: BarterInput) -> str:
     score = sum(value_of(thing) for thing in give) + round(bond / tools.barter_relation_scale) + call.die(tools.barter_die, "barter")
     ask = sum(value_of(thing) for thing in take)
     call.target(other.id)
-    gift_names, take_names = JOIN.join(thing.name for thing in give), JOIN.join(thing.name for thing in take)
+    gift_names = JOIN.join(thing.name for thing in give)
     if take and score < ask:
         await change_relation(call.tick, call.me.id, other.id, -tools.barter_reject_relation, MemoryKind.ILL_WILL, note=BARTER_EVENT)
-        await call.chronicle(
-            ChronicleKind.TRADE, lines.BARTER_REFUSED, entity_ids=[call.me.id, other.id], me=call.me.name, target=other.name, take=take_names, give=gift_names
+        await call.record(
+            "tools.mortal.barter_refused",
+            roles={IncidentRole.GIVER: call.me.id, IncidentRole.RECEIVER: other.id, IncidentRole.PRODUCT: [thing.id for thing in [*give, *take]]},
+            facts={"score": score, "ask": ask},
         )
         return result(MortalResult.BARTER_REFUSED, name=other.name, score=score, ask=ask)
     await _hand_over(call, give, other, args.terms)
     await _hand_over(call, take, call.me, args.terms)
     await change_relation(call.tick, call.me.id, other.id, tools.barter_relation, MemoryKind.TRADED_WITH, note=BARTER_EVENT)
     if take:
-        await call.chronicle(
-            ChronicleKind.TRADE,
-            lines.BARTERED,
-            entity_ids=[call.me.id, other.id],
-            me=call.me.name,
-            target=other.name,
-            give=gift_names,
-            take=take_names,
-            terms=args.terms,
+        await call.record(
+            "tools.mortal.bartered",
+            roles={IncidentRole.GIVER: call.me.id, IncidentRole.RECEIVER: other.id, IncidentRole.PRODUCT: [thing.id for thing in [*give, *take]]},
+            facts={"given": len(give), "taken": len(take), "score": score, "ask": ask, "terms": args.terms},
         )
     else:
-        await call.chronicle(
-            ChronicleKind.TRADE, lines.GIFTED, entity_ids=[call.me.id, other.id], me=call.me.name, give=gift_names, target=other.name, terms=args.terms
+        await call.record(
+            "tools.mortal.gifted",
+            roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: other.id},
+            facts={"give": str(gift_names), "terms": args.terms},
+            kind=ChronicleKind.TRADE,
         )
     return result(MortalResult.BARTERED)
 
@@ -153,8 +156,10 @@ async def lend(call: MortalCall, args: LendInput) -> str:
     owes.debt_status = DebtStatus.OPEN
     await change_relation(call.tick, call.me.id, debtor.id, call.rules.civilization.loan_relation, MemoryKind.GIFTED_ME, note=LOAN_EVENT)
     call.target(debtor.id)
-    await call.chronicle(
-        ChronicleKind.DEBT, lines.LENT, entity_ids=[call.me.id, debtor.id], me=call.me.name, amount=args.amount, what=args.what, debtor=debtor.name, due=due
+    await call.record(
+        "tools.mortal.lent",
+        roles={IncidentRole.LENDER: call.me.id, IncidentRole.BORROWER: debtor.id},
+        facts={"amount": args.amount, "what": args.what, "due_epoch": due},
     )
     return result(MortalResult.LENT, name=debtor.name, amount=args.amount, what=args.what, due=due)
 
@@ -179,15 +184,11 @@ async def repay_debt(call: MortalCall, args: RepayInput) -> str:
     await bonds.deactivate(debt, call.epoch, REPAY_EVENT)
     await change_relation(call.tick, call.me.id, creditor.id, call.rules.civilization.loan_repay_relation, MemoryKind.KEPT_OATH, note=REPAY_EVENT)
     call.target(creditor.id)
-    await call.chronicle(
-        ChronicleKind.DEBT,
-        lines.REPAID,
-        entity_ids=[call.me.id, creditor.id],
-        me=call.me.name,
-        amount=amount,
-        what=debt.debt_what or "",
-        creditor=creditor.name,
-        late=lines.LATE if late else "",
+    await call.record(
+        "tools.mortal.repaid",
+        roles={IncidentRole.BORROWER: call.me.id, IncidentRole.LENDER: creditor.id},
+        facts={"amount": amount, "what": debt.debt_what or "silver", "late": int(late)},
+        steps=(StepDraft(StepAction.REPAY, actor=call.me.id, target=creditor.id, amount=amount, unit=FactUnit.WEALTH_POINTS),),
     )
     return result(MortalResult.REPAID, name=creditor.name)
 

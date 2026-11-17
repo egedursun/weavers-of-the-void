@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -12,14 +13,20 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.primitives.faith import FaithIndex
+from aerona.engine.recording.record import FactInput
 
 
 @dataclass(frozen=True)
 class FaithLine:
-    text: str
     key: str
-    ids: tuple[int, ...] = ()
+    roles: Mapping[IncidentRole, int | tuple[int, ...]]
+    facts: Mapping[str, FactInput] = field(default_factory=dict)
+
+    @property
+    def ids(self) -> tuple[int, ...]:
+        return tuple(node for value in self.roles.values() for node in (value if isinstance(value, tuple) else (value,)))
 
 
 @dataclass

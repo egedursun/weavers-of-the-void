@@ -30,6 +30,7 @@ import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { mediaUrl } from '@/features/pantheon/media'
 import { CouncilRecord } from './CouncilRecord'
+import { CouncilRecordForge } from './CouncilRecordControls'
 import { useCouncils } from './api'
 import { councilFrequencyText } from './frequency'
 
@@ -189,6 +190,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
         title='Council'
         onDismiss={convene.clearJob}
       />
+      <CouncilRecordForge />
       {councils.isPending ? (
         <Skeleton className='h-textarea w-full' />
       ) : councils.isError ? (

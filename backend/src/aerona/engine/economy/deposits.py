@@ -9,15 +9,16 @@ from aerona.core.total import total
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import ResourceStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.resources import BYPRODUCTS, DIFFICULTY, RENEWABLE
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 
 ORIGIN_WORDS = total(
     MaterialOrigin,
@@ -178,11 +179,11 @@ async def new_substance(
         ),
     )
     row.deposit_entity_id = deposit.id
-    await ctx.chronicle(
-        ChronicleKind.RESOURCE,
-        f"A substance of its own came from {ORIGIN_WORDS[origin]} near {place.name}. {row.description}",
-        template_key=f"material.substance_{origin.value}",
-        entity_ids=[deposit.id, place.id],
-        place_entity_id=place.id,
+    await record(
+        ctx,
+        f"material.substance_{origin.value}",
+        roles={IncidentRole.PRODUCT: deposit.id, IncidentRole.PLACE: place.id},
+        facts={"origin": origin, "rarity": values["rarity"], "base_value": values["base_value"]},
+        place=place.id,
     )
     return row

@@ -16,12 +16,13 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome, Stance, UnitFamily
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, OfficeKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.hits import Harm
@@ -40,6 +41,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 SLOW_WEATHER = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD, WeatherKind.DOWNPOUR, WeatherKind.STORM, WeatherKind.SANDSTORM})
@@ -217,12 +219,14 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
     outcome = mutiny_outcome(ctx.rules, ctx.rng(f"mutiny.{army.id}.{ctx.epoch}").below(PERCENT), profile.mutiny, enemy_id is not None)
     owner = await living_entity(ctx.session, row.owner_entity_id)
     rows = await stacks_of(ctx.session, army.id)
+    steps: tuple[StepDraft, ...] = ()
     if outcome is MutinyOutcome.GRUMBLING:
         for stack in rows:
             stack.morale = clamp_int(stack.morale - round_half_up(ctx.rules.campaign_depth.mutiny_gain // 2 * await fear_of(ctx.session, army)), 0, PERCENT)
     elif outcome is MutinyOutcome.REFUSAL:
         profile.stance = Stance.ENTRENCH
     elif outcome is MutinyOutcome.DEPOSED:
+        steps = (StepDraft(StepAction.DEPOSE, actor=army.id, target=row.commander_entity_id),)
         for officer in await ctx.session.scalars(select(ArmyOfficerRow).where(ArmyOfficerRow.army_entity_id == army.id, ArmyOfficerRow.until_epoch.is_(None))):
             if officer.role is ArmyRole.COMMANDER:
                 officer.until_epoch = ctx.epoch
@@ -236,19 +240,12 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
             stack.origin_entity_id = stack.origin_entity_id or (owner.id if owner is not None else None)
     profile.mutiny = clamp_int(profile.mutiny - ctx.rules.campaign_depth.mutiny_threshold // 2, 0, PERCENT)
     sync(army, rows, ctx.rules)
-    text = MUTINY_TEXT[outcome].format(army=army.name, owner=owner.name if owner is not None else "its masters")
-    await ctx.chronicle(ChronicleKind.WAR, text, template_key=f"war.mutiny.{outcome.value}", entity_ids=(army.id,), feed_category=FeedCategory.WAR)
+    roles = {IncidentRole.SUBJECT: army.id, **({IncidentRole.OWNER: owner.id} if owner is not None else {})}
+    await record(
+        ctx, f"war.mutiny.{outcome.value}", roles=roles, facts={"outcome": outcome, "mutiny": profile.mutiny}, place=profile.region_entity_id, steps=steps
+    )
     ctx.count(f"mutiny_{outcome.value}")
     return outcome
-
-
-MUTINY_TEXT = {
-    MutinyOutcome.GRUMBLING: "The soldiers of {army} grew restless; {owner} left them hungry and unpaid.",
-    MutinyOutcome.REFUSAL: "{army} refused to march further for {owner} and halted where it stood.",
-    MutinyOutcome.DEPOSED: "The soldiers of {army} rose against their commander and cast them out.",
-    MutinyOutcome.BANDITRY: "{army} turned to banditry and plundered the lands of {owner} it was raised to guard.",
-    MutinyOutcome.TURNCOAT: "{army} went over to the enemy and turned on {owner}.",
-}
 
 
 async def drill(ctx: TickContext, owner: EntityRow, profile: ArmyProfileRow, rows: Sequence[ArmyUnitRow]) -> bool:

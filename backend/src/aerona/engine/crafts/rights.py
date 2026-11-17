@@ -11,13 +11,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import RightAcquired, RightKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
-from aerona.engine.notes import note
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import ruler_of
 from aerona.engine.services.community_relations import change_relation
 
@@ -180,8 +182,12 @@ async def infringe(ctx: TickContext, row: IncorporealRightRow, tally: RightsTall
                     locked=[],
                 )
             )
-    await note(
-        ctx, f"{culprit.name} took up {row.name} without leave, to the anger of its holders.", key="rights.infringed", ids=[culprit.id, row.holder_node_id]
+    await record(
+        ctx,
+        "rights.infringed",
+        roles={IncidentRole.ACTOR: culprit.id, IncidentRole.VICTIM: row.holder_node_id},
+        facts={"right": row.name, "kind": row.kind, "opinion": -table.insult_opinion},
+        place=town,
     )
 
 
@@ -202,7 +208,13 @@ async def collect_licence(ctx: TickContext, row: IncorporealRightRow, tally: Rig
         await shift_points(ctx.session, licensee, -price)
         await shift_points(ctx.session, holder, price)
         row.holder_node_id, row.acquired, row.licensed_to_node_id = licensee.id, RightAcquired.BOUGHT, None
-        await note(ctx, f"{licensee.name} bought {row.name} outright from {holder.name}.", key="rights.bought", ids=[licensee.id, holder.id])
+        await record(
+            ctx,
+            "rights.bought",
+            roles={IncidentRole.BUYER: licensee.id, IncidentRole.SELLER: holder.id},
+            facts={"right": row.name, "kind": row.kind, "price": price},
+            steps=(StepDraft(StepAction.PAY, actor=licensee.id, target=holder.id, amount=price, unit=FactUnit.WEALTH_POINTS),),
+        )
         return
     await shift_points(ctx.session, licensee, -fee)
     await shift_points(ctx.session, holder, fee)

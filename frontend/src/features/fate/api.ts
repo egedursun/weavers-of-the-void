@@ -6,7 +6,7 @@ import { queryKeys } from '@/api/queryKeys'
 
 export type FateControls = components['schemas']['FateControlsView']
 export type LimboRecord = components['schemas']['LimboRecord']
-export type StepState = components['schemas']['StepState']
+export type StepState = components['schemas']['FateStepState']
 export type HistorianView = components['schemas']['HistorianViewItem']
 export type VerdictChoice = components['schemas']['VerdictChoice']
 export type ActionResponse = components['schemas']['ActionResponse']

@@ -17,7 +17,7 @@ LAW_OUTER_MECHANICS: tuple[Mechanic, ...] = (
         phases=("natural_laws",),
         surface=Surface(drawer="section-law-grammar"),
         backfill="natural_laws: every law gains the grammar of its old kind on the first epoch",
-        templates=("law.natural_set", "law.natural_broken"),
+        templates=("law.natural_set", "law.natural_suspended", "law.natural_ended", "law.natural_reshaped"),
         fields=("target", "operator", "key", "value", "condition", "until_epoch", "suspended"),
         tables=(LawExceptionRow.__tablename__, LawTheoryRow.__tablename__),
         exposure=Exposure.TOOL,

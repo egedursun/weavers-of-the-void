@@ -5,15 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.climate import CLIMATES, ClimateProfile, climate_profile, climate_weights
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
 from aerona.db.tables.physics import WorldPhysicsRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
@@ -21,7 +19,6 @@ from aerona.engine.cosmos.eras import emergent_era
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
 from aerona.engine.primitives.derivation import Origin, replace_derived, shaped_draft
@@ -29,6 +26,7 @@ from aerona.engine.primitives.modifiers import ModifierDraft
 from aerona.engine.primitives.numbers import clamp_int, fraction
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 LAND_TYPES = (EntityType.REGION, EntityType.PLACE)
@@ -91,16 +89,21 @@ def ensure_climate(ctx: TickContext, world: WorldRow) -> ClimateEra:
     return world.climate_era
 
 
-async def announce_era(ctx: TickContext, world: WorldRow, era: ClimateEra, many_worlds: bool) -> None:
+async def announce_era(ctx: TickContext, world: WorldRow, era: ClimateEra, epochs: int) -> None:
     profile = climate_profile(ctx.rules, era)
-    prefix = f"{world.name}: " if many_worlds else ""
-    await note(
+    await record(
         ctx,
-        f"{prefix}the {profile.label.lower()} began. {profile.description}",
-        key="climate.era",
+        "climate.era",
+        roles={IncidentRole.SUBJECT: world.id},
+        facts={
+            "era": era,
+            "epochs": epochs,
+            "temperature": profile.temperature_shift,
+            "rain": profile.rain_shift,
+            "plague": plague_pct(ctx.rules, era),
+            "population_loss": population_loss_pct(ctx.rules, era),
+        },
         world_id=world.id,
-        feed=FeedCategory.WORLD,
-        kind=ChronicleKind.CLIMATE,
     )
 
 
@@ -109,7 +112,7 @@ async def star_instability(ctx: TickContext, world: WorldRow) -> int:
     return star_mechanics(star.star_type).instability(ctx.rules) if star is not None else 0
 
 
-async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) -> None:
+async def advance_world(ctx: TickContext, world: WorldRow) -> None:
     era = ensure_climate(ctx, world)
     order = await ctx.session.get(ClimateOrderRow, world.id)
     if order is not None:
@@ -130,26 +133,26 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
         left = max(1, left - await star_instability(ctx, world))
         if era is ClimateEra.VARIABLE:
             left = min(left, settings.variable_epochs)
-        await announce_era(ctx, world, era, many_worlds)
+        await announce_era(ctx, world, era, left)
     world.climate_epochs_left = left
     await apply_climate_effect(ctx, world, era)
 
 
-@reads(
+@reads("people.population", "settlement.population", "table.climate_orders", "table.entities", "table.nodes", "table.world_physics", "table.worlds")
+@writes(
     "people.population",
     "settlement.population",
-    "table.climate_orders",
+    "table.chronicle",
     "table.entities",
-    "table.epoch_year_cursors",
-    "table.nodes",
-    "table.world_physics",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.worlds",
 )
-@writes("people.population", "settlement.population", "table.chronicle", "table.entities", "table.epoch_year_cursors", "table.incidents", "table.worlds")
 async def climate_transition(ctx: TickContext) -> None:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
     for world in worlds:
-        await advance_world(ctx, world, len(worlds) > 1)
+        await advance_world(ctx, world)
     await ctx.session.flush()
     ctx.count("worlds", len(worlds))
 
@@ -239,13 +242,13 @@ async def impose_climate(ctx: TickContext, world_id: int, era: ClimateEra, epoch
         order.son_id = son_id
     await ctx.session.flush()
     profile = climate_profile(ctx.rules, era)
-    await note(
+    await record(
         ctx,
-        f"By divine order the {profile.label.lower()} fell upon {world.name} for {several(epochs, 'epoch', 'epochs')}. {profile.description}",
-        key="climate.imposed",
+        "climate.imposed",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.AUTHORITY: son_id},
+        facts={"era": era, "epochs": epochs, "temperature": profile.temperature_shift, "rain": profile.rain_shift},
         world_id=world.id,
         son_id=son_id,
-        kind=ChronicleKind.CLIMATE,
     )
     state = await climate_of(ctx.session, ctx.rules, world.id)
     if state is None:

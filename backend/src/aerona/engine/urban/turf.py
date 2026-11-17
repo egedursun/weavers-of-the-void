@@ -13,12 +13,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import CRIME_KINDS
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import UrbanService
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import slay
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 TURF_DEATH = "fell in a turf war"
 
@@ -99,16 +100,13 @@ async def turf_war(ctx: TickContext, district: DistrictRow, rows: list[TurfRow],
         town.public_order = clamp_int(town.public_order - table.war_order, 0, PERCENT)
     tally.wars += 1
     tally.dead += await casualties(ctx, loser.faction_entity_id, table.war_deaths)
-    first = await ctx.session.get(EntityRow, winner.faction_entity_id)
-    second = await ctx.session.get(EntityRow, loser.faction_entity_id)
-    place = await ctx.session.get(EntityRow, district.settlement_entity_id)
-    if first is not None and second is not None and place is not None:
-        await note(
-            ctx,
-            f"{first.name} and {second.name} fought for the streets of {place.name}.",
-            key="crime.turf_war",
-            ids=[first.id, second.id, place.id],
-        )
+    await record(
+        ctx,
+        "crime.turf_war",
+        roles={IncidentRole.ACTOR: winner.faction_entity_id, IncidentRole.OPPONENT: loser.faction_entity_id},
+        facts={"district": district.kind, "strength_lost": table.war_loss, "order_lost": table.war_order},
+        place=district.settlement_entity_id,
+    )
 
 
 async def hold_turf(ctx: TickContext, tally: TurfTally) -> None:

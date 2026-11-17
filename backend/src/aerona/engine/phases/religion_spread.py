@@ -23,6 +23,7 @@ from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, LawKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus
@@ -42,7 +43,6 @@ from aerona.engine.mind.book import ValueIndex
 from aerona.engine.mind.drives import zeal_drive
 from aerona.engine.mind.hooks import converted
 from aerona.engine.mind.space import DISTANCE_MAX, NEUTRAL_DISTANCE, value_distance
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.laws import LawBook
@@ -53,6 +53,7 @@ from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_lang
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import lend_settlement_values
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
@@ -125,13 +126,13 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     sons = SonRepository(ctx.session)
     if old_patron is not None and await sons.get(old_patron) is not None:
         await sons.change_relation(old_patron, candidate.id, -settings.schism_patron_relation)
-    await note(
+    await record(
         ctx,
-        f"{cult.name} split: {several(split, 'follower', 'followers')} turned to {candidate.name}.",
-        key="religion.schism",
-        ids=[cult.id, sect.id],
-        son_id=candidate.id,
+        "religion.schism",
+        roles={IncidentRole.SUBJECT: [cult.id, candidate.id, sect.id]},
+        facts={"split": split},
         kind=ChronicleKind.WORSHIP,
+        son_id=candidate.id,
     )
     return sect
 
@@ -145,7 +146,6 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.creator",
     "table.cult_doctrines",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -171,8 +171,8 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.chronicle_entities",
     "table.cult_doctrines",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.heresies",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.messages",
@@ -207,7 +207,7 @@ async def schisms(ctx: TickContext) -> None:
 
 
 @reads("settlement.piety", "table.bonds", "table.creator", "table.entities", "table.entity_flags", "table.nodes", "table.reverences", "table.sons")
-@writes("table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
+@writes("table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.incident_participants", "table.incidents")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)
@@ -226,7 +226,7 @@ async def godlessness(ctx: TickContext) -> None:
             continue
         await repository.add_flag(entity.id, EntityFlag.GODLESS, ctx.epoch)
         turned += 1
-        await note(ctx, f"{entity.name} turned its back on the gods; it is godless now.", key="religion.godless", ids=[entity.id], kind=ChronicleKind.WORSHIP)
+        await record(ctx, "religion.godless", roles={IncidentRole.SUBJECT: entity.id}, kind=ChronicleKind.WORSHIP)
     ctx.count("godless", turned)
 
 
@@ -452,16 +452,21 @@ def god_name(faith: FaithIndex, god_id: int | None) -> str:
 async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, old: int | None, chosen: ConversionSource, *, syncretic: bool) -> None:
     if not syncretic:
         await god_grudge(ctx, old, chosen.god_id, MemoryKind.STOLE_FAITHFUL, f"took {community.name}")
-    new_name = god_name(faith, chosen.god_id)
-    if syncretic:
-        text = f"{community.name} began making offerings to {new_name} too, without abandoning {god_name(faith, old)}."
-        key = "religion.syncretism"
-    else:
-        cold = f"; the altars of {god_name(faith, old)} grew cold" if old is not None else ""
-        text = f"{community.name} converted to the faith of {new_name} {chosen.reason}{cold}."
-        key = "religion.conversion"
     son_id = chosen.god_id if chosen.god_id in faith.sons else None
-    await note(ctx, text, key=key, ids=[community.id], son_id=son_id, feed=FeedCategory.WORLD, kind=ChronicleKind.WORSHIP)
+    await record(
+        ctx,
+        "religion.syncretism" if syncretic else "religion.conversion",
+        roles={IncidentRole.SUBJECT: community.id, IncidentRole.TARGET: chosen.god_id, IncidentRole.PREDECESSOR: old},
+        facts={
+            "new_faith": god_name(faith, chosen.god_id),
+            "old_faith": god_name(faith, old),
+            "reason": chosen.reason,
+            "cold": f"; the altars of {god_name(faith, old)} grew cold" if old is not None else "",
+        },
+        son_id=son_id,
+        feed=FeedCategory.WORLD,
+        kind=ChronicleKind.WORSHIP,
+    )
 
 
 @reads(
@@ -475,7 +480,6 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.culture_values",
     "table.divine_standing",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.journeys",
     "table.language_intelligibility",
     "table.language_profiles",
@@ -505,7 +509,6 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_intelligibility",
@@ -615,12 +618,7 @@ async def religion_spread(ctx: TickContext) -> None:
             await converted(ctx, community.id, chosen.converter_id, note=chosen.reason)
             for festival in await absorb_festivals(ctx, community, chosen.converter_id):
                 ctx.count("festivals_absorbed")
-                await note(
-                    ctx,
-                    f"{community.name} kept {festival.name} even under the new faith, and the converters took the festival as their own.",
-                    key="lore.festival_absorbed",
-                    ids=[community.id, festival.id, chosen.converter_id],
-                )
+                await record(ctx, "lore.festival_absorbed", roles={IncidentRole.SUBJECT: [community.id, festival.id, chosen.converter_id]})
     ctx.count("conversions", conversions)
     ctx.count("syncretisms", syncretisms)
 

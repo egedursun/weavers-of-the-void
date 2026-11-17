@@ -5,9 +5,9 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.fortune import FortuneSourceKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.fortune.profiles import fortune_of, shift_fortune
 from aerona.engine.kinds.society import mortals_may_found
@@ -20,7 +20,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 async def take_care(call: MortalCall, _args: ToolInput) -> str:
@@ -31,7 +30,7 @@ async def take_care(call: MortalCall, _args: ToolInput) -> str:
         fail(MortalResult.CARE_DECLINED, why="you cannot spare what care would cost")
     await shift_points(call.session, call.me, -table.care_cost)
     await shift_fortune(call.tick, call.me.id, table.care_strength, FortuneSourceKind.CARE, epochs=1)
-    await call.chronicle(ChronicleKind.CULTURE, lines.TOOK_CARE, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.took_care", roles={IncidentRole.ACTOR: call.me.id}, facts={"cost": table.care_cost, "fortune": table.care_strength})
     return result(MortalResult.CARE_TAKEN, fortune=await fortune_of(call.tick, call.me.id))
 
 
@@ -59,8 +58,11 @@ async def found_faction(call: MortalCall, args: FoundFactionInput) -> str:
     if profile is not None:
         profile.leader_entity_id = call.me.id
     call.target(faction.id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION, lines.FOUNDED_FACTION, entity_ids=[call.me.id, faction.id, town.id], me=call.me.name, name=faction.name, town=town.name
+    await call.record(
+        "tools.mortal.founded_faction",
+        roles={IncidentRole.LEADER: call.me.id, IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: town.id},
+        facts={"faction": args.kind, "cost": table.found_cost},
+        place=town.id,
     )
     return result(MortalResult.FACTION_FOUNDED, name=faction.name, town=town.name)
 

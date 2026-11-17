@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import DamageType
@@ -40,6 +42,8 @@ from aerona.domain.enums.discovery import (
     TheoryDomain,
 )
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import RumourDistortion, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 
 
@@ -630,6 +634,23 @@ class CustomKinds(ApiModel):
     kinds: list[CustomKindView]
 
 
+class RumourDistortionView(ApiModel):
+    id: int
+    distortion: RumourDistortion
+    role: IncidentRole | None
+    fact_key: str | None
+    step_id: int | None
+    told: NodeRef | None
+    told_number: float | None
+    told_enum_value: str | None
+    told_year: int | None
+    told_incident_id: int | None
+    told_action: StepAction | None
+    told_outcome: StepOutcome | None
+    epoch: int
+    locked: list[str]
+
+
 class RumourView(ApiModel):
     id: int
     incident_id: int
@@ -648,6 +669,7 @@ class RumourView(ApiModel):
     alarm: bool
     carriers: int
     locked: list[str]
+    distortions: list[RumourDistortionView] = Field(default_factory=list)
 
 
 class RumourBoard(ApiModel):

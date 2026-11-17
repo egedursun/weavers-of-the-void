@@ -10,14 +10,15 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import HistorianViewRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import Verdict
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.recording.record import record
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import HISTORIAN_EDITED, HISTORIAN_STRUCK, VERDICT_OVERRIDDEN
 from aerona.services.player.ports import FateControls
 from aerona.services.player.runtime import CostedJob, PlayerRuntime, submit_costed, unavailable
 from aerona.services.player.scope import ActionOutcome, Command, Effect, PlayerScope, player_action
@@ -125,7 +126,15 @@ async def override_verdict(scope: PlayerScope, command: OverrideVerdict) -> Effe
         entity.fate_note = rationale
         await record_verdict(scope.session, entity, Verdict.ACCEPTED, rationale, epoch)
     ctx = await scope.context("override_verdict")
-    message = await hand(ctx, creator, VERDICT_OVERRIDDEN, ids=[entity.id], entity=entity.name, verdict=command.choice.value + "ed")
+    message = (
+        await record(
+            ctx,
+            "player.fate.verdict_override",
+            roles={IncidentRole.TARGET: entity.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"verdict": str(command.choice.value + "ed")},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, entity.id, essence_spent=spent)
 
 
@@ -146,7 +155,15 @@ async def edit_view(scope: PlayerScope, command: EditHistorianView) -> Effect:
     spent = guards.charge(creator, scope.rules.costs.edit_historian_view, "costs.edit_historian_view")
     view.text = text
     ctx = await scope.context("edit_historian_view")
-    message = await hand(ctx, creator, HISTORIAN_EDITED, ids=[people.id], people=people.name)
+    message = (
+        await record(
+            ctx,
+            "player.fate.historian_edit",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: people.id},
+            facts={"people": people.name},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, people.id, essence_spent=spent)
 
 
@@ -157,5 +174,13 @@ async def delete_view(scope: PlayerScope, command: HistorianViewTarget) -> Effec
     spent = guards.charge(creator, scope.rules.costs.edit_historian_view, "costs.edit_historian_view")
     await scope.session.delete(view)
     ctx = await scope.context("delete_historian_view")
-    message = await hand(ctx, creator, HISTORIAN_STRUCK, ids=[people.id], people=people.name)
+    message = (
+        await record(
+            ctx,
+            "player.fate.historian_delete",
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: people.id},
+            facts={"people": people.name},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, people.id, essence_spent=spent)

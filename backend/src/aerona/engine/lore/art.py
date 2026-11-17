@@ -20,7 +20,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ArtMode, Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind, SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -32,12 +34,12 @@ from aerona.engine.lore.style import image_mode, style_fit, style_message, style
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.preferences import art_fit, favourite, paint
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.transform.lore import remember_artwork
 
 WEAK_CLAIM = 50
@@ -275,7 +277,13 @@ async def forgotten(ctx: TickContext, artwork: EntityRow, row: ArtworkProfileRow
         return False
     await retire(ctx.session, artwork, ctx.epoch, f"Epoch {ctx.epoch}: none were left who could perform it.", status=EntityStatus.DESTROYED)
     await remember_artwork(ctx, artwork, row)
-    await note(ctx, f"{artwork.name} was forgotten, for none were left who could perform it.", key="art.forgotten", ids=[artwork.id])
+    await record(
+        ctx,
+        "art.forgotten",
+        roles={IncidentRole.SUBJECT: artwork.id, IncidentRole.MAKER: row.author_entity_id},
+        facts={"medium": row.medium},
+        place=artwork.location_id,
+    )
     return True
 
 
@@ -297,7 +305,14 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
     scribe = await translate(ctx, artwork, row)
     counts["translated"] = int(scribe is not None)
     if scribe is not None:
-        await note(ctx, f"{artwork.name} was put into another tongue and its message carried further.", key="art.translated", ids=[artwork.id, scribe])
+        await record(
+            ctx,
+            "art.translated",
+            roles={IncidentRole.SUBJECT: artwork.id, IncidentRole.MAKER: scribe},
+            facts={"language": row.translations[-1], "from_language": row.language_entity_id},
+            place=artwork.location_id,
+            steps=(StepDraft(StepAction.TRANSLATE, actor=scribe, target=artwork.id),),
+        )
     if row.medium in VERBAL_MODES and (stat(artwork, "renown") or 0) >= PERCENT // HALF and "copies" not in row.locked:
         printed = await has_technique(ctx.session, artwork.location_id, Technique.PRINTING)
         gain = ctx.rules.art.copies_gain + (ctx.rules.technique_effects.printing_copies if printed else 0)
@@ -392,7 +407,22 @@ async def commission_work(
         await connect(ctx.session, author.id, work.id, BondKind.OWNS, ctx.epoch, description="made it")
     if subject is not None:
         await connect(ctx.session, work.id, subject.id, BondKind.CELEBRATES, ctx.epoch, description="portrays")
-    await note(ctx, f"{patron.name} commissioned {work.name}.", key="art.commissioned", ids=[work.id, patron.id, *([author.id] if author else [])])
+    await record(
+        ctx,
+        "art.commissioned",
+        roles={
+            IncidentRole.AUTHORITY: patron.id,
+            IncidentRole.PRODUCT: work.id,
+            IncidentRole.MAKER: author.id if author is not None else None,
+            IncidentRole.SUBJECT: subject.id if subject is not None else None,
+        },
+        facts={
+            "medium": medium,
+            "quality": clamp_int(skill if skill is not None else PERCENT // HALF, 0, PERCENT),
+            "paid": ctx.rules.propaganda.cost if paid else 0,
+        },
+        place=home.id,
+    )
     return work
 
 
@@ -404,7 +434,13 @@ async def canonise(ctx: TickContext, artwork_id: int, *, canon: bool) -> Artwork
     row.canon = canon
     row.locked = sorted({*row.locked, "canon"})
     if canon:
-        await note(ctx, f"{artwork.name} was set among the classics of its people.", key="art.canonised", ids=[artwork.id])
+        await record(
+            ctx,
+            "art.canonised",
+            roles={IncidentRole.SUBJECT: artwork.id, IncidentRole.MAKER: row.author_entity_id},
+            facts={"medium": row.medium},
+            place=artwork.location_id,
+        )
     await ctx.session.flush()
     return row
 

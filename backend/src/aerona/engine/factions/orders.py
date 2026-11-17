@@ -13,13 +13,13 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.military.orders import raise_standing_army
 from aerona.engine.military.support import new_side
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.folk import present_among
@@ -29,6 +29,7 @@ from aerona.engine.primitives.queries import active_bonds, connect, living_entit
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import war_event
 
 STRENGTH = "strength"
@@ -165,7 +166,13 @@ async def take_vows(ctx: TickContext, order: EntityRow, row: HolyOrderProfileRow
         if not ctx.rng(seed_of("order.vows", order.id, mortal.id, ctx.epoch)).chance(ctx.rules.holy_orders.recruit_pct):
             continue
         await connect(ctx.session, mortal.id, order.id, BondKind.MEMBER_OF, ctx.epoch, description="took the vows of the order")
-        await note(ctx, f"{mortal.name} took the vows of {order.name}.", key="orders.vows", ids=[mortal.id, order.id])
+        await record(
+            ctx,
+            "orders.vows",
+            roles={IncidentRole.MEMBER: mortal.id, IncidentRole.SUBJECT: order.id},
+            facts={"chance": ctx.rules.holy_orders.recruit_pct},
+            place=mortal.location_id,
+        )
         tally.sworn += 1
         return
 
@@ -202,5 +209,11 @@ async def serve_holy_wars(ctx: TickContext, order: EntityRow, row: HolyOrderProf
             )
         except (ConflictError, ValidationFailedError):
             continue
-        await note(ctx, f"{order.name} rode out to the holy war as {host.name}.", key="orders.holy_war", ids=[order.id, host.id, fortress.id])
+        await record(
+            ctx,
+            "orders.holy_war",
+            roles={IncidentRole.SUBJECT: order.id, IncidentRole.PRODUCT: host.id, IncidentRole.ORIGIN: fortress.id},
+            facts={"war": war.event_entity_id, "size": size},
+            place=fortress.id,
+        )
         tally.hosts += 1

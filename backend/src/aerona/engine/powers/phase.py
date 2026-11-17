@@ -16,23 +16,25 @@ from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindOrigin, MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.powers import PowerDeviceEffect, PowerOrigin, PowerState, PowerTrigger, PowerVisibility
+from aerona.domain.enums.records import InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.body.book import species_of, species_traits
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import profile_of
-from aerona.engine.notes import note
 from aerona.engine.powers.backfill import keep_power_kinds, legacy_backfill
 from aerona.engine.powers.devices import devices_of
 from aerona.engine.powers.kinds import triggered
 from aerona.engine.powers.sources import keep_density, keep_knowledge
-from aerona.engine.powers.use import use
+from aerona.engine.powers.use import Outcome, use
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import StepDraft, record
 
 E = RiteEffectKind
 QUIET = frozenset({PowerState.LATENT, PowerState.EXHAUSTED, PowerState.SUPPRESSED, PowerState.LOST})
@@ -74,7 +76,7 @@ async def awaken(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
     present = woken or await trigger_present(ctx, power, holder)
     if power.state is PowerState.LATENT and present and ctx.rng(f"power.emerge.{power.id}.{ctx.epoch}").chance(table.emerge_chance * (2 if woken else 1)):
         power.state = PowerState.EMERGING
-        await note(ctx, f"A power stirred in {holder.name}.", key="power.emerged", ids=[holder.id])
+        await record(ctx, "power.emerged", roles={IncidentRole.OWNER: holder.id})
         return
     if power.state is not PowerState.EMERGING:
         return
@@ -87,7 +89,7 @@ async def awaken(ctx: TickContext, power: PowerRow, holder: EntityRow) -> None:
         )
         outcome = await use(ctx, power, holder, near)
         if outcome.done is not None:
-            await note(ctx, f"The power of {holder.name} broke loose: {outcome.done}.", key="power.wild", ids=[holder.id])
+            await record(ctx, "power.wild", roles={IncidentRole.OWNER: holder.id}, facts={"done": outcome.done})
             ctx.count("wild_manifestations")
     if rng.chance(table.settle_chance):
         power.state = PowerState.ACTIVE
@@ -126,7 +128,32 @@ async def live_with(ctx: TickContext, power: PowerRow, holder: EntityRow) -> Non
     if outcome.done is not None:
         ctx.count("powers_used")
         if power.visibility is PowerVisibility.OVERT:
-            await note(ctx, f"{holder.name} used a power: {outcome.done}.", key="power.used", ids=[holder.id])
+            await record(
+                ctx,
+                "power.used",
+                roles={IncidentRole.OWNER: holder.id, IncidentRole.TARGET: target.id if target is not None else None},
+                facts={"done": outcome.done},
+                steps=power_steps(power, holder, target, outcome),
+            )
+
+
+def power_steps(power: PowerRow, holder: EntityRow, target: EntityRow | None, outcome: Outcome) -> tuple[StepDraft, ...]:
+    used = StepDraft(
+        StepAction.USE_POWER,
+        actor=holder.id,
+        target=target.id if target is not None else None,
+        instrument_kind=InstrumentKind.POWER,
+        instrument_key=power.technique.value,
+        record_table=PowerRow.__tablename__,
+        record_key=str(power.id),
+        outcome=StepOutcome.FAILURE if outcome.resisted else StepOutcome.SUCCESS,
+    )
+    if not outcome.misfired:
+        return (used,)
+    return (
+        used,
+        StepDraft(StepAction.BACKLASH, actor=holder.id, target=holder.id, instrument_kind=InstrumentKind.POWER, instrument_key=power.form.value, parent=0),
+    )
 
 
 async def end_span(ctx: TickContext, row: PowerSpanRow) -> None:
@@ -239,7 +266,7 @@ async def gestalts(ctx: TickContext) -> int:
         mind.seat, mind.seat_node_id, mind.origin = MindSeat.BODIES, anchor, MindOrigin.MERGED
         mind.capacity = clamp_percent(mind.capacity + len(group) * 2)
         mind.will = MindWill.FULL
-        await note(ctx, "Linked minds became one gestalt.", key="power.gestalt", ids=sorted(group))
+        await record(ctx, "power.gestalt", roles={IncidentRole.SUBJECT: [*sorted(group)]})
         formed += 1
     return formed
 
@@ -257,7 +284,7 @@ async def hive_minds(ctx: TickContext) -> int:
             continue
         mind = await profile_of(ctx.session, ctx.rules, people.id, ctx.epoch)
         mind.seat, mind.seat_node_id, mind.origin, mind.will = MindSeat.BODIES, people.id, MindOrigin.BORN, MindWill.FULL
-        await note(ctx, f"The folk of {people.name} think as one mind.", key="power.hive_mind", ids=[people.id])
+        await record(ctx, "power.hive_mind", roles={IncidentRole.SUBJECT: people.id}, facts={"people": people.name})
         formed += 1
     return formed
 

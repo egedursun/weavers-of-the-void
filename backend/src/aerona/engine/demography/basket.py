@@ -11,11 +11,11 @@ from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.body.customs import people_of
@@ -26,12 +26,12 @@ from aerona.engine.economy.household import Meal, Wear
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.cold import frostbite
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.notes import note
 from aerona.engine.primitives.kept import kept_rows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 E = ShortfallEffect
@@ -300,14 +300,13 @@ async def freeze(ctx: TickContext, community: EntityRow, short: int, band: Tempe
         return 0
     with flowing(FlowCategory.DEATH):
         set_stats(community, population=population - dead)
-    if dead >= ctx.rules.consumption.notable_cold_deaths:
-        await note(
+    if dead > 0:
+        await record(
             ctx,
-            f"Without fuel or warm cloth, {dead} of {community.name} died of the cold.",
-            key="consumption.cold_deaths",
-            ids=[community.id],
-            feed=FeedCategory.DISASTER,
-            kind=ChronicleKind.WORLD,
+            "consumption.cold_deaths",
+            roles={IncidentRole.VICTIM: community.id},
+            facts={"dead": dead, "short": short, "band": band},
+            place=community.id,
         )
     return dead
 
@@ -324,8 +323,8 @@ async def sicken(ctx: TickContext, community: EntityRow, short: int) -> int:
             continue
         if move_amount(rows[key], row_for(ctx.session, rows, community.id, (band, sex, social_class, CohortCondition.SICK), ctx.epoch), "count", count):
             moved += count
-    if moved >= ctx.rules.consumption.notable_sick:
-        await note(ctx, f"With no medicine to be had, {moved} of {community.name} fell sick.", key="consumption.sickness", ids=[community.id])
+    if moved > 0:
+        await record(ctx, "consumption.sickness", roles={IncidentRole.VICTIM: community.id}, facts={"sick": moved, "short": short}, place=community.id)
     return moved
 
 
@@ -336,7 +335,7 @@ async def starve_herds(ctx: TickContext, community: EntityRow, short: int) -> in
         return 0
     taken = await goods_of(ctx.session, ctx.epoch).take_units(community.id, CommodityKind.LIVESTOCK, lost, GoodsFlow.CONSUMPTION)
     if taken > 0:
-        await note(ctx, f"For want of fodder, {taken} head of the herds of {community.name} starved.", key="consumption.herd_loss", ids=[community.id])
+        await record(ctx, "consumption.herd_loss", roles={IncidentRole.VICTIM: community.id}, facts={"lost": taken, "short": short}, place=community.id)
     return taken
 
 

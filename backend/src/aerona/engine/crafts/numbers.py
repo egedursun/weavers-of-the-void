@@ -6,14 +6,16 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.crafts import Notation
+from aerona.domain.enums.crafts import Notation, NumberMilestone
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import StepDraft, record
 
 BASES = (10, 12, 20, 60)
 SCHOOLING = (Technique.ALPHABET, Technique.BUREAUCRACY, Technique.UNIVERSITIES, Technique.DOUBLE_ENTRY)
@@ -56,14 +58,20 @@ async def keep_numbers(ctx: TickContext, tally: NumberTally) -> None:
             continue
         if not row.zero and "zero" not in row.locked:
             row.zero = True
-            found = "a sign for nothing"
+            found = NumberMilestone.ZERO
         elif row.notation is Notation.ADDITIVE and "notation" not in row.locked:
             row.notation = Notation.POSITIONAL
-            found = "numbers written by place"
+            found = NumberMilestone.PLACE_VALUE
         else:
             continue
         if "numeracy" not in row.locked:
             row.numeracy = clamp_int(row.numeracy + table.milestone_pct, 0, PERCENT)
         tally.milestones += 1
-        await note(ctx, f"The {people.name} came upon {found}, and their reckoning grew sharper.", key="numbers.milestone", ids=[people.id])
+        await record(
+            ctx,
+            "numbers.milestone",
+            roles={IncidentRole.SUBJECT: people.id},
+            facts={"milestone": found, "base": row.base, "numeracy": row.numeracy},
+            steps=(StepDraft(StepAction.DISCOVER, actor=people.id, outcome=StepOutcome.SUCCESS),),
+        )
     await ctx.session.flush()

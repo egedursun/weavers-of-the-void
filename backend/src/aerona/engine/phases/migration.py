@@ -9,7 +9,9 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SettlementStats
 from aerona.engine.agrarian.book import gap_of
@@ -25,7 +27,6 @@ from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.legends import haunted_regions
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import closeness, hunger
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
 from aerona.engine.polity.laws import law_param
@@ -37,6 +38,8 @@ from aerona.engine.primitives.queries import canon, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import stock
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.services.community_relations import relation
 from aerona.language.generator import NameKind
 
@@ -175,7 +178,6 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.culture_values",
     "table.endemic_diseases",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.held_identities",
     "table.immunities",
@@ -213,7 +215,6 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -243,22 +244,31 @@ async def famine_migration(ctx: TickContext) -> None:
         target = await greener_region(ctx, atlas, region, ground, community) if region is not None else None
         if target is None:
             continue
-        leaving = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
-        lost = round_half_up(leaving * (PERCENT - walkable(ctx, ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
-        migrants = max(1, leaving - lost)
-        if lost:
-            floor, cap = headcount_bounds(rules, community)
-            with flowing(FlowCategory.DEATH):
-                set_stats(community, population=max(floor, min(cap, population - lost)))
-        settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
-        moved += 1
-        if rebuilt:
-            people_counted_2 = several(migrants, "person", "people")
-            text = f"Famine drove {people_counted_2} from {community.name} to the lands of {target.name}; they rebuilt the ruin of {settlement.name}."
-        else:
-            people_counted = several(migrants, "person", "people")
-            text = f"Famine drove {people_counted} from {community.name} to the lands of {target.name}; there they founded a new settlement."
-        await note(ctx, text, key="migration.famine", ids=[community.id, settlement.id, target.id])
+        with explaining():
+            leaving = round_half_up(population * rules.deep_world.famine_migration_share_pct / PERCENT)
+            lost = round_half_up(leaving * (PERCENT - walkable(ctx, ground, target.id)) * effects.migration_road_loss_pct / PERCENT / PERCENT)
+            migrants = max(1, leaving - lost)
+            if lost:
+                floor, cap = headcount_bounds(rules, community)
+                with flowing(FlowCategory.DEATH):
+                    set_stats(community, population=max(floor, min(cap, population - lost)))
+            settlement, rebuilt = await migrate(ctx, atlas, community, target, migrants=migrants, reason="famine")
+            moved += 1
+            await record(
+                ctx,
+                "migration.famine",
+                roles={IncidentRole.ACTOR: community.id, IncidentRole.DESTINATION: target.id, IncidentRole.PRODUCT: settlement.id},
+                facts={"migrants": migrants, "lost_on_road": lost, "rebuilt": 1 if rebuilt else 0},
+                steps=(
+                    StepDraft(StepAction.DEPART, actor=community.id, amount=leaving, unit=FactUnit.PEOPLE),
+                    StepDraft(StepAction.TRAVEL, actor=community.id, target=target.id, amount=lost or None, unit=FactUnit.PEOPLE if lost else None),
+                    StepDraft(
+                        StepAction.SETTLE if rebuilt else StepAction.FOUND, actor=community.id, target=settlement.id, amount=migrants, unit=FactUnit.PEOPLE
+                    ),
+                ),
+                place=settlement.id,
+                world_id=community.world_id,
+            )
 
 
 PHASES = (Phase("famine_migration", famine_migration),)

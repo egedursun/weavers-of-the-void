@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.urban import HousingLevel
+from aerona.domain.enums.urban import HousingLevel, MarketPlay
 
 HOUSING_LEVEL = total(
     HousingLevel,
@@ -63,5 +63,17 @@ HOUSING_LEVEL = total(
             checked_by=("catalog.urban.HOUSING_GATES", "catalog.urban.HOUSING_RULE"),
             used_by=("catalog.genetics.DWELLINGS", "catalog.urban.HOUSING_ORDER", "db.kind_concepts.dwellings.LEVEL_LABELS"),
         ),
+    },
+)
+
+MARKET_PLAY = total(
+    MarketPlay,
+    {
+        MarketPlay.CORNER: Defined(
+            "Cornered",
+            checked_by=("engine.economy.manipulation.swing",),
+            used_by=("engine.economy.manipulation.play_markets", "tools.mortal.urban_depth.corner_market"),
+        ),
+        MarketPlay.DUMP: Defined("Flooded", checked_by=(), used_by=("engine.economy.manipulation.play_markets",)),
     },
 )

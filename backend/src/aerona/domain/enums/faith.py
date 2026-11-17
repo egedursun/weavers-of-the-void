@@ -8,7 +8,7 @@ class TenetKind(StrEnum):
     SACRED_SUFFERING = "sacred_suffering"
     PURITY_OF_BODY = "purity_of_body"
     ANCESTOR_VENERATION = "ancestor_veneration"
-    HUMAN_SACRIFICE = "human_sacrifice"
+    SACRIFICE_OF_PEOPLE = "sacrifice_of_people"
     ANIMAL_SACRIFICE = "animal_sacrifice"
     CELIBATE_CLERGY = "celibate_clergy"
     PROSELYTISM = "proselytism"

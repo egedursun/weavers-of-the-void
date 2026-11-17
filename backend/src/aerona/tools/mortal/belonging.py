@@ -4,8 +4,8 @@ from aerona.db.tables.belonging import SatireRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.belonging import SatireSource
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.belonging import control
 from aerona.engine.belonging.refuge import refuge_of
 from aerona.engine.belonging.sanctuary import fugitives, host_for
@@ -20,7 +20,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class SeekSanctuaryInput(ToolInput):
@@ -56,7 +55,11 @@ async def seek_sanctuary(call: MortalCall, args: SeekSanctuaryInput) -> str:
         },
     )
     call.target(host.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.SEEK_SANCTUARY, entity_ids=[me.id, host.id], me=me.name, host=host.name)
+    await call.record(
+        "tools.mortal.seek_sanctuary",
+        roles={IncidentRole.ACTOR: me.id, IncidentRole.HOST: host.id, IncidentRole.OPPONENT: hunted.pursuer},
+        facts={"fee": call.tick.rules.sanctuary.fee},
+    )
     return result(MortalResult.SANCTUARY_FOUND, host=host.name)
 
 
@@ -79,7 +82,7 @@ async def mock_the_ruler(call: MortalCall, args: MockTheRulerInput) -> str:
     if isinstance(row, SatireRow):
         await judge(call.tick, row, SatireTally())
     call.target(ruler)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.MOCK_THE_RULER, entity_ids=[me.id, ruler], me=me.name)
+    await call.record("tools.mortal.mock_the_ruler", roles={IncidentRole.ACTOR: me.id, IncidentRole.TARGET: ruler}, facts={"bite": bite}, place=me.location_id)
     return result(MortalResult.SATIRE_TOLD, bite=bite, tolerated=isinstance(row, SatireRow) and row.tolerated)
 
 

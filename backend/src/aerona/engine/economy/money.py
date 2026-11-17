@@ -12,14 +12,15 @@ from aerona.db.tables.economy import CommunityStockRow, CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
@@ -28,13 +29,13 @@ from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 MINTERS = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION})
@@ -127,12 +128,13 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
     row = await ctx.session.get(CommunitySocietyRow, issuer.id)
     if row is not None:
         row.currency_id = currency.id
-    await note(
+    await record(
         ctx,
-        f"{issuer.name} began minting its own coin of {spoken(metal)}.",
-        key="money.minted",
-        ids=[issuer.id, coin.id],
-        kind=ChronicleKind.TRADE,
+        "money.minted",
+        roles={IncidentRole.MAKER: issuer.id, IncidentRole.PRODUCT: coin.id},
+        facts={"metal": metal, "purity": currency.purity, "trust": currency.trust},
+        steps=(StepDraft(StepAction.SHAPE, actor=issuer.id, target=coin.id),),
+        place=coin.location_id,
     )
     return currency
 
@@ -179,11 +181,7 @@ async def adopt(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
                 row.currency_id = using[giver]
                 using[taker] = using[giver]
                 tally.adopted += 1
-                taker_row, giver_row = book.entities.get(taker), book.entities.get(giver)
-                if taker_row is not None and giver_row is not None:
-                    await note(
-                        ctx, f"{taker_row.name} began using the money of {giver_row.name}.", key="money.adopted", ids=[taker, giver], kind=ChronicleKind.TRADE
-                    )
+                await record(ctx, "money.adopted", roles={IncidentRole.RECEIVER: taker, IncidentRole.GIVER: giver}, facts={"currency": using[giver]})
 
 
 def users_of(book: EconomyBook, currency_id: int) -> list[int]:
@@ -204,12 +202,11 @@ async def debase(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, *, 
     for user in users_of(book, currency.id):
         row = book.societies[user]
         row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - table.debase_merchant_loss, 0, PERCENT)
-    how = "by decree of the Creator" if forced else "to fill an empty treasury"
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"{issuer.name} debased {currency.name} {how}: its purity fell to {currency.purity}, and merchants no longer trust it.",
-        template_key="money.debased",
-        entity_ids=[issuer.id, *([currency.item_entity_id] if currency.item_entity_id else [])],
+    await record(
+        ctx,
+        "money.debased_by_creator" if forced else "money.debased",
+        roles={IncidentRole.ACTOR: issuer.id, IncidentRole.SUBJECT: currency.item_entity_id},
+        facts={"purity": currency.purity, "trust": currency.trust, "supply": currency.supply, "treasury_gain": table.debase_treasury_gain},
     )
     return True
 
@@ -226,8 +223,11 @@ async def reform(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, iss
     currency.form = form
     currency.metal = None
     currency.purity = PERCENT
-    await note(
-        ctx, f"{issuer.name} moved {currency.name} to {MONEY_FORMS[form].label.lower()}.", key="money.reformed", ids=[issuer.id], kind=ChronicleKind.TRADE
+    await record(
+        ctx,
+        "money.reformed",
+        roles={IncidentRole.ACTOR: issuer.id, IncidentRole.SUBJECT: currency.item_entity_id},
+        facts={"form": form, "backing": currency.backing},
     )
     return True
 
@@ -288,12 +288,7 @@ async def inject_hoard(ctx: TickContext, community: EntityRow, units: int, metal
         currency.supply += round_half_up(units * table.coins_per_unit * table.hoard_supply_pct / PERCENT)
         if currency.metal is metal:
             currency.trust = clamp_int(currency.trust - table.debase_trust_loss // 2, 0, PERCENT)
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"A hoard of {spoken(metal)} flooded the market of {community.name}; prices of fine things fell and coin lost its worth.",
-        template_key="money.hoard",
-        entity_ids=[community.id],
-    )
+    await record(ctx, "money.hoard", roles={IncidentRole.RECEIVER: community.id}, facts={"metal": metal, "units": units, "added": added}, place=community.id)
     return added
 
 
@@ -345,11 +340,12 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
         gain(borrower, table.principal)
         gain(lender, -table.principal // 2)
         tally.lent += 1
-        await ctx.chronicle(
-            ChronicleKind.DEBT,
-            f"{lender.name} lent {borrower.name} the means to keep fighting, at {loan.interest_pct}% interest, due Epoch {loan.due_epoch}.",
-            template_key="banking.war_loan",
-            entity_ids=[lender.id, borrower.id],
+        await record(
+            ctx,
+            "banking.war_loan",
+            roles={IncidentRole.LENDER: lender.id, IncidentRole.BORROWER: borrower.id},
+            facts={"principal": loan.principal, "interest": loan.interest_pct, "due_epoch": loan.due_epoch},
+            steps=(StepDraft(StepAction.LEND, actor=lender.id, target=borrower.id, amount=loan.principal, unit=FactUnit.COIN),),
         )
 
 
@@ -391,11 +387,11 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
     if law is not None and law.remedy is DebtRemedy.JUBILEE:
         loan.status = LoanStatus.FORGIVEN
         gain(lender, -table.default_bank_loss)
-        await ctx.chronicle(
-            ChronicleKind.DEBT,
-            f"The jubilee wiped the loan {borrower.name} owed {lender.name}; the bank bore the loss.",
-            template_key="banking.jubilee",
-            entity_ids=[borrower.id, lender.id],
+        await record(
+            ctx,
+            "banking.jubilee",
+            roles={IncidentRole.BORROWER: borrower.id, IncidentRole.LENDER: lender.id},
+            facts={"owed": max(0, owed(loan)), "bank_loss": table.default_bank_loss},
         )
         return
     if law is not None and law.remedy is DebtRemedy.BONDAGE:
@@ -406,11 +402,12 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
     gain(lender, -table.default_bank_loss)
     await on_default(ctx, borrower, lender)
     await change_relation(ctx, lender.id, borrower.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="defaulted on a loan")
-    await ctx.chronicle(
-        ChronicleKind.DEBT,
-        f"{borrower.name} could not repay {lender.name}; the loan was defaulted and the bank will remember.",
-        template_key="banking.default",
-        entity_ids=[borrower.id, lender.id],
+    await record(
+        ctx,
+        "banking.default",
+        roles={IncidentRole.BORROWER: borrower.id, IncidentRole.LENDER: lender.id},
+        facts={"owed": max(0, owed(loan)), "remedy": law.remedy if law is not None else None, "relation": -table.default_relation_loss},
+        steps=(StepDraft(StepAction.DEFAULT, actor=borrower.id, target=lender.id, amount=max(0, owed(loan)), unit=FactUnit.COIN, outcome=StepOutcome.FAILURE),),
     )
 
 
@@ -421,11 +418,8 @@ async def collapse(ctx: TickContext, book: EconomyBook, bank: EntityRow) -> None
     row = book.societies.get(home) if home is not None else None
     if row is not None:
         row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - table.collapse_merchant_loss, 0, PERCENT)
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"{bank.name} collapsed under its bad loans; the merchants who trusted it were ruined.",
-        template_key="banking.collapse",
-        entity_ids=[bank.id, *([home] if home is not None else [])],
+    await record(
+        ctx, "banking.collapse", roles={IncidentRole.SUBJECT: bank.id, IncidentRole.VICTIM: home}, facts={"merchant_loss": table.collapse_merchant_loss}
     )
 
 

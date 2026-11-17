@@ -1,10 +1,14 @@
 from sqlalchemy import select
 
+from aerona.catalog.incident_kinds.body_lines import CONDITION_PHRASES, END_PHRASES, ILLNESSES
+from aerona.core.total import partial
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN, ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.body.book import Bearer
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
@@ -13,8 +17,8 @@ from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import mind_of
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import condition_trait
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.recording.record import StepDraft, record
 
 VISIBLE_CONDITIONS = frozenset(
     {
@@ -28,44 +32,48 @@ VISIBLE_CONDITIONS = frozenset(
     }
 )
 
-CONDITION_PHRASES: dict[ConditionKind, str] = {
-    ConditionKind.CHRONIC_ILLNESS: "fell into a lingering illness",
-    ConditionKind.PARANOIA: "grew paranoid",
-    ConditionKind.VISIONS: "began to see visions",
-    ConditionKind.RAGE: "was seized by fits of rage",
-    ConditionKind.MELANCHOLY: "sank into melancholy",
-    ConditionKind.ADDICTION: "fell into addiction",
-    ConditionKind.AGE_BLINDNESS: "went blind with age",
-    ConditionKind.AGE_DEAFNESS: "went deaf with age",
-    ConditionKind.WITHERED_LIMB: "was left with a withered limb",
-    ConditionKind.ENDLESS_HUNGER: "was cursed with an endless hunger",
-    ConditionKind.POSSESSION: "was possessed by a spirit",
-    ConditionKind.VOID_TAINT: "was tainted by the void",
-    ConditionKind.CHOSEN_MARK: "bore the mark of the chosen",
-    ConditionKind.DIVINE_BRAND: "bore a god's brand",
-    ConditionKind.NIGHTMARES: "began to dream the same nightmare night after night",
-    ConditionKind.COMATOSE: "fell into a sleep no one could wake them from",
-    ConditionKind.COGNITIVE_DECLINE: "began to lose their memory and their reckoning",
-    ConditionKind.MALNUTRITION: "began to waste from a poor diet",
-}
-
-END_PHRASES: dict[ConditionKind, str] = {
-    ConditionKind.CHRONIC_ILLNESS: "recovered from a lingering illness",
-    ConditionKind.PARANOIA: "was freed of paranoia",
-    ConditionKind.VISIONS: "no longer sees visions",
-    ConditionKind.RAGE: "mastered their rage",
-    ConditionKind.MELANCHOLY: "came out of melancholy",
-    ConditionKind.ADDICTION: "broke free of addiction",
-    ConditionKind.POSSESSION: "was freed of the spirit that possessed them",
-    ConditionKind.ENDLESS_HUNGER: "was freed of the endless hunger",
-    ConditionKind.NIGHTMARES: "slept free of nightmares at last",
-    ConditionKind.COMATOSE: "woke at last",
-    ConditionKind.COGNITIVE_DECLINE: "came back to their wits",
-    ConditionKind.MALNUTRITION: "was nourished back to strength",
-}
-
-
-ILLNESSES = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.ENDLESS_HUNGER, ConditionKind.MALNUTRITION})
+GAINED_KEYS = partial(
+    ConditionKind,
+    {
+        ConditionKind.CHRONIC_ILLNESS: "condition.gained.chronic_illness",
+        ConditionKind.PARANOIA: "condition.gained.paranoia",
+        ConditionKind.VISIONS: "condition.gained.visions",
+        ConditionKind.RAGE: "condition.gained.rage",
+        ConditionKind.MELANCHOLY: "condition.gained.melancholy",
+        ConditionKind.ADDICTION: "condition.gained.addiction",
+        ConditionKind.AGE_BLINDNESS: "condition.gained.age_blindness",
+        ConditionKind.AGE_DEAFNESS: "condition.gained.age_deafness",
+        ConditionKind.WITHERED_LIMB: "condition.gained.withered_limb",
+        ConditionKind.ENDLESS_HUNGER: "condition.gained.endless_hunger",
+        ConditionKind.POSSESSION: "condition.gained.possession",
+        ConditionKind.VOID_TAINT: "condition.gained.void_taint",
+        ConditionKind.CHOSEN_MARK: "condition.gained.chosen_mark",
+        ConditionKind.DIVINE_BRAND: "condition.gained.divine_brand",
+        ConditionKind.NIGHTMARES: "condition.gained.nightmares",
+        ConditionKind.COMATOSE: "condition.gained.comatose",
+        ConditionKind.COGNITIVE_DECLINE: "condition.gained.cognitive_decline",
+        ConditionKind.MALNUTRITION: "condition.gained.malnutrition",
+    },
+    without=tuple(kind for kind in ConditionKind if kind not in CONDITION_PHRASES),
+)
+ENDED_KEYS = partial(
+    ConditionKind,
+    {
+        ConditionKind.CHRONIC_ILLNESS: "condition.ended.chronic_illness",
+        ConditionKind.PARANOIA: "condition.ended.paranoia",
+        ConditionKind.VISIONS: "condition.ended.visions",
+        ConditionKind.RAGE: "condition.ended.rage",
+        ConditionKind.MELANCHOLY: "condition.ended.melancholy",
+        ConditionKind.ADDICTION: "condition.ended.addiction",
+        ConditionKind.ENDLESS_HUNGER: "condition.ended.endless_hunger",
+        ConditionKind.POSSESSION: "condition.ended.possession",
+        ConditionKind.NIGHTMARES: "condition.ended.nightmares",
+        ConditionKind.COMATOSE: "condition.ended.comatose",
+        ConditionKind.COGNITIVE_DECLINE: "condition.ended.cognitive_decline",
+        ConditionKind.MALNUTRITION: "condition.ended.malnutrition",
+    },
+    without=tuple(kind for kind in ConditionKind if kind not in END_PHRASES),
+)
 
 
 async def condition_of(ctx: TickContext, bearer_id: int, kind: ConditionKind) -> ConditionRow | None:
@@ -73,12 +81,27 @@ async def condition_of(ctx: TickContext, bearer_id: int, kind: ConditionKind) ->
     return await ctx.session.scalar(statement.limit(1))
 
 
-async def _announce(ctx: TickContext, bearer: Bearer, phrase: str, kind: ConditionKind, verb: str) -> None:
+async def _announce(ctx: TickContext, bearer: Bearer, row: ConditionRow, key: str, action: StepAction) -> None:
     if not isinstance(bearer, EntityRow):
         return
     if not is_notable(ctx.rules, bearer, await EntityRepository(ctx.session).flags(bearer.id)):
         return
-    await note(ctx, f"{bearer.name} {phrase}.", key=f"condition.{verb}.{kind.value}", ids=[bearer.id])
+    steps = (
+        (
+            StepDraft(
+                action,
+                actor=row.source_node_id if action is StepAction.FALL_ILL else None,
+                target=bearer.id,
+                amount=float(row.severity),
+                unit=FactUnit.SEVERITY,
+                record_table=ConditionRow.__tablename__,
+                record_key=str(row.id),
+            ),
+        )
+        if row.kind in ILLNESSES
+        else ()
+    )
+    await record(ctx, key, roles={IncidentRole.PATIENT: bearer.id}, facts={"condition": row.kind, "severity": row.severity}, steps=steps)
 
 
 CONDITION_KEY = "conditions"
@@ -122,8 +145,8 @@ async def gain_condition(
         await condition_trait(ctx, bearer.id, kind)
     if kind in ILLNESSES:
         await think(ctx.session, ctx.rules, bearer.id, ThoughtKind.FELL_ILL, ctx.epoch, subject_id=source_node_id)
-    if announce:
-        await _announce(ctx, bearer, CONDITION_PHRASES[kind], kind, "gained")
+    if announce and kind in GAINED_KEYS:
+        await _announce(ctx, bearer, row, GAINED_KEYS[kind], StepAction.FALL_ILL)
     return row
 
 
@@ -133,6 +156,6 @@ async def end_condition(ctx: TickContext, bearer: Bearer, kind: ConditionKind, *
         return False
     row.ended_epoch = ctx.epoch
     await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
-    if announce and kind in END_PHRASES:
-        await _announce(ctx, bearer, END_PHRASES[kind], kind, "ended")
+    if announce and kind in ENDED_KEYS:
+        await _announce(ctx, bearer, row, ENDED_KEYS[kind], StepAction.RECOVER)
     return True

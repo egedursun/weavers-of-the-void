@@ -8,13 +8,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.disease import CureSource, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.living import CultivationMethod, LineTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import DiseaseDesign, create_disease
 from aerona.engine.living.lines import LineDraft, make_line
 from aerona.engine.living.traits import traits_of
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.recording.record import FactInput, RoleValue, record
 
 
 async def design_disease(ctx: TickContext, maker: EntityRow, name: str, *, target_id: int | None, lethality: int, virulence: int) -> EntityRow:
@@ -26,7 +27,8 @@ async def design_disease(ctx: TickContext, maker: EntityRow, name: str, *, targe
     profile = await ctx.session.get(DiseaseProfileRow, disease.id)
     if profile is not None:
         profile.designed_line_id, profile.target_node_id = line.id, target_id
-    await note(ctx, f"{maker.name} made a disease by design: {disease.name}.", key="living.disease_designed", ids=[maker.id, disease.id])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.MAKER: maker.id, IncidentRole.PRODUCT: disease.id, IncidentRole.TARGET: target_id}
+    await record(ctx, "living.disease_designed", roles=roles, facts={"lethality": lethality, "virulence": virulence}, place=region)
     return disease
 
 
@@ -42,7 +44,9 @@ async def design_cure(ctx: TickContext, maker: EntityRow, disease_id: int, line_
     row = DiseaseCureRow(disease_entity_id=disease_id, community_entity_id=maker.location_id, source=CureSource.CULTURED, since_epoch=ctx.epoch)
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{maker.name} cultured a cure.", key="living.cure_cultured", ids=[maker.id, disease_id])
+    line = await ctx.session.get(LivingLineRow, line_id)
+    facts: dict[str, FactInput] = {"line": line.name} if line is not None else {}
+    await record(ctx, "living.cure_cultured", roles={IncidentRole.MAKER: maker.id, IncidentRole.TARGET: disease_id}, facts=facts, place=maker.location_id)
     return row
 
 
@@ -62,6 +66,8 @@ async def loose_designed(ctx: TickContext) -> int:
         if not ctx.rng(f"living.loose.{disease.id}.{ctx.epoch}").chance(table.escape_chance):
             continue
         await strike_plague(ctx, maker, table.escape_severity, disease=disease, path=SpreadPath.LOOSED)
-        await note(ctx, f"{disease.name} got loose among the ones who made it.", key="living.disease_loosed", ids=[maker.id, disease.id])
+        await record(
+            ctx, "living.disease_loosed", roles={IncidentRole.SUBJECT: disease.id, IncidentRole.VICTIM: maker.id}, facts={"severity": table.escape_severity}
+        )
         loosed += 1
     return loosed

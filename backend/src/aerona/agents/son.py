@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select, update
 
-from aerona.agents.chronicle import ChroniclePhase, write_line
+from aerona.agents.chronicle import ChroniclePhase, record_line
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.son_turn import son_system_context, son_user_context
 from aerona.agents.metrics import metrics_turn
@@ -22,6 +22,7 @@ from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import SonStatus
@@ -146,8 +147,16 @@ async def finish_son_turn(runtime: AgentRuntime, started: StartedTurn, outcome: 
         if started.unread:
             await session.execute(update(MessageRow).where(MessageRow.id.in_(started.unread)).values(is_read=True))
         if word:
-            text = f'{son.name}: "{word[:WORD_CHRONICLE_CHARS]}"'
-            await write_line(session, rules, epoch, ChronicleKind.SPEECH, text, key="son.word", phase=ChroniclePhase.GODS, entity_ids=creations, son_id=son.id)
+            await record_line(
+                session,
+                rules,
+                "son.word",
+                roles={IncidentRole.ACTOR: son.id, IncidentRole.PRODUCT: list(creations)},
+                facts={"words": word[:WORD_CHRONICLE_CHARS]},
+                phase=ChroniclePhase.GODS,
+                kind=ChronicleKind.SPEECH,
+                son_id=son.id,
+            )
     return SonTurnResult(started.son_id, started.son_name, word, creations, outcome.status.value, started.resumed)
 
 

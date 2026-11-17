@@ -1,5 +1,9 @@
 import { useMemo } from 'react'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
@@ -14,6 +18,11 @@ export type CosmicEpoch = components['schemas']['CosmicEpoch']
 export type EpochStatistics = components['schemas']['EpochStatistics']
 export type SearchHit = components['schemas']['SearchHit']
 export type ThreadRecord = components['schemas']['ThreadRecord']
+export type ChronicleScope = components['schemas']['ChronicleScope']
+export type FactSearchView = components['schemas']['FactSearchView']
+export type FactSearchHit = components['schemas']['FactSearchHit']
+export type StepAction = components['schemas']['StepAction']
+export type InstrumentKind = components['schemas']['InstrumentKind']
 
 const world = queryKeys.world.all
 
@@ -26,6 +35,10 @@ export const chronicleKeys = {
   cosmic: (last: number) => [...world, 'chronicle', 'cosmic', last] as const,
   stats: [...world, 'stats', 'epochs'] as const,
   search: (query: string) => [...world, 'search', query] as const,
+  facts: (query: RecordQuery) =>
+    [...world, 'records', 'search', query] as const,
+  scoped: (scope: ChronicleScope, scopeId: number | null, loaded: number) =>
+    [...world, 'chronicle', 'scope', scope, scopeId, loaded] as const,
 }
 
 export const CODEX_URL = '/api/codex.zip'
@@ -120,4 +133,102 @@ export function useChronicleKindLabels(): Map<string, string> {
       ),
     [catalogue.data]
   )
+}
+
+export const SCOPED_STEP = 40
+
+export function useOlderLines(
+  scope: ChronicleScope,
+  scopeId: number | null,
+  loaded: number,
+  total: number
+) {
+  const pages = useInfiniteQuery({
+    queryKey: chronicleKeys.scoped(scope, scopeId, loaded),
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET('/api/chronicle/scope', {
+          params: {
+            query: {
+              scope,
+              scope_id: scopeId ?? undefined,
+              offset: pageParam,
+              limit: SCOPED_STEP,
+            },
+          },
+        })
+      ),
+    initialPageParam: loaded,
+    getNextPageParam: (last, all) => {
+      const reached =
+        loaded + all.reduce((sum, page) => sum + page.items.length, 0)
+      return reached < last.total ? reached : undefined
+    },
+    enabled: false,
+  })
+  const lines = (pages.data?.pages ?? []).flatMap((page) => page.items)
+  const reached = loaded + lines.length
+  const loadOlder = () => {
+    if (pages.isFetching) return
+    if (pages.data) void pages.fetchNextPage({ cancelRefetch: false })
+    else void pages.refetch()
+  }
+  return {
+    lines,
+    total,
+    remaining: Math.max(0, total - reached),
+    loading: pages.isFetching,
+    failed: pages.isError,
+    loadOlder,
+  }
+}
+
+export type OlderLines = ReturnType<typeof useOlderLines>
+
+export type RecordQuery = {
+  fact: string | null
+  enumValue: string | null
+  kind: string | null
+  action: StepAction | null
+  instrumentKind: InstrumentKind | null
+}
+
+export const RECORD_PAGE = 25
+
+export function recordQueryEmpty(query: RecordQuery): boolean {
+  return (
+    !query.fact &&
+    !query.enumValue &&
+    !query.kind &&
+    query.action === null &&
+    query.instrumentKind === null
+  )
+}
+
+export function useRecordSearch(query: RecordQuery) {
+  return useInfiniteQuery({
+    queryKey: chronicleKeys.facts(query),
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET('/api/records/search', {
+          params: {
+            query: {
+              fact: query.fact ?? undefined,
+              enum_value: query.enumValue ?? undefined,
+              kind: query.kind ?? undefined,
+              action: query.action ?? undefined,
+              instrument_kind: query.instrumentKind ?? undefined,
+              offset: pageParam,
+              limit: RECORD_PAGE,
+            },
+          },
+        })
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (last) => {
+      const reached = last.offset + last.hits.length
+      return reached < last.total ? reached : undefined
+    },
+    enabled: !recordQueryEmpty(query),
+  })
 }

@@ -2,22 +2,22 @@ from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
-from aerona.catalog.law_depth import COURT_TEXT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import AppealRow, PrecedentRow, PrisonerRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.law.systems import advocacy, court_above, courts_of
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft, record
 
 REVERSED = "reversed"
 
@@ -77,13 +77,16 @@ async def hear_appeal(ctx: TickContext, row: AppealRow, tally: AppealTally) -> N
         await overturn(ctx, case)
         tally.reversed += 1
     if accused is not None:
-        outcome = "overturned the conviction of" if upheld else "upheld the conviction of"
-        await note(
+        await record(
             ctx,
-            f"On appeal, {COURT_TEXT[row.to_court]} {outcome} {accused.name}.",
-            key="law.appeal_upheld" if upheld else "law.appeal_denied",
-            ids=[accused.id],
-            kind=ChronicleKind.CIVILIZATION,
+            f"law.appeal_upheld_{row.to_court.value}" if upheld else f"law.appeal_denied_{row.to_court.value}",
+            roles={IncidentRole.ACCUSED: accused.id, IncidentRole.ADVOCATE: case.advocate_entity_id},
+            facts={"chance": chance, "fee": row.fee, "from_court": row.from_court},
+            steps=(
+                StepDraft(StepAction.APPEAL, actor=accused.id, amount=row.fee, unit=FactUnit.COIN),
+                StepDraft(StepAction.JUDGE, target=accused.id, outcome=StepOutcome.REVERSED if upheld else StepOutcome.REFUSED),
+            ),
+            place=case.settlement_entity_id,
         )
 
 

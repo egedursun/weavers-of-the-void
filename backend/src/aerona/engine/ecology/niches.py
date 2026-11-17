@@ -12,11 +12,12 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import SIZE_ORDER, Diet
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.evolution import EvolvedTrait
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import record
 
 NicheKey = tuple[Diet, bool, int, str]
 ANY_HABITAT = ""
@@ -105,11 +106,12 @@ async def exclude(ctx: TickContext, occupant: Occupant, winner: Occupant, tally:
     await ctx.session.delete(row)
     tally.excluded += 1
     if loser is not None and region is not None and rival is not None:
-        await note(
+        await record(
             ctx,
-            f"{rival.name} took the whole of its way of life in {region.name}; {loser.name} is gone from there.",
-            key="ecology.niche_excluded",
-            ids=[loser.id, rival.id, region.id],
+            "ecology.niche_excluded",
+            roles={IncidentRole.ACTOR: rival.id, IncidentRole.VICTIM: loser.id, IncidentRole.PLACE: region.id},
+            facts={"abundance": row.abundance, "loss": table.exclusion_loss},
+            place=region.id,
         )
 
 
@@ -185,11 +187,12 @@ async def radiate(ctx: TickContext, tally: NicheTally) -> None:
         region = await ctx.session.get(EntityRow, region_id)
         tally.radiated += 1
         if species is not None and region is not None:
-            await note(
+            await record(
                 ctx,
-                f"{species.name} spread into the way of life {lost.name} left empty in {region.name}.",
-                key="ecology.niche_radiation",
-                ids=[species.id, lost.id, region.id],
+                "ecology.niche_radiation",
+                roles={IncidentRole.SUBJECT: species.id, IncidentRole.PREDECESSOR: lost.id, IncidentRole.PLACE: region.id},
+                facts={"abundance": table.excluded_at * 2, "fit": heir.range.fit},
+                place=region.id,
             )
 
 

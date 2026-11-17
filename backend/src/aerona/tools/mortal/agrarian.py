@@ -12,23 +12,24 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.agrarian import AidKind, CommonsRule, PerennialKind, PreparednessKind, RebuildPlan
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.agrarian import control
 from aerona.engine.collective.book import shift
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.queries import living_entity, top_region
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.cycles import ruled_realm
 
 WORK_COST = 200
@@ -99,7 +100,12 @@ async def enclose_commons(call: MortalCall, args: EncloseCommonsInput) -> str:
         fail(MortalResult.ENCLOSURE_REFUSED, why="it is already enclosed")
     await control.enclose_common(call.tick, row.id, call.me.id)
     call.target(row.region_entity_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.ENCLOSE_COMMONS, entity_ids=[call.me.id, row.region_entity_id], me=call.me.name, kind=row.kind.value)
+    await call.record(
+        "tools.mortal.enclose_commons",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: row.region_entity_id},
+        facts={"commons": row.kind, "driven": row.dispossessed},
+        place=row.region_entity_id,
+    )
     return result(MortalResult.COMMONS_ENCLOSED, kind=row.kind.value, driven=row.dispossessed)
 
 
@@ -109,7 +115,22 @@ async def rule_commons(call: MortalCall, args: RuleCommonsInput) -> str:
         fail(MortalResult.COUNCIL_REFUSED, why=f"it is already {spoken(row.rule)}")
     await control.edit_record(call.tick, "commons", row.id, {"rule": CommonsRule.COUNCIL.value}, [])
     call.target(row.region_entity_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.RULE_COMMONS, entity_ids=[call.me.id, row.region_entity_id], me=call.me.name, kind=row.kind.value)
+    await call.record(
+        "tools.mortal.rule_commons",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: row.region_entity_id},
+        facts={"commons": row.kind, "condition": row.condition},
+        place=row.region_entity_id,
+        steps=(
+            StepDraft(
+                StepAction.APPOINT,
+                actor=call.me.id,
+                target=row.region_entity_id,
+                record_table="commons",
+                record_key=str(row.id),
+                outcome=StepOutcome.SUCCESS,
+            ),
+        ),
+    )
     return result(MortalResult.COMMONS_RULED, kind=row.kind.value, condition=row.condition)
 
 
@@ -124,7 +145,12 @@ async def reserve_game(call: MortalCall, args: ReserveGameInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.RESERVE_REFUSED, why=str(error).rstrip("."))
     call.target(land.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.RESERVE_GAME, entity_ids=[call.me.id, land.id], me=call.me.name, land=land.name)
+    await call.record(
+        "tools.mortal.reserve_game",
+        roles={IncidentRole.OWNER: call.me.id, IncidentRole.PLACE: land.id, IncidentRole.SUBJECT: args.species_id},
+        facts={"strictness": args.strictness},
+        place=land.id,
+    )
     return result(MortalResult.GAME_RESERVED, land=land.name, id=row.id)
 
 
@@ -145,7 +171,12 @@ async def poach_game(call: MortalCall, args: PoachGameInput) -> str:
     if town is not None and row.strictness >= STRICT_RESERVE:
         await report_crime(call.tick, town.id, call.me.id, CrimeKind.THEFT)
     call.target(land.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.POACH_GAME, entity_ids=[call.me.id, land.id], me=call.me.name, land=land.name)
+    await call.record(
+        "tools.mortal.poach_game",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: land.id, IncidentRole.VICTIM: row.holder_node_id},
+        facts={"coin": CATCH_COIN, "poaching": row.poaching},
+        place=land.id,
+    )
     return result(MortalResult.GAME_POACHED, land=land.name, coin=CATCH_COIN)
 
 
@@ -158,7 +189,12 @@ async def plant_perennial(call: MortalCall, args: PlantPerennialInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.PLANTING_REFUSED, why=str(error).rstrip("."))
     call.target(land.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.PLANT_PERENNIAL, entity_ids=[call.me.id, land.id], me=call.me.name, kind=args.kind.value, land=land.name)
+    await call.record(
+        "tools.mortal.plant_perennial",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: land.id},
+        facts={"perennial": args.kind, "epochs": row.mature_epochs},
+        place=land.id,
+    )
     return result(MortalResult.PERENNIAL_PLANTED, kind=args.kind.value, epochs=row.mature_epochs)
 
 
@@ -174,7 +210,12 @@ async def send_aid(call: MortalCall, args: SendAidInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.AID_REFUSED, why=str(error).rstrip("."))
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SEND_AID, entity_ids=[call.me.id, realm.id, town.id], me=call.me.name, kind=args.kind.value, town=town.name)
+    await call.record(
+        "tools.mortal.send_aid",
+        roles={IncidentRole.GIVER: realm.id, IncidentRole.RECEIVER: town.id, IncidentRole.ACTOR: call.me.id},
+        facts={"aid": args.kind, "refused": int(row.refused)},
+        place=town.id,
+    )
     return result(MortalResult.AID_TURNED_AWAY if row.refused else MortalResult.AID_SENT, kind=args.kind.value, town=town.name)
 
 
@@ -189,7 +230,9 @@ async def plan_rebuilding(call: MortalCall, args: PlanRebuildingInput) -> str:
         fail(MortalResult.REBUILD_REFUSED, why="nothing there waits to be rebuilt")
     await control.edit_record(call.tick, "reconstruction", row.id, {"plan": RebuildPlan.PLANNED.value, "planner_entity_id": call.me.id}, [])
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.PLAN_REBUILDING, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name)
+    await call.record(
+        "tools.mortal.plan_rebuilding", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: town.id}, facts={"progress": row.progress}, place=town.id
+    )
     return result(MortalResult.REBUILDING_PLANNED, town=town.name, progress=row.progress)
 
 
@@ -205,7 +248,12 @@ async def prepare_town(call: MortalCall, args: PrepareTownInput) -> str:
         fail(MortalResult.PREPARE_REFUSED, why=f"it costs {WORK_COST * level} coin")
     await control.build_work(call.tick, town.id, args.kind, level)
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.PREPARE_TOWN, entity_ids=[call.me.id, town.id], me=call.me.name, kind=args.kind.value, town=town.name)
+    await call.record(
+        "tools.mortal.prepare_town",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: town.id},
+        facts={"work": args.kind, "level": level, "cost": WORK_COST * level},
+        place=town.id,
+    )
     return result(MortalResult.TOWN_PREPARED, kind=args.kind.value, level=level)
 
 

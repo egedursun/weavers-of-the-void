@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.crafts import PublicClockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -11,11 +10,12 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import ClockKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.chemistry import knows
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 PRECISION = {
     ClockKind.SUNDIAL: 20,
@@ -67,7 +67,7 @@ async def keep_clocks(ctx: TickContext, tally: ClockTally) -> None:
             elif "kind" not in row.locked:
                 row.kind, row.precision, row.built_epoch = best, PRECISION[best], ctx.epoch
                 tally.improved += 1
-            await note(ctx, f"{town.name} set up a public {spoken(best)} to keep its hours.", key="clocks.built", ids=[town.id])
+            await record(ctx, "clocks.built", roles={IncidentRole.MAKER: town.id}, facts={"clock": best, "precision": PRECISION[best]}, place=town.id)
         if row is None:
             continue
         profile = await ctx.session.get(SettlementProfileRow, town.id)

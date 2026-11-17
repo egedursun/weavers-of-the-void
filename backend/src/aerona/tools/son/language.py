@@ -6,6 +6,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -14,7 +15,6 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.shared_inputs import WordInput, add_words
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, no_cost
 from aerona.tools.framework.validation import require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 WORD_SEPARATOR = ", "
@@ -36,7 +36,9 @@ async def coin_words(call: SonCall, args: CoinWordsInput) -> str:
     if not added:
         return result(SonResult.WORDS_NONE)
     joined = WORD_SEPARATOR.join(added)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.WORDS, entity_ids=[language.id], son=call.son.name, language=language.name, words=joined)
+    await call.record(
+        "tools.son.words", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: language.id}, facts={"words": str(joined)}, kind=ChronicleKind.LANGUAGE
+    )
     return result(SonResult.WORDS_ADDED, language=language.name, words=joined)
 
 

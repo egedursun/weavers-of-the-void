@@ -74,7 +74,7 @@ async def test_settling_the_heavens_gives_every_star_and_world_its_physics(sessi
 
 async def test_a_called_body_strikes_and_leaves_a_crater(session: AsyncSession, ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(session, "Low Plain", cosmos.home.id)
-    impact = await call_impact(ctx, cosmos.home.id, region.id, None, "The Creator", size=60)
+    impact = await call_impact(ctx, cosmos.home.id, region.id, None, size=60)
     assert impact.outcome is ImpactOutcome.PENDING and impact.due_epoch == EPOCH + 1
     assert await resolve(tick(session, rules, epoch=EPOCH + 1)) == 1
     assert impact.outcome is ImpactOutcome.STRUCK
@@ -83,12 +83,12 @@ async def test_a_called_body_strikes_and_leaves_a_crater(session: AsyncSession, 
 
 
 async def test_a_deflected_body_never_strikes(session: AsyncSession, ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
-    impact = await call_impact(ctx, cosmos.home.id, None, None, "The Creator")
-    await deflect_impact(ctx, impact.id, None, "The Creator")
+    impact = await call_impact(ctx, cosmos.home.id, None, None)
+    await deflect_impact(ctx, impact.id, None)
     assert await resolve(tick(session, rules, epoch=EPOCH + 1)) == 0
     assert impact.outcome is ImpactOutcome.DEFLECTED
     with pytest.raises(ValidationFailedError):
-        await deflect_impact(ctx, impact.id, None, "The Creator")
+        await deflect_impact(ctx, impact.id, None)
 
 
 async def test_terraforming_moves_the_world_and_ends(session: AsyncSession, ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
@@ -96,7 +96,7 @@ async def test_terraforming_moves_the_world_and_ends(session: AsyncSession, ctx:
     physics = await session.get(WorldPhysicsRow, cosmos.home.id)
     assert physics is not None
     before = physics.pressure
-    await begin(ctx, cosmos.home.id, TerraformAim.THICKEN_AIR, None, "The Creator", step=10, epochs=2)
+    await begin(ctx, cosmos.home.id, TerraformAim.THICKEN_AIR, None, step=10, epochs=2)
     assert await terraform_cycle(ctx) == 1
     assert await terraform_cycle(ctx) == 1
     assert physics.pressure > before
@@ -239,7 +239,7 @@ async def test_a_people_that_breathes_methane_reshapes_its_air_toward_methane(se
     physics = await session.get(WorldPhysicsRow, cosmos.home.id)
     assert physics is not None and wanted_aim(biology, physics, rules) is TerraformAim.BREATHABLE_AIR
     before = physics.methane
-    await begin(ctx, cosmos.home.id, TerraformAim.BREATHABLE_AIR, people.id, people.name, step=10, epochs=1)
+    await begin(ctx, cosmos.home.id, TerraformAim.BREATHABLE_AIR, people.id, step=10, epochs=1)
     await terraform_cycle(ctx)
     assert physics.methane == before + 10
 
@@ -274,7 +274,7 @@ async def test_a_strike_is_remembered_and_spares_the_kinds_that_bear_the_cold(se
     tender = await make_entity(session, "Sunwing", EntityType.SPECIES, SpeciesStats(abundance=100), world_id=cosmos.home.id)
     session.add_all([SpeciesProfileRow(species_entity_id=hardy.id, temperature_min=-40), SpeciesProfileRow(species_entity_id=tender.id, temperature_min=10)])
     region = await make_region(session, "Low Plain", cosmos.home.id)
-    await call_impact(ctx, cosmos.home.id, region.id, None, "The Creator", size=80)
+    await call_impact(ctx, cosmos.home.id, region.id, None, size=80)
     await resolve(tick(session, rules, epoch=EPOCH + 1))
     assert stat(hardy, "abundance") > stat(tender, "abundance")
     assert await session.scalar(select(NotableYearRow).where(NotableYearRow.world_id == cosmos.home.id)) is not None
@@ -330,13 +330,13 @@ async def test_a_son_breaks_a_moon_into_a_ring(session: AsyncSession, ctx: TickC
     moon = await make_world(session, "Pebble")
     moon.parent_world_id, moon.orbit = cosmos.home.id, 0.2
     await settle_heavens(session, rules)
-    await physics_control.break_moon(ctx, moon.id, "Veyr")
+    await physics_control.break_moon(ctx, moon.id, cosmos.creator.id)
     assert moon.world_type is WorldType.SHATTERED
     await world_physics(tick(session, rules))
     physics = await session.get(WorldPhysicsRow, cosmos.home.id)
     assert physics is not None and physics.ringed
     with pytest.raises(ValidationFailedError):
-        await physics_control.break_moon(ctx, cosmos.home.id, "Veyr")
+        await physics_control.break_moon(ctx, cosmos.home.id, cosmos.creator.id)
 
 
 async def test_moons_the_god_holds_darken_the_sky(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

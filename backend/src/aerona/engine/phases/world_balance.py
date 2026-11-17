@@ -11,8 +11,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery
@@ -20,7 +21,6 @@ from aerona.domain.models.entity_stats import CultStats, FactionStats, Tradition
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.worlds import declare_holy_world
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.births import NOTABLE_ROLES, pick_class, raise_notable
 from aerona.engine.primitives.faith import living_patron
@@ -31,6 +31,7 @@ from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.storyteller.pace import quiet_world
 from aerona.rules.registry import Rules
 
@@ -218,8 +219,18 @@ async def balance_sons(ctx: TickContext) -> int:
         son = min(ranked, key=lambda item: (item[0], item[1]))[2]
         son.current_world_id = receiver_world.id
         await ctx.session.flush()
-        text = f"{son.name} left {donor_world.name}, crowded with their siblings, for {receiver_world.name}, whose people need gods."
-        await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="world_balance.son_moved", son_id=son.id, world_id=receiver_world.id)
+        await record(
+            ctx,
+            "world_balance.son_moved",
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.ORIGIN: donor_world.id, IncidentRole.DESTINATION: receiver_world.id},
+            facts={"gap": receivers[0].share - receivers[0].sons},
+            steps=(
+                StepDraft(StepAction.DEPART, actor=son.id),
+                StepDraft(StepAction.ARRIVE, actor=son.id, locus_kind=StepLocus.REALM, locus_node=receiver_world.id),
+            ),
+            son_id=son.id,
+            world_id=receiver_world.id,
+        )
         moved += 1
     return moved
 
@@ -274,7 +285,8 @@ async def raise_faction(ctx: TickContext, world_id: int) -> EntityRow | None:
     community = max(candidates, key=lambda item: (stat(item, "population") or 0, -item.id), default=None)
     if community is None:
         return None
-    subtype, suffix = FACTION_KINDS[await _dominant(ctx, community)]
+    dominant = await _dominant(ctx, community)
+    subtype, suffix = FACTION_KINDS[dominant]
     rng = ctx.rng(seed_of("balance_faction", community.id))
 
     def roll() -> int:
@@ -295,7 +307,12 @@ async def raise_faction(ctx: TickContext, world_id: int) -> EntityRow | None:
     )
     await connect(ctx.session, faction.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, description="rose from within")
     await bind_language_and_faith(ctx, faction, source=community)
-    await note(ctx, f"The first {subtype} of the world was founded in {community.name}.", key="world_balance.faction", ids=[community.id, faction.id])
+    await record(
+        ctx,
+        "world_balance.faction",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: community.id},
+        facts={"class_": dominant, "population": stat(community, "population") or 0},
+    )
     return faction
 
 
@@ -331,11 +348,11 @@ async def raise_cult(ctx: TickContext, world_id: int) -> EntityRow | None:
     await connect(ctx.session, cult.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, description="rose from within")
     await connect(ctx.session, cult.id, patron.id, BondKind.WORSHIPS, ctx.epoch, description="founding faith")
     await bind_language_and_faith(ctx, cult, source=community)
-    await note(
+    await record(
         ctx,
-        f"The most devout of {community.name} founded the world's first temple order in the name of {patron.name}.",
-        key="world_balance.cult",
-        ids=[community.id, cult.id],
+        "world_balance.cult",
+        roles={IncidentRole.PRODUCT: cult.id, IncidentRole.PLACE: community.id, IncidentRole.PATRON: patron.id},
+        facts={"followers": followers, "piety": stat(community, "piety") or 0},
         son_id=patron.id,
     )
     return cult
@@ -343,7 +360,8 @@ async def raise_cult(ctx: TickContext, world_id: int) -> EntityRow | None:
 
 async def begin_tradition(ctx: TickContext, community: EntityRow) -> EntityRow | None:
     settings = ctx.rules.world_balance
-    subtype = TRADITIONS[await _dominant(ctx, community)]
+    dominant = await _dominant(ctx, community)
+    subtype = TRADITIONS[dominant]
     celebrated = (
         select(EntityRow.id)
         .join(BondRow, BondRow.target_node_id == EntityRow.id)
@@ -370,7 +388,7 @@ async def begin_tradition(ctx: TickContext, community: EntityRow) -> EntityRow |
         ),
     )
     await connect(ctx.session, community.id, tradition.id, BondKind.CELEBRATES, ctx.epoch)
-    await note(ctx, f"{community.name} began a new {subtype}.", key="world_balance.tradition", ids=[community.id, tradition.id])
+    await record(ctx, "world_balance.tradition", roles={IncidentRole.ACTOR: community.id, IncidentRole.PRODUCT: tradition.id}, facts={"class_": dominant})
     return tradition
 
 
@@ -402,8 +420,8 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
         if not forced and not rng.chance(settings.revival_chance):
             continue
         community = rng.pick(communities)
-        record = (await begin_tradition(ctx, community) if index % 2 else None) or await birth(ctx, community)
-        created.append(record.id)
+        entry = (await begin_tradition(ctx, community) if index % 2 else None) or await birth(ctx, community)
+        created.append(entry.id)
     return created
 
 
@@ -428,7 +446,6 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.community_societies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.incident_participants",
     "table.incidents",
@@ -452,8 +469,8 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",

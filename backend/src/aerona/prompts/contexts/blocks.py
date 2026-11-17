@@ -439,6 +439,7 @@ class SonMemoryContext(RulesContext):
     recollections: list[ChronicleRow] = Field(default_factory=list)
     about: list[ChronicleRow] = Field(default_factory=list)
     beliefs: list[FolkBeliefLine] = Field(default_factory=list)
+    records: str = ""
 
 
 class SkyCalendarContext(PromptContext):

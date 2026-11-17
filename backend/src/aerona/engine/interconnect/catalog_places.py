@@ -59,7 +59,7 @@ PLACE_MECHANICS = (
         fields=("mystery", "danger"),
         tables=(PlaceSecretRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("hide_secret",),
+        tools=("hide_secret", "reveal_secret"),
         targets=PLACE,
         couplings=(
             Coupling(S.KNOWLEDGE, "explorers, seers and solved mysteries reveal secrets", EdgeKind.TRIGGER, "places.discover_skill_pct"),

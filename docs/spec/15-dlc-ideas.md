@@ -1034,7 +1034,7 @@ Your house remembers the name of every kinsman they killed. Each epoch the griev
 
 Your god's faith is no longer a count of followers. It has a doctrine, a clergy, temples, lands and a treasury. Its tenets decide whether the maimed are holy or unclean, whether captives die on the altar, whether priests may found dynasties. Persecution feeds its zeal and comfort starves it. And somewhere a brilliant theologian is already drafting the heresy that will split it in two.
 
-- **Twenty-Three Tenets**: three to six per faith, each with real effects. Sacred suffering honours the maimed while purity of body calls them unclean, celibate clergy found no houses, and human sacrifice consumes captives and earns infamy abroad.
+- **Twenty-Three Tenets**: three to six per faith, each with real effects. Sacred suffering honours the maimed while purity of body calls them unclean, celibate clergy found no houses, and the sacrifice of people consumes captives and earns infamy abroad.
 - **Zeal That Burns and Fades**: persecution, martyrs, miracles, holy war victories and plague raise it; prosperity, scandal and failed prophecies drain it. Push it too high and fanaticism follows: inquisition, iconoclasm, crusade.
 - **Clergy, Tithes and Relics**: high priests, priests, monks and inquisitors, paid by tithes that also fund alms, war chests and monasteries that keep learning alive through dark ages. Saints' bones draw pilgrims, coin and disease.
 - **Heresy and Schism**: doctrine drifts under a creative theologian and splits into a heresy tree. Orthodoxy decides between inquisition and tolerance, councils vote on tenets and saints, and a vacant High Seat can crown two rival heads.

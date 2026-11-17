@@ -15,14 +15,16 @@ from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.mind import PreferenceKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.relations import CircleKind
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import is_locked, mind_of, stored_values, write_values
-from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, shift
 
 VALUE_SPAN = 100
@@ -114,7 +116,14 @@ async def found_circle(ctx: TickContext, place: EntityRow, interest: Interest, m
             FactionMembershipRow(faction_entity_id=faction.id, mortal_entity_id=mortal_id, rank=FactionRank.MEMBER, joined_epoch=ctx.epoch, locked=[])
         )
     await ctx.session.flush()
-    await note(ctx, f"{faction.name} first gathered, drawn together by what they share.", key="circle.founded", ids=[faction.id, place.id])
+    await record(
+        ctx,
+        "circle.founded",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: place.id, IncidentRole.MEMBER: members},
+        facts={"circle": kind},
+        steps=(StepDraft(StepAction.FOUND, actor=members[0], target=faction.id),),
+        place=place.id,
+    )
     return row
 
 

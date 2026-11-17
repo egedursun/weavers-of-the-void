@@ -8,14 +8,15 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import DiseaseTarget, DiseaseVector
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, WARM_BANDS, new_strain
 from aerona.engine.ecology.history import record_pathogen
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import RoleValue, record
 
 INCUBATION_MAX = 20
 SPREADING_SYMPTOMS = {DiseaseVector.AIR: DiseaseTarget.BREATH, DiseaseVector.TOUCH: DiseaseTarget.SKIN}
@@ -98,10 +99,6 @@ async def evolve_pathogens(ctx: TickContext, tally: PathogenTally) -> None:
             strain = await new_strain(ctx, book, disease, land) if land is not None else None
             if strain is not None and land is not None:
                 tally.escaped += 1
-                await note(
-                    ctx,
-                    f"{disease.name} changed past the immunity of {land.name}; {strain.name} spreads where the old sickness could not.",
-                    key="disease.immune_escape",
-                    ids=[disease.id, strain.id, land.id],
-                )
+                roles: dict[IncidentRole, RoleValue] = {IncidentRole.PREDECESSOR: disease.id, IncidentRole.PRODUCT: strain.id, IncidentRole.PLACE: land.id}
+                await record(ctx, "disease.immune_escape", roles=roles, facts={"immune_share": share}, place=land.id)
     await ctx.session.flush()

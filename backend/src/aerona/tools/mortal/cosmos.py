@@ -8,16 +8,15 @@ from aerona.catalog.travel import JOURNEY_INTENT_LABELS
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
-from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, VehicleKind
 from aerona.engine.cosmos.routes import LIVE_JOURNEYS, JourneySpec, can_use_route, method_label, start_journey
@@ -65,22 +64,21 @@ async def find_route(call: MortalCall, args: FindRouteInput) -> str:
         if search.vehicle is not None:
             call.remember_creation(search.vehicle.id)
         call.target(search.target.id)
-        await call.chronicle(
-            ChronicleKind.EXPLORATION,
-            lines.ROUTE_FOUND,
-            entity_ids=[call.me.id],
-            feed=FeedCategory.VOYAGE,
-            me=call.me.name,
-            world=search.target.name,
-            method=method_label(route.method),
-            epochs=route.duration_epochs,
+        await call.record(
+            "tools.mortal.route_found",
+            roles={
+                IncidentRole.ACTOR: call.me.id,
+                IncidentRole.DESTINATION: search.target.id,
+                IncidentRole.INSTRUMENT: search.vehicle.id if search.vehicle is not None else None,
+            },
+            facts={"method": route.method, "epochs": route.duration_epochs, "danger": route.danger},
         )
         return result(MortalResult.ROUTE_FOUND, id=route.id, method=method_label(route.method), epochs=route.duration_epochs, danger=route.danger)
     if search.status is SearchStatus.INTUITION:
         await record_intuition(call.tick, call.me, args.how, search.method)
-        await call.chronicle(ChronicleKind.EXPLORATION, lines.ROUTE_SENSED, entity_ids=[call.me.id], feed=FeedCategory.VOYAGE, me=call.me.name, how=args.how)
+        await call.record("tools.mortal.route_sensed", roles={IncidentRole.ACTOR: call.me.id}, facts={"method": search.method, "how": args.how})
         return result(MortalResult.WORLD_SENSED)
-    await call.chronicle(ChronicleKind.EXPLORATION, lines.ROUTE_NOT_FOUND, entity_ids=[call.me.id], me=call.me.name, how=args.how)
+    await call.record("tools.mortal.route_not_found", roles={IncidentRole.ACTOR: call.me.id}, facts={"how": args.how})
     return result(MortalResult.NO_ROUTE)
 
 
@@ -109,7 +107,9 @@ async def explore_land(call: MortalCall, args: ExploreInput) -> str:
     wits = first_stat(call.me, EXPLORER_WITS, call.rules.mortal_tools.default_stat)
     roll = call.die(PERCENT, "explore") + round(wits / call.rules.mortal_tools.route_intellect_divisor) + (exploration.tool_knowledge_bonus if knows_way else 0)
     if roll < exploration.tool_success_threshold:
-        await call.chronicle(ChronicleKind.EXPLORATION, lines.EXPLORE_FAILED, entity_ids=[call.me.id], me=call.me.name)
+        await call.record(
+            "tools.mortal.explore_failed", roles={IncidentRole.ACTOR: call.me.id}, facts={"roll": roll, "needed": exploration.tool_success_threshold}
+        )
         return result(MortalResult.EXPLORE_FAILED, roll=roll, needed=exploration.tool_success_threshold)
     kind = EntityType.REGION if args.kind is LandKind.REGION else EntityType.PLACE
     stats = land_stats(call.tick, kind, call.rng("land")).model_dump(exclude={"kind"}, exclude_none=True)
@@ -133,15 +133,11 @@ async def explore_land(call: MortalCall, args: ExploreInput) -> str:
     settlement = await pioneers(call.tick, call.me, land) if args.settle and call.me.entity_type in SETTLERS else None
     if settlement is not None:
         call.remember_creation(settlement.id)
-    found = lines.NEW_PLACE.format(parent=parent.name) if parent is not None else lines.NEW_REGION
-    await call.chronicle(
-        ChronicleKind.EXPLORATION,
-        lines.EXPLORED,
-        entity_ids=[call.me.id, land.id],
-        me=call.me.name,
-        found=found,
-        name=land.name,
-        pioneers=lines.PIONEERS.format(settlement=settlement.name) if settlement is not None else "",
+    await call.record(
+        "tools.mortal.explored",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: land.id, IncidentRole.PLACE: parent.id if parent is not None else None},
+        facts={"land_kind": kind, "settlement": settlement.id if settlement is not None else None, "roll": roll},
+        place=parent.id if parent is not None else land.id,
     )
     return result(
         MortalResult.EXPLORED,
@@ -176,7 +172,9 @@ async def build_ship(call: MortalCall, args: ShipInput) -> str:
     await set_vessel_kind(call.session, ship.id, VehicleKind.SHIP)
     await BondRepository(call.session).connect(BondDraft(call.me.id, ship.id, BondKind.OWNS, call.epoch, lines.SHIPYARD))
     await shift_stock(call.session, call.rules, call.me.id, Commodity.ORE, -tools.ship_miners_cost, epoch=call.epoch, flow=GoodsFlow.TOOL)
-    await call.chronicle(ChronicleKind.PRODUCTION, lines.SHIP, entity_ids=[call.me.id, ship.id], me=call.me.name, name=ship.name)
+    await call.record(
+        "tools.mortal.ship", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: ship.id}, facts={"ore_spent": tools.ship_miners_cost}, place=home
+    )
     return result(MortalResult.SHIP_READY, id=ship.id, name=ship.name)
 
 
@@ -229,19 +227,16 @@ async def launch_expedition(call: MortalCall, args: ExpeditionInput) -> str:
     if args.intent in CROWD_INTENTS and people < tools.expedition_min_people:
         fail(MortalResult.TOO_FEW_FOR_EXPEDITION)
     journey = await start_journey(call.tick, JourneySpec(call.me, route, args.intent, people, vessel))
-    destination = await call.session.get(WorldRow, journey.destination_world_id)
     call.target(journey.destination_world_id)
-    await call.chronicle(
-        ChronicleKind.EXPEDITION,
-        lines.EXPEDITION,
-        entity_ids=[call.me.id],
-        feed=FeedCategory.VOYAGE,
-        me=call.me.name,
-        intent=JOURNEY_INTENT_LABELS[args.intent].lower(),
-        world=destination.name if destination is not None else "",
-        count=journey.population,
-        vessel=lines.WITH_VESSEL.format(vessel=vessel.name) if vessel is not None else "",
-        epochs=journey.epochs_left,
+    await call.record(
+        "tools.mortal.expedition",
+        roles={
+            IncidentRole.ACTOR: call.me.id,
+            IncidentRole.DESTINATION: journey.destination_world_id,
+            IncidentRole.INSTRUMENT: vessel.id if vessel is not None else None,
+        },
+        facts={"intent": args.intent, "travellers": journey.population, "epochs": journey.epochs_left},
+        cause=journey.incident_id,
     )
     return result(MortalResult.EXPEDITION_STARTED, epochs=journey.epochs_left)
 

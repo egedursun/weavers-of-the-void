@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.travel import ExplorationReason
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats
-from aerona.engine.phases.exploration import ExplorationScene, Reason, cosmic_exploration, exploration_pressure, exploration_round
+from aerona.engine.phases.exploration import ExplorationScene, cosmic_exploration, exploration_pressure, exploration_round
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, teach, tick, tuned
 
@@ -42,13 +43,13 @@ async def test_crowding_hunger_and_poverty_raise_the_pressure(session: AsyncSess
     region = await make_region(session, "Vale", cosmos.home.id)
     people = await community(session, cosmos, region)
     crowded = await exploration_pressure(ctx, await ExplorationScene.load(ctx), people, [people])
-    assert crowded.pct == 22 and crowded.reasons == [Reason.NARROW]
+    assert crowded.pct == 22 and crowded.reasons == [ExplorationReason.NARROW]
     poor_ctx = tick(session, explore(rules, **{**base, "crowded_fill_pct": 100000, "poor_prosperity": 90}))
     poor = await exploration_pressure(poor_ctx, await ExplorationScene.load(poor_ctx), people, [people])
-    assert poor.pct == 20 and Reason.POVERTY in poor.reasons
+    assert poor.pct == 20 and ExplorationReason.POVERTY in poor.reasons
     hungry_ctx = tick(session, explore(rules, **{**base, "crowded_fill_pct": 100000, "hungry_food": 100000}))
     hungry = await exploration_pressure(hungry_ctx, await ExplorationScene.load(hungry_ctx), people, [people])
-    assert hungry.pct == 20 and Reason.HUNGER in hungry.reasons
+    assert hungry.pct == 20 and ExplorationReason.HUNGER in hungry.reasons
 
 
 async def test_an_explorer_on_the_land_and_road_knowledge_add_to_the_pressure(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -59,10 +60,10 @@ async def test_an_explorer_on_the_land_and_road_knowledge_add_to_the_pressure(se
     await teach(session, people, KnowledgeBranch.SEAFARING)
     pressure = await exploration_pressure(ctx, await ExplorationScene.load(ctx), people, [people])
     assert pressure.pct == 28
-    assert pressure.reasons == [Reason.EXPLORER, Reason.KNOWLEDGE]
+    assert pressure.reasons == [ExplorationReason.EXPLORER, ExplorationReason.KNOWLEDGE]
     assert pressure.explorer is not None and pressure.explorer.id == scout.id
     own = await exploration_pressure(ctx, await ExplorationScene.load(ctx), scout, [people])
-    assert own.pct == 20 and own.reasons == [Reason.SPIRIT]
+    assert own.pct == 20 and own.reasons == [ExplorationReason.SPIRIT]
 
 
 async def test_pressure_is_clamped_to_one_hundred(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

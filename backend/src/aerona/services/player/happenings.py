@@ -161,7 +161,7 @@ async def end_event(scope: PlayerScope, command: EventTarget) -> Effect:
 async def stir_land(scope: PlayerScope, command: StirLand) -> Effect:
     if command.disaster not in VOLCANIC:
         raise ValidationFailedError("Only an eruption or a volcanic earthquake can be stirred here.")
-    event = await send_disaster(await scope.context("land_stir"), command.region_id, command.disaster, command.severity)
+    event = await send_disaster(await scope.context("land_stir"), command.region_id, command.disaster, command.severity, (await scope.creator()).id)
     return Effect(f"{DISASTERS[command.disaster].label} struck: {event.name}.", command.region_id, created_ids=(event.id,))
 
 

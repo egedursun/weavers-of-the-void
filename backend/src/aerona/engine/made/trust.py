@@ -9,12 +9,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import Authenticity
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import best_skill
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 
 FALSE = frozenset({Authenticity.ALTERED, Authenticity.FORGED, Authenticity.GENERATED})
 KEEPERS = (SkillKind.WRITING, SkillKind.LAW, SkillKind.CRYPTOGRAPHY, SkillKind.COMPUTING)
@@ -60,7 +63,14 @@ async def find_forgeries(ctx: TickContext, town: EntityRow, accounts: list[Accou
                 account.credence = 0
             found += 1
     if found:
-        await note(ctx, f"The keepers of {town.name} found a false record.", key="trust.forgery_found", ids=[town.id])
+        await record_incident(
+            ctx,
+            "trust.forgery_found",
+            roles={IncidentRole.SUBJECT: town.id},
+            facts={"records": found},
+            place=town.id,
+            steps=(StepDraft(StepAction.FIND_EVIDENCE, target=town.id, amount=found, unit=FactUnit.COUNT),),
+        )
     return found
 
 

@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.agrarian import AidKind, KeystoneUse
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.agrarian import control
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import definite
@@ -20,7 +21,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -67,8 +67,11 @@ async def designate_keystone(call: SonCall, args: DesignateKeystoneInput) -> str
     except ValidationFailedError as error:
         fail(SonResult.KEYSTONE_REFUSED, why=str(error).rstrip("."))
     call.target(land.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.DESIGNATE_KEYSTONE, entity_ids=[species.id, land.id], son=call.son.name, name=definite(row.name), reason=args.reason
+    await call.record(
+        "tools.son.designate_keystone",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [species.id, land.id]},
+        facts={"name": definite(row.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.KEYSTONE_DESIGNATED, name=definite(row.name), land=land.name, use=row.use.value)
 
@@ -81,14 +84,11 @@ async def inspire_relief(call: SonCall, args: InspireReliefInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.RELIEF_REFUSED, why=str(error).rstrip("."))
     call.target(town.id)
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.INSPIRE_RELIEF,
-        entity_ids=[giver.id, town.id],
-        son=call.son.name,
-        giver=giver.name,
-        town=town.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.inspire_relief",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [giver.id, town.id]},
+        facts={"giver_detail": str(giver.name), "town": str(town.name), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.RELIEF_TURNED_AWAY if row.refused else SonResult.RELIEF_INSPIRED, giver=giver.name, town=town.name, kind=args.kind.value)
 

@@ -19,6 +19,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.military import FeudParty, FeudStatus
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.domain.enums.regime import SegmentLevel
 from aerona.domain.enums.unions import UnionPurpose
@@ -30,10 +31,10 @@ from aerona.engine.demography.kinship import may_wed
 from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.mortal.kin import children_of, spouses_of
 from aerona.engine.mortal.kinship import marry
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
@@ -218,8 +219,11 @@ async def steer(ctx: TickContext, plan: BreedingPlanRow, design: LongPlanRow, ta
             shift(plan, "love_matches", 1, high=10**6)
             shift(design, "progress", -1, high=10**6)
             tally.love_matches += 1
-            await note(
-                ctx, f"{member.name} married for love, against the long design of the house.", key="breeding.love", ids=[member.id, plan.house_entity_id]
+            await record(
+                ctx,
+                "breeding.love",
+                roles={IncidentRole.SUBJECT: member.id, IncidentRole.OPPONENT: plan.house_entity_id},
+                facts={"love_matches": plan.love_matches},
             )
             made += 1
             continue

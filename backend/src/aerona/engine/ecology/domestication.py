@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +28,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import SpeciesStats
@@ -36,7 +39,6 @@ from aerona.engine.ecology.evolution import inherit_marks
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -44,6 +46,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.rules.registry import Rules
 
 S = DomesticationStage
@@ -179,7 +182,14 @@ async def master_herder(ctx: TickContext, keeper_id: int) -> int:
     return int(found or 0)
 
 
-async def advance(ctx: TickContext, herd: HerdRow, made: int) -> str | None:
+@dataclass(frozen=True)
+class Advanced:
+    key: str
+    roles: dict[IncidentRole, RoleValue]
+    facts: dict[str, FactInput]
+
+
+async def advance(ctx: TickContext, herd: HerdRow, made: int) -> Advanced | None:
     table = ctx.rules.domestication
     if "stage" in herd.locked:
         return None
@@ -191,23 +201,36 @@ async def advance(ctx: TickContext, herd: HerdRow, made: int) -> str | None:
     rng = ctx.rng(f"domestication.{herd.community_entity_id}.{herd.species_entity_id}.{ctx.epoch}")
     if herd.stage is S.TAMED and herd.fed_epochs >= table.herd_epochs:
         herd.stage, herd.since_epoch = S.HERDED, ctx.epoch
-        return f"{keeper.name} now keeps herds of {species.name}"
+        return Advanced(
+            "ecology.domestication",
+            {IncidentRole.ACTOR: keeper.id, IncidentRole.SUBJECT: species.id},
+            {"head": herd.head, "fed_epochs": herd.fed_epochs},
+        )
     if made >= table.cap:
         return None
     tamed = rng.chance(table.domesticate_chance * profile.tameability / PERCENT)
-    return await promote(ctx, herd, species, keeper, tamed=tamed, bred=rng.chance(table.breed_chance))
+    return await promote(ctx, herd, species, keeper, tamed=tamed, bred=rng.chance(table.breed_chance), tameability=profile.tameability)
 
 
-async def promote(ctx: TickContext, herd: HerdRow, species: EntityRow, keeper: EntityRow, *, tamed: bool, bred: bool) -> str | None:
+async def promote(ctx: TickContext, herd: HerdRow, species: EntityRow, keeper: EntityRow, *, tamed: bool, bred: bool, tameability: int) -> Advanced | None:
     table = ctx.rules.domestication
     if herd.stage is S.HERDED and ctx.epoch - herd.since_epoch >= table.domesticate_epochs and tamed:
         child = await offspring(ctx, species, keeper, stage=S.DOMESTICATED)
         await rehome(ctx, herd, child, S.DOMESTICATED)
-        return f"the herders of {keeper.name} tamed {species.name} into {child.name}"
-    if herd.stage is S.DOMESTICATED and bred and await master_herder(ctx, keeper.id) >= table.breed_skill:
+        return Advanced(
+            "ecology.domesticated",
+            {IncidentRole.ACTOR: keeper.id, IncidentRole.SUBJECT: species.id, IncidentRole.PRODUCT: child.id},
+            {"head": herd.head, "tameability": tameability},
+        )
+    skill = await master_herder(ctx, keeper.id) if herd.stage is S.DOMESTICATED and bred else 0
+    if herd.stage is S.DOMESTICATED and bred and skill >= table.breed_skill:
         child = await offspring(ctx, species, keeper, stage=S.BREED)
         await rehome(ctx, herd, child, S.BREED)
-        return f"a master herder of {keeper.name} raised a new breed, {child.name}"
+        return Advanced(
+            "ecology.breed_raised",
+            {IncidentRole.ACTOR: keeper.id, IncidentRole.SUBJECT: species.id, IncidentRole.PRODUCT: child.id},
+            {"head": herd.head, "skill": skill},
+        )
     return None
 
 
@@ -320,11 +343,11 @@ async def husbandry(ctx: TickContext) -> dict[str, int]:
         if "trained" not in herd.locked:
             herd.trained = min(herd.trained, herd.head)
         counts["trained"] = counts.get("trained", 0) + await train(ctx, herd)
-        text = await advance(ctx, herd, made)
-        if text:
+        advanced = await advance(ctx, herd, made)
+        if advanced is not None:
             counts["advanced"] += 1
             made += 1
-            await note(ctx, f"{text[0].upper()}{text[1:]}.", key="ecology.domestication", ids=[herd.community_entity_id, herd.species_entity_id])
+            await record(ctx, advanced.key, roles=advanced.roles, facts=advanced.facts)
     await ctx.session.flush()
     counts["stages"] = await stage_from_herds(ctx)
     return counts

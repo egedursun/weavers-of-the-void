@@ -8,16 +8,17 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.customs import NameForm
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.intrigue import HookSource
+from aerona.domain.enums.intrigue import HookSource, TrueNameCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.customs.taboo import name_tabooed
 from aerona.engine.intrigue.secrets import grant_hook
 from aerona.engine.mortal.kin import partners_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 ALWAYS_NAMED = frozenset({EntityType.SPIRIT, EntityType.OUTER_BEING})
 SOMETIMES_NAMED = frozenset({EntityType.MORTAL, EntityType.PLACE, EntityType.ITEM, EntityType.SPECIES})
@@ -129,7 +130,7 @@ async def name_power(ctx: TickContext, caster_id: int, target: EntityRow | None)
     return max(0.0, factor)
 
 
-async def rename(ctx: TickContext, namer: Namer, row: TrueNameRow, *, cause: str, name: str | None = None) -> bool:
+async def rename(ctx: TickContext, namer: Namer, row: TrueNameRow, *, cause: TrueNameCause, name: str | None = None, form: NameForm | None = None) -> bool:
     node = await ctx.session.get(NodeRow, row.bearer_node_id)
     if node is not None:
         await ctx.session.refresh(node)
@@ -148,13 +149,13 @@ async def rename(ctx: TickContext, namer: Namer, row: TrueNameRow, *, cause: str
     )
     if son is not None and son.existence_profile is not None:
         son.existence_profile = son.existence_profile.model_copy(update={"true_name": name})
-    label = son.name if son is not None else (bearer.name if bearer is not None else "a being")
-    await note(
+    await record(
         ctx,
-        f"{label} took a new true name {cause}; every hold on the old one fell away.",
-        key="intrigue.true_name_changed",
-        ids=[row.bearer_node_id],
-        kind=ChronicleKind.WORLD,
+        "intrigue.true_name_changed",
+        roles={IncidentRole.SUBJECT: row.bearer_node_id},
+        facts={"cause": cause, "form": form},
+        son_id=son.id if son is not None else None,
+        world_id=world_id,
     )
     return True
 
@@ -171,7 +172,7 @@ async def renew_names(ctx: TickContext, namer: Namer) -> int:
             if son.essence < table.rename_essence:
                 continue
             son.essence -= table.rename_essence
-            renewed += await rename(ctx, namer, row, cause="through a costly rebirth of its manifestation")
+            renewed += await rename(ctx, namer, row, cause=TrueNameCause.REBIRTH)
         elif ctx.rng(seed_of("intrigue.rename", row.bearer_node_id, ctx.epoch)).chance(table.rename_initiation_pct):
-            renewed += await rename(ctx, namer, row, cause="through an initiation")
+            renewed += await rename(ctx, namer, row, cause=TrueNameCause.INITIATION)
     return renewed

@@ -10,21 +10,22 @@ from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.flora import WorldBiochemistryRow
 from aerona.db.tables.physics import TerraformingRow, WorldPhysicsRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed, TerraformAim
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.lifeforms import AIR_GAS, habitability
 from aerona.engine.cosmos.orbits import air_band
 from aerona.engine.ecology.biochemistry import bearable
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import scale_stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 ABUNDANCE_KEY = "abundance"
@@ -101,12 +102,13 @@ async def terraform_cycle(ctx: TickContext) -> int:
         if "epochs_left" not in project.locked:
             project.epochs_left -= 1
         if project.epochs_left <= 0:
-            await note(
+            await record(
                 ctx,
-                f"The work to {TERRAFORM_AIMS[project.aim].words} came to its end on {world.name}.",
-                key="terraform.finished",
+                "terraform.finished",
+                roles={IncidentRole.SUBJECT: world.id, IncidentRole.ACTOR: project.by_node_id},
+                facts={"aim": project.aim, "step": project.step},
+                steps=(StepDraft(StepAction.END, actor=project.by_node_id, locus_kind=StepLocus.REALM, locus_node=world.id),),
                 world_id=world.id,
-                kind=ChronicleKind.WORLD,
             )
             await ctx.session.delete(project)
     await ctx.session.flush()
@@ -114,7 +116,7 @@ async def terraform_cycle(ctx: TickContext) -> int:
 
 
 async def begin(
-    ctx: TickContext, world_id: int, aim: TerraformAim, by_node_id: int | None, by: str, *, step: int | None = None, epochs: int | None = None
+    ctx: TickContext, world_id: int, aim: TerraformAim, by_node_id: int | None, *, step: int | None = None, epochs: int | None = None
 ) -> TerraformingRow:
     world = await ctx.session.get(WorldRow, world_id)
     if world is None:
@@ -132,7 +134,14 @@ async def begin(
         locked=[],
     )
     ctx.session.add(project)
-    await note(ctx, f"{by} began to {TERRAFORM_AIMS[aim].words}: {world.name}.", key="terraform.begun", world_id=world.id, kind=ChronicleKind.MIRACLE)
+    await record(
+        ctx,
+        "terraform.begun",
+        roles={IncidentRole.ACTOR: by_node_id, IncidentRole.SUBJECT: world.id},
+        facts={"aim": aim, "step": project.step, "epochs": project.epochs_left},
+        steps=(StepDraft(StepAction.BEGIN, actor=by_node_id, locus_kind=StepLocus.REALM, locus_node=world.id),),
+        world_id=world.id,
+    )
     await ctx.session.flush()
     return project
 
@@ -166,7 +175,7 @@ async def powers_reshape(ctx: TickContext) -> int:
         aim = wanted_aim(biology, physics, ctx.rules)
         if aim is None or not ctx.rng(f"terraform.{people.id}.{ctx.epoch}").chance(table.polity_chance):
             continue
-        await begin(ctx, physics.world_id, aim, people.id, people.name)
+        await begin(ctx, physics.world_id, aim, people.id)
         working.add(physics.world_id)
         begun += 1
     return begun

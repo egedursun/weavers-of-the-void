@@ -256,6 +256,7 @@ class DuelEnd(StrEnum):
     CRIPPLED = "crippled"
     DEATH = "death"
     EXHAUSTION = "exhaustion"
+    UNCONSCIOUS = "unconscious"
 
 
 class SpyOperation(StrEnum):
@@ -281,6 +282,12 @@ class SabotageKind(StrEnum):
     RITE_DISRUPTION = "rite_disruption"
     SOURCE_POISONING = "source_poisoning"
     MACHINE_SEIZURE = "machine_seizure"
+
+
+class CovertSabotage(StrEnum):
+    POISON = "poison"
+    ARSON = "arson"
+    DISCORD = "discord"
 
 
 class SpyCover(StrEnum):
@@ -405,13 +412,6 @@ class MutinyOutcome(StrEnum):
     DEPOSED = "deposed"
     BANDITRY = "banditry"
     TURNCOAT = "turncoat"
-
-
-class VesselArmament(StrEnum):
-    RAMS = "rams"
-    MISSILES = "missiles"
-    SIEGE_ENGINES = "siege_engines"
-    RITES = "rites"
 
 
 class VesselStatus(StrEnum):

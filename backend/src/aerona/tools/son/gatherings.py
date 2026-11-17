@@ -8,6 +8,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.gathering import GatheringKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gatherings.hold import plan
 from aerona.engine.gatherings.occasions import Occasion
 from aerona.prompts import SonToolId
@@ -16,7 +17,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 HOSTS = frozenset({*COMMUNITY_TYPES, EntityType.CULT, EntityType.PLACE})
@@ -43,7 +43,12 @@ async def convene_gathering(call: SonCall, args: ConveneGatheringInput) -> str:
         fail(SonResult.GATHERING_REFUSED, why=f"{host.name} is held against change")
     call.target(host.id)
     kind = args.kind.value.replace("_", " ")
-    await call.chronicle(ChronicleKind.WORLD, lines.CONVENE_GATHERING, entity_ids=[host.id], son=call.son.name, kind=kind, host=host.name, reason=args.reason)
+    await call.record(
+        "tools.son.convene_gathering",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.HOST: host.id},
+        facts={"kind": str(kind), "reason": str(args.reason)},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.GATHERING_CONVENED, kind=kind, host=host.name, id=row.id)
 
 

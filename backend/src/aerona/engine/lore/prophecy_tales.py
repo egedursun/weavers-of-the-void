@@ -7,14 +7,15 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import ProphecyPredicate, ProphecyState
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import ProphecyStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.prophecy import cult_of, fail
 from aerona.engine.mind.drives import rulers_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 
 
 async def pending(ctx: TickContext) -> list[ProphecyConditionRow]:
@@ -48,9 +49,7 @@ async def pair_rivals(ctx: TickContext, rows: list[ProphecyConditionRow]) -> int
             if one is None or two is None or one.world_id != two.world_id or first.args == second.args:
                 continue
             first.rival_entity_id, second.rival_entity_id = second.prophecy_entity_id, first.prophecy_entity_id
-            await note(
-                ctx, f"{one.name} and {two.name} are told as rivals; believers take one side or the other.", key="lore.prophecy_rivals", ids=[one.id, two.id]
-            )
+            await record(ctx, "lore.prophecy_rivals", roles={IncidentRole.SUBJECT: [one.id, two.id]})
             paired += 1
     return paired
 
@@ -113,7 +112,7 @@ async def forgeries(ctx: TickContext) -> int:
             continue
         if ctx.rng(f"prophecy_forged.{realm.polity_entity_id}.{ctx.epoch}").chance(table.forge_chance):
             told = await forge_for(ctx, ruler, realm)
-            await note(ctx, f"{told.name} began to be told in the realm.", key="lore.prophecy_forged", ids=[told.id, ruler.id])
+            await record(ctx, "lore.prophecy_forged", roles={IncidentRole.SUBJECT: [told.id, ruler.id]})
             forged += 1
     return forged
 
@@ -133,7 +132,7 @@ async def exposures(ctx: TickContext) -> int:
             realm = await ctx.session.get(PolityProfileRow, realm_id)
             if realm is not None and "legitimacy" not in realm.locked:
                 realm.legitimacy = clamp_int(realm.legitimacy - table.exposure_loss, 0, PERCENT)
-        await note(ctx, "A forged prophecy was exposed.", key="lore.prophecy_exposed", ids=[row.prophecy_entity_id])
+        await record(ctx, "lore.prophecy_exposed", roles={IncidentRole.SUBJECT: row.prophecy_entity_id})
         exposed += 1
     return exposed
 

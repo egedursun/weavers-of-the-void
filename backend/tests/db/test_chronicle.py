@@ -1,26 +1,18 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.random import SeededRandom
-from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository, incident_for
+from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository, incident_for
 from aerona.db.session import Database
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, NotificationCategory
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.models.calendar import YearWindow, chronicle_year, epoch_end_year, epoch_start_year
+from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
 from tests.db.factories import make_entity, make_son, seed_world
 
 YEARS = 50
 
 
-def clock(start: int, end: int, stream: str = "chronicle") -> ChronicleClock:
-    return ChronicleClock(years_per_epoch=YEARS, window=YearWindow(start=start, end=end), pace_divisor=3, rng=SeededRandom.for_epoch(1, 3, stream))
-
-
 def test_epoch_years() -> None:
     assert (epoch_start_year(1, YEARS), epoch_end_year(1, YEARS)) == (0, 50)
     assert epoch_start_year(3, YEARS) == 100
-    window = YearWindow(start=45, end=49)
-    assert chronicle_year(epoch=3, years_per_epoch=YEARS, window=window, last_year=None, roll=0.99, pace_divisor=1) == 148
-    assert chronicle_year(epoch=3, years_per_epoch=YEARS, window=window, last_year=149, roll=0.0, pace_divisor=1) == 149
 
 
 async def test_append_keeps_entity_order_and_derives_world(session: AsyncSession, world_id: int) -> None:
@@ -51,15 +43,9 @@ async def test_son_lines_follow_the_son_world(session: AsyncSession, world_id: i
     assert written.row.world_id == other.id
 
 
-async def test_years_never_go_backwards_within_an_epoch(session: AsyncSession, world_id: int) -> None:
-    repository = ChronicleRepository(session)
-    late = await repository.append(ChronicleDraft(3, ChronicleKind.FATE, "late"), clock(45, 49))
-    early = await repository.append(ChronicleDraft(3, ChronicleKind.FATE, "early"), clock(0, 15, "other"))
-    assert late.row.year is not None
-    assert early.row.year is not None
-    assert 145 <= late.row.year <= 149
-    assert early.row.year >= late.row.year
-    assert await repository.last_year(3) == early.row.year
+async def test_a_line_takes_the_year_of_its_moment(session: AsyncSession, world_id: int) -> None:
+    written = await ChronicleRepository(session).append(ChronicleDraft(3, ChronicleKind.FATE, "dated", year=147))
+    assert written.row.year == 147
 
 
 async def test_world_filter_follows_records_then_son_then_main_world(session: AsyncSession, world_id: int) -> None:

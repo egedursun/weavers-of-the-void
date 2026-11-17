@@ -14,6 +14,8 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorMoodLabel, CreatorSignKind
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.context import Publisher, TickContext
 from aerona.engine.divine.creator_bonds import WIDER_SIGNS
 from aerona.engine.gods.mood import MoodState, last_breakdown, mood_label, mood_of, store_breakdown, store_mood
@@ -23,6 +25,7 @@ from aerona.engine.gods.worship import CultEffect, creator_worshippers, cult_eff
 from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 from aerona.services.gods.context import record_action, require, require_creator
 
@@ -127,11 +130,17 @@ async def answer_mortal_prayer(session: AsyncSession, rules: Rules, message_id: 
     message.is_read = True
     message.answered_epoch = ctx.epoch
     message.answer_essence = essence_given
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND,
-        god_lines.PRAYER_ANSWERED.render(creator=creator.name, entity=entity.name, grace=god_lines.PRAYER_GRACE if essence_given else ""),
-        template_key=god_lines.PRAYER_ANSWERED.key,
-        entity_ids=[entity.id],
+    await record(
+        ctx,
+        "gods.mood.prayer_answered",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.TARGET: entity.id},
+        facts={"grace": str(god_lines.PRAYER_GRACE if essence_given else "")},
+        kind=ChronicleKind.CREATOR_HAND,
+        steps=(
+            StepDraft(StepAction.ANSWER, actor=creator.id, target=entity.id, amount=essence_given, unit=FactUnit.ESSENCE)
+            if essence_given
+            else StepDraft(StepAction.ANSWER, actor=creator.id, target=entity.id),
+        ),
     )
     await record_action(ctx, ActionKind.ANSWER_PRAYER, entity.id, essence_given)
     return entity

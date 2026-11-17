@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import write_line
+from aerona.agents.chronicle import record_line
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import world_summary
@@ -21,6 +21,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.primitives.mechanics import assign_mechanics
@@ -162,8 +163,14 @@ async def reveal(
         await link_revelation(scope, entity, output)
         await type_revealed(session, rules, scope.epoch, entity, output)
         await assign_mechanics(session, rules, entity, resource_choice=output.resource_mechanics)
-        text_line = f"{scope.creator.name} revealed, and {entity.name} appeared in the world ({ENTITY_TYPES[chosen].label})."
-        await write_line(session, rules, scope.epoch, ChronicleKind.CREATOR_HAND, text_line, key="creator.revelation", entity_ids=[entity.id])
+        await record_line(
+            session,
+            rules,
+            "creator.revelation",
+            roles={IncidentRole.ACTOR: scope.creator.id, IncidentRole.PRODUCT: entity.id},
+            facts={"type_label": ENTITY_TYPES[chosen].label},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
         entity_id = entity.id
     runtime.publish(EventKind.REVELATION, {"entity_id": entity_id, "name": entity.name})
     async with runtime.database.read() as session:

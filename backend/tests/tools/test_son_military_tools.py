@@ -59,7 +59,7 @@ async def test_a_son_wages_a_whole_war(database: Database) -> None:
     async with database.read() as session:
         assert await session.scalar(select(SiegeRow).where(SiegeRow.war_id == war_id)) is not None
     await ok(toolkit, "plant_spies", {"owner_id": realm.people_id, "target_id": realm.settlement_id, "cover": "priest"})
-    await ok(toolkit, "commission_vessel", {"owner_id": realm.settlement_id, "name": "Saltwind", "frame": "longship", "armament": ["rams"]})
+    await ok(toolkit, "commission_vessel", {"owner_id": realm.settlement_id, "name": "Saltwind", "frame": "longship"})
     peace = await ok(toolkit, "offer_peace", {"war_id": war_id, "victor_id": realm.people_id, "terms": ["tribute"]})
     assert "The war ended" in peace
     await ok(toolkit, "raise_host", {"community_id": realm.settlement_id, "soldiers": 20, "commander_id": realm.mortal_id})

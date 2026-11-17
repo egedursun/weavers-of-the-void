@@ -174,14 +174,14 @@ async def delete_feature(scope: PlayerScope, command: FeatureTarget) -> Effect:
 @player_action("impact:call", ActionKind.EDIT_RECORD)
 async def call_impact(scope: PlayerScope, command: ImpactCall) -> Effect:
     creator = await scope.creator()
-    row = await control.call(await scope.context("impact_call"), command.world_id, command.region_id, creator.id, by=creator.name, size=command.size)
+    row = await control.call(await scope.context("impact_call"), command.world_id, command.region_id, creator.id, size=command.size)
     return Effect("A body falls toward the world.", command.world_id, values={"impact_id": row.id})
 
 
 @player_action("impact:deflect", ActionKind.EDIT_RECORD)
 async def deflect_impact(scope: PlayerScope, command: ImpactTarget) -> Effect:
     creator = await scope.creator()
-    row = await control.deflect(await scope.context("impact_deflect"), command.impact_id, creator.id, creator.name)
+    row = await control.deflect(await scope.context("impact_deflect"), command.impact_id, creator.id)
     return Effect(row.text, row.world_id)
 
 
@@ -201,7 +201,7 @@ async def delete_impact(scope: PlayerScope, command: ImpactTarget) -> Effect:
 async def start_terraform(scope: PlayerScope, command: TerraformDraft) -> Effect:
     creator = await scope.creator()
     row = await control.start_terraform(
-        await scope.context("terraform_start"), command.world_id, command.aim, creator.id, by=creator.name, step=command.step, epochs=command.epochs
+        await scope.context("terraform_start"), command.world_id, command.aim, creator.id, step=command.step, epochs=command.epochs
     )
     return Effect("The world begins to change.", command.world_id, values={"project_id": row.id})
 

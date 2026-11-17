@@ -11,20 +11,21 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.tongues import DivineTongueRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
+from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.tongues import LanguageStage, WordRegister
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.gods.queries import worshippers_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
 
 DIVINE_SUBTYPE = "divine tongue"
@@ -132,14 +133,7 @@ async def teach(ctx: TickContext, god_id: int, mortal: EntityRow) -> bool:
         )
     )
     await ctx.session.flush()
-    language = await ctx.session.get(EntityRow, language_id)
-    await note(
-        ctx,
-        f"{mortal.name} learned words of {language.name if language is not None else 'a sacred tongue'} from its god.",
-        key="tongues.revealed",
-        ids=[mortal.id, language_id],
-        kind=ChronicleKind.LANGUAGE,
-    )
+    await record_incident(ctx, "tongues.revealed", roles={IncidentRole.LEARNER: mortal.id, IncidentRole.SUBJECT: language_id})
     return True
 
 

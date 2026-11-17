@@ -14,7 +14,7 @@ YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_nam
 {% for line in heavens %}- {{ line }}
 {% endfor %}{% endif %}
 {% if golden_age_epochs is not none %}
-GOLDEN AGE: since age {{ golden_age_since }} ({{ golden_age_epochs }} ages); prosperity grows by {{ golden_age_gain }} each age{% if golden_age_soft %}, but long ease has lowered its peoples' readiness: their armies and defences weaken{% endif %}.
+GOLDEN AGE: since age {{ golden_age_since }} ({{ golden_age_epochs | several("age", "ages") }}); prosperity grows by {{ golden_age_gain }} each age{% if golden_age_soft %}, but long ease has lowered its peoples' readiness: their armies and defences weaken{% endif %}.
 {% endif %}
 {% if cosmology %}
 THIS WORLD'S COSMOLOGY: {{ cosmology }}

@@ -43,14 +43,14 @@ async def throne(realm: Realm, holder: EntityRow) -> EntityRow:
 
 async def test_a_struck_rival_dies_vanishes_or_falls_in_love(realm: Realm) -> None:
     ctx, _, plotter, rival = await pair(realm)
-    assert await strike(ctx, await plot(ctx, plotter, PlotKind.SWAY, rival), plotter, None) == "it struck at nothing"
-    assert "warmed" in await STRIKES[PlotKind.SWAY](ctx, await plot(ctx, plotter, PlotKind.SWAY, rival), plotter, rival)
-    assert "hidden love" in await STRIKES[PlotKind.SEDUCE](ctx, await plot(ctx, plotter, PlotKind.SEDUCE, rival), plotter, rival)
+    assert await strike(ctx, await plot(ctx, plotter, PlotKind.SWAY, rival), plotter, None) == "it found no target"
+    assert "came to like" in await STRIKES[PlotKind.SWAY](ctx, await plot(ctx, plotter, PlotKind.SWAY, rival), plotter, rival)
+    assert "secret love affair" in await STRIKES[PlotKind.SEDUCE](ctx, await plot(ctx, plotter, PlotKind.SEDUCE, rival), plotter, rival)
     affair = await realm.session.scalar(select(SecretRow).where(SecretRow.holder_node_id == rival.id, SecretRow.kind == IntrigueSecret.AFFAIR))
     assert affair is not None
     assert "eloped" in await STRIKES[PlotKind.ELOPE](ctx, await plot(ctx, plotter, PlotKind.ELOPE, rival), plotter, rival)
     victim = await mortal(realm, "Ivo")
-    assert "captivity" in await STRIKES[PlotKind.ABDUCT](ctx, await plot(ctx, plotter, PlotKind.ABDUCT, victim), plotter, victim)
+    assert "taken captive" in await STRIKES[PlotKind.ABDUCT](ctx, await plot(ctx, plotter, PlotKind.ABDUCT, victim), plotter, victim)
     assert await realm.session.scalar(select(CaptiveRow).where(CaptiveRow.captive_entity_id == victim.id)) is not None
     doomed = await mortal(realm, "Rask")
     assert "found dead" in await STRIKES[PlotKind.MURDER](ctx, await plot(ctx, plotter, PlotKind.MURDER, doomed), plotter, doomed)

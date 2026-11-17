@@ -12,6 +12,8 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.catch import trap_factors
@@ -35,13 +37,13 @@ from aerona.engine.ecology.ranges import (
     spread,
 )
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.rules.registry import Rules
 
 ABUNDANCE_KEY = "abundance"
@@ -111,10 +113,14 @@ async def extinction(ctx: TickContext, species: EntityRow, hunters: list[EntityR
         hunter_people = max(nearby, key=lambda community: (stat(community, "population") or 0, -community.id), default=None)
     if predator is not None:
         reason = f"{predator.name} hunted down its last herds"
+        key = "ecology.extinct"
     elif hunter_people is not None:
         reason = f"the hunters of {hunter_people.name} took its last herds"
+        key = "ecology.extinct_hunted"
     else:
         reason = "the land could carry it no longer"
+        key = "ecology.extinct_starved"
+    last = abundance(species)
     set_stats(species, abundance=0)
     await remove_flag(ctx.session, species.id, EntityFlag.ENDANGERED)
     await add_flag(ctx.session, species.id, EntityFlag.EXTINCT, ctx.epoch)
@@ -122,7 +128,27 @@ async def extinction(ctx: TickContext, species: EntityRow, hunters: list[EntityR
     culprit = predator or hunter_people
     if culprit is not None:
         await BondRepository(ctx.session).connect(BondDraft(culprit.id, species.id, BondKind.DESTROYED, ctx.epoch, "wiped out its kind"))
-    await note(ctx, f"{species.name} died out: {reason}.", key="ecology.extinct", ids=[species.id, *([culprit.id] if culprit is not None else [])])
+    facts: dict[str, FactInput] = {"abundance": last}
+    if key == "ecology.extinct_hunted":
+        facts["danger"] = stat(species, "danger") or 0
+    await record(
+        ctx,
+        key,
+        roles={IncidentRole.SUBJECT: species.id, IncidentRole.ACTOR: culprit.id if culprit is not None else None, IncidentRole.PLACE: region},
+        facts=facts,
+        place=region,
+        steps=(
+            StepDraft(
+                StepAction.DIE_OUT,
+                actor=culprit.id if culprit is not None else None,
+                target=species.id,
+                locus_kind=StepLocus.REGION if region is not None else StepLocus.NONE,
+                locus_node=region,
+                amount=last,
+                unit=FactUnit.PERCENT,
+            ),
+        ),
+    )
 
 
 @dataclass(frozen=True)
@@ -157,7 +183,12 @@ async def track_endangered(ctx: TickContext, item: EntityRow, marks: EcologyMark
     if abundance(item) < settings.critical and item.id not in marks.endangered:
         await add_flag(ctx.session, item.id, EntityFlag.ENDANGERED, ctx.epoch)
         if warnings < settings.warning_cap:
-            await note(ctx, f"The herds of {item.name} grew sparse; it is close to dying out.", key="ecology.endangered", ids=[item.id])
+            await record(
+                ctx,
+                "ecology.endangered",
+                roles={IncidentRole.SUBJECT: item.id},
+                facts={"abundance": abundance(item), "critical": settings.critical},
+            )
             return warnings + 1
     elif abundance(item) >= settings.critical * 2 and item.id in marks.endangered:
         await remove_flag(ctx.session, item.id, EntityFlag.ENDANGERED)
@@ -222,7 +253,6 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.game_reserves",
     "table.gardens",
     "table.herds",
@@ -252,7 +282,6 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.community_stocks",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.species_hosts",
@@ -293,9 +322,7 @@ async def ecology(ctx: TickContext) -> None:
                     row.abundance = settings.rewind_abundance
                 set_stats(item, abundance=settings.rewind_abundance)
                 await add_flag(ctx.session, item.id, EntityFlag.TIME_RETURNED, ctx.epoch)
-                await note(
-                    ctx, f"{item.name} turned back time in the epoch it would have died out; its herds are seen again.", key="ecology.rewound", ids=[item.id]
-                )
+                await record(ctx, "ecology.rewound", roles={IncidentRole.SUBJECT: item.id}, facts={"abundance": settings.rewind_abundance})
                 continue
             if extinct < settings.extinction_cap:
                 await extinction(ctx, item, web.hunters_of[item.id], habitat)
@@ -321,7 +348,7 @@ async def set_abundance(ctx: TickContext, species_id: int, value: int) -> Entity
         row.abundance = clamp_int(value, 0, 100)
     if abundance(species) >= ctx.rules.ecology.critical:
         await remove_flag(ctx.session, species.id, EntityFlag.ENDANGERED)
-    await note(ctx, f"The herds of {species.name} now stand at {abundance(species)}.", key="ecology.abundance_set", ids=[species.id])
+    await record(ctx, "ecology.abundance_set", roles={IncidentRole.SUBJECT: species.id}, facts={"abundance": abundance(species)})
     return species
 
 

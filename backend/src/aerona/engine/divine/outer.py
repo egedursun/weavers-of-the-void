@@ -18,6 +18,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, TenetKind
 from aerona.domain.enums.limits import POWER_SLOTS
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
@@ -27,11 +28,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.wounds import inflict
 from aerona.engine.lifecycle.states import ended_ids
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record, retire_in
 from aerona.engine.primitives.stats import POPULATION_KEY, stat_or
+from aerona.engine.recording.record import record
 
 H = OuterHunger
 VOID_TENETS = (TenetKind.VOID_COMMUNION, TenetKind.FEEDING_THE_HUNGER, TenetKind.WHISPERED_SECRETS)
@@ -170,11 +171,11 @@ async def outer_feeding(ctx: TickContext) -> int:
             influence = clamp_percent(stat_or(being, "influence", 0) + table.influence_per_meal)
             being.stats = being.stats.model_copy(update={"influence": influence})
             fed += eaten
-            await note(
+            await record(
                 ctx,
-                f"{being.name} fed on {HUNGER_LABELS[row.hunger].lower()} in its world ({eaten}).",
-                key=f"outer.fed_{row.hunger.value}",
-                ids=[being.id],
+                f"outer.fed_{row.hunger.value}",
+                roles={IncidentRole.SUBJECT: being.id},
+                facts={"being": str(being.name), "hunger_labels": HUNGER_LABELS[row.hunger].lower(), "eaten": str(eaten)},
                 kind=ChronicleKind.OUTER_BEING,
                 world_id=being.world_id,
             )

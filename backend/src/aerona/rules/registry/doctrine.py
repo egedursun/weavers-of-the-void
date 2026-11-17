@@ -19,7 +19,7 @@ class DoctrineRules:
     pacifist_drift_pct: int = rule(10, 0, 100, R, "Share of a pacifist people's surplus warriors who take up farming each epoch (%)")
     pacifist_legitimacy: int = rule(6, 0, 100, R, "Legitimacy a devout pacifist ruler loses for each war they wage")
     sacrifice_essence: int = rule(2, 0, 100, R, "Essence a death or blood god gains for each sacrificing cult in an epoch")
-    sacrifice_infamy: int = rule(5, 0, 100, R, "Ill will other cultures hold for human sacrifice")
+    sacrifice_infamy: int = rule(5, 0, 100, R, "Ill will other cultures hold for the sacrifice of people")
     animal_sacrifice_livestock: int = rule(3, 0, 1000, R, "Livestock an animal-sacrificing cult offers in an epoch")
     monastic_protection_pct: int = rule(50, 0, 100, R, "Share of knowledge loss in dark ages that monasteries prevent (%)")
     dietary_demand_pct: int = rule(0, 0, 100, R, "Demand left for a commodity forbidden by dietary law (%)")

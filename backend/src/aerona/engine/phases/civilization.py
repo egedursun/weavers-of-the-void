@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civilization import TIER_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an
 from aerona.core.total import total
+from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -20,22 +20,23 @@ from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
-from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.civilization import DebtTiming, IndependenceAnswer, TierCapability
 from aerona.domain.enums.cycles import AdoptionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, DebtStatus, WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats, KnowledgeStats, PlaceStats
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.routes import RouteBook, method_label, world_name
+from aerona.engine.cosmos.routes import RouteBook, method_label
 from aerona.engine.cosmos.tiers import TierScene, may, planned_tiers, tier_lock, tier_of
 from aerona.engine.cycles.lineage import kinship_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mortal.kin import fosterers_of, parents_of
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
@@ -44,6 +45,8 @@ from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount, put_stat, stat, stat_or
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
@@ -102,12 +105,15 @@ async def apply_tier(ctx: TickContext, entity: EntityRow, new: int, *, forced: b
     entity.civ_tier = new
     repository = EntityRepository(ctx.session)
     if new > old and new >= T.KINGDOM:
-        await note(ctx, f"{entity.name} rose: now {an(tier_name(new))}.", key="civilization.rose", ids=[entity.id])
-        await ctx.chronicle(ChronicleKind.CIVILIZATION, f"{entity.name} became {an(tier_name(new))}.", template_key="civilization.tier", entity_ids=[entity.id])
+        await record_incident(
+            ctx, "civilization.rose", roles={IncidentRole.SUBJECT: entity.id}, facts={"tier": int(new), "tier_label": tier_name(new), "from_tier": int(old)}
+        )
         if new >= T.WORLD_EMPIRE:
             await repository.add_flag(entity.id, EntityFlag.EMPIRE, ctx.epoch)
     if new < old and old >= T.KINGDOM:
-        await note(ctx, f"{entity.name} declined: now {an(tier_name(new))}.", key="civilization.declined", ids=[entity.id])
+        await record_incident(
+            ctx, "civilization.declined", roles={IncidentRole.SUBJECT: entity.id}, facts={"tier": int(new), "tier_label": tier_name(new), "from_tier": int(old)}
+        )
     if new < T.WORLD_EMPIRE <= old:
         await repository.remove_flag(entity.id, EntityFlag.EMPIRE)
     return True
@@ -156,11 +162,13 @@ async def declare_independence(ctx: TickContext, colony: EntityRow, mother: Enti
     await repository.remove_flag(colony.id, EntityFlag.COLONY)
     await repository.add_flag(colony.id, EntityFlag.INDEPENDENT, ctx.epoch)
     fought = war and await declare_war(ctx, mother.id, colony.id, "war of independence", cause=WarCause.INDEPENDENCE)
-    tail = "; the homeland declared it an enemy" if fought else " and the homeland had to let it go"
-    text = f"{colony.name} declared its independence from {mother.name}{tail}."
-    await ctx.chronicle(ChronicleKind.CIVILIZATION, text, template_key="civilization.independence", entity_ids=[colony.id, mother.id])
-    await note(ctx, text, key="civilization.independence_note", ids=[colony.id, mother.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.independence",
+        roles={IncidentRole.ACTOR: colony.id, IncidentRole.OPPONENT: mother.id},
+        facts={"answer": IndependenceAnswer.WAR if fought else IndependenceAnswer.RELEASED},
+    )
+    return written.text
 
 
 async def _federated(session: AsyncSession) -> tuple[set[int], int]:
@@ -190,8 +198,7 @@ async def found_federation_of(ctx: TickContext, members: list[EntityRow]) -> Ent
     )
     for member in members:
         await BondRepository(ctx.session).connect(BondDraft(member.id, federation.id, BondKind.MEMBER_OF, ctx.epoch, "federation oath"))
-    text = f"An interworld federation was founded: {', '.join(item.name for item in members)}."
-    await ctx.chronicle(ChronicleKind.CIVILIZATION, text, template_key="civilization.federation", entity_ids=[federation.id, *(item.id for item in members)])
+    await record_incident(ctx, "civilization.federation", roles={IncidentRole.PRODUCT: federation.id, IncidentRole.MEMBER: [item.id for item in members]})
     return federation
 
 
@@ -260,9 +267,12 @@ async def reveal_previous_creation(ctx: TickContext, world: WorldRow) -> EntityR
     ctx.session.add_all(
         ThreadLinkRow(thread_id=thread.id, entity_id=item.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch) for item in (ruin, relic, knowledge)
     )
-    text = f"In {world.name}, the ruins of a creation before this cosmos came to light."
-    await ctx.chronicle(
-        ChronicleKind.PREVIOUS_CREATION, text, template_key="civilization.previous_creation", entity_ids=[ruin.id, relic.id, knowledge.id], world_id=world.id
+    await record_incident(
+        ctx,
+        "civilization.previous_creation",
+        roles={IncidentRole.PLACE: ruin.id, IncidentRole.PRODUCT: [relic.id, knowledge.id], IncidentRole.SUBJECT: world.id},
+        world_id=world.id,
+        place=ruin.id,
     )
     return ruin
 
@@ -349,10 +359,14 @@ async def repay(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor: En
     bond.debt_status = DebtStatus.REPAID
     await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "debt paid")
     await change_relation(ctx, debtor.id, creditor.id, ctx.rules.civilization.loan_repay_relation, MemoryKind.KEPT_OATH, note="debt paid")
-    late = " even though it was overdue" if overdue else ""
-    text = f"{debtor.name} paid its debt ({amount} {bond.debt_what or SILVER}) to {creditor.name}{late}."
-    await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.debt_paid", entity_ids=[debtor.id, creditor.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.debt_paid",
+        roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id},
+        facts={"amount": amount, "goods": bond.debt_what or SILVER, "overdue": DebtTiming.OVERDUE if overdue else DebtTiming.ON_TIME},
+        steps=(StepDraft(StepAction.REPAY, actor=debtor.id, target=creditor.id, amount=paid, unit=FactUnit.WEALTH_POINTS),),
+    )
+    return written.text
 
 
 async def _debt_parties(ctx: TickContext, bond: BondRow) -> tuple[EntityRow, EntityRow] | None:
@@ -393,9 +407,17 @@ async def late_debts(ctx: TickContext) -> int:
         debtor, creditor = parties
         await change_relation(ctx, creditor.id, debtor.id, -ctx.rules.civilization.loan_default_relation, MemoryKind.CHEATED_US, note="unpaid debt")
         bond.debt_status = DebtStatus.OVERDUE
-        debt = f"{bond.debt_amount} {bond.debt_what or SILVER}"
-        text = f"{debtor.name} did not pay its debt ({debt}) to {creditor.name} on time (Epoch {bond.debt_due_epoch}); relations between them cooled."
-        await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.debt_late", entity_ids=[debtor.id, creditor.id])
+        await record_incident(
+            ctx,
+            "civilization.debt_late",
+            roles={IncidentRole.BORROWER: debtor.id, IncidentRole.LENDER: creditor.id},
+            facts={
+                "amount": bond.debt_amount or 0,
+                "goods": bond.debt_what or SILVER,
+                "due_epoch": bond.debt_due_epoch,
+                "relation": -ctx.rules.civilization.loan_default_relation,
+            },
+        )
         marked += 1
     return marked
 
@@ -414,9 +436,14 @@ async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount:
     if owes is not None and owes.debt_status is None:
         owes.debt_status = DebtStatus.OPEN
     await change_relation(ctx, lender.id, borrower.id, civ.loan_relation, MemoryKind.GIFTED_ME, note="loan")
-    text = f"{lender.name} lent {lent} {what} to {borrower.name}, who was in need; due Epoch {due}."
-    await ctx.chronicle(ChronicleKind.DEBT, text, template_key="civilization.loan", entity_ids=[lender.id, borrower.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.loan",
+        roles={IncidentRole.LENDER: lender.id, IncidentRole.BORROWER: borrower.id},
+        facts={"amount": lent, "goods": what, "due_epoch": due},
+        terms=[Term("rules.civilization.loan_term", civ.loan_term)],
+    )
+    return written.text
 
 
 async def _loan_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] | None:
@@ -445,8 +472,7 @@ async def spontaneous_loans(ctx: TickContext) -> None:
     await late_debts(ctx)
     candidate = await _loan_candidate(ctx)
     if candidate is not None and ctx.rng("loan").chance(ctx.rules.civilization.loan_chance):
-        text = await lend(ctx, *candidate, ctx.rules.civilization.loan_amount)
-        await note(ctx, text, key="civilization.loan_note", ids=[candidate[0].id, candidate[1].id])
+        await lend(ctx, *candidate, ctx.rules.civilization.loan_amount)
 
 
 def good_value(entity: EntityRow) -> int:
@@ -472,9 +498,13 @@ async def swap_goods(ctx: TickContext, first: EntityRow, second: EntityRow, firs
     await bonds.connect(BondDraft(first.id, second_good.id, BondKind.OWNS, ctx.epoch, "barter"))
     await bonds.connect(BondDraft(second.id, first_good.id, BondKind.OWNS, ctx.epoch, "barter"))
     await change_relation(ctx, first.id, second.id, ctx.rules.civilization.barter_relation, MemoryKind.TRADED_WITH, note="barter")
-    text = f"{first.name} and {second.name} bartered: {first_good.name} for {second_good.name}."
-    await ctx.chronicle(ChronicleKind.TRADE, text, template_key="civilization.barter", entity_ids=[first.id, second.id, first_good.id, second_good.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.barter",
+        roles={IncidentRole.BUYER: first.id, IncidentRole.SELLER: second.id, IncidentRole.INSTRUMENT: [first_good.id, second_good.id]},
+        facts={"value_given": good_value(first_good), "value_taken": good_value(second_good)},
+    )
+    return written.text
 
 
 async def _barter_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow, EntityRow, EntityRow] | None:
@@ -496,7 +526,7 @@ async def _barter_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow, Ent
 async def spontaneous_barter(ctx: TickContext) -> None:
     candidate = await _barter_candidate(ctx)
     if candidate is not None and ctx.rng("barter").chance(ctx.rules.civilization.barter_chance):
-        await note(ctx, await swap_goods(ctx, *candidate), key="civilization.barter_note", ids=[item.id for item in candidate])
+        await swap_goods(ctx, *candidate)
 
 
 async def adoption_custom(ctx: TickContext, adopter: EntityRow) -> AdoptionKind:
@@ -508,13 +538,17 @@ async def adopt(ctx: TickContext, adopter: EntityRow, child: EntityRow) -> str:
     kind = await adoption_custom(ctx, adopter)
     tie = ADOPTION_TIES[kind]
     await BondRepository(ctx.session).connect(BondDraft(child.id, adopter.id, BondKind.FOSTERED_BY, ctx.epoch, f"adopted: {tie.words}"))
-    relation = ctx.rules.civilization.adoption_relation * tie.regard_pct // PERCENT
-    await change_relation(ctx, adopter.id, child.id, relation, MemoryKind.GOODWILL, note="adoption")
+    relation_row = ctx.rules.civilization.adoption_relation * tie.regard_pct // PERCENT
+    await change_relation(ctx, adopter.id, child.id, relation_row, MemoryKind.GOODWILL, note="adoption")
     if tie.heir:
         await BondRepository(ctx.session).connect(BondDraft(adopter.id, child.id, BondKind.PARENT_OF, ctx.epoch, "made heir by adoption"))
-    text = f"{adopter.name} took in the orphaned {child.name}, {tie.words}."
-    await ctx.chronicle(ChronicleKind.LINEAGE, text, template_key="civilization.adoption", entity_ids=[adopter.id, child.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.adoption",
+        roles={IncidentRole.PARENT: adopter.id, IncidentRole.CHILD: child.id},
+        facts={"custom": kind, "heir": int(tie.heir), "regard": relation_row},
+    )
+    return written.text
 
 
 async def _orphan(ctx: TickContext, child: EntityRow) -> bool:
@@ -560,7 +594,7 @@ async def _adoption_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] |
 async def spontaneous_adoption(ctx: TickContext) -> None:
     candidate = await _adoption_candidate(ctx)
     if candidate is not None and ctx.rng("adoption").chance(ctx.rules.civilization.adoption_chance):
-        await note(ctx, await adopt(ctx, *candidate), key="civilization.adoption_note", ids=[candidate[0].id, candidate[1].id])
+        await adopt(ctx, *candidate)
 
 
 @dataclass(frozen=True)
@@ -593,12 +627,13 @@ async def sign_treaty(ctx: TickContext, offer: TreatyOffer) -> str:
             witnessed=False,
         )
     await change_relation(ctx, offer.first.id, offer.second.id, ctx.rules.civilization.treaty_relation, MemoryKind.ALLIED_WITH, note="interworld treaty")
-    kind = "alliance" if offer.kind is BondKind.ALLY else "trade"
-    first_world, second_world = await world_name(ctx.session, offer.first.world_id), await world_name(ctx.session, offer.second.world_id)
-    parties = f"{offer.first.name} of the world {first_world} and {offer.second.name} of the world {second_world}"
-    text = f"{parties} made an interworld {kind} treaty over the {offer.method} route between them."
-    await ctx.chronicle(ChronicleKind.DIPLOMACY, text, template_key="civilization.treaty", entity_ids=[offer.first.id, offer.second.id])
-    return text
+    written = await record_incident(
+        ctx,
+        "civilization.treaty",
+        roles={IncidentRole.ACTOR: offer.first.id, IncidentRole.CO_ACTOR: offer.second.id},
+        facts={"bond": offer.kind, "route": offer.method, "relation": offer.relation},
+    )
+    return written.text
 
 
 async def _offer_for(ctx: TickContext, first: EntityRow, second: EntityRow, method: str) -> TreatyOffer | None:
@@ -634,7 +669,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
                 if offer is not None and (best is None or offer.relation > best.relation):
                     best = offer
     if best is not None and ctx.rng("treaty").chance(ctx.rules.civilization.treaty_chance):
-        await note(ctx, await sign_treaty(ctx, best), key="civilization.treaty_note", ids=[best.first.id, best.second.id])
+        await sign_treaty(ctx, best)
 
 
 @reads(
@@ -663,7 +698,6 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.currencies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.held_identities",
     "table.holder_levels",
     "table.incident_participants",
@@ -709,7 +743,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_grammar",
@@ -726,9 +760,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
 async def civilization_phase(ctx: TickContext) -> None:
     await update_tiers(ctx)
     await colony_independence(ctx)
-    found = await federations(ctx)
-    if found is not None:
-        await note(ctx, f"{found.name} was founded across the worlds.", key="civilization.federation_note", ids=[found.id])
+    await federations(ctx)
     await previous_creations(ctx)
     await spontaneous_loans(ctx)
     await spontaneous_barter(ctx)

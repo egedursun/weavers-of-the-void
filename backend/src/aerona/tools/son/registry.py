@@ -34,6 +34,7 @@ from aerona.tools.son import (
     dominion,
     economic,
     eras,
+    events,
     evolution,
     faith,
     flora,
@@ -96,6 +97,7 @@ from aerona.tools.son.creation_rules import cheap_creation
 SonSpec = ToolSpec[SonCall, Any]
 FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     read.specs,
+    events.specs,
     memory.specs,
     language.specs,
     kin.specs,

@@ -5,18 +5,18 @@ from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.gods import FolkView, ForeignGodDetail, ForeignGodWorshipper
 from aerona.api.schemas.records import EntitySummary, ForeignGodPower, ForeignGodRecord, NodeRef, WorldRecord
-from aerona.api.views.common import bond_count, bond_views, chronicle_lines, foreign_god_record, foreign_god_records, images_of
+from aerona.api.views.common import bond_count, bond_views, foreign_god_record, foreign_god_records, images_of
+from aerona.api.views.scoped_lines import scoped_lines
 from aerona.constants.api import RELATION_PAGE_DEFAULT, RELATION_PAGE_MAX
 from aerona.core.errors import NotFoundError
-from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
-from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
+from aerona.db.tables.lore import FolkBeliefRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect
 from aerona.engine.gods.acts import foreign_drain_for, foreign_kill_cost_for
 from aerona.services.images.records import cover_of
@@ -67,14 +67,7 @@ async def read_foreign_god(
                 .order_by(EntityRow.id)
             )
         )
-        lines = list(
-            await session.scalars(
-                select(ChronicleRow)
-                .where(shown_lines(), ChronicleRow.kind == ChronicleKind.FOREIGN_GOD, ChronicleRow.world_id == god.world_id)
-                .order_by(ChronicleRow.id.desc())
-                .limit(rules.server.foreign_god_chronicle_lines)
-            )
-        )
+        chronicle, chronicle_total = await scoped_lines(session, ChronicleScope.FOREIGN_GOD, god.id, offset=0, limit=rules.server.foreign_god_chronicle_lines)
         sons = await session.scalars(select(SonRow).where(SonRow.current_world_id == god.world_id).order_by(SonRow.id))
         beliefs = await session.execute(
             select(FolkBeliefRow, EntityRow.name)
@@ -94,7 +87,8 @@ async def read_foreign_god(
             worshippers=[ForeignGodWorshipper(entity=EntitySummary.model_validate(row), cover=await cover_of(session, row.id)) for row in worshippers],
             bonds=await bond_views(session, god.id, offset=bond_offset, limit=bond_limit),
             bond_total=await bond_count(session, god.id, active_only=False),
-            chronicle=await chronicle_lines(session, list(reversed(lines))),
+            chronicle=chronicle,
+            chronicle_total=chronicle_total,
             sons_here=[NodeRef(id=son.id, kind=son.kind, name=son.name) for son in sons],
             folk_views=[
                 FolkView(

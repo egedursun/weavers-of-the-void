@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -5,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES, InjuryKind, TreatmentStep
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.records import StepAction
 from aerona.engine.body.strike import worn_layers
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
@@ -33,6 +36,29 @@ SUPPLIES: dict[TreatmentStep, CommodityKind] = {
     S.SPLINT: CommodityKind.TIMBER,
     S.CRUTCH: CommodityKind.TIMBER,
 }
+
+TREATMENT_ACTIONS: dict[TreatmentStep, StepAction] = {
+    S.DIAGNOSE: StepAction.EXAMINE,
+    S.CLEAN: StepAction.TREAT,
+    S.SUTURE: StepAction.SUTURE,
+    S.SET_BONE: StepAction.SET_BONE,
+    S.SPLINT: StepAction.TREAT,
+    S.DRESS: StepAction.TREAT,
+    S.AMPUTATE: StepAction.AMPUTATE,
+    S.CAUTERISE: StepAction.TREAT,
+    S.CRUTCH: StepAction.TREAT,
+    S.TRACTION: StepAction.TREAT,
+}
+
+
+@dataclass(frozen=True)
+class Treatment:
+    steps: tuple[TreatmentStep, ...] = ()
+    misdiagnosed: bool = False
+
+    @property
+    def changed(self) -> bool:
+        return self.misdiagnosed or any(step is not S.DIAGNOSE for step in self.steps)
 
 
 def step_level(rules: Rules, step: TreatmentStep) -> int:
@@ -82,16 +108,17 @@ def stanch(row: InjuryRow, step: TreatmentStep) -> None:
         row.bleeding = 0
 
 
-async def treat(ctx: TickContext, row: InjuryRow, *, skill: int, medicine: int, community_id: int | None, walking: bool, rng: SeededRandom) -> bool:
+async def treat(ctx: TickContext, row: InjuryRow, *, skill: int, medicine: int, community_id: int | None, walking: bool, rng: SeededRandom) -> Treatment:
     if row.state not in OPEN_INJURY_STATES:
-        return False
+        return Treatment()
+    done: list[TreatmentStep] = []
     if S.DIAGNOSE.value not in row.treatments:
         if not rng.chance(diagnosis_chance(ctx.rules, skill)):
             row.misdiagnosed = True
-            return True
+            return Treatment(misdiagnosed=True)
         row.misdiagnosed = False
         row.treatments = [*row.treatments, S.DIAGNOSE.value]
-    changed = False
+        done.append(S.DIAGNOSE)
     for step in wanted_steps(row, walking=walking):
         chosen = step
         if medicine < step_level(ctx.rules, step) or not await supplied(ctx, community_id, step):
@@ -99,8 +126,8 @@ async def treat(ctx: TickContext, row: InjuryRow, *, skill: int, medicine: int, 
                 continue
             chosen = S.CAUTERISE
         stanch(row, chosen)
-        changed = True
-    return changed
+        done.append(chosen)
+    return Treatment(tuple(done))
 
 
 async def first_aid(ctx: TickContext, bearer: EntityRow) -> int:

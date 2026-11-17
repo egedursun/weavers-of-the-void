@@ -4,10 +4,12 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.tellings import PLANTED, PLANTED_ATROCITY
 from aerona.catalog.lore import LEGEND_MORALS
 from aerona.catalog.rumours import is_alarm, is_atrocity, is_quiet, legend_archetype
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow, LegendProfileRow, RumourRow
@@ -17,7 +19,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.routes import JourneyRow
+from aerona.db.tables.tellings import RumourDistortionRow
 from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -27,6 +31,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import WitnessMode
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.climes.shifts import current_coasts
@@ -36,15 +41,18 @@ from aerona.engine.customs.relief import tavern_of
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.printing import printed
+from aerona.engine.lore.tellings import carried, distortions_of, draft_distortion, heard_again, tellings_of, told_text
 from aerona.engine.mind.memories import remember
 from aerona.engine.networks.book import reach_pct
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity, load_entities, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record as record_incident
+from aerona.engine.recording.terms import explaining_alone, term
+from aerona.engine.renown.book import standing_with
 from aerona.engine.services.community_relations import change_relation
 
 CARRIER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.POLITY})
@@ -52,12 +60,13 @@ CULPRIT_TYPES = frozenset({*CARRIER_TYPES, EntityType.MORTAL, EntityType.ARMY})
 LOUD_ROLES = (IncidentRole.ACTOR, IncidentRole.SUBJECT, IncidentRole.TARGET)
 HELD = "fidelity"
 RUMOUR_FIXUP = "lore.rumours_backfill"
-PLANTED_KIND = "rumour.planted"
-PLANTED_ATROCITY = "rumour.planted_atrocity"
 FRESH_EPOCHS = 1
 LEGEND_POWER = 2
 UNKNOWN_FAR = 20
 LOAD_CHUNK = 500
+
+
+FIRST_HAND = frozenset({WitnessMode.SAW, WitnessMode.TOOK_PART})
 
 
 @dataclass
@@ -122,6 +131,8 @@ async def casts_of(session: AsyncSession, incidents: list[IncidentRow]) -> dict[
 async def witnesses(ctx: TickContext, incident: IncidentRow, atlas: RegionAtlas, cast: list[IncidentParticipantRow] | None = None) -> list[int]:
     found: set[int] = set()
     for row in cast if cast is not None else await participants(ctx.session, incident.id):
+        if row.role is IncidentRole.WITNESS and row.witness_mode not in FIRST_HAND:
+            continue
         entity = await living_entity(ctx.session, row.node_id)
         if entity is None:
             continue
@@ -155,15 +166,17 @@ async def seed(ctx: TickContext, atlas: RegionAtlas, since: int | None = None) -
     made = 0
     for incident in incidents:
         age = max(0, ctx.epoch - incident.epoch)
+        seen = {row.node_id: row.fidelity for row in casts[incident.id] if row.role is IncidentRole.WITNESS and row.fidelity is not None}
         for carrier in await witnesses(ctx, incident, atlas, casts[incident.id]):
             if (incident.id, carrier) in known or held(carrier) or await is_carrier(ctx.session, carrier) is None:
                 continue
+            first = seen.get(carrier, ctx.rules.records.fidelity_saw)
             ctx.session.add(
                 RumourRow(
                     incident_id=incident.id,
                     carrier_entity_id=carrier,
                     channel=RumourChannel.WITNESS,
-                    fidelity=clamp_int(PERCENT - age * ctx.rules.rumours.linger_decay, 0, PERCENT),
+                    fidelity=clamp_int(first - age * ctx.rules.rumours.linger_decay, 0, PERCENT),
                     hops=0,
                     epoch=incident.epoch,
                     lingered=age,
@@ -285,8 +298,13 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             .order_by(RumourRow.id)
         )
     )
-    known = await known_pairs(ctx.session, sorted({row.incident_id for row in fresh}))
+    incident_ids = sorted({row.incident_id for row in fresh})
+    known = await known_pairs(ctx.session, incident_ids)
+    holders = await holders_of(ctx.session, incident_ids)
+    told = await distortions_of(ctx.session, [*(row.id for row in fresh), *(row.id for row in holders.values())])
+    renown = await doers_renown(ctx, fresh)
     passed = 0
+    born: list[tuple[RumourRow, RumourRow]] = []
     taverns: dict[int, TavernRow | None] = {}
     for rumour in fresh:
         carrier = await is_carrier(ctx.session, rumour.carrier_entity_id)
@@ -294,8 +312,9 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             continue
         for community_id in await pilgrims_of(ctx, carrier, faithful):
             found.pilgrims[carrier.id].add(community_id)
+        fame = renown.get((rumour.incident_id, carrier.id), 0)
         for target, channel in found.of(carrier.id):
-            if passed >= table.cap or (rumour.incident_id, target) in known or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
+            if passed >= table.cap or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
                 continue
             if target not in taverns:
                 taverns[target] = await tavern_of(ctx.session, target)
@@ -303,33 +322,95 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             boost = (ctx.rules.taverns.rumour_pct if tavern is not None else 0) + await reach_pct(
                 ctx.session, ctx.rules, target, ctx.epoch, kind="carries_opinion"
             )
+            boost += round_half_up(fame * table.renown_spread_pct / PERCENT)
             if not ctx.rng(f"rumour.{rumour.incident_id}.{carrier.id}.{target}.{ctx.epoch}").chance(int(getattr(table, CHANCES[channel])) + boost):
+                continue
+            if (rumour.incident_id, target) in known:
+                holder = holders.get((rumour.incident_id, target))
+                outcome = await heard_again(ctx, rumour, holder, told.get(rumour.id, []), told.get(holder.id, [])) if holder is not None else None
+                if outcome is not None:
+                    counts[outcome] = counts.get(outcome, 0) + 1
                 continue
             if tavern is not None and "rumours" not in tavern.locked:
                 tavern.rumours += 1
             fidelity = await fidelity_after(ctx, atlas, rumour.fidelity, source=carrier.id, target=target, channel=channel)
             if fidelity < table.floor:
                 continue
-            ctx.session.add(
-                RumourRow(
-                    incident_id=rumour.incident_id,
-                    carrier_entity_id=target,
-                    source_entity_id=carrier.id,
-                    channel=channel,
-                    fidelity=fidelity,
-                    hops=rumour.hops + 1,
-                    epoch=ctx.epoch,
-                    lingered=0,
-                    acted=False,
-                    planted=rumour.planted,
-                    locked=[],
-                )
+            passed_on = RumourRow(
+                incident_id=rumour.incident_id,
+                carrier_entity_id=target,
+                source_entity_id=carrier.id,
+                channel=channel,
+                fidelity=fidelity,
+                hops=rumour.hops + 1,
+                epoch=ctx.epoch,
+                lingered=0,
+                acted=False,
+                planted=rumour.planted,
+                locked=[],
             )
+            ctx.session.add(passed_on)
+            born.append((passed_on, rumour))
             known.add((rumour.incident_id, target))
             counts[channel.value] += 1
             passed += 1
     await ctx.session.flush()
+    counts["distorted"] = await retell(ctx, atlas, born, told)
     return counts
+
+
+async def holders_of(session: AsyncSession, incident_ids: list[int]) -> dict[tuple[int, int], RumourRow]:
+    found: dict[tuple[int, int], RumourRow] = {}
+    for start in range(0, len(incident_ids), LOAD_CHUNK):
+        statement = select(RumourRow).where(RumourRow.incident_id.in_(incident_ids[start : start + LOAD_CHUNK]))
+        for row in await session.scalars(statement.order_by(RumourRow.id)):
+            found.setdefault((row.incident_id, row.carrier_entity_id), row)
+    return found
+
+
+async def doers_renown(ctx: TickContext, rumours: list[RumourRow]) -> dict[tuple[int, int], int]:
+    if ctx.rules.rumours.renown_spread_pct <= 0 or not rumours:
+        return {}
+    doers: dict[int, int] = {}
+    ids = sorted({row.incident_id for row in rumours})
+    for start in range(0, len(ids), LOAD_CHUNK):
+        statement = select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id).where(
+            IncidentParticipantRow.incident_id.in_(ids[start : start + LOAD_CHUNK]), IncidentParticipantRow.role == IncidentRole.ACTOR
+        )
+        for incident_id, node_id in await ctx.session.execute(statement.order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position)):
+            doers.setdefault(incident_id, node_id)
+    found: dict[tuple[int, int], int] = {}
+    for rumour in rumours:
+        doer = doers.get(rumour.incident_id)
+        if doer is not None and (rumour.incident_id, rumour.carrier_entity_id) not in found:
+            found[(rumour.incident_id, rumour.carrier_entity_id)] = max(await standing_with(ctx.session, doer, rumour.carrier_entity_id))
+    return found
+
+
+async def retell(ctx: TickContext, atlas: RegionAtlas, born: list[tuple[RumourRow, RumourRow]], told: dict[int, list[RumourDistortionRow]]) -> int:
+    if not born:
+        return 0
+    tellings = await tellings_of(ctx.session, [row.incident_id for row, _ in born])
+    chance = ctx.rules.records.distortion_per_hop_pct
+    made = 0
+    for row, parent in born:
+        before = told.get(parent.id, [])
+        rows = carried(before, row.id, ctx.epoch)
+        telling = tellings.get(row.incident_id)
+        rng = ctx.rng(f"rumour.distort.{row.incident_id}.{row.carrier_entity_id}.{ctx.epoch}")
+        if telling is not None and rng.chance(chance):
+            draft = await draft_distortion(ctx.session, atlas, telling, before, rng)
+            if draft is not None:
+                draft.rumour_id = row.id
+                draft.position = len(rows)
+                draft.epoch = ctx.epoch
+                draft.locked = []
+                rows.append(draft)
+                made += 1
+        ctx.session.add_all(rows)
+        told[row.id] = rows
+    await ctx.session.flush()
+    return made
 
 
 async def culprit(ctx: TickContext, incident_id: int, hearer: int) -> int | None:
@@ -418,7 +499,9 @@ async def react(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     counts = {"atrocities": 0, "alarms": 0}
     heard = list(await ctx.session.scalars(select(RumourRow).where(RumourRow.acted.is_(False)).order_by(RumourRow.id)))
     for rumour in heard:
-        rumour.acted = True
+        with explaining_alone():
+            term("rumour.heard", 1, source_node_id=rumour.carrier_entity_id, source_incident_id=rumour.incident_id)
+            rumour.acted = True
         incident = await ctx.session.get(IncidentRow, rumour.incident_id)
         if incident is None or held(rumour.carrier_entity_id) or await is_carrier(ctx.session, rumour.carrier_entity_id) is None:
             continue
@@ -426,24 +509,20 @@ async def react(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
         enemy = await alarm(ctx, atlas, rumour, incident)
         if enemy is not None:
             counts["alarms"] += 1
-            hearer = await ctx.session.get(EntityRow, rumour.carrier_entity_id)
-            foe = await ctx.session.get(EntityRow, enemy)
-            if hearer is not None and foe is not None:
-                await note(
-                    ctx,
-                    f"Word reached {hearer.name} that the host of {foe.name} was near; they made ready and called on their friends.",
-                    key="rumour.alarm",
-                    ids=[hearer.id, foe.id],
-                )
+            await record_incident(ctx, "rumour.alarm", roles={IncidentRole.RECEIVER: rumour.carrier_entity_id, IncidentRole.OPPONENT: enemy}, cause=incident.id)
     return counts
 
 
 async def linger(ctx: TickContext) -> int:
     old = list(await ctx.session.scalars(select(RumourRow).where(RumourRow.epoch < ctx.epoch, RumourRow.fidelity > 0)))
+    decay = ctx.rules.rumours.linger_decay
     for rumour in old:
-        rumour.lingered += 1
-        if HELD not in rumour.locked:
-            rumour.fidelity = clamp_int(rumour.fidelity - ctx.rules.rumours.linger_decay, 0, PERCENT)
+        with explaining_alone():
+            term("rumour.age", 1, source_incident_id=rumour.incident_id)
+            term("rules.rumours.linger_decay", decay)
+            rumour.lingered += 1
+            if HELD not in rumour.locked:
+                rumour.fidelity = clamp_int(rumour.fidelity - decay, 0, PERCENT)
     return len(old)
 
 
@@ -525,7 +604,7 @@ async def legends(ctx: TickContext) -> list[EntityRow]:
         legend = await harden(ctx, incident, rows)
         if legend is not None:
             made.append(legend)
-            await note(ctx, f"Garbled in the retelling, word of old deeds hardened into {legend.name}.", key="rumour.legend", ids=[legend.id])
+            await record_incident(ctx, "rumour.legend", roles={IncidentRole.PRODUCT: legend.id}, facts={"tellings": len(rows)}, cause=incident.id)
     return made
 
 
@@ -537,7 +616,15 @@ async def heard_by(session: AsyncSession, community_id: int) -> list[tuple[Rumou
         .where(RumourRow.carrier_entity_id == community_id)
         .order_by(RumourRow.fidelity.desc(), RumourRow.epoch.desc(), RumourRow.id)
     )
-    return [(rumour, incident, text or incident.note or incident.kind.replace(".", " ")) for rumour, incident, text in rows.all()]
+    found = rows.all()
+    told = await distortions_of(session, [rumour.id for rumour, _, _ in found])
+    tellings = await tellings_of(session, [incident.id for rumour, incident, _ in found if told.get(rumour.id)])
+    heard: list[tuple[RumourRow, IncidentRow, str]] = []
+    for rumour, incident, text in found:
+        telling = tellings.get(incident.id)
+        version = await told_text(session, telling, told[rumour.id]) if telling is not None and told.get(rumour.id) else None
+        heard.append((rumour, incident, version or text or incident.note or spoken(incident.kind.replace(".", " "))))
+    return heard
 
 
 async def plant(
@@ -556,7 +643,7 @@ async def plant(
         if subject is None or not text.strip():
             raise ValidationFailedError("Name whom the rumour is about and what it says.")
         incident = IncidentRow(
-            kind=PLANTED_ATROCITY if atrocity else PLANTED_KIND,
+            kind=PLANTED_ATROCITY if atrocity else PLANTED,
             epoch=max(1, ctx.epoch),
             world_id=carrier.world_id,
             place_entity_id=carrier.id,
@@ -565,7 +652,8 @@ async def plant(
         )
         ctx.session.add(incident)
         await ctx.session.flush()
-        ctx.session.add(IncidentParticipantRow(incident_id=incident.id, node_id=subject.id, role=IncidentRole.ACTOR, position=0))
+        ctx.session.add(IncidentParticipantRow(incident_id=incident.id, node_id=subject.id, role=IncidentRole.SUBJECT, position=0))
+        ctx.session.add(IncidentFactRow(incident_id=incident.id, key="account", position=0, name=text.strip()))
     existing = await ctx.session.scalar(select(RumourRow).where(RumourRow.incident_id == incident.id, RumourRow.carrier_entity_id == carrier.id))
     if existing is not None:
         existing.fidelity, existing.planted, existing.acted = fidelity, True, False

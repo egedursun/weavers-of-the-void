@@ -33,6 +33,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, StarType, WorldType
 from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer, seal_gate
@@ -169,7 +170,13 @@ async def move_to_world(call: SonCall, args: WorldInput) -> str:
             fail(SonResult.SOLE_GOD, name=current.name)
     call.son.current_world_id = target.id
     call.target(target.id)
-    await call.chronicle(ChronicleKind.COSMIC, lines.MOVE, world_id=target.id, son=call.son.name, old=current.name if current else "", new=target.name)
+    await call.record(
+        "tools.son.move",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PRODUCT: target.id},
+        facts={"old": str(current.name if current else "")},
+        kind=ChronicleKind.COSMIC,
+        world_id=target.id,
+    )
     return result(SonResult.MOVED, name=target.name)
 
 
@@ -188,8 +195,12 @@ async def sever_ley_line(call: SonCall, args: SeverLeyInput) -> str:
     call.spend_essence(cost)
     names = (first.name if first is not None else "", second.name if second is not None else "")
     ids = [line.region_a_id, line.region_b_id]
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.SEVER_LEY, entity_ids=ids, world_id=line.world_id, son=call.son.name, first=names[0], second=names[1], reason=args.reason
+    await call.record(
+        "tools.son.sever_ley",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [*ids]},
+        facts={"first": str(names[0]), "second": str(names[1]), "reason": str(args.reason)},
+        kind=ChronicleKind.COSMIC,
+        world_id=line.world_id,
     )
     return result(SonResult.LEY_SEVERED, first=names[0], second=names[1], epochs=epochs)
 
@@ -211,7 +222,13 @@ async def reorder_world_seasons(call: SonCall, args: ReorderSeasonsInput) -> str
     order = ", ".join(season.name for season in seasons)
     call.spend_essence(tools.reorder_seasons_essence)
     await call.bump(TurnCounter.SEASON_ORDER)
-    await call.chronicle(ChronicleKind.COSMIC, lines.REORDER_SEASONS, world_id=world.id, son=call.son.name, world=world.name, order=order)
+    await call.record(
+        "tools.son.reorder_seasons",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"order": str(order)},
+        kind=ChronicleKind.COSMIC,
+        world_id=world.id,
+    )
     return result(SonResult.SEASONS_REORDERED, name=world.name, order=order)
 
 
@@ -233,16 +250,13 @@ async def shape_weather(call: SonCall, args: ShapeWeatherInput) -> str:
     call.spend_essence(cost)
     await call.bump(TurnCounter.WEATHER_SHAPING)
     label = WEATHER[args.weather].label
-    await call.chronicle(
-        ChronicleKind.COSMIC,
-        lines.SHAPE_WEATHER,
-        entity_ids=[region.id],
+    await call.record(
+        "tools.son.shape_weather",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"weather": label.lower(), "epochs": epochs, "reason": str(args.reason)},
+        place=region.id,
+        kind=ChronicleKind.COSMIC,
         world_id=region.world_id,
-        son=call.son.name,
-        weather=label.lower(),
-        region=region.name,
-        epochs=epochs,
-        reason=args.reason,
     )
     return result(SonResult.WEATHER_SHAPED, weather=label, name=region.name, epochs=epochs)
 
@@ -267,7 +281,7 @@ async def seal(call: SonCall, args: SealInput) -> str:
     route = await call.session.get(RouteRow, args.route_id)
     if route is not None and not (await call.reachable_world(route.world_a_id) or await call.reachable_world(route.world_b_id)):
         fail(SonResult.ROUTE_OUT_OF_REACH, id=route.id)
-    await seal_gate(call.tick, args.route_id, call.son.name)
+    await seal_gate(call.tick, args.route_id, call.son.name, call.son.id)
     call.spend_essence(cost)
     return result(SonResult.GATE_SEALED, reason=args.reason)
 
@@ -276,7 +290,7 @@ async def rekindle(call: SonCall, args: StarInput) -> str:
     star = await _star(call, args.star_id)
     cost = rekindle_cost(call.rules, star.star_type, share(call.rules.cosmic_costs.rekindle_dead_star, call.rules.son_tools.cosmic_rekindle_pct))
     require_essence(call, cost)
-    await rekindle_star(call.tick, args.star_id, call.son.name)
+    await rekindle_star(call.tick, args.star_id, call.son.name, call.son.id)
     call.spend_essence(cost)
     call.son.fame += call.rules.son_tools.rekindle_star_renown
     call.target(args.star_id)
@@ -303,7 +317,7 @@ async def bind_spirit(call: SonCall, args: BindSpiritInput) -> str:
         fail(SonResult.SPIRIT_TARGET_STATE, reason=state_reason(target, target.id))
     await ensure_in_reach(call, spirit)
     await ensure_in_reach(call, target)
-    bound = await soul_bind(call.tick, spirit.id, target.id, call.son.name, call.son.id)
+    bound = await soul_bind(call.tick, spirit.id, target.id, call.son.id)
     call.spend_essence(cost)
     call.target(target.id)
     animated = bound.id if bound.id != target.id else None
@@ -336,7 +350,7 @@ async def hang(call: SonCall, args: HangStarInput) -> str:
         call.tick,
         name,
         args.type or StarType.YELLOW_DWARF,
-        call.son.name,
+        call.son.id,
         args.description,
         galaxy_id=args.galaxy_id,
         world_id=args.world_id,
@@ -361,7 +375,7 @@ async def extinguish(call: SonCall, args: ExtinguishInput) -> str:
         fail(SonResult.STAR_ALREADY_DEAD, name=star.name)
     cost = share(call.rules.cosmic_costs.ignite_star, tools.cosmic_extinguish_pct)
     require_essence(call, cost)
-    await extinguish_star(call.tick, star.id, call.son.name)
+    await extinguish_star(call.tick, star.id, call.son.name, call.son.id)
     call.spend_essence(cost)
     call.son.fame += tools.extinguish_star_renown
     for sibling in await call.session.scalars(select(SonRow).where(SonRow.id != call.son.id)):
@@ -403,15 +417,12 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
     god.stance = max(RELATION_MIN, min(RELATION_MAX, god.stance))
     outcome = lines.TALK_OUTCOMES[(args.intent.value, won)].format(god=god.name, gain=gained)
     call.target(god.id)
-    await call.chronicle(
-        ChronicleKind.FOREIGN_GOD,
-        lines.FOREIGN_TALK,
+    await call.record(
+        "tools.son.foreign_talk",
+        roles={IncidentRole.ACTOR: me.id, IncidentRole.SUBJECT: god.id},
+        facts={"manner": str(lines.TALK_MANNERS[args.intent.value]), "words": str(args.words), "outcome": str(outcome)},
+        kind=ChronicleKind.FOREIGN_GOD,
         world_id=god.world_id,
-        son=me.name,
-        god=god.name,
-        manner=lines.TALK_MANNERS[args.intent.value],
-        words=args.words,
-        outcome=outcome,
     )
     return result(SonResult.TALKED, outcome=outcome[:1].upper() + outcome[1:])
 
@@ -430,7 +441,13 @@ async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     call.spend_essence(tools.seal_cost)
     call.target(world.id)
     await call.bump(TurnCounter.LEAK_CLOSED)
-    await call.chronicle(ChronicleKind.COSMIC, lines.STITCH, world_id=world.id, son=call.son.name, world=world.name, how=args.how, old=old, new=world.leakage)
+    await call.record(
+        "tools.son.stitch",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"how": str(args.how), "old": str(old), "new": world.leakage},
+        kind=ChronicleKind.COSMIC,
+        world_id=world.id,
+    )
     return result(SonResult.STITCHED, old=old, new=world.leakage)
 
 

@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import (
@@ -25,7 +25,6 @@ from aerona.db.tables.urban import ConvoyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import Capability, Technique
 from aerona.domain.enums.discovery import TheoryDomain
@@ -36,7 +35,9 @@ from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.urban import PreservationMethod
@@ -56,7 +57,7 @@ from aerona.engine.economy.convoys import OPEN, harbour_limit, route_capacity
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.good_kinds import GoodBook, good_book
 from aerona.engine.economy.markets import Quote
-from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, season_pct_of, split, spoil
+from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, froze, season_pct_of, split, spoil
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
@@ -72,14 +73,14 @@ from aerona.engine.means.navigation import instrument_navigation
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.nature.effects import sensed
 from aerona.engine.nature.senses import NAVIGATION
-from aerona.engine.notes import note
 from aerona.engine.orders.exchange import billed_between, exchange_cost
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import credit
 
@@ -436,11 +437,12 @@ async def _shipwreck(ctx: TickContext, route: Route, seller: EntityRow, tally: R
         with flowing(FlowCategory.DISASTER):
             set_stats(seller, population=max(0, population - crew))
     tally.shipwrecks += 1
-    await ctx.chronicle(
-        ChronicleKind.DISASTER,
-        f"A storm broke the ships of {seller.name} on {route.entity.name}; {several(crew, 'sailor', 'sailors')} drowned with their cargo.",
-        template_key="trade_route.shipwreck",
-        entity_ids=[route.entity.id, seller.id],
+    await record(
+        ctx,
+        "trade_route.shipwreck",
+        roles={IncidentRole.SUBJECT: route.entity.id, IncidentRole.VICTIM: seller.id},
+        facts={"drowned": crew},
+        steps=(StepDraft(StepAction.SINK, target=route.entity.id, amount=crew, unit=FactUnit.PEOPLE, outcome=StepOutcome.DESTROYED),),
     )
 
 
@@ -573,20 +575,20 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
     poor = (purse or 0) < flow.credit_threshold
     rng = ctx.rng(f"credit.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}")
     if poor or rng.chance(flow.credit_chance):
-        if await sell_on_credit(ctx, buyer, seller, lane.commodity, delivered, noted=tally.noted < flow.note_cap):
+        if await sell_on_credit(ctx, buyer, seller, lane.commodity, delivered):
             tally.noted += 1
             tally.credit += 1
     else:
         cost = round_half_up(value * rate / THOUSAND)
         charge(buyer, cost + await exchange_cost(ctx, lane.seller_id, lane.buyer_id, cost))
-    if lane.desperate and COMMODITIES[lane.commodity].nourishment > 0 and tally.noted < flow.note_cap:
+    if lane.desperate and COMMODITIES[lane.commodity].nourishment > 0:
         tally.noted += 1
-        await note(
+        await record(
             ctx,
-            f"{buyer.name} brought {COMMODITIES[lane.commodity].label.lower()} from {seller.name} in a time of famine.",
-            key="market.famine_grain",
-            ids=[buyer.id, seller.id, route.entity.id],
-            kind=ChronicleKind.TRADE,
+            "market.famine_grain",
+            roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: seller.id, IncidentRole.INSTRUMENT: route.entity.id},
+            facts={"good": lane.commodity, "delivered": delivered, "value": value},
+            steps=(StepDraft(StepAction.DELIVER, actor=seller.id, target=buyer.id, amount=delivered, unit=FactUnit.COUNT),),
         )
     await levy_terms(ctx, lane, value, tally)
     paid = 0
@@ -654,7 +656,8 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
             await feed_beast(ctx, book, route.entity, lane.commodity, units=units, beast_id=culprit)
         elif cause is TradeLoss.WEATHER:
             tally.weather_losses += units
-            await spoil(ctx, route.entity, lane.commodity, units=units, mode=route.profile.mode)
+            frozen = froze(ctx.rules, book, route.profile.mode, route.path, route.entity.world_id)
+            await spoil(ctx, route.entity, lane.commodity, units=units, mode=route.profile.mode, frozen=frozen)
     return max(shares, key=lambda cause: (shares[cause], cause.value)) if shares else None
 
 
@@ -798,11 +801,11 @@ async def _pass_into_legend(ctx: TickContext, route: Route) -> None:
         ),
     )
     await BondRepository(ctx.session).connect(BondDraft(legend.id, route.entity.id, BondKind.TELLS_OF, ctx.epoch, "the famous road"))
-    await ctx.chronicle(
-        ChronicleKind.CULTURE,
-        f"{route.entity.name} passed into legend.",
-        template_key="trade_route.legend",
-        entity_ids=[route.entity.id, legend.id],
+    await record(
+        ctx,
+        "trade_route.legend",
+        roles={IncidentRole.SUBJECT: route.entity.id, IncidentRole.PRODUCT: legend.id},
+        facts={"renown": stat_or(route.entity, "renown", 0)},
     )
 
 
@@ -830,11 +833,11 @@ async def _blockade(ctx: TickContext, book: EconomyBook, route: Route, blocker: 
         row = book.societies.get(end)
         if row is not None:
             row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - ctx.rules.trade_routes.blockade_merchant_loss, 0, PERCENT)
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{blocker.name} closed {route.entity.name}; no goods pass.",
-        template_key="trade_route.blockade",
-        entity_ids=[route.entity.id, blocker.id, *route.ends],
+    await record(
+        ctx,
+        "trade_route.blockade",
+        roles={IncidentRole.ACTOR: blocker.id, IncidentRole.SUBJECT: route.entity.id, IncidentRole.VICTIM: list(route.ends)},
+        facts={"merchant_loss": ctx.rules.trade_routes.blockade_merchant_loss},
     )
     owner = await ctx.session.get(ArmyRow, blocker.id)
     master = book.entities.get(owner.owner_entity_id) if owner is not None else None
@@ -864,11 +867,25 @@ async def _age(ctx: TickContext, book: EconomyBook, route: Route, tally: RouteTa
         profile.status = TradeRouteStatus.OPEN
         route.entity.pending_name = True
         tally.opened += 1
-        await ctx.chronicle(
-            ChronicleKind.TRADE,
-            f"The way between {book.entities[route.ends[0]].name} and {book.entities[route.ends[1]].name} became a road merchants know by name.",
-            template_key="trade_route.formed",
-            entity_ids=[route.entity.id, *route.ends],
+        await record(
+            ctx,
+            "trade_route.formed",
+            roles={IncidentRole.SUBJECT: route.entity.id, IncidentRole.ORIGIN: route.ends[0], IncidentRole.DESTINATION: route.ends[1]},
+            facts={"mode": profile.mode, "traffic_epochs": profile.traffic_epochs, "length": profile.length},
+            steps=(
+                StepDraft(
+                    StepAction.CONNECT,
+                    actor=route.ends[0],
+                    target=route.ends[1],
+                    locus_kind=StepLocus.ROUTE,
+                    locus_node=route.entity.id,
+                    amount=profile.length,
+                    unit=FactUnit.DISTANCE,
+                    outcome=StepOutcome.SUCCESS,
+                ),
+            ),
+            origin=route.ends[0],
+            destination=route.ends[1],
         )
     last = profile.last_traffic_epoch if profile.last_traffic_epoch is not None else profile.founded_epoch
     if ctx.epoch - last >= lanes.decay_epochs:
@@ -889,12 +906,7 @@ async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> Non
     route.profile.status = TradeRouteStatus.CLOSED
     route.profile.blockaded_by_entity_id = None
     tally.decayed += 1
-    await ctx.chronicle(
-        ChronicleKind.TRADE,
-        f"{route.entity.name} lost a market at one end and no trader takes it any more.",
-        template_key="trade_route.orphaned",
-        entity_ids=[route.entity.id],
-    )
+    await record(ctx, "trade_route.orphaned", roles={IncidentRole.SUBJECT: route.entity.id}, facts={"mode": route.profile.mode})
 
 
 async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
@@ -941,11 +953,11 @@ async def _chokepoint_war(ctx: TickContext, book: EconomyBook, route: Route, tal
             continue
         if await declare_war(ctx, end, master.id, f"the chokepoint of {route.entity.name}", cause=WarCause.TRADE_ROUTE):
             tally.wars += 1
-            await ctx.chronicle(
-                ChronicleKind.WAR,
-                f"{book.entities[end].name} took up arms against {master.name} over the chokepoint of {route.entity.name}.",
-                template_key="trade_route.chokepoint_war",
-                entity_ids=[route.entity.id, end, master.id],
+            await record(
+                ctx,
+                "trade_route.chokepoint_war",
+                roles={IncidentRole.ACTOR: end, IncidentRole.OPPONENT: master.id, IncidentRole.SUBJECT: route.entity.id},
+                facts={"merchants": round(merchants)},
             )
             return
 
@@ -964,13 +976,7 @@ async def divert(ctx: TickContext, book: EconomyBook, route: Route, works: dict[
             await ctx.session.delete(route.tolls.pop(region))
     route.profile.length = length_of(ctx, route.profile.mode, other)
     set_stats(route.entity, capacity=await spoken_capacity(ctx, book, route, works))
-    await note(
-        ctx,
-        f"Merchants turned off {route.entity.name} to dodge the tolls and found another way.",
-        key="tolls.diverted",
-        ids=[route.entity.id],
-        kind=ChronicleKind.TRADE,
-    )
+    await record(ctx, "tolls.diverted", roles={IncidentRole.SUBJECT: route.entity.id}, facts={"length": route.profile.length, "regions": len(other)})
     return True
 
 

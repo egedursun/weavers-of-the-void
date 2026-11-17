@@ -14,15 +14,17 @@ from aerona.domain.enums.arts import CanonPath
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.collective.crowds import mood_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values, write_values
-from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import town_of
 from aerona.engine.structures.readers import strength_at
 
@@ -72,7 +74,14 @@ async def found_movement(ctx: TickContext, town: EntityRow, makers: list[EntityR
         if await ctx.session.get(FactionMembershipRow, (faction.id, maker.id)) is None:
             ctx.session.add(FactionMembershipRow(faction_entity_id=faction.id, mortal_entity_id=maker.id, joined_epoch=ctx.epoch, locked=[]))
     await ctx.session.flush()
-    await note(ctx, f"The makers of {town.name} banded into {faction.name}.", key="arts.movement", ids=[faction.id, town.id])
+    await record(
+        ctx,
+        "arts.movement",
+        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: town.id, IncidentRole.MEMBER: [maker.id for maker in makers]},
+        facts={"art_form": form, "makers": len(makers)},
+        steps=(StepDraft(StepAction.FOUND, target=faction.id),),
+        place=town.id,
+    )
     return row
 
 
@@ -119,7 +128,14 @@ async def tend_movements(ctx: TickContext, tally: MovementTally) -> None:
                 mood.agitation = clamp_int(mood.agitation + table.scandal_agitation, 0, PERCENT)
             row.scandals += 1
             tally.scandals += 1
-            await note(ctx, f"{faction.name} scandalised {home.name}.", key="arts.scandal", ids=[faction.id, home.id])
+            await record(
+                ctx,
+                "arts.scandal",
+                roles={IncidentRole.ACTOR: faction.id, IncidentRole.PLACE: home.id},
+                facts={"agitation": table.scandal_agitation, "scandals": row.scandals},
+                steps=(StepDraft(StepAction.SHAME, actor=faction.id, target=home.id),),
+                place=home.id,
+            )
         if not row.orthodoxy and row.patrons >= table.orthodoxy_patrons and "orthodoxy" not in row.locked:
             people = await people_of_faction(ctx, faction.id)
             for other in rows:
@@ -127,7 +143,7 @@ async def tend_movements(ctx: TickContext, tally: MovementTally) -> None:
                     other.orthodoxy = False
             row.orthodoxy = True
             tally.orthodox += 1
-            await note(ctx, f"{faction.name} became the orthodoxy of its people's art.", key="arts.orthodox", ids=[faction.id])
+            await record(ctx, "arts.orthodox", roles={IncidentRole.SUBJECT: faction.id, IncidentRole.MEMBER: people}, facts={"patrons": row.patrons})
 
 
 async def orthodox_makers(ctx: TickContext) -> set[int]:
@@ -188,7 +204,13 @@ async def form_canon(ctx: TickContext, tally: MovementTally) -> None:
         if "canon" not in profile.locked:
             profile.canon = True
         tally.canonised += 1
-        await note(ctx, f"{artwork.name} entered the canon of its people.", key="arts.canonised", ids=[artwork.id])
+        await record(
+            ctx,
+            "arts.canonised",
+            roles={IncidentRole.SUBJECT: artwork.id, IncidentRole.MEMBER: people},
+            facts={"path": path, "weight": PATH_WEIGHT[path]},
+            steps=(StepDraft(StepAction.HONOUR, target=artwork.id),),
+        )
     await ctx.session.flush()
 
 

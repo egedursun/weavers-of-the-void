@@ -4,7 +4,6 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.foreign_gods import ForeignGodDraft, ForeignGodRepository
@@ -84,7 +83,7 @@ async def test_god_death_builds_corpse_shade_order(session: AsyncSession, world:
     assert world.creator.essence == before + round(80 / rules.death.dead_essence_divisor)
     assert enemy.fame == rules.death.god_death_enemy_renown
     assert await session.scalar(select(ThreadRow.id)) is not None
-    assert god_lines.GOD_DEATH.key in await chronicle_keys(session)
+    assert "gods.death.god_death" in await chronicle_keys(session)
 
 
 async def test_rites_schemes_and_scatter(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -129,7 +128,7 @@ async def test_auto_resurrection_and_fading(session: AsyncSession, world: GodsWo
     assert epochs_until_resurrection(rules, son, 3) == rules.death.resurrection_min_epochs
     await gods_fate(make_context(session, tuned, 4, "gods_fate"))
     assert son.status is SonStatus.ACTIVE
-    assert god_lines.SON_RESURRECTED.key in await chronicle_keys(session)
+    assert "gods.death.son_resurrected" in await chronicle_keys(session)
     corpse = await session.get(EntityRow, son.corpse_entity_id)
     assert corpse is not None and await EntityRepository(session).has_flag(corpse.id, EntityFlag.EMPTY_TOMB)
     fading = await make_son(session, "Faded", world.world.id)
@@ -137,7 +136,7 @@ async def test_auto_resurrection_and_fading(session: AsyncSession, world: GodsWo
     for epoch in range(5, 5 + rules.death.fading_death_epochs):
         await gods_fate(make_context(session, rules, epoch, "gods_fate"))
     assert fading.status is SonStatus.DEAD and fading.death_cause is SonDeathCause.FADING
-    assert god_lines.FADING_ONE.key in await chronicle_keys(session)
+    assert "gods.death.fading_one" in await chronicle_keys(session)
 
 
 async def test_death_engine_foreign_strike_and_rites(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -154,7 +153,7 @@ async def test_death_engine_foreign_strike_and_rites(session: AsyncSession, worl
     await god_death(make_context(session, tuned, 3), son, "fell", SonDeathCause.OTHER)
     await death_engine(make_context(session, tuned, 4, "death_engine"))
     assert victim.status is EntityStatus.DEAD
-    assert god_lines.RITE.key in await chronicle_keys(session)
+    assert "gods.death.rite" in await chronicle_keys(session)
 
 
 async def test_death_services(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

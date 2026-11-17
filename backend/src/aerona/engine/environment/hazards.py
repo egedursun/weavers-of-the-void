@@ -5,17 +5,16 @@ from sqlalchemy import select
 
 from aerona.catalog.dangers import HAZARDS, HazardSpec
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.region import RegionHazardRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, WeatherEffect
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import HazardSeason, TerrainHazard
 from aerona.engine.body.hits import Harm
 from aerona.engine.climes.shifts import fire_wind
@@ -31,6 +30,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 PERMILLE = 1000
@@ -174,15 +174,14 @@ async def strike(
     if hazard is TerrainHazard.WILDFIRE:
         burn_back(ground, ctx.epoch)
     season_name = season.name if season is not None else "a hard season"
-    write = await ctx.chronicle(
-        ChronicleKind.DISASTER,
-        spec.line.format(region=region.name, season=season_name.lower(), deaths=dead) + (f"; {several(injured, 'was', 'were')} hurt" if injured else "") + ".",
-        template_key=f"hazard.{hazard.value}",
-        entity_ids=[region.id, *hurt_ids],
+    write = await record(
+        ctx,
+        f"hazard.{hazard.value}",
+        roles={IncidentRole.PLACE: region.id, IncidentRole.VICTIM: hurt_ids},
+        facts={"season": season_name.lower(), "deaths": dead, "injured": injured, "soldiers": soldiers},
+        place=region.id,
         world_id=region.world_id,
-        place_entity_id=region.id,
         magnitude=min(PERCENT, dead),
-        year=year,
     )
     ctx.session.add(
         RegionHazardRow(

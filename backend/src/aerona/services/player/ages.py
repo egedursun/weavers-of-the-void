@@ -299,7 +299,7 @@ async def eco_transformation_edit(scope: PlayerScope, command: PlanEdit) -> Effe
 
 @player_action("eco_transformation:delete", ActionKind.EDIT_RECORD)
 async def eco_transformation_delete(scope: PlayerScope, command: PlanTarget) -> Effect:
-    await control.delete_record(await scope.context("eco_transformation_delete"), "eco_transformation", command.plan_id)
+    await control.drop_transformation(await scope.context("eco_transformation_delete"), command.plan_id)
     return Effect("The plan no longer aims the land.")
 
 

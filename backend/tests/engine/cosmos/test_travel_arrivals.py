@@ -5,10 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.records import IncidentStepRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, TravelMethod
 from aerona.domain.models.entity_stats import ItemStats, MortalStats, PeopleStats, ResourceStats, SpeciesStats
@@ -18,6 +22,23 @@ from aerona.engine.phases.travel import journeys
 from aerona.engine.services.community_relations import relation
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_world, teach, tick, tuned
+
+
+async def role_holders(session: AsyncSession, kind: str, *roles: IncidentRole) -> set[int]:
+    rows = await session.scalars(
+        select(IncidentParticipantRow.node_id)
+        .join(IncidentRow, IncidentRow.id == IncidentParticipantRow.incident_id)
+        .where(IncidentRow.kind == kind, IncidentParticipantRow.role.in_(roles))
+    )
+    return set(rows)
+
+
+async def meeting(session: AsyncSession, native_id: int) -> StepOutcome | None:
+    return await session.scalar(
+        select(IncidentStepRow.outcome)
+        .join(IncidentRow, IncidentRow.id == IncidentStepRow.incident_id)
+        .where(IncidentRow.kind == "travel.arrival", IncidentStepRow.action == StepAction.MEET, IncidentStepRow.target_node_id == native_id)
+    )
 
 
 async def chronicle_texts(session: AsyncSession) -> list[str]:
@@ -71,7 +92,7 @@ async def test_a_lost_vehicle_becomes_a_ghost_ship_legend(session: AsyncSession,
     assert vessel.status is not EntityStatus.CANON
     lost = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.LEGEND, EntityRow.name == "Swift Keel, the Lost Vessel"))
     assert lost is not None
-    assert any("legend of a lost vessel" in text for text in await chronicle_texts(session))
+    assert lost.id in await role_holders(session, "travel.vanished", IncidentRole.PRODUCT)
 
 
 async def test_a_stowaway_species_invades_the_landing_region(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -83,7 +104,7 @@ async def test_a_stowaway_species_invades_the_landing_region(session: AsyncSessi
     assert journey is not None and invader is not None
     assert invader.world_id == journey.destination_world_id
     assert await EntityRepository(session).has_flag(invader.id, EntityFlag.INVASIVE)
-    assert any("stowaway species" in text for text in await chronicle_texts(session))
+    assert invader.id in await role_holders(session, "travel.stowaway", IncidentRole.SUBJECT, IncidentRole.ACTOR, IncidentRole.PRODUCT)
     assert JourneyEventKind.STOWAWAY in {event.kind for event in journey.events}
 
 
@@ -123,7 +144,7 @@ async def test_conquest_is_seen_as_invasion_and_opens_a_war(session: AsyncSessio
     assert outpost is not None
     assert await BondRepository(session).exists_between(outpost.id, folk.id, BondKind.ENEMY)
     assert await relation(session, ctx.rules, people.id, folk.id) < 0
-    assert any("saw them as invaders" in text for text in await chronicle_texts(session))
+    assert await meeting(session, folk.id) is StepOutcome.REFUSED
 
 
 async def test_uneasy_first_contact_lowers_the_relation_slightly(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -132,7 +153,7 @@ async def test_uneasy_first_contact_lowers_the_relation_slightly(session: AsyncS
     before = await relation(session, ctx.rules, people.id, folk.id)
     await journeys(ctx)
     assert await relation(session, ctx.rules, people.id, folk.id) == before - ctx.rules.travel.uneasy_relation_loss
-    assert any("watched them uneasily" in text for text in await chronicle_texts(session))
+    assert await meeting(session, folk.id) is StepOutcome.DELAYED
     assert not await BondRepository(session).exists_between(people.id, folk.id, BondKind.TRADES_WITH)
 
 
@@ -153,4 +174,4 @@ async def test_friendly_first_contact_exchanges_culture_both_ways(session: Async
     assert await bonds.exists_between(people.id, folk.id, BondKind.TRADES_WITH)
     assert await bonds.exists_between(folk.id, brought.id, BondKind.KNOWS)
     assert await bonds.exists_between(people.id, native_lore.id, BondKind.KNOWS)
-    assert any(text.startswith("Cultural exchange") for text in await chronicle_texts(session))
+    assert people.id in await role_holders(session, "culture.contact", IncidentRole.ACTOR, IncidentRole.TARGET)

@@ -3,11 +3,15 @@ from dataclasses import replace
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, NotificationCategory
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.notes import last_chronicle_id
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
 from aerona.services import notifications
-from aerona.services.chronicle import ChronicleLine, ChronicleWriter
+from aerona.services.chronicle import ChronicleWriter
 from aerona.services.notifications import NotificationRequest, Notifier
 from tests.services.app.factories import Cosmos
 
@@ -73,15 +77,18 @@ async def test_prune_keeps_severe_and_recent(session: AsyncSession, world: Cosmo
 
 async def test_chronicle_writer_notifies(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
     writer = ChronicleWriter(Notifier())
-    line = ChronicleLine(kind=ChronicleKind.WORLD, text="A great battle near #4 shook the plain.", entity_ids=[world.region.id])
-    row = await writer.write(session, rules, line)
-    assert row.text == "A great battle near shook the plain."
-    assert row.feed_category is FeedCategory.WAR
-    assert row.year is not None
+    since = await last_chronicle_id(session)
+    ctx = await manual_context(session, "test", rules)
+    written = await record(
+        ctx,
+        "player.history",
+        roles={IncidentRole.SUBJECT: world.region.id},
+        facts={"account": "A great battle shook the plain."},
+        kind=ChronicleKind.WAR,
+        feed=FeedCategory.WAR,
+    )
+    assert written.row.year is not None
+    assert await writer.notify_unclassified(session, rules, since) >= 1
     page = await notifications.list_notifications(session, limit=10)
-    assert page.items[0].chronicle_id == row.id
+    assert page.items[0].chronicle_id == written.row.id
     assert page.items[0].target_node_id == world.region.id
-    hand = await writer.creator_hand(session, rules, "the rain was stopped.", [world.region.id])
-    assert hand.text == "Aeron's hand: the rain was stopped."
-    birth = await writer.world_birth(session, rules, "Ithren", world.world)
-    assert birth.text == "Ithren brought forth a new world, Velar (ordinary world)."

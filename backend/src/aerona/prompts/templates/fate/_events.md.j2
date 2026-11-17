@@ -1,6 +1,6 @@
 {% macro event_rows(rows) -%}
 {% for row in rows %}
-{{ row.text }}{% if row.repeats > 1 %} (this age {{ row.repeats }} times){% endif %}{% if not loop.last %}{{ "\n" }}{% endif %}
+{{ row.text }}{% if row.repeats > 1 %} (this age {{ row.repeats | several("time", "times") }}){% endif %}{% if not loop.last %}{{ "\n" }}{% endif %}
 {% endfor %}
 {%- endmacro %}
 {% macro events_by_world(sections, limit, trim) -%}

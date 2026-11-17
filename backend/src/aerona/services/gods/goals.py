@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.catalog.achievements import ACHIEVEMENTS
 from aerona.catalog.goal_metrics import CATEGORY_LABELS, METRICS
 from aerona.catalog.scenarios import SCENARIOS, custom_description, custom_title
@@ -13,6 +12,7 @@ from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedErr
 from aerona.db.tables.meta import AchievementRow, ScenarioRow, ScoreRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.meta import ACHIEVEMENT_TIERS, AchievementKey, GoalBasis, GoalCategory, GoalComparator, GoalMetric, ScenarioKey, ScenarioStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.records import ScoreBreakdown
 from aerona.engine.gods.goals import (
     GoalsEpochResult,
@@ -31,6 +31,7 @@ from aerona.engine.gods.goals import (
 )
 from aerona.engine.gods.metrics import MetricReader
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from aerona.services.gods.context import require_creator
 
@@ -277,8 +278,7 @@ def checked_custom(rules: Rules, comparator: GoalComparator, basis: GoalBasis, t
 async def announce(session: AsyncSession, rules: Rules, row: ScenarioRow, reason: str) -> None:
     ctx = await manual_context(session, reason, rules)
     creator = await require_creator(session)
-    line = god_lines.GOAL_SET
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, name=scenario_name(row)), template_key=line.key)
+    await record(ctx, "gods.goals.set", roles={IncidentRole.ACTOR: creator.id}, facts={"name": scenario_name(row)}, kind=ChronicleKind.CREATOR_HAND)
 
 
 async def start_scenario(session: AsyncSession, rules: Rules, key: ScenarioKey, target: int | None = None, deadline_epochs: int | None = None) -> GoalsOverview:

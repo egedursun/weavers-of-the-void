@@ -79,7 +79,7 @@ async def test_wealthy_community_lends_to_a_poor_neighbour_on_its_own(session: A
     debt = await session.scalar(select(BondRow).where(BondRow.kind == BondKind.OWES))
     assert debt is not None and debt.debt_status is DebtStatus.OPEN and debt.debt_amount == amount
     recorded = await keys(session)
-    assert "civilization.loan" in recorded and "civilization.loan_note" in recorded
+    assert "civilization.loan" in recorded
 
 
 async def test_no_spontaneous_loan_when_the_chance_is_zero(session: AsyncSession, world: CoreWorld) -> None:
@@ -105,7 +105,7 @@ async def test_trade_partners_barter_goods_of_similar_value(session: AsyncSessio
     assert await repository.active_between(buyer.id, sword.id, [BondKind.OWNS])
     assert not await repository.active_between(seller.id, sword.id, [BondKind.OWNS])
     recorded = await keys(session)
-    assert "civilization.barter" in recorded and "civilization.barter_note" in recorded
+    assert "civilization.barter" in recorded
 
 
 async def test_barter_is_refused_when_values_are_too_far_apart(session: AsyncSession, world: CoreWorld) -> None:
@@ -129,7 +129,7 @@ async def test_an_elder_adopts_a_nearby_orphan_on_their_own(session: AsyncSessio
     await spontaneous_adoption(ctx)
     assert await BondRepository(session).exists_between(child.id, elder.id, BondKind.FOSTERED_BY)
     recorded = await keys(session)
-    assert "civilization.adoption" in recorded and "civilization.adoption_note" in recorded
+    assert "civilization.adoption" in recorded
 
 
 async def test_no_spontaneous_adoption_when_the_chance_is_zero(session: AsyncSession, world: CoreWorld) -> None:

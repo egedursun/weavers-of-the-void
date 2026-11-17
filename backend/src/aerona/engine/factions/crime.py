@@ -15,7 +15,8 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.intrigue import HookSource
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OathBreach, OathKind
 from aerona.domain.enums.urban import CrimeStance
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -23,10 +24,10 @@ from aerona.engine.disease.stigma import values_for
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.intrigue.secrets import grant_hook, learn
 from aerona.engine.lifecycle.wounds import slay
-from aerona.engine.notes import note
 from aerona.engine.polity.oaths import break_on, oaths_of, swear
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.urban.turf import crime_orgs
 
@@ -128,12 +129,12 @@ async def punish_informers(ctx: TickContext, faction: EntityRow, tally: CrimeTal
     if mortal is None or held(mortal.id):
         return
     tally.traitors += 1
-    await break_on(ctx, [mortal.id], OathKind.SILENCE, f"talked about {faction.name}", recipient_id=faction.id)
+    await break_on(ctx, [mortal.id], OathKind.SILENCE, OathBreach.SECRETS_TOLD, recipient_id=faction.id, occasion=faction.id)
     for stance in await ctx.session.scalars(select(CrimeStanceRow).where(CrimeStanceRow.faction_entity_id == faction.id)):
         if "strength" not in stance.locked:
             stance.strength = clamp_int(stance.strength + ctx.rules.crime_orgs.suppress_loss, 0, PERCENT)
     if await slay(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, HarmCause.PUNISHMENT, TRAITOR_DEATH, killer_id=faction.id)):
-        await note(ctx, f"{mortal.name} talked, and {faction.name} kept its code.", key="crime.informer_killed", ids=[mortal.id, faction.id])
+        await record(ctx, "crime.informer_killed", roles={IncidentRole.VICTIM: mortal.id, IncidentRole.ACTOR: faction.id}, place=mortal.location_id)
 
 
 async def take_stance(ctx: TickContext, faction: EntityRow, profile: FactionProfileRow, tally: CrimeTally) -> None:

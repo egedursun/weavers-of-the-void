@@ -29,6 +29,7 @@ import { CosmicChronicleGrid } from './CosmicChronicleGrid'
 import { EpochArticle } from './EpochArticle'
 import { EpochStrip } from './EpochStrip'
 import { EpochTraces } from './EpochTraces'
+import { RecordSearch } from './RecordSearch'
 import {
   BOOK_URL,
   CODEX_URL,
@@ -202,6 +203,7 @@ export function ChronicleScreen() {
             localMatches={shown}
             onGo={go}
           />
+          <RecordSearch />
           <EpochStrip epochs={numbers} onJump={go} />
           {pending ? (
             <div className='flex flex-col gap-4'>

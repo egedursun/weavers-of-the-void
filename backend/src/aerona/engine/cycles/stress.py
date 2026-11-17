@@ -15,16 +15,18 @@ from aerona.domain.enums.cycles import CyclePhase
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import polities, put, realm_towns
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import FactInput
+from aerona.engine.recording.record import record as record_happening
 from aerona.engine.regime.book import graduates
 from aerona.rules.registry import Rules
 
@@ -204,11 +206,14 @@ async def read_stress(ctx: TickContext, tally: StressTally) -> list[tuple[Entity
         tally.read += 1
         if row.phase is CyclePhase.CRISIS and before is not CyclePhase.CRISIS:
             tally.crises += 1
-            await note(
-                ctx,
-                f"{polity.name} entered a crisis: its people are poor, its elites too many and its treasury strained.",
-                key="stress.crisis",
-                ids=[polity.id],
-            )
+            facts: dict[str, FactInput] = {
+                "immiseration": row.immiseration,
+                "elite_overproduction": row.elite_overproduction,
+                "fiscal_distress": row.fiscal_distress,
+                "psi": row.psi,
+                "aspirants": row.aspirants,
+                "positions": row.positions,
+            }
+            await record_happening(ctx, "stress.crisis", roles={IncidentRole.SUBJECT: polity.id}, facts=facts)
         found.append((polity, profile, row))
     return found

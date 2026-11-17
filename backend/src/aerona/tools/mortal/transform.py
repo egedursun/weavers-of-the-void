@@ -4,8 +4,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.transform.bodies import lift_fallen
 from aerona.prompts import MortalToolId
@@ -14,7 +14,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class SeekTrueNameInput(ToolInput):
@@ -47,7 +46,7 @@ async def seek_true_name(call: MortalCall, args: SeekTrueNameInput) -> str:
     row.known_by = sorted({*row.known_by, call.me.id})
     if bearer_id == call.me.id:
         await lift_fallen(call.tick, call.me.id, call.rules.transform.true_name_existence)
-    await call.chronicle(ChronicleKind.WORLD, lines.TRUE_NAME, entity_ids=[call.me.id, keeper.id], me=call.me.name, keeper=keeper.name)
+    await call.record("tools.mortal.true_name", roles={IncidentRole.LEARNER: call.me.id, IncidentRole.TEACHER: keeper.id})
     return result(MortalResult.TRUE_NAME_LEARNED, bearer=bearer.name, name=row.name)
 
 

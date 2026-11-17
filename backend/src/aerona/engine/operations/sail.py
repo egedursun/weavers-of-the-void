@@ -1,18 +1,16 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.operations import RAKED_SECTIONS, SHOT_TARGETS, SHOT_WEIGHT, STATION_SHARES
+from aerona.catalog.operations import STATION_SHARES
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
-from aerona.core.random import SeededRandom
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import ShipCrewRow, ShipStateRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import MaterialFamily
-from aerona.domain.enums.eras import TechFamily
-from aerona.domain.enums.military import VesselArmament
+from aerona.domain.enums.equipment import EquipmentFamily
 from aerona.domain.enums.operations import CrewStation, PointOfSail, ShotKind
 from aerona.domain.enums.vehicles import VehicleFrame, VehicleSection
 from aerona.engine.climes.shifts import prevailing
@@ -21,8 +19,7 @@ from aerona.engine.military.battle import stack_material
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.limits import tonnage_of
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.technology.profiles import family_level
-from aerona.engine.vehicles.sections import design_sections, strike_vessel
+from aerona.engine.vehicles.sections import design_sections
 
 OCTANTS = 8
 HALF_TURN = 4
@@ -30,11 +27,10 @@ SOLID_LEVEL = 4
 SHELL_LEVEL = 6
 GUIDED_LEVEL = 7
 ENERGY_LEVEL = 9
-RAKING_GAP = 30
-TINY = 1e-9
 GRAPE_CREW_PCT = 130
 ROWED = frozenset({VehicleFrame.GALLEY, VehicleFrame.LONGSHIP})
-HULL_SECTIONS = frozenset({VehicleSection.HULL, VehicleSection.KEEL, VehicleSection.BOW, VehicleSection.STERN, VehicleSection.HOLD})
+GUIDED_FAMILIES = frozenset({EquipmentFamily.MISSILE_LAUNCHER, EquipmentFamily.ROCKET_LAUNCHER, EquipmentFamily.TORPEDO})
+RITE_FAMILIES = frozenset({EquipmentFamily.FOCUS, EquipmentFamily.FOCUS_ARRAY})
 P = PointOfSail
 S = CrewStation
 
@@ -45,16 +41,7 @@ class Broadside:
     row: VesselProfileRow
     state: ShipStateRow
     crew_at_start: int
-
-
-@dataclass
-class Engagement:
-    winner: EntityRow
-    loser: EntityRow
-    sunk: bool = False
-    exploded: bool = False
-    struck: bool = False
-    hits: dict[int, int] = field(default_factory=dict)
+    families: frozenset[EquipmentFamily] = frozenset()
 
 
 @dataclass
@@ -170,7 +157,7 @@ def rate_of_fire(ctx: TickContext, row: VesselProfileRow, crews: dict[CrewStatio
 def modern_shot(shooter: Broadside, target: Broadside, level: int, sections: list[VehicleSection]) -> ShotKind | None:
     if level >= ENERGY_LEVEL:
         return ShotKind.ENERGY
-    if level >= GUIDED_LEVEL and VesselArmament.MISSILES.value in shooter.row.armament:
+    if level >= GUIDED_LEVEL and shooter.families & GUIDED_FAMILIES:
         return ShotKind.GUIDED
     if level >= SHELL_LEVEL:
         if VehicleSection.ARMOUR_PLATING in sections:
@@ -182,116 +169,13 @@ def modern_shot(shooter: Broadside, target: Broadside, level: int, sections: lis
 
 
 def shot_for(shooter: Broadside, target: Broadside, shooter_speed: int, target_speed: int) -> ShotKind:
-    if shooter.row.frame is VehicleFrame.FIRE_SHIP or VesselArmament.RITES.value in shooter.row.armament:
+    if shooter.row.frame is VehicleFrame.FIRE_SHIP or shooter.families & RITE_FAMILIES:
         return ShotKind.FIRE
     if target.row.crew * PERCENT > shooter.row.crew * GRAPE_CREW_PCT:
         return ShotKind.GRAPE
     if target_speed > shooter_speed:
         return ShotKind.CHAIN
     return ShotKind.ROUND
-
-
-def aim(rng: SeededRandom, sections: list[VehicleSection], shot: ShotKind, raking: bool) -> VehicleSection | None:
-    wanted = [section for section in sections if section in SHOT_TARGETS[shot] or (raking and section in RAKED_SECTIONS)]
-    pool = wanted or sections
-    return rng.pick(pool) if pool else None
-
-
-async def fire_broadside(ctx: TickContext, shooter: Broadside, target: Broadside, index: int, tally: SailTally, *, weight: float = 1.0) -> int:
-    table = ctx.rules.age_of_sail
-    crews = await crews_of(ctx, shooter.vessel.id, shooter.row)
-    keep(shooter.state, "rate_of_fire", rate_of_fire(ctx, shooter.row, crews))
-    mine, theirs = speed_of(ctx, shooter.state), speed_of(ctx, target.state)
-    sections = sorted(await design_sections(ctx.session, target.row.design_id), key=lambda item: item.value) if target.row.design_id is not None else []
-    level = await family_level(ctx.session, shooter.vessel.affiliated_entity_id, TechFamily.WARFARE)
-    keep(shooter.state, "shot", modern_shot(shooter, target, level, sections) or shot_for(shooter, target, mine, theirs))
-    raking = target.state.point_of_sail is P.IN_IRONS or mine - theirs >= RAKING_GAP
-    hits = max(1, round((table.base_hits + shooter.state.rate_of_fire // table.rate_hits_per) * weight * SHOT_WEIGHT[shooter.state.shot] / PERCENT))
-    if raking:
-        hits = hits * table.raking_pct // PERCENT
-        keep(target.state, "raked", target.state.raked + 1)
-        tally.raked += 1
-    rng = ctx.rng(f"broadside.{shooter.vessel.id}.{target.vessel.id}.{ctx.epoch}.{index}")
-    flammable = stack_material(target.row.hull_material).family is MaterialFamily.ORGANIC
-    for _ in range(hits):
-        section = aim(rng, sections, shooter.state.shot, raking)
-        if section is not None:
-            await strike_vessel(ctx, target.vessel, target.row, section, 1)
-        elif "condition" not in target.row.locked:
-            target.row.condition = clamp_int(target.row.condition - ctx.rules.vehicles.section_hit, 0, PERCENT)
-        if shooter.state.shot is ShotKind.ROUND and (section is None or section in HULL_SECTIONS):
-            keep(target.state, "leak", clamp_int(target.state.leak + table.leak_per_hit, 0, PERCENT))
-        elif shooter.state.shot is ShotKind.GRAPE and "crew" not in target.row.locked:
-            target.row.crew = max(0, target.row.crew - max(1, target.row.crew * table.grape_crew_pct // PERCENT))
-        elif shooter.state.shot is ShotKind.FIRE:
-            spread = table.fire_spread_pct if flammable else PERCENT
-            keep(target.state, "fire", clamp_int(target.state.fire + table.fire_per_hit * spread // PERCENT, 0, PERCENT))
-            tally.fires += 1
-    tally.broadsides += 1
-    return hits
-
-
-async def damage_control(ctx: TickContext, side: Broadside) -> None:
-    table = ctx.rules.age_of_sail
-    crews = await crews_of(ctx, side.vessel.id, side.row)
-    riggers = crews.get(S.RIGGERS)
-    pumps = table.pumping * (1 + (riggers.count if riggers is not None else 0) // max(1, FRAMES[side.row.frame].crew // 4))
-    keep(side.state, "leak", clamp_int(side.state.leak - pumps, 0, PERCENT))
-    keep(side.state, "fire", clamp_int(side.state.fire - table.fire_fought, 0, PERCENT))
-
-
-async def doomed(ctx: TickContext, side: Broadside, index: int, tally: SailTally) -> tuple[bool, bool]:
-    table = ctx.rules.age_of_sail
-    if side.state.leak >= table.founder_leak:
-        tally.foundered += 1
-        return True, False
-    if (
-        side.state.magazine
-        and side.state.fire >= table.magazine_fire
-        and ctx.rng(f"magazine.{side.vessel.id}.{ctx.epoch}.{index}").chance(table.magazine_chance)
-    ):
-        keep(side.state, "magazine", False)
-        tally.explosions += 1
-        return True, True
-    return False, False
-
-
-def strikes(ctx: TickContext, side: Broadside) -> bool:
-    table = ctx.rules.age_of_sail
-    thinned = side.row.crew * PERCENT < side.crew_at_start * table.strike_crew_pct
-    return thinned or side.row.condition < table.strike_condition
-
-
-async def engage(
-    ctx: TickContext, first: tuple[EntityRow, VesselProfileRow], second: tuple[EntityRow, VesselProfileRow], powers: tuple[float, float], tally: SailTally
-) -> Engagement:
-    sides = [Broadside(vessel, row, await ship_state(ctx, vessel.id), row.crew) for vessel, row in (first, second)]
-    strongest = max(*powers, TINY)
-    weights = [power / strongest for power in powers]
-    weaker = 0 if powers[0] < powers[1] else 1
-    hits = {side.vessel.id: 0 for side in sides}
-    for index in range(ctx.rules.age_of_sail.rounds):
-        for position, (shooter, target) in enumerate(((sides[0], sides[1]), (sides[1], sides[0]))):
-            if held(target.vessel.id):
-                continue
-            hits[target.vessel.id] += await fire_broadside(ctx, shooter, target, index, tally, weight=weights[position])
-        doomed_now: list[tuple[int, bool]] = []
-        for position, side in enumerate(sides):
-            await damage_control(ctx, side)
-            sunk, exploded = await doomed(ctx, side, index, tally)
-            if sunk:
-                doomed_now.append((position, exploded))
-        if doomed_now:
-            position, exploded = next((item for item in doomed_now if item[0] == weaker), doomed_now[0])
-            return Engagement(sides[1 - position].vessel, sides[position].vessel, sunk=True, exploded=exploded, hits=hits)
-        broken = [position for position, side in enumerate(sides) if strikes(ctx, side) and not held(side.vessel.id)]
-        if broken:
-            position = weaker if weaker in broken else broken[0]
-            keep(sides[position].state, "struck", True)
-            tally.struck += 1
-            return Engagement(sides[1 - position].vessel, sides[position].vessel, struck=True, hits=hits)
-    winner, loser = (sides[0], sides[1]) if powers[0] >= powers[1] else (sides[1], sides[0])
-    return Engagement(winner.vessel, loser.vessel, hits=hits)
 
 
 async def take_prize(ctx: TickContext, captor_row: VesselProfileRow, prize: EntityRow, prize_row: VesselProfileRow, captor_owner: EntityRow | None) -> int:

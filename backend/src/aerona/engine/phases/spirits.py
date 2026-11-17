@@ -18,19 +18,20 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.effects import scale_here
 from aerona.engine.environment.perils import haunt_factor
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 
 
 async def land_of_the_dead(ctx: TickContext) -> WorldRow | None:
@@ -44,8 +45,8 @@ async def lay_to_rest(ctx: TickContext, spirit: EntityRow, reason: str) -> None:
     await retire(ctx.session, spirit, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", close_bonds=True)
 
 
-@reads("spirit.unrest", "table.bonds", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.routes", "table.worlds")
-@writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.epoch_year_cursors", "table.incidents")
+@reads("spirit.unrest", "table.bonds", "table.entities", "table.entity_flags", "table.nodes", "table.routes", "table.worlds")
+@writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.incident_facts", "table.incidents")
 async def spirits_rest(ctx: TickContext) -> None:
     rules = ctx.rules
     life = rules.deep_life
@@ -89,13 +90,26 @@ async def spirits_rest(ctx: TickContext) -> None:
         for spirit in ordered[: len(spirits) - world_rules.spirits_per_place_cap]:
             await lay_to_rest(ctx, spirit, "came to rest among the crowd of spirits")
             rested += 1
-    parts = []
-    if rested:
-        parts.append(f"{several(rested, 'spirit', 'spirits')} came to rest")
-    if crossed and dead_world is not None:
-        parts.append(f"{several(crossed, 'spirit', 'spirits')} crossed to {dead_world.name}, the land of the dead")
-    if parts:
-        await note(ctx, "; ".join(parts) + ".", key="spirits.rest")
+    if rested or (crossed and dead_world is not None):
+        await record(
+            ctx,
+            "spirits.rest",
+            roles={IncidentRole.DESTINATION: dead_world.id if crossed and dead_world is not None else None},
+            facts={
+                "rested": rested,
+                "crossed": crossed if dead_world is not None else 0,
+                "told": "; ".join(
+                    part
+                    for part in (
+                        f"{several(rested, 'spirit', 'spirits')} came to rest" if rested else "",
+                        f"{several(crossed, 'spirit', 'spirits')} crossed to {dead_world.name}, the land of the dead"
+                        if crossed and dead_world is not None
+                        else "",
+                    )
+                    if part
+                ),
+            },
+        )
     ctx.count("rested", rested)
     ctx.count("crossed", crossed)
 
@@ -105,7 +119,6 @@ async def spirits_rest(ctx: TickContext) -> None:
     "spirit.unrest",
     "table.bonds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
@@ -123,7 +136,7 @@ async def spirits_rest(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
@@ -150,14 +163,16 @@ async def hauntings(ctx: TickContext) -> None:
             haunted, prosperity=clamp_int((prosperity if prosperity is not None else effects.unknown_prosperity) - effects.haunt_prosperity_loss, 0, PERCENT)
         )
         set_stats(spirit, unrest=clamp_int(unrest - effects.haunt_unrest_drop, 0, PERCENT))
-        await note(ctx, f"{spirit.name} haunted {haunted.name}.", key="spirits.haunting", ids=[spirit.id, haunted.id])
+        await record(
+            ctx, "spirits.haunting", roles={IncidentRole.SUBJECT: [spirit.id, haunted.id]}, facts={"spirit": str(spirit.name), "haunted": str(haunted.name)}
+        )
         legend, born = await ghost_legend(ctx, spirit, haunted)
         if born:
-            await note(
+            await record(
                 ctx,
-                f"In {haunted.name} they began to tell of {spirit.name}: {legend.name}.",
-                key="spirits.ghost_legend",
-                ids=[legend.id, spirit.id, haunted.id],
+                "spirits.ghost_legend",
+                roles={IncidentRole.SUBJECT: [legend.id, spirit.id, haunted.id]},
+                facts={"haunted": str(haunted.name), "spirit": str(spirit.name), "legend": str(legend.name)},
             )
 
 
@@ -235,7 +250,7 @@ async def lay_spirit_to_rest(ctx: TickContext, spirit_id: int) -> EntityRow:
     if spirit is None or spirit.entity_type is not EntityType.SPIRIT:
         raise ValidationFailedError("Only a wandering spirit can be laid to rest.")
     await lay_to_rest(ctx, spirit, "was laid to rest by the gods")
-    await note(ctx, f"{spirit.name} was laid to rest; it wanders no more.", key="spirits.laid_to_rest", ids=[spirit.id])
+    await record(ctx, "spirits.laid_to_rest", roles={IncidentRole.SUBJECT: spirit.id})
     return spirit
 
 

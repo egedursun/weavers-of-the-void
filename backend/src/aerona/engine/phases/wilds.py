@@ -11,7 +11,6 @@ from aerona.engine.ecology.pets import adopt_pets, tend_pets
 from aerona.engine.ecology.profiles import typed_nature_backfill
 from aerona.engine.ecology.totems import adopt_totems, hunt_gods
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.records import retire_in
@@ -122,20 +121,12 @@ async def beast_cycles(ctx: TickContext) -> None:
     for beast, row in await living_beasts(ctx):
         if held(beast.id):
             continue
-        worshipped = await deify(ctx, atlas, beast, row)
-        if worshipped:
+        if await deify(ctx, atlas, beast, row):
             ctx.count("beasts_worshipped")
-            await note(ctx, f"{worshipped[0].upper()}{worshipped[1:]}.", key="beasts.worshipped", ids=[beast.id])
-        text = await lair_cycle(ctx, atlas, beast, row)
-        if text == "old age":
+        if await lair_cycle(ctx, atlas, beast, row):
             await retire_in(ctx, beast, "died of great age in its lair")
             ctx.count("beasts_aged_out")
-        elif text:
-            ctx.count("beast_deeds")
-            await note(ctx, f"{text[0].upper()}{text[1:]}.", key="beasts.deed", ids=[beast.id])
-    for told in await fallen(ctx):
-        ctx.count("beasts_fallen")
-        await note(ctx, f"{told}.", key="beasts.fallen", ids=[])
+    ctx.count("beasts_fallen", len(await fallen(ctx)))
     ctx.count("void_roamed", await roam_void(ctx, atlas))
 
 

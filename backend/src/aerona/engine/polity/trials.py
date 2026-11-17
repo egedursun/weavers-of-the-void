@@ -16,15 +16,16 @@ from aerona.db.tables.polity import SentenceRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import HookDemand, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdict
 from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, SkillKind, TraitKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import LawArea, LawKind, OfficeKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.engine.body.bands import banded
 from aerona.engine.body.customs import people_of
@@ -49,7 +50,6 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.justice import CRIME_TEXT, MUTILATIONS, code_punishment, community_ruler, cruelty_of, sentence
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.standing import add_renown, add_stress
-from aerona.engine.notes import note
 from aerona.engine.polity.justice import offenders
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.polity.repute import shift_infamy
@@ -58,6 +58,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import relation
 from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.settlement.book import Town, credit
@@ -573,7 +574,7 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
     await tamper(ctx, case, accused)
     await claimed_court(ctx, case, accused)
     await plead(ctx, case, accused)
-    trial = case.trial or TrialKind.JUDGE
+    trial: TrialKind = case.trial or TrialKind.JUDGE
     guilty = erred(ctx, case, trial, await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused)))
     tally.tried += 1
     await weigh_trial(ctx, trial, case.settlement_entity_id, case.polity_entity_id)
@@ -584,13 +585,39 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
     else:
         close(ctx, case, Verdict.ACQUITTED)
         tally.acquitted += 1
-    verdict = "condemned" if guilty else "acquitted"
-    await note(
+    witnesses = await witnesses_of(ctx, case.id)
+    steps = (
+        StepDraft(StepAction.ACCUSE, actor=case.investigator_entity_id, target=accused.id),
+        *(
+            StepDraft(
+                StepAction.TESTIFY,
+                actor=row.witness_entity_id,
+                target=accused.id,
+                outcome=StepOutcome.SUCCESS
+                if row.testimony is Deposition.ACCUSES
+                else StepOutcome.REFUSED
+                if row.testimony is Deposition.SHIELDS
+                else StepOutcome.NO_EFFECT,
+            )
+            for row in witnesses
+        ),
+        StepDraft(StepAction.PLEAD, actor=accused.id),
+        StepDraft(StepAction.JUDGE, actor=case.judge_entity_id, target=accused.id, outcome=StepOutcome.SUCCESS if guilty else StepOutcome.FAILURE),
+        *((StepDraft(StepAction.SENTENCE, actor=case.judge_entity_id, target=accused.id),) if guilty else ()),
+    )
+    await record(
         ctx,
-        f"{accused.name} was tried {TRIAL_TEXT[trial]} for {CRIME_TEXT[case.crime]} and {verdict}.",
-        key=f"trials.{verdict}",
-        ids=[accused.id, *([case.judge_entity_id] if case.judge_entity_id is not None else [])],
-        kind=ChronicleKind.CIVILIZATION,
+        f"trials.{'condemned' if guilty else 'acquitted'}_{trial.value}",
+        roles={
+            IncidentRole.ACCUSED: accused.id,
+            IncidentRole.JUDGE: case.judge_entity_id,
+            IncidentRole.ADVOCATE: case.advocate_entity_id,
+            IncidentRole.WITNESS: [row.witness_entity_id for row in witnesses],
+            IncidentRole.AUTHORITY: case.polity_entity_id,
+        },
+        facts={"crime": case.crime, "evidence": case.evidence},
+        steps=steps,
+        place=case.settlement_entity_id,
     )
 
 

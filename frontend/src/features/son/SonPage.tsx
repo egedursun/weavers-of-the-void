@@ -128,7 +128,11 @@ export function SonPage({ id }: DrawerPageProps) {
       {!dead && <SonBirthChild son={son} siblings={data.siblings} />}
       <SonBonds sonId={son.id} bonds={data.bonds} total={data.bond_total} />
       <SonRecords detail={data} />
-      <SonTurns sonId={son.id} chronicle={data.chronicle} />
+      <SonTurns
+        sonId={son.id}
+        chronicle={data.chronicle}
+        chronicleTotal={data.chronicle_total}
+      />
     </div>
   )
 }

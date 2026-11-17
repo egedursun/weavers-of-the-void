@@ -10,9 +10,9 @@ from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.urban import OrderLawRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import MarketPlay, OrderLaw
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.urban import control
@@ -22,7 +22,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 CLAIMED = 30
 BRIBE = 10
@@ -70,7 +69,12 @@ async def claim_turf(call: MortalCall, args: DistrictInput) -> str:
         fail(MortalResult.TURF_REFUSED, why="that district is not in your town")
     await control.set_turf(call.tick, district.id, profile.faction_entity_id, CLAIMED)
     call.target(district.settlement_entity_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.CLAIM_TURF, entity_ids=[call.me.id, district.settlement_entity_id], me=call.me.name)
+    await call.record(
+        "tools.mortal.claim_turf",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.MEMBER: profile.faction_entity_id},
+        facts={"district": district.kind},
+        place=district.settlement_entity_id,
+    )
     return result(MortalResult.TURF_CLAIMED, kind=district.kind.value.replace("_", " "))
 
 
@@ -81,7 +85,11 @@ async def bribe_official(call: MortalCall, args: OfficialInput) -> str:
         fail(MortalResult.BRIBE_REFUSED, why="there is no such official")
     await control.add_payroll(call.tick, profile.faction_entity_id, official.id, BRIBE)
     call.target(official.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.BRIBE_OFFICIAL, entity_ids=[call.me.id, official.id], me=call.me.name, official=official.name)
+    await call.record(
+        "tools.mortal.bribe_official",
+        roles={IncidentRole.GIVER: call.me.id, IncidentRole.RECEIVER: official.id, IncidentRole.MEMBER: profile.faction_entity_id},
+        facts={"bribe": BRIBE},
+    )
     return result(MortalResult.BRIBED, name=official.name)
 
 
@@ -92,7 +100,11 @@ async def open_trading_post(call: MortalCall, args: HostInput) -> str:
         fail(MortalResult.POST_REFUSED, why="that is no foreign town")
     await control.open_trading_post(call.tick, profile.faction_entity_id, host.id)
     call.target(host.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.OPEN_POST, entity_ids=[call.me.id, host.id], me=call.me.name, town=host.name)
+    await call.record(
+        "tools.mortal.open_post",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: host.id, IncidentRole.MEMBER: profile.faction_entity_id},
+        place=host.id,
+    )
     return result(MortalResult.POST_OPENED, name=host.name)
 
 
@@ -103,7 +115,9 @@ async def send_convoy(call: MortalCall, args: RouteInput) -> str:
         fail(MortalResult.CONVOY_SEND_REFUSED, why="that route does not touch your town")
     convoy = await control.send_convoy(call.tick, route.route_entity_id)
     call.target(route.route_entity_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SEND_CONVOY, entity_ids=[call.me.id, route.route_entity_id], me=call.me.name)
+    await call.record(
+        "tools.mortal.send_convoy", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: route.route_entity_id}, facts={"capacity": convoy.capacity}
+    )
     return result(MortalResult.CONVOY_SENT, capacity=convoy.capacity)
 
 
@@ -114,8 +128,11 @@ async def corner_market(call: MortalCall, args: CornerInput) -> str:
     town = await call.session.get(EntityRow, profile.home_entity_id)
     await control.set_play(call.tick, profile.faction_entity_id, profile.home_entity_id, args.commodity, MarketPlay.CORNER, strength=CORNERED)
     call.target(profile.home_entity_id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.CORNER_MARKET, entity_ids=[call.me.id, profile.home_entity_id], me=call.me.name, good=args.commodity.value.replace("_", " ")
+    await call.record(
+        "tools.mortal.corner_market",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OWNER: profile.faction_entity_id, IncidentRole.PLACE: profile.home_entity_id},
+        facts={"good": args.commodity, "strength": CORNERED},
+        place=profile.home_entity_id,
     )
     return result(MortalResult.CORNERED, good=args.commodity.value.replace("_", " "), name=town.name if town is not None else "your market")
 
@@ -129,7 +146,11 @@ async def call_tribunal(call: MortalCall, args: TribunalInput) -> str:
         fail(MortalResult.TRIBUNAL_REFUSED, why="there is no such mortal")
     trial = await control.convene(call.tick, profile.faction_entity_id, args.law, accused.id)
     call.target(accused.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.CALL_TRIBUNAL, entity_ids=[call.me.id, accused.id], me=call.me.name, accused=accused.name)
+    await call.record(
+        "tools.mortal.call_tribunal",
+        roles={IncidentRole.ACCUSER: call.me.id, IncidentRole.ACCUSED: accused.id, IncidentRole.AUTHORITY: profile.faction_entity_id},
+        facts={"verdict": trial.verdict},
+    )
     return result(MortalResult.TRIBUNAL_HELD, name=accused.name, verdict=trial.verdict.value)
 
 

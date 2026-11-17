@@ -16,6 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.minds import MindOrigin
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import (
     GiftedAttitude,
     GiftedStance,
@@ -31,10 +32,10 @@ from aerona.domain.enums.powers import (
     TideCycle,
 )
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 
 Check = Callable[[TickContext, EntityRow], Awaitable[bool]]
 GIFTED_ORIGINS = frozenset({PowerOrigin.BORN, PowerOrigin.AWAKENED, PowerOrigin.EXPOSURE, PowerOrigin.BLOODLINE})
@@ -243,7 +244,7 @@ async def suffer(ctx: TickContext, user: EntityRow, power: PowerRow, hazard: Pow
     spec = POWER_HAZARDS[hazard]
     await harm(ctx, user, power, spec.harm)
     if spec.noted:
-        await note(ctx, f"Drawing on power marked {user.name}: {spoken(hazard)}.", key="power.hazard", ids=[user.id])
+        await record(ctx, "power.hazard", roles={IncidentRole.SUBJECT: user.id}, facts={"hazard": hazard})
     return hazard.value
 
 

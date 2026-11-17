@@ -6,6 +6,7 @@ from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.db.record_context import current_scope
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import (
@@ -48,6 +49,7 @@ from aerona.domain.enums.mind import (
     ValueAxis,
     ValueHolder,
 )
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.mind.book import (
     PRESSURE_TYPES,
     Holder,
@@ -82,7 +84,7 @@ from aerona.engine.mind.split import (
 )
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.values import VALUE_LOCK
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import refresh_relation
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -420,8 +422,12 @@ async def set_role(scope: PlayerScope, command: SetRole) -> Effect:
         ctx = await scope.context("mind_role")
         rose = role_status(scope.rules, move.new) >= role_status(scope.rules, move.old)
         await think(scope.session, scope.rules, node.id, ThoughtKind.ROSE_IN_RANK if rose else ThoughtKind.FELL_IN_RANK, ctx.epoch)
-        text = f"By a god's hand {node.name} left the life of {an(label(move.old.value))} to become {an(label(move.new.value))}."
-        await note(ctx, text, key=f"skill.career_{move.reason.value}", ids=[node.id])
+        await record(
+            ctx,
+            f"skill.career_{move.reason.value}",
+            roles={IncidentRole.SUBJECT: node.id, IncidentRole.AUTHORITY: acting.actor_node_id if (acting := current_scope()) is not None else None},
+            facts={"reason": move.reason, "before": move.old, "after": move.new},
+        )
     return Effect(f"{node.name} is now {an(label(command.role.value))}.", target_node_id=node.id)
 
 

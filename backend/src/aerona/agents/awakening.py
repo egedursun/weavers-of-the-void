@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import write_line
 from aerona.agents.context.creation import creation_text
 from aerona.agents.context.geography import geography_lines
 from aerona.agents.context.scope import Scope, load_scope
@@ -21,14 +20,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.kinds import KindSpread
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.kinds.genesis import KindSeed, found_kinds
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record as record_incident
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.genesis import AwakenPeoplesContext
 from aerona.prompts.data.images import fix_image_prompt
@@ -196,12 +197,17 @@ async def awaken_one(
     seeds = [KindSeed(entry.concept, entry.category, entry.name, entry.description) for entry in item.kinds]
     await found_kinds(session, rules, seeds, holder_id=people.id, world_id=region.world_id, epoch=epoch, spread=KindSpread.GENESIS)
     created = [people, language, settlement, resource, knowledge, tradition]
-    text = (
-        f"A new people awoke in the lands of {region.name}: {people.name}. It speaks {language.name}, founded {settlement.name}, "
-        f"owns {resource.name} and knows the knowledge of {knowledge.name}."
-    )
-    await write_line(
-        session, rules, epoch, ChronicleKind.BIRTH, text, key="awakening.people", entity_ids=[row.id for row in created], son_id=son.id if son else None
+    await record_incident(
+        await manual_context(session, "awakening", rules, key=str(people.id)),
+        "awakening.people",
+        roles={
+            IncidentRole.PRODUCT: people.id,
+            IncidentRole.PLACE: region.id,
+            IncidentRole.MEMBER: [language.id, settlement.id, resource.id, knowledge.id, tradition.id],
+            IncidentRole.PATRON: son.id if son else None,
+        },
+        son_id=son.id if son else None,
+        place=region.id,
     )
     return created
 

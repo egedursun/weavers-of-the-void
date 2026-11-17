@@ -10,12 +10,12 @@ from aerona.db.tables.polity import OathRow
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.polity import OathBreach, OathKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 
 Swore = Callable[[TickContext, EntityRow, frozenset[TenetKind]], Awaitable[tuple[bool, int | None]]]
-Broke = Callable[[TickContext, OathRow, EntityRow], Awaitable[str | None]]
+Broke = Callable[[TickContext, OathRow, EntityRow], Awaitable[OathBreach | None]]
 SERVING = frozenset({SocialClass.SERF_OR_SLAVE, SocialClass.WORKER})
 
 
@@ -60,36 +60,36 @@ VOWS: Mapping[OathKind, Swore] = {
 }
 
 
-async def service_broken(_ctx: TickContext, oath: OathRow, swearer: EntityRow) -> str | None:
-    return "left the service sworn" if oath.recipient_node_id is not None and swearer.affiliated_entity_id != oath.recipient_node_id else None
+async def service_broken(_ctx: TickContext, oath: OathRow, swearer: EntityRow) -> OathBreach | None:
+    return OathBreach.SERVICE_LEFT if oath.recipient_node_id is not None and swearer.affiliated_entity_id != oath.recipient_node_id else None
 
 
-async def poverty_broken(ctx: TickContext, _oath: OathRow, swearer: EntityRow) -> str | None:
+async def poverty_broken(ctx: TickContext, _oath: OathRow, swearer: EntityRow) -> OathBreach | None:
     profile = await ctx.session.get(MortalProfileRow, swearer.id)
-    return "grew rich against the vow" if profile is not None and profile.wealth > ctx.rules.oaths.poverty_wealth else None
+    return OathBreach.WEALTH_GATHERED if profile is not None and profile.wealth > ctx.rules.oaths.poverty_wealth else None
 
 
-async def peace_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> str | None:
+async def peace_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> OathBreach | None:
     killed = await ctx.session.scalar(
         select(MemoryRow.id)
         .where(MemoryRow.subject_node_id == swearer.id, MemoryRow.kind == MemoryKind.KILLED_KIN, MemoryRow.epoch >= oath.sworn_epoch)
         .limit(1)
     )
-    return "shed blood against the vow" if killed is not None else None
+    return OathBreach.BLOOD_SHED if killed is not None else None
 
 
-async def fidelity_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> str | None:
+async def fidelity_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> OathBreach | None:
     marriage = await ctx.session.scalar(
         select(MarriageRow.id).where(MarriageRow.end_epoch.is_(None), (MarriageRow.first_id == swearer.id) | (MarriageRow.second_id == swearer.id)).limit(1)
     )
-    return "the union sworn to was put aside" if marriage is None else None
+    return OathBreach.UNION_PUT_ASIDE if marriage is None else None
 
 
-async def secrecy_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> str | None:
+async def secrecy_broken(ctx: TickContext, oath: OathRow, swearer: EntityRow) -> OathBreach | None:
     if oath.recipient_node_id is None:
         return None
     still = await ctx.session.get(FactionMembershipRow, (oath.recipient_node_id, swearer.id))
-    return "walked away from those it swore to keep secret" if still is None else None
+    return OathBreach.KEEPERS_LEFT if still is None else None
 
 
 BREACHES: Mapping[OathKind, Broke] = {

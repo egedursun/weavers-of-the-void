@@ -8,10 +8,11 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.entity import HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_of
@@ -21,13 +22,13 @@ from aerona.engine.cosmos.placement import hidden_sky
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.hooks import practised
-from aerona.engine.notes import note
 from aerona.engine.phases.knowledge_levels import known_records, shift_level
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.structures.readers import Working, working
 
 K = StructureKind
@@ -70,9 +71,9 @@ async def deepen(ctx: TickContext, item: Working, host: EntityRow, tally: Tally,
     ):
         return
     options = [
-        record
-        for record in await known_records(ctx.session, host.id)
-        if knowledge_level(ctx.rules, record) < ctx.rules.knowledge.level_cap and (branch is None or record.knowledge_branch is branch)
+        entry
+        for entry in await known_records(ctx.session, host.id)
+        if knowledge_level(ctx.rules, entry) < ctx.rules.knowledge.level_cap and (branch is None or entry.knowledge_branch is branch)
     ]
     if not options:
         return
@@ -81,8 +82,25 @@ async def deepen(ctx: TickContext, item: Working, host: EntityRow, tally: Tally,
     if level is None:
         return
     tally.deepened += 1
-    text = f"The scholars of {item.structure.name} deepened the knowledge of {chosen.name} (level {level})."
-    await note(ctx, text, key="living_stats.work_knowledge", ids=[item.structure.id, host.id, chosen.id], kind=ChronicleKind.KNOWLEDGE)
+    await record(
+        ctx,
+        "living_stats.work_knowledge",
+        roles={IncidentRole.ACTOR: item.structure.id, IncidentRole.SUBJECT: chosen.id, IncidentRole.PLACE: host.id},
+        facts={"level": level, "effect": item.profile.effect_pct * pct / PERCENT},
+        steps=(
+            StepDraft(
+                StepAction.LEARN,
+                actor=host.id,
+                target=chosen.id,
+                instrument_kind=InstrumentKind.STRUCTURE,
+                instrument_node=item.structure.id,
+                amount=level,
+                unit=FactUnit.KNOWLEDGE,
+                outcome=StepOutcome.SUCCESS,
+            ),
+        ),
+        place=host.id,
+    )
 
 
 async def library(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) -> None:
@@ -169,17 +187,31 @@ async def arena(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) 
         return
     first = rng.pick(fighters)
     second = rng.pick([fighter for fighter in fighters if fighter.id != first.id])
-    victor, loser = (
-        (first, second) if (stat(first, "strength") or 0) + rng.die(PERCENT) >= (stat(second, "strength") or 0) + rng.die(PERCENT) else (second, first)
-    )
+    first_roll = stat_or(first, "strength", 0) + rng.die(PERCENT)
+    second_roll = stat_or(second, "strength", 0) + rng.die(PERCENT)
+    victor, loser = (first, second) if first_roll >= second_roll else (second, first)
     victor.importance = (victor.importance or 0) + table.arena_duel_renown
     await apply_hits(ctx, loser, Harm(table.arena_duel_hp, HarmCause.DUEL, f"fell in the arena of {item.structure.name}"))
-    await note(
+    await record(
         ctx,
-        f"In {item.structure.name}, {victor.name} bested {loser.name} before the crowd.",
-        key="structures.duel",
-        ids=[item.structure.id, victor.id, loser.id],
-        kind=ChronicleKind.WORLD,
+        "structures.duel",
+        roles={IncidentRole.ACTOR: victor.id, IncidentRole.OPPONENT: loser.id, IncidentRole.PLACE: item.structure.id},
+        facts={"victor_roll": max(first_roll, second_roll), "loser_roll": min(first_roll, second_roll), "renown": table.arena_duel_renown},
+        steps=(
+            StepDraft(
+                StepAction.STRIKE,
+                actor=victor.id,
+                target=loser.id,
+                round=1,
+                instrument_kind=InstrumentKind.BODY,
+                damage_type=DamageType.BLUNT,
+                amount=table.arena_duel_hp,
+                unit=FactUnit.HP,
+                outcome=StepOutcome.WOUNDED,
+            ),
+            StepDraft(StepAction.WIN, actor=victor.id, target=loser.id, round=1),
+        ),
+        place=item.structure.id,
     )
     tally.duels += 1
 

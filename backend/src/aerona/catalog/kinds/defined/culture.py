@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.culture import CurseKind, LanguageRegister, RumourChannel, SpeakerKind, SummonForm, Technique, TraditionFunction
+from aerona.domain.enums.culture import CurseKind, ItemCategory, LanguageRegister, RumourChannel, SpeakerKind, SummonForm, Technique, TraditionFunction
 
 CURSE_KIND = total(
     CurseKind,
@@ -92,6 +92,20 @@ CURSE_KIND = total(
     },
 )
 
+ITEM_CATEGORY = total(
+    ItemCategory,
+    {
+        ItemCategory.WEAPON: Defined("Weapon", checked_by=(), used_by=()),
+        ItemCategory.ARMOUR: Defined("Armour", checked_by=(), used_by=()),
+        ItemCategory.SHIELD: Defined("Shield", checked_by=(), used_by=()),
+        ItemCategory.TOOL: Defined("Tool", checked_by=(), used_by=()),
+        ItemCategory.JEWELLERY: Defined("Jewellery", checked_by=(), used_by=()),
+        ItemCategory.SACRED_RELIC: Defined("Sacred relic", checked_by=(), used_by=()),
+        ItemCategory.INSTRUMENT: Defined("Instrument", checked_by=(), used_by=()),
+        ItemCategory.BOOK: Defined("Book", checked_by=(), used_by=()),
+    },
+)
+
 LANGUAGE_REGISTER = total(
     LanguageRegister,
     {
@@ -114,7 +128,9 @@ RUMOUR_CHANNEL = total(
     RumourChannel,
     {
         RumourChannel.WITNESS: Defined(
-            "Seen with their own eyes", checked_by=("engine.lore.rumours.atrocity_heard",), used_by=("db.tables.culture.RumourRow", "engine.lore.rumours.seed")
+            "Seen with their own eyes",
+            checked_by=("engine.lore.rumours.atrocity_heard",),
+            used_by=("db.tables.culture.RumourRow", "engine.lore.rumours.seed", "tools.mortal.events.recount"),
         ),
         RumourChannel.ROUTE: Defined("Down the trade road", checked_by=("engine.lore.rumours.CHANCES",), used_by=("engine.lore.rumours.Links.of",)),
         RumourChannel.PILGRIMAGE: Defined("From pilgrims", checked_by=("engine.lore.rumours.CHANCES",), used_by=("engine.lore.rumours.Links.of",)),
@@ -123,7 +139,7 @@ RUMOUR_CHANNEL = total(
             "Reported by spies", checked_by=("engine.lore.rumours.CHANCES", "engine.lore.rumours.fidelity_after"), used_by=("engine.lore.rumours.Links.of",)
         ),
         RumourChannel.CURRENT: Defined("Carried by the current", checked_by=("engine.lore.rumours.CHANCES",), used_by=("engine.lore.rumours.Links.of",)),
-        RumourChannel.PLANTED: Defined("Planted by you", checked_by=(), used_by=("engine.lore.rumours.plant",)),
+        RumourChannel.PLANTED: Defined("Planted by you", checked_by=(), used_by=("engine.lore.rumours.plant", "tools.son.events.retell_event")),
     },
 )
 
@@ -543,7 +559,7 @@ TECHNIQUE = total(
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.regime.learning.license_holders",
                 "engine.regime.rule.LAW_TECHNIQUES",
-                "engine.regime.rule.turn_charisma",
+                "engine.regime.rule.charisma_turned",
                 "engine.sites.digs.LOST_TECHNIQUES",
             ),
         ),
@@ -570,8 +586,8 @@ TECHNIQUE = total(
                 "engine.crafts.numbers.SCHOOLING",
                 "engine.polity.revenue.breed_corruption",
                 "engine.regime.patronage.institutional_strength",
+                "engine.regime.rule.charisma_turned",
                 "engine.regime.rule.legitimacy_targets",
-                "engine.regime.rule.turn_charisma",
             ),
         ),
         Technique.CENSUS: Defined(

@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT, TENTHS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
 from aerona.core.grammar import spoken as spoken_word
+from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -17,11 +18,11 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
@@ -54,7 +55,6 @@ from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots
 from aerona.engine.industry.energy import taste_meal
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import craft
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
 from aerona.engine.primitives.distance import RegionAtlas
@@ -66,6 +66,8 @@ from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import default_class_shares
 from aerona.engine.primitives.stats import headcount, set_stats, shift_stat, stat, stat_or
+from aerona.engine.recording.record import record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import declare_war, uprising_target
 from aerona.engine.settlement.storage import community_capacity, storage_index
 from aerona.rules.registry import Rules
@@ -372,7 +374,7 @@ def land_fertility(rules: Rules, entity: EntityRow, entities: Mapping[int, Entit
 async def gather_inputs(ctx: TickContext, entity: EntityRow, world: EconomyWorld) -> EconomyInputs:
     settings = ctx.rules.society
     book = world.book
-    craft = stat(entity, "craft")
+    craft_kind = stat(entity, "craft")
     return EconomyInputs(
         harvest_pct=world.harvests.get(world.atlas.top_region(entity.id) or -1, PERCENT),
         at_war=book.at_war(entity.id),
@@ -388,7 +390,7 @@ async def gather_inputs(ctx: TickContext, entity: EntityRow, world: EconomyWorld
         levels={branch: book.knowledge.level(entity.id, branch) for branch in book.knowledge.branches(entity.id)},
         piety=stat_or(entity, "piety", settings.default_stat),
         prosperity=stat_or(entity, "prosperity", settings.default_stat),
-        skilled_crafts=craft is not None and craft >= settings.target_craft_threshold,
+        skilled_crafts=craft_kind is not None and craft_kind >= settings.target_craft_threshold,
     )
 
 
@@ -414,13 +416,16 @@ async def strike_famine(ctx: TickContext, entity: EntityRow, society: Society) -
         set_stats(entity, population=clamp_int(population * fraction(settings.famine_population_kept_pct), floor, ceiling))
     shift_stat(entity, "prosperity", -settings.famine_prosperity_loss)
     multiple = society.prices[Commodity.FOOD] / PERCENT
-    await note(
+    await record_incident(
         ctx,
-        f"{entity.name}'s stores emptied: food now costs {multiple:.1f}x as much, and the hungry suffer.",
-        key="society.famine",
-        ids=[entity.id, *([entity.location_id] if entity.location_id else [])],
-        feed=FeedCategory.DISASTER,
-        kind=ChronicleKind.WORLD,
+        "society.famine",
+        roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: entity.location_id},
+        facts={"price_multiple": multiple, "population_kept": settings.famine_population_kept_pct, "prosperity_lost": settings.famine_prosperity_loss},
+        place=entity.location_id,
+        terms=[
+            Term("rules.society.famine_population_kept_pct", settings.famine_population_kept_pct),
+            Term("rules.society.famine_prosperity_loss", -settings.famine_prosperity_loss),
+        ],
     )
 
 
@@ -459,12 +464,12 @@ async def forge_weapons(ctx: TickContext, entity: EntityRow, society: Society) -
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.PRODUCED, ctx.epoch, "forge"))
     await bonds.connect(BondDraft(entity.id, weapon.id, BondKind.OWNS, ctx.epoch, "forge"))
-    await note(
+    await record(
         ctx,
-        f"The forges of {entity.name} hammered out new {props.label.lower()} weapons.",
-        key="material.weapons_forged",
-        ids=[entity.id, weapon.id],
-        kind=ChronicleKind.PRODUCTION,
+        "material.weapons_forged",
+        roles={IncidentRole.MAKER: entity.id, IncidentRole.PRODUCT: weapon.id},
+        facts={"material": props.label, "quality": quality, "damage": stat_or(weapon, "damage", 0), "might": stat_or(weapon, "might", 0)},
+        place=location,
     )
     return weapon
 
@@ -475,12 +480,16 @@ async def bankrupt_guilds(ctx: TickContext, entity: EntityRow, society: Society)
     society.shares[SocialClass.MERCHANT] = max(0.0, society.shares[SocialClass.MERCHANT] - settings.bankruptcy_share_loss)
     society.shares = normalized_shares(society.shares)
     shift_stat(entity, "prosperity", -settings.bankruptcy_prosperity_loss)
-    await note(
+    await record_incident(
         ctx,
-        f"The merchant guilds of {entity.name} went bankrupt; debtors are on the streets.",
-        key="society.bankruptcy",
-        ids=[entity.id],
-        kind=ChronicleKind.TRADE,
+        "society.bankruptcy",
+        roles={IncidentRole.SUBJECT: entity.id},
+        facts={
+            "satisfaction_lost": settings.bankruptcy_satisfaction_loss,
+            "share_lost": settings.bankruptcy_share_loss,
+            "prosperity_lost": settings.bankruptcy_prosperity_loss,
+        },
+        terms=[Term("rules.society.bankruptcy_prosperity_loss", -settings.bankruptcy_prosperity_loss)],
     )
 
 
@@ -520,13 +529,12 @@ async def raise_class_uprising(ctx: TickContext, entity: EntityRow, society: Soc
     if language is not None:
         await BondRepository(ctx.session).connect(BondDraft(faction.id, language, BondKind.SPEAKS, ctx.epoch, "the tongue of the uprising"))
     society.satisfaction[social_class] = clamp_int(mood + settings.revolt_relief, 0, PERCENT)
-    await note(
+    await record_incident(
         ctx,
-        f"In {entity.name} the {spec.plural.lower()} rose up: their satisfaction had fallen to {mood}.",
-        key="society.class_uprising",
-        ids=[entity.id, faction.id],
-        feed=FeedCategory.WAR,
-        kind=ChronicleKind.WORLD,
+        "society.class_uprising",
+        roles={IncidentRole.PLACE: entity.id, IncidentRole.ACTOR: faction.id, IncidentRole.TARGET: target.id},
+        facts={"social_class": social_class, "satisfaction": mood},
+        place=entity.id,
     )
     return faction
 
@@ -686,7 +694,6 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.ferment_cultures",
     "table.forced_weather",
@@ -778,9 +785,10 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.injuries",
     "table.messages",
@@ -899,7 +907,7 @@ async def send_plenty(ctx: TickContext, entity_id: int) -> Society:
     society = await society_of(ctx.session, ctx.rules, entity_id)
     society.prices[Commodity.FOOD] = ctx.rules.markets.price_floor_pct
     await save_society(ctx.session, entity_id, society, stocks=False)
-    await note(ctx, f"Plenty filled the stores of {entity.name}.", key="society.plenty", ids=[entity.id], kind=ChronicleKind.CREATOR_HAND)
+    await record_incident(ctx, "society.plenty", roles={IncidentRole.RECEIVER: entity.id}, facts={"food": room})
     return society
 
 

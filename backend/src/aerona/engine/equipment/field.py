@@ -21,6 +21,7 @@ from aerona.engine.equipment.stores import add_pieces, take_pieces
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 S = ArmamentSlot
+WIELDED = frozenset({S.HAND_WEAPON, S.MISSILE_WEAPON, S.VEHICLE_WEAPON})
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,19 @@ async def carried_by_units(session: AsyncSession, unit_ids: list[int]) -> dict[i
     )
     for row, model in await session.execute(statement):
         found[row.unit_id].append(Carried(model, row.count, row.condition))
+    return found
+
+
+async def main_arms(session: AsyncSession, unit_ids: list[int]) -> dict[int, int]:
+    found: dict[int, int] = {}
+    for unit_id, items in (await carried_by_units(session, unit_ids)).items():
+        best: EquipmentModelRow | None = None
+        for item in items:
+            model = item.model
+            if model.slot in WIELDED and model.entity_id is not None and (best is None or (model.damage, -model.id) > (best.damage, -best.id)):
+                best = model
+        if best is not None and best.entity_id is not None:
+            found[unit_id] = best.entity_id
     return found
 
 

@@ -2,8 +2,8 @@ from collections.abc import Sequence
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several, spoken
 from aerona.db.base import Base
+from aerona.db.record_context import current_scope
 from aerona.db.tables.cycles import (
     ALLIANCE_FIELDS,
     ASABIYYA_FIELDS,
@@ -57,12 +57,14 @@ from aerona.domain.enums.cycles import (
     ReproductiveCaste,
 )
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
 from aerona.engine.cycles.challenge import answer, response_to
 from aerona.engine.cycles.gifts import GiftTally, give, pass_circuit, refuse, return_gift
-from aerona.engine.cycles.indenture import freed_class, record_manumission
+from aerona.engine.cycles.indenture import bought_freedom, freed_class, record_manumission
 from aerona.engine.cycles.legacy import apply_legacy
 from aerona.engine.cycles.nomads import NomadTally, circuit_for, move
 from aerona.engine.cycles.plans import PlanTally, complete
@@ -72,8 +74,8 @@ from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.divine.control import apply
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.gatherings.control import Values, allowed, found
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.recording.record import StepDraft, record
 
 POLITIES = frozenset({EntityType.POLITY})
 PEOPLES = frozenset({EntityType.PEOPLE})
@@ -149,7 +151,12 @@ async def new_plan(
         locked=[],
     )
     await saved(ctx, plan)
-    await note(ctx, f"A long design was set in motion: {name}.", key="plans.begun", ids=[holder_id, *([target_id] if target_id else [])])
+    await record(
+        ctx,
+        "plans.begun",
+        roles={IncidentRole.OWNER: holder_id, IncidentRole.TARGET: target_id, IncidentRole.AUTHORITY: carrier_id},
+        facts={"plan": name, "plan_kind": kind, "steps": plan.steps, "step_cost": plan.step_cost, "secrecy": plan.secrecy},
+    )
     return plan
 
 
@@ -165,7 +172,7 @@ async def advance_plan(ctx: TickContext, plan_id: int, steps: int) -> LongPlanRo
 async def expose_plan(ctx: TickContext, plan_id: int) -> LongPlanRow:
     plan = await found(ctx, LongPlanRow, plan_id, "long plan")
     plan.exposed = True
-    await note(ctx, f"The long design called {plan.name} was laid bare.", key="plans.exposed", ids=[plan.holder_node_id])
+    await record(ctx, "plans.laid_bare", roles={IncidentRole.OWNER: plan.holder_node_id}, facts={"plan": plan.name, "plan_kind": plan.kind})
     await ctx.session.flush()
     return plan
 
@@ -332,7 +339,18 @@ async def new_confederation(ctx: TickContext, name: str, leader_id: int | None, 
     if leader_id is not None:
         await of_type(ctx, leader_id, MORTALS, "a mortal")
     row = await saved(ctx, ConfederationRow(name=name, leader_entity_id=leader_id, members=await members_of(ctx, members), formed_epoch=ctx.epoch, locked=[]))
-    await note(ctx, f"{name} was formed from {several(len(row.members), 'camp', 'camps')}.", key="nomads.confederation", ids=list(row.members))
+    scope = current_scope()
+    await record(
+        ctx,
+        "nomads.confederation",
+        roles={
+            IncidentRole.LEADER: leader_id,
+            IncidentRole.MEMBER: list(row.members),
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None,
+        },
+        facts={"confederation": name, "camps": len(row.members)},
+        steps=(StepDraft(StepAction.SWEAR, actor=leader_id),),
+    )
     return row
 
 
@@ -346,7 +364,14 @@ async def join_confederation(ctx: TickContext, confederation_id: int, members: S
 async def dissolve_confederation(ctx: TickContext, confederation_id: int) -> ConfederationRow:
     row = await found(ctx, ConfederationRow, confederation_id, "confederation")
     row.dissolved_epoch = ctx.epoch
-    await note(ctx, f"{row.name} broke apart into its camps.", key="nomads.fragmented", ids=list(row.members))
+    scope = current_scope()
+    await record(
+        ctx,
+        "nomads.fragmented",
+        roles={IncidentRole.MEMBER: list(row.members), IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
+        facts={"confederation": row.name, "camps": len(row.members)},
+        steps=(StepDraft(StepAction.SEPARATE),),
+    )
     await ctx.session.flush()
     return row
 
@@ -403,7 +428,7 @@ async def release_indenture(ctx: TickContext, indenture_id: int) -> int:
     row = await found(ctx, IndentureRow, indenture_id, "bond of labour")
     community_id, count = row.community_entity_id, row.count
     await ctx.session.delete(row)
-    await note(ctx, f"{several(count, 'bound labourer was', 'bound labourers were')} released from their bond.", key="indenture.released", ids=[community_id])
+    await record(ctx, "indenture.released", roles={IncidentRole.SUBJECT: community_id}, facts={"count": count, "by_hand": 1}, place=community_id)
     await ctx.session.flush()
     return community_id
 
@@ -428,7 +453,14 @@ async def free_bound(ctx: TickContext, community_id: int, share_pct: int, path: 
     sync_bound_share(await ctx.session.get(CommunitySocietyRow, community.id), rows)
     row = await record_manumission(ctx, community, freed, path)
     if freed:
-        await note(ctx, f"In {community.name}, {freed} of the bound were set free by {spoken(path)}.", key="manumission.freed", ids=[community.id])
+        await record(
+            ctx,
+            "manumission.freed",
+            roles={IncidentRole.SUBJECT: community.id},
+            facts={"freed": freed, "path": path, "share": share_pct},
+            place=community.id,
+            steps=bought_freedom(community.id, freed, path),
+        )
     await ctx.session.flush()
     return row
 

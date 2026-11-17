@@ -4,7 +4,6 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.discovery import TheoryAdherentRow
@@ -23,15 +22,16 @@ from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.fossil import FossilReading, FossilSource
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import scale_stat
+from aerona.engine.recording.record import record
 
 COLD_WORLDS = frozenset({WorldType.ICE, WorldType.ICE_SHELL})
 DIGGINGS = (StructureKind.MINE, StructureKind.QUARRY)
@@ -206,12 +206,14 @@ async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, 
     bed.found_epoch = ctx.epoch
     bed.finder_entity_id = finder.id if finder is not None else None
     tally.found += 1
+    luxuries = 0
     if finder is not None:
         if "reading" not in bed.locked:
             bed.reading = await reading_of(ctx, finder)
         tally.read += int(bed.reading is not FossilReading.UNREAD)
         await told(ctx, bed, finder)
         units = round_half_up(bed.richness / 10 * table.luxury_per_10)
+        luxuries = max(0, units)
         if units > 0:
             await goods_of(ctx.session, ctx.epoch).add(finder.id, CommodityKind.LUXURIES, units, GoodsFlow.EXTRACTION)
     if bed.frozen and bed.disease_entity_id is not None:
@@ -227,15 +229,16 @@ async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, 
             )
         )
         tally.rereleased += 1
-    region = await ctx.session.get(EntityRow, bed.region_entity_id)
-    named = region.name if region is not None else "a land"
-    reading = bed.reading.value.replace("_", " ")
-    told_as = f", read as {reading}" if bed.reading is not FossilReading.UNREAD else ""
-    await note(
+    await record(
         ctx,
-        f"Remains ({spoken(bed.source)}) came to light in {named}{told_as}.",
-        key=f"fossil.{bed.reading.value}",
-        ids=[item for item in (bed.region_entity_id, finder.id if finder is not None else None) if item is not None],
+        f"fossil.{bed.reading.value}",
+        roles={
+            IncidentRole.PLACE: bed.region_entity_id,
+            IncidentRole.ACTOR: finder.id if finder is not None else None,
+            IncidentRole.SUBJECT: bed.source_entity_id,
+        },
+        facts={"source": bed.source, "reading": bed.reading, "richness": bed.richness, "luxuries": luxuries},
+        place=bed.region_entity_id,
         world_id=bed.world_id,
     )
     await ctx.session.flush()

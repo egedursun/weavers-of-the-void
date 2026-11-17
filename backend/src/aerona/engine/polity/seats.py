@@ -8,20 +8,20 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import GUILD_KINDS, FactionKind, FactionRank
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.doctrine import CLERGY_ROLES
-from aerona.engine.notes import note
 from aerona.engine.polity.titles import HOLDER, POWER, RANK, emblem_of, record_holder
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import bump, purse_of
 
 FOLLOWERS = "followers"
@@ -209,12 +209,12 @@ async def tend_seats(ctx: TickContext, tally: SeatTally) -> None:
         if title is None:
             title = await found_seat(ctx, seat)
             tally.founded += 1
-            await note(
+            await record(
                 ctx,
-                f"{seat.institution.name} raised a seat: the {RANK_WORDS[seat.rank].lower()}.",
-                key="titles.seat_founded",
-                ids=[seat.institution.id, title.title_entity_id],
-                kind=ChronicleKind.WORLD,
+                "titles.seat_founded",
+                roles={IncidentRole.SUBJECT: seat.institution.id, IncidentRole.PRODUCT: title.title_entity_id, IncidentRole.LEADER: seat.holder_id},
+                facts={"rank": seat.rank},
+                place=seat.home_id,
             )
         elif not held(title.title_entity_id):
             await keep_seat(ctx, title, seat, tally)

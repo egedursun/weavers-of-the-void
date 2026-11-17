@@ -36,17 +36,18 @@ from aerona.db.tables.operations import (
 )
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind, CrewStation, EchelonLevel, ExpeditionEvent, ExpeditionRole, ExpeditionStatus, QuirkKind
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import node_exists, put_values
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
-from aerona.engine.notes import note
 from aerona.engine.operations.expeditions import ExpeditionTally, advance, grant_quirk, launch, party_of
 from aerona.engine.operations.sail import ship_state
 from aerona.engine.operations.supply import operation_of
 from aerona.engine.operations.theatres import theatre_of
+from aerona.engine.recording.record import record
 
 OWNERS = frozenset({EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.HOUSE})
 ARMIES = frozenset({EntityType.ARMY})
@@ -111,7 +112,13 @@ async def found_depot(ctx: TickContext, owner_id: int, region_id: int, *, field:
             locked=[],
         ),
     )
-    await note(ctx, f"{owner.name} stocked a depot in {region.name}.", key="logistics.depot_founded", ids=[owner.id, region.id])
+    await record(
+        ctx,
+        "logistics.depot_founded",
+        roles={IncidentRole.ACTOR: owner.id},
+        facts={"region": region.id, "supplies": row.supplies, "capacity": row.capacity},
+        place=region.id,
+    )
     return row
 
 

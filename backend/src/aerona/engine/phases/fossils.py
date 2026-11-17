@@ -8,7 +8,6 @@ from aerona.engine.phases.dominion import count
 @reads(
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.fossil_beds",
     "table.incident_participants",
     "table.incidents",
@@ -27,9 +26,9 @@ from aerona.engine.phases.dominion import count
     "table.chronicle_entities",
     "table.community_stocks",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.fossil_beds",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",

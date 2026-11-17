@@ -14,6 +14,7 @@ from aerona.catalog.scenarios import SCENARIOS, custom_description, custom_title
 from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
 from aerona.core.grammar import several
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.notifications import NotificationDraft, NotificationRepository, fitted_texts, raw_title
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow
@@ -22,11 +23,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.meta import ACHIEVEMENT_TIERS, AchievementKey, GoalBasis, GoalComparator, GoalMetric, ScenarioKey, ScenarioStatus, ScoreComponent
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.records import ScoreBreakdown
 from aerona.engine.context import TickContext
 from aerona.engine.gods.metrics import MetricReader, faith_counts, measure_metric
 from aerona.engine.gods.queries import canon_count, cosmos_row
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
@@ -185,7 +188,7 @@ async def _loyal_pantheon(session: AsyncSession, rules: Rules, row: ScenarioRow,
     goals = rules.goals
     rebels = set(await session.scalars(select(SonRow.id).where(SonRow.rebel.is_(True), SonRow.status != SonStatus.DEAD)))
     new_rebels = rebels - set(row.baseline_rebel_ids)
-    declared = select(func.count(ChronicleRow.id)).where(ChronicleRow.template_key == god_lines.REBELLION.key)
+    declared = select(func.count(ChronicleRow.id)).where(ChronicleRow.template_key == "gods.power.rebellion_declared")
     if row.baseline_chronicle_id is not None:
         declared = declared.where(ChronicleRow.id > row.baseline_chronicle_id)
     else:
@@ -397,9 +400,15 @@ async def finish_scenario(ctx: TickContext, row: ScenarioRow, progress: Scenario
     row.result = progress.text
     if progress.done:
         row.awarded_points = max(0, row.points - await best_earlier_points(ctx.session, row))
-    line = god_lines.GOAL_ACHIEVED if progress.done else god_lines.GOAL_LOST
-    text = line.render(name=name, detail=progress.text)
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=line.key)
+    text = (
+        await record(
+            ctx,
+            "gods.goals.achieved" if progress.done else "gods.goals.lost",
+            roles={IncidentRole.ACTOR: creator.id if (creator := await CosmosRepository(ctx.session).creator()) is not None else None},
+            facts={"name": name, "detail": progress.text},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     await notify(ctx.session, ctx.epoch, text, None, GOAL_SEVERITY)
 
 

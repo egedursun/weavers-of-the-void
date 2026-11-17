@@ -17,24 +17,25 @@ from aerona.db.tables.justice import LawProposalRow, ProposalStanceRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import EstatePrivilege, FactionGoalKind
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.justice import ProposalEvent, ProposalStance, ProposalState
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, owe, use_hook
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.mind.book import Values, values_for
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import enact, law_reading, validate
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 
 COUNCIL = frozenset(
     {
@@ -53,6 +54,7 @@ COUNCIL = frozenset(
 )
 FOR = frozenset({ProposalStance.SUPPORT})
 AGAINST = frozenset({ProposalStance.OPPOSE, ProposalStance.OBSTRUCT})
+OBSTRUCTING = frozenset({ProposalStance.OBSTRUCT})
 PROGRESS = "progress"
 SUPPORT = "support"
 OPPOSITION = "opposition"
@@ -82,6 +84,23 @@ class Hearing:
     realm: Realm
     row: LawProposalRow
     stands: dict[int, Stand] = field(default_factory=dict)
+
+
+def blocs(hearing: Hearing, stances: frozenset[ProposalStance]) -> list[int]:
+    return [node for node, stand in sorted(hearing.stands.items()) if stand.stance in stances]
+
+
+def votes(hearing: Hearing) -> tuple[StepDraft, ...]:
+    return tuple(
+        StepDraft(
+            StepAction.VOTE,
+            actor=node,
+            amount=stand.weight,
+            unit=FactUnit.STRENGTH,
+            outcome=StepOutcome.ACCEPTED if stand.stance in FOR else StepOutcome.REFUSED if stand.stance is ProposalStance.OPPOSE else StepOutcome.BLOCKED,
+        )
+        for node, stand in sorted(hearing.stands.items())
+    )
 
 
 def law_title(kind: LawKind) -> str:
@@ -131,13 +150,12 @@ async def propose(
     ctx.session.add(row)
     await ctx.session.flush()
     champion = await living_entity(ctx.session, champion_id) if champion_id is not None else None
-    who = champion.name if champion is not None else "the needs of the hour"
-    await note(
+    await record(
         ctx,
-        f"{who} brought {law_title(kind)} before {realm.entity.name}.",
-        key="polity.law_proposed",
-        ids=[realm.entity.id, *([champion.id] if champion is not None else [])],
-        kind=ChronicleKind.CIVILIZATION,
+        "polity.law_proposed" if champion is not None else "polity.law_proposed_by_need",
+        roles={IncidentRole.ACTOR: champion.id if champion is not None else None, IncidentRole.AUTHORITY: realm.entity.id},
+        facts={"law": kind, "basis": row.basis},
+        place=realm.profile.capital_entity_id,
     )
     return row
 
@@ -361,23 +379,32 @@ async def stir(ctx: TickContext, hearing: Hearing, tally: EnactmentTally) -> Non
     obstructed = any(stand.stance is ProposalStance.OBSTRUCT for stand in hearing.stands.values())
     capital = await ctx.session.get(SettlementProfileRow, realm.profile.capital_entity_id or -1)
     event: ProposalEvent | None = None
-    text = ""
     if obstructed:
-        event, text = ProposalEvent.OBSTRUCTION, f"The estates of {realm.entity.name} used their seats to stall {law_title(row.kind)}."
+        event = ProposalEvent.OBSTRUCTION
     elif row.support > row.opposition and realm.profile.decision_rule in {DecisionRule.ASSEMBLY, DecisionRule.COUNCIL}:
         if PROGRESS not in row.locked:
             row.progress = clamp_int(row.progress + table.debate_progress, 0, PERCENT)
-        event, text = ProposalEvent.DEBATE, f"{realm.entity.name} gathered to debate {law_title(row.kind)}, and the speeches carried it on."
+        event = ProposalEvent.DEBATE
     elif row.opposition > row.support and capital is not None and "unrest" not in (capital.locked or []):
         capital.unrest = clamp_int(capital.unrest + table.riot_unrest, 0, PERCENT)
-        event, text = ProposalEvent.RIOT, f"Crowds rioted in the streets of {realm.entity.name} against {law_title(row.kind)}."
+        event = ProposalEvent.RIOT
     elif row.opposition > 0 and not row.amended and PARAMS not in row.locked and soften(row):
         row.amended = True
-        event, text = ProposalEvent.COMPROMISE, f"The backers of {law_title(row.kind)} softened its terms to win over {realm.entity.name}."
+        event = ProposalEvent.COMPROMISE
     if event is None:
         return
     row.last_event = event
-    await note(ctx, text, key=f"enactment.{event.value}", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION)
+    await record(
+        ctx,
+        f"enactment.{event.value}",
+        roles={
+            IncidentRole.AUTHORITY: realm.entity.id,
+            IncidentRole.ACTOR: row.champion_node_id,
+            IncidentRole.MEMBER: blocs(hearing, OBSTRUCTING) if event is ProposalEvent.OBSTRUCTION else None,
+        },
+        facts={"law": row.kind, "support": row.support, "opposition": row.opposition, "progress": row.progress},
+        place=realm.profile.capital_entity_id,
+    )
     tally.events += 1
 
 
@@ -414,13 +441,13 @@ async def fail(ctx: TickContext, hearing: Hearing) -> None:
             await add_renown(ctx.session, champion.id, -cost, ctx.epoch, rules=ctx.rules)
         else:
             shift_stat(champion, "sway", -cost)
-    who = f", and {champion.name} lost face" if champion is not None else ""
-    await note(
+    await record(
         ctx,
-        f"{law_title(row.kind).capitalize()} stalled in {realm.entity.name} and failed{who}.",
-        key="enactment.failed",
-        ids=[realm.entity.id, *([champion.id] if champion is not None else [])],
-        kind=ChronicleKind.CIVILIZATION,
+        "enactment.failed_champion" if champion is not None else "enactment.failed",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.ACTOR: champion.id if champion is not None else None},
+        facts={"law": row.kind, "support": row.support, "opposition": row.opposition, "stalled_epochs": row.stalled_epochs, "face_lost": cost},
+        steps=votes(hearing),
+        place=realm.profile.capital_entity_id,
     )
 
 
@@ -449,12 +476,17 @@ async def advance(ctx: TickContext, realm: Realm, row: LawProposalRow, tally: En
         law = await carry(ctx, hearing)
         row.state, row.resolved_epoch = ProposalState.PASSED, ctx.epoch
         await reward(ctx, hearing)
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name} passed {law.name if law is not None else law_title(row.kind)}.",
-            key="polity.law_enacted",
-            ids=[realm.entity.id, *([law.id] if law is not None else [])],
-            kind=ChronicleKind.CIVILIZATION,
+            "polity.law_enacted" if law is not None else "polity.law_amended",
+            roles={
+                IncidentRole.AUTHORITY: realm.entity.id,
+                IncidentRole.ACTOR: row.champion_node_id,
+                IncidentRole.PRODUCT: law.id if law is not None else None,
+            },
+            facts={"law": row.kind, "support": row.support, "opposition": row.opposition, "rule": realm.profile.decision_rule},
+            steps=votes(hearing),
+            place=realm.profile.capital_entity_id,
         )
         tally.passed += 1
     elif row.stalled_epochs >= table.stall_epochs:

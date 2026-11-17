@@ -9,7 +9,6 @@ from aerona.db.tables.military import ArmyProfileRow, CaptiveCohortRow, Commande
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.couplings import FieldAgreementState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -17,6 +16,7 @@ from aerona.domain.enums.environment import SoilKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, CommanderTrait, DefenderAction, SackChoice, SiegeAction, SiegeWork, Stance
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import SiegeStatus
@@ -30,7 +30,8 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity, spoken_language
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 SOFT_GROUND = frozenset({SoilKind.LOAM, SoilKind.CLAY, SoilKind.SAND, SoilKind.PEAT, SoilKind.TEPHRA, SoilKind.CALCAREOUS})
@@ -204,13 +205,12 @@ async def relief_arrived(ctx: TickContext, siege: SiegeRow, besieged: EntityRow,
     if (stat(army, "size") or 0) * 5 < (stat(besiegers, "size") or 0) * 3:
         return False
     siege.status, siege.ended_epoch = SiegeStatus.LIFTED, ctx.epoch
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{army.name} came to the relief of {besieged.name}; the besiegers broke camp and the siege was lifted.",
-        template_key="war.siege.relieved",
-        entity_ids=(army.id, besieged.id),
-        feed_category=FeedCategory.WAR,
-        place_entity_id=besieged.id,
+    await record(
+        ctx,
+        "war.siege.relieved",
+        roles={IncidentRole.ACTOR: army.id, IncidentRole.TARGET: besieged.id, IncidentRole.OPPONENT: besiegers.id},
+        facts={"relief_soldiers": stat_or(army, "size", 0), "besiegers": stat_or(besiegers, "size", 0)},
+        place=besieged.id,
     )
     return True
 

@@ -4,16 +4,15 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.services.community_relations import change_relation
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import TradeInput
 from aerona.tools.mortal.support import enemies, fail_with_candidates, is_community, near, require_target
 
@@ -34,7 +33,7 @@ async def establish_trade(call: MortalCall, args: TradeInput) -> str:
     await bonds.connect(BondDraft(call.me.id, target.id, BondKind.TRADES_WITH, call.epoch, args.goods))
     await change_relation(call.tick, call.me.id, target.id, call.rules.mortal_tools.trade_relation, MemoryKind.TRADED_WITH, note=TRADE_EVENT)
     call.target(target.id)
-    await call.chronicle(ChronicleKind.TRADE, lines.TRADE, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name, goods=args.goods)
+    await call.record("tools.mortal.trade", roles={IncidentRole.GIVER: call.me.id, IncidentRole.RECEIVER: target.id}, facts={"goods": args.goods})
     return result(MortalResult.TRADE_BEGUN, name=target.name)
 
 

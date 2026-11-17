@@ -11,14 +11,15 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
+from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, SiegeWork, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome, StepState
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
@@ -66,7 +67,9 @@ from aerona.engine.powers.war import breach_by_power
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.structures.damage import mend_defences, strike_defences
@@ -86,6 +89,7 @@ class SiegeSeason:
     sally_dead: int = 0
     betrayed: bool = False
     relieved: bool = False
+    incident_id: int | None = None
 
 
 @dataclass
@@ -257,6 +261,8 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     )
     engines *= await siege_power(ctx.session, march.army.id)
     defence = defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
+    walls_before = walls.walls_condition if walls is not None else 0
+    breaches_before, works_before = siege.breaches, dict(siege.works or {})
     await starve(ctx, siege, besieged, defence is DefenderAction.RATION or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)
     build_works(ctx, siege, action)
@@ -286,13 +292,133 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     siege.last_action, siege.last_defence = action, defence
     if await relief_arrived(ctx, siege, besieged, march.army, atlas):
         found.relieved = True
-        return found
-    found.betrayed = await hunger_betrayal(ctx, siege, besieged)
-    found.surrendered = found.betrayed or await surrenders(ctx, siege, action)
-    if found.surrendered:
-        await offer_terms(ctx, siege)
-    found.assault = not found.surrendered and action is SiegeAction.ASSAULT
+    else:
+        found.betrayed = await hunger_betrayal(ctx, siege, besieged)
+        found.surrendered = found.betrayed or await surrenders(ctx, siege, action)
+        if found.surrendered:
+            await offer_terms(ctx, siege)
+        found.assault = not found.surrendered and action is SiegeAction.ASSAULT
+    marks = SeasonMarks(walls_before, walls.walls_condition if walls is not None else 0, breaches_before, works_before)
+    found.incident_id = await tell_season(ctx, found, besieged, march, marks)
     return found
+
+
+@dataclass(frozen=True)
+class SeasonMarks:
+    walls_before: int
+    walls_after: int
+    breaches_before: int
+    works_before: dict[str, int]
+
+
+WORK_KEYS = frozenset(work.value for work in SiegeWork)
+SIEGE_ACTIONS = {
+    SiegeAction.BLOCKADE: StepAction.HOLD,
+    SiegeAction.BOMBARD: StepAction.BOMBARD,
+    SiegeAction.MINE: StepAction.UNDERMINE,
+    SiegeAction.ASSAULT: StepAction.STORM,
+    SiegeAction.NEGOTIATE: StepAction.NEGOTIATE,
+}
+DEFENCE_ACTIONS = {
+    DefenderAction.SALLY: StepAction.SORTIE,
+    DefenderAction.REPAIR: StepAction.REPAIR,
+    DefenderAction.RATION: StepAction.HOLD,
+    DefenderAction.SEEK_RELIEF: StepAction.REINFORCE,
+}
+
+
+def season_steps(found: SiegeSeason, besieged: EntityRow, march: March, marks: SeasonMarks) -> list[StepDraft]:
+    siege = found.siege
+    army = march.army.id
+    steps = [
+        StepDraft(
+            SIEGE_ACTIONS[found.action],
+            actor=army,
+            target=besieged.id,
+            round=siege.rounds,
+            locus_kind=StepLocus.SETTLEMENT,
+            locus_node=besieged.id,
+            amount=max(0, marks.walls_before - marks.walls_after),
+            unit=FactUnit.PERCENT,
+            outcome=StepOutcome.DAMAGED if marks.walls_after < marks.walls_before else StepOutcome.NO_EFFECT,
+            record_table="sieges",
+            record_key=str(siege.id),
+            states=((besieged.id, StepState.CUT_OFF),) if found.action is SiegeAction.BLOCKADE else (),
+        )
+    ]
+    for work, done in sorted((siege.works or {}).items()):
+        if work in WORK_KEYS and done > marks.works_before.get(work, 0):
+            closed = work == SiegeWork.CIRCUMVALLATION.value and done >= PERCENT > marks.works_before.get(work, 0)
+            steps.append(
+                StepDraft(
+                    StepAction.RAISE,
+                    actor=army,
+                    round=siege.rounds,
+                    parent=0,
+                    instrument_key=work,
+                    amount=done,
+                    unit=FactUnit.PERCENT,
+                    states=((besieged.id, StepState.ENCIRCLED),) if closed else (),
+                )
+            )
+    if siege.breaches > marks.breaches_before:
+        steps.append(
+            StepDraft(
+                StepAction.BREACH,
+                actor=army,
+                target=besieged.id,
+                round=siege.rounds,
+                parent=0,
+                amount=siege.breaches - marks.breaches_before,
+                unit=FactUnit.COUNT,
+                outcome=StepOutcome.SUCCESS,
+                states=((besieged.id, StepState.BREACHED),),
+            )
+        )
+    defended = DEFENCE_ACTIONS[found.defence]
+    steps.append(
+        StepDraft(
+            defended,
+            actor=besieged.id,
+            target=army,
+            round=siege.rounds,
+            amount=found.sally_dead if found.defence is DefenderAction.SALLY else siege.supplies if found.defence is DefenderAction.RATION else None,
+            unit=FactUnit.PEOPLE if found.defence is DefenderAction.SALLY else FactUnit.DAYS if found.defence is DefenderAction.RATION else None,
+            outcome=StepOutcome.KILLED if found.sally_dead else None,
+        )
+    )
+    if siege.relief_army_id is not None and found.relieved:
+        steps.append(StepDraft(StepAction.REINFORCE, actor=siege.relief_army_id, target=army, round=siege.rounds, outcome=StepOutcome.SUCCESS))
+    if found.surrendered:
+        steps.append(StepDraft(StepAction.SURRENDER, actor=besieged.id, target=army, round=siege.rounds, outcome=StepOutcome.ACCEPTED))
+    return steps
+
+
+async def tell_season(ctx: TickContext, found: SiegeSeason, besieged: EntityRow, march: March, marks: SeasonMarks) -> int:
+    siege = found.siege
+    war = await ctx.session.get(WarRow, siege.war_id)
+    event = await living_entity(ctx.session, war.event_entity_id) if war is not None else None
+    facts: dict[str, FactInput] = {
+        "seasons": siege.rounds,
+        "action": found.action,
+        "defence": found.defence,
+        "walls": marks.walls_after,
+        "breaches": siege.breaches,
+        "supplies": clamp_int(siege.supplies, 0, PERCENT),
+        "sally_dead": found.sally_dead,
+        "hunger": siege.starvation,
+    }
+    if event is not None:
+        facts["war"] = event.id
+    written = await record(
+        ctx,
+        "war.siege.season",
+        roles={IncidentRole.ACTOR: march.owner.id, IncidentRole.TARGET: besieged.id, IncidentRole.MEMBER: march.army.id},
+        facts=facts,
+        steps=season_steps(found, besieged, march, marks),
+        place=besieged.id,
+    )
+    return written.incident_id
 
 
 def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None, rings: int = 0) -> float:
@@ -393,19 +519,11 @@ async def sack_city(
     await record_sack(ctx, besieged, report.dead)
     ctx.count("sacked_images", len(await smash(ctx, besieged.id, ctx.rules.art.sack_chance, "broken by the army that sacked the city")))
     if victor is not None:
-        await ctx.chronicle(
-            ChronicleKind.WAR,
-            SACK_TEXT[choice].format(victor=victor.name, city=besieged.name, dead=report.dead, captives=report.captives, relics=report.relics),
-            template_key=f"war.sack.{choice.value}",
-            entity_ids=(victor.id, besieged.id),
-            feed_category=FeedCategory.WAR,
-            place_entity_id=besieged.id,
+        await record(
+            ctx,
+            f"war.sack.{choice.value}",
+            roles={IncidentRole.ACTOR: victor.id, IncidentRole.TARGET: besieged.id},
+            facts={"choice": choice, "dead": report.dead, "captives": report.captives, "relics": report.relics},
+            place=besieged.id,
         )
     return report
-
-
-SACK_TEXT = {
-    SackChoice.MERCY: "{victor} spared {city}.",
-    SackChoice.SACK: "{victor} sacked {city}: {dead} died, {captives} were led away captive and {relics} treasures were carried off.",
-    SackChoice.RAZE: "{victor} razed {city} to the ground: {dead} died, {captives} were enslaved and its districts burned.",
-}

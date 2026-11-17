@@ -22,17 +22,18 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import HoldingKind, TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import LanguageModality
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, connect, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 
 F = FactionKind
 FACTION_SPEECH = MappingProxyType(
@@ -153,9 +154,7 @@ async def sign_languages(ctx: TickContext) -> None:
             continue
         language = await make_sign_language(ctx, community, cause)
         made += 1
-        await note(
-            ctx, f"{community.name} came to share a signed language of its own: {language.name}.", key="language.signed", ids=[community.id, language.id]
-        )
+        await record_incident(ctx, "language.signed", roles={IncidentRole.SUBJECT: community.id, IncidentRole.PRODUCT: language.id}, facts={"cause": cause})
     ctx.count("sign_languages", made)
 
 

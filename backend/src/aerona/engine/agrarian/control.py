@@ -2,7 +2,6 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import spoken
 from aerona.db.base import Base
 from aerona.db.tables.agrarian import (
     AID_FIELDS,
@@ -50,6 +49,8 @@ from aerona.domain.enums.agrarian import (
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.agrarian.lands import enclose, holdings, mature_epochs
 from aerona.engine.agrarian.resilience import ResilienceTally, aid_from, finish
@@ -59,9 +60,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import node_exists, put_values
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
-from aerona.engine.primitives.records import definite
+from aerona.engine.recording.record import StepDraft, record
 
 REGIONS = frozenset({EntityType.REGION})
 SETTLEMENTS = frozenset({EntityType.SETTLEMENT})
@@ -127,7 +127,13 @@ async def plant(
             locked=[],
         ),
     )
-    await note(ctx, f"A new {spoken(kind)} was planted in {region.name}.", key="perennials.planted", ids=[region.id])
+    await record(
+        ctx,
+        "perennials.made",
+        roles={IncidentRole.PLACE: region.id, IncidentRole.OWNER: owner_id, IncidentRole.PRODUCT: species_id},
+        facts={"perennial": kind, "area": area, "epochs": row.mature_epochs},
+        place=region.id,
+    )
     return row
 
 
@@ -171,7 +177,14 @@ async def declare_reserve(ctx: TickContext, region_id: int, holder_id: int, spec
             region_entity_id=region_id, holder_node_id=holder_id, species_entity_id=species_id, strictness=strictness, since_epoch=ctx.epoch, locked=[]
         ),
     )
-    await note(ctx, f"The game of {region.name} is reserved; the folk may no longer hunt there.", key="game.reserved", ids=[region.id])
+    await record(
+        ctx,
+        "game.reserved",
+        roles={IncidentRole.OWNER: holder_id, IncidentRole.PLACE: region.id, IncidentRole.SUBJECT: species_id},
+        facts={"strictness": strictness},
+        steps=(StepDraft(StepAction.DECREE, actor=holder_id, target=region.id),),
+        place=region.id,
+    )
     return row
 
 
@@ -188,7 +201,7 @@ async def build_work(ctx: TickContext, settlement_id: int, kind: PreparednessKin
     )
     row = await put_values(ctx, row, {"level": level, "condition": PERCENT}, PREPAREDNESS_FIELDS, "disaster work")
     row.built_epoch = ctx.epoch
-    await note(ctx, f"{town.name} raised its {spoken(kind)}s to level {level}.", key="resilience.built", ids=[town.id])
+    await record(ctx, "resilience.raised", roles={IncidentRole.SUBJECT: town.id}, facts={"work": kind, "level": level}, place=town.id)
     return row
 
 
@@ -261,11 +274,12 @@ async def designate_keystone(
     if commodity is not None:
         values["commodity"] = commodity.value
     keystone = await put_values(ctx, keystone, values, KEYSTONE_FIELDS, "keystone resource")
-    await note(
+    await record(
         ctx,
-        f"{definite(name)} became what the whole world depends on.",
-        key="keystone.designated",
-        ids=[item for item in (producer_id, source_id, cult_id) if item],
+        "keystone.named",
+        roles={IncidentRole.SUBJECT: producer_id, IncidentRole.ORIGIN: source_id},
+        facts={"name": name, "cult": cult_id, "use": use, "commodity": commodity},
+        world_id=world_id,
     )
     return keystone
 
@@ -285,7 +299,7 @@ async def found_brand(ctx: TickContext, workshop_id: int, name: str) -> BrandRow
             locked=[],
         ),
     )
-    await note(ctx, f"The {name} is known for its work; buyers ask for it by name.", key="brands.earned", ids=[workshop.community_entity_id])
+    await record(ctx, "brands.earned", roles={IncidentRole.SUBJECT: workshop.community_entity_id}, facts={"brand": name})
     return row
 
 

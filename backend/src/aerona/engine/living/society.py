@@ -8,6 +8,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
 from aerona.domain.enums.living import LivingCraftStance
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.factions.companies import realm_of
@@ -15,7 +16,7 @@ from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.book import values_for
 from aerona.engine.minds.continuity import law_for
 from aerona.engine.minds.values import liberty_of
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import church_of
 from aerona.engine.services.community_relations import change_relation
 
@@ -75,7 +76,7 @@ async def rise_against(ctx: TickContext, being: EntityRow, law: LawKind, label: 
     if realm is None or held(realm) or not ctx.rng(f"living.rising.{being.id}.{ctx.epoch}").chance(table.movement_chance):
         return False
     await change_relation(ctx, being.id, realm, -table.bond_by_status, MemoryKind.HUMILIATED_ME, note=f"held as {status}")
-    await note(ctx, f"{being.name} rose with the {label} who sought a higher standing.", key="living.rising", ids=[being.id, realm])
+    await record(ctx, "living.rising", roles={IncidentRole.ACTOR: being.id, IncidentRole.AUTHORITY: realm}, facts={"law": law, "wanted": wanted, "step": step})
     return True
 
 

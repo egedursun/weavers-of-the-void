@@ -1,4 +1,5 @@
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -12,6 +13,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several, spoken
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
@@ -24,13 +26,15 @@ from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
-from aerona.domain.enums.travel import HorizonStatus, TravelMethod, VehicleKind
+from aerona.domain.enums.travel import ExplorationReason, HorizonStatus, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import EntityStats, PlaceStats, RegionStats, SettlementStats, VesselStats
 from aerona.engine.body.book import factor
@@ -39,7 +43,6 @@ from aerona.engine.cosmos.placement import hidden_sky
 from aerona.engine.cosmos.routes import RouteSpec, can_reach, has_tamed_mount, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.distance import RegionAtlas
@@ -52,6 +55,7 @@ from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import stock
 from aerona.engine.primitives.stats import headcount, put_stat, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -65,41 +69,6 @@ PROSPERITY_KEY = "prosperity"
 PIETY_KEY = "piety"
 POPULATION_KEY = "population"
 COSMIC_SEARCH_HOW = "searching with all they knew"
-
-
-class Reason(StrEnum):
-    NARROW = "narrow"
-    HUNGER = "hunger"
-    POVERTY = "poverty"
-    EXPLORER = "explorer"
-    KNOWLEDGE = "knowledge"
-    SPIRIT = "spirit"
-
-
-PHRASES: dict[Reason, str] = {
-    Reason.NARROW: "when their homeland grew too small",
-    Reason.HUNGER: "when their food ran short",
-    Reason.POVERTY: "when poverty pressed",
-    Reason.EXPLORER: "led by {name}",
-    Reason.KNOWLEDGE: "trusting what they knew of travel",
-    Reason.SPIRIT: "out of curiosity",
-}
-NEED_REASONS = (Reason.NARROW, Reason.HUNGER, Reason.POVERTY)
-
-
-def exploration_sentence(reasons: list[Reason], explorer_name: str | None = None) -> str:
-    def phrase(reason: Reason) -> str:
-        return PHRASES[reason].format(name=explorer_name or "an explorer")
-
-    needs = " and ".join(phrase(reason) for reason in NEED_REASONS if reason in reasons)
-    parts = [needs] if needs else []
-    if Reason.EXPLORER in reasons:
-        parts.append(phrase(Reason.EXPLORER))
-    if Reason.SPIRIT in reasons:
-        parts.append(phrase(Reason.SPIRIT))
-    if Reason.KNOWLEDGE in reasons:
-        parts.append(phrase(Reason.KNOWLEDGE))
-    return " ".join(parts)
 
 
 @dataclass(frozen=True)
@@ -138,7 +107,7 @@ async def explores(ctx: TickContext, entity: EntityRow) -> bool:
 @dataclass
 class Pressure:
     pct: int
-    reasons: list[Reason]
+    reasons: list[ExplorationReason]
     explorer: EntityRow | None
 
 
@@ -174,27 +143,27 @@ class ExplorationScene:
 async def exploration_pressure(ctx: TickContext, scene: ExplorationScene, entity: EntityRow, communities: list[EntityRow]) -> Pressure:
     settings = ctx.rules.exploration
     pct = settings.base_chance
-    reasons: list[Reason] = []
+    reasons: list[ExplorationReason] = []
     explorer: EntityRow | None = None
     if entity.entity_type in COMMUNITY_TYPES:
         if entity.entity_type in LAND_COMMUNITIES and scene.occupancy(entity, communities) >= settings.crowded_fill_pct:
             pct += settings.crowded_bonus_pct
-            reasons.append(Reason.NARROW)
+            reasons.append(ExplorationReason.NARROW)
         hungry = entity.entity_type in LAND_COMMUNITIES and await stock(ctx.session, ctx.rules, entity.id, Commodity.FOOD) < ctx.rules.world_effects.hungry_food
         poor = stat_or(entity, PROSPERITY_KEY, ctx.rules.travel.default_prosperity) < settings.poor_prosperity
         if hungry or poor:
             pct += settings.hungry_bonus_pct
-            reasons.append(Reason.HUNGER if hungry else Reason.POVERTY)
+            reasons.append(ExplorationReason.HUNGER if hungry else ExplorationReason.POVERTY)
         explorer = scene.local_explorer(entity)
         if explorer is not None:
             pct += settings.explorer_bonus_pct
-            reasons.append(Reason.EXPLORER)
+            reasons.append(ExplorationReason.EXPLORER)
     elif await explores(ctx, entity):
         pct += settings.explorer_bonus_pct
-        reasons.append(Reason.SPIRIT)
+        reasons.append(ExplorationReason.SPIRIT)
     if scene.knowledge.branches(entity.id) & KNOWLEDGE_FOR_EXPLORING:
         pct += settings.knowledge_bonus_pct
-        reasons.append(Reason.KNOWLEDGE)
+        reasons.append(ExplorationReason.KNOWLEDGE)
     return Pressure(clamp_percent(pct), reasons, explorer)
 
 
@@ -206,7 +175,7 @@ class LandSearch:
     foreign_god: ForeignGodRow | None = None
     near: EntityRow | None = None
     kind: EntityType | None = None
-    reason: str | None = None
+    reasons: tuple[ExplorationReason, ...] = ()
     pioneers: bool = True
     narrow: bool = False
 
@@ -293,7 +262,7 @@ async def find_land(ctx: TickContext, search: LandSearch) -> LandResult | None:
     if search.foreign_god is not None:
         how = f"{search.foreign_god.name} raised it in the world {world.name}"
     else:
-        how = f"{who}{', ' + search.reason if search.reason else ''} set out into unknown lands and found it"
+        how = f"{who} set out into unknown lands and found it"
     where = f"a place inside {parent.name} unknown until that day" if parent is not None else "a new region not on the map"
     flags = (EntityFlag.DISCOVERY, EntityFlag.NAME_FROM_LANGUAGE) if derived else (EntityFlag.DISCOVERY,)
     land = await open_record(
@@ -315,16 +284,36 @@ async def find_land(ctx: TickContext, search: LandSearch) -> LandResult | None:
         await position_region(ctx, land, source)
     await _discovery_bonds(ctx, search, land)
     pioneer = await _maybe_pioneers(ctx, search, land, rng)
-    text = _land_text(search, land, parent, world, pioneer)
-    await note(ctx, text, key="exploration.land_found", ids=[item.id for item in (search.explorer, land, parent, pioneer) if item is not None])
+    written = await record(
+        ctx,
+        "exploration.land_found",
+        roles={
+            IncidentRole.ACTOR: search.foreign_god.id if search.foreign_god is not None else search.explorer.id if search.explorer is not None else None,
+            IncidentRole.LEADER: search.leader.id if search.leader is not None and search.leader is not search.explorer else None,
+            IncidentRole.PRODUCT: land.id,
+            IncidentRole.PLACE: parent.id if parent is not None else None,
+        },
+        facts={
+            "land_kind": kind,
+            "reasons": list(search.reasons),
+            "settlement": pioneer.id if pioneer is not None else None,
+            "pioneers": stat_or(pioneer, POPULATION_KEY, 0) if pioneer is not None else 0,
+        },
+        steps=(
+            StepDraft(StepAction.DISCOVER, actor=search.explorer.id if search.explorer is not None else None, target=land.id),
+            *((StepDraft(StepAction.FOUND, target=pioneer.id),) if pioneer is not None else ()),
+        ),
+        place=parent.id if parent is not None else land.id,
+        world_id=world.id,
+    )
     ctx.count("lands_found")
-    return LandResult(land, kind, pioneer, text)
+    return LandResult(land, kind, pioneer, written.text)
 
 
 async def _discovery_bonds(ctx: TickContext, search: LandSearch, land: EntityRow) -> None:
     bonds = BondRepository(ctx.session)
     if search.explorer is not None:
-        await bonds.connect(BondDraft(search.explorer.id, land.id, BondKind.DISCOVERED, ctx.epoch, search.reason or "found unknown lands"))
+        await bonds.connect(BondDraft(search.explorer.id, land.id, BondKind.DISCOVERED, ctx.epoch, "found unknown lands"))
     if search.leader is not None and (search.explorer is None or search.leader.id != search.explorer.id):
         led = f"led {search.explorer.name}'s expedition" if search.explorer else "led the expedition"
         await bonds.connect(BondDraft(search.leader.id, land.id, BondKind.DISCOVERED, ctx.epoch, led))
@@ -338,19 +327,6 @@ async def _maybe_pioneers(ctx: TickContext, search: LandSearch, land: EntityRow,
         return None
     chance = min(PERCENT, ctx.rules.exploration.pioneer_chance * (2 if search.narrow else 1))
     return await pioneers(ctx, explorer, land) if rng.chance(chance) else None
-
-
-def _land_text(search: LandSearch, land: EntityRow, parent: EntityRow | None, world: WorldRow, pioneer: EntityRow | None) -> str:
-    kind_word = "place" if parent is not None else "region"
-    if search.foreign_god is not None:
-        inside = f" (inside {parent.name})" if parent is not None else ""
-        return f"{search.foreign_god.name} raised a new {kind_word} on the world {world.name}: {land.name}{inside}."
-    who = search.explorer.name if search.explorer is not None else "Someone"
-    why = f", {search.reason}," if search.reason else ""
-    found = f"{land.name} was found inside {parent.name}" if parent is not None else f"a new region, {land.name}, entered the map"
-    elsewhere = f" (on the world {world.name})" if search.explorer is not None and search.explorer.world_id != world.id else ""
-    settled = f"; its pioneers founded {pioneer.name} there" if pioneer is not None else ""
-    return f"{who}{why} set out into unknown lands: {found}{elsewhere}{settled}."
 
 
 async def pioneers(ctx: TickContext, explorer: EntityRow, land: EntityRow) -> EntityRow | None:
@@ -411,6 +387,17 @@ class SearchStatus(StrEnum):
     INTUITION = "intuition"
     NONE = "none"
     IGNORANT = "ignorant"
+
+
+SEARCH_OUTCOMES: Mapping[SearchStatus, StepOutcome] = total(
+    SearchStatus,
+    {
+        SearchStatus.ROUTE: StepOutcome.SUCCESS,
+        SearchStatus.INTUITION: StepOutcome.PARTIAL,
+        SearchStatus.NONE: StepOutcome.FAILURE,
+        SearchStatus.IGNORANT: StepOutcome.NO_EFFECT,
+    },
+)
 
 
 @dataclass(frozen=True)
@@ -518,7 +505,7 @@ async def record_intuition(ctx: TickContext, me: EntityRow, how: str, method: Tr
     ctx.session.add(DeferredStepRow(epoch=ctx.epoch, kind=DeferredStepKind.SENSED_WORLD, requested_by_node_id=me.id, payload={"intuition_id": intuition.id}))
     await ctx.session.flush()
     ctx.count("intuitions")
-    return f"{me.name}, searching {how}, sensed the existence of a world nobody knew; at the end of the epoch that world will come to light."
+    return f"{me.name} sensed a world nobody knew; it comes to light at the end of the epoch."
 
 
 async def held_intuitions(session: AsyncSession) -> set[int]:
@@ -564,20 +551,23 @@ async def settle_intuition(ctx: TickContext, intuition: HorizonIntuitionRow, bor
             ctx.epoch,
             RouteSpec(seeker.world_id, born.id, intuition.method or TravelMethod.DREAM_JOURNEY, controller_id=seeker.id, description=intuition.how),
         )
-        tail = ""
+        discovery = Discovery.KNOWN
     except ValidationFailedError:
         await WorldRepository(ctx.session).set_discovery(born, Discovery.LEGEND)
-        tail = " But its route closed; the world is remembered only as a legend."
-    text = f"{seeker.name} discovered a world nobody knew: {born.name}.{tail}"
-    await ctx.chronicle(
-        ChronicleKind.EXPLORATION,
-        text,
-        template_key="exploration.sensed_world_born",
-        entity_ids=[seeker.id],
+        discovery = Discovery.LEGEND
+    written = await record(
+        ctx,
+        "exploration.sensed_world_born",
+        roles={IncidentRole.ACTOR: seeker.id, IncidentRole.PRODUCT: born.id},
+        facts={"method": intuition.method or TravelMethod.DREAM_JOURNEY, "discovery": discovery},
+        steps=(
+            StepDraft(
+                StepAction.DISCOVER, actor=seeker.id, target=born.id, outcome=StepOutcome.SUCCESS if discovery is Discovery.KNOWN else StepOutcome.PARTIAL
+            ),
+        ),
         world_id=born.id,
-        feed_category=FeedCategory.WORLD,
     )
-    return text
+    return written.text
 
 
 async def recover_intuitions(session: AsyncSession) -> int:
@@ -626,11 +616,15 @@ async def _explore_world(ctx: TickContext, scene: ExplorationScene, world: World
         pressure = await exploration_pressure(ctx, scene, entity, communities) if stale else measured
         if not rng.chance(pressure.pct):
             continue
-        reason = exploration_sentence(pressure.reasons, pressure.explorer.name if pressure.explorer else None)
         result = await find_land(
             ctx,
             LandSearch(
-                world.id, explorer=entity, leader=pressure.explorer, reason=reason, narrow=measure.narrow, kind=None if measure.regions else EntityType.REGION
+                world.id,
+                explorer=entity,
+                leader=pressure.explorer,
+                reasons=tuple(pressure.reasons),
+                narrow=measure.narrow,
+                kind=None if measure.regions else EntityType.REGION,
             ),
         )
         if result is not None:
@@ -665,16 +659,21 @@ async def cosmic_exploration(ctx: TickContext) -> int:
 
 
 async def report_search(ctx: TickContext, seeker: EntityRow, result: RouteSearch, how: str) -> str:
-    if result.status is SearchStatus.ROUTE:
-        text = result.text
-    elif result.status is SearchStatus.INTUITION:
-        text = await record_intuition(ctx, seeker, how, result.method)
-    elif result.status is SearchStatus.IGNORANT:
-        text = f"{seeker.name} knows no way between worlds to search for."
-    else:
-        text = f"{seeker.name} searched for the road to other worlds but did not find it this epoch."
-    await note(ctx, text, key=f"exploration.route_search.{result.status.value}", ids=[seeker.id], feed=FeedCategory.VOYAGE)
-    return text
+    if result.status is SearchStatus.INTUITION:
+        await record_intuition(ctx, seeker, how, result.method)
+    written = await record(
+        ctx,
+        f"exploration.route_search.{result.status.value}",
+        roles={
+            IncidentRole.ACTOR: seeker.id,
+            IncidentRole.DESTINATION: result.target.id if result.target is not None else None,
+            IncidentRole.INSTRUMENT: result.vehicle.id if result.vehicle is not None else None,
+        },
+        facts={"method": result.method},
+        steps=(StepDraft(StepAction.INVESTIGATE, actor=seeker.id, outcome=SEARCH_OUTCOMES[result.status]),),
+        world_id=seeker.world_id,
+    )
+    return written.text
 
 
 async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[LandResult]:
@@ -714,7 +713,6 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -743,9 +741,10 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.deferred_steps",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.horizon_intuitions",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
@@ -825,9 +824,7 @@ async def send_to_explore(session: AsyncSession, rules: Rules, entity_id: int, k
     measure = await land_measure(session, rules, entity.world_id)
     return await find_land(
         ctx,
-        LandSearch(
-            entity.world_id, explorer=entity, reason="sent by the creator's hand", narrow=measure.narrow, kind=kind if measure.regions else EntityType.REGION
-        ),
+        LandSearch(entity.world_id, explorer=entity, narrow=measure.narrow, kind=kind if measure.regions else EntityType.REGION),
     )
 
 

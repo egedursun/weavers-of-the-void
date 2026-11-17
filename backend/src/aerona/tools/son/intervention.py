@@ -31,6 +31,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster, Miracle
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.divine.politics import god_grudge
 from aerona.engine.dominion.miracles import impress, miracle_factor, witness_count
@@ -147,15 +148,11 @@ async def miracle(call: SonCall, args: MiracleInput) -> str:
         await think(call.session, call.rules, witness, ThoughtKind.SAW_MIRACLE, call.epoch, subject_id=call.son.id)
     await impress(call.tick, call.son.id, target, kind=args.kind.value, magnitude=call.son.might, witnesses=await witness_count(call.tick, target))
     joined = NOTE_SEPARATOR.join(notes)
-    await call.chronicle(
-        ChronicleKind.MIRACLE,
-        lines.MIRACLE,
-        entity_ids=[target.id],
-        son=call.son.name,
-        miracle=label.lower(),
-        target=target.name,
-        how=args.how,
-        notes=f" ({joined})" if joined else "",
+    await call.record(
+        "tools.son.miracle",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id},
+        facts={"miracle": label.lower(), "how": str(args.how), "notes": str(f" ({joined})" if joined else "")},
+        kind=ChronicleKind.MIRACLE,
     )
     return result(SonResult.MIRACLE_DONE, notes=joined, level=level)
 
@@ -214,16 +211,11 @@ async def send_disaster(call: SonCall, args: DisasterInput) -> str:
     call.spend_essence(cost)
     call.target(target.id)
     joined = NOTE_SEPARATOR.join(impact.notes)
-    await call.chronicle(
-        ChronicleKind.DISASTER,
-        lines.DISASTER,
-        entity_ids=[target.id, event.id],
-        son=call.son.name,
-        disaster=DISASTERS[args.kind].label.lower(),
-        target=target.name,
-        name=event.name,
-        reason=args.reason,
-        notes=f" {joined}" if joined else "",
+    await call.record(
+        "tools.son.disaster",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: event.id},
+        facts={"disaster": DISASTERS[args.kind].label.lower(), "reason": str(args.reason), "notes": str(f" {joined}" if joined else "")},
+        kind=ChronicleKind.DISASTER,
     )
     return result(SonResult.DISASTER_DONE, id=event.id, name=event.name, severity=severity, notes=joined)
 
@@ -255,7 +247,12 @@ async def transform(call: SonCall, args: TransformInput) -> str:
     call.spend_essence(cost)
     call.target(entity.id)
     suffix = lines.RENAMED.format(new=entity.name) if renamed else ""
-    await call.chronicle(ChronicleKind.CREATION, lines.TRANSFORM, entity_ids=[entity.id], son=call.son.name, old=old_name, renamed=suffix, reason=args.reason)
+    await call.record(
+        "tools.son.transform",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: entity.id},
+        facts={"old": str(old_name), "renamed": str(suffix), "reason": str(args.reason)},
+        kind=ChronicleKind.CREATION,
+    )
     return result(SonResult.TRANSFORMED)
 
 
@@ -280,7 +277,12 @@ async def destroy(call: SonCall, args: DestroyInput) -> str:
     if entity.creator_son_id is not None and entity.creator_son_id != call.son.id:
         await shift_relation(call, entity.creator_son_id, -tools.destroy_creator_relation)
     call.target(entity.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.DESTROY, entity_ids=[entity.id], son=call.son.name, name=entity.name, reason=args.reason)
+    await call.record(
+        "tools.son.destroy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: entity.id},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.CREATION,
+    )
     return result(SonResult.DESTROYED, name=entity.name)
 
 

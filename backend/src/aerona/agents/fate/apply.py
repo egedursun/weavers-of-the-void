@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.agents.chronicle import write_line
+from aerona.agents.chronicle import record_line
 from aerona.agents.fate.facts import entities_in_text, usable
 from aerona.agents.fate.naming import apply_naming
 from aerona.agents.fate.rollback import roll_back_rejection
@@ -20,6 +20,7 @@ from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech, ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType, ProphecyReading
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.gods.progress import grant_progress
 from aerona.engine.gods.rewards import adjust_reward
@@ -99,8 +100,15 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
         if verdict.decision is VerdictDecision.REJECT:
             await EntityRepository(session).set_status(entity, EntityStatus.REJECTED, ruling.epoch, rationale or "Fate rejected.")
             await record_verdict(session, entity, Verdict.REJECTED, rationale, ruling.epoch)
-            text = f"Fate rejected {entity.name}: {rationale}" if rationale else f"Fate rejected {entity.name}."
-            await write_line(session, rules, ruling.epoch, ChronicleKind.FATE, text, key="fate.rejected", entity_ids=[entity.id], son_id=entity.creator_son_id)
+            await record_line(
+                session,
+                rules,
+                "fate.rejected",
+                roles={IncidentRole.SUBJECT: entity.id},
+                facts={"detail": f": {rationale}" if rationale else ""},
+                kind=ChronicleKind.FATE,
+                son_id=entity.creator_son_id,
+            )
             applied.rejected.append(entity.name)
             applied.rejected_ids.append(entity.id)
         elif verdict.decision is VerdictDecision.FIX and not verdict.fixed_description.strip():
@@ -111,8 +119,15 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
             entity.fate_note = f"Fate fixed: {rationale}" if rationale else "Fate fixed."
             await record_verdict(session, entity, Verdict.FIXED, rationale, ruling.epoch)
             await adjust_reward(session, rules, entity.id, rules.son_tools.fix_take_back_pct, raise_only=True, reason=FIXED_REASON)
-            text = f"Fate accepted {entity.name} with a fix: {rationale}" if rationale else f"Fate accepted {entity.name} with a fix."
-            await write_line(session, rules, ruling.epoch, ChronicleKind.FATE, text, key="fate.fixed", entity_ids=[entity.id], son_id=entity.creator_son_id)
+            await record_line(
+                session,
+                rules,
+                "fate.fixed",
+                roles={IncidentRole.SUBJECT: entity.id},
+                facts={"detail": f": {rationale}" if rationale else ""},
+                kind=ChronicleKind.FATE,
+                son_id=entity.creator_son_id,
+            )
             applied.fixed.append(entity.name)
         else:
             entity.fate_note = rationale or "Fate accepted."
@@ -131,9 +146,14 @@ async def apply_prophecies(session: AsyncSession, rules: Rules, ruling: FateRuli
         bonds = BondRepository(session)
         for target in await entities_in_text(session, item.how, prophecy.world_id, prophecy.id):
             await bonds.connect(BondDraft(prophecy.id, target.id, BondKind.PROPHESIES, ruling.epoch, "came true"))
-        text = f"{READING_TEXTS[item.reading]}: {prophecy.name}. {how or ''}".strip()
-        await write_line(
-            session, rules, ruling.epoch, ChronicleKind.PROPHECY, text, key="fate.prophecy_fulfilled", entity_ids=[prophecy.id], son_id=prophecy.creator_son_id
+        await record_line(
+            session,
+            rules,
+            "fate.prophecy_fulfilled",
+            roles={IncidentRole.SUBJECT: prophecy.id},
+            facts={"reading": item.reading, "reading_text": READING_TEXTS[item.reading], "how": how or ""},
+            kind=ChronicleKind.PROPHECY,
+            son_id=prophecy.creator_son_id,
         )
         ctx = await manual_context(session, "fate_prophecy", rules, key=str(prophecy.id))
         await reward_fulfilment(ctx, prophecy, misread=item.reading is ProphecyReading.MISREAD)
@@ -155,14 +175,14 @@ async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling,
         if not await advance_story(session, thread, record.id, epoch):
             continue
         if thread.id not in closed_ids:
-            await write_line(session, rules, epoch, ChronicleKind.FATE, f"A story advanced: {how}", key="fate.thread_advanced", entity_ids=[record.id])
+            await record_line(session, rules, "fate.thread_advanced", roles={IncidentRole.SUBJECT: record.id}, facts={"how": how}, kind=ChronicleKind.FATE)
     for item in first_by_id(closing, lambda closed: closed.id):
         thread = await session.get(ThreadRow, item.id)
         if thread is None or thread.status is ThreadStatus.CLOSED or not await thread_closable(session, rules, thread, epoch):
             continue
         how = clean_fate_note(item.how) or ""
         related = await close_story(session, thread, how or None, epoch)
-        await write_line(session, rules, epoch, ChronicleKind.FATE, f"A story closed: {how}".strip(), key="fate.thread_closed", entity_ids=related)
+        await record_line(session, rules, "fate.thread_closed", roles={IncidentRole.SUBJECT: list(related)}, facts={"how": how}, kind=ChronicleKind.FATE)
 
 
 async def new_stories(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, limit: int) -> None:
@@ -206,14 +226,6 @@ async def reward_streak(session: AsyncSession, son_id: int, epoch: int, window: 
     return int(await session.scalar(statement) or 0)
 
 
-REWARD_WITH_REASON = "Fate gave {son} {fame} fame: {reason}"
-REWARD_BARE = "Fate gave {son} {fame} fame."
-
-
-def reward_line(son: str, fame: int, reason: str | None) -> str:
-    return REWARD_WITH_REASON.format(son=son, fame=fame, reason=reason) if reason else REWARD_BARE.format(son=son, fame=fame)
-
-
 async def apply_rewards(session: AsyncSession, rules: Rules, ruling: FateRuling, output: FateJudgmentOutput) -> None:
     fate = rules.fate
     cap = max(1, fate.reward_cap)
@@ -235,8 +247,15 @@ async def apply_rewards(session: AsyncSession, rules: Rules, ruling: FateRuling,
         xp = fame * fate.xp_per_renown
         reason = clean_fate_note(item.reason)
         session.add(FateRewardRow(son_id=son.id, epoch=ruling.epoch, fame=fame, xp=xp, reason=reason))
-        text = reward_line(son.name, fame, reason)
-        await write_line(session, rules, ruling.epoch, ChronicleKind.FATE, text, key="fate.reward", son_id=son.id)
+        await record_line(
+            session,
+            rules,
+            "fate.reward",
+            roles={IncidentRole.BENEFICIARY: son.id},
+            facts={"fame": fame, "xp": xp, "detail": f": {reason}" if reason else "."},
+            kind=ChronicleKind.FATE,
+            son_id=son.id,
+        )
         await grant_progress(await manual_context(session, "fate_reward", rules, key=str(son.id)), son, xp=xp, fame=fame)
 
 

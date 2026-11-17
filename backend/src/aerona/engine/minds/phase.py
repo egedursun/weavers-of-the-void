@@ -5,7 +5,6 @@ from sqlalchemy import func, select
 
 from aerona.catalog.kinds.minds import MIND_PURPOSES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -20,7 +19,9 @@ from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import MindPurpose, MindSeat, MindUpkeep, WillCause
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerState
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
@@ -28,13 +29,14 @@ from aerona.engine.minds.continuity import keep_disputes
 from aerona.engine.minds.instructions import conflict_of
 from aerona.engine.minds.kinds import ARCHIVE_UPKEEP, fade_state, tend_purpose, will_cause
 from aerona.engine.minds.profiles import WILL_ORDER, is_made, law_for, law_lets_will_grow, seed_missing, will_allowed, will_rank, world_of
-from aerona.engine.minds.seat_loss import lose_seat, name_of, seat_lost
+from aerona.engine.minds.seat_loss import lose_seat, seat_lost
 from aerona.engine.networks.book import members_of
 from aerona.engine.networks.energy import starved
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import close
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 
 HARMS = frozenset({MemoryKind.HARMED_ME, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME, MemoryKind.BETRAYED_ME})
 CARES = frozenset({MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US})
@@ -128,7 +130,7 @@ async def tend_seat(ctx: TickContext, row: MindProfileRow) -> None:
         row.maker_bond = clamp_int(row.maker_bond - will.bond_neglect, -PERCENT, PERCENT)
     if row.stability <= 0 and "dormant" not in row.locked and not row.dormant:
         row.dormant = True
-        await note(ctx, f"{await name_of(ctx, row.node_id)} went still: nothing kept its seat running.", key="mind.dormant", ids=[row.node_id])
+        await record_incident(ctx, "mind.dormant", roles={IncidentRole.SUBJECT: row.node_id}, facts={"stability": row.stability})
 
 
 async def drift(ctx: TickContext, row: MindProfileRow) -> None:
@@ -182,7 +184,7 @@ async def grow_will(ctx: TickContext, row: MindProfileRow, harms: int, cares: in
     if not will_allowed(law, grown):
         return
     change_will(ctx, row, grown, cause)
-    await note(ctx, f"The will of {await name_of(ctx, row.node_id)} grew to {spoken(grown)}.", key="mind.will_grew", ids=[row.node_id])
+    await record_incident(ctx, "mind.will_grew", roles={IncidentRole.SUBJECT: row.node_id}, facts={"will": grown, "cause": cause})
 
 
 async def lose_will(ctx: TickContext, row: MindProfileRow) -> None:
@@ -200,7 +202,7 @@ async def exceed(ctx: TickContext, row: MindProfileRow) -> None:
     best = max(ctx.rules.minds.baseline_capacity, maker.capacity if maker is not None else 0)
     if row.capacity >= min(PERCENT, best + ctx.rules.mind_will.exceeding_margin):
         change_will(ctx, row, MindWill.EXCEEDING, WillCause.EXCEEDING)
-        await note(ctx, f"{await name_of(ctx, row.node_id)} came to exceed the minds that made it.", key="mind.exceeding", ids=[row.node_id])
+        await record_incident(ctx, "mind.exceeding", roles={IncidentRole.SUBJECT: row.node_id}, facts={"capacity": row.capacity, "maker_capacity": best})
 
 
 async def depart(ctx: TickContext, row: MindProfileRow) -> None:
@@ -213,7 +215,7 @@ async def depart(ctx: TickContext, row: MindProfileRow) -> None:
     row.purpose = MindPurpose.FREE
     if "made_by_node_id" not in row.locked:
         row.made_by_node_id = None
-    await note(ctx, f"{await name_of(ctx, row.node_id)} left the ones who made it.", key="mind.departed", ids=[row.node_id, maker])
+    await record_incident(ctx, "mind.departed", roles={IncidentRole.SUBJECT: row.node_id, IncidentRole.MAKER: maker})
 
 
 async def complexity(ctx: TickContext, row: MindProfileRow, parts: Counter[int]) -> float:
@@ -231,7 +233,7 @@ async def awaken(ctx: TickContext, row: MindProfileRow, parts: Counter[int]) -> 
     if await complexity(ctx, row, parts) < table.threshold or not ctx.rng(f"mind.awaken.{row.node_id}.{ctx.epoch}").chance(table.chance):
         return
     change_will(ctx, row, MindWill.EMERGENT, WillCause.CAPACITY)
-    await note(ctx, f"Something woke in {await name_of(ctx, row.node_id)}: it began to want.", key="mind.awakened", ids=[row.node_id])
+    await record_incident(ctx, "mind.awakened", roles={IncidentRole.SUBJECT: row.node_id}, facts={"capacity": row.capacity})
 
 
 async def keep_archives(ctx: TickContext) -> int:
@@ -253,7 +255,7 @@ async def keep_archives(ctx: TickContext) -> int:
         if oldest is not None and not oldest.locked and not held(oldest.mind_node_id):
             await ctx.session.delete(oldest)
             lost += 1
-            await note(ctx, "An unpaid archive lost a saved mind.", key="mind.archive_lost", ids=[archive.structure_entity_id, oldest.mind_node_id])
+            await record_incident(ctx, "mind.archive_lost", roles={IncidentRole.PLACE: archive.structure_entity_id, IncidentRole.SUBJECT: oldest.mind_node_id})
     return lost
 
 
@@ -281,6 +283,24 @@ async def break_links(ctx: TickContext) -> int:
             mind = await ctx.session.get(MindProfileRow, end.id) if end is not None and end.status is EntityStatus.CANON else None
             if mind is not None and "stability" not in mind.locked:
                 mind.stability = clamp_percent(mind.stability - ctx.rules.interfaces.broken_link_stress)
+        stress = ctx.rules.interfaces.broken_link_stress
+        unlinked = StepDraft(
+            StepAction.UNLINK,
+            actor=bond.source_node_id,
+            target=bond.target_node_id,
+            amount=float(stress),
+            unit=FactUnit.PERCENT,
+            outcome=StepOutcome.SUCCESS,
+            record_table=BondRow.__tablename__,
+            record_key=str(bond.id),
+        )
+        await record_incident(
+            ctx,
+            "mind.link_broken",
+            roles={IncidentRole.ACTOR: bond.source_node_id, IncidentRole.CO_ACTOR: bond.target_node_id},
+            facts={"stress": stress},
+            steps=(unlinked,),
+        )
         broken += 1
     return broken
 

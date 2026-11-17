@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.concealment import ConcealScope, HiddenTruthKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import (
     Learnability,
     PowerOrigin,
@@ -29,7 +30,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -96,7 +96,12 @@ async def shape_source(call: SonCall, args: ShapeSourceInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.SOURCE_REFUSED, why=str(error))
     call.target(place.id)
-    await call.chronicle(ChronicleKind.FATE, lines.SHAPE_SOURCE, entity_ids=[place.id], son=call.son.name, name=row.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_source",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: place.id},
+        facts={"name": row.name, "reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.SOURCE_SHAPED, name=row.name)
 
 
@@ -110,7 +115,9 @@ async def shape_magic(call: SonCall, args: ShapeMagicInput) -> str:
         row = await control.create_system(call.tick, draft)
     except (ValidationFailedError, NotFoundError) as error:
         fail(SonResult.MAGIC_REFUSED, why=str(error))
-    await call.chronicle(ChronicleKind.FATE, lines.SHAPE_MAGIC, entity_ids=[], son=call.son.name, name=row.name, reason=args.reason)
+    await call.record(
+        "tools.son.shape_magic", roles={IncidentRole.ACTOR: call.son.id}, facts={"name": row.name, "reason": args.reason}, kind=ChronicleKind.FATE
+    )
     return result(SonResult.MAGIC_SHAPED, name=row.name)
 
 
@@ -127,7 +134,12 @@ async def grant_power(call: SonCall, args: GrantPowerInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.POWER_GRANT_REFUSED, why=str(error))
     call.target(holder.id)
-    await call.chronicle(ChronicleKind.FATE, lines.GRANT_POWER, entity_ids=[holder.id], son=call.son.name, name=holder.name, reason=args.reason)
+    await call.record(
+        "tools.son.grant_power",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: holder.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.POWER_GRANTED, name=holder.name)
 
 
@@ -140,7 +152,12 @@ async def revoke_power(call: SonCall, args: RevokePowerInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.POWER_REVOKE_REFUSED, why=str(error))
     call.target(power.holder_node_id)
-    await call.chronicle(ChronicleKind.FATE, lines.REVOKE_POWER, entity_ids=[power.holder_node_id], son=call.son.name, reason=args.reason)
+    await call.record(
+        "tools.son.revoke_power",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: power.holder_node_id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.POWER_REVOKED)
 
 
@@ -152,7 +169,12 @@ async def unveil_truth(call: SonCall, args: UnveilInput) -> str:
     await ensure_in_reach(call, population)
     await control.reveal(call.tick, truth.id, population.id)
     call.target(population.id)
-    await call.chronicle(ChronicleKind.FATE, lines.UNVEIL_TRUTH, entity_ids=[population.id], son=call.son.name, name=population.name, reason=args.reason)
+    await call.record(
+        "tools.son.unveil_truth",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: population.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.TRUTH_UNVEILED, title=truth.title, name=population.name)
 
 
@@ -164,7 +186,12 @@ async def hide_truth(call: SonCall, args: HideTruthInput) -> str:
     draft = control.TruthDraft(args.title, subject.id, args.kind, args.hidden_from, None, PERCENT * 3 // 4, ("by_nature",), 0, call.son.id)
     row = await control.create_truth(call.tick, draft)
     call.target(subject.id)
-    await call.chronicle(ChronicleKind.FATE, lines.HIDE_TRUTH, entity_ids=[subject.id], son=call.son.name, name=subject.name, reason=args.reason)
+    await call.record(
+        "tools.son.hide_truth",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: subject.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.FATE,
+    )
     return result(SonResult.TRUTH_HIDDEN, title=row.title)
 
 

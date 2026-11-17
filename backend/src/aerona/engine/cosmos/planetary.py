@@ -10,21 +10,21 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import carbon_flux, cycles_by_world
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, shift_bounded
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 FERTILITY_KEY = "fertility"
@@ -91,11 +91,23 @@ async def move_coasts(ctx: TickContext, world: WorldRow, physics: WorldPhysicsRo
         for region in sorted(regions.values(), key=lambda row: row.id):
             await apply_disaster(ctx, region, Disaster.FLOOD, table.flood_loss_pct / PERCENT)
         moved = await move_inland(ctx, world, coastal, atlas)
-        await note(ctx, f"The seas of {world.name} rose and drowned its coasts.", key="climate.seas_rose", world_id=world.id, kind=ChronicleKind.CLIMATE)
+        await record(
+            ctx,
+            "climate.seas_rose",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.VICTIM: sorted(regions)},
+            facts={"shift": shift, "loss": table.flood_loss_pct, "moved": moved},
+            world_id=world.id,
+        )
         return moved + len(regions)
     for region in regions.values():
         shift_bounded(ctx.rules, region, FERTILITY_KEY, table.flood_step)
-    await note(ctx, f"The seas of {world.name} fell and new shores rose from them.", key="climate.seas_fell", world_id=world.id, kind=ChronicleKind.CLIMATE)
+    await record(
+        ctx,
+        "climate.seas_fell",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.BENEFICIARY: sorted(regions)},
+        facts={"shift": shift, "fertility": table.flood_step},
+        world_id=world.id,
+    )
     return len(regions)
 
 
@@ -113,9 +125,18 @@ async def move_inland(ctx: TickContext, world: WorldRow, coastal: set[int], atla
         inland = sorted(region for region in atlas.neighbour_regions(town.location_id) if region not in coastal)
         if not inland:
             continue
+        coast = town.location_id
         town.location_id = inland[0]
         await BondRepository(ctx.session).refresh_location(town.id, town.location_id, ctx.epoch)
-        await note(ctx, f"{town.name} moved inland before the rising sea.", key="climate.town_moved", ids=[town.id], world_id=world.id)
+        await record(
+            ctx,
+            "climate.town_moved",
+            roles={IncidentRole.SUBJECT: town.id, IncidentRole.ORIGIN: coast, IncidentRole.DESTINATION: inland[0]},
+            facts={"loss": table.flood_loss_pct},
+            origin=coast,
+            destination=inland[0],
+            world_id=world.id,
+        )
         moved += 1
     return moved
 

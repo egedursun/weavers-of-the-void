@@ -11,9 +11,9 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.couplings import FieldAgreementKind
 from aerona.domain.enums.military import ArmyRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import CLOSURES, LawKind, LegitimacyBasis, OfficeKind
 from aerona.domain.enums.war import SiegeStatus, WarStatus
 from aerona.engine.couplings.field import agree, commander_of, offer_terms
@@ -27,7 +27,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.ruler import throne_of
 
 
@@ -92,7 +91,11 @@ async def parley(call: MortalCall, args: ParleyInput) -> str:
     await agree(
         call.tick, war.id, kind, commander=call.me.id, counterpart=other.id, place=mine.region_entity_id, term=term if truce else call.tick.epoch, honour=margin
     )
-    await call.chronicle(ChronicleKind.WORLD, lines.PARLEY, entity_ids=[call.me.id, other.id], me=call.me.name, foe=other.name)
+    await call.record(
+        "tools.mortal.parley_truce" if truce else "tools.mortal.parley",
+        roles={IncidentRole.ENVOY: call.me.id, IncidentRole.OPPONENT: other.id},
+        facts={"war": war.event_entity_id, "margin": margin},
+    )
     return result(MortalResult.PARLEY_TRUCE, foe=other.name, term=term) if truce else result(MortalResult.PARLEY_FAILED, foe=other.name)
 
 
@@ -109,7 +112,7 @@ async def offer(call: MortalCall, args: TermsInput) -> str:
         fail(MortalResult.TERMS_IMPOSSIBLE, why="your army besieges no such town")
     if held(town.id):
         fail(MortalResult.TERMS_IMPOSSIBLE, why="a stronger hand holds that town")
-    await call.chronicle(ChronicleKind.WORLD, lines.TERMS, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name)
+    await call.record("tools.mortal.terms", roles={IncidentRole.ENVOY: call.me.id, IncidentRole.TARGET: town.id}, facts={"rounds": siege.rounds}, place=town.id)
     table = call.rules.field_diplomacy
     if siege.rounds < table.fraternise_rounds and siege.supplies > table.terms_supplies:
         return result(MortalResult.TERMS_REFUSED, town=town.name)
@@ -126,7 +129,11 @@ async def declare_closure(call: MortalCall, args: ClosureInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.LAW_TERMS_INVALID, reason=str(error))
     call.target(law.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.CLOSURE, entity_ids=[call.me.id, law.id], me=call.me.name, law=law.name, realm=realm.entity.name)
+    await call.record(
+        "tools.mortal.closure",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: law.id, IncidentRole.AUTHORITY: realm.entity.id},
+        facts={"law": args.kind},
+    )
     return result(MortalResult.CLOSURE_DECLARED, law=law.name, realm=realm.entity.name)
 
 
@@ -140,7 +147,9 @@ async def create_office(call: MortalCall, args: OfficeInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.OFFICE_NOT_MADE, why=str(error).rstrip("."))
     realm.profile.treasury -= cost
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.OFFICE, entity_ids=[call.me.id, realm.entity.id], me=call.me.name, realm=realm.entity.name)
+    await call.record(
+        "tools.mortal.office", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.entity.id}, facts={"office": args.kind, "cost": cost}
+    )
     return result(MortalResult.OFFICE_MADE, realm=realm.entity.name, count=await office_count(call.tick, realm.entity.id))
 
 

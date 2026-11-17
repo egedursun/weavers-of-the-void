@@ -7,15 +7,16 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.renames import rewrite_name
+from aerona.engine.recording.record import record as record_incident
 from aerona.services.integrity.folk_names import rename_belief
 from aerona.services.narrative import clean_chronicle_text, collapse_spaces
 from aerona.services.player import guards
 from aerona.services.player.canon import believed_god
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import BELIEF_NAME_DERIVED, NAME_ACCEPTED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -70,7 +71,15 @@ async def rename_folk_god(scope: PlayerScope, command: BeliefTarget) -> Effect:
     if name is None:
         raise ValidationFailedError(f"The language of {people.name} gives no other name for this god.")
     ctx = await scope.context("rename_folk_god")
-    text = await hand(ctx, await scope.creator(), BELIEF_NAME_DERIVED, ids=[people.id], people=people.name, name=name)
+    text = (
+        await record_incident(
+            ctx,
+            "player.belief.renamed",
+            roles={IncidentRole.SUBJECT: people.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"name": name},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(text, people.id, values={"old": old, "name": name})
 
 
@@ -91,6 +100,14 @@ async def accept_name(scope: PlayerScope, command: AcceptName) -> Effect:
         await rewrite_name(scope.session, record.id, old, record.name)
     await scope.session.flush()
     ctx = await scope.context("accept_name")
-    text = await hand(ctx, await scope.creator(), NAME_ACCEPTED, ids=[record.id], old=old, new=record.name)
+    text = (
+        await record_incident(
+            ctx,
+            "player.naming.accepted",
+            roles={IncidentRole.PRODUCT: record.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"old": str(old)},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     letters = ", ".join(violation.letters) if violation is not None else ""
     return Effect(text, record.id, values={"overridden_letters": letters})

@@ -17,7 +17,6 @@ INFRASTRUCTURE = frozenset(
         "table.chronicle_entities",
         "table.incidents",
         "table.incident_participants",
-        "table.epoch_year_cursors",
         "table.nodes",
         "table.name_registry",
         "table.applied_fixups",

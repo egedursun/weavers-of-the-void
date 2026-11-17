@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, NEED_LABELS, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
+from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.entities import EntityRepository
@@ -22,6 +22,8 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
@@ -39,12 +41,12 @@ from aerona.engine.mind.preferences import market_fit, nature_bonus
 from aerona.engine.mind.wider_needs import by_activity_and_make, wider_needs
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.museums.reading import gardens_kept
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import BranchLevels, known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import class_shares, stock
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
@@ -401,6 +403,13 @@ async def update_needs(ctx: TickContext, mortal: EntityRow, values: Values, trai
     floor = ctx.rules.needs.despair_level
     fallen = [need for need, value in after.items() if value < floor <= before.get(need, FULL)]
     if fallen and is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
-        lost = " and ".join(NEED_LABELS[need].lower() for need in sorted(fallen))
-        await note(ctx, f"{mortal.name} has lost all {lost}.", key="need.despair", ids=[mortal.id])
+        await record(
+            ctx,
+            "need.despair",
+            roles={IncidentRole.SUBJECT: mortal.id},
+            facts={"needs": sorted(fallen), "levels": [after[need] for need in sorted(fallen)]},
+            steps=tuple(
+                StepDraft(StepAction.WORSEN, target=mortal.id, locus_key=need.value, amount=after[need], unit=FactUnit.PERCENT) for need in sorted(fallen)
+            ),
+        )
     return True

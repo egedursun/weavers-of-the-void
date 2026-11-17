@@ -16,7 +16,7 @@ from aerona.db.tables.contracts import CONTRACT_FIELDS, MonsterContractRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.sacred import SIGN_FIELDS, BirthSignRow
-from aerona.domain.enums.constructs import CommandToken, ContractStatus, MindWill, OrderCondition, OrderKind
+from aerona.domain.enums.constructs import CommandToken, ConstructEnd, ContractStatus, MindWill, OrderCondition, OrderKind
 from aerona.domain.enums.culture import MagicSource
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import BindingKind
@@ -67,7 +67,7 @@ async def ensoul(ctx: TickContext, construct_id: int, spirit_id: int | None) -> 
 async def unmake_construct(ctx: TickContext, construct_id: int) -> None:
     await found(ctx, ConstructRow, construct_id, "construct")
     construct = await of_type(ctx, construct_id, BEASTS, "a construct")
-    await unmake(ctx, construct, "unmade by the gods")
+    await unmake(ctx, construct, ConstructEnd.UNMADE_BY_GODS)
     await ctx.session.flush()
 
 

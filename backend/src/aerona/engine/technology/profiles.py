@@ -16,6 +16,7 @@ from aerona.engine.eras.effects import chosen_levels, world_start
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.terms import explaining_alone, term
 
 
 def derived(levels: dict[KnowledgeBranch, int], known: set[Technique], family: TechFamily) -> int:
@@ -58,7 +59,9 @@ async def keep_peoples(ctx: TickContext) -> int:
                 ctx.session.add(TechnologyProfileRow(holder_node_id=people, family=family, level=level, updated_epoch=ctx.epoch, locked=[]))
                 moved += 1
             elif "level" not in row.locked and row.level != level:
-                row.level, row.updated_epoch = level, ctx.epoch
+                with explaining_alone():
+                    term("technology.known_level", level, source_node_id=people)
+                    row.level, row.updated_epoch = level, ctx.epoch
                 moved += 1
     return moved
 

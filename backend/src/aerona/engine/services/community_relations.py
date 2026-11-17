@@ -28,6 +28,7 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import memories_between, remember, strength_of
 from aerona.engine.mind.opinion import OPINION_TABLES, OpinionContext, pair_relation
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.terms import plain
 from aerona.rules.registry import Rules
 
 SET_PASSES = 3
@@ -94,7 +95,7 @@ async def relation(session: AsyncSession, rules: Rules, first: int, second: int)
     if first == second:
         return RELATION_MAX
     memo = memo_of(session, "relation", RELATION_TABLES)
-    key = (id(rules), *pair_key(first, second))
+    key = (id(plain(rules)), *pair_key(first, second))
     if memo is not None and key in memo:
         found: int = memo[key]
         return found

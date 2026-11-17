@@ -18,17 +18,18 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import AfterlifeState, SpiritAlignment, StratumActivity, StratumValence
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import ServitorOrigin, ServitorRole
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
 from aerona.engine.faith.book import patron_node
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 SERVITOR_POWER = 3
@@ -126,13 +127,7 @@ async def fall(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None
     if profile is not None and "alignment" not in profile.locked:
         profile.alignment = SpiritAlignment.VENGEFUL
     tally.fallen += 1
-    await note(
-        ctx,
-        "A servitor fell from its god and took another master.",
-        key="mythic.servitor_fell",
-        ids=[row.spirit_entity_id, old, master],
-        kind=ChronicleKind.WORLD,
-    )
+    await record(ctx, "mythic.servitor_fell", roles={IncidentRole.SUBJECT: [row.spirit_entity_id, old, master]}, kind=ChronicleKind.WORLD)
 
 
 async def judge(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:

@@ -3,16 +3,17 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.foodweb import appetites, raid_chance, raid_herds
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter, monsters_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, connect, directed_bond, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, record
 from aerona.rules.registry import Rules
 
 
@@ -35,11 +36,8 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
         if await directed_bond(ctx.session, monster.id, settlement.id, BondKind.HUNTS) is None:
             await connect(ctx.session, monster.id, settlement.id, BondKind.HUNTS, ctx.epoch, description="raids its herds")
         ctx.count("herd_raids")
-        await note(
-            ctx,
-            f"{monster.name} fell on the herds of {settlement.name} and carried off {herds} head.",
-            key="monsters.herd_raid",
-            ids=[monster.id, settlement.id],
+        await record(
+            ctx, "monsters.herd_raid", roles={IncidentRole.ACTOR: monster.id, IncidentRole.VICTIM: settlement.id}, facts={"head": herds}, place=settlement.id
         )
         return
     loss = raid_loss(rules, monster)
@@ -55,12 +53,13 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     if await directed_bond(ctx.session, monster.id, settlement.id, BondKind.HUNTS) is None:
         await connect(ctx.session, monster.id, settlement.id, BondKind.HUNTS, ctx.epoch, description="raids")
     ctx.count("raids")
-    await note(
-        ctx,
-        f"{monster.name} raided {settlement.name}; {round_half_up(loss * PERCENT)}% of the population was lost.",
-        key="monsters.raid",
-        ids=[monster.id, settlement.id],
-    )
+    facts: dict[str, FactInput] = {
+        "lost_pct": round_half_up(loss * PERCENT),
+        "population_before": population or effects.raid_default_population,
+        "population_after": stat_or(settlement, "population", 0),
+        "prosperity_loss": effects.raid_prosperity_loss,
+    }
+    await record(ctx, "monsters.raid", roles={IncidentRole.ACTOR: monster.id, IncidentRole.VICTIM: settlement.id}, facts=facts, place=settlement.id)
 
 
 @reads(
@@ -98,7 +97,6 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.geasa",
     "table.goods_flows",
@@ -158,11 +156,12 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.creature_attacks",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.griefs",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.marriages",

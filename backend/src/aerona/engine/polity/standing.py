@@ -22,7 +22,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.demography import Job
@@ -31,7 +30,8 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import LawKind, OathBreach, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
@@ -43,7 +43,6 @@ from aerona.engine.lore.items import regalia_holder
 from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.memories import strength_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.loyalty import loyalty_autonomy
@@ -55,6 +54,7 @@ from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.engine.regime.book import legitimacy_kinds
 from aerona.engine.services.war import declare_war
 from aerona.engine.structures.readers import palace_legitimacy
@@ -137,12 +137,12 @@ async def claim_to_rule(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dic
     mark = realm.profile.legitimacy_parts.get("usurper")
     if mark is not None and mark > 1 and ctx.epoch - mark >= table.usurper_fade_epochs:
         realm.profile.legitimacy_parts = {key: value for key, value in realm.profile.legitimacy_parts.items() if key != "usurper"}
-        await note(
+        await record(
             ctx,
-            f"Folk stopped calling {ruler.name} a usurper; the throne of {realm.entity.name} was theirs by right of years.",
-            key="polity.usurper_accepted",
-            ids=[ruler.id, realm.entity.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "polity.usurper_accepted",
+            roles={IncidentRole.LEADER: ruler.id, IncidentRole.SUBJECT: realm.entity.id},
+            facts={"epochs": ctx.epoch - mark},
+            place=realm.profile.capital_entity_id,
         )
     if "usurper" in realm.profile.legitimacy_parts:
         return {"usurper": -table.usurper, **await foretold_return(ctx, ruler)}
@@ -394,8 +394,9 @@ async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: Entity
                 )
             )
         )
-        await break_on(ctx, sworn, OathKind.FEALTY, f"{member.name} broke away", recipient_id=realm.ruler_id)
+        await break_on(ctx, sworn, OathKind.FEALTY, OathBreach.MEMBER_BROKE_AWAY, recipient_id=realm.ruler_id, occasion=member.id)
     row = realm.members.pop(member.id, None)
+    autonomy = row.autonomy if row is not None else None
     if row is not None:
         await ctx.session.delete(row)
     book.member_of.pop(member.id, None)
@@ -405,12 +406,12 @@ async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: Entity
     core = book.entities.get(realm.profile.core_entity_id or -1)
     if core is not None:
         await declare_war(ctx, member.id, core.id, f"{member.name} broke away from {realm.entity.name}", cause=WarCause.INDEPENDENCE)
-    await note(
+    await record(
         ctx,
-        f"{member.name}, far from the throne and long left to itself, broke away from {realm.entity.name}.",
-        key="polity.secession",
-        ids=[member.id, realm.entity.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "polity.secession",
+        roles={IncidentRole.ACTOR: member.id, IncidentRole.PREDECESSOR: realm.entity.id, IncidentRole.LEADER: realm.ruler_id},
+        facts={"autonomy": autonomy},
+        place=member.id,
     )
 
 
@@ -456,16 +457,24 @@ async def realm_tier(ctx: TickContext, book: RealmBook, realm: Realm, knowledge:
         profile.tier_strain = 0
         risen = min(score, profile.tier + 1) if profile.tier else score
         if risen > profile.tier:
-            await note(
-                ctx, f"{realm.entity.name} rose to the {risen} tier of realms.", key="polity.tier_rose", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION
+            await record(
+                ctx,
+                "polity.tier_rose",
+                roles={IncidentRole.SUBJECT: realm.entity.id},
+                facts={"tier": risen, "score": score},
+                place=profile.capital_entity_id,
             )
         return risen
     if score < profile.tier:
         profile.tier_strain += 1
         if profile.tier_strain >= table.decline_epochs:
             profile.tier_strain = 0
-            await note(
-                ctx, f"{realm.entity.name} fell from its standing among realms.", key="polity.tier_fell", ids=[realm.entity.id], kind=ChronicleKind.CIVILIZATION
+            await record(
+                ctx,
+                "polity.tier_fell",
+                roles={IncidentRole.SUBJECT: realm.entity.id},
+                facts={"tier": profile.tier - 1, "score": score, "strain_epochs": table.decline_epochs},
+                place=profile.capital_entity_id,
             )
             return profile.tier - 1
         return profile.tier

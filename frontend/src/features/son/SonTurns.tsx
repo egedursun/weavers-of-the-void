@@ -17,6 +17,7 @@ import {
   useShowMore,
 } from '@/components/domain'
 import { Text } from '@/components/typography'
+import { useOlderLines } from '@/features/chronicle/api'
 import { ChronicleList } from '@/features/pantheon/ChronicleList'
 import { humanize } from '@/features/pantheon/labels'
 import { type SonDetail, useSonLedger } from './api'
@@ -115,11 +116,14 @@ function TurnEpochs({
 export function SonTurns({
   sonId,
   chronicle,
+  chronicleTotal,
 }: {
   sonId: number
   chronicle: SonDetail['chronicle']
+  chronicleTotal: number
 }) {
   const ledger = useSonLedger(sonId)
+  const older = useOlderLines('son', sonId, chronicle.length, chronicleTotal)
   const entries = ledger.data?.entries ?? []
   const byEpoch = new Map<number, typeof entries>()
   for (const view of entries) {
@@ -153,6 +157,7 @@ export function SonTurns({
       <ChronicleList
         title='Trace in the chronicle'
         lines={chronicle}
+        older={older}
         emptyTitle='None yet'
         emptyText='Chronicle lines about them appear here.'
       />

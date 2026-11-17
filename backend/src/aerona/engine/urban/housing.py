@@ -14,18 +14,19 @@ from aerona.db.tables.urban import DistrictServiceRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import HousingLevel
 from aerona.engine.context import TickContext
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.settlement.book import Town, town_of
 from aerona.engine.settlement.life import add_district, housing_of
 from aerona.engine.urban.coverage import people_of_districts
@@ -100,7 +101,13 @@ async def grow_slums(ctx: TickContext, town: Town, share: float, tally: HousingT
         tally.mobs += 1
         if "public_order" not in town.profile.locked:
             town.profile.public_order = clamp_int(town.profile.public_order - table.unrest, 0, PERCENT)
-        await note(ctx, f"The homeless of {town.entity.name} gathered as a mob.", key="settlement.homeless_mob", ids=[town.entity.id])
+        await record(
+            ctx,
+            "settlement.homeless_mob",
+            roles={IncidentRole.PLACE: town.entity.id},
+            facts={"homeless_share": round_half_up(share * PERCENT), "order_loss": table.unrest},
+            place=town.entity.id,
+        )
 
 
 async def cramped_rich(ctx: TickContext, town: Town) -> bool:

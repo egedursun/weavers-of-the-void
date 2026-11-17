@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.kind_concepts.nature import DUTY_DOMAINS, DUTY_FORMS
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import DomainActivityRow
@@ -19,15 +18,16 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import AfterlifeState
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import CosmicOffice, OfficeChoice
 from aerona.domain.enums.nature_kinds import OfficeDuty
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.kinds.nature import office_duty
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -175,7 +175,7 @@ async def conquer_offices(ctx: TickContext, winner_id: int, loser_id: int, strea
         return None
     row = held_by_loser[0]
     row.holder_node_id, row.chosen_by, row.since_epoch = winner_id, OfficeChoice.CONQUEST, ctx.epoch
-    await note(
-        ctx, f"The office of {spoken(row.office)} passed by conquest.", key="mythic.office_conquered", ids=[winner_id, loser_id], kind=ChronicleKind.CHALLENGE
+    await record(
+        ctx, "mythic.office_conquered", roles={IncidentRole.SUBJECT: [winner_id, loser_id]}, facts={"office": row.office}, kind=ChronicleKind.CHALLENGE
     )
     return row.office

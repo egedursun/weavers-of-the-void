@@ -8,9 +8,10 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.military import CovertSabotage
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitEffect
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
@@ -25,11 +26,10 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import DeclareWarInput, SabotageInput, SabotageKind, SpyInput
+from aerona.tools.mortal.inputs import DeclareWarInput, SabotageInput, SpyInput
 from aerona.tools.mortal.support import enemies, fail_with_candidates, first_stat, is_community, near, practised, require_target, wits_of
 
 PERCENT = 100
-SPY_COVER_EXCERPT = 80
 WATCH_CHAIN = ("defense", "intellect")
 WAR_TARGETS = COMMUNITY_TYPES | {EntityType.SPECIES}
 SABOTAGE_TARGETS = COMMUNITY_TYPES | {EntityType.MORTAL}
@@ -68,7 +68,11 @@ async def declare(call: MortalCall, args: DeclareWarInput) -> str:
         await declare_war(call.tick, call.me.id, target.id, args.reason, cause=WarCause.DECLARED)
         await change_relation(call.tick, call.me.id, target.id, -tools.war_declare_relation, MemoryKind.FOUGHT_US, note=args.reason[:KEY_MAX_LENGTH])
         await _sour_patrons(call, target)
-    await call.chronicle(ChronicleKind.WAR, lines.WAR, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name, reason=args.reason)
+    await call.record(
+        "tools.mortal.war",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id},
+        facts={"cause": WarCause.GRUDGE if species else WarCause.DECLARED},
+    )
     return result(MortalResult.WAR_DECLARED, name=target.name)
 
 
@@ -106,7 +110,7 @@ async def _discord(call: MortalCall, target: EntityRow) -> str:
         return result(MortalResult.NO_ALLIANCE)
     bond = allies[0]
     other = await call.session.get(EntityRow, bond.other_end(target.id))
-    await bonds.deactivate(bond, call.epoch, SabotageKind.DISCORD.value)
+    await bonds.deactivate(bond, call.epoch, CovertSabotage.DISCORD.value)
     return result(MortalResult.DISCORD_WORKED, name=target.name, other=other.name if other is not None else "")
 
 
@@ -125,9 +129,9 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
     call.target(target.id)
     if cunning >= watch:
         effects = {
-            SabotageKind.POISON: lambda: _poison(call, target, caught),
-            SabotageKind.ARSON: lambda: _arson(call, target),
-            SabotageKind.DISCORD: lambda: _discord(call, target),
+            CovertSabotage.POISON: lambda: _poison(call, target, caught),
+            CovertSabotage.ARSON: lambda: _arson(call, target),
+            CovertSabotage.DISCORD: lambda: _discord(call, target),
         }
         note = await effects[args.kind]()
     else:
@@ -141,11 +145,17 @@ async def sabotage(call: MortalCall, args: SabotageInput) -> str:
         if is_community(target) and is_community(call.me):
             await change_relation(call.tick, call.me.id, target.id, -tools.sabotage_caught_relation, MemoryKind.HARMED_ME, note=label)
         note += lines.CAUGHT_SUFFIX
-        await call.chronicle(
-            ChronicleKind.INTRIGUE, lines.SABOTAGE_CAUGHT, entity_ids=[call.me.id, target.id], me=call.me.name, kind=label, target=target.name, note=note
+        await call.record(
+            "tools.mortal.sabotage_caught",
+            roles={IncidentRole.ACCUSED: call.me.id, IncidentRole.TARGET: target.id},
+            facts={"sabotage": args.kind, "succeeded": int(cunning >= watch)},
         )
     else:
-        await call.chronicle(ChronicleKind.INTRIGUE, lines.SABOTAGE_HIDDEN, entity_ids=[target.id], kind=label, target=target.name)
+        await call.record(
+            "tools.mortal.sabotage_hidden",
+            roles={IncidentRole.TARGET: target.id},
+            facts={"sabotage": args.kind, "succeeded": int(cunning >= watch)},
+        )
     return result(MortalResult.SABOTAGE_DONE, note=note[:1].upper() + note[1:])
 
 
@@ -170,10 +180,12 @@ async def build_spy_network(call: MortalCall, args: SpyInput) -> str:
                 call.tick, target.id, call.me.id, -tools.spy_caught_relation, MemoryKind.SPIED_ON_US, note=lines.SPIES_CAUGHT_EVENT
             )
         war = relation <= -tools.spy_war_threshold and await declare_war(call.tick, target.id, call.me.id, lines.SPIES_CAUGHT_EVENT, cause=WarCause.ESPIONAGE)
-        await call.chronicle(ChronicleKind.INTRIGUE, lines.SPIES_CAUGHT, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name)
+        await call.record(
+            "tools.mortal.spies_caught", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id}, facts={"wits": mine, "watch": theirs}
+        )
         return result(MortalResult.SPIES_CAUGHT, name=target.name, mine=mine, theirs=theirs, war=war)
     await bonds.connect(BondDraft(call.me.id, target.id, BondKind.SPY_NETWORK, call.epoch, args.cover))
-    await call.chronicle(ChronicleKind.INTRIGUE, lines.SPIES, entity_ids=[target.id], target=target.name, cover=args.cover[:SPY_COVER_EXCERPT])
+    await call.record("tools.mortal.spies", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id}, facts={"wits": mine, "watch": theirs})
     return result(MortalResult.SPIES_PLANTED, name=target.name)
 
 

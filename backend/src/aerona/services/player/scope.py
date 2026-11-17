@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_capture import LedgerDraft
+from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
@@ -92,8 +93,9 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
     try:
         async with session.begin_nested(), scope.ledger.capture(session) as capture:
             marker = await _last_action_id(session)
-            essence_before = (await scope.creator()).essence
-            with chosen_bonds():
+            acting_creator = await scope.creator()
+            essence_before = acting_creator.essence
+            with chosen_bonds(), acting(ActorKind.CREATOR, acting_creator.id, await scope.epoch(), key=f"actor.{action}"):
                 effect = await body()
             creator = await scope.creator()
             delta = creator.essence - essence_before

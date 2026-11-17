@@ -21,6 +21,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, RiteStage, SpeakerKind, TraditionFunction
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -49,7 +50,6 @@ from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
 from aerona.engine.lore.creed_change import keep_constitutions, schisms, syntheses
 from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
 from aerona.engine.lore.prophecy_tales import keep_prophecy_tales
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.made_things import artwork_cycles, item_cycles
 from aerona.engine.polity.book import RealmBook
@@ -58,6 +58,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 
 K = TraditionFunction
 STAGE_DEFIED_BY = {RiteStage.DEATH: LawKind.BURIAL_LAW, RiteStage.UNION: LawKind.MARRIAGE_LAW}
@@ -305,7 +306,6 @@ async def language_cycles(ctx: TickContext) -> None:
     "table.dimensions",
     "table.divine_wounds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -336,8 +336,8 @@ async def language_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.claims",
     "table.culture_values",
-    "table.epoch_year_cursors",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
@@ -353,7 +353,12 @@ async def legend_cycles(ctx: TickContext) -> None:
         row = await legends.profile_of(ctx, legend)
         if await legends.tell(ctx, legend, row):
             ctx.count("legends_drifted")
-            await note(ctx, f"In the retelling, {legend.name} became a tale of {spoken_word(row.archetype)}.", key="lore.legend_drift", ids=[legend.id])
+            await record(
+                ctx,
+                "lore.legend_drift",
+                roles={IncidentRole.SUBJECT: legend.id},
+                facts={"legend": str(legend.name), "spoken_word": str(spoken_word(row.archetype))},
+            )
         if "credence" not in row.locked and await legends.confirmed(ctx, legend, row):
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)
             ctx.count("legends_confirmed")
@@ -361,11 +366,11 @@ async def legend_cycles(ctx: TickContext) -> None:
         remembered = await legends.remember_legend(ctx, legend, row)
         if remembered:
             ctx.count("legend_memories", remembered)
-            await note(ctx, f"The telling of {legend.name} reshaped what its peoples remember.", key="lore.legend_memory", ids=[legend.id])
+            await record(ctx, "lore.legend_memory", roles={IncidentRole.SUBJECT: legend.id}, facts={"legend": str(legend.name)})
         outcome = await legends.consequences(ctx, row)
         if outcome:
             ctx.count("legend_consequences")
-            await note(ctx, f"Because {legend.name} is believed, {outcome}.", key="lore.legend_consequence", ids=[legend.id])
+            await record(ctx, "lore.legend_consequence", roles={IncidentRole.SUBJECT: legend.id}, facts={"legend": str(legend.name), "outcome": outcome})
 
 
 CREED_DEFIES = {
@@ -428,13 +433,13 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
         founded = await traditions.commemorate(ctx, event)
         if founded is not None:
             ctx.count("commemorations")
-            await note(ctx, f"{founded.name} began, so that {event.name} is not forgotten.", key="lore.commemoration", ids=[founded.id, event.id])
+            await record(ctx, "lore.commemoration", roles={IncidentRole.SUBJECT: [founded.id, event.id]}, facts={"event": str(event.name)})
     for founded in await traditions.remember_years(ctx, atlas):
         ctx.count("commemorations_of_years")
-        await note(ctx, f"{founded.name} began, so that the year is not forgotten.", key="lore.commemoration_year", ids=[founded.id])
+        await record(ctx, "lore.commemoration_year", roles={IncidentRole.SUBJECT: founded.id})
     for founded in await traditions.remember_miracles(ctx):
         ctx.count("commemorations_of_miracles")
-        await note(ctx, f"{founded.name} began, so that the wonder is not forgotten.", key="lore.commemoration_miracle", ids=[founded.id])
+        await record(ctx, "lore.commemoration_miracle", roles={IncidentRole.SUBJECT: founded.id})
 
 
 @reads(
@@ -451,7 +456,6 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.culture_values",
     "table.custom_kinds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.holder_techniques",
     "table.ideology_adherents",
@@ -493,9 +497,9 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.community_stocks",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.ideology_adherents",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -517,17 +521,17 @@ async def tradition_cycles(ctx: TickContext) -> None:
     ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
-    rites = await RiteCalendar.load(ctx.session)
+    rite_rows = await RiteCalendar.load(ctx.session)
     held = 0
     for tradition in unheld(await canon(ctx.session, [EntityType.TRADITION])):
         profile = await traditions.profile_of(ctx, tradition)
         kind = profile.kind
         for community in unheld(await traditions.celebrants(ctx, tradition.id)):
-            rites.bind(profile, tradition, community)
+            rite_rows.bind(profile, tradition, community)
             if held >= table.cap:
                 await traditions.participate(ctx, tradition, community)
                 continue
-            keeping = rites.keeping(ctx, profile, tradition, community)
+            keeping = rite_rows.keeping(ctx, profile, tradition, community)
             done = await traditions.celebrate(ctx, tradition, community, atlas, keeping)
             if keeping.in_season is not None:
                 ctx.count("traditions_in_season" if keeping.in_season else "traditions_off_season")
@@ -581,7 +585,6 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.era_deeds",
     "table.foreign_gods",
     "table.genomes",
@@ -659,12 +662,13 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.community_societies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.era_deeds",
     "table.great_person_points",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_terms",
     "table.incidents",
     "table.injuries",
     "table.mortal_profiles",
@@ -722,7 +726,6 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.ideology_adherents",
     "table.ideology_profiles",
@@ -745,10 +748,10 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.constitutions",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.ideology_adherents",
     "table.ideology_profiles",
     "table.ideology_tenets",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -762,7 +765,7 @@ async def ideology_cycles(ctx: TickContext) -> None:
     founded = await ideology.emerge(ctx)
     if founded is not None:
         ctx.count("creeds_founded")
-        await note(ctx, f"A new creed was taught: {founded.name}.", key="lore.creed_founded", ids=[founded.id])
+        await record(ctx, "lore.creed_founded", roles={IncidentRole.SUBJECT: founded.id}, facts={"founded": str(founded.name)})
     events = 0
     for creed, profile in await ideology.living_creeds(ctx):
         if await ideology.write_text(ctx, creed, profile) is not None:
@@ -782,7 +785,7 @@ async def ideology_cycles(ctx: TickContext) -> None:
         if outcome:
             events += 1
             ctx.count("revolutions")
-            await note(ctx, f"In the name of {creed.name}, {outcome}.", key="lore.revolution", ids=[creed.id])
+            await record(ctx, "lore.revolution", roles={IncidentRole.SUBJECT: creed.id}, facts={"creed": str(creed.name), "outcome": outcome})
     ctx.count("creed_merges", await syntheses(ctx, [creed for creed, _ in await ideology.living_creeds(ctx)]))
     ctx.count("constitutions", await keep_constitutions(ctx))
 
@@ -859,7 +862,6 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.divine_wounds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.house_members",
     "table.legend_profiles",
     "table.nodes",
@@ -876,7 +878,6 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.claims",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.prophecy_conditions",
@@ -888,10 +889,10 @@ async def prophecy_cycles(ctx: TickContext) -> None:
         if state is ProphecyState.FULFILLED:
             ctx.count("prophecies_fulfilled")
             tail = f" {pressed[0].upper()}{pressed[1:]}." if pressed else ""
-            await note(ctx, f"{seen.name} came true.{tail}", key="lore.prophecy_fulfilled", ids=[seen.id])
+            await record(ctx, "lore.prophecy_fulfilled", roles={IncidentRole.SUBJECT: seen.id}, facts={"tail": str(tail)})
         elif pressed:
             ctx.count("prophecies_pressing")
-            await note(ctx, f"Under the weight of {seen.name}, {pressed}.", key="lore.prophecy_pressure", ids=[seen.id])
+            await record(ctx, "lore.prophecy_pressure", roles={IncidentRole.SUBJECT: seen.id}, facts={"pressed": str(pressed)})
     await keep_prophecy_tales(ctx)
 
 

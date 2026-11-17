@@ -19,7 +19,7 @@
 {%- elif item.reason == "rebelled_against_you" %}it rose against you
 {%- elif item.reason == "hostile_pair" %}turn this enmity into an event
 {%- elif item.reason == "rich_essence" %}your essence is {{ item.value }}
-{%- elif item.reason == "few_celestials" %}this world's sky holds only {{ item.value }} bodies
+{%- elif item.reason == "few_celestials" %}this world's sky holds only {{ item.value | several("body", "bodies") }}
 {%- elif item.reason == "few_laws" %}this world has only {{ item.value }} natural laws
 {%- elif item.reason == "no_road" %}no known road leaves your world
 {%- elif item.reason == "no_faction" %}a settlement of yours without any faction or guild

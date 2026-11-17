@@ -15,6 +15,8 @@ from aerona.engine.kinds.society import ensure_built_ins as ensure_society_built
 from aerona.engine.phases.exploration import recover_intuitions
 from aerona.engine.pipeline import current_environment
 from aerona.engine.primitives.manual import silent
+from aerona.engine.recording.checkpoints import first_checkpoint
+from aerona.engine.recording.legacy import upgrade_records
 
 StartupStep = Callable[[TickContext], Awaitable[int]]
 
@@ -49,6 +51,14 @@ async def maps_drawn(ctx: TickContext) -> int:
     return len(await refresh_world_maps(ctx.session, ctx.rules, ctx.epoch))
 
 
+async def records_upgraded(ctx: TickContext) -> int:
+    return await upgrade_records(ctx.session)
+
+
+async def checkpoint_taken(ctx: TickContext) -> int:
+    return await first_checkpoint(ctx.session, ctx.epoch)
+
+
 STARTUP_STEPS: tuple[tuple[str, StartupStep], ...] = (
     ("pair_mirrors", mirrors_paired),
     ("align_moons", moons_aligned),
@@ -57,6 +67,8 @@ STARTUP_STEPS: tuple[tuple[str, StartupStep], ...] = (
     ("world_maps", maps_drawn),
     ("built_in_dwellings", dwellings_built_in),
     ("built_in_kinds", kinds_built_in),
+    ("legacy_records", records_upgraded),
+    ("first_checkpoint", checkpoint_taken),
 )
 
 

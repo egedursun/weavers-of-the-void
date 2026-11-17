@@ -4,6 +4,7 @@ from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.evolution import SpeciesTraitRow, TraitHistoryRow
 from aerona.db.write_guard import held
 from aerona.engine.context import TickContext
+from aerona.engine.lore.history import scope_incident
 from aerona.engine.primitives.numbers import round_half_up
 
 PATHOGEN_TRAITS = ("virulence", "lethality", "cold_tolerance", "heat_tolerance", "resistance")
@@ -12,7 +13,7 @@ PATHOGEN_TRAITS = ("virulence", "lethality", "cold_tolerance", "heat_tolerance",
 async def keep_point(ctx: TickContext, holder_id: int, trait: str, value: int) -> None:
     row = await ctx.session.get(TraitHistoryRow, (holder_id, trait, ctx.epoch))
     if row is None:
-        ctx.session.add(TraitHistoryRow(holder_entity_id=holder_id, trait=trait, epoch=ctx.epoch, value=value))
+        ctx.session.add(TraitHistoryRow(holder_entity_id=holder_id, trait=trait, epoch=ctx.epoch, value=value, incident_id=scope_incident()))
     else:
         row.value = value
 

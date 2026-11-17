@@ -1,10 +1,11 @@
 from aerona.core.errors import NotFoundError
-from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import HarmCause, StrikeStyle
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -12,10 +13,11 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.lore.taboos import guest_killed
 from aerona.engine.mortal.death import manner_of
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import connect, entity
 from aerona.engine.primitives.records import SweepResult, retire, sweep_dead_bonds
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 
 
 async def death_path(
@@ -49,8 +51,14 @@ async def sweep_bonds_of_the_dead(ctx: TickContext) -> SweepResult:
     result = await sweep_dead_bonds(ctx.session, ctx.epoch)
     ctx.count("bonds_closed", result.closed)
     ctx.count("bonds_inherited", result.transferred)
-    if result.transferred:
-        await note(ctx, f"The dead's {several(result.transferred, 'property', 'properties')} and rulerships passed to their heirs.", key="records.inheritance")
+    for dead_id, (heir_id, targets) in result.passed.items():
+        await record_incident(
+            ctx,
+            "records.inheritance",
+            roles={IncidentRole.PREDECESSOR: dead_id, IncidentRole.HEIR: heir_id, IncidentRole.TARGET: targets},
+            facts={"transferred": len(targets), "closed": result.closed_of.get(dead_id, 0)},
+            steps=(StepDraft(StepAction.SUCCEED, actor=heir_id, target=dead_id, amount=len(targets), unit=FactUnit.COUNT, outcome=StepOutcome.SUCCESS),),
+        )
     return result
 
 

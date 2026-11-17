@@ -61,6 +61,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.lore.account_text import records_text
 from aerona.engine.lore.rumours import heard_by
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import knowledge_level
@@ -287,6 +288,9 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
         items=[NamedRecord(id=entity.id, name=entity.name) for entity in await owned(scope, me, EntityType.ITEM)],
         mentions=[ChronicleRow(age=row.epoch, text=prompt_text(row.text)) for row in reversed(mentions)],
         rumours=await heard_rumours(scope, me),
+        records=await records_text(
+            scope.session, me.id, title="HAPPENINGS YOU SAW, TOOK PART IN OR WERE TOLD OF", tool="recount", limit=scope.rules.context.records_shown
+        ),
         languages=await language_lines(scope, me.world_id),
         routes=[route for route in await route_lines(scope) if scope.world_name(me.world_id) in (route.world_a, route.world_b)],
     )

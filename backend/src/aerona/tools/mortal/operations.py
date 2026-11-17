@@ -8,7 +8,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import EchelonOrder, ExpeditionStatus
 from aerona.engine.operations import control
 from aerona.engine.operations.expeditions import ExpeditionTally, camp, companions_for, on_expedition, party_of
@@ -19,7 +19,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 UNDER_WAY = (ExpeditionStatus.UNDERWAY, ExpeditionStatus.CAMPED)
 
@@ -50,7 +49,13 @@ async def lead_expedition(call: MortalCall, args: LeadExpeditionInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.EXPEDITION_DECLINED, why=str(error).rstrip("."))
     call.target(target.id)
-    await call.chronicle(ChronicleKind.EXPLORATION, lines.LEAD_EXPEDITION, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name)
+    await call.record(
+        "tools.mortal.lead_expedition",
+        roles={IncidentRole.LEADER: call.me.id, IncidentRole.DESTINATION: target.id, IncidentRole.MEMBER: [mortal.id for mortal in companions]},
+        facts={"party": len(companions) + 1, "legs": row.legs_total},
+        place=target.id,
+        cause=row.incident_id,
+    )
     return result(MortalResult.EXPEDITION_LED, target=target.name, legs=row.legs_total, party=len(companions) + 1)
 
 
@@ -69,7 +74,12 @@ async def make_camp(call: MortalCall, args: MakeCampInput) -> str:
     if not tally.camps:
         fail(MortalResult.CAMP_REFUSED, why="the party has too few provisions or will not rest")
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.EXPLORATION, lines.MAKE_CAMP, entity_ids=[call.me.id], me=call.me.name, expedition=row.name)
+    await call.record(
+        "tools.mortal.make_camp",
+        roles={IncidentRole.LEADER: call.me.id},
+        facts={"expedition": row.name, "provisions": row.provisions, "ambushes": tally.ambushes},
+        cause=row.incident_id,
+    )
     return result(MortalResult.CAMP_MADE, provisions=row.provisions, ambushed="an ambush struck it" if tally.ambushes else "the night passed quietly")
 
 
@@ -84,7 +94,8 @@ async def order_formation(call: MortalCall, args: OrderFormationInput) -> str:
     if "order" not in row.locked:
         row.order = args.order
     call.target(row.army_entity_id or row.owner_entity_id)
-    await call.chronicle(ChronicleKind.ORDER, lines.ORDER_FORMATION, entity_ids=[call.me.id], me=call.me.name, formation=row.name, order=args.order.value)
+    roles = {IncidentRole.ACTOR: call.me.id, **({IncidentRole.SUBJECT: row.army_entity_id} if row.army_entity_id is not None else {})}
+    await call.record("tools.mortal.order_formation", roles=roles, facts={"formation": row.name, "order": args.order})
     return result(MortalResult.FORMATION_ORDERED, formation=row.name, order=args.order.value)
 
 

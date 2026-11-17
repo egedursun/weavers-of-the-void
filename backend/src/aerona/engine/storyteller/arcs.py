@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
-from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -19,12 +17,13 @@ from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import OathStatus, OfficeKind
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record as record_incident
 
 STAGES = (ArcStage.INCITING, ArcStage.RISING, ArcStage.CRISIS, ArcStage.CLIMAX, ArcStage.RESOLUTION)
 MONOMYTH = (ArcStage.CALL, ArcStage.REFUSAL, ArcStage.MENTOR, ArcStage.THRESHOLD, ArcStage.ORDEAL, ArcStage.RETURN, ArcStage.RESOLUTION)
@@ -292,10 +291,13 @@ async def detect(ctx: TickContext, tally: ArcTally) -> None:
                 continue
             row = await open_arc(ctx, candidate.subject_id, candidate.template, candidate.figures)
             tally.begun += 1
-            subject = await ctx.session.get(EntityRow, candidate.subject_id)
-            told = candidate.template.value.replace("_", " ")
-            await note(
-                ctx, f"The life of {subject.name if subject else 'one'} took the shape of a tale of {told}.", key="arcs.begun", ids=[row.subject_node_id]
+            await record_incident(
+                ctx,
+                "arcs.begun",
+                roles={IncidentRole.SUBJECT: row.subject_node_id, IncidentRole.MEMBER: [node for node, _ in candidate.figures]},
+                facts={
+                    "template": candidate.template,
+                },
             )
 
 
@@ -327,13 +329,7 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
     arc.stage = ArcStage.RESOLUTION
     setattr(tally, outcome.value, getattr(tally, outcome.value) + 1)
     ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=ArcStage.RESOLUTION, text=outcome.value, epoch=ctx.epoch, locked=[]))
-    subject = await NodeRepository(ctx.session).name_of(arc.subject_node_id)
-    await note(
-        ctx,
-        f"The tale of {spoken(arc.template)} of {subject or 'one'} ended: {spoken(outcome)}.",
-        key="arcs.ended",
-        ids=[arc.subject_node_id],
-    )
+    await record_incident(ctx, "arcs.ended", roles={IncidentRole.SUBJECT: arc.subject_node_id}, facts={"template": arc.template, "outcome": outcome})
 
 
 async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:

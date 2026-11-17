@@ -7,6 +7,7 @@ from aerona.db.tables.world_views import SHARE_MAX, WORLD_VIEW_SHARES
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.cosmos.world_view_control import edit_view
 from aerona.engine.cosmos.world_views import seed_view
 from aerona.engine.primitives.numbers import clamp_int
@@ -16,7 +17,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.ages import world_in_reach
 from aerona.tools.son.support import require_essence
 
@@ -46,7 +46,12 @@ async def shift_world_nature(call: SonCall, args: ShiftWorldNatureInput) -> str:
     await edit_view(call.tick, world.id, {args.share: value}, [args.share])
     call.spend_essence(table.son_cost)
     call.target(world.id)
-    await call.chronicle(ChronicleKind.CLIMATE, lines.SHIFT_WORLD_NATURE, entity_ids=[], son=call.son.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.shift_world_nature",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CLIMATE,
+    )
     return result(SonResult.NATURE_SHIFTED, world=world.name, share=args.share.replace("_", " "), value=value)
 
 

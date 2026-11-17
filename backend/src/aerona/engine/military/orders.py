@@ -10,9 +10,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyOfficerRow, WarAimRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow, WarRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EntityFlag, EntityType
-from aerona.domain.enums.military import ArmyRole, PeaceTermKind, Stance, WarAimKind
+from aerona.domain.enums.military import ArmyRole, PeaceTermKind, Stance, VesselStatus, WarAimKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.domain.models.entity_stats import ArmyStats, VesselStats
 from aerona.engine.context import TickContext
@@ -22,7 +23,7 @@ from aerona.engine.military.peace import PeaceTerm
 from aerona.engine.military.shipyard import Commission, commission
 from aerona.engine.military.siege import open_siege
 from aerona.engine.military.units import muster, profile_of
-from aerona.engine.military.vessels import SeaTally, repair
+from aerona.engine.military.vessels import SeaTally, can_meet, repair, sea_fight
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -203,6 +204,25 @@ async def repair_vessel(ctx: TickContext, vessel_id: int) -> int:
     if gain <= 0:
         raise ConflictError("No shipyard at its home port can mend it, or its owners cannot pay.")
     return gain
+
+
+async def force_engagement(ctx: TickContext, first_id: int, second_id: int) -> EntityRow:
+    if first_id == second_id:
+        raise ValidationFailedError("An engagement needs two different vessels.")
+    sides: list[tuple[EntityRow, VesselProfileRow]] = []
+    for vessel_id in (first_id, second_id):
+        vessel = await living_entity(ctx.session, vessel_id)
+        row = await ctx.session.get(VesselProfileRow, vessel_id)
+        if vessel is None or row is None:
+            raise NotFoundError("No such vessel afloat.")
+        if row.status in {VesselStatus.WRECKED, VesselStatus.GHOST}:
+            raise ConflictError(f"{vessel.name} is lost and cannot fight.")
+        if held(vessel.id):
+            raise ConflictError(f"{vessel.name} is held against the world.")
+        sides.append((vessel, row))
+    if not can_meet(sides[0][1], sides[1][1]):
+        raise ConflictError(f"{sides[0][0].name} and {sides[1][0].name} move in different domains and cannot meet.")
+    return await sea_fight(ctx, sides[0], sides[1], None, SeaTally())
 
 
 async def take_named_captive(ctx: TickContext, captor_id: int, mortal_id: int, war_id: int | None = None) -> CaptiveRow:

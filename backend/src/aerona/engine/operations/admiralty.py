@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SchemeRow
@@ -13,7 +12,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis
-from aerona.domain.enums.polity import ClauseKind, OfficeKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, OfficeKind, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome, StepState
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.intrigue.schemes import begin_scheme
@@ -21,7 +22,6 @@ from aerona.engine.military.orders import create_vessel
 from aerona.engine.military.shipyard import Commission
 from aerona.engine.military.vessels import best_hull
 from aerona.engine.mind.book import skill_level, values_for
-from aerona.engine.notes import note
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.limits import cap_of, fleet_of, owners_of, tonnage_of, tonnage_under
 from aerona.engine.operations.theatres import folk_of
@@ -31,6 +31,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.services.war import current_war
 from aerona.language.generator import NameKind
@@ -107,18 +108,25 @@ async def commission_ships(ctx: TickContext, polity: EntityRow, row: AdmiraltyRo
     if yard is None or held(yard.id) or count <= 0:
         return
     knowledge = await KnowledgeMap.load(ctx.session)
+    frame = best_hull(knowledge, yard.id, 0)
     namer = Namer(ctx.session, ctx.rules)
     laid = 0
     for index in range(count):
         if not await take_coin(ctx.session, ctx.rules, polity, ctx.rules.admiralty.ship_cost):
             break
         name = await namer.from_speaker(polity.id, seed_of(polity.id, ctx.epoch, "ship", index), NameKind.GENERAL) or f"{polity.name} {ctx.epoch}-{index + 1}"
-        await create_vessel(ctx, yard.id, name, Commission(frame=best_hull(knowledge, yard.id, 0)))
+        await create_vessel(ctx, yard.id, name, Commission(frame=frame))
         laid += 1
     tally.commissioned += laid
     if laid:
         keep(row, "commissioned", row.commissioned + laid)
-        await note(ctx, f"The admiralty of {polity.name} laid down {several(laid, 'new ship', 'new ships')}.", key="admiralty.commissioned", ids=[polity.id])
+        await record(
+            ctx,
+            "admiralty.commissioned",
+            roles={IncidentRole.ACTOR: polity.id},
+            facts={"laid": laid, "cost": laid * ctx.rules.admiralty.ship_cost, "frame": frame, "yard": yard.id},
+            place=yard.id,
+        )
 
 
 async def room_for(ctx: TickContext, polity: EntityRow, fleet: list[VesselProfileRow]) -> int:
@@ -175,11 +183,22 @@ async def expose(ctx: TickContext, polity: EntityRow, row: AdmiraltyRow, clauses
         return
     clause = clauses[0]
     profile = await ctx.session.get(TreatyProfileRow, clause.treaty_entity_id)
+    hidden = row.concealed
     keep(row, "concealed", 0)
     tally.discovered += 1
     if profile is not None:
-        await breach(ctx, profile, polity.id, clause=clause, reason="it built ships in secret beyond the tonnage it swore to")
-    await note(ctx, f"The hidden ships of {polity.name} were found out; it had built past its fleet limit.", key="admiralty.fleet_exposed", ids=[polity.id])
+        await breach(ctx, profile, polity.id, clause=clause, reason=TreatyBreach.SHIPS_BUILT_IN_SECRET)
+    await record(
+        ctx,
+        "admiralty.fleet_exposed",
+        roles={IncidentRole.ACTOR: polity.id},
+        facts={"hidden": hidden, "treaty": clause.treaty_entity_id},
+        steps=(
+            StepDraft(
+                StepAction.REVEAL, target=polity.id, amount=hidden, unit=FactUnit.TONS, outcome=StepOutcome.SUCCESS, states=((polity.id, StepState.REVEALED),)
+            ),
+        ),
+    )
 
 
 async def limited_pair(ctx: TickContext, first: int, second: int) -> bool:

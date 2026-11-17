@@ -11,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.dominion import BeliefStance, CreatureDeed, CreatureLesson
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.dominion.creatures import raise_creature, teach
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 HOMES = frozenset({EntityType.PLACE, EntityType.REGION})
@@ -55,8 +55,12 @@ async def raise_divine_creature(call: SonCall, args: RaiseCreatureInput) -> str:
     row = await raise_creature(call.tick, call.son.id, name=args.name, description=args.description, home_id=home.id)
     call.spend_essence(cost)
     call.target(row.creature_entity_id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.RAISE_CREATURE, entity_ids=[row.creature_entity_id, home.id], son=call.son.name, name=args.name, home=home.name
+    await call.record(
+        "tools.son.raise_creature",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: home.id, IncidentRole.SUBJECT: row.creature_entity_id},
+        facts={"name": str(args.name)},
+        place=home.id,
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.CREATURE_RAISED, name=args.name, id=row.creature_entity_id)
 
@@ -83,7 +87,12 @@ async def release_creature(call: SonCall, args: ReleaseCreatureInput) -> str:
     await call.session.delete(row)
     await call.session.flush()
     call.target(args.creature_id)
-    await call.chronicle(ChronicleKind.WORLD, lines.RELEASE_CREATURE, entity_ids=[args.creature_id], son=call.son.name, name=name, reason=args.reason)
+    await call.record(
+        "tools.son.release_creature",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: args.creature_id},
+        facts={"name": str(name), "reason": str(args.reason)},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.CREATURE_RELEASED, name=name)
 
 
@@ -96,7 +105,9 @@ async def shape_image(call: SonCall, args: ShapeImageInput) -> str:
         fail(SonResult.IMAGE_REFUSED, why="your stance toward your image is held by a higher will")
     row.stance = args.stance
     await call.session.flush()
-    await call.chronicle(ChronicleKind.WORLD, lines.SHAPE_IMAGE, entity_ids=[], son=call.son.name, stance=args.stance.value, reason=args.reason)
+    await call.record(
+        "tools.son.shape_image", roles={IncidentRole.ACTOR: call.son.id}, facts={"stance": args.stance, "reason": str(args.reason)}, kind=ChronicleKind.WORLD
+    )
     return result(SonResult.IMAGE_SHAPED, stance=args.stance.value)
 
 

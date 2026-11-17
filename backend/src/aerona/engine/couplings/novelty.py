@@ -11,11 +11,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import record
 
 
 async def novelty_of(session: AsyncSession, holder_id: int | None) -> int:
@@ -72,6 +73,6 @@ async def novelty(ctx: TickContext) -> None:
             if before < table.revival_floor <= row.novelty and "revivals" not in row.locked:
                 row.revivals += 1
                 ctx.count("fashion_revivals")
-                await note(ctx, f"{entity.name} came back into fashion.", key="fashion.revival", ids=[entity.id])
+                await record(ctx, "fashion.revival", roles={IncidentRole.SUBJECT: entity.id}, facts={"novelty": row.novelty, "revivals": row.revivals})
         row.updated_epoch = ctx.epoch
     await ctx.session.flush()

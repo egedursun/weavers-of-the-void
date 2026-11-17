@@ -45,6 +45,7 @@ import { PowersSection } from '@/features/powers/PowersSection'
 import { SourcesSection } from '@/features/powers/SourcesSection'
 import { PrehistorySection } from '@/features/prehistory/PrehistorySection'
 import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
+import { HistorySection } from '@/features/records/HistorySection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
 import { SacredSection } from '@/features/sacred/SacredSection'
 import { TalesSection } from '@/features/tales/TalesSection'
@@ -107,6 +108,7 @@ export function ThingSections({
         <BondsSection nodeId={nodeId} />
         <RenownSection nodeId={nodeId} />
         <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+        <HistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <CouplingsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
         <WaysOfLifeSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
@@ -159,6 +161,7 @@ export function ThingSections({
       <AffairsSection nodeId={nodeId} />
       <GatheringsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <HistorySection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <DominionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <ArcanaSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -8,8 +9,8 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import PolityLoyaltyRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import GRIEVANCE_PARTS, LoyaltyPart
 from aerona.engine.belonging.effects import identity_loyalty, realm_fault
@@ -18,12 +19,12 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Values, values_for
 from aerona.engine.mind.space import value_distance
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm
 from aerona.engine.polity.trials import injustices
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import relation
 from aerona.rules.registry import Rules
 
@@ -131,12 +132,13 @@ async def member_loyalty(ctx: TickContext, realm: Realm, member: EntityRow, won:
         row.loyalty = loyalty_of(ctx.rules, row.value_distance, row.grievances, row.benefits, row.satisfaction)
     row.epoch = ctx.epoch
     if row.loyalty < ctx.rules.realm_loyalty.wavering_loyalty <= before:
-        await note(
+        await record(
             ctx,
-            f"{member.name} wavers in its loyalty to {realm.entity.name}.",
-            key="loyalty.wavering",
-            ids=[member.id, realm.entity.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "loyalty.wavering",
+            roles={IncidentRole.SUBJECT: member.id, IncidentRole.AUTHORITY: realm.entity.id},
+            facts={"loyalty": row.loyalty, "before": before, "grievances": row.grievances, "benefits": row.benefits},
+            terms=[Term(f"loyalty.{part.value}", value) for part, value in parts.items()],
+            place=member.id,
         )
     return row
 

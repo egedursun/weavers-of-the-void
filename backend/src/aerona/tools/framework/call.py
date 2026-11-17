@@ -1,13 +1,13 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.god_lines import Line
 from aerona.catalog.stats import max_essence, max_hp
 from aerona.core.random import SeededRandom
+from aerona.db.record_context import Term
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.entities import EntityRow
@@ -15,11 +15,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import has_unlocked_power
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.agent import ActionsSpentContext, PerEpochLimitContext, StatusLineContext
 from aerona.prompts.tools.results import CommonResult, result
@@ -150,29 +152,41 @@ class ToolCall:
         if await self.count(counter) >= cap:
             raise RejectionError(result(CommonResult.LIMIT_REACHED, message=result(template, **values), limit=self.limit_text(rule_path, cap)))
 
-    async def chronicle(
+    async def record(
         self,
-        category: ChronicleKind,
-        line: Line,
+        key: str,
         /,
         *,
-        entity_ids: Sequence[int] = (),
+        roles: Mapping[IncidentRole, RoleValue] | None = None,
+        facts: Mapping[str, FactInput] | None = None,
+        place: int | None = None,
+        origin: int | None = None,
+        destination: int | None = None,
         world_id: int | None = None,
         feed: FeedCategory | None = None,
+        kind: ChronicleKind | None = None,
         about: int | None = None,
-        **fields: object,
+        cause: int | None = None,
+        steps: Sequence[StepDraft] = (),
+        terms: Sequence[Term] | None = None,
     ) -> str:
-        text = line.render(**fields)
-        await self.tick.chronicle(
-            category,
-            text,
-            template_key=line.key,
-            entity_ids=[entity_id for entity_id in entity_ids if entity_id],
+        written = await record(
+            self.tick,
+            key,
+            roles=roles,
+            facts=facts,
+            steps=steps,
+            terms=terms,
+            place=place,
+            origin=origin,
+            destination=destination,
             son_id=about if about is not None else self.chronicle_son_id,
             world_id=world_id if world_id is not None else self.world_id,
-            feed_category=feed,
+            feed=feed,
+            kind=kind,
+            cause=cause,
         )
-        return text
+        return written.text
 
     def remember_creation(self, entity_id: int) -> None:
         self.turn.remember_creation(entity_id)

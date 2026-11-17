@@ -47,13 +47,14 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import ClimateTurn
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos import dimensions as planes
 from aerona.engine.cosmos import galaxies as heavens
 from aerona.engine.cosmos.beings import banish_being, bind_being, create_being
-from aerona.engine.cosmos.climate import ClimateTurn, turn_region
+from aerona.engine.cosmos.climate import turn_region
 from aerona.engine.cosmos.encounters import JourneyCounts
 from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, settle_star
 from aerona.engine.cosmos.phenomena import contain, form_phenomenon
@@ -373,8 +374,8 @@ async def edit_rift(ctx: TickContext, rift_id: int, values: Values, release: lis
     return row
 
 
-async def close_rift(ctx: TickContext, rift_id: int, by: str) -> RiftRow:
-    return await seal_rift(ctx, rift_id, by)
+async def close_rift(ctx: TickContext, rift_id: int, by_id: int | None) -> RiftRow:
+    return await seal_rift(ctx, rift_id, by_id)
 
 
 async def remove_rift(ctx: TickContext, rift_id: int) -> None:
@@ -406,8 +407,8 @@ async def bind(ctx: TickContext, entity_id: int, binder_id: int, by: str) -> Cos
     return await bind_being(ctx, entity_id, binder_id, by)
 
 
-async def banish(ctx: TickContext, entity_id: int, by: str) -> CosmicBeingProfileRow:
-    return await banish_being(ctx, entity_id, by)
+async def banish(ctx: TickContext, entity_id: int, by: str, by_id: int | None = None) -> CosmicBeingProfileRow:
+    return await banish_being(ctx, entity_id, by, by_id)
 
 
 async def new_phenomenon(ctx: TickContext, kind: PhenomenonKind, region_id: int, intensity: int, cause: PhenomenonCause) -> EntityRow:
@@ -445,8 +446,8 @@ async def set_footprint(ctx: TickContext, entity_id: int, region_id: int, intens
     return row
 
 
-async def ward_phenomenon(ctx: TickContext, entity_id: int, amount: int, by: str) -> PhenomenonProfileRow:
-    return await contain(ctx, entity_id, amount, by)
+async def ward_phenomenon(ctx: TickContext, entity_id: int, amount: int, by_id: int) -> PhenomenonProfileRow:
+    return await contain(ctx, entity_id, amount, by_id)
 
 
 async def edit_star_life(ctx: TickContext, star_id: int, values: Values, release: list[str]) -> StarRow:
@@ -555,8 +556,8 @@ async def set_variant(ctx: TickContext, variant: ApocalypseVariant | None) -> Co
     return cosmos
 
 
-async def turn_climate(ctx: TickContext, region_id: int, turn: ClimateTurn, by: str) -> None:
-    await turn_region(ctx, region_id, turn, by)
+async def turn_climate(ctx: TickContext, region_id: int, turn: ClimateTurn, by_id: int) -> None:
+    await turn_region(ctx, region_id, turn, by_id)
 
 
 async def bind_law(ctx: TickContext, dimension_id: int, law_id: int) -> NaturalLawProfileRow:

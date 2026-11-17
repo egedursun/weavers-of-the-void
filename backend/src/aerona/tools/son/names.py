@@ -8,6 +8,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.intrigue.names import teach_name
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -15,7 +16,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 
@@ -38,8 +38,11 @@ async def reveal_true_name(call: SonCall, args: RevealTrueNameInput) -> str:
         fail(SonResult.TRUE_NAME_KNOWN, name=learner.name, bearer=bearer.name)
     call.spend_essence(cost)
     call.target(learner.id)
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.REVEAL_TRUE_NAME, entity_ids=[learner.id], son=call.son.name, learner=learner.name, bearer=bearer.name, reason=args.reason
+    await call.record(
+        "tools.son.reveal_true_name",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.LEARNER: learner.id, IncidentRole.TARGET: bearer.id},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.TRUE_NAME_REVEALED, name=learner.name, bearer=bearer.name)
 

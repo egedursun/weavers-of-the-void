@@ -12,14 +12,15 @@ from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import SIZE_ORDER, SizeClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.traditions import cost_for
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon, close, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 
 GRAND = SIZE_ORDER.index(SizeClass.LARGE)
 
@@ -90,12 +91,10 @@ async def hunt_gods(ctx: TickContext) -> int:
                 continue
             profile.sacred_to_node_id = son.id
             await EntityRepository(ctx.session).add_trait(profile.species_entity_id, CreatureTrait.SACRED_ANIMAL)
-            species = await ctx.session.get(EntityRow, profile.species_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"{son.name} of the Hunt was seen wearing the head of the {species.name if species else 'beast'}; its kind is holy to the god.",
-                key="ecology.animal_god",
-                ids=[profile.species_entity_id],
+                "ecology.animal_god",
+                roles={IncidentRole.PATRON: son.id, IncidentRole.SUBJECT: profile.species_entity_id, IncidentRole.MEMBER: keeper},
                 son_id=son.id,
             )
             linked += 1

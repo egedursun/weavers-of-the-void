@@ -13,15 +13,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeRouteStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import SizeTier
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.lore.research_depth import add_progress
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 
 PUT_OUT: MappingProxyType[CommodityKind, CommodityKind] = MappingProxyType(
     {
@@ -96,7 +97,13 @@ async def put_out(ctx: TickContext, tally: PuttingOutTally) -> None:
             )
         )
         tally.founded += 1
-        await note(ctx, f"{house.name} put work out to the households of {village.name}.", key="putting_out.founded", ids=[house.id, village.id])
+        await record(
+            ctx,
+            "putting_out.founded",
+            roles={IncidentRole.OWNER: house.id, IncidentRole.PLACE: village.id},
+            facts={"raw": raw, "product": PUT_OUT[raw], "volume": table.volume},
+            place=village.id,
+        )
     await ctx.session.flush()
 
 
@@ -148,7 +155,13 @@ async def buy_in(ctx: TickContext, tally: PuttingOutTally) -> None:
             ChainHoldingRow(holder_entity_id=house.id, town_entity_id=partner, product=product, share_pct=table.chain_share, since_epoch=ctx.epoch, locked=[])
         )
         tally.bought += 1
-        await note(ctx, f"{house.name} bought into the making of a good of another town.", key="chains.bought", ids=[house.id, partner])
+        await record(
+            ctx,
+            "chains.bought",
+            roles={IncidentRole.BUYER: house.id, IncidentRole.PLACE: partner},
+            facts={"product": product, "share": table.chain_share},
+            place=partner,
+        )
     await ctx.session.flush()
 
 

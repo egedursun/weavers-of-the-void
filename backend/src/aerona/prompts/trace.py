@@ -70,6 +70,8 @@ SPEC_PROMPTS: dict[str, tuple[PromptId, ...]] = {
     "context.powers": (P.POWERS,),
     "context.world_summary": (P.WORLD_SUMMARY, P.LOCATION_TREE, P.LANGUAGE_LINES, P.GEOGRAPHY_LINES),
     "context.son_memory": (P.SON_MEMORY,),
+    "context.event_account": (P.EVENT_ACCOUNT,),
+    "context.event_records": (P.EVENT_RECORDS,),
     "context.sky_calendar": (P.SKY_CALENDAR,),
     "context.age_events": (P.AGE_EVENTS, P.AGE_EVENTS_BY_WORLD),
     "context.prescreen": (P.FATE_PRESCREEN_WARNINGS, P.FATE_CREATION_ENTRY),

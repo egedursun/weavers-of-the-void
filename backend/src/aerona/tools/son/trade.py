@@ -2,7 +2,6 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
-from aerona.catalog.god_lines import Line
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.economy import TradeRouteProfileRow
@@ -11,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.economy.control import open_route
 from aerona.engine.economy.route_control import found_by_hand
 from aerona.engine.economy.routes import load_routes
@@ -21,9 +21,6 @@ from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec
 from aerona.tools.framework.validation import fail, require_canon, require_type
 from aerona.tools.son.support import ensure_in_reach, require_essence
-
-ROUTE_OPENED = Line("tools.son.trade_route_opened", "{son} laid {route} between {first} and {second}: {reason}")
-ROUTE_CLOSED = Line("tools.son.trade_route_closed", "{son} closed {route}; no goods pass between {first} and {second}: {reason}")
 
 
 class OpenTradeRouteInput(ToolInput):
@@ -68,15 +65,11 @@ async def open_trade_route(call: SonCall, args: OpenTradeRouteInput) -> str:
         entity.creator_son_id = call.son.id
     call.spend_essence(table.open_cost)
     call.target(entity.id)
-    await call.chronicle(
-        ChronicleKind.TRADE,
-        ROUTE_OPENED,
-        entity_ids=[entity.id, first.id, second.id],
-        son=call.son.name,
-        route=entity.name,
-        first=first.name,
-        second=second.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.trade_route_opened",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: entity.id, IncidentRole.ORIGIN: first.id, IncidentRole.DESTINATION: second.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.TRADE,
     )
     return result(template, id=entity.id, name=entity.name, mode=mode.value)
 
@@ -96,15 +89,11 @@ async def close_trade_route(call: SonCall, args: CloseTradeRouteInput) -> str:
     call.spend_essence(table.close_cost)
     call.target(entity.id)
     first, second = await call.session.get_one(type(entity), profile.first_market_id), await call.session.get_one(type(entity), profile.second_market_id)
-    await call.chronicle(
-        ChronicleKind.TRADE,
-        ROUTE_CLOSED,
-        entity_ids=[entity.id, first.id, second.id],
-        son=call.son.name,
-        route=entity.name,
-        first=first.name,
-        second=second.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.trade_route_closed",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: entity.id, IncidentRole.ORIGIN: first.id, IncidentRole.DESTINATION: second.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.TRADE,
     )
     return result(SonResult.TRADE_ROUTE_CLOSED, id=entity.id, name=entity.name)
 

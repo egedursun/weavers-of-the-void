@@ -8,6 +8,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorPassion
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.queries import creator_row
 from aerona.engine.gods.reputation import (
     CosmosReputation,
@@ -20,6 +21,7 @@ from aerona.engine.gods.reputation import (
     push_reputation,
 )
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from aerona.services.gods.context import record_action, require, require_creator
 
@@ -48,8 +50,7 @@ async def set_passions(session: AsyncSession, rules: Rules, passions: list[Creat
     creator.passions = cleaned
     creator.passions_automatic = False
     names = god_lines.PASSION_JOIN.join(CREATOR_PASSIONS[passion].label.lower() for passion in cleaned)
-    line = god_lines.PASSIONS_REVEALED
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, passions=names), template_key=line.key)
+    await record(ctx, "gods.reputation.passions", roles={IncidentRole.ACTOR: creator.id}, facts={"passions": str(names)}, kind=ChronicleKind.CREATOR_HAND)
     await record_action(ctx, ActionKind.SET_PASSIONS, creator.id)
     return PassionsView(tuple(cleaned), False)
 

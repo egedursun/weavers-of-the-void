@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.prehistory import WORLD_PREHISTORY
 from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -21,6 +20,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world import WorldType
@@ -31,11 +31,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import disaster_pct, mechanics_of
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.economy.stocks import goods_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 VIEW_TABLES = frozenset({WorldViewRow.__tablename__, WorldRow.__tablename__})
@@ -300,7 +300,7 @@ async def keep_needs(ctx: TickContext, tally: ViewTally) -> None:
             continue
         tally.short += 1
         await suffer(ctx, town, await ctx.session.get(SettlementProfileRow, town.id))
-        await note(ctx, f"{town.name} ran short of the {spoken(view.need)} its world binds it to.", key="world_views.short", ids=[town.id])
+        await record(ctx, "world_views.short", roles={IncidentRole.SUBJECT: town.id}, facts={"need": view.need}, place=town.id)
 
 
 async def keep_views(ctx: TickContext, tally: ViewTally) -> None:

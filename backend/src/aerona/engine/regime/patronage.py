@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
@@ -16,6 +16,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import ActKind, TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, OfficePower
 from aerona.domain.enums.regime import ClientRole, PowerStance
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -30,7 +31,6 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mortal.kin import children_of, siblings_of, spouses_of
 from aerona.engine.mortal.kinship import marry
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import LawBook
@@ -39,6 +39,8 @@ from aerona.engine.polity.revenue import mean_justice
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.regime.book import HALF, clients_of
 
 SEATS_KEPT = frozenset({OfficeKind.RULER, OfficeKind.HEIR_DESIGNATE, OfficeKind.REGENT})
@@ -175,11 +177,12 @@ async def sell_seat(
     tally.sold += 1
     if realm.ruler_id is not None:
         await judged(ctx, realm.ruler_id, buyer.id, ActKind.SELLING_OFFICES, note=f"sold the seat of {spoken(seat.kind)}")
-    await note(
+    await record(
         ctx,
-        f"{buyer.name} bought the seat of {spoken(seat.kind)} in {realm.entity.name} for {price}.",
-        key="venality.sold",
-        ids=[realm.entity.id, buyer.id],
+        "venality.sold",
+        roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: realm.entity.id, IncidentRole.AUTHORITY: realm.ruler_id},
+        facts={"office": seat.kind, "price": price},
+        place=realm.profile.capital_entity_id,
     )
     await ctx.session.flush()
     return venal
@@ -236,11 +239,12 @@ async def make_sinecure(
         ctx.session.add(venal)
     venal.sinecure = True
     tally.sinecures += 1
-    await note(
+    await record(
         ctx,
-        f"{holder.name} was given the seat of {spoken(seat.kind)} in {realm.entity.name}, with its income and none of its duties.",
-        key="venality.sinecure",
-        ids=[realm.entity.id, holder.id],
+        "venality.sinecure",
+        roles={IncidentRole.RECEIVER: holder.id, IncidentRole.GIVER: realm.entity.id, IncidentRole.AUTHORITY: realm.ruler_id},
+        facts={"office": seat.kind, "reward": ctx.rules.venality.sinecure_reward if member is not None else 0},
+        place=realm.profile.capital_entity_id,
     )
     await ctx.session.flush()
     return venal
@@ -316,12 +320,14 @@ async def act_on_base(ctx: TickContext, realm: Realm, mortal: EntityRow, row: Po
         spend(ctx, realm, -table.extortion, TreasuryEntry.GRANT, f"wrung from the treasury by {mortal.name}")
         await receive_coin(ctx.session, ctx.rules, mortal, table.extortion)
         tally.extorted += 1
-        await note(
-            ctx,
-            f"{mortal.name} wrung {table.extortion} from the treasury of {realm.entity.name}.",
-            key="power_bases.extorted",
-            ids=[realm.entity.id, mortal.id],
-        )
+        with explaining():
+            await record(
+                ctx,
+                "power_bases.extorted",
+                roles={IncidentRole.ACTOR: mortal.id, IncidentRole.VICTIM: realm.entity.id},
+                facts={"amount": ctx.rules.power_bases.extortion, "threat": row.threat},
+                place=mortal.location_id,
+            )
     elif row.stance is PowerStance.DEFIANT:
         shift(realm.profile, "stability", -table.defiance_stability)
         tally.defiant += 1
@@ -362,12 +368,14 @@ async def bind_by_marriage(ctx: TickContext, realm: Realm, base: PowerBaseRow, s
                 shift(base, "threat", -ctx.rules.power_bases.marriage_cut)
                 if "stance" not in base.locked:
                     base.stance = PowerStance.LOYAL
-                await note(
-                    ctx,
-                    f"{realm.entity.name} bound {subject.name} to the throne by the marriage of {ours.name} and {theirs.name}.",
-                    key="power_bases.married",
-                    ids=[realm.entity.id, subject.id],
-                )
+                with explaining():
+                    await record(
+                        ctx,
+                        "power_bases.married",
+                        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.TARGET: subject.id, IncidentRole.SPOUSE: [ours.id, theirs.id]},
+                        facts={"threat_cut": ctx.rules.power_bases.marriage_cut, "threat": base.threat},
+                        place=realm.profile.capital_entity_id,
+                    )
                 return True
     return False
 
@@ -382,31 +390,35 @@ async def split_command(ctx: TickContext, realm: Realm, subject: EntityRow) -> b
     for army in loose:
         army.commander_entity_id = None
     if loose:
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name} took {several(len(loose), 'host', 'hosts')} out of the hands of {subject.name}.",
-            key="power_bases.split",
-            ids=[realm.entity.id, subject.id],
+            "power_bases.split",
+            roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.TARGET: subject.id, IncidentRole.INSTRUMENT: [army.entity_id for army in loose]},
+            facts={"hosts": len(loose)},
+            place=realm.profile.capital_entity_id,
         )
     return bool(loose)
 
 
 async def purge_subject(ctx: TickContext, realm: Realm, subject: EntityRow) -> bool:
     purged = False
+    seats = 0
     for office in realm.offices:
         if office.holder_entity_id == subject.id and office.kind is not OfficeKind.RULER and "holder" not in office.locked:
             await appoint(ctx, realm, office, None, by_id=realm.ruler_id, reason="purged as an overmighty subject")
             purged = True
+            seats += 1
     member = await ctx.session.get(CoalitionMemberRow, (realm.entity.id, subject.id))
     if member is not None and not member.locked:
         await ctx.session.delete(member)
         purged = True
     if purged:
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name} stripped {subject.name} of every seat before the plot could ripen.",
-            key="power_bases.purged",
-            ids=[realm.entity.id, subject.id],
+            "power_bases.purged",
+            roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.VICTIM: subject.id},
+            facts={"seats": seats},
+            place=realm.profile.capital_entity_id,
         )
     return purged
 

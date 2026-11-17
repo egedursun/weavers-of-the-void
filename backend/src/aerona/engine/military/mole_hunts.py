@@ -2,27 +2,26 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.law_depth import HUNT_TEXT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_depth import MoleHuntOutcome
 from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind, TraitSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.military.spy_depth import compromise, defect
 from aerona.engine.mind.book import add_trait, skill_level, traits_of
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 from aerona.engine.services.war import held_captive, take_captive
 
@@ -58,21 +57,17 @@ async def moles_in(ctx: TickContext, polity_id: int) -> list[tuple[SpyAgentRow, 
     return [(agent, networks[agent.network_id]) for agent in agents if agent.mortal_entity_id in present and not held(agent.mortal_entity_id)]
 
 
-async def record(ctx: TickContext, polity_id: int, spymaster_id: int, suspect_id: int | None, outcome: MoleHuntOutcome, *, mole: bool) -> None:
+async def log_hunt(ctx: TickContext, polity_id: int, spymaster_id: int, suspect_id: int | None, outcome: MoleHuntOutcome, *, mole: bool) -> None:
     ctx.session.add(
         MoleHuntRow(polity_entity_id=polity_id, spymaster_entity_id=spymaster_id, suspect_entity_id=suspect_id, mole=mole, outcome=outcome, epoch=ctx.epoch)
     )
     realm, spymaster = await ctx.session.get(EntityRow, polity_id), await ctx.session.get(EntityRow, spymaster_id)
     suspect = await ctx.session.get(EntityRow, suspect_id) if suspect_id is not None else None
     if realm is not None and spymaster is not None:
-        whom = f": {suspect.name}" if suspect is not None else ""
-        await note(
-            ctx,
-            f"{spymaster.name}, spymaster of {realm.name}, hunted for moles and {HUNT_TEXT[outcome]}{whom}.",
-            key=f"espionage.mole_{outcome.value}",
-            ids=[spymaster.id, realm.id, *([suspect_id] if suspect_id is not None else [])],
-            kind=ChronicleKind.WAR,
-        )
+        roles = {IncidentRole.ACTOR: spymaster.id, IncidentRole.AUTHORITY: realm.id}
+        if suspect is not None:
+            roles[IncidentRole.ACCUSED] = suspect.id
+        await record(ctx, f"espionage.mole_{outcome.value}", roles=roles, facts={"outcome": outcome}, place=realm.id)
 
 
 async def catch_mole(ctx: TickContext, polity_id: int, spymaster_id: int, agent: SpyAgentRow, network: SpyNetworkRow) -> None:
@@ -82,7 +77,7 @@ async def catch_mole(ctx: TickContext, polity_id: int, spymaster_id: int, agent:
     realm = await ctx.session.get(EntityRow, polity_id)
     if mortal is not None and realm is not None and await held_captive(ctx.session, mortal.id) is None:
         await take_captive(ctx, realm, mortal, None, description="a mole caught at court", home_id=network.side_entity_id)
-    await record(ctx, polity_id, spymaster_id, agent.mortal_entity_id, MoleHuntOutcome.CAUGHT, mole=True)
+    await log_hunt(ctx, polity_id, spymaster_id, agent.mortal_entity_id, MoleHuntOutcome.CAUGHT, mole=True)
 
 
 async def officials(ctx: TickContext, polity_id: int) -> list[OfficeRow]:
@@ -113,7 +108,7 @@ async def purge(ctx: TickContext, polity_id: int, spymaster_id: int, office: Off
     for other in await officials(ctx, polity_id):
         if DILIGENCE not in (other.locked or []):
             other.diligence = clamp_int(other.diligence - ctx.rules.mole_hunts.purge_loyalty, 0, PERCENT)
-    await record(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.PURGED, mole=False)
+    await log_hunt(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.PURGED, mole=False)
     if ctx.rng(f"espionage.paranoia.{spymaster_id}.{ctx.epoch}").chance(ctx.rules.mole_hunts.paranoia_pct):
         await add_trait(ctx.session, spymaster_id, TraitKind.PARANOID, TraitSource.EXPERIENCE, ctx.epoch)
 
@@ -132,14 +127,14 @@ async def accuse_innocent(ctx: TickContext, polity_id: int, spymaster_id: int, t
     )
     trust = await relation(ctx.session, ruler, accused.id) if ruler is not None else None
     if trust is not None and trust.friendship >= ctx.rules.pardons.friend_at:
-        await record(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.CLEARED, mole=False)
+        await log_hunt(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.CLEARED, mole=False)
         tally.cleared += 1
         return
     rival = await rival_of(ctx, polity_id)
     if rival is not None and ctx.rng(f"espionage.flee.{accused.id}.{ctx.epoch}").chance(table.defect_pct):
         office.holder_entity_id = None
         await defect(ctx, accused, polity_id, rival)
-        await record(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.DEFECTED, mole=False)
+        await log_hunt(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.DEFECTED, mole=False)
         tally.defected += 1
         return
     await purge(ctx, polity_id, spymaster_id, office, accused)

@@ -12,6 +12,7 @@ from aerona.db.bond_index import drop_lookup
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
 from aerona.db.inline_sqlite import inline_engine
+from aerona.db.ledger_capture import install_change_capture
 from aerona.db.ordered_reads import install_ordered_reads
 from aerona.db.read_memo import KEEP_KEY, forget_all
 from aerona.db.read_only import install_read_only_guard, mark_read_only
@@ -28,6 +29,7 @@ class Database:
         install_flush_batching()
         install_ordered_reads()
         install_read_only_guard()
+        install_change_capture()
 
     @staticmethod
     def _configure_connection(connection: Any, _record: Any) -> None:

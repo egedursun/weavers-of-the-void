@@ -6,7 +6,9 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class WorldEngineRules:
-    chronicle_fold_threshold: int = rule(3, 2, 100, RuleGroup.CHRONICLE, "This many chronicle lines of the same template are folded into one line")
+    chronicle_fold_threshold: int = rule(
+        3, 2, 100, RuleGroup.CHRONICLE, "Lines of one kind in one epoch from which the feed shows them as one group, every line still reachable"
+    )
     raid_danger_divisor: int = rule(160, 10, 10000, RuleGroup.CREATURES, "Monster raid chance: danger / this number")
     raid_loss_divisor: int = rule(400, 10, 10000, RuleGroup.CREATURES, "Population lost in a raid: danger / this number")
     monster_top_pct: int = rule(80, 0, 100, RuleGroup.CREATURES, "Species counted as monsters: the world's top X% most dangerous")

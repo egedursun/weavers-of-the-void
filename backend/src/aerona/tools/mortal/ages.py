@@ -11,9 +11,9 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.ages import ArcRole, ArcTemplate
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cycles import LongPlanStatus
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.cycles.ecology import set_back
 from aerona.engine.primitives.queries import living_entity
@@ -26,7 +26,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class ForecastSeasonsInput(ToolInput):
@@ -52,7 +51,7 @@ async def forecast_seasons(call: MortalCall, args: ForecastSeasonsInput) -> str:
         fail(MortalResult.FORECAST_DECLINED, why="you belong to no people that would heed you")
     made = await control.read_winter(call.tick, call.me.world_id)
     call.target(folk)
-    await call.chronicle(ChronicleKind.KNOWLEDGE, lines.FORECAST_SEASONS, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.forecast_seasons", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.BENEFICIARY: folk}, facts={"peoples": made})
     return result(MortalResult.SEASONS_FORECAST, peoples=made)
 
 
@@ -68,7 +67,11 @@ async def sabotage_remaking(call: MortalCall, args: SabotageRemakingInput) -> st
         fail(MortalResult.SABOTAGE_DECLINED, why="a stronger hand holds it")
     await set_back(call.tick, plan, work)
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SABOTAGE_REMAKING, entity_ids=[call.me.id], me=call.me.name, plan=plan.name)
+    await call.record(
+        "tools.mortal.sabotage_remaking",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OPPONENT: plan.holder_node_id, IncidentRole.PLACE: plan.target_node_id},
+        facts={"plan": plan.name, "progress": plan.progress},
+    )
     return result(MortalResult.REMAKING_SABOTAGED, plan=plan.name, progress=plan.progress)
 
 
@@ -89,7 +92,11 @@ async def swear_vengeance(call: MortalCall, args: SwearVengeanceInput) -> str:
         fail(MortalResult.VENGEANCE_DECLINED, why="your vow of vengeance already stands")
     row = await control.begin_arc(call.tick, call.me.id, ArcTemplate.REVENGE, foe.id, ArcRole.FOE)
     call.target(foe.id)
-    await call.chronicle(ChronicleKind.FATE, lines.SWEAR_VENGEANCE, entity_ids=[call.me.id, foe.id], me=call.me.name, foe=foe.name)
+    await call.record(
+        "tools.mortal.swear_vengeance",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OPPONENT: foe.id},
+        facts={"stage": row.stage},
+    )
     return result(MortalResult.VENGEANCE_SWORN, foe=foe.name, stage=row.stage.value)
 
 

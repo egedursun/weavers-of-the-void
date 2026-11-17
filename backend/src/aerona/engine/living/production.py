@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from aerona.catalog.methods import METHODS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import PerennialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
@@ -15,12 +14,13 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.living import Fertility, LineTrait
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import NetworkCarrier
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.living.traits import eased, traits_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import FactInput, record
 from aerona.engine.services.community_relations import change_relation
 
 LIVING_METHODS = frozenset({MethodKind.CULTURED_CROPS, MethodKind.GROWN_TIMBER, MethodKind.FIBRE_FROM_LIFE, MethodKind.VAT_CULTURE, MethodKind.BIOREACTOR})
@@ -55,11 +55,12 @@ async def keep_living_works(ctx: TickContext) -> int:
         row.method, row.adopted_epoch = fallback, ctx.epoch
         lapsed += 1
         town = await ctx.session.get(EntityRow, row.community_node_id)
-        await note(
+        await record(
             ctx,
-            f"The living works of {town.name if town else 'a town'} sickened; {spoken(old)} gave way to the older way.",
-            key="living.works_lapsed",
-            ids=[row.community_node_id],
+            "living.works_lapsed",
+            roles={IncidentRole.SUBJECT: row.community_node_id},
+            facts={"old_method": old, "new_method": fallback},
+            place=town.id if town else None,
         )
     return lapsed
 
@@ -84,13 +85,8 @@ async def blight_monocultures(ctx: TickContext) -> int:
             if "condition" not in row.locked:
                 row.condition = clamp_percent(row.condition - harm)
         line = await ctx.session.get(LivingLineRow, line_id)
-        region = await ctx.session.get(EntityRow, region_id)
-        await note(
-            ctx,
-            f"A blight struck {line.name if line else 'a line'} across {region.name if region else 'a land'}, where nothing else was grown.",
-            key="living.blight",
-            ids=[region_id],
-        )
+        facts: dict[str, FactInput] = {"harm": harm, "plantings": len(plantings), **({"line": line.name} if line else {})}
+        await record(ctx, "living.blight", roles={IncidentRole.PLACE: region_id}, facts=facts, place=region_id)
         struck += 1
     return struck
 

@@ -44,7 +44,6 @@ class RefiningRules:
     ship_chance: int = rule(30, 0, 100, G, "A shipyard with timber and cloth launches a ship (% per epoch)")
     fleet_cap: int = rule(12, 0, 1000, G, "Most ships a community keeps afloat")
     weapon_batch_threshold: int = rule(20, 0, 100000, G, "Weapons in store at which the smiths of a warlike people forge a named batch")
-    shortage_note_cap: int = rule(4, 0, 100, G, "Most bottleneck notes written per epoch")
     target_index: int = rule(200, 0, 10000, G, "Supply index of a good its makers work towards before they stop")
     household_batches_pct: int = rule(30, 0, 100, G, "Share of the artisans' batches a community can run at home without a workshop (%)")
     upgrade_chance: int = rule(15, 0, 100, G, "A workshop that ran at full stretch is enlarged (% per epoch)")

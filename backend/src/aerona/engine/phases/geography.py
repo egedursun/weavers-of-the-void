@@ -5,25 +5,27 @@ from sqlalchemy import select
 from aerona.catalog.place_terrain import TERRAIN_NATURES
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.places import write_kind
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 from aerona.language.generator import NameKind
 
 
@@ -153,10 +155,21 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     if settlements and (move if move is not None else rng.chance(settings.move_chance)):
         moved = settlements[0]
         await EntityRepository(ctx.session).move(moved, place.id, ctx.epoch)
-    edge = f"; {moved.name} stands at its edge" if moved is not None else ""
-    text = f"{an(nature.subtype, capital=True)} of {region.name} entered the map: {place.name}{edge}."
-    await note(ctx, text, key="geography.place_seeded", ids=[place.id, region.id, *([moved.id] if moved is not None else [])])
-    return SeededPlace(place, moved, text)
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "geography.place_seeded",
+        roles={
+            IncidentRole.PRODUCT: place.id,
+            IncidentRole.PLACE: region.id,
+            IncidentRole.SUBJECT: moved.id if moved is not None else None,
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None and by is not None else None,
+        },
+        facts={"nature": nature.kind},
+        place=region.id,
+        world_id=region.world_id,
+    )
+    return SeededPlace(place, moved, written.text)
 
 
 @reads(
@@ -166,7 +179,6 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "settlement.population",
     "table.bonds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -183,7 +195,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",

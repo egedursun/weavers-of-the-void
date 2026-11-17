@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import OrderLaw, TribunalVerdict
@@ -23,10 +24,10 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.factions.order_laws import keep_law, outer_dealers
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_bounded, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.construction import Commission, begin
@@ -115,11 +116,8 @@ async def try_member(ctx: TickContext, order: EntityRow, law: OrderLawRow, accus
         membership.rank = FactionRank.NOVICE
     ctx.session.add(TribunalRow(faction_entity_id=order.id, accused_entity_id=accused_id, law=law.law, verdict=verdict, fine=fine, epoch=ctx.epoch))
     tally.trials += 1
-    await note(
-        ctx,
-        f"The tribunal of {order.name} judged {accused.name} for breaking its law and {VERDICT_WORDS[verdict]} them.",
-        key="order.tribunal",
-        ids=[order.id, accused.id],
+    await record(
+        ctx, "order.tribunal", roles={IncidentRole.SUBJECT: order.id, IncidentRole.ACCUSED: accused.id}, facts={"verdict_words": str(VERDICT_WORDS[verdict])}
     )
 
 
@@ -162,7 +160,7 @@ async def contest_bans(ctx: TickContext, order: EntityRow, profile: FactionProfi
     profile.outlawed = True
     await change_relation(ctx, realm, order.id, -table.feud_loss, MemoryKind.BETRAYED_ME, note="defied the ban on magic")
     tally.defiant += 1
-    await note(ctx, f"{order.name} defied the ban on magic and was outlawed by the realm.", key="order.outlawed", ids=[order.id, realm])
+    await record(ctx, "order.outlawed", roles={IncidentRole.SUBJECT: [order.id, realm]})
 
 
 async def rival_orders(ctx: TickContext, found: list[tuple[EntityRow, FactionProfileRow]], tally: OrderTally) -> None:
@@ -180,7 +178,9 @@ async def rival_orders(ctx: TickContext, found: list[tuple[EntityRow, FactionPro
                 loser.reputation = clamp_int(loser.reputation - table.feud_loss, 0, PERCENT)
             await change_relation(ctx, first.id, second.id, -table.feud_loss, MemoryKind.BETRAYED_ME, note="a war among mages")
             tally.feuds += 1
-            await note(ctx, f"{first.name} and {second.name} turned on each other.", key="order.feud", ids=[first.id, second.id, home])
+            await record(
+                ctx, "order.feud", roles={IncidentRole.SUBJECT: [first.id, second.id, home]}, facts={"first": str(first.name), "second": str(second.name)}
+            )
 
 
 async def keep_orders(ctx: TickContext, tally: OrderTally) -> None:

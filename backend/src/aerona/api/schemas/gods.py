@@ -51,6 +51,7 @@ class CreatorDetail(ApiModel):
     cult: list[EntitySummary]
     folk_views: list[FolkView]
     traces: list[ChronicleLineRecord]
+    traces_total: int
     images: list[ImageRecord]
 
 
@@ -100,6 +101,7 @@ class ForeignGodDetail(ApiModel):
     bonds: list[BondView]
     bond_total: int
     chronicle: list[ChronicleLineRecord]
+    chronicle_total: int
     sons_here: list[NodeRef]
     folk_views: list[FolkView]
     images: list[ImageRecord]
@@ -113,6 +115,7 @@ class SonDetail(ApiModel):
     folk_views: list[FolkView]
     creations: list[EntitySummary]
     chronicle: list[ChronicleLineRecord]
+    chronicle_total: int
     messages: list["MessageView"]
     siblings: list["SiblingView"]
     bonds: list[BondView]

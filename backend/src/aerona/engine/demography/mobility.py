@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleCultureRow
 from aerona.db.tables.economy import LoanRow
@@ -9,12 +9,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
@@ -29,12 +30,12 @@ from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.law.prisons import imprison
 from aerona.engine.military.units import resize
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
 from aerona.rules.registry import Rules
@@ -62,25 +63,25 @@ async def settle_captives(ctx: TickContext, community: EntityRow, rows: dict[Coh
         if condition is not CohortCondition.CAPTIVE or rows[key].count <= 0:
             continue
         count = rows[key].count
-        enslaved = round_half_up(count * table.enslave_captives_pct / PERCENT) if lawful else 0
+        freed_captives = round_half_up(count * table.enslave_captives_pct / PERCENT) if lawful else 0
         rows[key].count = 0
-        if enslaved:
-            row_for(ctx.session, rows, community.id, (band, sex, BOUND, CohortCondition.ENSLAVED), ctx.epoch).count += enslaved
-        if count - enslaved:
-            row_for(ctx.session, rows, community.id, (band, sex, SocialClass.FARMER, CohortCondition.NONE), ctx.epoch).count += count - enslaved
-        bound += enslaved
+        if freed_captives:
+            row_for(ctx.session, rows, community.id, (band, sex, BOUND, CohortCondition.ENSLAVED), ctx.epoch).count += freed_captives
+        if count - freed_captives:
+            row_for(ctx.session, rows, community.id, (band, sex, SocialClass.FARMER, CohortCondition.NONE), ctx.epoch).count += count - freed_captives
+        bound += freed_captives
     return bound
 
 
-async def manumit(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> int:
+async def manumit(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], lawful: bool) -> tuple[int, ManumissionPath | None]:
     table = ctx.rules.mobility
     if lawful and not ctx.rng(f"manumission.{community.id}").chance(table.manumission_chance):
-        return 0
+        return 0, None
     share = table.manumission_pct / PERCENT if lawful else 1.0
     path = await manumission_path(ctx, community, lawful, await at_war(ctx, {community.id}))
     loosed = await move_people(ctx, community, rows, source=BOUND, target=freed_class(path), share=share)
     await record_manumission(ctx, community, loosed, path)
-    return loosed
+    return loosed, path
 
 
 async def slavery_costs(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], culture: PeopleCultureRow | None) -> None:
@@ -119,12 +120,12 @@ async def desertion(ctx: TickContext) -> int:
         with flowing(FlowCategory.DEATH):
             await resize(ctx.session, ctx.rules, army, size - leaving)
         deserted += leaving
-        await note(
+        await record_incident(
             ctx,
-            f"{several(leaving, 'soldier', 'soldiers')} of {army.name} slipped away home; the warriors of {owner.name} had nothing left to fight for.",
-            key="society.desertion",
-            ids=[army.id, owner.id],
-            kind=ChronicleKind.WORLD,
+            "society.desertion",
+            roles={IncidentRole.SUBJECT: army.id, IncidentRole.OWNER: owner.id},
+            facts={"deserters": leaving, "returned": returned},
+            terms=[Term("rules.mobility.desertion_pct", table.desertion_pct)],
         )
     return deserted
 
@@ -239,9 +240,9 @@ async def class_mobility(ctx: TickContext, community: EntityRow) -> dict[str, in
     lawful = culture.slavery_lawful if culture is not None else False
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     bound = await settle_captives(ctx, community, rows, lawful)
-    loosed = await manumit(ctx, community, rows, lawful)
+    loosed, path = await manumit(ctx, community, rows, lawful)
     await enslaved(ctx, community, bound)
-    await freed(ctx, community, loosed)
+    await freed(ctx, community, loosed, path=path)
     counts = {
         "enslaved": bound,
         "freed": loosed,

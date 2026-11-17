@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -16,10 +15,11 @@ from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.collective import StoryletId
 from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.mind import DreamReading
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import ForesightStatus
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 
 CONFRONTING = frozenset({ArcTemplate.REVENGE, ArcTemplate.RIVALRY})
 OPPOSED = (ArcRole.FOE, ArcRole.RIVAL)
@@ -237,8 +237,16 @@ async def pay_setups(ctx: TickContext, tally: DramaTally) -> None:
         row.paid_epoch = ctx.epoch
         setattr(tally, found[0].value, getattr(tally, found[0].value) + 1)
         if found[0] is not PayoffKind.LAPSED:
-            told = f"What was set up in epoch {row.opened_epoch} ({spoken(row.kind)}) was paid off: {found[1]}."
-            await note(ctx, told, key="arcs.payoff", ids=[row.subject_node_id] if row.subject_node_id is not None else [])
+            await record_incident(
+                ctx,
+                "arcs.payoff",
+                roles={IncidentRole.SUBJECT: row.subject_node_id},
+                facts={
+                    "setup": row.kind,
+                    "payoff": found[0],
+                    "opened_epoch": row.opened_epoch,
+                },
+            )
 
 
 async def keep_drama(ctx: TickContext, moved: list[ArcRow], tally: DramaTally) -> None:

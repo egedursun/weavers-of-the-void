@@ -12,6 +12,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.cosmos.resources import DepositSpec, create_cosmic_deposit, travel_resource
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -21,7 +22,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, no_cost
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 ABUNDANCE = "abundance"
@@ -81,7 +81,12 @@ async def harvest_resource(call: SonCall, args: HarvestInput) -> str:
     call.turn.remember_harvest(resource.id)
     call.target(resource.id)
     await call.bump(TurnCounter.HARVESTS)
-    await call.chronicle(ChronicleKind.RESOURCE, lines.HARVEST, entity_ids=[resource.id], son=son.name, gain=gained, resource=resource.name, abundance=left)
+    await call.record(
+        "tools.son.harvest",
+        roles={IncidentRole.SUBJECT: resource.id},
+        facts={"son": str(son.name), "gain": gained, "abundance": left},
+        kind=ChronicleKind.RESOURCE,
+    )
     return result(SonResult.HARVESTED, gain=gained, name=resource.name, abundance=left)
 
 
@@ -116,8 +121,12 @@ async def open_cosmic_bed(call: SonCall, args: CosmicBedInput) -> str:
     call.spend_essence(tools.open_deposit_cost)
     call.remember_creation(bed.id)
     call.target(bed.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.COSMIC_BED, entity_ids=[bed.id, region.id], son=call.son.name, bed=bed.name, region=region.name, reason=args.reason
+    await call.record(
+        "tools.son.cosmic_bed",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: [bed.id, region.id]},
+        facts={"reason": str(args.reason)},
+        place=bed.id,
+        kind=ChronicleKind.COSMIC,
     )
     return result(SonResult.BED_OPENED, id=bed.id, name=bed.name)
 

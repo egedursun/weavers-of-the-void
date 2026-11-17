@@ -19,13 +19,14 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.lifecycle_end import LifecycleCause, LifecycleKind, LifecycleState
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.states import GONE
 from aerona.engine.lore.research_depth import RESEARCHERS
 from aerona.engine.lore.theories import adhere
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record as record_incident
 
 S = LifecycleState
 C = LifecycleCause
@@ -165,9 +166,13 @@ async def move(ctx: TickContext, holder: EntityRow, row: LifecycleStateRow, stat
     row.state, row.cause, row.since_epoch, row.updated_epoch = state, cause, ctx.epoch, ctx.epoch
     if state is S.ACTIVE and before in GONE:
         row.idle_epochs = 0
-    told = state.value.replace("_", " ")
-    reason = cause.value.replace("_", " ")
-    await note(ctx, f"{holder.name} is now {told}: {reason}.", key=f"lifecycle.{state.value}", ids=[holder.id], world_id=holder.world_id)
+    await record_incident(
+        ctx,
+        f"lifecycle.{state.value}",
+        roles={IncidentRole.SUBJECT: holder.id},
+        facts={"state": state, "cause": cause, "before": before},
+        world_id=holder.world_id,
+    )
     return True
 
 

@@ -13,14 +13,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cuisine import CookingMethod
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kinds import GoodCategory, KindConcept, KindSpread, KindStance
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.cuisine.dishes import COOKED, cuisine_of
 from aerona.engine.economy.good_kinds import good_book
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import StepDraft, record
 
 CUISINE_WORD = "Cuisine"
 
@@ -97,7 +99,13 @@ async def found_cuisine(ctx: TickContext, people: EntityRow, tally: CuisineTally
     await ctx.session.flush()
     await hold_cuisine(ctx, people.id, row.id, KindSpread.INVENTED)
     tally.founded += 1
-    await note(ctx, f"The way the {people.name} eat came to be known as {row.name}.", key="cuisine.founded", ids=[people.id])
+    await record(
+        ctx,
+        "cuisine.founded",
+        roles={IncidentRole.MAKER: people.id},
+        facts={"cuisine": row.name, "method": row.signature_method, "dishes": len(dishes)},
+        steps=(StepDraft(StepAction.SHAPE, actor=people.id),),
+    )
     return row
 
 
@@ -142,7 +150,13 @@ async def fuse(ctx: TickContext, people: EntityRow, tally: CuisineTally) -> None
         await ctx.session.flush()
         await hold_cuisine(ctx, people.id, fused.id, KindSpread.CONTACT)
         tally.fused += 1
-        await note(ctx, f"The {people.name} came to eat in a way that joins {own.name} and {foreign.name}: {fused.name}.", key="cuisine.fused", ids=[people.id])
+        await record(
+            ctx,
+            "cuisine.fused",
+            roles={IncidentRole.MAKER: people.id, IncidentRole.ORIGIN: foreign.origin_node_id},
+            facts={"cuisine": fused.name, "own": own.name, "foreign": foreign.name},
+            steps=(StepDraft(StepAction.LEARN, actor=people.id, target=foreign.origin_node_id),),
+        )
 
 
 async def feast(ctx: TickContext, people: EntityRow, tally: CuisineTally) -> None:

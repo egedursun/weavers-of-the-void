@@ -3,6 +3,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteTollRow
@@ -12,12 +13,12 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, TributeRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, OathBreach, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
@@ -30,7 +31,6 @@ from aerona.engine.military.support import new_side
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.minds.war_methods import method_breached
 from aerona.engine.mortal.kinship import marry
-from aerona.engine.notes import note
 from aerona.engine.operations.limits import over_limit
 from aerona.engine.polity.accords import (
     DEFAULT_CLAUSES,
@@ -58,6 +58,8 @@ from aerona.engine.primitives.society import move_stock
 from aerona.engine.primitives.stats import move_stat, shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.relations.persuasion import envoy_sways
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.services.community_relations import change_relation, relation
@@ -133,26 +135,35 @@ async def clauses_by_treaty(ctx: TickContext, treaty_ids: list[int]) -> dict[int
     return found
 
 
-async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *, clause: TreatyClauseRow | None, reason: str) -> None:
+async def breach(
+    ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *, clause: TreatyClauseRow | None, reason: TreatyBreach, occasion: int | None = None
+) -> None:
+    with explaining():
+        await broken_treaty(ctx, profile, breaker_id=breaker_id, clause=clause, reason=reason, occasion=occasion)
+
+
+async def broken_treaty(
+    ctx: TickContext, profile: TreatyProfileRow, *, breaker_id: int, clause: TreatyClauseRow | None, reason: TreatyBreach, occasion: int | None
+) -> None:
     table = ctx.rules.treaties
     row = TreatyBreachRow(
         treaty_entity_id=profile.treaty_entity_id,
         clause_id=clause.id if clause is not None else None,
         breaker_node_id=breaker_id,
         epoch=ctx.epoch,
-        note=reason,
+        note=spoken(reason),
     )
     ctx.session.add(row)
-    await end_treaty(ctx, profile, TreatyStatus.BROKEN, reason)
+    await end_treaty(ctx, profile, TreatyStatus.BROKEN, spoken(reason))
     wronged = [party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id) if party.party_node_id != breaker_id]
     await on_breach(ctx, breaker_id, wronged)
     breaker = await living_entity(ctx.session, breaker_id)
-    treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
-    write = await ctx.chronicle(
-        ChronicleKind.DIPLOMACY,
-        f"{breaker.name if breaker is not None else 'A party'} broke {treaty.name if treaty else 'the treaty'}: {reason}.",
-        template_key="treaty.broken",
-        entity_ids=[breaker_id, profile.treaty_entity_id],
+    write = await record(
+        ctx,
+        "treaty.broken",
+        roles={IncidentRole.ACTOR: breaker_id, IncidentRole.VICTIM: wronged, IncidentRole.PATRON: profile.witness_son_id},
+        facts={"treaty": profile.treaty_entity_id, "breach": reason, "clause": clause.kind if clause is not None else None, "occasion": occasion},
+        place=breaker.location_id if breaker is not None else None,
         son_id=profile.witness_son_id,
     )
     row.incident_id = write.incident_id
@@ -165,7 +176,7 @@ async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *
     if profile.oath_id is not None:
         oath = await ctx.session.get(OathRow, profile.oath_id)
         if oath is not None:
-            await break_oath(ctx, oath, reason)
+            await break_oath(ctx, oath, OathBreach.TREATY_BROKEN, cause=write.incident_id)
     victims = [
         party.party_node_id
         for party in await parties_of(ctx.session, profile.treaty_entity_id)
@@ -212,7 +223,7 @@ async def hostilities(ctx: TickContext) -> int:
         clauses = await clauses_of(ctx, profile.treaty_entity_id)
         if any(clause.kind in PEACEFUL for clause in clauses) or profile.kind in {TreatyKind.PEACE, TreatyKind.TRUCE, TreatyKind.NON_AGGRESSION}:
             peaceful = next((item for item in clauses if item.kind in PEACEFUL), None)
-            await breach(ctx, profile, bond.source_node_id, clause=peaceful, reason="it went to war against a sworn party")
+            await breach(ctx, profile, bond.source_node_id, clause=peaceful, reason=TreatyBreach.WAR_ON_PARTY)
             broken += 1
     return broken
 
@@ -307,16 +318,17 @@ async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Tr
     beneficiary = await living_entity(ctx.session, clause.beneficiary_node_id)
     if obligor is None or beneficiary is None or held(obligor.id, beneficiary.id):
         return False
-    label = clause.kind.value.replace("_", " ")
-    await note(
-        ctx,
-        f"Neither court read the other's tongue: {obligor.name} kept the clause of {label} as something less than {beneficiary.name} meant, "
-        "and the misreading was counted a breach.",
-        key="treaty.misread_breach",
-        ids=[obligor.id, beneficiary.id],
-    )
+    with explaining():
+        chance = ctx.rules.interpreters.misread_breach_chance
+        await record(
+            ctx,
+            "treaty.misread_breach",
+            roles={IncidentRole.ACTOR: obligor.id, IncidentRole.BENEFICIARY: beneficiary.id},
+            facts={"treaty": profile.treaty_entity_id, "clause": clause.kind, "chance": chance},
+            place=obligor.location_id,
+        )
     ctx.count("treaty_clause_misread_breach")
-    await breach(ctx, profile, obligor.id, clause=clause, reason="it kept the clause only as its own tongue had read it")
+    await breach(ctx, profile, obligor.id, clause=clause, reason=TreatyBreach.CLAUSE_MISREAD)
     return True
 
 
@@ -329,14 +341,13 @@ async def armed_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Trea
         for row in armies:
             army = await living_entity(ctx.session, row.entity_id)
             if army is not None and army.location_id == region:
-                await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="it marched soldiers into the demilitarised land")
+                await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason=TreatyBreach.SOLDIERS_IN_DEMILITARISED_LAND)
                 return True
     if clause.kind is ClauseKind.FLEET_LIMIT and await over_limit(ctx, clause):
-        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason="its fleet grew past the tonnage it swore to")
+        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason=TreatyBreach.FLEET_PAST_TONNAGE)
         return True
-    method = await method_breached(ctx, clause)
-    if method is not None:
-        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason=method)
+    if await method_breached(ctx, clause) is not None:
+        await breach(ctx, profile, clause.obligor_node_id, clause=clause, reason=TreatyBreach.FORBIDDEN_METHOD)
         return True
     return False
 
@@ -420,7 +431,7 @@ async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
         return True
     last = clause.last_kept_epoch if clause.last_kept_epoch is not None else profile.signed_epoch
     if ctx.epoch - last > table.unpaid_grace:
-        await breach(ctx, profile, payer.id, clause=clause, reason="it stopped paying the tribute it owed")
+        await breach(ctx, profile, payer.id, clause=clause, reason=TreatyBreach.TRIBUTE_UNPAID)
         return False
     return True
 
@@ -439,7 +450,7 @@ async def keep_hostage(ctx: TickContext, profile: TreatyProfileRow, clause: Trea
             and hostage.location_id == clause.obligor_node_id
             and clause.last_kept_epoch is not None
         ):
-            await breach(ctx, profile, clause.obligor_node_id or hostage.id, clause=clause, reason="it took back the hostage it had given")
+            await breach(ctx, profile, clause.obligor_node_id or hostage.id, clause=clause, reason=TreatyBreach.HOSTAGE_TAKEN_BACK)
             return False
         hostage.location_id = clause.beneficiary_node_id
     else:
@@ -456,7 +467,7 @@ async def tolls_kept(ctx: TickContext, profile: TreatyProfileRow, clause: Treaty
         .limit(1)
     )
     if charged is not None and charged.controller_entity_id is not None:
-        await breach(ctx, profile, charged.controller_entity_id, clause=clause, reason="it charged tolls it had sworn to waive")
+        await breach(ctx, profile, charged.controller_entity_id, clause=clause, reason=TreatyBreach.TOLLS_CHARGED)
         return False
     clause.last_kept_epoch = ctx.epoch
     return True
@@ -560,7 +571,7 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         patron = await new_overlord(ctx, book, vassal, overlord)
         if patron is not None and ctx.rng(f"switch.{vassal_id}.{ctx.epoch}").chance(table.switch_chance):
             if treaty is not None and treaty.status is TreatyStatus.IN_FORCE:
-                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it submitted to another lord")
+                await breach(ctx, treaty, vassal_core.id, clause=None, reason=TreatyBreach.SUBMITTED_TO_ANOTHER)
             patron_core = patron.profile.core_entity_id
             if patron_core is not None:
                 await sign(
@@ -577,7 +588,7 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
             counts["switched"] += 1
         elif ctx.rng(f"vassal_revolt.{vassal_id}.{ctx.epoch}").chance(table.vassal_revolt_chance):
             if treaty is not None and treaty.status is TreatyStatus.IN_FORCE:
-                await breach(ctx, treaty, vassal_core.id, clause=None, reason="it rose against its overlord")
+                await breach(ctx, treaty, vassal_core.id, clause=None, reason=TreatyBreach.ROSE_AGAINST_OVERLORD)
             await declare_war(ctx, vassal_core.id, lord_core.id, f"{vassal.entity.name} threw off its overlord", cause=WarCause.INDEPENDENCE)
             await ctx.session.delete(row)
             book.vassals.pop(vassal_id, None)

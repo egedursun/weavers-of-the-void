@@ -6,8 +6,8 @@ from aerona.catalog.intrigue import HOOK_DEMAND_LABELS, SCHEMES
 from aerona.db.tables.intrigue import SchemeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.intrigue import HookDemand, PlotKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.intrigue.leverage import press
 from aerona.engine.intrigue.schemes import OPEN, begin_scheme
 from aerona.prompts import MortalToolId
@@ -16,7 +16,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.mortal import lines
 
 
 class PlotInput(ToolInput):
@@ -41,7 +40,7 @@ async def plot_scheme(call: MortalCall, args: PlotInput) -> str:
         fail(MortalResult.SCHEME_REFUSED, why="a god holds you or your target against change")
     label = SCHEMES[args.kind].label.lower()
     call.target(target.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SCHEME_BEGUN, entity_ids=[call.me.id], me=call.me.name, scheme=label)
+    await call.record("tools.mortal.scheme_begun", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id}, facts={"plot": args.kind})
     return result(MortalResult.SCHEME_BEGUN, scheme=label, target=target.name, difficulty=SCHEMES[args.kind].difficulty)
 
 
@@ -53,7 +52,7 @@ async def press_leverage(call: MortalCall, args: PressInput) -> str:
     if done is None:
         fail(MortalResult.LEVERAGE_FAILED, why=f"you hold no hook or favour that moved {target.name}, or they could not do it")
     call.target(target.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.LEVERAGE_PRESSED, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name, deed=done)
+    await call.record("tools.mortal.leverage_pressed", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id}, facts={"demand": args.demand})
     return result(MortalResult.LEVERAGE_PRESSED, target=target.name, demand=HOOK_DEMAND_LABELS[args.demand].lower(), deed=done)
 
 

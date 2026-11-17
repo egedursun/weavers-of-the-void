@@ -181,3 +181,4 @@ class SettlementHistoryRow(Base):
     wealth: Mapped[int]
     treasury: Mapped[int]
     population: Mapped[int]
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))

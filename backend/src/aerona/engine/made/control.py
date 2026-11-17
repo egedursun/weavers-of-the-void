@@ -39,7 +39,9 @@ from aerona.domain.enums.made import (
 )
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import MindUpkeep
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import NetworkCarrier, NetworkRole, OutageCause
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import NetworkStats
 from aerona.engine.context import TickContext
@@ -47,9 +49,10 @@ from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
 from aerona.engine.networks.book import carrier_days, shake_ledger
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.record import record as record_incident
 
 NETWORK_POWER = 5
 
@@ -81,7 +84,7 @@ async def found_network(ctx: TickContext, owner_id: int | None, name: str, carri
     row.delay_days = carrier_days(ctx.rules, carrier)
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{entity.name} was founded.", key="network.founded", ids=[entity.id])
+    await record_incident(ctx, "network.founded", roles={IncidentRole.PRODUCT: entity.id, IncidentRole.OWNER: owner_id}, facts={"carrier": carrier})
     return row
 
 
@@ -122,7 +125,7 @@ async def cut_network(ctx: TickContext, network_id: int, cause: OutageCause, epo
     ctx.session.add(row)
     await shake_ledger(ctx.session, ctx.rules, network_id)
     await ctx.session.flush()
-    await note(ctx, "A network went down.", key="network.cut", ids=[network_id])
+    await record_incident(ctx, "network.cut", roles={IncidentRole.SUBJECT: network_id}, facts={"cause": cause, "epochs": row.epochs, "severity": row.severity})
     return row
 
 
@@ -185,7 +188,13 @@ async def make_realm(ctx: TickContext, draft: RealmDraft) -> MadeRealmRow:
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"{dimension.name} was made.", key="realm.made", ids=[dimension.id])
+    await record(
+        ctx,
+        "realm.made",
+        roles={IncidentRole.PRODUCT: dimension.id, IncidentRole.MAKER: draft.keeper_id, IncidentRole.OWNER: draft.host_id},
+        facts={"purpose": draft.purpose, "entry": draft.entry, "awareness": draft.aware, "time_ratio": row.time_ratio_pct},
+        steps=(StepDraft(StepAction.APPEAR, actor=draft.keeper_id, target=dimension.id, outcome=StepOutcome.SUCCESS),),
+    )
     return row
 
 
@@ -277,7 +286,13 @@ async def found_line(ctx: TickContext, draft: LineDraft) -> ReplicatorLineRow:
     await ctx.session.flush()
     ctx.session.add(ReplicatorPresenceRow(line_id=row.id, place_node_id=draft.place_id, mass=max(1, draft.mass), growth=PERCENT, locked=[]))
     await ctx.session.flush()
-    await note(ctx, f"{row.name} began to make itself.", key="replicator.founded", ids=[draft.place_id])
+    await record(
+        ctx,
+        "replicator.founded",
+        roles={IncidentRole.PLACE: draft.place_id, IncidentRole.OWNER: row.owner_node_id},
+        facts={"line": row.name, "scale": row.scale, "mass": max(1, draft.mass)},
+        place=draft.place_id,
+    )
     return row
 
 
@@ -293,7 +308,7 @@ async def stop_line(ctx: TickContext, line_id: int) -> ReplicatorLineRow:
     row.stage = ReplicatorStage.STOPPED
     row.locked = sorted({*row.locked, "stage"})
     await ctx.session.flush()
-    await note(ctx, f"{row.name} was stopped.", key="replicator.stopped", ids=[])
+    await record(ctx, "replicator.stopped", roles={IncidentRole.OWNER: row.owner_node_id}, facts={"line": row.name, "scale": row.scale, "by_kill_switch": 0})
     return row
 
 

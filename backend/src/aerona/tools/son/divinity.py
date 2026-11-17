@@ -15,6 +15,7 @@ from aerona.domain.enums.divine import GoalSource, GodGoalKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.lifecycle_end import LifecycleState
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.divine import control
 from aerona.engine.divine.foreign import friendship, pact_between, seal_pact
 from aerona.engine.divine.goals import GOAL_LABELS, active_goals
@@ -30,7 +31,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, no_cost, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 
@@ -72,7 +72,7 @@ async def set_aim(call: SonCall, args: SetAimInput) -> str:
         )
     except AeronaError as error:
         fail(SonResult.AIM_REFUSED, reason=error.message)
-    await call.chronicle(ChronicleKind.ASCENSION, lines.SET_AIM, son=call.son.name, aim=GOAL_LABELS[row.kind].lower())
+    await call.record("tools.son.set_aim", roles={IncidentRole.ACTOR: call.son.id}, facts={"aim": GOAL_LABELS[row.kind].lower()}, kind=ChronicleKind.ASCENSION)
     return result(SonResult.AIM_SET, aim=GOAL_LABELS[row.kind].lower())
 
 
@@ -87,7 +87,13 @@ async def take_mortal_form(call: SonCall, args: MortalFormInput) -> str:
         fail(SonResult.FORM_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(avatar.id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.MORTAL_FORM, entity_ids=[avatar.id, place.id], son=call.son.name, place=place.name, reason=args.reason)
+    await call.record(
+        "tools.son.mortal_form",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: place.id, IncidentRole.SUBJECT: avatar.id},
+        facts={"reason": str(args.reason)},
+        place=place.id,
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.FORM_TAKEN, name=avatar.name, place=place.name)
 
 
@@ -106,7 +112,12 @@ async def ward_against_outer(call: SonCall, args: WardInput) -> str:
         if "strength" not in breach.locked:
             breach.strength = clamp_int(breach.strength - table.ward_breach, 1, PERCENT)
     call.target(being.id)
-    await call.chronicle(ChronicleKind.OUTER_BEING, lines.WARD_OUTER, entity_ids=[being.id], son=call.son.name, outsider=being.name, reason=args.reason)
+    await call.record(
+        "tools.son.ward_outer",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: being.id},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.OUTER_BEING,
+    )
     return result(SonResult.WARDED, name=being.name, cost=cost)
 
 
@@ -121,7 +132,12 @@ async def seal_divine_pact(call: SonCall, args: PactInput) -> str:
         fail(SonResult.PACT_REFUSED, name=god.name, warmth=warmth, needed=call.rules.god_relations.pact_friendship)
     treaty = await seal_pact(call.tick, call.son, god)
     call.target(treaty.id)
-    await call.chronicle(ChronicleKind.FOREIGN_GOD, lines.DIVINE_PACT, entity_ids=[treaty.id], son=call.son.name, god=god.name, reason=args.reason)
+    await call.record(
+        "tools.son.divine_pact",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [god.id, treaty.id]},
+        facts={"reason": str(args.reason)},
+        kind=ChronicleKind.FOREIGN_GOD,
+    )
     return result(SonResult.PACT_SEALED, name=god.name)
 
 

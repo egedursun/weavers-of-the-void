@@ -18,11 +18,11 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CommonsRule
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.mind import MemoryKind, PressureKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import MandateKind, MandateState, NobleWant
@@ -31,12 +31,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
 from aerona.engine.urban.housing import clear_slums
@@ -221,13 +221,12 @@ async def judge(ctx: TickContext, realm: Realm, row: MandateRow, tally: MandateT
     tally.failed += 1
     if LEGITIMACY not in realm.profile.locked:
         realm.profile.legitimacy = clamp_int(realm.profile.legitimacy - ctx.rules.affairs.mandate_legitimacy, 0, PERCENT)
-    place = await ctx.session.get(EntityRow, row.settlement_entity_id or -1)
-    await note(
+    await record(
         ctx,
-        f"{place.name if place is not None else realm.entity.name} failed the {spoken(row.kind)} mandate of {realm.entity.name}.",
-        key="affairs.mandate_failed",
-        ids=[realm.entity.id, *([place.id] if place is not None else [])],
-        kind=ChronicleKind.CIVILIZATION,
+        "affairs.mandate_failed",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: row.settlement_entity_id, IncidentRole.ACTOR: row.issuer_node_id},
+        facts={"mandate": row.kind, "legitimacy_lost": ctx.rules.affairs.mandate_legitimacy},
+        place=row.settlement_entity_id,
     )
 
 

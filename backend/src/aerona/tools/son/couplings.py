@@ -10,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.couplings import SealKind, TeachingKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.couplings.deep import active_seal, seal_deep
 from aerona.engine.couplings.teachers import lesson
 from aerona.prompts import SonToolId
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -55,7 +55,12 @@ async def send_teacher(call: SonCall, args: SendTeacherInput) -> str:
     if row is None:
         fail(SonResult.TEACHER_REFUSED, why=f"{teacher.name} has nothing of that kind to teach {learner.name}, or is forbidden to")
     call.target(learner.id)
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.SEND_TEACHER, son=call.son.name, teacher=teacher.name, learner=learner.name, reason=args.reason)
+    await call.record(
+        "tools.son.send_teacher",
+        roles={IncidentRole.ACTOR: call.son.id},
+        facts={"teacher_detail": str(teacher.name), "learner_detail": str(learner.name), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.TEACHER_SENT, teacher=teacher.name, learner=learner.name)
 
 
@@ -70,7 +75,12 @@ async def seal_breach(call: SonCall, args: SealBreachInput) -> str:
         fail(SonResult.BREACH_REFUSED, why="it is already sealed")
     row = await seal_deep(call.tick, place.id, SealKind.DIVINE, call.son.id)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.DIVINE_SIGN, lines.SEAL_BREACH, son=call.son.name, place=place.name, reason=args.reason)
+    await call.record(
+        "tools.son.seal_breach",
+        roles={IncidentRole.ACTOR: call.son.id},
+        facts={"place_detail": str(place.name), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
+    )
     return result(SonResult.BREACH_SEALED, place=place.name, strength=row.strength)
 
 

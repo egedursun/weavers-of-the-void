@@ -8,19 +8,19 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import best_skill
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 
 STRENGTH = "strength"
 BROKEN = "broken_by"
@@ -99,16 +99,13 @@ async def notice_break(ctx: TickContext, cipher: CipherRow, tally: CipherTally) 
     if not ctx.rng(seed_of("cipher.noticed", cipher.owner_node_id, ctx.epoch)).chance(ctx.rules.communication.break_noticed_pct):
         return
     cipher.break_known = True
-    owner = await ctx.session.get(EntityRow, cipher.owner_node_id)
     tally.noticed += 1
-    if owner is not None:
-        await note(
-            ctx,
-            f"{owner.name} learned that its cipher had been broken and set about a new one.",
-            key="communication.cipher_broken",
-            ids=[owner.id],
-            kind=ChronicleKind.WORLD,
-        )
+    await record_incident(
+        ctx,
+        "communication.cipher_broken",
+        roles={IncidentRole.SUBJECT: cipher.owner_node_id, IncidentRole.OPPONENT: list(cipher.broken_by)},
+        facts={"strength": cipher.strength},
+    )
     if STRENGTH not in (cipher.locked or []):
         cipher.broken_by, cipher.break_known, cipher.since_epoch = [], False, ctx.epoch
 

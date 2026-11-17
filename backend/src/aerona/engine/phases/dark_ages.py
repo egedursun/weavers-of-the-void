@@ -15,14 +15,14 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
 from aerona.engine.faith.zealotry import monastery_keeps
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import society_of
 from aerona.engine.phases.society_support.knowledge import KnowledgeHoldings, teach
@@ -30,6 +30,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 FORGOTTEN_REASON = "forgotten"
@@ -109,12 +110,12 @@ async def forget_knowledge(ctx: TickContext, community: EntityRow, knowledge: En
         if bond.target_node_id == knowledge.id:
             await bonds.deactivate(bond, ctx.epoch, FORGOTTEN_REASON)
     holdings.forget(community.id, knowledge.id)
-    await note(
+    await record(
         ctx,
-        f"After the devastation {community.name} forgot the {knowledge.name} knowledge; the masters died and the records were lost.",
-        key="dark_ages.forgotten",
-        ids=[community.id, knowledge.id],
-        kind=ChronicleKind.KNOWLEDGE,
+        "dark_ages.forgotten",
+        roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: knowledge.id},
+        facts={"scribes": (await society_of(ctx.session, ctx.rules, community.id)).shares[SocialClass.SCRIBE]},
+        steps=(StepDraft(StepAction.LOSE, actor=community.id, target=knowledge.id, outcome=StepOutcome.FAILURE),),
     )
 
 
@@ -150,13 +151,7 @@ async def _lost_marking(ctx: TickContext, holdings: KnowledgeHoldings, lost: set
         await repository.add_flag(knowledge.id, EntityFlag.LOST, ctx.epoch)
         lost.add(knowledge.id)
         marked += 1
-        await note(
-            ctx,
-            f"No one is left who knows {knowledge.name}; it is now a lost knowledge that leaves traces only in ruins.",
-            key="dark_ages.lost",
-            ids=[knowledge.id],
-            kind=ChronicleKind.KNOWLEDGE,
-        )
+        await record(ctx, "dark_ages.lost", roles={IncidentRole.SUBJECT: knowledge.id})
     return marked
 
 
@@ -211,12 +206,12 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
         await EntityRepository(ctx.session).remove_flag(knowledge.id, EntityFlag.LOST)
         lost.discard(knowledge.id)
         found += 1
-        await note(
+        await record(
             ctx,
-            f"The scribes of {community.name} deciphered the forgotten {knowledge.name} knowledge in the ruins of {ruin.name}.",
-            key="dark_ages.rediscovered",
-            ids=[community.id, knowledge.id, ruin.id],
-            kind=ChronicleKind.KNOWLEDGE,
+            "dark_ages.rediscovered",
+            roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: knowledge.id, IncidentRole.PLACE: ruin.id},
+            facts={"scribes": society.shares[SocialClass.SCRIBE], "chance": settings.relic_decipher_chance},
+            place=ruin.id,
         )
     return found
 
@@ -231,7 +226,6 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.cult_holdings",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",
@@ -245,7 +239,7 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
 )

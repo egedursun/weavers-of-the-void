@@ -8,8 +8,9 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.physics import StarPhysicsRow, WorldLifeRow, WorldPhysicsRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import adopt_comets, devour, ensure_wells, harbour_pirates, keep_wormholes, mine_fields, pass_rogues, return_comets
@@ -25,11 +26,11 @@ from aerona.engine.cosmos.terraform import powers_reshape, terraform_cycle
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.environment.profile import make_factor, make_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.environment import write_seasons
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 BROKEN = frozenset({WorldType.SHATTERED, WorldType.ASTEROID_BELT})
@@ -101,13 +102,13 @@ async def break_moons(ctx: TickContext, worlds: dict[int, WorldRow]) -> int:
         if world.parent_world_id is None or world.orbit >= roche or world.world_type in BROKEN or held(world.id) or "world_type" in world.locked:
             continue
         world.world_type = WorldType.SHATTERED
-        parent = worlds.get(world.parent_world_id)
-        await note(
+        await record(
             ctx,
-            f"{world.name} came too near {parent.name if parent is not None else 'its world'} and broke into a ring.",
-            key="world.ring_formed",
+            "world.ring_formed",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.DESTINATION: world.parent_world_id},
+            facts={"orbit": world.orbit, "roche": roche},
+            steps=(StepDraft(StepAction.COLLAPSE_BODY, target=world.id, outcome=StepOutcome.DESTROYED),),
             world_id=world.parent_world_id,
-            kind=ChronicleKind.SKY,
         )
         broken += 1
     return broken
@@ -144,7 +145,13 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         if "season_count" in changed:
             await write_seasons(ctx, world)
         if not quiet and world_id in known and row.tidally_locked and not was_locked:
-            await note(ctx, f"{world.name} came to turn one face forever to its star.", key="world.tidally_locked", world_id=world.id, kind=ChronicleKind.SKY)
+            await record(
+                ctx,
+                "world.tidally_locked",
+                roles={IncidentRole.SUBJECT: world.id},
+                facts={"orbit": root.orbit, "day": world.day_length_hours or round_half_up(row.rotation_hours)},
+                world_id=world.id,
+            )
         derived += 1
     await ctx.session.flush()
     return derived
@@ -169,7 +176,7 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
     "table.world_physics",
     "table.worlds",
 )
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.world_life", "table.world_physics", "table.world_seasons", "table.worlds")
+@writes("table.chronicle", "table.incidents", "table.world_life", "table.world_physics", "table.world_seasons", "table.worlds")
 async def world_physics(ctx: TickContext) -> None:
     ctx.count("worlds_derived", await derive_all(ctx, quiet=False))
     ctx.count("peoples_fitted", await fit_peoples(ctx.session, ctx.rules))
@@ -206,7 +213,7 @@ async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
 
 
 @reads("table.cosmos", "table.nodes", "table.region_environment", "table.world_cycles", "table.world_physics", "table.worlds")
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.region_environment", "table.world_physics")
+@writes("table.chronicle", "table.incidents", "table.region_environment", "table.world_physics")
 async def planetary(ctx: TickContext) -> None:
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))}
     rows = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
@@ -229,7 +236,7 @@ async def planetary(ctx: TickContext) -> None:
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.community_stocks", "table.cosmic_features", "table.epoch_year_cursors", "table.incidents", "table.routes", "table.sky_events")
+@writes("table.chronicle", "table.community_stocks", "table.cosmic_features", "table.incidents", "table.routes", "table.sky_events")
 async def cosmic_features(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     ctx.count("wells_made", await ensure_wells(ctx, cosmography))
@@ -256,7 +263,7 @@ async def cosmic_features(ctx: TickContext) -> None:
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.epoch_year_cursors", "table.impact_events", "table.incidents", "table.region_environment")
+@writes("table.chronicle", "table.impact_events", "table.incidents", "table.region_environment")
 async def impacts(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     ctx.count("impacts_foreseen", await forecast(ctx, cosmography))
@@ -266,9 +273,7 @@ async def impacts(ctx: TickContext) -> None:
 
 
 @reads("table.entities", "table.nodes", "table.terraforming", "table.world_physics")
-@writes(
-    "table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.terraforming", "table.world_biochemistries", "table.world_physics", "table.worlds"
-)
+@writes("table.chronicle", "table.incidents", "table.terraforming", "table.world_biochemistries", "table.world_physics", "table.worlds")
 async def terraforming(ctx: TickContext) -> None:
     ctx.count("terraform_steps", await terraform_cycle(ctx))
     ctx.count("terraform_begun", await powers_reshape(ctx))

@@ -8,8 +8,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import MarriageEnd
-from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.polity import OathBreach, OathKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.relations import RelationType
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.talk import affair_secret
@@ -20,10 +22,10 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.kinship import end_marriage, marriage_between
-from aerona.engine.notes import note
 from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, relation, shift
 from aerona.engine.relations.passions import betrayed
 from aerona.engine.unions.customs import divorce_rule
@@ -58,28 +60,28 @@ async def divorce_allowed(ctx: TickContext, spouse: EntityRow) -> str:
     return await divorce_rule(ctx.session, spouse)
 
 
-async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spouse: EntityRow, tally: AffairTally) -> list[str]:
+async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spouse: EntityRow, tally: AffairTally) -> list[StepDraft]:
     table = ctx.rules.social
     rng = ctx.rng(seed_of("affair_end", cheat.id, spouse.id, ctx.epoch))
-    told: list[str] = []
+    told: list[StepDraft] = []
     model = await honour_of(ctx.session, (await culture_of(ctx.session, spouse.id) or spouse).id)
     if HONOUR_MODELS[model].affairs_end_in_duels and rng.chance(table.affair_duel_pct):
         await remember(
             ctx.session, ctx.rules, holder_id=spouse.id, subject_id=lover.id, kind=MemoryKind.HUMILIATED_ME, magnitude=table.affair_memory, epoch=ctx.epoch
         )
         tally.challenges += 1
-        told.append(f"{spouse.name} swore to answer {lover.name} with steel")
-    await break_on(ctx, [cheat.id], OathKind.FIDELITY, "lay with another against the vow")
+        told.append(StepDraft(StepAction.THREATEN, actor=spouse.id, target=lover.id))
+    await break_on(ctx, [cheat.id], OathKind.FIDELITY, OathBreach.LOVER_TAKEN)
     custom = await divorce_allowed(ctx, spouse)
     marriage = await marriage_between(ctx.session, cheat.id, spouse.id)
     odds = table.affair_divorce_pct * (2 if custom == "free" else 1)
     if marriage is not None and custom != "forbidden" and rng.chance(min(PERCENT, odds)):
         await end_marriage(ctx.session, marriage, ctx.epoch, MarriageEnd.DIVORCE)
         tally.divorces += 1
-        told.append(f"{spouse.name} and {cheat.name} parted")
+        told.append(StepDraft(StepAction.SEPARATE, actor=spouse.id, target=cheat.id))
     if rng.chance(table.affair_feud_pct) and await house_feud(ctx, lover.id, spouse.id, "an affair") is not None:
         tally.feuds += 1
-        told.append("their houses took up the quarrel")
+        told.append(StepDraft(StepAction.FEUD, actor=spouse.id, target=lover.id))
     return told
 
 
@@ -98,8 +100,12 @@ async def discover(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spouse:
         shift(ctx.rules, view, ctx.epoch, friendship=ctx.rules.social.affair_memory, romance=ctx.rules.social.affair_memory // 2)
     await judged(ctx, cheat.id, spouse.id, ActKind.ADULTERY, note=f"love outside a marriage with {lover.name}")
     told = await consequences(ctx, cheat, lover, spouse, tally)
-    tail = f"; {', '.join(told)}" if told else ""
-    await note(ctx, f"{spouse.name} learned that {cheat.name} loved {lover.name}{tail}.", key="affair.discovered", ids=[spouse.id, cheat.id, lover.id])
+    await record(
+        ctx,
+        "affair.discovered",
+        roles={IncidentRole.SPOUSE: spouse.id, IncidentRole.ACCUSED: cheat.id, IncidentRole.CO_ACTOR: lover.id},
+        steps=(StepDraft(StepAction.DISCOVER, actor=spouse.id, target=cheat.id), *told),
+    )
     tally.discovered += 1
 
 

@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from aerona.catalog.law_depth import MOTIVE_LOYALTY
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.law_depth import DefectionRow, RegistryRow, SpyCellRow
@@ -13,10 +12,10 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.law_depth import RecruitMotive, RegistryKind
 from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import TraitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
@@ -24,9 +23,9 @@ from aerona.engine.intrigue.favours import hook_on
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.mortal.standing import add_infamy, add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.records import death_path
 
 VAIN = frozenset({TraitKind.PROUD, TraitKind.AMBITIOUS, TraitKind.VENGEFUL})
@@ -203,13 +202,15 @@ async def defect(ctx: TickContext, defector: EntityRow, from_id: int | None, to_
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    side = await ctx.session.get(EntityRow, to_id)
-    await note(
+    await record(
         ctx,
-        f"{defector.name} defected to {side.name if side else 'another side'}, carrying {several(carried, 'secret', 'secrets')}.",
-        key="espionage.defected",
-        ids=[defector.id, to_id],
-        kind=ChronicleKind.WAR,
+        "espionage.defected",
+        roles={
+            IncidentRole.SUBJECT: defector.id,
+            **({IncidentRole.OPPONENT: from_id} if from_id is not None else {}),
+            **({IncidentRole.RECEIVER: to_id} if to_id is not None else {}),
+        },
+        facts={"secrets": carried},
     )
     return row
 

@@ -6,8 +6,8 @@ from aerona.db.tables.nature import FermentCultureRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import FermentKind
 from aerona.engine.nature.microbes import live_cultures
 from aerona.engine.primitives.numbers import clamp_int
@@ -17,7 +17,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class TendCultureInput(ToolInput):
@@ -42,7 +41,12 @@ async def tend_culture(call: MortalCall, args: TendCultureInput) -> str:
     await call.session.flush()
     call.target(town.id)
     kind = args.kind.value
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.TEND_CULTURE, entity_ids=[me.id, town.id], me=me.name, kind=kind, town=town.name)
+    await call.record(
+        "tools.mortal.tend_culture",
+        roles={IncidentRole.ACTOR: me.id, IncidentRole.PLACE: town.id},
+        facts={"culture": args.kind, "quality": row.quality},
+        place=town.id,
+    )
     return result(MortalResult.CULTURE_TENDED, kind=kind, town=town.name, quality=row.quality)
 
 

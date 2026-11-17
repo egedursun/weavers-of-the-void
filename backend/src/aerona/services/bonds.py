@@ -10,20 +10,19 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import VISIBLE_BOND_STATES, BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMPANION_TYPES, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.war import DebtStatus
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import relation
 from aerona.engine.services.war_resolution import make_peace
 from aerona.rules.registry import Rules
-from aerona.services.chronicle import ChronicleLine, ChronicleWriter
+from aerona.services.chronicle import ChronicleWriter
 
 FRIENDLY_KINDS = (BondKind.ALLY, BondKind.TRADES_WITH)
 COMPANION_NODE_KINDS = frozenset({NodeKind.SON, NodeKind.FOREIGN_GOD})
-SHARED_THRONE_TEMPLATE = "bonds.shared_throne_ended"
-SHARED_THRONE_TEXT = "The shared throne over {place} has ended: {withdrawn} withdrew from rule, {keeper} reigns alone."
 GRUDGE_ENDED = "the grudge died out"
 FRIEND_AND_FOE = "friend and foe at once"
 OUT = "out"
@@ -110,14 +109,12 @@ class BondService:
         return [bond.source_node_id for bond in await _mortal_rulers(session, draft.target_node_id, draft.source_node_id)]
 
     async def _shared_throne_line(self, session: AsyncSession, rules: Rules, place_id: int, keeper_id: int, withdrawn: list[int]) -> None:
-        names = await NodeRepository(session).names_of([place_id, keeper_id, *withdrawn])
-        text = SHARED_THRONE_TEXT.format(
-            place=names.get(place_id, ""),
-            withdrawn=", ".join(names.get(node_id, "") for node_id in withdrawn),
-            keeper=names.get(keeper_id, ""),
+        await record_incident(
+            await manual_context(session, "shared_throne", rules, key=str(place_id)),
+            "bonds.shared_throne_ended",
+            roles={IncidentRole.PLACE: place_id, IncidentRole.SUCCESSOR: keeper_id, IncidentRole.PREDECESSOR: withdrawn},
+            place=place_id,
         )
-        line = ChronicleLine(kind=ChronicleKind.WORLD, text=text, entity_ids=[place_id, keeper_id, *withdrawn], template_key=SHARED_THRONE_TEMPLATE)
-        await self._writer.write(session, rules, line)
 
     async def enforce_single_throne(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
         statement = select(BondRow).where(BondRow.kind == BondKind.RULES, BondRow.state == BondState.ACTIVE).order_by(BondRow.id)

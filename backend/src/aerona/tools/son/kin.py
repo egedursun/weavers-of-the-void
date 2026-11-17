@@ -13,6 +13,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, MessageIntent, PendingJobKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.engine.cosmos.duels import son_duel
 from aerona.engine.cycles.gifts import divine_gift
@@ -119,7 +120,12 @@ async def call_sibling(call: SonCall, args: CallSiblingInput) -> str:
     )
     await call.bump(TurnCounter.SIBLING_MESSAGES)
     phrase = lines.MESSAGE_PHRASES[args.intent.value]
-    await call.chronicle(ChronicleKind.MESSAGE, lines.MESSAGE, son=call.son.name, phrase=phrase, sibling=sibling.name, message=args.message)
+    await call.record(
+        "tools.son.message",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.RECEIVER: sibling.id},
+        facts={"phrase": str(phrase), "message": str(args.message)},
+        kind=ChronicleKind.MESSAGE,
+    )
     value, label = (bond.value, bond.label) if bond is not None else (0, "")
     return result(SonResult.MESSAGE_SENT, name=sibling.name, label=label, value=value)
 
@@ -140,7 +146,12 @@ async def swear_covenant(call: SonCall, args: CovenantInput) -> str:
     call.target(sibling.id)
     await BondRepository(call.session).connect(BondDraft(call.son.id, sibling.id, BondKind.ALLY, call.epoch, args.terms))
     bond = await shift_relation(call, sibling.id, tools.covenant_relation_bonus)
-    await call.chronicle(ChronicleKind.COVENANT, lines.COVENANT, son=call.son.name, sibling=sibling.name, terms=args.terms)
+    await call.record(
+        "tools.son.covenant",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.RECEIVER: sibling.id},
+        facts={"terms": str(args.terms)},
+        kind=ChronicleKind.COVENANT,
+    )
     return result(SonResult.COVENANT_MADE, label=bond.label if bond else "", value=bond.value if bond else 0)
 
 
@@ -160,8 +171,10 @@ async def _transfer(call: SonCall, sibling: SonRow, worshipper_id: int) -> bool:
         await bonds.connect(BondDraft(community.id, sibling.id, BondKind.WORSHIPS, call.epoch, lines.GIFT_BOND.format(son=call.son.name)))
         call.note(result(SonResult.GIFT_TRANSFER_NOTE, community=community.name, name=sibling.name))
     else:
-        await call.chronicle(
-            ChronicleKind.GIFT, lines.GIFT_REFUSED, entity_ids=[community.id], community=community.name, son=call.son.name, sibling=sibling.name
+        await call.record(
+            "tools.son.gift_refused",
+            roles={IncidentRole.SUBJECT: community.id, IncidentRole.ACTOR: call.son.id, IncidentRole.RECEIVER: sibling.id},
+            kind=ChronicleKind.GIFT,
         )
         call.note(result(SonResult.GIFT_REFUSED_NOTE, community=community.name))
     return accepted
@@ -191,7 +204,12 @@ async def give_gift(call: SonCall, args: GiftInput) -> str:
     delta = tools.gift_relation_base + rounded(args.essence / tools.gift_relation_essence_divisor) + (tools.gift_worshipper_relation if accepted else 0)
     bond = await shift_relation(call, sibling.id, delta)
     notes = NOTE_SEPARATOR.join(call.log.detail)
-    await call.chronicle(ChronicleKind.GIFT, lines.GIFT, son=call.son.name, sibling=sibling.name, notes=notes, words=args.words)
+    await call.record(
+        "tools.son.gift",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.RECEIVER: sibling.id},
+        facts={"notes": str(notes), "words": str(args.words)},
+        kind=ChronicleKind.GIFT,
+    )
     return result(SonResult.GIFT_GIVEN, notes=notes, label=bond.label if bond else "", value=bond.value if bond else 0)
 
 
@@ -211,7 +229,7 @@ async def challenge(call: SonCall, args: ChallengeInput) -> str:
         me.fame = max(0, me.fame - tools.covenant_break_renown_cost)
         await BondRepository(call.session).close_between(me.id, sibling.id, [BondKind.ALLY], call.epoch, "covenant broken")
         await shift_relation(call, sibling.id, tools.challenge_relation - tools.challenge_covenant_relation)
-        await call.chronicle(ChronicleKind.COVENANT, lines.COVENANT_BROKEN, son=me.name, sibling=sibling.name)
+        await call.record("tools.son.covenant_broken", roles={IncidentRole.ACTOR: me.id, IncidentRole.RECEIVER: sibling.id}, kind=ChronicleKind.COVENANT)
     bond = await relation(call, sibling.id)
     return result(SonResult.CHALLENGE_RESULT, text=duel.text, level=level, label=bond.label, value=bond.value)
 

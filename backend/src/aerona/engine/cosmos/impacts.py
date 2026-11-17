@@ -2,7 +2,6 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import an, several, spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import SpeciesProfileRow
@@ -11,7 +10,6 @@ from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
@@ -19,8 +17,10 @@ from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKi
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import LegendStats, PlaceStats
 from aerona.engine.context import TickContext
@@ -33,7 +33,6 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.industry.stores import perishables
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.phases.environment import Notable, YearHarvest, record_notable
 from aerona.engine.primitives.distance import RegionAtlas
@@ -42,6 +41,7 @@ from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import scale_stat, shift_bounded
+from aerona.engine.recording.record import FactInput, StepDraft, record
 
 PIETY_KEY = "piety"
 ABUNDANCE_KEY = "abundance"
@@ -110,7 +110,15 @@ async def flee(ctx: TickContext, world: WorldRow, impact: ImpactEventRow) -> int
             continue
         town.location_id = away[0]
         await BondRepository(ctx.session).refresh_location(town.id, town.location_id, ctx.epoch)
-        await note(ctx, f"{town.name} left its land before the body from the sky could fall on it.", key="impact.fled", ids=[town.id], world_id=world.id)
+        await record(
+            ctx,
+            "impact.fled",
+            roles={IncidentRole.SUBJECT: town.id, IncidentRole.ORIGIN: impact.region_entity_id, IncidentRole.DESTINATION: away[0]},
+            steps=(StepDraft(StepAction.DEPART, actor=town.id), StepDraft(StepAction.ARRIVE, actor=town.id, locus_kind=StepLocus.REGION, locus_node=away[0])),
+            origin=impact.region_entity_id,
+            destination=away[0],
+            world_id=world.id,
+        )
         fled += 1
     return fled
 
@@ -132,14 +140,13 @@ async def warn(ctx: TickContext, world: WorldRow, impact: ImpactEventRow, seers:
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.impacts.prepare_piety)
             await hoard(ctx, community)
     await flee(ctx, world, impact)
-    epochs_counted = several(impact.due_epoch - ctx.epoch, "epoch", "epochs")
-    await note(
+    await record(
         ctx,
-        f"The astronomers of {seers[0].name} foresaw a body that will strike {world.name} in {epochs_counted}; its peoples prepare.",
-        key="impact.foreseen",
-        ids=[seers[0].id],
+        "impact.foreseen",
+        roles={IncidentRole.ACTOR: seers[0].id, IncidentRole.SUBJECT: world.id, IncidentRole.TELLER: [seer.id for seer in seers[1:]]},
+        facts={"body": impact.body, "size": impact.size, "epochs": impact.due_epoch - ctx.epoch, "piety": ctx.rules.impacts.prepare_piety},
+        steps=(StepDraft(StepAction.FORESEE, actor=seers[0].id, outcome=StepOutcome.SUCCESS),),
         world_id=world.id,
-        kind=ChronicleKind.SKY,
     )
 
 
@@ -240,8 +247,42 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
         profile = await ctx.session.get(SpeciesProfileRow, species.id)
         bears = table.hardy_pct / PERCENT if profile is not None and profile.temperature_min <= table.hardy_cold else 1.0
         scale_stat(ctx.rules, species, ABUNDANCE_KEY, 1 - impact.size * table.extinction_pct / PERCENT / PERCENT * (1 - spared) * bears)
-    impact.text = f"{an(spoken(impact.body), capital=True)} struck {region.name if region is not None else world.name}."
-    await note(ctx, impact.text, key="impact.struck", ids=[region.id] if region is not None else [], world_id=world.id, kind=ChronicleKind.SKY)
+    facts: dict[str, FactInput] = {
+        "body": impact.body,
+        "size": impact.size,
+        "severity": severity * PERCENT,
+        "winter": impact.winter_epochs,
+        "spared": spared * PERCENT,
+    }
+    steps = (
+        StepDraft(StepAction.COLLIDE, actor=impact.called_by_node_id, locus_kind=StepLocus.REGION, locus_node=impact.region_entity_id),
+        StepDraft(StepAction.SPREAD, locus_kind=StepLocus.REALM, locus_node=world.id),
+    )
+    if region is not None:
+        written = await record(
+            ctx,
+            "impact.struck",
+            roles={
+                IncidentRole.SUBJECT: world.id,
+                IncidentRole.PLACE: region.id,
+                IncidentRole.PRODUCT: place.id if place is not None else None,
+                IncidentRole.AUTHORITY: impact.called_by_node_id,
+            },
+            facts=facts,
+            steps=steps,
+            place=region.id,
+            world_id=world.id,
+        )
+    else:
+        written = await record(
+            ctx,
+            "impact.struck_world",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.AUTHORITY: impact.called_by_node_id},
+            facts=facts,
+            steps=steps,
+            world_id=world.id,
+        )
+    impact.text = written.text
     if place is not None:
         await legend_of(ctx, impact, world, place)
     await remember_the_fall(ctx, world, region, impact)
@@ -256,9 +297,10 @@ async def remember_the_fall(ctx: TickContext, world: WorldRow, region: EntityRow
     name = f"the year of the impact on {region.name if region is not None else world.name}"
     return await record_notable(
         ctx,
+        "year.weather",
         world,
         region,
-        Notable(NotableYearKind.WEATHER, YearHarvest(sampled.offset, sampled.year, 0, WeatherKind.ASH_FALL), clamp_percent(impact.size), name, impact.text),
+        Notable(NotableYearKind.WEATHER, YearHarvest(sampled.offset, sampled.year, 0, WeatherKind.ASH_FALL), clamp_percent(impact.size), name),
     )
 
 
@@ -276,10 +318,15 @@ async def resolve(ctx: TickContext) -> int:
 
 
 async def pass_by(ctx: TickContext, impact: ImpactEventRow) -> None:
-    world = await ctx.session.get(WorldRow, impact.world_id)
     impact.outcome = ImpactOutcome.MISSED
-    impact.text = f"The body passed {world.name if world is not None else 'its world'} by."
-    await note(ctx, impact.text, key="impact.missed", world_id=impact.world_id, kind=ChronicleKind.SKY)
+    written = await record(
+        ctx,
+        "impact.missed",
+        roles={IncidentRole.SUBJECT: impact.world_id},
+        facts={"body": impact.body, "size": impact.size, "chance": ctx.rules.impacts.miss_pct},
+        world_id=impact.world_id,
+    )
+    impact.text = written.text
 
 
 async def impact_winters(ctx: TickContext) -> int:
@@ -288,12 +335,21 @@ async def impact_winters(ctx: TickContext) -> int:
     for impact in list(await ctx.session.scalars(statement)):
         if held(impact.world_id) or "winter_epochs" in impact.locked:
             continue
-        chilled += await cold_snap(ctx, impact.world_id, ctx.rules.impacts.winter_cold, "An impact winter")
+        cooled = await cold_snap(ctx, impact.world_id, ctx.rules.impacts.winter_cold)
+        chilled += cooled
         impact.winter_epochs -= 1
+        if cooled:
+            await record(
+                ctx,
+                "climate.impact_winter",
+                roles={IncidentRole.SUBJECT: impact.world_id, IncidentRole.PLACE: impact.region_entity_id},
+                facts={"cold": ctx.rules.impacts.winter_cold, "regions": cooled, "epochs_left": impact.winter_epochs},
+                world_id=impact.world_id,
+            )
     return chilled
 
 
-async def call_impact(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, by: str, *, size: int | None = None) -> ImpactEventRow:
+async def call_impact(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None = None) -> ImpactEventRow:
     world = await ctx.session.get(WorldRow, world_id)
     if world is None:
         raise NotFoundError("No such world.")
@@ -303,12 +359,20 @@ async def call_impact(ctx: TickContext, world_id: int, region_id: int | None, by
         if region is None or region.world_id != world.id or region.entity_type is not EntityType.REGION:
             raise ValidationFailedError("An impact falls on a region of its own world.")
         impact.region_entity_id = region.id
-    await note(ctx, f"{by} called a body down upon {world.name}.", key="impact.called", world_id=world.id, kind=ChronicleKind.MIRACLE)
+    await record(
+        ctx,
+        "impact.called",
+        roles={IncidentRole.ACTOR: by_node_id, IncidentRole.SUBJECT: world.id, IncidentRole.PLACE: impact.region_entity_id},
+        facts={"size": impact.size, "due": impact.due_epoch - ctx.epoch},
+        steps=(StepDraft(StepAction.INVOKE, actor=by_node_id, outcome=StepOutcome.SUCCESS),),
+        place=impact.region_entity_id,
+        world_id=world.id,
+    )
     await ctx.session.flush()
     return impact
 
 
-async def deflect_impact(ctx: TickContext, impact_id: int, by_node_id: int | None, by: str) -> ImpactEventRow:
+async def deflect_impact(ctx: TickContext, impact_id: int, by_node_id: int | None) -> ImpactEventRow:
     impact = await ctx.session.get(ImpactEventRow, impact_id)
     if impact is None:
         raise NotFoundError("No such impact.")
@@ -316,8 +380,14 @@ async def deflect_impact(ctx: TickContext, impact_id: int, by_node_id: int | Non
         raise ValidationFailedError("That body has already struck or passed.")
     impact.outcome = ImpactOutcome.DEFLECTED
     impact.deflected_by_node_id = by_node_id
-    world = await ctx.session.get(WorldRow, impact.world_id)
-    impact.text = f"{by} turned the body aside from {world.name if world is not None else 'its world'}."
-    await note(ctx, impact.text, key="impact.deflected", world_id=impact.world_id, kind=ChronicleKind.MIRACLE)
+    written = await record(
+        ctx,
+        "impact.deflected",
+        roles={IncidentRole.ACTOR: by_node_id, IncidentRole.SUBJECT: impact.world_id},
+        facts={"body": impact.body, "size": impact.size},
+        steps=(StepDraft(StepAction.BLOCK, actor=by_node_id, outcome=StepOutcome.BLOCKED),),
+        world_id=impact.world_id,
+    )
+    impact.text = written.text
     await ctx.session.flush()
     return impact

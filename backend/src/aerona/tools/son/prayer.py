@@ -9,6 +9,7 @@ from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, MessageIntent, PrayerRequest, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.power import declare_rebellion
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -66,7 +67,9 @@ async def pray_to_creator(call: SonCall, args: PrayInput) -> str:
     )
     await call.bump(TurnCounter.PRAYERS)
     request = lines.PRAYER_REQUESTS[args.request.value]
-    await call.chronicle(ChronicleKind.PRAYER, lines.PRAYER, son=call.son.name, request=request, message=args.message)
+    await call.record(
+        "tools.son.prayer", roles={IncidentRole.ACTOR: call.son.id}, facts={"request": str(request), "message": str(args.message)}, kind=ChronicleKind.PRAYER
+    )
     return result(SonResult.PRAYER_RISEN)
 
 

@@ -4,9 +4,9 @@ from aerona.core.grammar import several, spoken
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import FateMode, ImageStyle, SonDistribution
-from aerona.services.player.chronicle import tell
-from aerona.services.player.lines import SETTINGS
+from aerona.engine.recording.record import record
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 MIN_PARALLELISM = 1
@@ -68,4 +68,14 @@ async def update_settings(scope: PlayerScope, command: WorldSettings) -> Effect:
     if not fields:
         raise ValidationFailedError("Nothing to change in the settings.")
     ctx = await scope.context("settings")
-    return Effect(await tell(ctx, SETTINGS, kind=ChronicleKind.SYSTEM, fields="; ".join(fields)))
+    return Effect(
+        (
+            await record(
+                ctx,
+                "player.settings",
+                roles={IncidentRole.AUTHORITY: (await scope.creator()).id},
+                facts={"fields": "; ".join(fields)},
+                kind=ChronicleKind.SYSTEM,
+            )
+        ).text
+    )

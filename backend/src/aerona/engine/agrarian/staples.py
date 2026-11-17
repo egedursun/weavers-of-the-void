@@ -16,6 +16,7 @@ from aerona.domain.enums.agrarian import KeystoneUse
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.war import WarCause
 from aerona.engine.agrarian.rings import put
@@ -24,13 +25,13 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.standing import regard
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.faith.book import Church, FaithBook
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import sentence_case
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import relation
 from aerona.engine.services.war import declare_war
 
@@ -128,13 +129,13 @@ async def designate(ctx: TickContext, atlas: RegionAtlas, faith: FaithBook, book
                 )
             )
             tally.designated += 1
-            region = await ctx.session.get(EntityRow, source)
-            await note(
+            await record(
                 ctx,
-                f"{name}, which only {species.name} of {region.name if region else 'one land'} gives, is held sacred by {church.cult.name}; "
-                "every realm of the world now wants it, and whoever holds its source holds much.",
-                key="keystone.designated",
-                ids=[species.id, source, church.cult.id],
+                "keystone.designated",
+                roles={IncidentRole.SUBJECT: species.id, IncidentRole.ORIGIN: source},
+                facts={"name": name, "cult": church.cult.id, "use": KeystoneUse.RITE, "commodity": option.commodity},
+                place=source,
+                world_id=world_id,
             )
             break
 
@@ -303,7 +304,7 @@ async def keep_brands(ctx: TickContext, tally: StaplesTally) -> None:
             )
             ctx.session.add(brand)
             tally.earned += 1
-            await note(ctx, f"The {brand.name} is known for its work; buyers ask for it by name.", key="brands.earned", ids=[community.id])
+            await record(ctx, "brands.earned", roles={IncidentRole.SUBJECT: community.id}, facts={"brand": brand.name, "quality": brand.quality})
         tally.brands += 1
         if run is not None:
             put(brand, "quality", run.quality)

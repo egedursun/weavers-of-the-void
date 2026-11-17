@@ -12,6 +12,7 @@ from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import SonDeathCause, SonStatus, Stat
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
@@ -21,8 +22,9 @@ from aerona.engine.gods.god_death import GodDeath, god_death
 from aerona.engine.gods.reputation import TraceKind, leave_trace
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, ordinal
 from aerona.engine.primitives.queries import living_sons
+from aerona.engine.recording.record import record
 
-DRAIN_KEYS = (god_lines.DRAIN_SON.key,)
+DRAIN_KEYS = ("gods.power.drain",)
 
 
 @dataclass(frozen=True)
@@ -56,21 +58,24 @@ async def drained_recently(ctx: TickContext, son_id: int, spacing: int) -> bool:
     return await ctx.session.scalar(statement.limit(1)) is not None
 
 
-async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: int, gained: int, *, spontaneous: bool, siblings: bool) -> tuple[str, str]:
+async def drain_record(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: int, gained: int, *, spontaneous: bool, siblings: bool) -> None:
     _, times = await _drain_counts(ctx, son.id)
-    line = god_lines.DRAIN_SON
-    text = line.render(
-        creator=creator.name,
-        anger=god_lines.DRAIN_ANGER if spontaneous else "",
-        again=god_lines.DRAIN_AGAIN if times else "",
-        son=son.name,
-        drawn=drawn,
-        gained=gained,
-        witness=god_lines.DRAIN_WITNESS if siblings else "",
+    await record(
+        ctx,
+        "gods.power.drain",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.VICTIM: son.id},
+        facts={
+            "drawn": drawn,
+            "gained": gained,
+            "times": times + 1,
+            "anger": god_lines.DRAIN_ANGER if spontaneous else "",
+            "again": god_lines.DRAIN_AGAIN if times else "",
+            "witness": god_lines.DRAIN_WITNESS if siblings else "",
+            "repeat": god_lines.DRAIN_REPEAT_SUFFIX.format(count=ordinal(times + 1)).rstrip(".") if times > 1 else "",
+        },
+        kind=ChronicleKind.CREATOR_HAND,
+        son_id=son.id,
     )
-    if times > 1:
-        text = text.rstrip(".") + god_lines.DRAIN_REPEAT_SUFFIX.format(count=ordinal(times + 1))
-    return line.key, text
 
 
 async def drain_son(ctx: TickContext, creator: CreatorRow, son: SonRow, spontaneous: bool = False) -> DrainResult:
@@ -89,8 +94,7 @@ async def drain_son(ctx: TickContext, creator: CreatorRow, son: SonRow, spontane
     for other in others:
         other.loyalty = clamp_percent(other.loyalty + rules.drain_witness_loyalty)
     gained = gain(creator, drawn * rules.drain_son_efficiency_pct / PERCENT)
-    key, text = await drain_text(ctx, creator, son, drawn, gained, spontaneous=spontaneous, siblings=bool(others))
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=key, son_id=son.id)
+    await drain_record(ctx, creator, son, drawn, gained, spontaneous=spontaneous, siblings=bool(others))
     await leave_trace(ctx.session, ctx.rules, TraceKind.DRAIN, son.id, ctx.epoch)
     ctx.count("drains")
     return DrainResult(son, drawn, gained)
@@ -114,8 +118,14 @@ async def devour_son(ctx: TickContext, creator: CreatorRow, son: SonRow, reason:
         if other.id in friends:
             other.wrath = clamp_percent(other.wrath + rules.devour_son_friend_wrath)
     await leave_trace(ctx.session, ctx.rules, TraceKind.DEVOUR, son.id, ctx.epoch, friends=friends)
-    line = god_lines.DEVOUR_SON
-    await ctx.chronicle(ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, son=son.name, gained=gained), template_key=line.key, son_id=son.id)
+    await record(
+        ctx,
+        "gods.power.devour",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.AUTHORITY: son.id},
+        facts={"gained": gained},
+        kind=ChronicleKind.CREATOR_HAND,
+        son_id=son.id,
+    )
     return death, gained
 
 
@@ -132,9 +142,13 @@ async def demote_son(ctx: TickContext, creator: CreatorRow, son: SonRow) -> Rari
     son.loyalty = clamp_percent(son.loyalty - rules.demote_loyalty_loss)
     son.wrath = clamp_percent(son.wrath + rules.demote_wrath)
     son.rarity = new
-    line = god_lines.DEMOTE
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, son=son.name, old=old.value, new=new.value), template_key=line.key, son_id=son.id
+    await record(
+        ctx,
+        "gods.power.demote",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.AUTHORITY: son.id},
+        facts={"old": old, "new": new},
+        kind=ChronicleKind.CREATOR_HAND,
+        son_id=son.id,
     )
     await leave_trace(ctx.session, ctx.rules, TraceKind.DEMOTE, son.id, ctx.epoch)
     return new
@@ -152,9 +166,13 @@ async def strip_power(ctx: TickContext, creator: CreatorRow, son: SonRow, slot: 
     await repository.set_powers(son.id, remaining)
     son.wrath = clamp_percent(son.wrath + rules.strip_power_wrath)
     gained = gain(creator, rules.strip_power_essence)
-    line = god_lines.STRIP_POWER
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, son=son.name, power=chosen.name, gained=gained), template_key=line.key, son_id=son.id
+    await record(
+        ctx,
+        "gods.power.strip",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.AUTHORITY: son.id},
+        facts={"power": str(chosen.name), "gained": gained},
+        kind=ChronicleKind.CREATOR_HAND,
+        son_id=son.id,
     )
     await leave_trace(ctx.session, ctx.rules, TraceKind.STRIP, son.id, ctx.epoch)
     return gained
@@ -169,8 +187,14 @@ async def absolute_command(ctx: TickContext, creator: CreatorRow, son: SonRow, c
     son.standing_order = text
     son.order_absolute = True
     son.loyalty = clamp_percent(son.loyalty - rules.absolute_command_loyalty_loss)
-    line = god_lines.ABSOLUTE_COMMAND
-    await ctx.chronicle(ChronicleKind.ORDER, line.render(creator=creator.name, son=son.name, command=text), template_key=line.key, son_id=son.id)
+    await record(
+        ctx,
+        "gods.power.absolute_command",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.AUTHORITY: son.id},
+        facts={"command": str(text)},
+        kind=ChronicleKind.ORDER,
+        son_id=son.id,
+    )
     return text
 
 
@@ -183,14 +207,21 @@ async def declare_rebellion(ctx: TickContext, creator: CreatorRow, son: SonRow, 
     for other in await living_sons(ctx.session):
         if other.id != son.id and other.loyalty >= tools.rebel_loyal_threshold:
             await repository.change_relation(son.id, other.id, -tools.rebel_sibling_relation)
-    line = god_lines.REBELLION
     text = manifesto if spontaneous else f'"{manifesto}"'
-    await ctx.chronicle(ChronicleKind.REBELLION, line.render(son=son.name, creator=creator.name, manifesto=text), template_key=line.key, son_id=son.id)
+    await record(
+        ctx,
+        "gods.power.rebellion_declared",
+        roles={IncidentRole.ACTOR: son.id, IncidentRole.AUTHORITY: creator.id},
+        facts={"manifesto": text},
+        kind=ChronicleKind.REBELLION,
+        son_id=son.id,
+    )
     ctx.count("rebellions")
 
 
 async def end_rebellion(ctx: TickContext, creator: CreatorRow, son: SonRow) -> None:
     son.rebel = False
-    line = god_lines.REBELLION_ENDED
-    await ctx.chronicle(ChronicleKind.REBELLION, line.render(son=son.name, creator=creator.name), template_key=line.key, son_id=son.id)
+    await record(
+        ctx, "gods.power.rebellion_ended", roles={IncidentRole.ACTOR: son.id, IncidentRole.AUTHORITY: creator.id}, kind=ChronicleKind.REBELLION, son_id=son.id
+    )
     ctx.count("rebellions_ended")

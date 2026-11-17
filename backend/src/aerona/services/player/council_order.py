@@ -1,3 +1,4 @@
+from pydantic import Field
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -12,9 +13,12 @@ from aerona.db.tables.council_order import (
 )
 from aerona.db.tables.divine import CouncilRulingRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.lore import CouncilRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.agent import CouncilCaller
 from aerona.domain.enums.divine import CouncilSeat, EscalationStep
+from aerona.domain.models.records import CouncilMinutes
 from aerona.engine.divine.council_order import PENALTIES, procedure_of
 from aerona.engine.powers.control import edit_fields
 from aerona.services.player import guards
@@ -149,6 +153,63 @@ async def violation_delete(scope: PlayerScope, command: ViolationTarget) -> Effe
     row = await violation_of(scope, command.violation_id)
     await scope.session.delete(row)
     return Effect("The breach is struck from the record.", row.violator_node_id)
+
+
+class CouncilRecordMake(Command):
+    topic: str = Field(min_length=1, max_length=400)
+    passed: bool = False
+    epoch: int | None = Field(default=None, ge=1)
+
+
+class CouncilRecordEdit(Command):
+    council_id: int
+    topic: str | None = Field(default=None, min_length=1, max_length=400)
+    passed: bool | None = None
+
+
+class CouncilRecordTarget(Command):
+    council_id: int
+
+
+async def council_of(scope: PlayerScope, council_id: int) -> CouncilRow:
+    row = await scope.session.get(CouncilRow, council_id)
+    if row is None:
+        raise NotFoundError("No such council on record.")
+    return row
+
+
+@player_action("council_record:create", ActionKind.EDIT_RECORD)
+async def council_record_create(scope: PlayerScope, command: CouncilRecordMake) -> Effect:
+    present = await scope.epoch()
+    epoch = command.epoch or present
+    if epoch > present:
+        raise ValidationFailedError("A council cannot be set down ahead of the present epoch.")
+    row = CouncilRow(
+        epoch=epoch,
+        topic=command.topic,
+        minutes=CouncilMinutes(topic=command.topic, convened_by=CouncilCaller.CREATOR, passed=command.passed),
+        passed=command.passed,
+    )
+    scope.session.add(row)
+    await scope.session.flush()
+    return Effect("A council of the gods is set down in the record.", values={"council_id": row.id})
+
+
+@player_action("council_record:edit", ActionKind.EDIT_RECORD)
+async def council_record_edit(scope: PlayerScope, command: CouncilRecordEdit) -> Effect:
+    row = await council_of(scope, command.council_id)
+    topic = command.topic if command.topic is not None else row.topic
+    passed = command.passed if command.passed is not None else row.passed
+    row.topic, row.passed = topic, passed
+    row.minutes = row.minutes.model_copy(update={"topic": topic, "passed": passed})
+    return Effect("The council's record is set so.", values={"council_id": row.id})
+
+
+@player_action("council_record:delete", ActionKind.EDIT_RECORD)
+async def council_record_delete(scope: PlayerScope, command: CouncilRecordTarget) -> Effect:
+    row = await council_of(scope, command.council_id)
+    await scope.session.delete(row)
+    return Effect("The council is struck from the record.")
 
 
 @player_action("council:veto", ActionKind.EDIT_RECORD)

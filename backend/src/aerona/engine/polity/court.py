@@ -11,14 +11,13 @@ from aerona.db.tables.households import DwellingRow, HouseholdMemberRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.standing import add_honour, add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.mandates import units_of
@@ -26,6 +25,7 @@ from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 
 POSITION_STATS: dict[CourtPosition, str] = {
     CourtPosition.STEWARD: "intellect",
@@ -180,13 +180,7 @@ async def draw_talent(ctx: TickContext, realm: Realm, capital: int, grandeur: in
         return
     gifted.location_id = capital
     tally.drawn += 1
-    await note(
-        ctx,
-        f"{gifted.name} was drawn to the court of {realm.entity.name}.",
-        key="affairs.court_talent",
-        ids=[gifted.id, realm.entity.id],
-        kind=ChronicleKind.CIVILIZATION,
-    )
+    await record(ctx, "affairs.court_talent", roles={IncidentRole.SUBJECT: gifted.id, IncidentRole.HOST: realm.entity.id}, destination=capital, place=capital)
 
 
 async def hold_court(ctx: TickContext, book: RealmBook, realm: Realm, tally: CourtTally) -> None:

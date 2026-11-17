@@ -15,9 +15,10 @@ from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, ClusterKind, DimensionElement, DimensionKind, GalaxyType, RiftCause
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import ClimateTurn
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import ImpactOutcome, TerraformAim
 from aerona.engine.cosmos import control, physics_control
-from aerona.engine.cosmos.climate import ClimateTurn
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.prompts import SonToolId
@@ -26,7 +27,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -156,8 +156,12 @@ async def open_rift(call: SonCall, args: OpenRiftInput) -> str:
         fail(SonResult.RIFT_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(region.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.OPEN_RIFT, entity_ids=[region.id], son=call.son.name, place=region.name, dimension=dimension.name, reason=args.reason
+    await call.record(
+        "tools.son.open_rift",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id, IncidentRole.SUBJECT: dimension.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.COSMIC,
     )
     return result(SonResult.RIFT_OPENED, place=region.name, dimension=dimension.name, world=world.name if world is not None else "")
 
@@ -170,9 +174,9 @@ async def seal_rift(call: SonCall, args: RiftInput) -> str:
         fail(SonResult.RIFT_OUT_OF_REACH, id=rift.id)
     cost = call.rules.rifts.seal_essence
     require_essence(call, cost)
-    await control.close_rift(call.tick, rift.id, call.son.name)
+    await control.close_rift(call.tick, rift.id, call.son.id)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.SEAL_RIFT, son=call.son.name, reason=args.reason)
+    await call.record("tools.son.seal_rift", roles={IncidentRole.ACTOR: call.son.id}, facts={"reason": args.reason}, kind=ChronicleKind.MIRACLE)
     return result(SonResult.RIFT_SEALED)
 
 
@@ -184,7 +188,12 @@ async def call_being(call: SonCall, args: CallBeingInput) -> str:
     being = await control.call_being(call.tick, args.kind, region.world_id, region_id=region.id, home_dimension_id=None, name=None)
     call.spend_essence(cost)
     call.target(being.id)
-    await call.chronicle(ChronicleKind.COSMIC, lines.CALL_BEING, entity_ids=[being.id], son=call.son.name, being=being.name, reason=args.reason)
+    await call.record(
+        "tools.son.call_being",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: being.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.BEING_CALLED, name=being.name)
 
 
@@ -207,7 +216,12 @@ async def bind_being(call: SonCall, args: BeingInput) -> str:
         fail(SonResult.BEING_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(args.being_id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.BIND_BEING, entity_ids=[args.being_id], son=call.son.name, reason=args.reason)
+    await call.record(
+        "tools.son.bind_being",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: args.being_id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.BEING_BOUND)
 
 
@@ -215,10 +229,15 @@ async def banish_being(call: SonCall, args: BeingInput) -> str:
     await being_of(call, args.being_id)
     cost = call.rules.cosmic_beings.banish_essence
     require_essence(call, cost)
-    await control.banish(call.tick, args.being_id, call.son.name)
+    await control.banish(call.tick, args.being_id, call.son.name, call.son.id)
     call.spend_essence(cost)
     call.target(args.being_id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.BANISH_BEING, entity_ids=[args.being_id], son=call.son.name, reason=args.reason)
+    await call.record(
+        "tools.son.banish_being",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: args.being_id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.BEING_BANISHED)
 
 
@@ -229,10 +248,15 @@ async def contain_phenomenon(call: SonCall, args: PhenomenonInput) -> str:
     await ensure_in_reach(call, entity)
     cost = call.rules.phenomena.contain_essence
     require_essence(call, cost)
-    await control.ward_phenomenon(call.tick, entity.id, call.rules.phenomena.contain_amount, call.son.name)
+    await control.ward_phenomenon(call.tick, entity.id, call.rules.phenomena.contain_amount, call.son.id)
     call.spend_essence(cost)
     call.target(entity.id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.CONTAIN_PHENOMENON, entity_ids=[entity.id], son=call.son.name, phenomenon=entity.name, reason=args.reason)
+    await call.record(
+        "tools.son.contain_phenomenon",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: entity.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.PHENOMENON_CONTAINED, name=entity.name)
 
 
@@ -242,7 +266,7 @@ async def turn_climate(call: SonCall, args: TurnClimateInput) -> str:
     cost = call.rules.world_life.son_climate_essence
     require_essence(call, cost)
     try:
-        await control.turn_climate(call.tick, region.id, args.turn, call.son.name)
+        await control.turn_climate(call.tick, region.id, args.turn, call.son.id)
     except AeronaError as error:
         fail(SonResult.CLIMATE_REFUSED, reason=error.message)
     call.spend_essence(cost)
@@ -260,7 +284,12 @@ async def claim_galaxy(call: SonCall, args: GalaxyInput) -> str:
     require_essence(call, cost)
     galaxy.patron_son_id = call.son.id
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.ASCENSION, lines.CLAIM_GALAXY, son=call.son.name, galaxy=galaxy.name, reason=args.reason)
+    await call.record(
+        "tools.son.claim_galaxy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: galaxy.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.ASCENSION,
+    )
     return result(SonResult.GALAXY_CLAIMED, name=galaxy.name)
 
 
@@ -274,7 +303,12 @@ async def rule_dimension(call: SonCall, args: DimensionInput) -> str:
     require_essence(call, cost)
     dimension.ruler_node_id = call.son.id
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.ASCENSION, lines.RULE_DIMENSION, son=call.son.name, dimension=dimension.name, reason=args.reason)
+    await call.record(
+        "tools.son.rule_dimension",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: dimension.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.ASCENSION,
+    )
     return result(SonResult.DIMENSION_RULED, name=dimension.name)
 
 
@@ -318,7 +352,12 @@ async def create_galaxy(call: SonCall, args: CreateGalaxyInput) -> str:
     galaxy.description = args.description
     galaxy.patron_son_id = call.son.id
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_GALAXY, son=call.son.name, galaxy=galaxy.name, description=args.description)
+    await call.record(
+        "tools.son.create_galaxy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: galaxy.id},
+        facts={"description": args.description},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.GALAXY_CREATED, id=galaxy.id, name=galaxy.name)
 
 
@@ -332,7 +371,12 @@ async def create_cluster(call: SonCall, args: CreateClusterInput) -> str:
     )
     cluster.description = args.description
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_CLUSTER, son=call.son.name, cluster=cluster.name, description=args.description)
+    await call.record(
+        "tools.son.create_cluster",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cluster.id},
+        facts={"description": args.description},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.CLUSTER_CREATED, id=cluster.id, name=cluster.name)
 
 
@@ -347,7 +391,12 @@ async def create_dimension(call: SonCall, args: CreateDimensionInput) -> str:
     )
     dimension.ruler_node_id = call.son.id
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_DIMENSION, son=call.son.name, dimension=dimension.name, description=args.description)
+    await call.record(
+        "tools.son.create_dimension",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: dimension.id},
+        facts={"description": args.description},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.DIMENSION_CREATED, id=dimension.id, name=dimension.name)
 
 
@@ -359,7 +408,12 @@ async def claim_star(call: SonCall, args: StarPatronInput) -> str:
     require_essence(call, cost)
     star.patron_son_id = call.son.id
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.ASCENSION, lines.CLAIM_STAR, son=call.son.name, star=star.name, reason=args.reason)
+    await call.record(
+        "tools.son.claim_star",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: star.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.ASCENSION,
+    )
     return result(SonResult.STAR_CLAIMED, name=star.name)
 
 
@@ -369,12 +423,18 @@ async def call_impact(call: SonCall, args: CallImpactInput) -> str:
     cost = call.rules.impacts.call_essence
     require_essence(call, cost)
     try:
-        impact = await physics_control.call(call.tick, region.world_id or 0, region.id, call.son.id, by=call.son.name, size=None)
+        impact = await physics_control.call(call.tick, region.world_id or 0, region.id, call.son.id, size=None)
     except AeronaError as error:
         fail(SonResult.IMPACT_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(region.id)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.CALL_IMPACT, entity_ids=[region.id], son=call.son.name, place=region.name, reason=args.reason)
+    await call.record(
+        "tools.son.call_impact",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.IMPACT_CALLED, place=region.name, epoch=impact.due_epoch)
 
 
@@ -386,11 +446,13 @@ async def deflect_impact(call: SonCall, args: ImpactInput) -> str:
         fail(SonResult.IMPACT_OUT_OF_REACH, id=impact.id)
     cost = call.rules.impacts.deflect_essence
     require_essence(call, cost)
-    await physics_control.deflect(call.tick, impact.id, call.son.id, call.son.name)
+    await physics_control.deflect(call.tick, impact.id, call.son.id)
     call.spend_essence(cost)
     world = await call.session.get(WorldRow, impact.world_id)
     name = world.name if world is not None else ""
-    await call.chronicle(ChronicleKind.MIRACLE, lines.DEFLECT_IMPACT, son=call.son.name, world=name, reason=args.reason)
+    await call.record(
+        "tools.son.deflect_impact", roles={IncidentRole.ACTOR: call.son.id}, facts={"world": str(name), "reason": args.reason}, kind=ChronicleKind.MIRACLE
+    )
     return result(SonResult.IMPACT_DEFLECTED, world=name)
 
 
@@ -401,11 +463,16 @@ async def terraform_world(call: SonCall, args: TerraformInput) -> str:
     cost = call.rules.terraforming.essence
     require_essence(call, cost)
     try:
-        project = await physics_control.start_terraform(call.tick, world.id, args.aim, call.son.id, by=call.son.name, step=None, epochs=None)
+        project = await physics_control.start_terraform(call.tick, world.id, args.aim, call.son.id, step=None, epochs=None)
     except AeronaError as error:
         fail(SonResult.TERRAFORM_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.TERRAFORM_WORLD, son=call.son.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.terraform_world",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.TERRAFORM_BEGUN, world=world.name, epochs=project.epochs_left)
 
 
@@ -419,11 +486,16 @@ async def break_moon(call: SonCall, args: MoonInput) -> str:
     cost = call.rules.orbits.break_moon_essence
     require_essence(call, cost)
     try:
-        await physics_control.break_moon(call.tick, moon.id, call.son.name)
+        await physics_control.break_moon(call.tick, moon.id, call.son.id)
     except AeronaError as error:
         fail(SonResult.MOON_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.MIRACLE, lines.BREAK_MOON, son=call.son.name, moon=moon.name, reason=args.reason)
+    await call.record(
+        "tools.son.break_moon",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: moon.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.MIRACLE,
+    )
     return result(SonResult.MOON_BROKEN, moon=moon.name)
 
 

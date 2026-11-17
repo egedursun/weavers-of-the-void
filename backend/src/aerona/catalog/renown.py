@@ -28,7 +28,7 @@ ACT_RENOWN: MappingProxyType[ActKind, ActRenown] = MappingProxyType(
         A.MUTILATION: renown(X.HONOUR, X.CRUELTY),
         A.BETRAYAL: renown(X.TRICKERY, X.TRICKERY, X.TRICKERY),
         A.MERCY_TO_ENEMY: renown(X.HONOUR, X.TRICKERY),
-        A.HUMAN_SACRIFICE: renown(X.PIETY, X.CRUELTY),
+        A.SACRIFICE_OF_PEOPLE: renown(X.PIETY, X.CRUELTY),
         A.TRADE_WITH_OUTSIDERS: renown(X.GENEROSITY, X.TROUBLEMAKER),
         A.BUILDING_TEMPLES: renown(X.PIETY, None, X.PIETY),
         A.BURNING_BOOKS: renown(X.PIETY, X.CRUELTY),

@@ -3,28 +3,28 @@ from collections import Counter, defaultdict
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, PhenomenonKind, WorldAge
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Atmosphere, WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.eras.effects import programme_pressure
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 GATE_METHODS = frozenset(
@@ -96,19 +96,27 @@ async def tend_mood(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvir
     if world.consciousness_closed:
         if worked <= table.mood_reopen_worked and "consciousness_closed" not in world.locked:
             world.consciousness_closed = False
-            await note(ctx, f"{world.name} woke again to those who live on it.", key="world.consciousness_opened", world_id=world.id)
+            await record(ctx, "world.consciousness_opened", roles={IncidentRole.SUBJECT: world.id}, facts={"worked": worked}, world_id=world.id)
         return
     world.mood = clamp_int(world.mood - round(worked / 10 * table.mood_mining) + revering * table.mood_reverence, -MOOD_LIMIT, MOOD_LIMIT)
     if world.mood <= table.mood_close and "consciousness_closed" not in world.locked:
         world.consciousness_closed = True
-        await note(ctx, f"{world.name} withdrew into itself and no longer answers those who live on it.", key="world.consciousness_closed", world_id=world.id)
+        await record(ctx, "world.consciousness_closed", roles={IncidentRole.SUBJECT: world.id}, facts={"mood": world.mood, "worked": worked}, world_id=world.id)
         return
     if world.mood <= table.mood_quake and grounds:
         target = ctx.rng(f"world_mood.{world.id}").pick(sorted(ground.entity_id for ground in grounds))
         region = await ctx.session.get(EntityRow, target)
         if region is not None and not held(region.id):
             await apply_disaster(ctx, region, Disaster.EARTHQUAKE, table.mood_quake_severity / PERCENT)
-            await note(ctx, f"{world.name} shook {region.name} in anger at what was taken from it.", key="world.mood_quake", ids=[region.id], world_id=world.id)
+            await record(
+                ctx,
+                "world.mood_quake",
+                roles={IncidentRole.SUBJECT: world.id, IncidentRole.PLACE: region.id},
+                facts={"mood": world.mood, "severity": table.mood_quake_severity},
+                steps=(StepDraft(StepAction.QUAKE, actor=world.id, locus_kind=StepLocus.REGION, locus_node=region.id),),
+                place=region.id,
+                world_id=world.id,
+            )
     if world.mood >= table.mood_bounty:
         for ground in grounds:
             if not held(ground.entity_id) and "soil_fertility" not in ground.locked:
@@ -122,7 +130,6 @@ async def tend_mood(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvir
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -131,7 +138,7 @@ async def tend_mood(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvir
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.worlds")
+@writes("table.chronicle", "table.incidents", "table.worlds")
 async def world_lives(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     grounds: dict[int, list[RegionEnvironmentRow]] = defaultdict(list)
@@ -165,7 +172,13 @@ async def tend_biosphere(ctx: TickContext, world: WorldRow, target: int) -> None
     step = max(-table.biosphere_regen * 5, min(table.biosphere_regen, target - world.biosphere_health))
     world.biosphere_health = clamp_percent(world.biosphere_health + step)
     if before >= table.biosphere_collapse > world.biosphere_health:
-        await note(ctx, f"The life of {world.name} collapsed.", key="world.biosphere_collapse", world_id=world.id, kind=ChronicleKind.WORLD)
+        await record(
+            ctx,
+            "world.biosphere_collapse",
+            roles={IncidentRole.SUBJECT: world.id},
+            facts={"health": world.biosphere_health, "target": target},
+            world_id=world.id,
+        )
 
 
 async def tend_age(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvironmentRow]) -> None:
@@ -173,7 +186,7 @@ async def tend_age(ctx: TickContext, world: WorldRow, grounds: list[RegionEnviro
         aged = grown_age(ctx.rules, world, ctx.epoch)
         if aged is not world.age_stage:
             world.age_stage = aged
-            await note(ctx, f"{world.name} grew {spoken(aged)}.", key=f"world.aged.{aged.value}", world_id=world.id, kind=ChronicleKind.WORLD_AGE)
+            await record(ctx, f"world.aged.{aged.value}", roles={IncidentRole.SUBJECT: world.id}, facts={"age": aged}, world_id=world.id)
     if world.age_stage not in (WorldAge.OLD, WorldAge.DYING):
         return
     for ground in grounds:

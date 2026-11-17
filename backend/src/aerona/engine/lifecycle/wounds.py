@@ -1,10 +1,13 @@
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
+from aerona.catalog.anatomy import SIGHT_PARTS
+from aerona.catalog.incident_kinds.body_lines import injury_line
 from aerona.catalog.mind import MELEE_SKILLS
-from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, digits_phrase
+from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS
 from aerona.constants.units import PERCENT
-from aerona.core.total import total
+from aerona.core.grammar import fill
+from aerona.db.record_context import PHASE_FAMILY, current_scope
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.anatomy import CreatureAnatomyRow
@@ -12,13 +15,16 @@ from aerona.db.tables.body import SEVERITY_MAX, BodyRow, InjuryRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.records import IncidentStepStateRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import Attribute
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import HarshnessScale
+from aerona.domain.enums.records import StepState
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
 from aerona.engine.body.digits import lose
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
@@ -40,13 +46,13 @@ from aerona.engine.mind.split import attribute, lean_factor
 from aerona.engine.mortal.death import manner_of
 from aerona.engine.mortal.equipment import mount_pct, off_hand_pct, wielded
 from aerona.engine.mortal.standing import add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import FactInput, RoleValue, record
 
 
 class WoundOutcome(StrEnum):
@@ -179,14 +185,45 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             epoch=ctx.epoch,
             year=ctx.environment.window.start if ctx.environment.window is not None else None,
             visible=hit.part.visible,
-            incident_id=incident_for(ctx.session, bearer.id, ctx.epoch),
+            incident_id=harm.incident_id or scoped_incident() or incident_for(ctx.session, bearer.id, ctx.epoch),
             digits=taken,
+            step_id=harm.step_id,
+            instrument_kind=harm.instrument_kind,
+            instrument_key=harm.instrument_key,
+            instrument_node_id=harm.instrument_node_id,
         )
         ctx.session.add(row)
         rows.append(row)
     if rows:
         await ctx.session.flush()
+        await mark_wound_states(ctx, bearer.id, rows)
     return rows
+
+
+BLINDING = frozenset({InjuryKind.GOUGED, InjuryKind.DESTROYED})
+
+
+def wound_states(row: InjuryRow) -> tuple[StepState, ...]:
+    states: list[StepState] = []
+    if row.bleeding > 0:
+        states.append(StepState.BLEEDING)
+    if row.kind is InjuryKind.CONCUSSION:
+        states.append(StepState.STUNNED)
+    if row.kind in BLINDING and row.part in SIGHT_PARTS:
+        states.append(StepState.BLINDED)
+    return tuple(states)
+
+
+async def mark_wound_states(ctx: TickContext, bearer_id: int, rows: list[InjuryRow]) -> None:
+    marks = dict.fromkeys((row.step_id, state) for row in rows if row.step_id is not None for state in wound_states(row))
+    for step_id, state in marks:
+        if await ctx.session.get(IncidentStepStateRow, (step_id, bearer_id, state)) is None:
+            ctx.session.add(IncidentStepStateRow(step_id=step_id, node_id=bearer_id, state=state))
+
+
+def scoped_incident() -> int | None:
+    scope = current_scope()
+    return scope.incident_id if scope is not None and not scope.key.startswith(f"{PHASE_FAMILY}.") else None
 
 
 def world_of(bearer: Bearer) -> int | None:
@@ -199,55 +236,23 @@ async def _announce(ctx: TickContext, bearer: Bearer, rows: list[InjuryRow]) -> 
     grave = [row for row in rows if row.severity >= ctx.rules.injury.note_severity or row.kind in MARK_KINDS]
     if not grave or not is_notable(ctx.rules, bearer, await EntityRepository(ctx.session).flags(bearer.id)):
         return
-    body = await ctx.session.get(BodyRow, bearer.id)
-    anatomy = anatomy_for(body) if body is not None else None
     for row in grave:
-        part = anatomy.part(row.part) if anatomy is not None else None
-        label = digits_phrase(row.digits) if row.digits else (part.label if part is not None else row.part).lower()
-        await note(ctx, f"{wound_sentence(bearer.name, row.kind, label)}.", key=f"injury.{row.kind.value}", ids=[bearer.id])
-    for row in grave:
-        row.incident_id = incident_for(ctx.session, bearer.id, ctx.epoch) or row.incident_id
-
-
-INJURY_PHRASES = total(
-    InjuryKind,
-    {
-        InjuryKind.BRUISE: "a bruising blow",
-        InjuryKind.CUT: "a cut",
-        InjuryKind.DEEP_CUT: "a deep cut",
-        InjuryKind.PUNCTURE: "a piercing wound",
-        InjuryKind.FRACTURE: "a broken bone",
-        InjuryKind.CRUSH: "a crushing blow",
-        InjuryKind.BURN: "burns",
-        InjuryKind.FROSTBITE: "frostbite",
-        InjuryKind.BITE: "a savage bite",
-        InjuryKind.VENOM: "venom",
-        InjuryKind.SEVERED: "the loss of a part",
-        InjuryKind.GOUGED: "a gouging",
-        InjuryKind.DESTROYED: "a ruinous wound",
-        InjuryKind.CURSE_WITHER: "a withering curse",
-        InjuryKind.VOID_TOUCH: "the touch of the void",
-        InjuryKind.DIVINE_BRAND: "a divine brand",
-        InjuryKind.SICKNESS: "a wasting sickness",
-        InjuryKind.GUNSHOT: "a gunshot wound",
-        InjuryKind.SHRAPNEL: "shrapnel wounds",
-        InjuryKind.CONCUSSION: "a concussion",
-        InjuryKind.ELECTRICAL_BURN: "electrical burns",
-        InjuryKind.CHEMICAL_BURN: "chemical burns",
-        InjuryKind.RADIATION_SICKNESS: "radiation sickness",
-        InjuryKind.MIND_SCAR: "harm to the mind",
-    },
-)
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.PATIENT: bearer.id, IncidentRole.ACTOR: row.cause_node_id}
+        facts: dict[str, FactInput] = {
+            "part": row.part,
+            "injury": row.kind,
+            "severity": row.severity,
+            "damage_type": row.damage_type,
+            "cause": row.cause_kind,
+            "digits_lost": len(row.digits),
+        }
+        written = await record(ctx, f"injury.{row.kind.value}", roles=roles, facts=facts, place=bearer.location_id)
+        if row.step_id is None:
+            row.incident_id = written.incident_id
 
 
 def wound_sentence(name: str, kind: InjuryKind, part: str) -> str:
-    if kind is InjuryKind.SEVERED:
-        return f"{name} lost their {part}"
-    if kind is InjuryKind.GOUGED:
-        return f"{name} had their {part} gouged out"
-    if kind is InjuryKind.DESTROYED:
-        return f"{name}'s {part} was ruined"
-    return f"{name} took {INJURY_PHRASES[kind]} to the {part}"
+    return fill(injury_line(kind), patient=name, part=part).rstrip(".")
 
 
 async def _hp_loss(ctx: TickContext, bearer: Bearer, harm: Harm, hits: list[Hit], lethal: bool) -> tuple[int, bool]:

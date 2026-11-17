@@ -9,6 +9,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.disease.responses import take_up
 from aerona.engine.ecology.lineages import BLESSING, TAINT, mark
 from aerona.prompts import SonToolId
@@ -17,7 +18,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -48,8 +48,11 @@ async def mark_lineage(call: SonCall, args: MarkLineageInput) -> str:
     await mark(call.tick, species, TAINT if args.taint else BLESSING, blessing=not args.taint, source_node_id=call.son.id)
     call.target(species.id)
     word = "tainted" if args.taint else "blessed"
-    await call.chronicle(
-        ChronicleKind.WORLD, lines.MARK_LINEAGE, entity_ids=[species.id], son=call.son.name, species=species.name, word=word, reason=args.reason
+    await call.record(
+        "tools.son.mark_lineage",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: species.id},
+        facts={"word": str(word), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.LINEAGE_MARKED, name=species.name, word=word)
 
@@ -65,15 +68,11 @@ async def move_plague_response(call: SonCall, args: MovePlagueResponseInput) -> 
     await take_up(call.tick, community, disease.id, args.response, strength=INSPIRED)
     call.target(community.id)
     response = args.response.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.WORLD,
-        lines.MOVE_PLAGUE_RESPONSE,
-        entity_ids=[community.id, disease.id],
-        son=call.son.name,
-        community=community.name,
-        disease=disease.name,
-        response=response,
-        reason=args.reason,
+    await call.record(
+        "tools.son.move_plague_response",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [community.id, disease.id]},
+        facts={"response": str(response), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
     )
     return result(SonResult.PLAGUE_RESPONSE_MOVED, name=community.name, response=response)
 

@@ -12,6 +12,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.happening import LandAct
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.environment.shaping import LandOutcome, reshape_ground
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import require_essence
 
 LAND_DOMAINS: dict[LandAct, frozenset[Domain]] = {
@@ -81,15 +81,17 @@ async def reshape_land(call: SonCall, args: ReshapeLandInput) -> str:
         fail(SonResult.LAND_UNCHANGED, name=region.name)
     call.spend_essence(tools.reshape_land_essence)
     call.target(region.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC,
-        lines.RESHAPE_LAND,
-        entity_ids=[region.id, *([args.target_region_id] if args.target_region_id is not None else [])],
+    await call.record(
+        "tools.son.reshape_land",
+        roles={
+            IncidentRole.ACTOR: call.son.id,
+            IncidentRole.PLACE: region.id,
+            IncidentRole.SUBJECT: [*[region.id, *([args.target_region_id] if args.target_region_id is not None else [])]],
+        },
+        facts={"act": str(ACT_WORDS[args.act]), "reason": str(args.reason)},
+        place=region.id,
+        kind=ChronicleKind.COSMIC,
         world_id=region.world_id,
-        son=call.son.name,
-        region=region.name,
-        act=ACT_WORDS[args.act],
-        reason=args.reason,
     )
     return result(SonResult.LAND_RESHAPED, name=region.name, act=ACT_WORDS[args.act])
 

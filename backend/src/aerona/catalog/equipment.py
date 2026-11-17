@@ -5,7 +5,7 @@ from aerona.core.total import total
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
-from aerona.domain.enums.military import ArmourType, ShieldType, UnitFamily, UnitKind, VesselArmament
+from aerona.domain.enums.military import ArmourType, ShieldType, UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 E = EquipmentFamily
@@ -13,7 +13,6 @@ S = ArmamentSlot
 B = KnowledgeBranch
 A = ArmourType
 H = ShieldType
-V = VesselArmament
 C = CommodityKind
 D = DamageType
 
@@ -53,7 +52,6 @@ class FamilySpec:
     level: int = 0
     armour: ArmourType | None = None
     shield: ShieldType | None = None
-    armament: VesselArmament | None = None
     ammunition: CommodityKind | None = None
     crew: int = 0
     damage_type: DamageType = DamageType.BLUNT
@@ -136,7 +134,6 @@ def gear(
 def engine(
     head: tuple[EquipmentFamily, str],
     values: tuple[int, int, int, int, int, int],
-    armament: VesselArmament,
     gate: tuple[KnowledgeBranch | None, int] = (None, 0),
     hit: tuple[DamageType, CommodityKind | None] = (DamageType.BLUNT, CommodityKind.SIEGE_MATERIEL),
 ) -> FamilySpec:
@@ -155,7 +152,6 @@ def engine(
         edge="blunt",
         branch=gate[0],
         level=gate[1],
-        armament=armament,
         ammunition=hit[1],
         crew=crew,
         damage_type=hit[0],
@@ -227,24 +223,24 @@ FAMILIES: MappingProxyType[EquipmentFamily, FamilySpec] = total(
             guard((E.FULL_HELM, S.HELMET, "Full helm"), (13, 16, 8), None, (B.METALLURGY, 3)),
             guard((E.LIGHT_BARDING, S.BARDING, "Light barding"), (10, 50, 20), None, (B.WARFARE, 1)),
             guard((E.HEAVY_BARDING, S.BARDING, "Heavy barding"), (25, 75, 45), None, (B.METALLURGY, 3)),
-            engine((E.RAM, "Ram"), (60, 70, 0, 1, 50, 0), V.RAMS, hit=(D.BLUNT, None)),
-            engine((E.BALLISTA, "Ballista"), (45, 70, 80, 1, 55, 3), V.MISSILES, (B.WARFARE, 2), (D.PIERCE, C.TIMBER)),
-            engine((E.CATAPULT_ENGINE, "Catapult engine"), (55, 40, 90, 1, 35, 5), V.SIEGE_ENGINES, (B.WARFARE, 2)),
-            engine((E.TREBUCHET_ENGINE, "Trebuchet engine"), (80, 50, 120, 1, 30, 10), V.SIEGE_ENGINES, (B.WARFARE, 3)),
-            engine((E.BOMBARD, "Bombard"), (85, 80, 100, 1, 25, 8), V.SIEGE_ENGINES, (B.METALLURGY, 3)),
-            engine((E.CANNON, "Cannon"), (70, 80, 120, 1, 40, 6), V.SIEGE_ENGINES, (B.METALLURGY, 4)),
-            engine((E.CARRONADE, "Carronade"), (75, 60, 60, 1, 35, 4), V.SIEGE_ENGINES, (B.METALLURGY, 4)),
-            engine((E.HOWITZER, "Howitzer"), (85, 75, 160, 1, 45, 6), V.SIEGE_ENGINES, (B.METALLURGY, 5), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
-            engine((E.MORTAR, "Mortar"), (75, 60, 120, 1, 35, 4), V.SIEGE_ENGINES, (B.METALLURGY, 4), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
-            engine((E.ROCKET_LAUNCHER, "Rocket launcher"), (70, 50, 150, 3, 35, 3), V.MISSILES, (B.METALLURGY, 5), (D.EXPLOSIVE, C.FUEL)),
-            engine((E.MISSILE_LAUNCHER, "Missile launcher"), (90, 85, 250, 2, 75, 2), V.MISSILES, (B.METALLURGY, 6), (D.EXPLOSIVE, C.FUEL)),
-            engine((E.TORPEDO, "Torpedo"), (95, 90, 120, 1, 55, 3), V.MISSILES, (B.SHIPBUILDING, 5), (D.EXPLOSIVE, C.FUEL)),
-            engine((E.MINE_LAYER, "Mine layer"), (85, 70, 0, 1, 30, 2), V.SIEGE_ENGINES, (B.METALLURGY, 5), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
-            engine((E.HEAVY_FLAMETHROWER, "Heavy flamethrower"), (70, 30, 25, 2, 55, 2), V.SIEGE_ENGINES, (B.METALLURGY, 5), (D.FIRE, C.FUEL)),
-            engine((E.BEAM_CANNON, "Beam cannon"), (95, 100, 200, 2, 80, 3), V.MISSILES, (B.METALLURGY, 6), (D.ENERGY, C.FUEL)),
-            engine((E.FOCUS_ARRAY, "Focus array"), (75, 70, 140, 2, 60, 4), V.RITES, (B.MAGIC, 3), (D.MAGIC, C.MAGICAL_REAGENTS)),
-            engine((E.HARPOON, "Harpoon"), (40, 60, 40, 1, 50, 2), V.RAMS, (B.SEAFARING, 1), (D.PIERCE, C.TIMBER)),
-            engine((E.BOARDING_GEAR, "Boarding gear"), (30, 20, 5, 1, 50, 0), V.RAMS, (B.SEAFARING, 1), (D.CUT, None)),
+            engine((E.RAM, "Ram"), (60, 70, 0, 1, 50, 0), hit=(D.BLUNT, None)),
+            engine((E.BALLISTA, "Ballista"), (45, 70, 80, 1, 55, 3), (B.WARFARE, 2), (D.PIERCE, C.TIMBER)),
+            engine((E.CATAPULT_ENGINE, "Catapult engine"), (55, 40, 90, 1, 35, 5), (B.WARFARE, 2)),
+            engine((E.TREBUCHET_ENGINE, "Trebuchet engine"), (80, 50, 120, 1, 30, 10), (B.WARFARE, 3)),
+            engine((E.BOMBARD, "Bombard"), (85, 80, 100, 1, 25, 8), (B.METALLURGY, 3)),
+            engine((E.CANNON, "Cannon"), (70, 80, 120, 1, 40, 6), (B.METALLURGY, 4)),
+            engine((E.CARRONADE, "Carronade"), (75, 60, 60, 1, 35, 4), (B.METALLURGY, 4)),
+            engine((E.HOWITZER, "Howitzer"), (85, 75, 160, 1, 45, 6), (B.METALLURGY, 5), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
+            engine((E.MORTAR, "Mortar"), (75, 60, 120, 1, 35, 4), (B.METALLURGY, 4), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
+            engine((E.ROCKET_LAUNCHER, "Rocket launcher"), (70, 50, 150, 3, 35, 3), (B.METALLURGY, 5), (D.EXPLOSIVE, C.FUEL)),
+            engine((E.MISSILE_LAUNCHER, "Missile launcher"), (90, 85, 250, 2, 75, 2), (B.METALLURGY, 6), (D.EXPLOSIVE, C.FUEL)),
+            engine((E.TORPEDO, "Torpedo"), (95, 90, 120, 1, 55, 3), (B.SHIPBUILDING, 5), (D.EXPLOSIVE, C.FUEL)),
+            engine((E.MINE_LAYER, "Mine layer"), (85, 70, 0, 1, 30, 2), (B.METALLURGY, 5), (D.EXPLOSIVE, C.SIEGE_MATERIEL)),
+            engine((E.HEAVY_FLAMETHROWER, "Heavy flamethrower"), (70, 30, 25, 2, 55, 2), (B.METALLURGY, 5), (D.FIRE, C.FUEL)),
+            engine((E.BEAM_CANNON, "Beam cannon"), (95, 100, 200, 2, 80, 3), (B.METALLURGY, 6), (D.ENERGY, C.FUEL)),
+            engine((E.FOCUS_ARRAY, "Focus array"), (75, 70, 140, 2, 60, 4), (B.MAGIC, 3), (D.MAGIC, C.MAGICAL_REAGENTS)),
+            engine((E.HARPOON, "Harpoon"), (40, 60, 40, 1, 50, 2), (B.SEAFARING, 1), (D.PIERCE, C.TIMBER)),
+            engine((E.BOARDING_GEAR, "Boarding gear"), (30, 20, 5, 1, 50, 0), (B.SEAFARING, 1), (D.CUT, None)),
             weapon((E.ASSAULT_RIFLE, S.MISSILE_WEAPON, "Assault rifle"), (62, 85, 90, 5, 60), "firearm", (B.METALLURGY, 6), C.ORE),
             weapon((E.SUBMACHINE_GUN, S.MISSILE_WEAPON, "Submachine gun"), (48, 60, 35, 7, 45), "firearm", (B.METALLURGY, 5), C.ORE),
             weapon((E.SHOTGUN, S.MISSILE_WEAPON, "Shotgun"), (70, 45, 20, 2, 55), "firearm", (B.METALLURGY, 5), C.ORE),
@@ -265,9 +261,9 @@ FAMILIES: MappingProxyType[EquipmentFamily, FamilySpec] = total(
             gear((E.MEDKIT, S.SUPPORT, "Medkit"), (0, 10, 40), (B.MEDICINE, 3)),
             gear((E.JAMMER, S.SUPPORT, "Jammer"), (0, 14, 60), (B.METALLURGY, 6)),
             gear((E.RECON_DRONE, S.SUPPORT, "Recon drone"), (10, 8, 80), (B.SKY_NAVIGATION, 6)),
-            engine((E.AUTOCANNON, "Autocannon"), (70, 75, 140, 6, 55, 2), V.MISSILES, (B.METALLURGY, 6), (D.BALLISTIC, C.ORE)),
-            engine((E.MASS_DRIVER, "Mass driver"), (95, 100, 260, 1, 70, 3), V.MISSILES, (B.METALLURGY, 7), (D.BALLISTIC, C.ORE)),
-            engine((E.PLASMA_CANNON, "Plasma cannon"), (95, 95, 180, 2, 65, 3), V.MISSILES, (B.METALLURGY, 7), (D.ENERGY, C.FUEL)),
+            engine((E.AUTOCANNON, "Autocannon"), (70, 75, 140, 6, 55, 2), (B.METALLURGY, 6), (D.BALLISTIC, C.ORE)),
+            engine((E.MASS_DRIVER, "Mass driver"), (95, 100, 260, 1, 70, 3), (B.METALLURGY, 7), (D.BALLISTIC, C.ORE)),
+            engine((E.PLASMA_CANNON, "Plasma cannon"), (95, 95, 180, 2, 65, 3), (B.METALLURGY, 7), (D.ENERGY, C.FUEL)),
         )
     },
 )

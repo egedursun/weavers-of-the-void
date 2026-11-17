@@ -1,5 +1,5 @@
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
-from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.polity import OathBreach, OathKind, OathStatus
 from aerona.engine.polity.oaths import break_oath, home_at_oath, lapse, swear
 from aerona.engine.primitives.queries import has_flag
 from tests.engine.society.factories import Realm, context, mortal, settlement, son, tuned
@@ -13,7 +13,7 @@ async def test_breaking_an_oath_sworn_before_a_god_feeds_its_wrath(realm: Realm)
     witness = await son(realm.session, "Vael", realm.world.id)
     essence = witness.essence
     oath = await swear(ctx, swearer, OathKind.FEALTY, recipient_id=lord.id, witness=witness)
-    await break_oath(ctx, oath, "turned on the hall")
+    await break_oath(ctx, oath, OathBreach.THRONE_SEIZED)
     assert witness.essence > essence
     assert await has_flag(realm.session, swearer.id, EntityFlag.CURSED)
 

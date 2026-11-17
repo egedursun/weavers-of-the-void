@@ -14,16 +14,17 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import GeasLayer, GeasMode, GeasState
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mythic.geas_acts import break_geas
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -80,7 +81,7 @@ async def doom(ctx: TickContext, row: GeasRow, bearer: EntityRow, why: str) -> N
         return
     break_geas(row, ctx.epoch)
     await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id)
-    await note(ctx, f"{bearer.name} broke a geas: {why}.", key="mythic.geas_broken", ids=[bearer.id], kind=ChronicleKind.WORLD)
+    await record(ctx, "mythic.geas_broken", roles={IncidentRole.SUBJECT: bearer.id}, facts={"why": why}, kind=ChronicleKind.WORLD)
 
 
 async def doom_broken(ctx: TickContext, tally: GeasTally) -> None:
@@ -95,7 +96,7 @@ async def doom_broken(ctx: TickContext, tally: GeasTally) -> None:
             )
         )
         if doomed is None and await afflict(ctx, bearer, PackageKind.GEAS_DOOM, Transmission.CURSE, source_node_id=row.layer_node_id) is not None:
-            await note(ctx, f"{bearer.name} broke a geas: {spoken(row.act)}.", key="mythic.geas_broken", ids=[bearer.id], kind=ChronicleKind.WORLD)
+            await record(ctx, "mythic.geas_broken", roles={IncidentRole.SUBJECT: bearer.id}, facts={"act": spoken(row.act)}, kind=ChronicleKind.WORLD)
             tally.broken += 1
 
 

@@ -4,9 +4,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import FIELDS
-from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow, LanguageStandingRow, ResearchFocusRow, ResearchProgressRow
 from aerona.db.tables.discovery import GreatPersonRow, GreatPointsRow
@@ -17,11 +16,11 @@ from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import GreatField
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import people_of
@@ -34,13 +33,13 @@ from aerona.engine.lore.research_depth import open_techniques
 from aerona.engine.mind.book import set_skill
 from aerona.engine.mind.ethics import church_of
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.engine.structures.readers import working
@@ -158,12 +157,12 @@ async def raise_great(ctx: TickContext, community: EntityRow, field: GreatField)
     await add_renown(ctx.session, mortal.id, ctx.rules.discovery.great_renown, ctx.epoch, rules=ctx.rules)
     row = GreatPersonRow(mortal_entity_id=mortal.id, field=field, holder_entity_id=community.id, promoted_epoch=ctx.epoch, deed_done=False, locked=[])
     ctx.session.add(row)
-    await note(
+    await record_incident(
         ctx,
-        f"{mortal.name} rose as {an(spec.label.lower())} of {community.name}.",
-        key="discovery.great_person",
-        ids=[mortal.id, community.id],
-        kind=ChronicleKind.KNOWLEDGE,
+        "discovery.great_person",
+        roles={IncidentRole.ACTOR: mortal.id, IncidentRole.BENEFICIARY: community.id},
+        facts={"field": field, "skill": best, "level": level, "renown": ctx.rules.discovery.great_renown},
+        terms=[Term("rules.discovery.great_skill", ctx.rules.discovery.great_skill), Term("rules.discovery.great_renown", ctx.rules.discovery.great_renown)],
     )
     return row
 
@@ -197,7 +196,7 @@ async def breakthrough(ctx: TickContext, community: EntityRow) -> bool:
     progress = await ctx.session.get(ResearchProgressRow, (community.id, chosen))
     if progress is not None:
         await ctx.session.delete(progress)
-    await note(ctx, f"A breakthrough gave {community.name} {TECHNIQUES[chosen].label.lower()}.", key="discovery.breakthrough", ids=[community.id])
+    await record_incident(ctx, "discovery.breakthrough", roles={IncidentRole.SUBJECT: community.id}, facts={"technique": chosen}, place=community.id)
     return True
 
 

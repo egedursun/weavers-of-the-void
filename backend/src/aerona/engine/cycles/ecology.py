@@ -10,10 +10,11 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 AIMS = (("moisture", "target_moisture"), ("forest_cover", "target_forest"), ("soil_fertility", "target_fertility"))
 TEMPERATE = 50
@@ -126,11 +127,12 @@ async def sabotage(ctx: TickContext, plan: LongPlanRow, row: EcoTransformationRo
         return
     await set_back(ctx, plan, row)
     tally.sabotaged += 1
-    await note(
+    await record(
         ctx,
-        f"The folk of {towns[0].name}, who live from the land as it is, set back {plan.name}.",
-        key="plans.eco_sabotage",
-        ids=[towns[0].id, plan.holder_node_id],
+        "plans.eco_sabotage",
+        roles={IncidentRole.ACTOR: towns[0].id, IncidentRole.TARGET: plan.holder_node_id},
+        facts={"plan": plan.name, "lost": ctx.rules.eco_transformations.sabotage_loss, "chance": table.sabotage_chance},
+        place=towns[0].id,
     )
 
 

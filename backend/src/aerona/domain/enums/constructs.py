@@ -59,3 +59,10 @@ class ContractStatus(StrEnum):
     SLAIN = "slain"
     FAILED = "failed"
     WITHDRAWN = "withdrawn"
+
+
+class ConstructEnd(StrEnum):
+    UNMADE_BY_GODS = "unmade_by_gods"
+    STILLED_BY_KILL_SWITCH = "stilled_by_kill_switch"
+    RUN_DOWN = "run_down"
+    WORN_AWAY = "worn_away"

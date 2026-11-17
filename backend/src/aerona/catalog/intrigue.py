@@ -5,6 +5,7 @@ from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.records import StepAction
 
 
 @dataclass(frozen=True)
@@ -50,6 +51,14 @@ class SchemeSpec:
     needs_target: bool = True
 
 
+PLOT_STEPS: Mapping[PlotKind, StepAction] = {
+    PlotKind.SWAY: StepAction.PERSUADE,
+    PlotKind.FABRICATE_CLAIM: StepAction.FORGE_RECORD,
+    PlotKind.FABRICATE_HOOK: StepAction.DECEIVE,
+    PlotKind.FRAME: StepAction.DECEIVE,
+    PlotKind.FORGE_LETTER: StepAction.FORGE_RECORD,
+    PlotKind.FORGE_WORK: StepAction.DECEIVE,
+}
 SCHEMES: dict[PlotKind, SchemeSpec] = {
     spec.kind: spec
     for spec in (

@@ -10,9 +10,9 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.polity import OathKind, RevoltKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OathBreach, OathKind, RevoltKind
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
@@ -20,7 +20,6 @@ from aerona.engine.demography.kinship import may_wed
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import unrest
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_support.community import CommunityBook
 from aerona.engine.polity.oaths import break_on
@@ -34,6 +33,7 @@ from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_lang
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import declare_war, uprising_target
 
 BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
@@ -84,7 +84,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
                 wealth=clamp_int(settings.rebel_wealth_base + rng.die(settings.rebel_wealth_die), 0, PERCENT),
                 sway=clamp_int(settings.rebel_sway_base + rng.die(settings.rebel_sway_die), 0, PERCENT),
             ),
-            body=f"{REVOLTS[kind].text.capitalize()} in {settlement.name} gave birth to an uprising.",
+            body=f"{REVOLTS[kind].text.capitalize()} in {settlement.name} turned into an uprising.",
             power=settings.rebel_power,
             world_id=settlement.world_id,
             location_id=settlement.id,
@@ -102,7 +102,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
             )
         )
     )
-    await break_on(ctx, sworn, OathKind.FEALTY, f"{settlement.name} rose in revolt")
+    await break_on(ctx, sworn, OathKind.FEALTY, OathBreach.TOWN_REVOLTED, occasion=settlement.id)
     cause = REVOLTS[kind].cause
     if await declare_war(ctx, rebels.id, target.id, f"{kind.value} revolt", cause=cause, world_cap=False):
         await seed_aims(ctx, rebels.id, target.id, REVOLTS[kind].aims)
@@ -113,14 +113,12 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     shift_stat(settlement, "defense", -settings.poverty_revolt_defense_loss, unknown)
     shift_stat(settlement, "prosperity", -settings.poverty_revolt_prosperity_loss, unknown)
     rulers = [entities[bond.source_node_id] for bond in book.bonds.incoming(settlement.id, BondKind.RULES) if bond.source_node_id in entities]
-    defied = f"the rule of {rulers[0].name}" if rulers else "the order of the city"
-    await note(
+    await record_incident(
         ctx,
-        f"Poverty in {settlement.name} turned into an uprising; the rebels defied {defied}.",
-        key="society.poverty_uprising",
-        ids=[settlement.id, rebels.id],
-        feed=FeedCategory.WAR,
-        kind=ChronicleKind.WORLD,
+        "society.poverty_uprising",
+        roles={IncidentRole.PLACE: settlement.id, IncidentRole.ACTOR: rebels.id, IncidentRole.TARGET: rulers[0].id if rulers else None},
+        facts={"defense_lost": settings.poverty_revolt_defense_loss, "prosperity_lost": settings.poverty_revolt_prosperity_loss},
+        place=settlement.id,
     )
     return rebels
 
@@ -144,7 +142,6 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -193,7 +190,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.deeds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -244,7 +241,6 @@ async def uprisings(ctx: TickContext) -> None:
     "table.age_set_members",
     "table.bonds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
@@ -258,9 +254,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.purity",
     "table.union_customs",
 )
-@writes(
-    "table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents"
-)
+@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.incident_participants", "table.incidents")
 async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
@@ -293,8 +287,14 @@ async def love_and_rivalry(ctx: TickContext) -> None:
                         war_cause=None if love else WarCause.RIVALRY,
                     )
                 )
-                text = f"Love grew between {first.name} and {second.name}." if love else f"A rivalry began between {first.name} and {second.name}."
-                await note(ctx, text, key="society.love" if love else "society.rivalry", ids=[first.id, second.id], kind=ChronicleKind.LINEAGE)
+                await record_incident(
+                    ctx,
+                    "society.love" if love else "society.rivalry",
+                    roles={
+                        IncidentRole.ACTOR: first.id,
+                        IncidentRole.CO_ACTOR: second.id,
+                    },
+                )
                 formed += 1
     ctx.count("pairs", formed)
 

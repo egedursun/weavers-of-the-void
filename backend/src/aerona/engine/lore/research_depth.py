@@ -23,7 +23,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import SiegeRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import BoostTrigger, Capability, ResearchChooser, Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.divine import DomainHook
@@ -32,6 +31,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, OfficeKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -48,12 +48,12 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.learning import court_scholar, realm_of
 from aerona.engine.lore.research import gate_open, has_technique, holder_levels, need_for, techniques_of
-from aerona.engine.notes import note
 from aerona.engine.polity.accords import parties_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
@@ -239,13 +239,7 @@ async def deeds_push_research(ctx: TickContext, tally: DepthTally) -> None:
             pushed = await boost(ctx, community.id, trigger)
             if pushed:
                 tally.add("boosts", pushed)
-                await note(
-                    ctx,
-                    f"{community.name} learned from what it lived through: {TRIGGERS[trigger].label.lower()} pushed its research forward.",
-                    key="research.boosted",
-                    ids=[community.id],
-                    kind=ChronicleKind.KNOWLEDGE,
-                )
+                await record_incident(ctx, "research.boosted", roles={IncidentRole.SUBJECT: community.id}, facts={"trigger": trigger, "techniques": pushed})
 
 
 async def living_researchers(session: AsyncSession) -> list[EntityRow]:
@@ -421,12 +415,8 @@ async def institutions_round(ctx: TickContext, tally: DepthTally) -> None:
                 ctx.session.add(row)
                 present[(technique, community.id)] = row
                 tally.add("institutions_born")
-                await note(
-                    ctx,
-                    f"{TECHNIQUES[technique].label} rose as an institution in {community.name}, where wealth, trade and scholars met.",
-                    key="research.institution_born",
-                    ids=[community.id],
-                    kind=ChronicleKind.KNOWLEDGE,
+                await record_incident(
+                    ctx, "research.institution_born", roles={IncidentRole.SUBJECT: community.id}, facts={"technique": technique}, place=community.id
                 )
                 break
     for (technique, holder_id), row in sorted(present.items(), key=lambda item: (item[0][0].value, item[0][1])):
@@ -445,13 +435,7 @@ async def institutions_round(ctx: TickContext, tally: DepthTally) -> None:
         if not row.embraced and "embraced" not in row.locked and not held(holder_id):
             if await embrace(ctx, row):
                 tally.add("institutions_embraced")
-                await note(
-                    ctx,
-                    f"{source.name} paid to embrace {TECHNIQUES[technique].label.lower()} as an institution of its own.",
-                    key="research.institution_embraced",
-                    ids=[holder_id],
-                    kind=ChronicleKind.KNOWLEDGE,
-                )
+                await record_incident(ctx, "research.institution_embraced", roles={IncidentRole.SUBJECT: holder_id}, facts={"technique": technique})
             elif "refused_epochs" not in row.locked:
                 row.refused_epochs += 1
     await ctx.session.flush()

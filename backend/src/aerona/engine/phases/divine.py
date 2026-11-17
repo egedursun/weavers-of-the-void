@@ -48,7 +48,6 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.bonds",
     "table.divine_wounds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.god_designs",
     "table.house_members",
@@ -75,9 +74,10 @@ async def domain_economy(ctx: TickContext) -> None:
 @writes(
     "table.bias_weights",
     "table.chronicle",
-    "table.epoch_year_cursors",
+    "table.chronicle_entities",
     "table.foreign_gods",
     "table.god_designs",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.son_goals",
@@ -114,7 +114,6 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.divine_powers",
     "table.divine_wounds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.hidden_truths",
     "table.incident_participants",
@@ -135,9 +134,7 @@ async def divine_wounds(ctx: TickContext) -> None:
 
 
 @reads("table.avatars", "table.bonds", "table.divine_standing", "table.entities", "table.foreign_gods", "table.sons")
-@writes(
-    "table.avatars", "table.bonds", "table.chronicle", "table.divine_standing", "table.epoch_year_cursors", "table.incident_participants", "table.incidents"
-)
+@writes("table.avatars", "table.bonds", "table.chronicle", "table.divine_standing", "table.incident_participants", "table.incidents")
 async def avatars(ctx: TickContext) -> None:
     ctx.count("converted", await avatar_cycles(ctx))
 
@@ -174,7 +171,6 @@ async def creator_taboos(ctx: TickContext) -> None:
     "table.creator_depictions",
     "table.creator_standing",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -204,7 +200,6 @@ async def creator_attention(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.incident_participants",
     "table.incidents",
@@ -247,7 +242,6 @@ async def god_relations(ctx: TickContext) -> None:
     "table.council_rulings",
     "table.council_violations",
     "table.divine_council_seats",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.incident_participants",
     "table.incidents",
@@ -293,7 +287,6 @@ async def council_rulings(ctx: TickContext) -> None:
     "table.chronicle",
     "table.creator",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.hidden_truths",
     "table.incident_participants",
     "table.incidents",
@@ -344,7 +337,6 @@ async def natural_laws(ctx: TickContext) -> None:
     "table.breach_points",
     "table.chronicle",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",

@@ -6,7 +6,7 @@ from aerona.db.tables.polity import OfficeRow, PolityProfileRow, TreatyPartyRow,
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.polity import OfficeKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import OfficeKind, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.engine.polity.accords import Clause, accept, propose
 from aerona.engine.polity.treaties import breach
 from aerona.prompts import MortalToolId
@@ -85,7 +85,7 @@ async def accept_treaty(call: MortalCall, args: TreatyTargetInput) -> str:
 
 async def break_treaty(call: MortalCall, args: TreatyTargetInput) -> str:
     profile, me = await mine(call, args.treaty_id, TreatyStatus.IN_FORCE)
-    await breach(call.tick, profile, me, clause=None, reason="its rulers chose to break faith")
+    await breach(call.tick, profile, me, clause=None, reason=TreatyBreach.FAITH_BROKEN_BY_CHOICE)
     call.target(profile.treaty_entity_id)
     return result(MortalResult.TREATY_BROKEN)
 

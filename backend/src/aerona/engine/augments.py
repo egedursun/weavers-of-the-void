@@ -10,7 +10,9 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import AugmentKind, AugmentMake, AugmentSlot, EffectTarget, MadeMindStance
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindUpkeep
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of
 from aerona.engine.interconnect.annotations import reads, writes
@@ -18,9 +20,9 @@ from aerona.engine.made.doctrine import doctrine_here
 from aerona.engine.mind.book import skill_level
 from aerona.engine.minds.continuity import law_for
 from aerona.engine.mortal.standing import add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 
 BEARER_TYPES = frozenset({EntityType.MORTAL, EntityType.BEAST, EntityType.SPIRIT, EntityType.COSMIC_BEING})
 SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.FOOD})
@@ -74,7 +76,21 @@ async def install(
     for target, key, amount in effects:
         ctx.session.add(AugmentEffectRow(augment_id=row.id, target=target, target_key=key, amount=amount, locked=[]))
     await ctx.session.flush()
-    await note(ctx, f"{being.name} took an augment.", key="augment.installed", ids=[being.id])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PATIENT: being.id, IncidentRole.HEALER: surgeon_id}
+    facts: dict[str, FactInput] = {"slot": slot, "kind": kind, "make": make, "quality": row.quality, "integration": integration}
+    if part is not None:
+        facts["part"] = part
+    steps = (
+        StepDraft(
+            StepAction.OPERATE,
+            actor=surgeon_id,
+            target=being.id,
+            locus_kind=StepLocus.BODY_PART if part else StepLocus.NONE,
+            locus_key=part.value if part else None,
+            outcome=StepOutcome.SUCCESS,
+        ),
+    )
+    await record(ctx, "augment.installed", roles=roles, facts=facts, steps=steps)
     return row
 
 
@@ -86,9 +102,10 @@ async def remove(ctx: TickContext, augment_id: int) -> int:
     if row.kind is AugmentKind.REPLACEMENT and being is not None and not held(being.id) and stat_or(being, "hp", 0):
         set_stats(being, hp=max(0, stat_or(being, "hp", 0) - ctx.rules.augments.removal_harm))
     bearer_id = row.bearer_node_id
+    facts: dict[str, FactInput] = {"slot": row.slot, "kind": row.kind, "make": row.make}
     await ctx.session.delete(row)
     await ctx.session.flush()
-    await note(ctx, "An augment was taken out.", key="augment.removed", ids=[bearer_id])
+    await record(ctx, "augment.removed", roles={IncidentRole.PATIENT: bearer_id}, facts=facts)
     return bearer_id
 
 
@@ -117,7 +134,8 @@ async def keep_one(ctx: TickContext, being: EntityRow, row: AugmentRow, count: i
     if row.strain >= table.stress_at and being.entity_type is EntityType.MORTAL:
         await add_stress(ctx.session, being.id, row.strain * table.stress_pct / PERCENT, ctx.epoch)
     if row.integration <= table.rejection_at and ctx.rng(f"augment.reject.{row.id}.{ctx.epoch}").chance(table.rejection_chance):
-        await note(ctx, f"The body of {being.name} rejected an augment.", key="augment.rejected", ids=[being.id])
+        rejected: dict[str, FactInput] = {"slot": row.slot, "kind": row.kind, "integration": row.integration, "strain": row.strain}
+        await record(ctx, "augment.rejected", roles={IncidentRole.PATIENT: being.id}, facts=rejected)
         await ctx.session.delete(row)
 
 

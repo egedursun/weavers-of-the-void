@@ -14,6 +14,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import Pollutant
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -21,11 +22,11 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.industry.pollution import shift
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.research import has_technique
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 P = ChemicalProduct
 C = CommodityKind
@@ -76,7 +77,7 @@ async def found_works(ctx: TickContext, town: EntityRow, tally: ChemistryTally) 
             continue
         ctx.session.add(ChemicalWorksRow(settlement_entity_id=town.id, product=product, founded_epoch=ctx.epoch, locked=[]))
         tally.founded += 1
-        await note(ctx, f"{town.name} set up works for {spoken(product)}.", key="chemistry.founded", ids=[town.id])
+        await record(ctx, "chemistry.founded", roles={IncidentRole.MAKER: town.id}, facts={"product": product}, place=town.id)
         return
 
 

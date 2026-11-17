@@ -41,7 +41,7 @@ async def test_protector_intercepts_a_monster_raid(session: AsyncSession, world:
     assert stat(town, "population") == 1000
     assert stat(town, "defense") == 30
     assert "monsters.raid" not in await keys(session)
-    assert "heroism.victory" in await keys(session)
+    assert {"heroism.victory", "heroism.drove_back"} & set(await keys(session))
     assert await BondRepository(session).exists_between(guard.id, world.species.id, BondKind.BEAT) or world.species.status is EntityStatus.DEAD
 
 
@@ -149,7 +149,7 @@ async def test_cursed_mortal_dies_of_the_curse_and_the_curser_is_the_killer(sess
     await curse_decay(ctx)
     assert cast(EntityStatus, victim.status) is EntityStatus.DEAD
     assert await BondRepository(session).exists_between(world.son.id, victim.id, BondKind.KILLED)
-    assert "mortal.death.cause" in await keys(session)
+    assert {"mortal.death.slain", "mortal.death.cause"} & set(await keys(session))
 
 
 async def test_curse_hp_loss_of_zero_leaves_a_cursed_mortal_alive(session: AsyncSession, world: CoreWorld) -> None:
@@ -177,7 +177,7 @@ async def test_cursed_item_damages_its_owner_stats_hp_and_life(session: AsyncSes
     await bond(session, doomed.id, jinx.id, BondKind.OWNS)
     await cursed_items(ctx)
     assert doomed.status is EntityStatus.DEAD
-    assert "mortal.death.cause" in await keys(session)
+    assert {"mortal.death.slain", "mortal.death.cause"} & set(await keys(session))
     assert "curses.spread" not in await keys(session)
 
 

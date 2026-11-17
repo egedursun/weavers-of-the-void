@@ -1,6 +1,5 @@
 from collections.abc import Callable
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.diseases import VECTOR_FUNCTIONS, VECTOR_LABELS, VECTOR_STIGMA
@@ -10,12 +9,11 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.interconnect import IncidentRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector, SpreadPath
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import DiseaseStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
@@ -23,6 +21,7 @@ from aerona.engine.ecology.hosts import link_hosts
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import FactInput, RoleValue, record
 
 WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
@@ -107,27 +106,26 @@ def strain_profile(ctx: TickContext, rng: SeededRandom, parent: DiseaseProfileRo
     )
 
 
-ORIGIN_KEYS = {SpreadPath.LOOSED: "disease.loosed"}
+ORIGIN_KEYS = {
+    (True, False): "disease.loosed",
+    (True, True): "disease.loosed_host",
+    (False, False): "disease.emerged",
+    (False, True): "disease.emerged_host",
+}
 
 
 async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: EntityRow, region: EntityRow, *, path: SpreadPath, son_id: int | None) -> None:
     host = await ctx.session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
-    carried = f", carried by {host.name}" if host is not None else ""
-    text = f"A new sickness rose in {region.name}: {entity.name}, borne by {spoken(profile.vector)}{carried}."
-    if son_id is not None and path is SpreadPath.LOOSED:
-        text = f"A god loosed a new sickness on {region.name}: {entity.name}, borne by {spoken(profile.vector)}{carried}."
-    write = await ctx.chronicle(
-        ChronicleKind.DISASTER,
-        text,
-        template_key=ORIGIN_KEYS.get(path, "disease.emerged"),
-        entity_ids=[entity.id, region.id, *([host.id] if host is not None else [])],
-        son_id=son_id,
-        feed_category=FeedCategory.DISASTER,
-        world_id=region.world_id,
-        place_entity_id=region.id,
-    )
-    incident = write.incident_id or await ctx.session.scalar(select(IncidentRow.id).where(IncidentRow.chronicle_id == write.row.id))
-    profile.origin_incident_id = incident
+    key = ORIGIN_KEYS[(path is SpreadPath.LOOSED, host is not None)]
+    roles: dict[IncidentRole, RoleValue] = {
+        IncidentRole.SUBJECT: entity.id,
+        IncidentRole.PLACE: region.id,
+        IncidentRole.ORIGIN: host.id if host else None,
+        IncidentRole.PATRON: son_id,
+    }
+    facts: dict[str, FactInput] = {"vector": profile.vector, "path": path, "lethality": profile.lethality}
+    write = await record(ctx, key, roles=roles, facts=facts, place=region.id, son_id=son_id, world_id=region.world_id)
+    profile.origin_incident_id = write.incident_id
 
 
 async def birth_disease(

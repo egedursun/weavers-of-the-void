@@ -53,8 +53,8 @@ def seed_level(rules: Rules, mortal: EntityRow, skill: SkillKind, base: int, rng
     lifespan = stat(mortal, "lifespan") or 0
     youth = min(1.0, age / table.adult_age) if table.adult_age else 1.0
     experience = min(table.seed_age_cap, max(0, age - table.adult_age) * table.seed_age_gain / PERCENT)
-    talent = (governing(attributes, skill) - STAT_MIDPOINT) * table.seed_stat_pct / PERCENT
-    level = (base + talent + experience) * youth + rng.integer(-table.seed_jitter, table.seed_jitter)
+    talent_level = (governing(attributes, skill) - STAT_MIDPOINT) * table.seed_stat_pct / PERCENT
+    level = (base + talent_level + experience) * youth + rng.integer(-table.seed_jitter, table.seed_jitter)
     if lifespan and SKILLS[skill].physical and age > lifespan * table.decline_start_pct / PERCENT:
         level -= table.decline_per_epoch
     return clamp_skill(level)

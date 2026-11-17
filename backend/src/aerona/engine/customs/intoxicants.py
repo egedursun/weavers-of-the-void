@@ -18,6 +18,8 @@ from aerona.domain.enums.customs import Intoxicant, IntoxicantUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
@@ -27,11 +29,11 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.grief import OPEN_STAGES
 from aerona.engine.mortal.profile import is_held
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 
 PACKAGES: Mapping[Intoxicant, PackageKind] = {
     Intoxicant.BREW: PackageKind.DRINK_DEPENDENCE,
@@ -141,7 +143,17 @@ async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) 
             ctx, hurt, Harm(damage=ctx.rules.intoxication.brawl_damage, cause=HarmCause.ACCIDENT, death_cause="died of a brawl at a gathering"), lethal=False
         )
         tally.brawls += 1
-        await note(ctx, f"Drink ran high at a gathering and {hurt.name} was hurt in a brawl.", key="intoxication.brawl", ids=[hurt.id])
+        await record(
+            ctx,
+            "intoxication.brawl",
+            roles={IncidentRole.VICTIM: hurt.id, IncidentRole.HOST: gathering.host_node_id, IncidentRole.GUEST: guests},
+            facts={"damage": ctx.rules.intoxication.brawl_damage},
+            steps=(
+                StepDraft(StepAction.QUARREL, target=hurt.id),
+                StepDraft(StepAction.STRIKE, target=hurt.id, amount=ctx.rules.intoxication.brawl_damage, unit=FactUnit.HP),
+            ),
+            place=gathering.place_entity_id,
+        )
 
 
 async def visions(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) -> None:

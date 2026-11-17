@@ -9,6 +9,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import SoundChangeCause, SoundChangeKind, SoundEnvironment
 from aerona.engine.tongues.divine import give_tongue, knows, teach, tongue_of
 from aerona.engine.tongues.meaning import veil
@@ -19,7 +20,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -66,7 +66,12 @@ async def reveal_tongue(call: SonCall, args: RevealTongueInput) -> str:
     if not await teach(call.tick, call.son.id, mortal):
         fail(SonResult.TONGUE_REFUSED, why=f"{mortal.name} cannot be taught now")
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.REVEAL_TONGUE, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, reason=args.reason)
+    await call.record(
+        "tools.son.reveal_tongue",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.LANGUAGE,
+    )
     return result(SonResult.TONGUE_REVEALED, name=mortal.name)
 
 
@@ -76,7 +81,12 @@ async def decree_sound(call: SonCall, args: DecreeSoundInput) -> str:
     await add_change(call.tick, language.id, change, SoundChangeCause.DECREE)
     changed = await rederive(call.tick, language.id)
     call.target(language.id)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.DECREE_SOUND, entity_ids=[language.id], son=call.son.name, language=language.name, reason=args.reason)
+    await call.record(
+        "tools.son.decree_sound",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: language.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.LANGUAGE,
+    )
     return result(SonResult.SOUND_DECREED, name=language.name, count=changed)
 
 
@@ -90,7 +100,12 @@ async def veil_name(call: SonCall, args: VeilNameInput) -> str:
     if word is None:
         fail(SonResult.TONGUE_REFUSED, why=f"{language.name} has too few words for a euphemism")
     call.target(language.id)
-    await call.chronicle(ChronicleKind.LANGUAGE, lines.VEIL_NAME, entity_ids=[language.id], son=call.son.name, name=name, reason=args.reason)
+    await call.record(
+        "tools.son.veil_name",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: language.id},
+        facts={"name": str(name), "reason": args.reason},
+        kind=ChronicleKind.LANGUAGE,
+    )
     return result(SonResult.NAME_VEILED, name=name, word=word.word)
 
 

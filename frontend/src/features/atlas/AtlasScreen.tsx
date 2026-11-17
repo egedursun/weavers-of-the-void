@@ -26,6 +26,7 @@ import {
 import { type EntitySummary } from '@/features/entity/api/types'
 import { useHealth } from '@/features/images/api'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import { AtlasAtMoment } from '@/features/records/AtlasAtMoment'
 import { AtlasDetail } from './AtlasDetail'
 import { AtlasFilters } from './AtlasFilters'
 import { AtlasList } from './AtlasList'
@@ -336,6 +337,7 @@ export function AtlasScreen() {
                 kinds={typeCounts.size}
                 onSelect={pick}
               />
+              <AtlasAtMoment />
             </section>
           </div>
         </div>

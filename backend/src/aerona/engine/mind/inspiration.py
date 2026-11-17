@@ -15,6 +15,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import InspirationKind, InspirationState, MoodState, PreferenceKind, SkillFamily, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.bands import banded
@@ -26,10 +27,10 @@ from aerona.engine.lore.items import profile_of
 from aerona.engine.lore.research_depth import add_progress, research_choices
 from aerona.engine.mind.preferences import favourite
 from aerona.engine.mind.thoughts import think
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.renown.deeds import acclaim_deed, best_craft
 
 SEERS = frozenset({MortalRole.PRIEST, MortalRole.SAGE})
@@ -154,7 +155,7 @@ async def make_masterwork(ctx: TickContext, mortal: EntityRow, row: InspirationR
     row.result_node_id = item.id
     row.state = InspirationState.FULFILLED
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.MADE_MASTERWORK, ctx.epoch, subject_id=item.id)
-    await note(ctx, f"In a fever of inspiration, {mortal.name} made {item.name}.", key="inspiration.masterwork", ids=[mortal.id, item.id])
+    await record(ctx, "inspiration.masterwork", roles={IncidentRole.SUBJECT: [mortal.id, item.id]}, facts={"item": str(item.name)})
     craft = await best_craft(ctx, mortal.id, CRAFT_SKILLS)
     await acclaim_deed(ctx, mortal.id, ReputationAxis.SKILL_RENOWN, ctx.rules.local_renown.masterwork_magnitude, place_id=community.id, skill=craft)
     return True

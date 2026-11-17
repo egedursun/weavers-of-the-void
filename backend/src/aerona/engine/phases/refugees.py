@@ -4,15 +4,17 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
+from aerona.domain.enums.travel import RefugeeCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.drives import closeness
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
 from aerona.engine.primitives.distance import RegionAtlas
@@ -20,12 +22,11 @@ from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import BondIndex, canon, connect, living_entity, spoken_language
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 
 SHELTER_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
 WAR_EVENT_KINDS = frozenset({EngineKind.WAR, EngineKind.BATTLE, EngineKind.SIEGE})
 DISASTER_EVENT_KINDS = frozenset({EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.PLAGUE, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.FAMINE})
-WAR_CAUSE = "war"
-DISASTER_CAUSE = "disaster"
 
 
 @dataclass(frozen=True)
@@ -93,7 +94,7 @@ async def shelters(ctx: TickContext, atlas: RegionAtlas, bonds: BondIndex, origi
 
 
 async def flee(
-    ctx: TickContext, atlas: RegionAtlas, origin: EntityRow, refugees: int, *, cause: str, destination: EntityRow | None, excluded: set[int]
+    ctx: TickContext, atlas: RegionAtlas, origin: EntityRow, refugees: int, *, cause: RefugeeCause, destination: EntityRow | None, excluded: set[int]
 ) -> Exodus | None:
     bonds = await BondIndex.load(ctx.session, [BondKind.ALLY, BondKind.ENEMY])
     floor, cap = headcount_bounds(ctx.rules, origin)
@@ -105,13 +106,18 @@ async def flee(
         host_floor, host_cap = headcount_bounds(ctx.rules, host)
         set_stats(host, population=min(host_cap, max(host_floor, (stat(host, "population") or 0) + refugees)))
         await connect(
-            ctx.session, origin.id, host.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {several(refugees, 'person', 'people')}"
+            ctx.session, origin.id, host.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({spoken(cause)}): {several(refugees, 'person', 'people')}"
         )
-        await note(
+        await record(
             ctx,
-            f"{several(refugees, 'refugee', 'refugees')} fleeing {cause} from {origin.name} took shelter in {host.name}.",
-            key="refugees.sheltered",
-            ids=[origin.id, host.id],
+            "refugees.sheltered",
+            roles={IncidentRole.ORIGIN: origin.id, IncidentRole.HOST: host.id},
+            facts={"refugees": refugees, "cause_kind": cause},
+            steps=(
+                StepDraft(StepAction.LEAVE, actor=origin.id, amount=refugees, unit=FactUnit.PEOPLE),
+                StepDraft(StepAction.ARRIVE, target=host.id, amount=refugees, unit=FactUnit.PEOPLE),
+            ),
+            place=host.id,
         )
         return Exodus(origin, refugees, host, False)
     region_id = atlas.top_region(origin.id)
@@ -119,18 +125,24 @@ async def flee(
         region = await living_entity(ctx.session, neighbour_id)
         if region is None:
             continue
-        ruin = await resettle_ruin(ctx, region, origin, refugees, f"refugees fleeing {cause} from {origin.name}", atlas=atlas)
+        ruin = await resettle_ruin(ctx, region, origin, refugees, f"refugees fleeing {spoken(cause)} from {origin.name}", atlas=atlas)
         if ruin is None:
             continue
         set_stats(origin, population=max(floor, min(cap, population - refugees)))
         await connect(
-            ctx.session, origin.id, ruin.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({cause}): {several(refugees, 'person', 'people')}"
+            ctx.session, origin.id, ruin.id, BondKind.MIGRATED_TO, ctx.epoch, description=f"refugees ({spoken(cause)}): {several(refugees, 'person', 'people')}"
         )
-        await note(
+        await record(
             ctx,
-            f"{several(refugees, 'refugee', 'refugees')} fleeing {cause} from {origin.name} settled the ruin of {ruin.name} and rebuilt it.",
-            key="refugees.ruin",
-            ids=[origin.id, ruin.id],
+            "refugees.ruin",
+            roles={IncidentRole.ORIGIN: origin.id, IncidentRole.PRODUCT: ruin.id},
+            facts={"refugees": refugees, "cause_kind": cause},
+            steps=(
+                StepDraft(StepAction.LEAVE, actor=origin.id, amount=refugees, unit=FactUnit.PEOPLE),
+                StepDraft(StepAction.ARRIVE, target=ruin.id),
+                StepDraft(StepAction.SETTLE, target=ruin.id, amount=refugees, unit=FactUnit.PEOPLE),
+            ),
+            place=ruin.id,
         )
         return Exodus(origin, refugees, ruin, True)
     return None
@@ -143,7 +155,6 @@ async def flee(
     "table.bonds",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",
@@ -156,8 +167,9 @@ async def flee(
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
 )
 async def refugees(ctx: TickContext) -> None:
@@ -175,7 +187,7 @@ async def refugees(ctx: TickContext) -> None:
         if community.status is not EntityStatus.CANON or population < life.refugee_min_population:
             continue
         struck = {community.id, community.location_id, atlas.top_region(community.id)} & sites
-        cause = WAR_CAUSE if community.id in defeated else DISASTER_CAUSE if struck else None
+        cause = RefugeeCause.WAR if community.id in defeated else RefugeeCause.DISASTER if struck else None
         if cause is None or not rng.chance(rules.deep_world.refugee_chance):
             continue
         count = round_half_up(population * rules.deep_world.refugee_share_pct / PERCENT)
@@ -197,7 +209,7 @@ async def order_exodus(ctx: TickContext, origin_id: int, share_pct: int, destina
     count = round_half_up((stat(origin, "population") or 0) * share_pct / PERCENT)
     if count <= 0:
         raise ValidationFailedError("No one is left to leave.")
-    exodus = await flee(ctx, await RegionAtlas.load(ctx.session), origin, count, cause="the will of the gods", destination=destination, excluded=set())
+    exodus = await flee(ctx, await RegionAtlas.load(ctx.session), origin, count, cause=RefugeeCause.DECREE, destination=destination, excluded=set())
     if exodus is None:
         raise ValidationFailedError(f"{origin.name} has nowhere to flee.")
     return exodus

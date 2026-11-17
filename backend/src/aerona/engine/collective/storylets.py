@@ -25,7 +25,9 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import CasusBelliKind
 from aerona.engine.body.hits import Harm
@@ -42,7 +44,6 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import church_of, culture_of
 from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.standing import add_infamy, add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
@@ -50,6 +51,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import RoleValue, StepDraft, record
 from aerona.engine.relations.book import ensure_relation
 from aerona.engine.relations.book import shift as shift_relation
 from aerona.engine.storyteller.drama import pressed, world_drama
@@ -320,8 +322,24 @@ async def begin(
         )
         run.collection_id = collection.id if collection is not None else None
     if delay == 0:
-        await note(ctx, await situation(ctx.session, run), key=f"storylet.{storylet.value}", ids=sorted(set(cast.values())))
+        await tell_situation(ctx, run)
     return run
+
+
+def storylet_roles(run: StoryletRunRow) -> dict[IncidentRole, RoleValue]:
+    cast = cast_of(run)
+    chooser = cast.get(STORYLETS[run.storylet].chooser)
+    return {IncidentRole.ACTOR: chooser, IncidentRole.MEMBER: sorted({node for node in cast.values() if node != chooser})}
+
+
+async def tell_situation(ctx: TickContext, run: StoryletRunRow) -> None:
+    await record(
+        ctx,
+        f"storylet.{run.storylet.value}",
+        roles=storylet_roles(run),
+        facts={"storylet": run.storylet, "step": run.step, "choices": len(STORYLETS[run.storylet].steps[run.step].choices)},
+        world_id=run.world_id,
+    )
 
 
 async def worlds(ctx: TickContext) -> list[int]:
@@ -523,9 +541,14 @@ async def resolve(ctx: TickContext, run: StoryletRunRow, choice_index: int, tall
         await apply_effect(ctx, effect, cast)
     run.status, run.choice, run.resolved_epoch = StoryletStatus.RESOLVED, choice_index, ctx.epoch
     tally.resolved += 1
-    known = await names(ctx.session, cast)
-    chooser = known.get(STORYLETS[run.storylet].chooser.value, "someone")
-    await note(ctx, f"{chooser} chose: {choice.text.format(**known)}.", key=f"storylet.{run.storylet.value}.{by}", ids=sorted(set(cast.values())))
+    await record(
+        ctx,
+        f"storylet.{run.storylet.value}.{by}",
+        roles=storylet_roles(run),
+        facts={"storylet": run.storylet, "step": run.step, "choice": choice_index + 1, "effects": len(choice.effects)},
+        steps=(StepDraft(StepAction.AGREE, actor=cast.get(STORYLETS[run.storylet].chooser), outcome=StepOutcome.ACCEPTED),),
+        world_id=run.world_id,
+    )
     if choice.follow is not None:
         await begin(ctx, choice.follow, run.world_id, cast, step=choice.step, follows=run.id, delay=ctx.rules.storylets.follow_epochs)
         tally.followed += 1
@@ -540,7 +563,7 @@ async def announce(ctx: TickContext, tally: StoryletTally) -> None:
         )
     )
     for run in rows:
-        await note(ctx, await situation(ctx.session, run), key=f"storylet.{run.storylet.value}", ids=sorted(set(cast_of(run).values())))
+        await tell_situation(ctx, run)
 
 
 async def settle_due(ctx: TickContext, tally: StoryletTally) -> None:

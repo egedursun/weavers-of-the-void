@@ -12,6 +12,7 @@ from aerona.domain.enums.culture import ItemClass, ItemDeed, RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faith import BindingKind, SpiritAlignment
 from aerona.engine.context import TickContext
+from aerona.engine.lore.history import scope_incident
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
@@ -90,5 +91,14 @@ async def wear_in_duel(ctx: TickContext, fighter_id: int, exchanges: int) -> int
         row.condition = clamp_int(row.condition - loss, 0, PERCENT)
         worn += 1
         if before >= ctx.rules.item_wear.broken > row.condition:
-            ctx.session.add(ItemHistoryRow(item_entity_id=row.item_entity_id, epoch=ctx.epoch, deed=ItemDeed.BROKEN, actor_entity_id=fighter_id, note=NOTE))
+            ctx.session.add(
+                ItemHistoryRow(
+                    item_entity_id=row.item_entity_id,
+                    epoch=ctx.epoch,
+                    deed=ItemDeed.BROKEN,
+                    actor_entity_id=fighter_id,
+                    note=NOTE,
+                    incident_id=scope_incident(),
+                )
+            )
     return worn

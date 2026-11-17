@@ -5,14 +5,13 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import TreatyProfileRow
 from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import ROBBER_KINDS, FactionActionKind, FactionKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import ClauseKind, OfficePower, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, OfficePower, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.factions.book import FactionBook, log
 from aerona.engine.military.support import new_side
-from aerona.engine.notes import note
 from aerona.engine.polity.accords import Clause, end_treaty, sign
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.offices import best_skill
@@ -22,6 +21,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import ongoing_wars
 
@@ -43,12 +43,13 @@ async def suppress(ctx: TickContext, factions: FactionBook, realms: RealmBook) -
         log(ctx, faction_id, FactionActionKind.SUPPRESSED, target=realm.entity.id)
         if (stat(band, "strength") or 0) <= table.destroy_strength:
             await retire_in(ctx, band, f"broken by the soldiers of {realm.entity.name}", close_bonds=True)
-            await note(
+            await record_incident(
                 ctx,
-                f"{realm.entity.name} hunted down {band.name}; the band was broken.",
-                key="faction.suppressed",
-                ids=[realm.entity.id, band.id],
-                kind=ChronicleKind.CIVILIZATION,
+                "faction.suppressed",
+                roles={IncidentRole.ACTOR: realm.entity.id, IncidentRole.TARGET: band.id},
+                facts={
+                    "command_skill": skill,
+                },
             )
             broken += 1
     return broken
@@ -117,12 +118,11 @@ async def contract(ctx: TickContext, factions: FactionBook, company: FactionProf
     company.pay = pay
     company.unpaid_epochs = 0
     log(ctx, company.faction_entity_id, FactionActionKind.HIRED, target=realm.entity.id, amount=pay)
-    await note(
+    await record_incident(
         ctx,
-        f"{realm.entity.name} took {factions.entities[company.faction_entity_id].name} into its pay.",
-        key="faction.hired",
-        ids=[realm.entity.id, company.faction_entity_id, treaty.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "faction.hired",
+        roles={IncidentRole.BUYER: realm.entity.id, IncidentRole.SELLER: company.faction_entity_id, IncidentRole.INSTRUMENT: treaty.id},
+        facts={"pay": pay},
     )
     return treaty.id
 
@@ -159,7 +159,7 @@ async def defect(
 ) -> None:
     table = ctx.rules.mercenaries
     company = factions.entities[profile.faction_entity_id]
-    await breach(ctx, treaty, company.id, clause=None, reason="it was not paid")
+    await breach(ctx, treaty, company.id, clause=None, reason=TreatyBreach.COMPANY_UNPAID)
     profile.employer_entity_id, profile.contract_entity_id = None, None
     core = employer.profile.core_entity_id
     wars = await ongoing_wars(ctx.session, core) if core is not None else []
@@ -170,25 +170,21 @@ async def defect(
         if side is not None and await ctx.session.get(WarSideRow, (item.war.id, company.id)) is None:
             ctx.session.add(new_side(ctx, item.war.id, company.id, side))
         log(ctx, company.id, FactionActionKind.DEFECTED, target=enemy, note="changed sides")
-        await note(
+        await record_incident(
             ctx,
-            f"Unpaid, {company.name} went over to the enemies of {employer.entity.name}.",
-            key="faction.turncoat",
-            ids=[company.id, employer.entity.id],
-            kind=ChronicleKind.WAR,
+            "faction.turncoat",
+            roles={
+                IncidentRole.ACTOR: company.id,
+                IncidentRole.VICTIM: employer.entity.id,
+                IncidentRole.ALLY: enemy,
+            },
         )
         counts["defected"] += 1
         return
     profile.kind = FactionKind.BANDITS
     profile.outlawed = True
     log(ctx, company.id, FactionActionKind.DEFECTED, target=employer.entity.id, note="turned bandit")
-    await note(
-        ctx,
-        f"Unpaid, {company.name} turned to banditry in {employer.entity.name}.",
-        key="faction.turned_bandit",
-        ids=[company.id, employer.entity.id],
-        kind=ChronicleKind.WAR,
-    )
+    await record_incident(ctx, "faction.turned_bandit", roles={IncidentRole.ACTOR: company.id, IncidentRole.VICTIM: employer.entity.id})
     counts["bandits"] += 1
 
 

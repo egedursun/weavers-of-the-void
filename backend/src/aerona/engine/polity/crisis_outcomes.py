@@ -1,23 +1,24 @@
 from sqlalchemy import select
 
+from aerona.catalog.statecraft import DEMAND_TEXT
 from aerona.db.tables.polity import TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.military.aims import cede
-from aerona.engine.notes import note
 from aerona.engine.polity.accords import end_treaty
 from aerona.engine.polity.book import Realm, RealmBook
-from aerona.engine.polity.crises import DEMAND_TEXT, CrisisTally, Verdict, ripe_crises
+from aerona.engine.polity.crises import CrisisTally, Verdict, ripe_crises
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 from aerona.engine.services.war import declare_war
 
 LEGITIMACY = "legitimacy"
@@ -91,27 +92,29 @@ async def settle(ctx: TickContext, book: RealmBook, verdict: Verdict, tally: Cri
     crisis = verdict.crisis
     demander, target = book.realms.get(crisis.demander_entity_id), book.realms.get(crisis.target_entity_id)
     state = verdict.state
-    text = ""
     if demander is None or target is None:
         state = CrisisState.BACKED_DOWN
     elif state is CrisisState.BACKED_DOWN:
         shame(demander, ctx.rules.statecraft.back_down_legitimacy)
-        text = f"{demander.entity.name} backed down from its demand on {target.entity.name}."
         tally.backed_down += 1
     elif state is CrisisState.CONCEDED:
         await concede(ctx, book, crisis, demander, target)
         await reward_backers(ctx, crisis, demander)
         shame(target, ctx.rules.statecraft.back_down_legitimacy)
-        text = f"{target.entity.name} gave way and agreed to {DEMAND_TEXT[crisis.demand]} for {demander.entity.name}."
         tally.conceded += 1
     elif await go_to_war(ctx, crisis, demander, target):
-        text = f"Neither {demander.entity.name} nor {target.entity.name} gave way, and the crisis became a war."
         tally.wars += 1
     else:
         return
     crisis.state, crisis.resolved_epoch = state, ctx.epoch
-    if text:
-        await note(ctx, text, key=f"statecraft.crisis_{state.value}", ids=[crisis.demander_entity_id, crisis.target_entity_id], kind=ChronicleKind.WAR)
+    if demander is not None and target is not None:
+        await record(
+            ctx,
+            f"statecraft.crisis_{state.value}_{crisis.demand.value}",
+            roles={IncidentRole.ACCUSER: demander.entity.id, IncidentRole.TARGET: target.entity.id},
+            facts={"escalation": crisis.escalation, "legitimacy_lost": ctx.rules.statecraft.back_down_legitimacy},
+            place=target.profile.capital_entity_id,
+        )
 
 
 async def tend_crises(ctx: TickContext, tally: CrisisTally) -> None:

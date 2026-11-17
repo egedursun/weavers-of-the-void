@@ -8,6 +8,7 @@ from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.mind import MemoryKind, TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -19,13 +20,13 @@ from aerona.engine.lore import art, items, typed_backfill
 from aerona.engine.lore.curse_kinds import WIDER_CURSES, Cursed
 from aerona.engine.mind.book import add_trait, stored_values, write_values
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.recording.record import record
 
 
 async def rival_of(ctx: TickContext, bearer: EntityRow) -> EntityRow | None:
@@ -168,7 +169,6 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -224,7 +224,6 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.community_stocks",
     "table.conditions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.house_profiles",
     "table.incident_participants",
@@ -271,7 +270,6 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.community_societies",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.language_intelligibility",
     "table.memories",
@@ -297,7 +295,6 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -316,4 +313,4 @@ async def artwork_cycles(ctx: TickContext) -> None:
         raised = await art.commission(ctx, realm)
         if raised is not None:
             ctx.count("propaganda_works")
-            await note(ctx, f"{raised.name} was raised to praise the ruler.", key="lore.propaganda", ids=[raised.id, realm.polity_entity_id])
+            await record(ctx, "lore.propaganda", roles={IncidentRole.SUBJECT: [raised.id, realm.polity_entity_id]})

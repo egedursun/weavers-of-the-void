@@ -20,6 +20,8 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus, StepOutcome, StepState
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.conditions import gain_condition
@@ -33,6 +35,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import held_captive, release_captive, take_captive
 
 
@@ -66,13 +69,30 @@ async def triggered(ctx: TickContext, atlas: RegionAtlas, anatomy: CreatureAnato
     return await desecrated_near(ctx, atlas, region_id)
 
 
-async def carry_off(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, near: list[EntityRow]) -> str | None:
+async def carry_off(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, near: list[EntityRow]) -> int | None:
     if not near or not ctx.rng(f"abduct.{beast.id}.{ctx.epoch}").chance(ctx.rules.monsters.abduct_pct):
         return None
     for town in near:
         victim = await seize(ctx, beast, row, town, "carried off in the night")
         if victim is not None:
-            return f"{beast.name} carried {victim.name} off from {town.name}"
+            await record(
+                ctx,
+                "beasts.carried_off",
+                roles={IncidentRole.ACTOR: beast.id, IncidentRole.VICTIM: victim.id, IncidentRole.ORIGIN: town.id},
+                steps=(
+                    StepDraft(
+                        StepAction.CARRY_OFF,
+                        actor=beast.id,
+                        target=victim.id,
+                        locus_kind=StepLocus.SETTLEMENT,
+                        locus_node=town.id,
+                        outcome=StepOutcome.CAPTURED,
+                        states=((victim.id, StepState.CAPTURED),),
+                    ),
+                ),
+                place=town.id,
+            )
+            return victim.id
     return None
 
 

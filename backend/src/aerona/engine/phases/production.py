@@ -13,11 +13,11 @@ from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow, Resourc
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, MaterialOrigin
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SkyEventKind
 from aerona.engine.context import TickContext
@@ -31,12 +31,12 @@ from aerona.engine.economy.survey import depth_backfill, economy_backfill, profi
 from aerona.engine.environment.book import active_sky
 from aerona.engine.industry.fuels import lay_coal_seams
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 ITEM_DECAY_KEYS = ("damage", "protection", "might")
@@ -56,7 +56,6 @@ CORRUPT_FROM = PERCENT // 2
     "table.community_stocks",
     "table.divine_wounds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.forced_weather",
     "table.foreign_gods",
@@ -100,8 +99,8 @@ CORRUPT_FROM = PERCENT // 2
     "table.community_industry",
     "table.community_societies",
     "table.community_stocks",
-    "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.production_runs",
@@ -129,7 +128,13 @@ async def _decay_item(ctx: TickContext, item: EntityRow, loss: int, cap: int, cu
     set_stats(item, **values)
     if loss > 0 and any(before.values()) and all(values[key] == 0 for key in ITEM_DECAY_KEYS):
         await retire_in(ctx, item, "crumbled away", status=EntityStatus.DESTROYED)
-        await note(ctx, f"{item.name} crumbled away; its material could not outlast the years.", key="material.crumbled", ids=[item.id])
+        await record(
+            ctx,
+            "material.crumbled",
+            roles={IncidentRole.SUBJECT: item.id},
+            facts={"loss": loss, "damage_lost": before["damage"], "protection_lost": before["protection"], "might_lost": before["might"]},
+            place=item.location_id,
+        )
         return True
     return False
 
@@ -166,7 +171,6 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.herds",
     "table.holder_levels",
@@ -207,7 +211,6 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
 )
@@ -590,11 +593,12 @@ async def deposit_finding(ctx: TickContext) -> None:
             if ctx.rng(f"reveal.{resource.id}.{community.id}.{ctx.epoch}").chance(table.deposit_reveal_chance):
                 profile.revealed = True
                 found += 1
-                await ctx.chronicle(
-                    ChronicleKind.RESOURCE,
-                    f"The prospectors of {community.name} found {resource.name}.",
-                    template_key="extraction.deposit_found",
-                    entity_ids=[community.id, resource.id],
+                await record(
+                    ctx,
+                    "extraction.deposit_found",
+                    roles={IncidentRole.ACTOR: community.id, IncidentRole.PRODUCT: resource.id},
+                    facts={"reserve": profile.reserve, "metallurgy": book.level(community.id, KnowledgeBranch.METALLURGY)},
+                    place=resource.location_id,
                 )
                 break
     ctx.count("deposits_found", found)

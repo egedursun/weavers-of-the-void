@@ -28,6 +28,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import ExistenceMode, PowerEffect, SonStatus, Stat
 from aerona.domain.enums.war import GodConflictOutcome
@@ -48,6 +49,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.transform.anchors import star_god_died
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -233,7 +235,13 @@ async def destroy_temple(ctx: TickContext, god: ForeignGodRow, temple: EntityRow
     if keeper is not None:
         await curse_desecrator(ctx, keeper.id, god.id)
         await desecrated(ctx, keeper.id, god.id, note=temple.name)
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, f"{god.name} destroyed {temple.name}.", template_key="pantheon.temple_destroyed", entity_ids=[temple.id])
+    await record(
+        ctx,
+        "pantheon.temple_destroyed",
+        roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: temple.id, IncidentRole.OWNER: keeper.id if keeper is not None else None},
+        place=temple.location_id,
+        kind=ChronicleKind.FOREIGN_GOD,
+    )
 
 
 async def _world_people(session: AsyncSession, world_id: int) -> EntityRow | None:
@@ -317,10 +325,12 @@ async def birth_local_god(ctx: TickContext, world: WorldRow, people: EntityRow) 
             status=ForeignGodStatus.ASLEEP,
         ),
     )
-    await ctx.chronicle(
-        ChronicleKind.FOREIGN_GOD,
-        f"Beneath {world.name} a god of its own stirred in its sleep: {god.name}, {title}.",
-        template_key="pantheon.local_god_born",
+    await record(
+        ctx,
+        "pantheon.local_god_born",
+        roles={IncidentRole.SUBJECT: god.id, IncidentRole.PLACE: world.id},
+        facts={"title": title},
+        kind=ChronicleKind.FOREIGN_GOD,
         world_id=world.id,
     )
     ctx.count("local_gods_born")
@@ -390,7 +400,13 @@ async def _son_loses(ctx: TickContext, son: SonRow, god: ForeignGodRow, diff: in
 
 
 async def resolve_god_war(
-    ctx: TickContext, son: SonRow, god: ForeignGodRow, reason: str = "to protect their worshippers and temples", *, allies: Sequence[SonRow] = ()
+    ctx: TickContext,
+    son: SonRow,
+    god: ForeignGodRow,
+    reason: str = "to protect their worshippers and temples",
+    *,
+    allies: Sequence[SonRow] = (),
+    key: str = "pantheon.god_war",
 ) -> GodWarResult:
     tools = ctx.rules.son_tools
     rng = ctx.rng("god_war")
@@ -410,12 +426,12 @@ async def resolve_god_war(
     if son_score >= god_score:
         status, verb = await _son_wins(ctx, son, god, diff, reason, powers=powers)
         outcome = GodConflictOutcome.ATTACKER_WON
-        text = f"{son.name} declared war on the foreign god {god.name} ({reason}) and {verb} ({son_score}-{god_score})."
+        result = f"{verb} ({son_score}-{god_score})."
     else:
         slept, tail = await _son_loses(ctx, son, god, diff)
         status = god.status
         outcome = GodConflictOutcome.DEFENDER_WON
-        text = f"{son.name} declared war on the foreign god {god.name} ({reason}) but lost ({son_score}-{god_score}); {tail}"
+        result = f"lost ({son_score}-{god_score}); {tail}"
     ctx.session.add(
         GodConflictRow(epoch=ctx.epoch, attacker_node_id=son.id, defender_node_id=god.id, outcome=outcome, attacker_score=son_score, defender_score=god_score)
     )
@@ -423,6 +439,16 @@ async def resolve_god_war(
         await strike(ctx, god, son.id, WoundCause.GOD_WAR, diff)
     elif outcome is GodConflictOutcome.DEFENDER_WON:
         await strike(ctx, son, god.id, WoundCause.GOD_WAR, diff)
-    await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.god_war", son_id=son.id, world_id=god.world_id)
+    text = (
+        await record(
+            ctx,
+            key,
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.OPPONENT: god.id, IncidentRole.ALLY: [ally.id for ally in allies]},
+            facts={"reason": reason, "son_score": son_score, "god_score": god_score, "outcome": outcome, "result": result},
+            kind=ChronicleKind.FOREIGN_GOD,
+            son_id=son.id,
+            world_id=god.world_id,
+        )
+    ).text
     await ctx.session.flush()
     return GodWarResult(son_score, god_score, outcome, status, slept, text)

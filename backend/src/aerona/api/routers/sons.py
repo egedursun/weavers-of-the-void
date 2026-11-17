@@ -10,7 +10,8 @@ from aerona.api.schemas.common import JobAccepted, RequestModel
 from aerona.api.schemas.gods import DeadSonPanel, DistributionPreviewView, FolkView, MessageView, ResurrectionOrder, SiblingView, SonDetail, SonReputation
 from aerona.api.schemas.records import EntitySummary, MessageRecord, NodeRef, SonPublic, SonRecord
 from aerona.api.schemas.state import SonRelationItem
-from aerona.api.views.common import bond_count, bond_views, images_of, node_refs, son_chronicle, son_public
+from aerona.api.views.common import bond_count, bond_views, images_of, node_refs, son_public
+from aerona.api.views.scoped_lines import scoped_lines
 from aerona.constants.api import RELATION_PAGE_DEFAULT, RELATION_PAGE_MAX
 from aerona.core.errors import ConflictError, NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -21,6 +22,7 @@ from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.engine.gods.devotion import resurrection_state
 from aerona.services.faith import live_faith
 from aerona.services.images.records import cover_of
@@ -101,6 +103,7 @@ async def read_son(
         if son is None:
             raise NotFoundError(NO_SON)
         server = rules.server
+        chronicle, chronicle_total = await scoped_lines(session, ChronicleScope.SON, son.id, offset=0, limit=server.son_chronicle_lines)
         creations = list(await session.scalars(select(EntityRow).where(EntityRow.creator_son_id == son.id).order_by(EntityRow.id.desc())))
         messages = list(
             await session.scalars(
@@ -160,7 +163,8 @@ async def read_son(
                 for row, name in beliefs
             ],
             creations=[EntitySummary.model_validate(row) for row in creations],
-            chronicle=await son_chronicle(session, son.id, server.son_chronicle_lines),
+            chronicle=chronicle,
+            chronicle_total=chronicle_total,
             messages=[
                 MessageView(
                     id=row.id,

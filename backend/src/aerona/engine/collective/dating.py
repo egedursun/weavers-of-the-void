@@ -17,12 +17,14 @@ from aerona.domain.enums.collective import DatingSystemKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.ethics import church_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 D = DatingSystemKind
@@ -161,8 +163,12 @@ async def reform(ctx: TickContext, holder: EntityRow, row: DatingSystemRow, year
         row.anchor_year = calendar.anchor_year if calendar is not None else year
         row.label_node_id = row.anchor_node_id = calendar.knowledge_entity_id if calendar is not None else holder.id
     tally.reforms += 1
-    await note(
-        ctx, f"{holder.name} reformed its calendar and now counts {await render_date(ctx.session, holder.id, year)}.", key="dating.reform", ids=[holder.id]
+    await record(
+        ctx,
+        "dating.reform",
+        roles={IncidentRole.AUTHORITY: holder.id, IncidentRole.INSTRUMENT: row.label_node_id},
+        facts={"dating": row.kind, "anchor_year": row.anchor_year, "year": year},
+        steps=(StepDraft(StepAction.DECREE, actor=holder.id),),
     )
     if holder.entity_type is EntityType.PEOPLE:
         for cult_id in await church_of(ctx.session, holder):

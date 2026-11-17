@@ -11,6 +11,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import CollectiveTrigger, StoryletId
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import expose, scholar_in
 from aerona.engine.collective.crowds import stir
 from aerona.engine.collective.storylets import CASTERS, begin, conditions_hold, names
@@ -21,7 +22,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -52,7 +52,13 @@ async def stir_crowd(call: SonCall, args: StirCrowdInput) -> str:
     if mood is None:
         fail(SonResult.CROWD_REFUSED, why="a stronger hand holds that town still")
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.STIR_CROWD, entity_ids=[town.id], son=call.son.name, town=town.name, reason=args.reason)
+    await call.record(
+        "tools.son.stir_crowd",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: town.id},
+        facts={"reason": args.reason},
+        place=town.id,
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.CROWD_STIRRED, name=town.name, anger=mood.anger, anxiety=mood.anxiety, fervour=mood.fervour)
 
 
@@ -65,7 +71,12 @@ async def reveal_true_history(call: SonCall, args: RevealInput) -> str:
     await ensure_in_reach(call, realm)
     await expose(call.tick, revision, original, await scholar_in(call.tick, realm.id))
     call.target(realm.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.REVEAL_TRUE_HISTORY, entity_ids=[realm.id], son=call.son.name, realm=realm.name, reason=args.reason)
+    await call.record(
+        "tools.son.reveal_true_history",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.HISTORY_REVEALED, name=realm.name, credence=revision.credence)
 
 
@@ -83,7 +94,12 @@ async def set_storylet(call: SonCall, args: SetStoryletInput) -> str:
     await ensure_in_reach(call, chooser)
     await begin(call.tick, args.storylet, world_id, cast)
     known = await names(call.session, cast)
-    await call.chronicle(ChronicleKind.WORLD, lines.SET_STORYLET, entity_ids=[chooser.id], son=call.son.name, title=spec.title, reason=args.reason)
+    await call.record(
+        "tools.son.set_storylet",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: chooser.id},
+        facts={"title": str(spec.title), "reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.STORYLET_SET, title=spec.title, chooser=known[spec.chooser.value])
 
 

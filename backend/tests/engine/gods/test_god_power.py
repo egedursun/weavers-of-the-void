@@ -4,7 +4,6 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
@@ -41,7 +40,7 @@ async def test_drain_son_numbers_and_one_plain_line_that_counts_repeats(session:
     await drain_son(ctx, world.creator, son)
     await drain_son(ctx, world.creator, son)
     keys = await chronicle_keys(session)
-    assert keys[:3] == [god_lines.DRAIN_SON.key] * 3
+    assert keys[:3] == ["gods.power.drain"] * 3
     last = await session.scalar(select(ChronicleRow.text).order_by(ChronicleRow.id.desc()).limit(1))
     assert last is not None and "3rd time this epoch" in last
 
@@ -53,14 +52,14 @@ async def test_spontaneous_rebellion_drain_and_return(session: AsyncSession, wor
     world.creator.mood_anger = 90
     await god_power(make_context(session, tuned, 3, "god_power"))
     keys = await chronicle_keys(session)
-    assert god_lines.REBELLION.key in keys
+    assert "gods.power.rebellion_declared" in keys
     assert angry.rebel
     assert angry.essence < 80
     assert await SonRepository(session).relation(angry.id, loyal.id) == -rules.son_tools.rebel_sibling_relation
     angry.loyalty = 80
     await god_power(make_context(session, tuned, 4, "god_power"))
     assert not angry.rebel
-    assert god_lines.REBELLION_ENDED.key in await chronicle_keys(session)
+    assert "gods.power.rebellion_ended" in await chronicle_keys(session)
 
 
 async def test_bloody_hand_curse_and_newborns(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -80,7 +79,7 @@ async def test_bloody_hand_curse_and_newborns(session: AsyncSession, world: Gods
     await bond(session, grandchild.id, child.id, BondKind.DESCENDS_FROM, 3)
     await god_power(make_context(session, tuned, 4, "god_power"))
     assert await entities.has_flag(grandchild.id, EntityFlag.BLOODLINE_CURSE)
-    assert god_lines.BLOODLINE_NEWBORNS.key in await chronicle_keys(session)
+    assert "gods.power.bloodline_newborns" in await chronicle_keys(session)
 
 
 async def test_spontaneous_prophet_and_conversion(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -93,7 +92,7 @@ async def test_spontaneous_prophet_and_conversion(session: AsyncSession, world: 
     await god_power(make_context(session, tuned, 3, "god_power"))
     assert await EntityRepository(session).has_flag(mortal.id, EntityFlag.PROPHET)
     assert await worships_creator(session, people.id)
-    assert god_lines.PROPHET_COMMUNITY.key in await chronicle_keys(session)
+    assert "gods.power.prophet_community" in await chronicle_keys(session)
 
 
 async def test_manual_god_power_actions(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

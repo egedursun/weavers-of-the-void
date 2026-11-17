@@ -10,12 +10,13 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 
 CRAFTS = {
     "venom": KnowledgeBranch.MEDICINE,
@@ -52,11 +53,11 @@ async def lost_crafts(ctx: TickContext, species: EntityRow) -> int:
                 row.level = max(0, row.level - ctx.rules.extinction.craft_loss)
                 lost += 1
         if lost:
-            await note(
+            await record(
                 ctx,
-                f"With {species.name} gone, no {product} is left; the craft that needed it fades.",
-                key="ecology.craft_lost",
-                ids=[species.id],
+                "ecology.craft_lost",
+                roles={IncidentRole.SUBJECT: species.id},
+                facts={"product": product, "craft": branch, "holders": lost, "loss": ctx.rules.extinction.craft_loss},
             )
     return lost
 
@@ -76,6 +77,7 @@ async def sacred_crisis(ctx: TickContext, species: EntityRow) -> int:
         cults |= set(await ctx.session.scalars(worshippers))
     book = await FaithBook.load(ctx.session)
     shaken = 0
+    faithful: list[int] = []
     for cult_id in sorted(cults):
         cult = await ctx.session.get(EntityRow, cult_id)
         if cult is None or cult.status is not EntityStatus.CANON:
@@ -88,8 +90,14 @@ async def sacred_crisis(ctx: TickContext, species: EntityRow) -> int:
             if town is not None and "unrest" not in town.locked:
                 town.unrest = clamp_int(town.unrest + table.sacred_unrest, 0, PERCENT)
         shaken += 1
+        faithful.append(cult.id)
     if shaken:
-        await note(ctx, f"The holy {species.name} is no more; its faithful lose what they held sacred.", key="ecology.sacred_lost", ids=[species.id])
+        await record(
+            ctx,
+            "ecology.sacred_lost",
+            roles={IncidentRole.SUBJECT: species.id, IncidentRole.VICTIM: faithful},
+            facts={"cults": shaken, "zeal_loss": table.sacred_zeal, "unrest": table.sacred_unrest},
+        )
     return shaken
 
 

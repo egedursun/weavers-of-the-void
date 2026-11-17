@@ -20,6 +20,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole
 from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonDeathCause, SonStatus, Stat
 from aerona.domain.enums.transform import GodDeathMode, TransformKind
 from aerona.domain.models.entity_stats import CultStats, PlaceStats, SpiritStats
@@ -34,6 +35,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon, living_sons, top_region
 from aerona.engine.primitives.stats import headcount
+from aerona.engine.recording.record import record
 from aerona.engine.transform.bodies import living_body
 from aerona.engine.transform.ledger import Ledger
 from aerona.engine.transform.moves import move_bonds
@@ -110,12 +112,12 @@ async def leave_cosmos(ctx: TickContext, son: SonRow, cause: str, successor_id: 
         ledger.set(son, column, value)
     creator = await creator_row(ctx.session)
     successor = await ctx.session.get(EntityRow, successor_id)
-    line = god_lines.GOD_LEFT_COSMOS
-    await ctx.chronicle(
-        ChronicleKind.DEATH,
-        line.render(creator=creator.name if creator else "", son=son.name, cause=cause, successor=successor.name if successor else "", moved=moved),
-        template_key=line.key,
-        entity_ids=[successor_id],
+    await record(
+        ctx,
+        "gods.death.left_cosmos",
+        roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: successor_id},
+        facts={"creator": str(creator.name if creator else ""), "cause": cause, "successor_detail": str(successor.name if successor else ""), "moved": moved},
+        kind=ChronicleKind.DEATH,
         son_id=son.id,
     )
     ctx.count("god_deaths")
@@ -138,7 +140,7 @@ async def god_death(
     ctx: TickContext,
     son: SonRow,
     cause: str,
-    death_cause: SonDeathCause,
+    cause_of_death: SonDeathCause,
     *,
     mode: GodDeathMode = GodDeathMode.IN_COSMOS,
     successor_id: int | None = None,
@@ -218,7 +220,7 @@ async def god_death(
     session.add_all(ThreadLinkRow(thread_id=thread.id, entity_id=entity.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch) for entity in (corpse, order, shade))
     son.status = SonStatus.DEAD
     son.death_epoch = ctx.epoch
-    son.death_cause = death_cause
+    son.death_cause = cause_of_death
     son.corpse_entity_id = corpse.id
     son.body_entity_id = None
     son.rebel = False
@@ -227,12 +229,12 @@ async def god_death(
     if creator is not None:
         gain(creator, son.essence / ctx.rules.death.dead_essence_divisor)
     await sway_siblings(ctx, son)
-    line = god_lines.GOD_DEATH
-    await ctx.chronicle(
-        ChronicleKind.DEATH,
-        line.render(creator=creator.name if creator else "", son=son.name, cause=cause, corpse=corpse.name, apostates=apostates, loyal=len(loyal)),
-        template_key=line.key,
-        entity_ids=[corpse.id, shade.id, order.id],
+    await record(
+        ctx,
+        "gods.death.god_death",
+        roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [corpse.id, shade.id, order.id]},
+        facts={"creator": str(creator.name if creator else ""), "cause": cause, "apostates": str(apostates), "loyal": len(loyal)},
+        kind=ChronicleKind.DEATH,
         son_id=son.id,
     )
     ctx.count("god_deaths")
@@ -289,13 +291,13 @@ async def resurrect_son(ctx: TickContext, son: SonRow, path: str) -> None:
         if order is not None:
             set_trait(order, Trait.DEVOTION, 0)
             await entities.add_flag(order.id, EntityFlag.RESURRECTION_COMPLETE, ctx.epoch)
-    line = god_lines.SON_RESURRECTED
     tomb = god_lines.EMPTY_TOMB_CLAUSE.format(corpse=corpse.name) if corpse is not None else ""
-    await ctx.chronicle(
-        ChronicleKind.RESURRECTION,
-        line.render(son=son.name, path=path, tomb=tomb),
-        template_key=line.key,
-        entity_ids=[corpse.id] if corpse is not None else [],
+    await record(
+        ctx,
+        "gods.death.son_resurrected",
+        roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [*([corpse.id] if corpse is not None else [])]},
+        facts={"path": path, "tomb": str(tomb)},
+        kind=ChronicleKind.RESURRECTION,
         son_id=son.id,
     )
     ctx.count("resurrections")
@@ -389,15 +391,15 @@ async def tend_living_son(ctx: TickContext, son: SonRow) -> bool:
             return False
         await god_death(ctx, son, god_lines.GOD_DEATH_FADED, await death_cause(ctx.session, son.id))
         return True
-    line = None
-    if left == FADING_WARN_TWO:
-        line = god_lines.FADING_TWO
-    elif left == FADING_WARN_ONE:
-        line = god_lines.FADING_ONE
-    elif son.fading_epochs == 1:
-        line = god_lines.FADING_MANY
-    if line is not None:
-        await ctx.chronicle(ChronicleKind.EXISTENCE, line.render(son=son.name, left=left), template_key=line.key, son_id=son.id)
+    if left in {FADING_WARN_TWO, FADING_WARN_ONE} or son.fading_epochs == 1:
+        await record(
+            ctx,
+            "gods.death.fading_two" if left == FADING_WARN_TWO else "gods.death.fading_one" if left == FADING_WARN_ONE else "gods.death.fading_many",
+            roles={IncidentRole.SUBJECT: son.id},
+            facts={"left": left},
+            kind=ChronicleKind.EXISTENCE,
+            son_id=son.id,
+        )
     return False
 
 

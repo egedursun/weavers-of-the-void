@@ -9,7 +9,7 @@ COHORT_CONDITION = total(
             "None",
             checked_by=(
                 "engine.demography.basket.sicken",
-                "engine.demography.cohorts.rebalance_classes",
+                "engine.demography.cohorts.place_classes",
                 "engine.demography.cohorts.reconcile",
                 "engine.demography.labour.CONDITION_WORK",
                 "engine.demography.mobility.bitter_emigration",
@@ -17,8 +17,8 @@ COHORT_CONDITION = total(
             ),
             used_by=(
                 "engine.demography.bound.move_people",
-                "engine.demography.cohorts.apply_flow",
-                "engine.demography.cohorts.rebalance_classes",
+                "engine.demography.cohorts.place_classes",
+                "engine.demography.cohorts.place_flow",
                 "engine.demography.cohorts.seed",
                 "engine.demography.control.move_cohort",
                 "engine.demography.mobility.settle_captives",

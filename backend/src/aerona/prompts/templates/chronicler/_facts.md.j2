@@ -1,7 +1,7 @@
 {% macro fact_sheet(facts) -%}
 FACT SHEET (definite outcomes; the narrative may not contradict them: do not show a winner as defeated or a god who acted as silent; bind every deed to the one who REALLY did it, never give a son's deed to the creator or to another son; do not merge events with different doers or kinds into one; do not change the numbers):
 {% if facts.creator.deed_count %}
-- {{ facts.creator.name }} (the creator, id {{ facts.creator.id }}, ref {{ facts.creator.ref }}) intervened {{ facts.creator.deed_count }} times this age: {{ facts.creator.deeds | join("; ") }}. Do not tell them as silent or distant.
+- {{ facts.creator.name }} (the creator, id {{ facts.creator.id }}, ref {{ facts.creator.ref }}) intervened {{ facts.creator.deed_count | several("time", "times") }} this age: {{ facts.creator.deeds | join("; ") }}. Do not tell them as silent or distant.
 {% else %}
 - {{ facts.creator.name }} (the creator, id {{ facts.creator.id }}) did not intervene this age.
 {% endif %}
@@ -18,7 +18,7 @@ FACT SHEET (definite outcomes; the narrative may not contradict them: do not sho
 MANDATORY COVERAGE (each is told at least once, in the main narrative or in its own world's section, by name, with its doer and its outcome; do not list them, bind the events together):
 Sons:
 {% for son in facts.sons %}
-- {{ son.name }} (id {{ son.id }}, ref {{ son.ref }}{% if son.world %}, {{ son.world }}{% endif %}): {% if son.deeds %}{{ son.deeds | join("; ") }}{% if son.deed_count > son.deeds | length %} ({{ son.deed_count }} deeds in all){% endif %}{% else %}did no great deed this age (say so in one sentence){% endif %}{% if son.records %}; made or blessed: {% for record in son.records %}{{ record.name }} (id {{ record.id }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+- {{ son.name }} (id {{ son.id }}, ref {{ son.ref }}{% if son.world %}, {{ son.world }}{% endif %}): {% if son.deeds %}{{ son.deeds | join("; ") }}{% if son.deed_count > son.deeds | length %} ({{ son.deed_count | several("deed", "deeds") }} in all){% endif %}{% else %}did no great deed this age (say so in one sentence){% endif %}{% if son.records %}; made or blessed: {% for record in son.records %}{{ record.name }} (id {{ record.id }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
 
 {% endfor %}
 {% if facts.histories %}
@@ -30,8 +30,14 @@ Histories under way this age (the incidents of this age belong to them; tell eve
 {% if facts.events %}
 Major events:
 {% for event in facts.events %}
-- [{{ event.category | replace("_", " ") }}{% if event.world %}, {{ event.world }}{% endif %}] (ref {{ event.ref }}) {{ event.text }}{% if event.repeats > 1 %} (this age {{ event.repeats }} times){% endif %}
+- [{{ event.category | replace("_", " ") }}{% if event.world %}, {{ event.world }}{% endif %}] (ref {{ event.ref }}) {{ event.text }}{% if event.repeats > 1 %} (this age {{ event.repeats | several("time", "times") }}){% endif %}
 
+{% if event.name %}  It is called {{ event.name }}.
+{% endif %}{% if event.place %}  Where: {{ event.place }}.
+{% endif %}{% if event.account %}  Account: {{ event.account | join("; ") }}.
+{% endif %}{% if event.steps %}  How it went: {% for step in event.steps %}{{ loop.index }}. {{ step }}{% if not loop.last %}; {% endif %}{% endfor %}{% if event.more_steps %} ({{ event.more_steps }} more steps){% endif %}.
+{% endif %}{% if event.cause %}  Caused by: {{ event.cause }}.
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if facts.tales %}
@@ -49,9 +55,16 @@ Payoffs this age (each pays off what was set up in an earlier age; tell it as th
 {% endif %}
 {% if facts.verdicts %}
 Fate's verdicts of the previous age (their consequences live in this age; mention each):
-{% for verdict in facts.verdicts %}
+{% for verdict in facts.verdicts if verdict.required %}
 - (ref {{ verdict.ref }}) {{ verdict.text }}
 {% endfor %}
+{% set further = facts.verdicts | rejectattr("required") | list %}
+{% if further %}
+Further verdicts of the previous age (mention them where they belong to the tale):
+{% for verdict in further %}
+- (ref {{ verdict.ref }}) {{ verdict.text }}
+{% endfor %}
+{% endif %}
 {% endif %}
 
 COVERAGE FIELD: in "coverage" list the ref of every item above that the text tells, the ids of the records it names, the winner it gives every contest it tells, whom it credits with every listed record it attributes, the gods it presents as silent or idle, and every number it states about an item. The ids and refs go only into "coverage", never into the text.

@@ -32,7 +32,6 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
@@ -43,7 +42,9 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.faith import BindingKind, SpiritAlignment
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureKind
@@ -73,7 +74,6 @@ from aerona.engine.means.media import burn_works
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
-from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.polity.trials import judge_for, open_case
@@ -83,6 +83,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
@@ -541,8 +542,8 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     rule = await scale_here(ctx, town.entity.id, DivineScale.ORDER)
     if "public_order" not in profile.locked:
         charter = ctx.rules.urban.charter_order if profile.charter_entity_id is not None else 0
-        seat = effects.order + rule * ctx.rules.dominion.order_per_step
-        profile.public_order = clamp_int(table.order_base + soldiers / PERCENT * table.order_per_100 + charter + seat - profile.crime / HALF, 0, PERCENT)
+        office_seat = effects.order + rule * ctx.rules.dominion.order_per_step
+        profile.public_order = clamp_int(table.order_base + soldiers / PERCENT * table.order_per_100 + charter + office_seat - profile.crime / HALF, 0, PERCENT)
     if "crime" not in profile.locked:
         crime = (
             (PERCENT - wealth) * table.poverty_pct / PERCENT
@@ -738,12 +739,12 @@ def flammability(material: BuildMaterial) -> float:
 
 
 def flammable_share(town: Town, burns: dict[int, float] | None = None) -> float:
-    total = sum(district.level for district in town.districts)
+    summed = sum(district.level for district in town.districts)
     timber = flammability(BuildMaterial.TIMBER) or 1.0
-    if total <= 0:
+    if summed <= 0:
         return 1.0
     known = burns or {}
-    return sum(district.level * known.get(district.id, flammability(district.material)) for district in town.districts) / total / timber
+    return sum(district.level * known.get(district.id, flammability(district.material)) for district in town.districts) / summed / timber
 
 
 def ambient_heat(rules: Rules, ground: RegionEnvironmentRow | None) -> int:
@@ -803,14 +804,29 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             set_stats(town.entity, population=before - dead)
         ledger(ctx, town, TreasuryEntry.FIRE, -table.treasury_loss, "great fire")
         burned += 1
-        driven = " Driven by the wind, it spread fast." if year.wind >= PERCENT // HALF else ""
-        await note(
+        driven = year.wind >= PERCENT // HALF
+        district_key = district.kind.value
+        await record(
             ctx,
-            f"A great fire swept through the {spoken(district.kind)} of {town.entity.name}; {dead} died in the flames.{driven}",
-            key="settlement.fire_wind" if driven else "settlement.fire",
-            ids=[town.entity.id],
-            feed=FeedCategory.DISASTER,
-            kind=ChronicleKind.WORLD,
+            "settlement.fire",
+            roles={IncidentRole.PLACE: town.entity.id},
+            facts={"district": district.kind, "dead": dead, "treasury_loss": table.treasury_loss, "wind": year.wind},
+            steps=(
+                StepDraft(
+                    StepAction.BURN_LAND,
+                    amount=dead or None,
+                    unit=FactUnit.PEOPLE if dead else None,
+                    outcome=StepOutcome.DESTROYED if gone else StepOutcome.DAMAGED,
+                    locus_kind=StepLocus.DISTRICT,
+                    locus_key=district_key,
+                ),
+                *(
+                    (StepDraft(StepAction.SPREAD, amount=year.wind, unit=FactUnit.PERCENT, locus_kind=StepLocus.DISTRICT, locus_key=district_key),)
+                    if driven
+                    else ()
+                ),
+            ),
+            place=town.entity.id,
         )
         await record_fire(ctx, town.entity, dead)
         await burn_works(ctx, town.entity)
@@ -892,28 +908,28 @@ async def abandon_elders(ctx: TickContext, town: Town) -> None:
     lost = min(lost, max(0, before - floor))
     with flowing(FlowCategory.FAMINE):
         set_stats(town.entity, population=before - lost)
-    await note(
+    await record(
         ctx,
-        f"With the stores empty, {town.entity.name} left {lost} of its old and sick outside the walls; the choice will be remembered.",
-        key="settlement.abandoned",
-        ids=[town.entity.id],
-        kind=ChronicleKind.WORLD,
+        "settlement.abandoned",
+        roles={IncidentRole.ACTOR: town.entity.id},
+        facts={"left": lost},
+        steps=(StepDraft(StepAction.ABANDON, actor=town.entity.id, amount=lost, unit=FactUnit.PEOPLE),),
     )
 
 
 async def foreigners(ctx: TickContext, town: Town) -> int:
     home = await people_of(ctx.session, town.entity)
     shares: dict[str, int] = {}
-    total = 0
+    summed = 0
     for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], targets=[town.entity.id]):
         people = await living_entity(ctx.session, bond.source_node_id)
         if people is None or people.entity_type is not EntityType.PEOPLE or (home is not None and people.id == home.id) or bond.role is BondRole.HOMELAND:
             continue
         weight = max(1, (stat(people, "population") or 0) // 20)
         shares[str(people.id)] = weight
-        total += weight
+        summed += weight
     population = max(1, stat(town.entity, "population") or 0)
-    keep(town.profile, "foreigners", {key: clamp_int(value * PERCENT / max(population, total * 5), 0, PERCENT) for key, value in shares.items()})
+    keep(town.profile, "foreigners", {key: clamp_int(value * PERCENT / max(population, summed * 5), 0, PERCENT) for key, value in shares.items()})
     return sum(town.profile.foreigners.values())
 
 
@@ -969,7 +985,7 @@ async def retier(ctx: TickContext, town: Town) -> SizeTier | None:
     return tier
 
 
-def remember(ctx: TickContext, town: Town) -> None:
+def remember(ctx: TickContext, town: Town, incident_id: int | None = None) -> None:
     profile = town.profile
     ctx.session.add(
         SettlementHistoryRow(
@@ -983,6 +999,7 @@ def remember(ctx: TickContext, town: Town) -> None:
             wealth=stat(town.entity, "wealth") or 0,
             treasury=profile.treasury,
             population=stat(town.entity, "population") or 0,
+            incident_id=incident_id,
         )
     )
 

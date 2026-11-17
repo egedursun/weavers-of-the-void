@@ -1,6 +1,7 @@
-from sqlalchemy import JSON, ForeignKey, Index
+from sqlalchemy import JSON, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.constants.units import PERCENT
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
@@ -23,6 +24,7 @@ from aerona.domain.enums.body import (
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.records import InstrumentKind
 
 SEVERITY_MIN = 1
 SEVERITY_MAX = 5
@@ -125,6 +127,10 @@ class InjuryRow(CreatedAtMixin, Base):
     treatments: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     misdiagnosed: Mapped[bool] = mapped_column(default=False, server_default="0")
     digits: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    step_id: Mapped[int | None] = mapped_column(ForeignKey("incident_steps.id", ondelete="SET NULL"), index=True)
+    instrument_kind: Mapped[InstrumentKind | None] = mapped_column(enum_type(InstrumentKind, "instrument_kind"))
+    instrument_key: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    instrument_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
 
 
 class ConditionRow(CreatedAtMixin, Base):

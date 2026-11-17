@@ -10,15 +10,16 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import AwakeningTrigger, BeastTemper, Habitat
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.anatomy import beast_anatomy
 from aerona.engine.ecology.beasts import lair_in, profile_beast
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.engine.storyteller.pace import paced
 
 
@@ -61,7 +62,8 @@ async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
         anatomy = await beast_anatomy(ctx, beast, row, deep=True)
         anatomy.awakening = AwakeningTrigger.DEEP_MINING
         emerged += 1
-        await note(ctx, f"{beast.name} climbed out of the deep mines of {region.name}.", key="monsters.emerged", ids=[beast.id, region.id])
+        facts: dict[str, FactInput] = {"region": region.id, "mined": (initial - reserve) * PERCENT // max(1, initial), "size": row.size_class}
+        await record(ctx, "monsters.emerged", roles={IncidentRole.SUBJECT: beast.id}, facts=facts, place=region.id)
     return emerged
 
 
@@ -95,9 +97,11 @@ async def roam_void(ctx: TickContext, atlas: RegionAtlas) -> int:
         lands = list(await ctx.session.scalars(regions.order_by(EntityRow.id)))
         if not lands:
             continue
+        left = beast.world_id
         beast.world_id, beast.location_id = target, lands[0].id
         row.lair_place_id = await lair_in(ctx, lands[0].id)
         road.danger = clamp_int(road.danger + table.void_route_danger, 0, PERCENT)
         roamed += 1
-        await note(ctx, f"{beast.name} crossed the road between worlds.", key="monsters.void_roamed", ids=[beast.id])
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: beast.id, IncidentRole.ORIGIN: left, IncidentRole.DESTINATION: target}
+        await record(ctx, "monsters.void_roamed", roles=roles, facts={"danger": road.danger}, place=lands[0].id)
     return roamed

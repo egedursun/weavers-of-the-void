@@ -5,7 +5,6 @@ from sqlalchemy import select
 from aerona.catalog.genetics import LOCI, LOOKS_LOCI
 from aerona.catalog.kinds.gifts import GIFT_STANCES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
@@ -13,20 +12,20 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import PreferenceKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import HouseTrait
 from aerona.engine.context import TickContext
 from aerona.engine.genetics.genome import genome_of, gifted_schools, phenotype
 from aerona.engine.genetics.life import TRAIT_ALLELES
 from aerona.engine.mind.preferences import rows_of, write_pref
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 
 SHARE = "share"
 ALLELE = "allele"
@@ -73,13 +72,7 @@ async def tend_resemblance(ctx: TickContext, house: EntityRow, alive: list[Entit
             await ctx.session.delete(row)
             await ctx.session.flush()
         ctx.session.add(HouseResemblanceRow(house_node_id=house.id, locus=spec.locus, allele=allele, share=share, since_epoch=ctx.epoch, locked=[]))
-        await note(
-            ctx,
-            f"Its kin came to know {house.name} by sight: {spec.allele(allele).label} ran in the blood.",
-            key="genetics.resemblance",
-            ids=[house.id],
-            kind=ChronicleKind.WORLD,
-        )
+        await record(ctx, "genetics.resemblance", roles={IncidentRole.SUBJECT: house.id}, facts={"locus": spec.locus, "share": share})
         return True
     row.share = share
     return False
@@ -153,10 +146,7 @@ async def examine_children(ctx: TickContext) -> int:
                 continue
             await connect(ctx.session, child.id, faction.id, BondKind.MEMBER_OF, ctx.epoch, description="tested and found gifted")
             taken += 1
-            await note(
-                ctx,
-                f"{faction.name} tested the children of the town and took {child.name}, gifted in {spoken(schools[0])}.",
-                key="genetics.order_recruits",
-                ids=[faction.id, child.id],
+            await record(
+                ctx, "genetics.order_recruits", roles={IncidentRole.ACTOR: faction.id, IncidentRole.LEARNER: child.id}, facts={"school": schools[0]}, place=home
             )
     return taken

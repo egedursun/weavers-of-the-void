@@ -12,9 +12,10 @@ from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.evolution import TrophicLevel
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 BALANCE = PERCENT // 2
@@ -123,6 +124,11 @@ async def turn_cycles(ctx: TickContext, tally: CycleTally) -> None:
             if physics.hydrosphere != before:
                 tally.seas += 1
                 if abs(cycle.water - BALANCE) >= STEP * 3:
-                    text = f"The seas of {world.name} rise as its ice melts." if rise > 0 else f"The seas of {world.name} fall as its ice grows."
-                    await note(ctx, text, key="climate.water_cycle", world_id=world_id)
+                    await record(
+                        ctx,
+                        "climate.water_cycle" if rise > 0 else "climate.ice_grew",
+                        roles={IncidentRole.SUBJECT: world_id},
+                        facts={"water": cycle.water, "hydrosphere": physics.hydrosphere, "rise": rise},
+                        world_id=world_id,
+                    )
     await ctx.session.flush()

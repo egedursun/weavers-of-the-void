@@ -2,7 +2,6 @@ from itertools import pairwise
 
 from sqlalchemy import select
 
-from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
@@ -10,7 +9,6 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -18,7 +16,9 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, TraitSource, WantKind
-from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OathBreach, OathKind, OathStatus
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.conditions import gain_condition
@@ -33,10 +33,11 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.traits import gain_trait
 from aerona.engine.mortal.standing import add_honour
-from aerona.engine.notes import note
 from aerona.engine.polity.oath_terms import answer_breach, honour_weight, scaled_loss, terms_for, witness_answer
 from aerona.engine.polity.vows import BREACHES, VOWS
 from aerona.engine.primitives.queries import add_flag, living_entity
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.relations.passions import invoke
 from aerona.engine.services.community_relations import change_relation
 
@@ -83,24 +84,26 @@ async def swear(
     return row
 
 
-async def wrath(ctx: TickContext, witness: SonRow, swearer: EntityRow) -> None:
-    table = ctx.rules.oaths
+async def wrath(ctx: TickContext, witness: SonRow, swearer: EntityRow, cause: int | None) -> None:
     if witness.status is not SonStatus.ACTIVE:
         return
-    before = witness.essence
-    witness.essence += table.wrath_essence
-    cap_gained_essence(ctx.rules, witness, before)
-    cursed = ctx.rng(f"wrath.{witness.id}.{swearer.id}.{ctx.epoch}").chance(table.wrath_curse_chance)
-    if cursed:
-        await add_flag(ctx.session, swearer.id, EntityFlag.CURSED, ctx.epoch)
-    await note(
-        ctx,
-        f"{witness.name} turned in wrath on {swearer.name}, who broke an oath sworn before it" + ("; a curse fell on the oathbreaker." if cursed else "."),
-        key="oaths.wrath",
-        ids=[swearer.id],
-        son_id=witness.id,
-        kind=ChronicleKind.DIVINE_SIGN,
-    )
+    with explaining():
+        table = ctx.rules.oaths
+        before = witness.essence
+        witness.essence += table.wrath_essence
+        cap_gained_essence(ctx.rules, witness, before)
+        cursed = ctx.rng(f"wrath.{witness.id}.{swearer.id}.{ctx.epoch}").chance(table.wrath_curse_chance)
+        if cursed:
+            await add_flag(ctx.session, swearer.id, EntityFlag.CURSED, ctx.epoch)
+        await record(
+            ctx,
+            "oaths.wrath_cursed" if cursed else "oaths.wrath",
+            roles={IncidentRole.PATRON: witness.id, IncidentRole.TARGET: swearer.id},
+            facts={"essence": witness.essence - before, "curse_chance": table.wrath_curse_chance},
+            place=swearer.location_id,
+            cause=cause,
+            son_id=witness.id,
+        )
 
 
 async def keep(ctx: TickContext, oath: OathRow, *, fulfilled: bool) -> None:
@@ -137,7 +140,12 @@ async def reward_witness(ctx: TickContext, oath: OathRow) -> None:
     cap_gained_essence(ctx.rules, son, before)
 
 
-async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
+async def break_oath(ctx: TickContext, oath: OathRow, breach: OathBreach, *, occasion: int | None = None, cause: int | None = None) -> None:
+    with explaining():
+        await broken_oath(ctx, oath, breach, occasion, cause)
+
+
+async def broken_oath(ctx: TickContext, oath: OathRow, breach: OathBreach, occasion: int | None, cause: int | None) -> None:
     table = ctx.rules.oaths
     oath.status = OathStatus.BROKEN
     oath.ended_epoch = ctx.epoch
@@ -145,7 +153,8 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
     if swearer is None:
         return
     weight = await honour_weight(ctx, swearer)
-    swearer.importance = max(0, (swearer.importance or 0) - scaled_loss(table.honour_loss, weight))
+    standing_before = swearer.importance or 0
+    swearer.importance = max(0, standing_before - scaled_loss(table.honour_loss, weight))
     await judged(ctx, swearer.id, oath.recipient_node_id or swearer.id, ActKind.OATHBREAKING)
     if swearer.entity_type is EntityType.MORTAL:
         await add_honour(ctx.session, swearer.id, -scaled_loss(ctx.rules.standing.honour_broken_oath, weight), ctx.epoch)
@@ -180,16 +189,22 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
         home = await living_entity(ctx.session, swearer.location_id)
         if home is not None and home.entity_type in {EntityType.SETTLEMENT, EntityType.PEOPLE} and home.status is EntityStatus.CANON:
             await change_relation(ctx, home.id, swearer.id, -table.wrath_relation, MemoryKind.BROKE_OATH, note=f"broke an oath sworn before {witness.name}")
-    if witness is not None:
-        await wrath(ctx, witness, swearer)
-    await note(
+    written = await record(
         ctx,
-        f"{swearer.name} broke the {spoken(oath.kind)} oath{f' sworn before {witness.name}' if witness else ''}: {reason}.",
-        key="oaths.broken",
-        ids=[swearer.id],
+        "oaths.broken",
+        roles={
+            IncidentRole.SUBJECT: swearer.id,
+            IncidentRole.RECEIVER: oath.recipient_node_id,
+            IncidentRole.PATRON: witness.id if witness is not None else None,
+        },
+        facts={"oath_kind": oath.kind, "breach": breach, "occasion": occasion, "standing_lost": standing_before - swearer.importance},
+        place=swearer.location_id,
+        cause=cause,
         son_id=witness.id if witness else None,
-        kind=ChronicleKind.WORLD,
+        steps=(StepDraft(StepAction.BREAK_OATH, actor=swearer.id, target=oath.recipient_node_id, record_table=OathRow.__tablename__, record_key=str(oath.id)),),
     )
+    if witness is not None:
+        await wrath(ctx, witness, swearer, written.incident_id)
 
 
 async def lapse(ctx: TickContext) -> tuple[int, int]:
@@ -213,7 +228,7 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
             oath.deadline_epoch = ctx.epoch + 1
             continue
         if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch:
-            await break_oath(ctx, oath, "the blood went unavenged" if oath.kind is OathKind.VENGEANCE else "the road was never walked")
+            await break_oath(ctx, oath, OathBreach.BLOOD_UNAVENGED if oath.kind is OathKind.VENGEANCE else OathBreach.ROAD_UNWALKED)
             broken += 1
         elif oath.kind in BREACHES and (breach := await BREACHES[oath.kind](ctx, oath, swearer)) is not None:
             await break_oath(ctx, oath, breach)
@@ -242,13 +257,15 @@ def home_at_oath(oath: OathRow) -> int | None:
     return int(oath.note) if oath.note is not None and oath.note.isdigit() else None
 
 
-async def break_on(ctx: TickContext, swearer_ids: list[int], kind: OathKind, reason: str, *, recipient_id: int | None = None) -> int:
+async def break_on(
+    ctx: TickContext, swearer_ids: list[int], kind: OathKind, breach: OathBreach, *, recipient_id: int | None = None, occasion: int | None = None
+) -> int:
     broken = 0
     for swearer_id in swearer_ids:
         for oath in await oaths_of(ctx, swearer_id, kind):
             if recipient_id is not None and oath.recipient_node_id != recipient_id:
                 continue
-            await break_oath(ctx, oath, reason)
+            await break_oath(ctx, oath, breach, occasion=occasion)
             broken += 1
     return broken
 

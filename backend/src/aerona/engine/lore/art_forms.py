@@ -13,11 +13,11 @@ from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.mind import CultureValueRow, InspirationRow, SkillRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import InspirationState, MemoryKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ArtFormStats
 from aerona.engine.body.customs import people_of
@@ -27,12 +27,12 @@ from aerona.engine.lore.language import barrier
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.lore.printing import banned_for
 from aerona.engine.lore.research_depth import trade_partners
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.tongues.grammar import gap
 
@@ -137,12 +137,12 @@ async def invent(ctx: TickContext) -> int:
             continue
         form = await found_form(ctx, home, best[0], f"The {DISCIPLINES[best[0]].label.lower()} of {mortal.name}", founder=mortal, parents=[], structure={})
         founded += 1
-        await note(
+        await record(
             ctx,
-            f"{mortal.name} set down a new {DISCIPLINES[best[0]].label.lower()}: {form.name}.",
-            key="art_forms.invented",
-            ids=[mortal.id, form.id],
-            kind=ChronicleKind.CULTURE,
+            "art_forms.invented",
+            roles={IncidentRole.MAKER: mortal.id, IncidentRole.PRODUCT: form.id},
+            facts={"discipline": best[0], "skill": best[1], "stirred": int(stirred)},
+            place=home.id,
         )
     return founded
 
@@ -170,7 +170,13 @@ async def fuse(ctx: TickContext) -> int:
             ctx, home, discipline, f"The {DISCIPLINES[discipline].label.lower()} of {home.name}", founder=None, parents=[first, second], structure=merged
         )
         fused += 1
-        await note(ctx, f"Two forms met in {home.name} and became one: {form.name}.", key="art_forms.fused", ids=[home.id, form.id], kind=ChronicleKind.CULTURE)
+        await record(
+            ctx,
+            "art_forms.fused",
+            roles={IncidentRole.PRODUCT: form.id, IncidentRole.PREDECESSOR: [first, second], IncidentRole.PLACE: home.id},
+            facts={"discipline": discipline},
+            place=home.id,
+        )
     return fused
 
 
@@ -285,8 +291,12 @@ async def tend_forms(ctx: TickContext) -> dict[str, int]:
         elif not profile.notation and ctx.epoch - profile.updated_epoch >= table.decline_epochs:
             await retire_in(ctx, form, "no one practised it and nothing kept it written", EntityStatus.DESTROYED)
             lost += 1
-            lost_text = f"{form.name} was lost: no one practised it and nothing kept it written."
-            await note(ctx, lost_text, key="art_forms.lost", ids=[form.id], kind=ChronicleKind.CULTURE)
+            await record(
+                ctx,
+                "art_forms.lost",
+                roles={IncidentRole.SUBJECT: form.id},
+                facts={"discipline": profile.discipline, "idle_epochs": ctx.epoch - profile.updated_epoch},
+            )
         if profile.sacred or profile.occasions:
             sacred += await hallow(ctx, holders, set(profile.occasions), sacred=profile.sacred)
         set_stats(form, practitioners=practitioners, prestige=profile.prestige)

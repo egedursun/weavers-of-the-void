@@ -69,13 +69,6 @@ class ChronicleEntityRow(Base):
     position: Mapped[int]
 
 
-class EpochYearCursorRow(Base):
-    __tablename__ = "epoch_year_cursors"
-
-    epoch: Mapped[int] = mapped_column(primary_key=True)
-    last_year: Mapped[int]
-
-
 class HistorianViewRow(CreatedAtMixin, Base):
     __tablename__ = "historian_views"
     __table_args__ = (UniqueConstraint("epoch", "people_entity_id", name="uq_historian_views_epoch_people"),)

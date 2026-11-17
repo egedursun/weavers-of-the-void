@@ -12,21 +12,22 @@ from aerona.db.tables.powers import PowerSourceRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.biology import BiologyVariant
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OmenReading
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import SourceLocus
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.book import values_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_bounded, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.rules.registry import Rules
 
 BRIGHT = PERCENT // 2
@@ -124,9 +125,17 @@ async def body_returns(ctx: TickContext, world: WorldRow, body: EntityRow, peopl
         shift = {OmenReading.GOOD: table.return_piety, OmenReading.EVIL: -table.return_piety, OmenReading.NEUTRAL: 0}[reading]
         if shift:
             shift_bounded(ctx.rules, people, "piety", shift)
-    if tally[OmenReading.EVIL] > len(peoples) / 2:
+    doomed = tally[OmenReading.EVIL] > len(peoples) / 2
+    if doomed:
         await advance_doom(ctx.session, ctx.rules, table.return_doom)
-    await note(ctx, f"{body.name} returned to the skies of {world.name}.", key="celestial.returned", ids=[body.id], world_id=world.id, kind=ChronicleKind.SKY)
+    await record(
+        ctx,
+        "celestial.returned",
+        roles={IncidentRole.SUBJECT: body.id, IncidentRole.PLACE: world.id},
+        facts={"good": tally[OmenReading.GOOD], "evil": tally[OmenReading.EVIL], "doom": table.return_doom if doomed else 0},
+        steps=(StepDraft(StepAction.APPEAR, actor=body.id, locus_kind=StepLocus.SKY, locus_node=world.id),),
+        world_id=world.id,
+    )
 
 
 async def epoch_body_sway(ctx: TickContext, world: WorldRow) -> None:

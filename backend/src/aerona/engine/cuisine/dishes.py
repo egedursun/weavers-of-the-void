@@ -21,6 +21,8 @@ from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kinds import GoodCategory, IngredientRole, KindConcept, KindSpread, KindStance, MealSlot
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody
@@ -29,13 +31,13 @@ from aerona.engine.couplings.novelty import novelty_of
 from aerona.engine.economy.good_kinds import GoodBook, good_book
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.nature.microbes import culture_lift
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.knowledge import KnowledgeMap, branch_level
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 
 M = CookingMethod
 D = DishCourse
@@ -368,7 +370,13 @@ async def invent(ctx: TickContext, knowledge: KnowledgeMap, tally: KitchenTally)
             dish = await invent_dish(ctx, people, knowledge, homes, course=course)
             if dish is not None:
                 tally.invented += 1
-                await note(ctx, f"{people.name} came to cook {dish.name}.", key="cuisine.invented", ids=[people.id])
+                await record(
+                    ctx,
+                    "cuisine.invented",
+                    roles={IncidentRole.MAKER: people.id},
+                    facts={"dish": dish.name, "course": dish.course, "method": dish.method},
+                    steps=(StepDraft(StepAction.PREPARE, actor=people.id),),
+                )
 
 
 @memoized(DishIngredientRow)
@@ -458,7 +466,14 @@ async def substitute(ctx: TickContext, town: EntityRow, row: CommunityDishRow, d
     if "short_epochs" not in row.locked:
         row.short_epochs = 0
     tally.substituted += 1
-    await note(ctx, f"{town.name} came to cook {made.name} in place of {dish.name}.", key="cuisine.substituted", ids=[town.id])
+    await record(
+        ctx,
+        "cuisine.substituted",
+        roles={IncidentRole.MAKER: town.id, IncidentRole.ORIGIN: dish.origin_node_id},
+        facts={"dish": made.name, "replaced": dish.name, "method": dish.method},
+        steps=(StepDraft(StepAction.PREPARE, actor=town.id),),
+        place=town.id,
+    )
     return made
 
 

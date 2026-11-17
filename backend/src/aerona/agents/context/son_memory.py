@@ -15,6 +15,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import EntityStatus
+from aerona.engine.lore.account_text import records_text
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import FolkBeliefLine, MemoryCreation, MemoryWord, RepeatBucket, SonMemoryContext
 from aerona.prompts.contexts.common import ChronicleRow, NamedRecord, WorldItem
@@ -157,6 +158,9 @@ async def son_memory_context(scope: Scope, son: SonRow, full: bool = False) -> S
         recollections=await recollections(scope, son),
         about=await about_son(scope, son),
         beliefs=await folk_beliefs(scope, son),
+        records=await records_text(
+            scope.session, son.id, title="HAPPENINGS YOUR SIGHT AND REACH TOOK IN", tool="recall_event", limit=scope.rules.context.records_shown
+        ),
     )
 
 

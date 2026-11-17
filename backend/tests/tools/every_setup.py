@@ -27,6 +27,7 @@ from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import LegalSystemRow, OutlawRow, PrisonerRow
@@ -38,6 +39,7 @@ from aerona.db.tables.operations import EchelonRow, ExpeditionMemberRow, Expedit
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
+from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.regime import CoalitionMemberRow, ExaminationRow, SchoolLineageRow, SchoolMemberRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
@@ -73,13 +75,15 @@ from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecre
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.operations import EchelonLevel, ExpeditionRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
-from aerona.domain.enums.place import PlaceKind
+from aerona.domain.enums.place import PlaceKind, SecretKind, SecretOrigin
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.records import IncidentTier, StepAction, WitnessMode
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.sacred import BureauRank, DivinationKind, GeniusLocusKind, MysticState, PetitionKind, TheodicyCause
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
@@ -114,6 +118,7 @@ from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure
 from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.environment.secrets import draft_for, hide
 from aerona.engine.households.formation import found_household
 from aerona.engine.mind.book import write_values
 from aerona.engine.phases.environment import environment_survey
@@ -136,6 +141,13 @@ async def surveyed(session: AsyncSession, _realm: Realm) -> Ids:
     await refresh_world_maps(session, context.rules, EPOCH)
     await environment_survey(context)
     return {}
+
+
+async def buried_secret(session: AsyncSession, realm: Realm) -> Ids:
+    context = await manual_context(session, "secret")
+    row = hide(context, realm.cosmos.place_id, draft_for(SecretKind.BURIED_RELIC, 30, context.rng("secret"), None), SecretOrigin.PLAYER)
+    await session.flush()
+    return {"secret": row.id}
 
 
 async def death_son(session: AsyncSession, realm: Realm) -> Ids:
@@ -1360,3 +1372,31 @@ async def visionary(session: AsyncSession, realm: Realm) -> Ids:
     session.add(MysticRow(mortal_entity_id=realm.mortal_id, state=MysticState.VISIONARY, visions=3, followers=20, locked=[]))
     await session.flush()
     return {}
+
+
+async def witnessed_happening(session: AsyncSession, realm: Realm) -> Ids:
+    incident = IncidentRow(
+        kind="player.history",
+        epoch=1,
+        year=12,
+        world_id=realm.cosmos.world_id,
+        place_entity_id=realm.settlement_id,
+        tier=IncidentTier.STEPS,
+        locked=[],
+    )
+    session.add(incident)
+    await session.flush()
+    session.add_all(
+        [
+            IncidentParticipantRow(incident_id=incident.id, node_id=realm.people_id, role=IncidentRole.ACTOR, position=0),
+            IncidentParticipantRow(
+                incident_id=incident.id, node_id=realm.mortal_id, role=IncidentRole.WITNESS, position=1, witness_mode=WitnessMode.SAW, fidelity=90
+            ),
+            IncidentFactRow(incident_id=incident.id, key="account", position=0, name="The elders of the town met and chose a new well keeper."),
+        ]
+    )
+    step = IncidentStepRow(incident_id=incident.id, position=0, action=StepAction.MEET, actor_node_id=realm.people_id, target_node_id=realm.mortal_id)
+    session.add(step)
+    await connect(session, realm.people_id, realm.son_id, BondKind.WORSHIPS)
+    await session.flush()
+    return {"incident": incident.id, "step": step.id}

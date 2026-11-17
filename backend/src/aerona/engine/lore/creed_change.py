@@ -16,13 +16,14 @@ from aerona.domain.enums.culture import IdeologyTenet
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.domain.models.entity_stats import IdeologyStats
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.recording.record import record
 from aerona.engine.technology.profiles import family_level
 
 IT = IdeologyTenet
@@ -135,7 +136,12 @@ async def split_creed(ctx: TickContext, creed_id: int, community_id: int, droppe
         )
     )
     await ctx.session.delete(follower)
-    await note(ctx, f"{splinter.name} split from {creed.name}.", key="lore.creed_split", ids=[creed.id, splinter.id, community_id])
+    await record(
+        ctx,
+        "lore.creed_split",
+        roles={IncidentRole.SUBJECT: [creed.id, splinter.id, community_id]},
+        facts={"splinter": str(splinter.name), "creed": str(creed.name)},
+    )
     return splinter
 
 
@@ -160,7 +166,9 @@ async def merge_creeds(ctx: TickContext, keeper_id: int, absorbed_id: int) -> En
     for realm in list(await ctx.session.scalars(select(PolityProfileRow).where(PolityProfileRow.ideology_entity_id == absorbed_id))):
         realm.ideology_entity_id = keeper_id
     await retire_in(ctx, absorbed, f"merged into {keeper.name}", status=EntityStatus.DESTROYED)
-    await note(ctx, f"{absorbed.name} merged into {keeper.name}.", key="lore.creed_merged", ids=[keeper.id, absorbed.id])
+    await record(
+        ctx, "lore.creed_merged", roles={IncidentRole.SUBJECT: [keeper.id, absorbed.id]}, facts={"absorbed": str(absorbed.name), "keeper": str(keeper.name)}
+    )
     return keeper
 
 
@@ -250,7 +258,7 @@ async def keep_constitutions(ctx: TickContext) -> int:
         if row is None or (row.ideology_entity_id != realm.ideology_entity_id and "ideology_entity_id" not in row.locked):
             row = await write_constitution(ctx, realm.polity_entity_id, realm.ideology_entity_id)
             written += 1
-            await note(ctx, "A realm set down a constitution in the name of its creed.", key="lore.constitution_written", ids=[realm.polity_entity_id])
+            await record(ctx, "lore.constitution_written", roles={IncidentRole.SUBJECT: realm.polity_entity_id})
     for row in list(await ctx.session.scalars(select(ConstitutionRow))):
         regime = await ctx.session.get(RegimeRow, row.polity_entity_id)
         if regime is None or held(row.polity_entity_id):

@@ -3,16 +3,17 @@ from typing import Any
 from aerona.catalog.communication import CONTENT_LABELS, MEDIUM_LABELS
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import DispatchContent, Medium
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.communication.post import send
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-from aerona.tools.mortal import lines
 
 MORTAL_MEDIA = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD, Medium.BIRD, Medium.SIGNAL_FIRE, Medium.NETWORK})
 
@@ -34,7 +35,12 @@ async def send_dispatch(call: MortalCall, args: DispatchInput) -> str:
         fail(MortalResult.DISPATCH_REFUSED, why="a god holds you against change")
     label = CONTENT_LABELS[args.content].lower()
     call.target(recipient.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.DISPATCH_SENT, entity_ids=[call.me.id, recipient.id], me=call.me.name, target=recipient.name, deed=label)
+    await call.record(
+        "tools.mortal.dispatch_sent",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.RECEIVER: recipient.id},
+        facts={"content": args.content, "medium": args.medium, "arrival_epoch": row.arrival_epoch},
+        steps=(StepDraft(StepAction.WRITE, actor=call.me.id, target=recipient.id, instrument_key=args.medium.value, outcome=StepOutcome.SUCCESS),),
+    )
     return result(MortalResult.DISPATCH_SENT, deed=label, target=recipient.name, medium=MEDIUM_LABELS[args.medium].lower(), epoch=row.arrival_epoch)
 
 

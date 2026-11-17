@@ -161,7 +161,7 @@ def kept_style(profile: StructureProfileRow) -> Style | None:
 
 
 async def adults_of(session: AsyncSession, community_id: int, social_class: str) -> int:
-    total = await session.scalar(
+    summed = await session.scalar(
         select(func.coalesce(func.sum(CohortRow.count), 0)).where(
             CohortRow.community_entity_id == community_id,
             CohortRow.social_class == social_class,
@@ -169,18 +169,18 @@ async def adults_of(session: AsyncSession, community_id: int, social_class: str)
             CohortRow.condition.in_(LIVING_ADULTS),
         )
     )
-    return int(total or 0)
+    return int(summed or 0)
 
 
 async def staff_taken(session: AsyncSession, community_id: int, social_class: str, structure_id: int) -> int:
-    total = await session.scalar(
+    summed = await session.scalar(
         select(func.coalesce(func.sum(StructureStaffRow.allocated), 0)).where(
             StructureStaffRow.community_entity_id == community_id,
             StructureStaffRow.social_class == social_class,
             StructureStaffRow.structure_entity_id != structure_id,
         )
     )
-    return int(total or 0)
+    return int(summed or 0)
 
 
 @memoized(StructureStaffRow)

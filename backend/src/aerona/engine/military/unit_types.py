@@ -19,6 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.equipment import ArmamentSlot
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.embodied import embody, settle
@@ -27,10 +28,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.equipment.models import model_for
 from aerona.engine.military.templates import weights_of
 from aerona.engine.military.units import allowed, choose_design, design_spec, designs_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.vehicles.fleet import CREW_ROLES, role_design
 
 S = ArmamentSlot
@@ -219,7 +220,8 @@ async def marshal_types(ctx: TickContext, knowledge: KnowledgeMap, tally: TypeTa
             if design is None and (fielded or allowed(UNITS[role], realm.id, knowledge)) and chosen:
                 drawn = await draw_type(ctx, realm, role, knowledge)
                 tally.drawn += 1
-                await note(ctx, f"{realm.name} raised a new kind of soldier: {drawn.name}.", key="unit_types.drawn", ids=[realm.id])
+                if drawn.entity_id is not None:
+                    await record(ctx, "unit_types.drawn", roles={IncidentRole.ACTOR: realm.id, IncidentRole.PRODUCT: drawn.entity_id})
             elif design is not None and "retired" not in design.locked and ctx.rng(f"unit_refit.{design.id}.{ctx.epoch}").chance(table.refit_pct):
                 newer = await refit_type(ctx, design, realm, knowledge)
                 tally.refitted += newer is not None

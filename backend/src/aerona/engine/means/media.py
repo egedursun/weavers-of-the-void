@@ -16,18 +16,19 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.means import WritingMedium
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.lore.printing import printed
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.recording.record import record as record_incident
 
 
 @dataclass
@@ -132,7 +133,7 @@ async def wear_works(ctx: TickContext, tally: MediaTally) -> None:
         if row.condition <= 0:
             await retire_in(ctx, work, f"its {spec.label.lower()} crumbled away", EntityStatus.DESTROYED)
             tally.lost += 1
-            await note(ctx, f"{work.name} crumbled away with its {spec.label.lower()}.", key="writing.lost", ids=[work.id])
+            await record_incident(ctx, "writing.lost", roles={IncidentRole.SUBJECT: work.id}, facts={"medium": row.medium, "copies": row.copies})
     await ctx.session.flush()
 
 

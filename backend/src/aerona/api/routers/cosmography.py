@@ -36,7 +36,8 @@ from aerona.api.schemas.cosmography import (
     StructureRecord,
 )
 from aerona.api.schemas.records import NodeRef, StarRecord
-from aerona.api.views.common import chronicle_lines, images_of, node_refs
+from aerona.api.views.common import images_of, node_refs
+from aerona.api.views.scoped_lines import scoped_lines
 from aerona.catalog.cosmography import (
     APOCALYPSE_LABELS,
     BARRED_GALAXIES,
@@ -58,7 +59,6 @@ from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.catalog.travel import METHOD_REACH
 from aerona.constants.api import WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
-from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -73,9 +73,9 @@ from aerona.db.tables.cosmography import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow
-from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.domain.enums.cosmography import SkyObject
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.job import JobKind
@@ -187,22 +187,15 @@ async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleW
             raise NotFoundError("No such part of the heavens.")
         name = node.name
         scale = await scale_row(session, SCALE_DEPTH_KINDS[node.kind], node_id)
-        lines = (
-            list(
-                await session.scalars(
-                    select(ChronicleRow).where(shown_lines(), ChronicleRow.text.contains(name)).order_by(ChronicleRow.id.desc()).limit(WIKI_TIMELINE_LINES)
-                )
-            )
-            if name
-            else []
-        )
+        timeline, timeline_total = await scoped_lines(session, ChronicleScope.NODE, node_id, offset=0, limit=WIKI_TIMELINE_LINES) if name else ([], 0)
         return ScaleWiki(
             node_id=node_id,
             kind=node.kind,
             depth=scale.depth if scale is not None else None,
             cover=await cover_of(session, node_id),
             images=await images_of(session, node_id),
-            timeline=await chronicle_lines(session, lines),
+            timeline=timeline,
+            timeline_total=timeline_total,
             laws=await held_laws(session, node_id) if node.kind is NodeKind.DIMENSION else [],
             strata=await hosted_strata(session, node_id) if node.kind is NodeKind.DIMENSION else [],
         )

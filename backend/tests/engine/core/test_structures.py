@@ -16,7 +16,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.structure import ConstructionState, ConstructionStatus, StructureKind
+from aerona.domain.enums.structure import AbandonCause, ConstructionState, ConstructionStatus, StructureKind
 from aerona.domain.models.entity_stats import StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
@@ -107,7 +107,7 @@ async def test_without_materials_or_coin_the_work_stalls_and_is_abandoned_into_a
     knowledge_map = await KnowledgeMap.load(ctx.session)
     assert await advance(ctx, row, active=1, knowledge=knowledge_map) == 0
     assert row.stalled_epochs == 1
-    await abandon(ctx, row, "the quarries ran dry")
+    await abandon(ctx, row, AbandonCause.STOOD_STILL)
     assert row.status is ConstructionStatus.ABANDONED
     assert await has_flag(ctx.session, work.id, EntityFlag.RUIN)
     legends = list(await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.LEGEND)))

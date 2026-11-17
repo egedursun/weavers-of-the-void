@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import func, select
@@ -5,21 +6,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
+from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.tongues import LanguageStage
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import link_weight, trade_links
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -29,6 +29,8 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, canon, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
+from aerona.engine.recording.record import RoleValue
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.tongues.grammar import loan_factor, simplify
 from aerona.engine.tongues.loans import adapted
 from aerona.language.lexicon import LexiconEntry
@@ -120,9 +122,9 @@ async def drop(ctx: TickContext, speaker: EntityRow, language: EntityRow, reason
     return True
 
 
-async def tell(ctx: TickContext, tally: ContactTally, text: str, key: str, ids: list[int]) -> None:
+async def tell(ctx: TickContext, tally: ContactTally, key: str, roles: Mapping[IncidentRole, RoleValue]) -> None:
     tally.events += 1
-    await note(ctx, text, key=f"language_contact.{key}", ids=ids, kind=ChronicleKind.LANGUAGE)
+    await record_incident(ctx, f"language_contact.{key}", roles=roles)
 
 
 async def communities_pair(session: AsyncSession, bond: BondRow) -> tuple[EntityRow, EntityRow] | None:
@@ -149,22 +151,12 @@ async def conquest_contact(ctx: TickContext, tally: ContactTally) -> None:
             if rng.chance(table.conquest_bilingual_chance) and await learn(ctx, ruled, ruler_tongue, f"learned under the rule of {ruler.name}"):
                 await borrow(ctx, tally, ruler_tongue, own, ruled.id, count=table.contact_words)
                 await tell(
-                    ctx,
-                    tally,
-                    f"{ruled.name} began to speak {ruler_tongue.name} too, under the rule of {ruler.name}.",
-                    "conquest_bilingual",
-                    [ruled.id, ruler.id, ruler_tongue.id],
+                    ctx, tally, "conquest_bilingual", {IncidentRole.LEARNER: ruled.id, IncidentRole.AUTHORITY: ruler.id, IncidentRole.SUBJECT: ruler_tongue.id}
                 )
             continue
         native = next((item for item in await spoken(ctx.session, ruled.id) if item.id != ruler_tongue.id), None)
         if native is not None and rng.chance(table.conquest_shift_chance) and await drop(ctx, ruled, native, "language shift"):
-            await tell(
-                ctx,
-                tally,
-                f"{ruled.name} gave up its own {native.name}; only its conquerors' {ruler_tongue.name} is spoken now.",
-                "shift",
-                [ruled.id, native.id],
-            )
+            await tell(ctx, tally, "shift", {IncidentRole.SUBJECT: ruled.id, IncidentRole.PREDECESSOR: native.id, IncidentRole.SUCCESSOR: ruler_tongue.id})
 
 
 async def migration_contact(ctx: TickContext, tally: ContactTally) -> None:
@@ -196,15 +188,15 @@ async def migration_contact(ctx: TickContext, tally: ContactTally) -> None:
         await tell(
             ctx,
             tally,
-            f"The migrants of {migrants.name} began to speak {neighbour_tongue.name}, the tongue of their neighbours {neighbour.name}.",
             "migration_bilingual",
-            [migrants.id, neighbour.id, neighbour_tongue.id],
+            {IncidentRole.LEARNER: migrants.id, IncidentRole.TEACHER: neighbour.id, IncidentRole.SUBJECT: neighbour_tongue.id},
         )
 
 
 async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
     borrowed_before = tally.borrowed
+    tongues: dict[int, None] = {}
     for link in sorted(await trade_links(ctx), key=lambda item: (-item.volume, item.first, item.second)):
         if tally.loans_left <= 0:
             break
@@ -221,6 +213,7 @@ async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
         if lender_tongue is None or borrower_tongue is None or lender_tongue.id == borrower_tongue.id:
             continue
         await borrow(ctx, tally, lender_tongue, borrower_tongue, borrower.id, count=table.contact_words)
+        tongues.update(dict.fromkeys((lender_tongue.id, borrower_tongue.id)))
         if tally.events >= table.event_cap or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
             continue
         if not rng.chance(table.trade_bilingual_chance):
@@ -228,20 +221,9 @@ async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
         small, large = (first, second) if headcount(first) <= headcount(second) else (second, first)
         large_tongue = await mother_tongue(ctx.session, large.id)
         if large_tongue is not None and await learn(ctx, small, large_tongue, f"learned in trade with {large.name}"):
-            await tell(
-                ctx,
-                tally,
-                f"The merchants of {small.name} began to speak {large_tongue.name}, the tongue of trade with {large.name}.",
-                "trade_bilingual",
-                [small.id, large.id],
-            )
+            await tell(ctx, tally, "trade_bilingual", {IncidentRole.LEARNER: small.id, IncidentRole.TEACHER: large.id, IncidentRole.SUBJECT: large_tongue.id})
     if tally.borrowed > borrowed_before:
-        await note(
-            ctx,
-            f"Along the trade roads {several(tally.borrowed - borrowed_before, 'word', 'words')} passed from one tongue to another.",
-            key="language_contact.loans",
-            kind=ChronicleKind.LANGUAGE,
-        )
+        await record_incident(ctx, "language_contact.loans", roles={IncidentRole.SUBJECT: tuple(tongues)}, facts={"words": tally.borrowed - borrowed_before})
 
 
 async def plague_contact(ctx: TickContext, tally: ContactTally) -> None:
@@ -261,13 +243,7 @@ async def plague_contact(ctx: TickContext, tally: ContactTally) -> None:
                 and ctx.rng(f"plague.{community.id}").chance(table.plague_shift_chance)
                 and await drop(ctx, community, minority, "plague")
             ):
-                await tell(
-                    ctx,
-                    tally,
-                    f"After the plague nobody among {community.name} spoke {minority.name} any more; the survivors live in the other tongue.",
-                    "plague_shift",
-                    [community.id, minority.id],
-                )
+                await tell(ctx, tally, "plague_shift", {IncidentRole.SUBJECT: community.id, IncidentRole.PREDECESSOR: minority.id})
         elif tongues:
             set_stats(tongues[0], spread=clamp_int(stat_or(tongues[0], "spread", 0) - table.plague_spread_loss, 0, PERCENT))
 
@@ -321,13 +297,7 @@ async def creole_round(ctx: TickContext, tally: ContactTally) -> None:
             continue
         creole = await birth_creole(ctx, community, first, second)
         tally.creoles += 1
-        await tell(
-            ctx,
-            tally,
-            f"Among {community.name}, {first.name} and {second.name} mixed; a new tongue was born: {creole.name}.",
-            "creole",
-            [community.id, creole.id],
-        )
+        await tell(ctx, tally, "creole", {IncidentRole.SUBJECT: community.id, IncidentRole.PARENT: [first.id, second.id], IncidentRole.PRODUCT: creole.id})
 
 
 async def living_language(session: AsyncSession, language_id: int) -> EntityRow | None:
@@ -385,7 +355,6 @@ async def language_stats(ctx: TickContext) -> int:
     "settlement.population",
     "table.bonds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.language_profiles",
     "table.lexemes",
@@ -405,7 +374,6 @@ async def language_stats(ctx: TickContext) -> int:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -437,11 +405,10 @@ async def order_creole(session: AsyncSession, rules: Rules, community_id: int) -
         raise ValidationFailedError(f"{community.name} does not speak two distinct languages.")
     ctx = await manual_context(session, "creole", rules, key=str(community_id))
     creole = await birth_creole(ctx, community, first, second, by="the Creator")
-    await ctx.chronicle(
-        ChronicleKind.CREATOR_HAND,
-        f"The Creator fused the two tongues of {community.name}; {creole.name} was born.",
-        template_key="language_contact.creator_creole",
-        entity_ids=[community.id, creole.id],
+    await record_incident(
+        ctx,
+        "language_contact.creator_creole",
+        roles={IncidentRole.SUBJECT: community.id, IncidentRole.PARENT: [first.id, second.id], IncidentRole.PRODUCT: creole.id},
     )
     return creole
 

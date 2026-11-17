@@ -29,6 +29,7 @@ from aerona.db.tables.powers import (
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import (
     Learnability,
     PowerOrigin,
@@ -42,8 +43,8 @@ from aerona.domain.enums.powers import (
 from aerona.engine.arcana.enchantments import pay_essence
 from aerona.engine.concealment.truths import breach, knowledge
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.recording.record import record as record_incident
 
 SOURCE_PARTS: dict[str, type[Base]] = {
     "cost": PowerSourceCostRow,
@@ -156,7 +157,9 @@ async def create_source(ctx: TickContext, draft: SourceDraft) -> PowerSourceRow:
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"A source of power came to be: {row.name}.", key="source.created", ids=[draft.scope_id] if draft.scope_id is not None else [])
+    await record_incident(
+        ctx, "source.created", roles={IncidentRole.SUBJECT: [*([draft.scope_id] if draft.scope_id is not None else [])]}, facts={"row": row.name}
+    )
     return row
 
 
@@ -245,7 +248,7 @@ async def create_system(ctx: TickContext, draft: SystemDraft) -> MagicSystemRow:
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"A system of power took shape: {row.name}.", key="magic_system.created", ids=[draft.scope_id])
+    await record_incident(ctx, "magic_system.created", roles={IncidentRole.SUBJECT: draft.scope_id}, facts={"row": row.name})
     return row
 
 
@@ -299,7 +302,9 @@ async def grant_power(ctx: TickContext, god_id: int, draft: PowerDraft) -> Power
         raise ValidationFailedError("The god has too little essence to grant a power.")
     row = await create_power(ctx, PowerDraft(**{**draft.__dict__, "origin": PowerOrigin.GRANTED, "granted_by_id": god_id, "state": PowerState.ACTIVE}))
     holder = await ctx.session.get(EntityRow, draft.holder_id)
-    await note(ctx, f"A god gave {holder.name if holder is not None else 'a mortal'} a power.", key="power.granted", ids=[draft.holder_id])
+    await record_incident(
+        ctx, "power.granted", roles={IncidentRole.SUBJECT: draft.holder_id}, facts={"detail": str(holder.name if holder is not None else "a mortal")}
+    )
     return row
 
 
@@ -310,7 +315,7 @@ async def revoke_power(ctx: TickContext, god_id: int, power_id: int) -> PowerRow
     if held(row.holder_node_id):
         raise ValidationFailedError("That one is held against the world.")
     row.state = PowerState.LOST
-    await note(ctx, "A god took back a power it had given.", key="power.revoked", ids=[row.holder_node_id])
+    await record_incident(ctx, "power.revoked", roles={IncidentRole.SUBJECT: row.holder_node_id})
     return row
 
 
@@ -390,7 +395,12 @@ async def reveal(ctx: TickContext, truth_id: int, population_id: int) -> PublicK
             spread=PERCENT,
         )
     )
-    await note(ctx, f"What was hidden was made known: {truth.title}.", key="truth.revealed_by_hand", ids=[truth.subject_node_id, population_id])
+    await record_incident(
+        ctx,
+        "truth.revealed_by_hand",
+        roles={IncidentRole.SUBJECT: truth.subject_node_id, IncidentRole.RECEIVER: population_id},
+        facts={"truth": truth.title, "truth_kind": truth.kind},
+    )
     await ctx.session.flush()
     return row
 

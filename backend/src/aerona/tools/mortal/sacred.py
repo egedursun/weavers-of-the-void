@@ -10,6 +10,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import DivinationQuestion, MysticState, PetitionKind
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -22,7 +23,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class PetitionSpiritInput(ToolInput):
@@ -70,7 +70,7 @@ async def petition_spirit(call: MortalCall, args: PetitionSpiritInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.PETITION_DECLINED, why=str(error).rstrip("."))
     call.target(spirit.id)
-    await call.chronicle(ChronicleKind.PRAYER, lines.PETITION_SPIRIT, entity_ids=[call.me.id, spirit.id], me=call.me.name, spirit=spirit.name)
+    await call.record("tools.mortal.petition_spirit", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: spirit.id}, kind=ChronicleKind.PRAYER)
     return result(MortalResult.PETITION_FILED, spirit=spirit.name, kind=args.kind.value.replace("_", " "), due=row.due_epoch)
 
 
@@ -85,7 +85,7 @@ async def offer_to_spirit(call: MortalCall, args: OfferToSpiritInput) -> str:
     if "contentment" not in row.locked:
         row.contentment = clamp_int(row.contentment + table.contentment_step, 0, PERCENT)
     call.target(spirit.id)
-    await call.chronicle(ChronicleKind.PRAYER, lines.OFFER_TO_SPIRIT, entity_ids=[call.me.id, spirit.id], me=call.me.name, spirit=spirit.name)
+    await call.record("tools.mortal.offer_to_spirit", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: spirit.id}, kind=ChronicleKind.PRAYER)
     return result(MortalResult.SPIRIT_OFFERING_MADE, spirit=spirit.name, contentment=row.contentment)
 
 
@@ -100,7 +100,7 @@ async def seek_vision(call: MortalCall, args: SeekVisionInput) -> str:
     else:
         await see_vision(call.tick, row, call.me, sender, tally)
     call.target(call.me.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.SEEK_VISION, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.seek_vision", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.WORSHIP)
     return result(MortalResult.VISION_SEEN, visions=row.visions, followers=row.followers)
 
 
@@ -113,7 +113,12 @@ async def consult_diviner(call: MortalCall, args: ConsultDivinerInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.OMENS_DECLINED, why=str(error).rstrip("."))
     call.target(realm_id)
-    await call.chronicle(ChronicleKind.FATE, lines.CONSULT_DIVINER, entity_ids=[call.me.id, realm_id], me=call.me.name, question=args.question.value)
+    await call.record(
+        "tools.mortal.consult_diviner",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: realm_id},
+        facts={"question": args.question},
+        kind=ChronicleKind.FATE,
+    )
     return result(MortalResult.OMENS_READ, question=args.question.value, verdict=row.verdict.value)
 
 
@@ -131,7 +136,12 @@ async def preach_end_time(call: MortalCall, args: PreachEndTimeInput) -> str:
         fail(MortalResult.END_DECLINED, why="the town already awaits the end")
     row = await control.stir_movement(call.tick, town.id, call.me.id, None)
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORSHIP, lines.PREACH_END_TIME, entity_ids=[call.me.id, town.id], me=call.me.name, town=town.name)
+    await call.record(
+        "tools.mortal.preach_end_time",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: town.id},
+        facts={"town": str(town.name)},
+        kind=ChronicleKind.WORSHIP,
+    )
     return result(MortalResult.END_PREACHED, town=town.name, end=row.end_epoch, members=row.members)
 
 

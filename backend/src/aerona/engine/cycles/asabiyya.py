@@ -10,15 +10,16 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import at_war, polities, psi_of, put, realm_towns
 from aerona.engine.mind.book import Values, stored_values
-from aerona.engine.notes import note
 from aerona.engine.polity.regard import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 HALF = PERCENT // 2
@@ -107,11 +108,18 @@ async def tend(
     if frontier:
         tally.frontiers += 1
     if before < table.surge_at <= row.value:
-        await note(ctx, f"The frontier bound {holder.name} into one: its people stand together as never before.", key="asabiyya.surge", ids=[holder.id])
-    if before >= table.soft_at > row.value:
-        await note(
-            ctx, f"Generations of ease have softened {holder.name}; its people no longer hold together as they did.", key="asabiyya.softened", ids=[holder.id]
+        await record_incident(
+            ctx,
+            "asabiyya.surge",
+            roles={IncidentRole.SUBJECT: holder.id},
+            facts={
+                "before": before,
+                "after": row.value,
+                "frontier": int(frontier),
+            },
         )
+    if before >= table.soft_at > row.value:
+        await record_incident(ctx, "asabiyya.softened", roles={IncidentRole.SUBJECT: holder.id}, facts={"before": before, "after": row.value})
 
 
 async def homeland_psi(ctx: TickContext, homes: set[int]) -> int:

@@ -2,7 +2,6 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.catalog.cosmography import STAR_AGE_LABELS
 from aerona.catalog.kinds.stars import STAR_AGES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
@@ -11,9 +10,9 @@ from aerona.db.tables.physics import StarPhysicsRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.transform import StarModifierRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import GalaxyAge, StarAge
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.context import TickContext
@@ -37,10 +36,11 @@ from aerona.engine.cosmos.stellar import (
     typical_mass,
 )
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.recording.record import record
+from aerona.engine.recording.scope import recording
 from aerona.rules.registry import Rules
 
 NEXT_STAGE: dict[StarAge, StarAge] = {StarAge.YOUNG: StarAge.MAIN, StarAge.MAIN: StarAge.OLD, StarAge.OLD: StarAge.DYING, StarAge.REBORN: StarAge.MAIN}
@@ -68,10 +68,11 @@ async def swell(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None)
         return
     star.star_type = giant
     reach = engulf_orbit(ctx.rules, mass)
-    await note(ctx, f"{star.name} swelled into a giant.", key="star.swelled", kind=ChronicleKind.SKY)
-    for world in sorted(await worlds_of_star(ctx.session, star.id), key=lambda row: row.id):
-        if world.parent_world_id is None and world.orbit < reach:
-            await scorch_world(ctx, world, f"The swelling of {star.name} swallowed")
+    async with recording(ctx, "star.swelled"):
+        await record(ctx, "star.swelled", roles={IncidentRole.SUBJECT: star.id}, facts={"star_type": giant, "mass": mass, "reach": reach})
+        for world in sorted(await worlds_of_star(ctx.session, star.id), key=lambda row: row.id):
+            if world.parent_world_id is None and world.orbit < reach:
+                await scorch_world(ctx, world, star.id)
 
 
 async def die(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -> None:
@@ -79,13 +80,12 @@ async def die(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -
     if physics is not None and physics.maker_son_id is not None:
         physics.maker_son_id = None
     if ends_in_supernova(ctx.rules, mass):
-        text = await supernova(ctx, star)
-        await note(ctx, text, key="sky.supernova", kind=ChronicleKind.SKY)
+        await supernova(ctx, star)
     if "star_type" not in star.locked:
         star.star_type = remnant_for(ctx.rules, mass)
     star.age_stage = StarAge.DEAD
     star.lifecycle_clock = None
-    await note(ctx, f"{star.name} reached the end of its life.", key="star.died", kind=ChronicleKind.SKY)
+    await record(ctx, "star.died", roles={IncidentRole.SUBJECT: star.id}, facts={"star_type": star.star_type, "mass": mass})
 
 
 async def pass_stage(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None = None) -> None:
@@ -98,7 +98,7 @@ async def pass_stage(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | 
         return
     star.age_stage = following
     star.lifecycle_clock = stage_epochs(ctx.rules, star, following, physics)
-    await note(ctx, f"{star.name} entered its {STAR_AGE_LABELS[following].lower()} age.", key=f"star.stage.{following.value}", kind=ChronicleKind.SKY)
+    await record(ctx, f"star.stage.{following.value}", roles={IncidentRole.SUBJECT: star.id}, facts={"stage": following, "epochs": star.lifecycle_clock or 0})
     if following is StarAge.OLD:
         await swell(ctx, star, physics)
 
@@ -112,7 +112,12 @@ async def keep_divine(ctx: TickContext, star: StarRow, physics: StarPhysicsRow |
     if maker is None or maker.status is SonStatus.DEAD or held(maker.id) or maker.essence < upkeep:
         physics.maker_son_id = None
         physics.upkeep = 0
-        await note(ctx, f"{star.name} fell back under the laws of its kind.", key="star.divine_lapsed", kind=ChronicleKind.SKY)
+        await record(
+            ctx,
+            "star.divine_lapsed",
+            roles={IncidentRole.SUBJECT: star.id, IncidentRole.MAKER: maker.id if maker is not None else None},
+            facts={"upkeep": upkeep},
+        )
         return False
     maker.essence -= upkeep
     physics.upkeep = upkeep
@@ -179,9 +184,11 @@ async def worship(ctx: TickContext, cosmography: Cosmography, dimmed: dict[int, 
             shift_bounded(ctx.rules, community, "piety", -table.crisis_piety)
     for star_id, loss in dimmed.items():
         if loss >= table.dimming_crisis and worshippers[star_id]:
-            star = cosmography.stars[star_id]
-            await note(
-                ctx, f"{star.name} dimmed, and those who worship it fell into a crisis of faith.", key="star.crisis_of_faith", kind=ChronicleKind.WORSHIP
+            await record(
+                ctx,
+                "star.crisis_of_faith",
+                roles={IncidentRole.SUBJECT: star_id},
+                facts={"loss": loss, "worshippers": worshippers[star_id], "piety_loss": table.crisis_piety},
             )
     return worshippers
 
@@ -201,7 +208,12 @@ async def star_cults(ctx: TickContext, cosmography: Cosmography, dimmed: dict[in
         if not stirred or not rng.chance(table.cult_chance):
             continue
         await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_STAR, ctx.epoch)
-        await note(ctx, f"{community.name} came to worship {star.name}.", key="star.cult_risen", ids=[community.id], kind=ChronicleKind.WORSHIP)
+        await record(
+            ctx,
+            "star.cult_risen",
+            roles={IncidentRole.ACTOR: community.id, IncidentRole.SUBJECT: star.id},
+            facts={"brightness": star.brightness, "chance": table.cult_chance},
+        )
         risen += 1
     return risen
 

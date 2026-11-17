@@ -1,13 +1,10 @@
-from enum import StrEnum
-
-from aerona.catalog.peoples import FUNERALS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import profiles_of
 from aerona.engine.demography.cohorts import rebalance_classes, reconcile, seed
@@ -31,12 +28,12 @@ from aerona.engine.demography.urban import urban_drift
 from aerona.engine.disease.emergence import WET
 from aerona.engine.disease.harm import community_targets
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.capacity import LAND_COMMUNITY_TYPES
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 
 COLD = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 
@@ -71,7 +68,6 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.disease_profiles",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.incident_participants",
@@ -109,7 +105,6 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.conditions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.incident_participants",
     "table.incidents",
@@ -201,7 +196,6 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.community_societies",
     "table.cult_tenets",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
     "table.loans",
@@ -223,7 +217,6 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.community_societies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
@@ -244,10 +237,6 @@ async def society_mobility(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-def words(value: StrEnum) -> str:
-    return value.value.replace("_", " ")
-
-
 async def homeland_regions(ctx: TickContext, atlas: RegionAtlas, people: EntityRow) -> list[int]:
     homes = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[people.id])]
     found = {atlas.top_region(people.id), *(atlas.top_region(home) for home in homes)}
@@ -265,14 +254,18 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     refresh_culture(ctx.rules, culture, await culture_for(ctx.session, ctx.rules, people, ground), victor)
     await drift_union(ctx.session, people)
     if culture.martial_style is not style:
-        learned = ", learned from those who beat them" if culture.martial_style is victor else ""
-        text = f"The {people.name} gave up fighting as {words(style)} and took up the way of {words(culture.martial_style)}{learned}."
-        await note(ctx, text, key="peoples.martial_style", ids=[people.id], kind=ChronicleKind.WAR)
+        await record_incident(
+            ctx,
+            "peoples.martial_style",
+            roles={IncidentRole.SUBJECT: people.id},
+            facts={"before": style, "after": culture.martial_style, "learned": int(culture.martial_style is victor)},
+        )
     tradition = await rite_tradition(ctx.session, ctx.rules, people, culture, ctx.epoch)
     if tradition is not None:
         ctx.count("funeral_rites")
-        text = f"The {people.name} now {FUNERALS[culture.funeral_rite].deed}; {tradition.name} began."
-        await note(ctx, text, key="peoples.funeral_rite", ids=[people.id, tradition.id], kind=ChronicleKind.LINEAGE)
+        await record_incident(
+            ctx, "peoples.funeral_rite", roles={IncidentRole.SUBJECT: people.id, IncidentRole.PRODUCT: tradition.id}, facts={"rite": culture.funeral_rite}
+        )
 
 
 @reads(
@@ -289,7 +282,6 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     "table.endemic_diseases",
     "table.entities",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.holder_techniques",
     "table.incident_participants",
@@ -316,7 +308,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     "table.community_cohorts",
     "table.community_societies",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",

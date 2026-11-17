@@ -11,14 +11,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import Attribute
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import HoardState, SavingForm
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.mind.split import MIDPOINT, attributes_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
 
 WEALTH = "wealth"
@@ -150,8 +152,14 @@ async def unearth_hoards(ctx: TickContext, place_ids: list[int], finder: EntityR
             continue
         hoard.state, hoard.found_by_node_id, hoard.found_epoch = HoardState.FOUND, finder.id, ctx.epoch
         await give_coin(ctx.session, ctx.rules, finder, hoard.amount)
-        place = await ctx.session.get(EntityRow, hoard.place_entity_id)
-        await note(ctx, f"{finder.name} found a hoard buried long ago in {place.name if place else 'the ground'}.", key="saving.hoard_found", ids=[finder.id])
+        await record(
+            ctx,
+            "saving.hoard_found",
+            roles={IncidentRole.ACTOR: finder.id, IncidentRole.PLACE: hoard.place_entity_id},
+            facts={"amount": hoard.amount},
+            steps=(StepDraft(StepAction.DISCOVER, actor=finder.id, amount=hoard.amount, unit=FactUnit.COIN, outcome=StepOutcome.SUCCESS),),
+            place=hoard.place_entity_id,
+        )
         found += hoard.amount
     return found
 

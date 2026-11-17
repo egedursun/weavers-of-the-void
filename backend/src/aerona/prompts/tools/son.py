@@ -118,7 +118,6 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "hull_material": "Its hull or frame: {{ materials | join(', ') }}; a hard, tough hull turns storms and raiders aside. Empty: its makers choose",
         "fabric_material": "Its sails or harness: {{ materials | join(', ') }}; a light one runs a stage faster, a tough one braves the wind. Empty: its makers choose",
         "frame": "For a ship or other vehicle: the frame it is built on; one of: {{ vehicle_frames }}",
-        "armament": "For a ship: what it carries to fight; any of: rams, missiles, siege_engines, rites",
         "home_port_id": "For a ship: the settlement it sails from",
         "captain_id": "For a ship: the mortal who commands it",
     },
@@ -261,6 +260,30 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.MY_MEMORY: ToolText(
         "Shows your plan, words said to you, your creations, your worshippers, your memories and what concerns you; the full version of the truncated memory in the prompt. Free."
+    ),
+    T.RECALL_EVENT: ToolText(
+        "Shows the full account of a happening you saw, took part in, or that happened in a world you can reach: who took part and in which role, "
+        "what is known of it, how it went step by step, what caused it and what it led to. Free.",
+        {"incident_id": "The happening's id", "step_offset": "Where to start in its steps when they run past one page"},
+    ),
+    T.RETELL_EVENT: ToolText(
+        "Tells the peoples who worship you a version of a happening, changed as you choose or told truly; it spreads as a rumour, and those who "
+        "knew it otherwise may contradict it. 1 action.",
+        {
+            "incident_id": "The happening's id",
+            "distortions": "The changes to make to the telling; leave it empty to tell it truly",
+            "distortions.kind": "What the change does",
+            "distortions.role": "The role whose holder is told otherwise, for a changed doer, one acted on or other part",
+            "distortions.fact": "The key of the fact told otherwise, for a changed amount or outcome",
+            "distortions.step_id": "The id of the step added, dropped or told otherwise",
+            "distortions.told_id": "The id of the record told in its place",
+            "distortions.told_amount": "The amount told instead",
+            "distortions.told_year": "The year told instead",
+            "distortions.told_action": "What is said to have been done in an added step",
+            "distortions.told_outcome": "The outcome told instead",
+            "distortions.told_value": "The value told instead, for a fact of fixed choices or a thing used",
+            "distortions.told_cause_id": "The id of the happening told as its cause",
+        },
     ),
     T.INSPECT_SIBLING: ToolText("Shows a sibling's visible form, powers, creations and relationship with you. Free.", {"son_id": "The sibling's id"}),
     T.WRITE_PLAN: ToolText(
@@ -1036,6 +1059,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you hide it",
         },
     ),
+    T.REVEAL_SECRET: ToolText(
+        "You bring to light the oldest secret still hidden in a place in your reach; what it holds comes into the world. "
+        "{{ rules.places.reveal_secret_essence }} essence, 1 action.",
+        {
+            "place_id": "The place's id",
+            "reason": "Why you bring it to light",
+        },
+    ),
     T.SANCTIFY_PLACE: ToolText(
         "You sanctify a place: its sacredness rises by {{ rules.places.sanctify_amount }}, it draws pilgrims and becomes a holy site of the faithful. "
         "{{ rules.places.sanctify_essence }} essence, 1 action.",
@@ -1344,13 +1375,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.COMMISSION_VESSEL: ToolText(
-        "You have a community lay down a vessel on the frame you choose, armed as you wish, with a captain if you name one; it is built to that "
-        "community's own type for the frame, drawn now if it has none. {{ rules.son_military.vessel_cost }} essence, 1 action.",
+        "You have a community lay down a vessel on the frame you choose, with a captain if you name one; it is built to that community's own "
+        "type for the frame, drawn now if it has none, and carries the weapons that type mounts. {{ rules.son_military.vessel_cost }} essence, 1 action.",
         {
             "owner_id": "The community or mortal that owns the vessel",
             "name": "The vessel's proper name",
             "frame": "The frame it is built on; one of: {{ vehicle_frames }}",
-            "armament": "What it carries to fight: rams, missiles, siege_engines, rites",
             "captain_id": "A living mortal to captain it, if any",
         },
     ),

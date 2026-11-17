@@ -10,14 +10,15 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.minds import MindOrigin, MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.minds.profiles import is_made
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.recording.record import record as record_incident
 
 PEOPLE_POWER = 10
 
@@ -43,7 +44,16 @@ async def form(ctx: TickContext, maker: EntityRow, rows: list[MindProfileRow]) -
     ctx.session.add(PeopleSubstrateRow(people_entity_id=people.id, seat=seat, origin=origin, share_pct=100, locked=[]))
     for row in rows:
         await connect(ctx.session, row.node_id, people.id, BondKind.MEMBER_OF, ctx.epoch, description="one of this people")
-    await note(ctx, f"The made minds of {maker.name} became a people.", key="made_people.formed", ids=[people.id, maker.id])
+    await record_incident(
+        ctx,
+        "made_people.formed",
+        roles={IncidentRole.PRODUCT: people.id, IncidentRole.MAKER: maker.id},
+        facts={
+            "minds": len(rows),
+            "seat": seat,
+            "origin": origin,
+        },
+    )
     return people
 
 

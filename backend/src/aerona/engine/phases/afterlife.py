@@ -7,6 +7,7 @@ from aerona.constants.cosmos import RECENT_DEATH_EPOCHS
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import MULTI_WORLD_COSMOS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -18,11 +19,12 @@ from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import InstrumentKind, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
@@ -36,7 +38,6 @@ from aerona.engine.cosmos.world_types import is_living, is_mirror, is_realm_of_d
 from aerona.engine.faith.judgement import judge
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster
 from aerona.engine.primitives.distance import RegionAtlas
@@ -47,6 +48,8 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon, count_communities, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, scale_stat, shift_bounded, stat_or
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.profiles import ensure_profile
 from aerona.rules.registry import Rules
@@ -68,7 +71,7 @@ async def _require(session: AsyncSession, entity_id: int, label: str) -> EntityR
     return entity
 
 
-async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, by: str, binder_id: int | None = None) -> EntityRow:
+async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, binder_id: int | None = None) -> EntityRow:
     soul = await ctx.session.get(EntityRow, soul_id)
     if soul is None or soul.status is not EntityStatus.CANON or soul.entity_type is not EntityType.SPIRIT:
         raise NotFoundError("No such free soul.")
@@ -77,13 +80,23 @@ async def soul_bind(ctx: TickContext, soul_id: int, target_id: int, by: str, bin
         raise ValidationFailedError("A soul binds only to an item, a vehicle or a work.")
     await retire(ctx.session, soul, ctx.epoch, f"Epoch {ctx.epoch}: bound to {target.name}.", close_bonds=True)
     await BondRepository(ctx.session).connect(BondDraft(soul.id, target.id, BondKind.INSIDE, ctx.epoch, "soul binding", role=BondRole.SPIRIT_BINDING))
-    record = await ctx.session.get(SoulRow, soul.id)
-    if record is not None:
-        record.bound_to_entity_id = target.id
+    soul_row = await ctx.session.get(SoulRow, soul.id)
+    if soul_row is not None:
+        soul_row.bound_to_entity_id = target.id
     result = await _animate(ctx, soul, target, binder_id) if target.entity_type is EntityType.STRUCTURE else await _bind_object(ctx, target)
-    walked = "; the work began to move" if result.id != target.id else ""
-    await ctx.chronicle(
-        ChronicleKind.SPIRIT, f"{by} bound {soul.name} to {target.name}{walked}.", template_key="beyond.soul_bound", entity_ids=[soul.id, target.id]
+    await record(
+        ctx,
+        "beyond.soul_bound",
+        roles={
+            IncidentRole.SUBJECT: soul.id,
+            IncidentRole.INSTRUMENT: target.id,
+            IncidentRole.ACTOR: binder_id,
+            IncidentRole.PRODUCT: result.id if result.id != target.id else None,
+        },
+        facts={"animated": 1 if result.id != target.id else 0},
+        steps=(StepDraft(StepAction.BIND, actor=binder_id, target=soul.id, instrument_kind=InstrumentKind.ITEM, instrument_node=target.id),),
+        place=target.location_id,
+        world_id=target.world_id,
     )
     return result
 
@@ -210,14 +223,22 @@ async def soul_buildup(ctx: TickContext) -> None:
 async def harvest_soul(ctx: TickContext, cult: EntityRow, soul: EntityRow) -> None:
     beyond = ctx.rules.beyond
     await retire(ctx.session, soul, ctx.epoch, f"Epoch {ctx.epoch}: harvested by {cult.name}.")
-    record = await ctx.session.get(SoulRow, soul.id)
-    if record is not None:
-        record.harvested_by_entity_id = cult.id
+    soul_row = await ctx.session.get(SoulRow, soul.id)
+    if soul_row is not None:
+        soul_row.harvested_by_entity_id = cult.id
     with flowing(FlowCategory.CONVERSION):
         scale_stat(ctx.rules, cult, FOLLOWERS_KEY, beyond.soul_harvest_follower_mult_pct / PERCENT, default=beyond.cult_default_followers)
     shift_bounded(ctx.rules, cult, INFLUENCE_KEY, beyond.soul_harvest_influence_gain, default=beyond.cult_default_influence)
     await EntityRepository(ctx.session).add_flag(cult.id, EntityFlag.SOUL_HARVESTER, ctx.epoch)
-    await note(ctx, f"{cult.name} harvested {soul.name}; the cult's power grew.", key="beyond.soul_harvest", ids=[cult.id, soul.id])
+    await record(
+        ctx,
+        "beyond.soul_harvest",
+        roles={IncidentRole.ACTOR: cult.id, IncidentRole.SUBJECT: soul.id},
+        facts={"follower_pct": beyond.soul_harvest_follower_mult_pct, "influence_gain": beyond.soul_harvest_influence_gain},
+        steps=(StepDraft(StepAction.DRAW_POWER, actor=cult.id, target=soul.id, outcome=StepOutcome.SUCCESS),),
+        place=soul.location_id,
+        world_id=cult.world_id,
+    )
 
 
 async def soul_harvest(ctx: TickContext) -> int:
@@ -252,12 +273,30 @@ async def planet_acts(ctx: TickContext, world: WorldRow) -> str | None:
             if polluter.location_id
             else polluter
         )
-        await apply_disaster(ctx, shaken or polluter, Disaster.EARTHQUAKE, fraction(beyond.planet_quake_severity))
-        return f"{world.name} stirred: the planet shook {polluter.name}, who polluted it."
+        place = shaken or polluter
+        await apply_disaster(ctx, place, Disaster.EARTHQUAKE, fraction(beyond.planet_quake_severity))
+        written = await record(
+            ctx,
+            "beyond.planet_shook",
+            roles={IncidentRole.ACTOR: world.id, IncidentRole.TARGET: polluter.id, IncidentRole.PLACE: place.id},
+            facts={"severity": beyond.planet_quake_severity},
+            steps=(StepDraft(StepAction.QUAKE, actor=world.id, target=polluter.id, locus_kind=StepLocus.SETTLEMENT, locus_node=place.id),),
+            place=place.id,
+            world_id=world.id,
+        )
+        return written.text
     if protected is not None:
         add_prosperity(ctx.rules, protected, beyond.planet_worshipper_prosperity)
         scale_stat(ctx.rules, protected, POPULATION_KEY, beyond.planet_worshipper_population_pct / PERCENT)
-        return f"{world.name} fed {protected.name}, who worship it: the lands grew warm."
+        written = await record(
+            ctx,
+            "beyond.planet_fed",
+            roles={IncidentRole.ACTOR: world.id, IncidentRole.BENEFICIARY: protected.id},
+            facts={"prosperity_gain": beyond.planet_worshipper_prosperity, "population_pct": beyond.planet_worshipper_population_pct},
+            steps=(StepDraft(StepAction.BLOOM, actor=world.id, target=protected.id),),
+            world_id=world.id,
+        )
+        return written.text
     region = rng.pick_or_none(regions)
     if region is None:
         return None
@@ -268,13 +307,23 @@ async def _toggle_skin(ctx: TickContext, world: WorldRow, region: EntityRow) -> 
     beyond = ctx.rules.beyond
     repository = EntityRepository(ctx.session)
     danger = stat_or(region, DANGER_KEY, beyond.region_default_danger)
-    if await repository.has_flag(region.id, EntityFlag.PLANET_CLOSED):
+    opening = await repository.has_flag(region.id, EntityFlag.PLANET_CLOSED)
+    if opening:
         await repository.remove_flag(region.id, EntityFlag.PLANET_CLOSED)
-        shift_bounded(ctx.rules, region, DANGER_KEY, -beyond.planet_close_skin_danger, default=danger)
-        return f"{world.name} opened {region.name} again."
-    await repository.add_flag(region.id, EntityFlag.PLANET_CLOSED, ctx.epoch)
-    shift_bounded(ctx.rules, region, DANGER_KEY, beyond.planet_close_skin_danger, default=danger)
-    return f"{world.name} closed {region.name}; entering it is dangerous."
+    else:
+        await repository.add_flag(region.id, EntityFlag.PLANET_CLOSED, ctx.epoch)
+    shift_bounded(ctx.rules, region, DANGER_KEY, -beyond.planet_close_skin_danger if opening else beyond.planet_close_skin_danger, default=danger)
+    action = StepAction.OPEN if opening else StepAction.CLOSE
+    written = await record(
+        ctx,
+        "beyond.planet_opened" if opening else "beyond.planet_closed",
+        roles={IncidentRole.ACTOR: world.id, IncidentRole.PLACE: region.id},
+        facts={"danger_before": danger, "danger_after": stat_or(region, DANGER_KEY, danger)},
+        steps=(StepDraft(action, actor=world.id, locus_kind=StepLocus.REGION, locus_node=region.id),),
+        place=region.id,
+        world_id=world.id,
+    )
+    return written.text
 
 
 async def planet_worship(ctx: TickContext, world: WorldRow) -> int:
@@ -289,7 +338,13 @@ async def planet_worship(ctx: TickContext, world: WorldRow) -> int:
     for community in godless[: beyond.planet_worship_candidates]:
         if rng.chance(beyond.planet_worship_chance):
             await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_PLANET, ctx.epoch)
-            await note(ctx, f"{community.name} began to worship the living planet beneath its feet.", key="beyond.planet_worship", ids=[community.id])
+            await record(
+                ctx,
+                "beyond.planet_worship",
+                roles={IncidentRole.ACTOR: community.id, IncidentRole.TARGET: world.id},
+                steps=(StepDraft(StepAction.PRAY, actor=community.id, target=world.id),),
+                world_id=world.id,
+            )
             turned += 1
     return turned
 
@@ -300,9 +355,7 @@ async def planetary_consciousness(ctx: TickContext) -> None:
             continue
         if not ctx.rng(f"planet_roll.{world.id}").chance(ctx.rules.beyond.planet_acts_chance):
             continue
-        text = await planet_acts(ctx, world)
-        if text is not None:
-            await note(ctx, text, key="beyond.planet_acts", feed=FeedCategory.WORLD)
+        await planet_acts(ctx, world)
         await planet_worship(ctx, world)
 
 
@@ -330,12 +383,13 @@ async def raise_archive(ctx: TickContext) -> EntityRow | None:
         ),
     )
     await ensure_profile(ctx.session, ctx.rules, ctx.epoch, archive, StructureKind.COSMIC_ARCHIVE)
-    world = await ctx.session.get(WorldRow, region.world_id)
-    await note(
+    await record(
         ctx,
-        f"In {world.name if world else region.name} an archive gathering the knowledge of all worlds appeared.",
-        key="beyond.archive_appeared",
-        ids=[archive.id],
+        "beyond.archive_appeared",
+        roles={IncidentRole.PRODUCT: archive.id, IncidentRole.PLACE: region.id},
+        facts={"worlds_known": await worlds_known(ctx.session)},
+        place=region.id,
+        world_id=region.world_id,
     )
     return archive
 
@@ -352,11 +406,25 @@ async def read_archive(ctx: TickContext, archive: EntityRow, community: EntityRo
     shift_bounded(ctx.rules, tech, SPREAD_KEY, ctx.rules.intervention_effects.knowledge_spread_gain)
     if await ctx.session.get(ArchiveHoldingRow, (archive.id, tech.id)) is None:
         ctx.session.add(ArchiveHoldingRow(archive_entity_id=archive.id, knowledge_entity_id=tech.id, reader_entity_id=community.id, epoch=ctx.epoch))
-    await note(
+    await record(
         ctx,
-        f"{community.name}'s scribes extracted the knowledge of {tech.name} from the Cosmic Archive.",
-        key="beyond.archive_read",
-        ids=[community.id, tech.id],
+        "beyond.archive_read",
+        roles={IncidentRole.LEARNER: community.id, IncidentRole.PRODUCT: tech.id, IncidentRole.PLACE: archive.id},
+        facts={"spread_gain": ctx.rules.intervention_effects.knowledge_spread_gain},
+        steps=(
+            StepDraft(
+                StepAction.READ,
+                actor=community.id,
+                target=archive.id,
+                instrument_kind=InstrumentKind.TEXT,
+                instrument_node=archive.id,
+                record_table=ArchiveHoldingRow.__tablename__,
+                record_key=f"{archive.id}.{tech.id}",
+            ),
+            StepDraft(StepAction.LEARN, actor=community.id, target=tech.id),
+        ),
+        place=archive.id,
+        world_id=archive.world_id,
     )
     return tech
 
@@ -388,10 +456,17 @@ async def archive_burned(ctx: TickContext) -> int:
         if archive.id in burned:
             continue
         await EntityRepository(ctx.session).add_flag(archive.id, EntityFlag.BURNED, ctx.epoch)
-        lost += await _burn_holdings(ctx, archive)
-        text = f"The Cosmic Archive burned. {beyond.archive_burn_loss_pct}% of the knowledge it held was lost with it; this is the end of an age."
-        await ctx.chronicle(ChronicleKind.AGE_CHANGE, text, template_key="beyond.archive_burned", entity_ids=[archive.id])
-        await note(ctx, f"The Cosmic Archive burned; {beyond.archive_burn_loss_pct}% of its knowledge was lost.", key="beyond.archive_burned_note")
+        with explaining():
+            burned_works = await _burn_holdings(ctx, archive)
+            lost += burned_works
+            await record(
+                ctx,
+                "beyond.archive_burned",
+                roles={IncidentRole.SUBJECT: archive.id},
+                facts={"loss_pct": beyond.archive_burn_loss_pct, "works_lost": burned_works},
+                place=archive.location_id,
+                world_id=archive.world_id,
+            )
     return lost
 
 
@@ -424,21 +499,23 @@ async def cosmic_plague(ctx: TickContext) -> int:
         place = await ctx.session.get(EntityRow, journey.result_entity_id)
         if place is None or place.status is not EntityStatus.CANON or place.id in infected or held(place.id) or not rng.chance(beyond.cosmic_plague_chance):
             continue
-        await infect(ctx, place)
+        await infect(ctx, place, journey.origin_world_id, journey.incident_id)
         infected.add(place.id)
         count += 1
     return count
 
 
-async def infect(ctx: TickContext, place: EntityRow) -> None:
+async def infect(ctx: TickContext, place: EntityRow, origin: int | None = None, cause: int | None = None) -> None:
     await apply_disaster(ctx, place, Disaster.PLAGUE, fraction(ctx.rules.beyond.cosmic_plague_severity))
     await EntityRepository(ctx.session).add_flag(place.id, EntityFlag.COSMIC_PLAGUE, ctx.epoch)
-    await note(
+    await record(
         ctx,
-        f"A disease came to {place.name} from another world; no one knows its name.",
-        key="beyond.cosmic_plague",
-        ids=[place.id],
-        feed=FeedCategory.DISASTER,
+        "beyond.cosmic_plague",
+        roles={IncidentRole.PLACE: place.id, IncidentRole.ORIGIN: origin},
+        facts={"severity": ctx.rules.beyond.cosmic_plague_severity},
+        place=place.id,
+        cause=cause,
+        world_id=place.world_id,
     )
 
 
@@ -463,9 +540,19 @@ async def void_storm(ctx: TickContext) -> str | None:
                 kind=SkyEventKind.VOID_STORM, epoch=ctx.epoch, until_epoch=result.severed_until - 1, world_id=world_id, route_id=route.id, text=result.text
             )
         )
-    text = "A void storm closed a hidden route, and the route was revealed." if result.revealed else "A void storm closed a route."
-    await note(ctx, f"{text} {result.text}", key="beyond.void_storm", feed=FeedCategory.GATE)
-    return result.text
+    written = await record(
+        ctx,
+        "beyond.void_storm",
+        roles={IncidentRole.PLACE: [route.world_a_id, route.world_b_id]},
+        facts={
+            "opens_epoch": result.severed_until,
+            "journeys_lost": result.lost,
+            "journeys_waiting": result.waiting,
+            "routes_revealed": 1 if result.revealed else 0,
+        },
+        steps=(StepDraft(StepAction.BLOW), StepDraft(StepAction.CLOSE), *((StepDraft(StepAction.REVEAL),) if result.revealed else ())),
+    )
+    return written.text
 
 
 async def mirror_birth(ctx: TickContext, dead: EntityRow, region: EntityRow, twin: WorldRow, mirror: WorldRow) -> EntityRow:
@@ -495,12 +582,15 @@ async def mirror_birth(ctx: TickContext, dead: EntityRow, region: EntityRow, twi
     )
     await EntityRepository(ctx.session).add_flag(dead.id, EntityFlag.MIRROR_BORN, ctx.epoch)
     await BondRepository(ctx.session).connect(BondDraft(born.id, dead.id, BondKind.RELATED, ctx.epoch, ITS_MIRROR))
-    text = (
-        f"{dead.name} died; their mirror was born in {mirror.name}."
-        if same_epoch
-        else f"The mirror of {dead.name}, who died in Epoch {dead.end_epoch}, was born in {mirror.name}."
+    await record(
+        ctx,
+        "beyond.mirror_birth",
+        roles={IncidentRole.PREDECESSOR: dead.id, IncidentRole.CHILD: born.id, IncidentRole.PLACE: region.id, IncidentRole.ORIGIN: twin.id},
+        facts={"death_epoch": dead.end_epoch if dead.end_epoch is not None else ctx.epoch},
+        steps=(StepDraft(StepAction.GIVE_BIRTH, target=born.id, locus_kind=StepLocus.REGION, locus_node=region.id),),
+        place=region.id,
+        world_id=mirror.id,
     )
-    await note(ctx, text, key="beyond.mirror_birth", ids=[dead.id, born.id])
     return born
 
 
@@ -545,30 +635,58 @@ async def cosmic_court(ctx: TickContext, traitor_id: int, victim_id: int) -> str
         for item in await canon(ctx.session, COMMUNITY_TYPES, traitor.world_id)
         if item.id not in (traitor.id, victim_id) and atlas.distance(traitor.id, item.id) <= beyond.oathbreaker_neighbor_distance
     ]
-    for neighbour in neighbours[: beyond.oathbreaker_neighbors]:
+    judged = neighbours[: beyond.oathbreaker_neighbors]
+    for neighbour in judged:
         await change_relation(ctx, traitor.id, neighbour.id, -beyond.oathbreaker_relation_loss, MemoryKind.BROKE_OATH, note="broke an oath")
-    victim_name = victim.name if victim is not None else "its ally"
-    text = f"Cosmic court (Fate's voice): {traitor.name} broke the oath given to {victim_name}. Verdict: a curse and the distrust of its neighbours."
-    await note(ctx, text, key="beyond.cosmic_court", ids=[traitor.id, victim_id], kind=ChronicleKind.COSMIC_LAW)
-    return text
+    written = await record(
+        ctx,
+        "beyond.cosmic_court",
+        roles={
+            IncidentRole.ACCUSED: traitor.id,
+            IncidentRole.VICTIM: victim.id if victim is not None else None,
+            IncidentRole.WITNESS: [item.id for item in judged],
+        },
+        facts={"neighbours": len(judged), "relation_loss": beyond.oathbreaker_relation_loss},
+        steps=(StepDraft(StepAction.JUDGE, target=traitor.id, outcome=StepOutcome.SUCCESS), StepDraft(StepAction.CURSE, target=traitor.id)),
+        world_id=traitor.world_id,
+    )
+    return written.text
 
 
-async def pardon(ctx: TickContext, entity_id: int, by: str) -> str:
+async def pardon(ctx: TickContext, entity_id: int) -> str:
     entity = await _require(ctx.session, entity_id, "No such record.")
     repository = EntityRepository(ctx.session)
+    lifted = 0
     for flag in (EntityFlag.OATHBREAKER, EntityFlag.EXILE, EntityFlag.CURSED):
+        if await repository.has_flag(entity.id, flag):
+            lifted += 1
         await repository.remove_flag(entity.id, flag)
-    text = f"{by} pardoned {entity.name}."
-    await ctx.chronicle(ChronicleKind.COSMIC_LAW, text, template_key="beyond.pardon", entity_ids=[entity.id])
-    return text
+    scope = current_scope()
+    written = await record(
+        ctx,
+        "beyond.pardon",
+        roles={IncidentRole.SUBJECT: entity.id, IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
+        facts={"lifted": lifted},
+        steps=(StepDraft(StepAction.PARDON, target=entity.id),),
+        world_id=entity.world_id,
+    )
+    return written.text
 
 
 async def make_immortal(ctx: TickContext, mortal: EntityRow) -> None:
     await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.IMMORTAL, ctx.epoch)
+    angered = 0
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE)):
         son.wrath = min(PERCENT, son.wrath + ctx.rules.beyond.immortality_son_wrath)
-    text = f"{mortal.name} defeated death: they no longer age."
-    await ctx.chronicle(ChronicleKind.IMMORTALITY, text, template_key="beyond.immortal", entity_ids=[mortal.id])
+        angered += 1
+    await record(
+        ctx,
+        "beyond.immortal",
+        roles={IncidentRole.SUBJECT: mortal.id},
+        facts={"sons_angered": angered, "wrath_gain": ctx.rules.beyond.immortality_son_wrath},
+        place=mortal.location_id,
+        world_id=mortal.world_id,
+    )
 
 
 async def pursuit_of_immortality(ctx: TickContext) -> int:
@@ -606,7 +724,6 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.cosmos",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.holder_levels",
     "table.journeys",
     "table.legendary_quests",
@@ -628,7 +745,6 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.cosmos",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.legendary_quests",

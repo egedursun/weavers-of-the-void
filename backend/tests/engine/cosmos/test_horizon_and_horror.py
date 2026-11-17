@@ -14,15 +14,13 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.enums.travel import HorizonStatus, TravelMethod
+from aerona.domain.enums.travel import ExplorationReason, HorizonStatus, TravelMethod
 from aerona.domain.models.entity_stats import CultStats, LanguageStats, MortalStats, OuterBeingStats, PeopleStats, PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.horror_model import HORROR_PRESETS
 from aerona.engine.cosmos.leak import apply_leak, leak_cap
 from aerona.engine.phases.exploration import (
     LandSearch,
-    Reason,
-    exploration_sentence,
     find_land,
     land_measure,
     record_intuition,
@@ -46,11 +44,6 @@ from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, teach, tick, tuned
 
 
-def test_exploration_sentence_never_shows_measures() -> None:
-    text = exploration_sentence([Reason.NARROW, Reason.HUNGER, Reason.EXPLORER, Reason.KNOWLEDGE], "Iska")
-    assert text == "when their homeland grew too small and when their food ran short led by Iska trusting what they knew of travel"
-
-
 async def test_land_measure_counts_crowding(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(session, "Coast", cosmos.home.id)
     for index in range(rules.exploration.crowded_communities_per_region):
@@ -63,7 +56,7 @@ async def test_find_land_and_pioneers(session: AsyncSession, cosmos: Cosmos, rul
     ctx = tick(session, tuned(rules, "exploration", pioneer_chance=100))
     region = await make_region(session, "Coast", cosmos.home.id)
     people = await make_entity(session, "Tarn", EntityType.PEOPLE, PeopleStats(population=20000), world_id=cosmos.home.id, location_id=region.id)
-    result = await find_land(ctx, LandSearch(cosmos.home.id, explorer=people, kind=EntityType.PLACE, reason="when their homeland grew too small"))
+    result = await find_land(ctx, LandSearch(cosmos.home.id, explorer=people, kind=EntityType.PLACE, reasons=(ExplorationReason.NARROW,)))
     assert result is not None and result.land.entity_type is EntityType.PLACE and result.land.location_id == region.id
     assert EntityFlag.DISCOVERY in await EntityRepository(session).flags(result.land.id)
     assert result.pioneer is not None and result.pioneer.location_id == result.land.id

@@ -413,3 +413,24 @@ def test_a_borrowed_creature_name_in_our_wording_or_an_enum_value_is_caught() ->
     hits = {finding.rule for finding in module.matches(enums, 1, "dragonbone", True, False, enum_value=True)}
     assert "borrowed creature name" in hits
     assert "borrowed creature name" not in rules_hit(module, PROMPT, "Bound to a monument, the monument moves and acts.")
+
+
+def test_a_deed_that_assumes_every_people_is_human_is_caught() -> None:
+    module = checker()
+    for text in ("Human sacrifice", "the fate of mankind", "a crime against humanity", "spilled human blood"):
+        assert "assumed species in a deed" in rules_hit(module, PROMPT, text), text
+    assert "assumed species in a deed" not in rules_hit(module, PROMPT, "Sacrifice of people")
+
+
+def test_a_borrowed_end_of_the_world_is_caught() -> None:
+    module = checker()
+    for text in ("The twilight of the gods came.", "a Ragnarok of the pantheon", "the last Armageddon"):
+        assert "borrowed end of the world" in rules_hit(module, PROMPT, text), text
+    assert "borrowed end of the world" not in rules_hit(module, PROMPT, "The end of the gods came.")
+
+
+def test_text_that_assumes_every_world_has_nights_is_caught() -> None:
+    module = checker()
+    for text in ("{subject} is haunted by the same nightmare night after night.", "began to dream the same nightmare every night"):
+        assert "assumed day and night" in rules_hit(module, PROMPT, text), text
+    assert "assumed day and night" not in rules_hit(module, PROMPT, "{subject} is haunted by the same nightmare again and again.")

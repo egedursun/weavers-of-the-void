@@ -172,7 +172,6 @@ describe('military depth surfaces', () => {
         slots: 3,
         mounts: ['broadside'],
         sections: [],
-        armament: ['rams'],
         branch: 'shipbuilding',
         level: 2,
         tier: 1,
@@ -183,7 +182,17 @@ describe('military depth surfaces', () => {
       hull_material: 'oak',
       fabric_material: null,
       condition: 60,
-      armament: ['rams', 'missiles'],
+      weapons: [
+        {
+          mount: 'broadside',
+          section: 'gun_deck',
+          family: 'cannon',
+          model_id: 4,
+          model_name: 'Long Nine',
+          count: 6,
+          damage_type: 'ballistic',
+        },
+      ],
       seaworthiness: 65,
       cargo_capacity: 120,
       crew: 180,
@@ -199,11 +208,15 @@ describe('military depth surfaces', () => {
       <VesselCard vesselId={7} blocked={null} />
     )
     await expect.element(screen.getByText('Warship').first()).toBeVisible()
-    await expect.element(screen.getByText('Missiles')).toBeVisible()
+    await expect.element(screen.getByText(/6 × Long Nine/)).toBeVisible()
     await screen.getByRole('button', { name: 'Repair at the yard' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/vessel:repair'))
       .toHaveLength(1)
+    await screen.getByRole('button', { name: 'Force an engagement' }).click()
+    await expect
+      .element(screen.getByRole('button', { name: 'Engage', exact: true }))
+      .toBeDisabled()
   })
 
   it('draws the war on the world map, or says the map is not drawn yet', async () => {

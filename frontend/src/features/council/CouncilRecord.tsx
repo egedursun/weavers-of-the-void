@@ -37,6 +37,7 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { MOTIONS, type Named } from '@/features/divine/labels'
 import { type SonPublic, useSons } from '@/features/pantheon/api'
 import { mediaUrl } from '@/features/pantheon/media'
+import { CouncilRecordControls } from './CouncilRecordControls'
 import { type CouncilRecord as Council, type CouncilVote } from './api'
 
 const VOTE_LABEL: Record<CouncilVote, string> = {
@@ -355,6 +356,11 @@ export function CouncilRecord({
             </div>
           </div>
         )}
+        <CouncilRecordControls
+          councilId={council.id}
+          topic={council.topic}
+          passed={council.passed}
+        />
       </CollapsibleContent>
     </Collapsible>
   )

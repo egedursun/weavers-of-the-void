@@ -100,3 +100,8 @@ class LanguagePolicy(StrEnum):
     LITURGICAL = "liturgical"
     SUPPRESSED = "suppressed"
     REVIVAL = "revival"
+
+
+class ScriptFate(StrEnum):
+    READABLE = "readable"
+    UNWRITTEN = "unwritten"

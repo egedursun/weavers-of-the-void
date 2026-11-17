@@ -16,6 +16,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
 from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
@@ -24,13 +25,13 @@ from aerona.engine.divine.standing import mean_neglect
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import has_unlocked_power, son_faith, worshipper_count
 from aerona.engine.primitives.ledger import LedgerKey, record
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, entity, living_entity, living_sons
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 ANCHOR_ALIVE_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
@@ -81,7 +82,7 @@ async def wake_or_heal(ctx: TickContext, son: SonRow) -> None:
         if son.sleep_epochs_left == 0:
             son.status = SonStatus.ACTIVE
             son.hp = round_half_up(ceiling / transition.wake_hp_divisor)
-            await note(ctx, f"{son.name} woke from their sleep.", key="sons.woke", son_id=son.id, kind=ChronicleKind.SYSTEM)
+            await record_incident(ctx, "sons.woke", roles={IncidentRole.ACTOR: son.id}, kind=ChronicleKind.SYSTEM, son_id=son.id)
         return
     son.hp = min(ceiling, son.hp + transition.heal_base + round_half_up(son.endurance / transition.heal_endurance_divisor))
 
@@ -100,12 +101,13 @@ async def renew_existence(ctx: TickContext, son: SonRow, faith: int) -> Existenc
     after = existence_band(rules, son.existence)
     if after is not before:
         tail = " Because their anchor perished, they began to fade." if not anchor_alive else ""
-        await note(
+        await record_incident(
             ctx,
-            f"{son.name}'s existence became {EXISTENCE_BAND_LABELS[after].lower()}.{tail}",
-            key="sons.existence",
-            son_id=son.id,
+            "sons.existence",
+            roles={IncidentRole.SUBJECT: son.id},
+            facts={"band": after, "band_label": EXISTENCE_BAND_LABELS[after].lower(), "existence": son.existence, "tail": tail},
             kind=ChronicleKind.EXISTENCE,
+            son_id=son.id,
         )
     return after
 
@@ -145,7 +147,6 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.divine_wounds",
     "table.dominions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.god_designs",
     "table.god_scales",
     "table.incident_participants",
@@ -156,7 +157,7 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.son_powers",
     "table.sons",
 )
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
+@writes("table.chronicle", "table.incident_facts", "table.incident_participants", "table.incidents", "table.sons")
 async def sons_renewal(ctx: TickContext) -> None:
     total = 0
     for son in await living_sons(ctx.session):
@@ -208,8 +209,8 @@ async def domain_rivalry(ctx: TickContext) -> None:
             await repository.change_relation(first.id, second.id, -min(transition.domain_rivalry * shared, relation + transition.domain_rivalry_floor))
 
 
-@reads("table.epoch_year_cursors", "table.nodes", "table.sons")
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")
+@reads("table.nodes", "table.sons")
+@writes("table.chronicle", "table.incident_participants", "table.incidents", "table.sons")
 async def rebel_theft(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
     stolen = 0
@@ -219,7 +220,9 @@ async def rebel_theft(ctx: TickContext) -> None:
         amount = transition.rebel_steal_base + son.level * transition.rebel_steal_per_level
         son.essence += amount
         stolen += amount
-        await note(ctx, f"Rebel {son.name} stole {amount} from the Creator's essence.", key="sons.rebel_theft", son_id=son.id, kind=ChronicleKind.REBELLION)
+        await record_incident(
+            ctx, "sons.rebel_theft", roles={IncidentRole.ACTOR: son.id}, facts={"amount": amount}, kind=ChronicleKind.REBELLION, son_id=son.id
+        )
     record(ctx, LedgerKey.STOLEN_ESSENCE, stolen)
 
 

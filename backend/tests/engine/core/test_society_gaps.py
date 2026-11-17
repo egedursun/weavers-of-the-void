@@ -157,7 +157,7 @@ async def test_doom_clock_chronicles_the_first_and_final_omens(session: AsyncSes
     await doom_clock(ctx)
     recorded = await keys(session)
     assert world.cosmos.doom_clock > 0
-    assert "doom.omen_10" in recorded and "doom.omen_20" in recorded
+    assert "doom.omen_first" in recorded and "doom.omen_final" in recorded
 
 
 async def test_doom_clock_omen_is_silent_below_the_warning_point(session: AsyncSession, world: CoreWorld) -> None:

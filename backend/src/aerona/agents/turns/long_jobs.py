@@ -5,13 +5,14 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.agents.chronicle import ChroniclePhase, write_line
+from aerona.agents.chronicle import ChroniclePhase, record_line
 from aerona.agents.turns.state import is_resumable
 from aerona.db.tables.agency import AgentTurnRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import AgentKind, PendingJobKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.turn import PendingJob
 from aerona.rules.registry import Rules
 
@@ -72,8 +73,16 @@ async def resolve_pending_job(session: AsyncSession, rules: Rules, son: SonRow, 
     son.essence += job.essence
     if is_resumable(row, epoch) and son.last_acted_epoch < epoch and row.action_points_left is not None:
         row.action_points_left += job.action_points
-    text = f"{son.name}'s half-finished {JOB_NOUNS[job.kind]} could not be completed; its essence returned to it."
-    await write_line(session, rules, epoch, ChronicleKind.SYSTEM, text, key="agents.long_job_refund", phase=ChroniclePhase.GODS, son_id=son.id)
+    await record_line(
+        session,
+        rules,
+        "agents.long_job_refund",
+        roles={IncidentRole.SUBJECT: son.id},
+        facts={"work": JOB_NOUNS[job.kind], "essence": job.essence},
+        phase=ChroniclePhase.GODS,
+        kind=ChronicleKind.SYSTEM,
+        son_id=son.id,
+    )
     return LongJobResult.REFUNDED
 
 

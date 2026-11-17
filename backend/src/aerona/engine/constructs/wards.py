@@ -14,13 +14,14 @@ from aerona.domain.enums.constructs import CommandToken, InstructionBinding
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import realm_for, ruler_of
 
 DISPEL_SHARE = 2
@@ -104,7 +105,13 @@ async def keep_seals(ctx: TickContext, tally: SealTally) -> None:
             if "organisation" not in unit.locked and unit.organisation > 0:
                 unit.organisation = 0
                 tally.stilled += 1
-        await note(ctx, f"The constructs of {army.name} stood still without their seal.", key="construct.seal_lost", ids=[army.id])
+        await record(
+            ctx,
+            "construct.seal_lost",
+            roles={IncidentRole.SUBJECT: army.id, IncidentRole.OWNER: ruler.id if ruler is not None else None},
+            facts={"stilled": len(units)},
+            place=army.location_id,
+        )
 
 
 async def unbind(ctx: TickContext, aim: EntityRow, force: int) -> str | None:

@@ -10,15 +10,17 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DESIGN_PARAMETERS, DistrictDesignRow, DistrictRow
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind
 from aerona.engine.agrarian.ruin import harm_ruin
 from aerona.engine.context import TickContext
 from aerona.engine.kinds.nature import sturdiness
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 from aerona.rules.registry import Rules
 
 HALF = 2
@@ -60,13 +62,13 @@ DISASTER_TARGETS: Mapping[DistrictHarm, frozenset[DistrictKind]] = MappingProxyT
         ),
     }
 )
-HARM_WORDS: Mapping[DistrictHarm, str] = MappingProxyType(
+HARM_STEPS: Mapping[DistrictHarm, StepAction] = MappingProxyType(
     {
-        DistrictHarm.FLOOD: "The flood waters broke into",
-        DistrictHarm.EARTHQUAKE: "The earthquake shook down",
-        DistrictHarm.STORM: "The storm tore through",
-        DistrictHarm.DROUGHT: "The drought withered",
-        DistrictHarm.SACK: "The looters stripped",
+        DistrictHarm.FLOOD: StepAction.FLOOD_LAND,
+        DistrictHarm.EARTHQUAKE: StepAction.QUAKE,
+        DistrictHarm.STORM: StepAction.BLOW,
+        DistrictHarm.DROUGHT: StepAction.DRY,
+        DistrictHarm.SACK: StepAction.PILLAGE,
     }
 )
 OFFICE_TIER_RULES: Mapping[OfficeKind, str] = MappingProxyType(
@@ -256,28 +258,43 @@ async def damage_districts(ctx: TickContext, settlement: EntityRow, harm: Distri
             .order_by(DistrictRow.id)
         )
     )
-    struck: list[str] = []
+    struck: list[DistrictKind] = []
+    steps: list[StepDraft] = []
+    destroyed = 0
     base = harm_loss(ctx.rules, harm) * max(0.0, scale)
-    for district in rows:
-        sturdy = await sturdiness(ctx.session, ctx.rules, district.material, district.world_material_id)
-        loss = round_half_up(base * material_factor(ctx.rules, harm, district.material) / max(0.1, sturdy))
-        if loss <= 0:
-            continue
-        struck.append(district.kind.value.replace("_", " "))
-        if wound_district(district, loss):
-            await ctx.session.delete(district)
-    if not struck:
-        return 0
-    await ctx.session.flush()
-    await harm_ruin(ctx, settlement, harm)
-    await note(
-        ctx,
-        f"{HARM_WORDS[harm]} the {', '.join(sorted(set(struck)))} of {settlement.name}.",
-        key=f"settlement.district_{harm.value}",
-        ids=[settlement.id],
-        feed=FeedCategory.DISASTER,
-        kind=ChronicleKind.WORLD,
-    )
+    with explaining():
+        for district in rows:
+            sturdy = await sturdiness(ctx.session, ctx.rules, district.material, district.world_material_id)
+            loss = round_half_up(base * material_factor(ctx.rules, harm, district.material) / max(0.1, sturdy))
+            if loss <= 0:
+                continue
+            struck.append(district.kind)
+            gone = wound_district(district, loss)
+            steps.append(
+                StepDraft(
+                    HARM_STEPS[harm],
+                    locus_kind=StepLocus.DISTRICT,
+                    locus_key=district.kind.value,
+                    amount=loss,
+                    unit=FactUnit.SEVERITY,
+                    outcome=StepOutcome.DESTROYED if gone else StepOutcome.DAMAGED,
+                )
+            )
+            if gone:
+                destroyed += 1
+                await ctx.session.delete(district)
+        if not struck:
+            return 0
+        await ctx.session.flush()
+        await harm_ruin(ctx, settlement, harm)
+        await record(
+            ctx,
+            f"settlement.district_{harm.value}",
+            roles={IncidentRole.PLACE: settlement.id},
+            facts={"harm": harm, "districts": sorted(set(struck)), "destroyed": destroyed},
+            steps=tuple(steps),
+            place=settlement.id,
+        )
     ctx.count(f"districts_{harm.value}", len(struck))
     return len(struck)
 

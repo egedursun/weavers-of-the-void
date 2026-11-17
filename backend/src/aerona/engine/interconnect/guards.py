@@ -5,13 +5,15 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from functools import cached_property
 
-from sqlalchemy import or_, select
+from sqlalchemy import insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.profile_guard import restore_held
 from aerona.db.read_memo import memo_of, table_names
+from aerona.db.record_context import TermsCollector, current_scope, stepping
 from aerona.db.repositories.chronicle import LAST_INCIDENT
 from aerona.db.tables.interconnect import ModifierRow
+from aerona.db.tables.records import IncidentTermRow
 from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.context import TickContext
@@ -19,6 +21,7 @@ from aerona.engine.interconnect.flows import current_category
 from aerona.engine.interconnect.registry import mechanic_keys_for_phase, suppression_key
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.modifiers import GUARD_SOURCES, ModifierIndex, live_modifiers
+from aerona.engine.recording.scope import reason_rows
 
 MODIFIER_TABLES = table_names((ModifierRow,))
 
@@ -150,11 +153,22 @@ async def phase_indexes(ctx: TickContext) -> tuple[GuardIndex, ModifierIndex]:
     return found
 
 
+async def step_reasons(ctx: TickContext, reasons: TermsCollector) -> None:
+    scope = current_scope()
+    terms = reasons.snapshot()
+    if scope is None or not terms:
+        return
+    rules_only = tuple(term for term in terms if term.source_node_id is None and term.source_incident_id is None)
+    rows = [row for incident_id in sorted(scope.phase_incidents.values()) for row in reason_rows(incident_id, rules_only)]
+    if rows:
+        await ctx.session.execute(insert(IncidentTermRow), rows)
+
+
 async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None, inside: set[int] | None = None) -> None:
     ctx.session.info.pop(LAST_INCIDENT, None)
     guard_index, index = await phase_indexes(ctx)
     state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only, inside=inside)
-    with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
+    with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules), stepping() as reasons:
         await phase.run(ctx)
         sync = ctx.session.sync_session
         for modified in list(sync.identity_map._modified):
@@ -163,6 +177,7 @@ async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None
                 if found is not None:
                     restore_held(found)
         await ctx.session.flush()
+        await step_reasons(ctx, reasons)
     if state.moved:
         for hook in AFTER_PHASE:
             await hook(ctx, state.moved)

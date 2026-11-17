@@ -10,7 +10,6 @@ from aerona.catalog.methods import (
     HERD_PROCESSES,
     METHODS,
     PROCESS_JOB,
-    PROCESS_LABELS,
     PROCESS_METHODS,
     PROCESS_OUTPUT,
     PROCESS_WORKSHOP,
@@ -19,15 +18,15 @@ from aerona.catalog.methods import (
     default_method,
 )
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several, spoken
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
+from aerona.db.record_context import Term
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, WorkshopKind
@@ -36,6 +35,7 @@ from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import method_lift
 from aerona.engine.context import TickContext
@@ -46,10 +46,10 @@ from aerona.engine.industry.quality import premium
 from aerona.engine.intrigue.beliefs import BeliefView, price_key
 from aerona.engine.loops.delay import lagged
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 TENTH = 10
@@ -309,13 +309,16 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
         tally.displaced += row.displaced
         if await lagged(ctx, BalanceLoop.MILL_RIOTS, community.id, row.displaced, subject=list(ProcessKind).index(spec.process)) > 0:
             tally.resisted += await resist(ctx, community, spec.process)
-    await note(
+    await record(
         ctx,
-        f"{community.name} turned from {before.label.lower()} to {spec.label.lower()} for {PROCESS_LABELS[spec.process].lower()}"
-        + (f"; {several(row.displaced, 'hand', 'hands')} lost their work." if row.displaced else "."),
-        key="industry.method_changed",
-        ids=[community.id],
-        kind=ChronicleKind.PRODUCTION,
+        "industry.method_changed",
+        roles={IncidentRole.SUBJECT: community.id},
+        facts={"process": spec.process, "before": before.kind, "after": spec.kind, "gain": gain, "displaced": row.displaced},
+        terms=(
+            Term(f"method.{spec.kind.value}.output_pct", spec.output_pct - before.output_pct),
+            Term(f"method.{spec.kind.value}.labour_pct", before.labour_pct - spec.labour_pct),
+        ),
+        place=community.id,
     )
     return row
 

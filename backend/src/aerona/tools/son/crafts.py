@@ -12,6 +12,7 @@ from aerona.domain.enums.crafts import AffinityMode
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Emotion
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.crafts import control
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -20,7 +21,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -54,8 +54,12 @@ async def wake_spirit(call: SonCall, args: WakeSpiritInput) -> str:
         {"region_entity_id": region.id, "emotion": args.emotion, "strength": 50, "born_epoch": call.tick.epoch, "lifetime": table.lifetime},
     )
     call.target(region.id)
-    await call.chronicle(
-        ChronicleKind.MIRACLE, lines.WAKE_SPIRIT, entity_ids=[region.id], son=call.son.name, region=region.name, emotion=args.emotion.value, reason=args.reason
+    await call.record(
+        "tools.son.wake_spirit",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: region.id},
+        facts={"emotion": args.emotion, "reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.MIRACLE,
     )
     return result(SonResult.SPIRIT_WOKEN, region=region.name, emotion=args.emotion.value)
 
@@ -75,8 +79,11 @@ async def lay_affinity(call: SonCall, args: LayAffinityInput) -> str:
     )
     call.target(resource.id)
     told = args.school.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.RESOURCE, lines.LAY_AFFINITY, entity_ids=[resource.id], son=call.son.name, resource=resource.name, school=told, reason=args.reason
+    await call.record(
+        "tools.son.lay_affinity",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: resource.id},
+        facts={"school": str(told), "reason": args.reason},
+        kind=ChronicleKind.RESOURCE,
     )
     return result(SonResult.AFFINITY_LAID, resource=resource.name, school=told, mode=args.mode.value)
 

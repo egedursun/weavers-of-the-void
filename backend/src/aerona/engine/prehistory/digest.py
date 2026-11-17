@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record as record_incident
 from aerona.language.similarity import NamePool
 
 LORE_FREE_KINDS = (ChronicleKind.CREATION, ChronicleKind.SYSTEM, ChronicleKind.ENGINE_RAW)
@@ -229,12 +230,8 @@ async def make_lost_origin(ctx: TickContext, row: PrehistoryRow, ship: WorldRow,
             locked=[],
         )
     )
-    write = await ctx.chronicle(
-        ChronicleKind.WORLD,
-        f"{ship.name} left {origin.name}, and {origin.name} was forgotten.",
-        template_key="prehistory.lost_origin",
-        world_id=ship.id,
-        magnitude=PERCENT // 2,
+    write = await record_incident(
+        ctx, "prehistory.lost_origin", roles={IncidentRole.SUBJECT: ship.id, IncidentRole.ORIGIN: origin.id}, world_id=ship.id, magnitude=PERCENT // 2
     )
     if write.incident_id is not None:
         incident = await ctx.session.get(IncidentRow, write.incident_id)

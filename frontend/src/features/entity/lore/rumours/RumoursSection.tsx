@@ -35,6 +35,7 @@ import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../../api/keys'
 import { AdjustBlock, AdjustPanel, NamedChip, Who } from '../LoreFields'
 import { KPI_GRID, PERCENT, busyOf } from '../model'
+import { RumourTellings } from './RumourTellings'
 import {
   CHANNELS,
   type Rumour,
@@ -154,6 +155,12 @@ function RumourCard({
         )}
       </div>
       <Text>{rumour.text}</Text>
+      <RumourTellings
+        rumourId={rumour.id}
+        distortions={rumour.distortions ?? []}
+        blocked={blocked}
+        invalidate={invalidate}
+      />
       <StatBar
         label={`${truthWord(rumour.fidelity)} (${rumour.fidelity}%)`}
         value={rumour.fidelity}

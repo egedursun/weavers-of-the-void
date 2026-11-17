@@ -9,14 +9,15 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import FORTUNE_MAX, FORTUNE_MIN, BirthSignRow, DivinationSystemRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import DivinationKind, SignInfluence
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.omens import BRIGHT, influence_share, returns_now
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import town_of
 
 MIDDLING = PERCENT // 2
@@ -125,7 +126,7 @@ async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> B
     ):
         row.exposed = True
         tally.fostered += 1
-        await note(ctx, f"{mortal.name} was born under a dreaded sign and sent away from {home.name}.", key="sign.fostered", ids=[mortal.id, home.id])
+        await record(ctx, "sign.fostered", roles={IncidentRole.SUBJECT: [mortal.id, home.id]}, facts={"home": str(home.name)})
     if home is not None and await reads_stars(ctx, await people_id_of(ctx.session, home)):
         await read_by_folk(ctx, mortal, row)
     tally.signed += 1

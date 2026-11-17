@@ -3,21 +3,21 @@ from collections.abc import Mapping, Sequence
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
@@ -51,13 +51,7 @@ async def promote_wonders(ctx: TickContext, works: Sequence[EntityRow], wonders:
         await repository.add_flag(work.id, EntityFlag.WONDER, ctx.epoch)
         wonders.add(work.id)
         promoted += 1
-        await note(
-            ctx,
-            f"{work.name} joined the wonders of the world; it draws pilgrims and renown.",
-            key="wonders.promoted",
-            ids=[work.id],
-            kind=ChronicleKind.CONSTRUCTION,
-        )
+        await record(ctx, "wonders.promoted", roles={IncidentRole.SUBJECT: work.id}, facts={"splendor": stat_or(work, "splendor", 0)}, place=work.location_id)
     return promoted
 
 
@@ -75,13 +69,11 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
             continue
         if await declare_war(ctx, neighbour.id, owner.id, f"for {work.name}", cause=WarCause.ENVY):
             wars += 1
-            await note(
+            await record(
                 ctx,
-                f"{neighbour.name} coveted the {work.name} wonder and declared {owner.name} its enemy.",
-                key="wonders.envy_war",
-                ids=[neighbour.id, owner.id, work.id],
-                feed=FeedCategory.WAR,
-                kind=ChronicleKind.WORLD,
+                "wonders.envy_war",
+                roles={IncidentRole.ACTOR: neighbour.id, IncidentRole.OPPONENT: owner.id, IncidentRole.SUBJECT: work.id},
+                facts={"relation": current},
             )
     return wars
 
@@ -99,7 +91,6 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.memories",
     "table.minds",
     "table.nodes",
@@ -121,7 +112,6 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",

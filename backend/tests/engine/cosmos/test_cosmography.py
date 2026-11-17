@@ -28,7 +28,7 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.environment import ClimateTurn, CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.world import StarType
@@ -37,7 +37,6 @@ from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import banish_near
-from aerona.engine.cosmos.climate import ClimateTurn
 from aerona.engine.cosmos.ladder import (
     ClusterDraft,
     DimensionDraft,
@@ -157,7 +156,7 @@ async def test_a_rift_opens_a_passage_and_a_seal_closes_it(ctx: TickContext, cos
     assert route is not None and route.world_b_id in {far.id, cosmos.home.id}
     with pytest.raises(ValidationFailedError):
         await open_rift(ctx, far, None, plane, RiftCause.GOD)
-    sealed = await control.close_rift(ctx, rift.id, "Aeron")
+    sealed = await control.close_rift(ctx, rift.id, cosmos.creator.id)
     assert sealed.state is RiftState.SEALED
     assert (await ctx.session.scalar(select(RiftRow.id).where(RiftRow.id == rift.id))) == rift.id
 
@@ -165,7 +164,7 @@ async def test_a_rift_opens_a_passage_and_a_seal_closes_it(ctx: TickContext, cos
 async def test_a_ward_holds_a_phenomenon_back(ctx: TickContext, cosmos: Cosmos) -> None:
     region = await make_region(ctx.session, "Fogland", cosmos.home.id)
     body = await control.new_phenomenon(ctx, PhenomenonKind.MOVING_FOG, region.id, 60, PhenomenonCause.DIVINE)
-    profile = await control.ward_phenomenon(ctx, body.id, 30, "Aeron")
+    profile = await control.ward_phenomenon(ctx, body.id, 30, cosmos.creator.id)
     assert profile.containment >= 30
     footprint = await control.set_footprint(ctx, body.id, region.id, None)
     assert footprint is None
@@ -175,8 +174,8 @@ async def test_turning_a_region_moves_its_climate_shift(ctx: TickContext, cosmos
     region = await make_region(ctx.session, "Coldfield", cosmos.home.id)
     ctx.session.add(ground_of(region.id, cosmos.home.id))
     await ctx.session.flush()
-    await control.turn_climate(ctx, region.id, ClimateTurn.WARMER, "Aeron")
-    await control.turn_climate(ctx, region.id, ClimateTurn.DRIER, "Aeron")
+    await control.turn_climate(ctx, region.id, ClimateTurn.WARMER, cosmos.creator.id)
+    await control.turn_climate(ctx, region.id, ClimateTurn.DRIER, cosmos.creator.id)
     ground = await ctx.session.get(RegionEnvironmentRow, region.id)
     assert ground is not None
     assert ground.temperature_shift == ctx.rules.world_life.imposed_shift
@@ -288,7 +287,7 @@ async def test_a_sunless_world_is_set_in_the_home_galaxy_and_takes_the_star_hung
     assert await place_free_worlds(ctx.session) == 1
     ladder = await Cosmography.load(ctx.session)
     assert ladder.place_world(sunless).galaxy_id == cosmos.star.galaxy_id
-    star = await hang_star(ctx, "Firstlight", StarType.YELLOW_DWARF, "Aeron", world_id=sunless.id)
+    star = await hang_star(ctx, "Firstlight", StarType.YELLOW_DWARF, cosmos.creator.id, world_id=sunless.id)
     assert sunless.star_id == star.id and star.galaxy_id == cosmos.star.galaxy_id
     assert (await Cosmography.load(ctx.session)).place_world(sunless).star is star
 
@@ -296,10 +295,10 @@ async def test_a_sunless_world_is_set_in_the_home_galaxy_and_takes_the_star_hung
 async def test_a_star_hung_in_a_lit_sky_rises_beside_its_sun_and_a_void_star_in_the_galaxy_asked(ctx: TickContext, cosmos: Cosmos) -> None:
     await ensure_ladder(ctx.session, ctx.rules)
     far = await create_galaxy(ctx.session, ctx.rules, GalaxyDraft("Far Wheel", GalaxyType.SPIRAL, 1))
-    companion = await hang_star(ctx, "Companion", StarType.RED_DWARF, "Aeron", world_id=cosmos.home.id)
+    companion = await hang_star(ctx, "Companion", StarType.RED_DWARF, cosmos.creator.id, world_id=cosmos.home.id)
     assert companion.galaxy_id == cosmos.star.galaxy_id and cosmos.home.star_id == cosmos.star.id
     assert math.dist((companion.x, companion.y), (cosmos.star.x, cosmos.star.y)) == pytest.approx(STAR_MAP_RADIUS_STEP)
-    lone = await hang_star(ctx, "Lone", StarType.BLUE_GIANT, "Aeron", galaxy_id=far.id)
+    lone = await hang_star(ctx, "Lone", StarType.BLUE_GIANT, cosmos.creator.id, galaxy_id=far.id)
     assert lone.galaxy_id == far.id
 
 

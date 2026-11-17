@@ -5,24 +5,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.holds import GOLDEN_AGE_KEY, is_held
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats, stat
-from aerona.prompts.filters import ordinal
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 DECADENT_KEYS = ("martiality", "defense")
@@ -93,13 +91,12 @@ async def enter_golden_age(ctx: TickContext, world: WorldRow, communities: list[
             softened += 1
     ctx.count("golden_age_softened", softened)
     if newly and announce:
-        links = [community.id for community in communities[: rules.deep_life.golden_age_record_links]]
-        await note(
+        await record(
             ctx,
-            f"{world.name} entered a golden age: prosperity grows.",
-            key="world_age.golden_age",
-            ids=links,
-            kind=ChronicleKind.WORLD_AGE,
+            "world_age.golden_age",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.MEMBER: [community.id for community in communities]},
+            facts={"prosperity": golden_age_effect(rules, ctx.epoch, ctx.epoch).prosperity, "communities": len(communities)},
+            world_id=world.id,
         )
 
 
@@ -113,13 +110,12 @@ async def end_golden_age_in(ctx: TickContext, world: WorldRow, communities: list
             began.append(society.golden_age_since_epoch)
             society.golden_age_since_epoch = None
     if ended:
-        span = f" It lasted {several(ctx.epoch - min(began), 'epoch', 'epochs')}." if began and ctx.epoch > min(began) else ""
-        await note(
+        await record(
             ctx,
-            f"{world.name}'s golden age has ended.{span}",
-            key="world_age.golden_age_ended",
-            ids=[community.id for community in communities[:1]],
-            kind=ChronicleKind.WORLD_AGE,
+            "world_age.golden_age_ended",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.MEMBER: [community.id for community in communities]},
+            facts={"lasted": ctx.epoch - min(began) if began else 0},
+            world_id=world.id,
         )
     return ended
 
@@ -177,24 +173,14 @@ def age_of(reading: AgeReading) -> WorldAge:
 
 async def world_age(ctx: TickContext, new_epoch: int) -> WorldAge:
     reading = await read_world_age(ctx, new_epoch)
-    if reading.turning:
-        await note(
-            ctx,
-            f"Epoch turning: the world entered its {ordinal(new_epoch)} epoch.",
-            key="world_age.epoch_turning",
-            kind=ChronicleKind.WORLD_AGE,
+    if reading.turning and reading.verdicts:
+        await record(
+            ctx, "world_age.epoch_turning", roles={IncidentRole.SUBJECT: [verdict.world.id for verdict in reading.verdicts]}, facts={"epoch": new_epoch}
         )
     for verdict in reading.verdicts:
         world = verdict.world
         if verdict.old:
-            epochs_counted = several(verdict.age, "epoch", "epochs")
-            await note(
-                ctx,
-                f"{world.name} is {epochs_counted} old; it is an old world now.",
-                key="world_age.old_world",
-                kind=ChronicleKind.WORLD_AGE,
-                world_id=world.id,
-            )
+            await record(ctx, "world_age.old_world", roles={IncidentRole.SUBJECT: world.id}, facts={"age": verdict.age}, world_id=world.id)
         if not verdict.communities:
             continue
         if verdict.held:

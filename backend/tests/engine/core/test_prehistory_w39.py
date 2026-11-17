@@ -24,6 +24,7 @@ from aerona.engine.prehistory.deep_time import fast_forward
 from aerona.engine.prehistory.digest import backfill_world, dreams_of, prehistory_of
 from aerona.engine.prehistory.run import born_prehistories, epoch_points, growth_phases, round_phases, run_prehistory
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import entity
 from tests.engine.core.stirring import eager, stir
@@ -145,9 +146,9 @@ async def test_realms_of_the_dead_palaces_and_dream_worlds_borrow_dream_and_tell
     async with database.write() as session:
         ctx = await manual_context(session, "test_prehistory", Rules())
         home = cosmos.home.world.id
-        await ctx.chronicle(ChronicleKind.DEATH, "The old queen died.", template_key="test.death", world_id=home, magnitude=60)
-        await ctx.chronicle(ChronicleKind.DREAM, "A herder dreamt of a field at night.", template_key="test.dream", world_id=home, magnitude=50)
-        await ctx.chronicle(ChronicleKind.WORLD, "The god raised a hall.", template_key="test.deed", son_id=son.id, magnitude=70)
+        await record(ctx, "player.history", facts={"account": "The old queen died."}, kind=ChronicleKind.DEATH, world_id=home, magnitude=60)
+        await record(ctx, "player.history", facts={"account": "A herder dreamt of a field at night."}, kind=ChronicleKind.DREAM, world_id=home, magnitude=50)
+        await record(ctx, "player.history", facts={"account": "The god raised a hall."}, kind=ChronicleKind.WORLD, son_id=son.id, magnitude=70)
         for world_id in (dead, palace, dream):
             await configure(ctx, world_id, 1, 1)
     for world_id in (dead, palace, dream):
@@ -161,7 +162,7 @@ async def test_realms_of_the_dead_palaces_and_dream_worlds_borrow_dream_and_tell
         world = await session.get(WorldRow, dream)
         row = await session.get(PrehistoryRow, dream)
         assert world is not None and row is not None
-        await ctx.chronicle(ChronicleKind.DREAM, "A fisher dreamt of the same field.", template_key="test.dream", world_id=home, magnitude=90)
+        await record(ctx, "player.history", facts={"account": "A fisher dreamt of the same field."}, kind=ChronicleKind.DREAM, world_id=home, magnitude=90)
         assert await dreams_of(ctx, row, world) >= 2
 
 

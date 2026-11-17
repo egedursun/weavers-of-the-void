@@ -9,12 +9,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.carriers import folk_by_region
 from aerona.engine.disease.emergence import new_strain
 from aerona.engine.disease.outbreaks import open_outbreak
-from aerona.engine.notes import note
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.recording.record import RoleValue, record
 from aerona.rules.registry import Rules
 
 HARD_HUNT = 10
@@ -76,9 +78,9 @@ async def spill(ctx: TickContext, tally: SpilloverTally) -> None:
             tally.jumped += 1
             species = await ctx.session.get(EntityRow, species_id)
             if species is not None and land_row is not None:
-                await note(
-                    ctx,
-                    f"{(jumped or disease).name} passed from {species.name} to the folk of {land_row.name}.",
-                    key="disease.spillover",
-                    ids=[(jumped or disease).id, species.id, land_row.id],
-                )
+                roles: dict[IncidentRole, RoleValue] = {
+                    IncidentRole.SUBJECT: (jumped or disease).id,
+                    IncidentRole.ORIGIN: species.id,
+                    IncidentRole.DESTINATION: land_row.id,
+                }
+                await record(ctx, "disease.spillover", roles=roles, facts={"chance": round_half_up(chance), "abundance": row.abundance}, place=land_row.id)

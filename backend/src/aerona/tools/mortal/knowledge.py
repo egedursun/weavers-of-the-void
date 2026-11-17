@@ -12,9 +12,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ResearchChooser
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.lore.art_forms import found_form
 from aerona.engine.lore.research_depth import research_choices, research_home
 from aerona.engine.lore.theories import create_theory
@@ -48,14 +48,10 @@ async def _deepen_held(call: MortalCall, knowledge: EntityRow, branch: str) -> s
         hint = lines.EMPTY_BRANCHES.format(branches=empty_branch_hint(call.rules, empty)) if empty else ""
         fail(MortalResult.KNOWLEDGE_AT_CAP, name=knowledge.name, cap=table.level_cap, hint=hint)
     call.target(knowledge.id)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.KNOWLEDGE_DEEPENED,
-        entity_ids=[call.me.id, knowledge.id],
-        me=call.me.name,
-        name=knowledge.name,
-        branch=branch,
-        level=level,
+    await call.record(
+        "tools.mortal.knowledge_deepened",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: knowledge.id},
+        facts={"branch": knowledge.knowledge_branch, "level": level},
     )
     return result(MortalResult.KNOWLEDGE_DEEPENED, id=knowledge.id, name=knowledge.name, level=level)
 
@@ -63,8 +59,8 @@ async def _deepen_held(call: MortalCall, knowledge: EntityRow, branch: str) -> s
 async def _find_existing(call: MortalCall, knowledge: EntityRow, branch: str) -> str:
     await teach(call.tick, call.me.id, knowledge, lines.FOUND_ALONE)
     call.target(knowledge.id)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE, lines.KNOWLEDGE_FOUND, entity_ids=[call.me.id, knowledge.id], me=call.me.name, name=knowledge.name, branch=branch
+    await call.record(
+        "tools.mortal.knowledge_found", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: knowledge.id}, facts={"branch": knowledge.knowledge_branch}
     )
     return result(MortalResult.KNOWLEDGE_FOUND, id=knowledge.id, name=knowledge.name, level=knowledge_level(call.rules, knowledge))
 
@@ -113,14 +109,8 @@ async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> st
     if resource is not None and resource.entity_type is EntityType.RESOURCE and resource.status is EntityStatus.CANON:
         await bonds.connect(BondDraft(knowledge.id, resource.id, BondKind.SOURCE_OF, call.epoch))
     await teach(call.tick, call.me.id, knowledge, lines.DEVELOPED)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.KNOWLEDGE,
-        entity_ids=[call.me.id, knowledge.id],
-        me=call.me.name,
-        name=knowledge.name,
-        branch=args.branch.value.replace("_", " "),
-        level=level,
+    await call.record(
+        "tools.mortal.knowledge", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: knowledge.id}, facts={"branch": args.branch, "level": level}
     )
     return result(MortalResult.KNOWLEDGE_DEVELOPED, id=knowledge.id, name=knowledge.name, level=level)
 
@@ -160,14 +150,7 @@ async def learn_knowledge(call: MortalCall, args: LearnInput) -> str:
         fail(MortalResult.ALREADY_KNOWN)
     await call.bump(TurnCounter.LEARNING)
     call.target(knowledge.id)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.LEARNED,
-        entity_ids=[call.me.id, knowledge.id, teacher.id],
-        me=call.me.name,
-        knowledge=knowledge.name,
-        teacher=teacher.name,
-    )
+    await call.record("tools.mortal.learned", roles={IncidentRole.LEARNER: call.me.id, IncidentRole.SUBJECT: knowledge.id, IncidentRole.TEACHER: teacher.id})
     return result(MortalResult.LEARNED, knowledge=knowledge.name, teacher=teacher.name)
 
 
@@ -194,13 +177,8 @@ async def choose_research(call: MortalCall, args: ChooseResearchInput) -> str:
     row.technique, row.chooser, row.epoch = args.technique, ResearchChooser.AGENT, call.epoch
     row.options = [item.value for item in choices]
     call.target(holder.id)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.RESEARCH_CHOSEN,
-        entity_ids=[call.me.id, holder.id],
-        me=call.me.name,
-        place=holder.name,
-        technique=TECHNIQUES[args.technique].label,
+    await call.record(
+        "tools.mortal.research_chosen", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: holder.id}, facts={"technique": args.technique}
     )
     return result(MortalResult.RESEARCH_CHOSEN, technique=TECHNIQUES[args.technique].label)
 
@@ -219,7 +197,7 @@ async def propose_theory(call: MortalCall, args: ProposeTheoryInput) -> str:
     theory = await create_theory(call.tick, home, args.domain, args.name, args.claim, correctness=truth)
     call.target(theory.id)
     domain = DOMAINS[args.domain].label.lower()
-    await call.chronicle(ChronicleKind.KNOWLEDGE, lines.THEORY_PROPOSED, entity_ids=[call.me.id, theory.id], me=call.me.name, name=theory.name, domain=domain)
+    await call.record("tools.mortal.theory_proposed", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: theory.id}, facts={"domain": args.domain})
     return result(MortalResult.THEORY_PROPOSED, id=theory.id, name=theory.name, domain=domain)
 
 
@@ -240,7 +218,9 @@ async def invent_art_form(call: MortalCall, args: InventArtFormInput) -> str:
     form.description = args.description
     call.target(form.id)
     label = spec.label.lower()
-    await call.chronicle(ChronicleKind.CULTURE, lines.ART_FORM_INVENTED, entity_ids=[call.me.id, form.id], me=call.me.name, name=form.name, discipline=label)
+    await call.record(
+        "tools.mortal.art_form_invented", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: form.id}, facts={"discipline": args.discipline}
+    )
     return result(MortalResult.ART_FORM_INVENTED, id=form.id, name=form.name, discipline=label)
 
 

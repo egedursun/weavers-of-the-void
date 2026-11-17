@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import write_line
 from aerona.agents.context.briefs import son_brief
 from aerona.agents.context.creation import creation_text
 from aerona.agents.context.scope import load_scope
@@ -13,7 +12,6 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.stats import stats_from
 from aerona.agents.summoner import NO_PARENT, insert_son
 from aerona.agents.text import sanitize
-from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS, RARITY_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError
@@ -27,10 +25,11 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.storyteller import StorytellerRow
 from aerona.domain.enums.ages import AgeCycle
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import DimensionKind, GalaxyType, WorldAge
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import Atmosphere, ClimateEra, CosmosShape, CosmosSize, Gravity, LoreLanguage, WorldType
 from aerona.domain.models.genesis import GenesisOutcome, GenesisSettings
@@ -40,7 +39,9 @@ from aerona.engine.cosmos.ladder import DimensionDraft, GalaxyDraft, create_dime
 from aerona.engine.cosmos.resources import DepositSpec, create_cosmic_deposit
 from aerona.engine.cosmos.stars import StarSpec, create_star
 from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_float, clamp_int
+from aerona.engine.recording.record import StepDraft, record
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.genesis import CreatorPortraitContext, GenesisContext
@@ -162,8 +163,14 @@ async def open_layer(session: AsyncSession, rules: Rules, world: WorldRow, *, se
     description = sanitize(layer.description) if layer is not None else None
     dimension = await create_dimension(session, rules, DimensionDraft(name, kind, FIRST_EPOCH, description=description or None))
     galaxy = await create_galaxy(session, rules, GalaxyDraft(f"{dimension.name} Galaxy", LAYER_GALAXY_TYPE, FIRST_EPOCH, dimension_id=dimension.id))
-    text = f"Beside {world.name} lies {dimension.name}, a second layer of the cosmos."
-    await write_line(session, rules, FIRST_EPOCH, ChronicleKind.CREATOR_HAND, text, key="genesis.layer")
+    await record(
+        await manual_context(session, "genesis", rules, key="layer"),
+        "genesis.layer",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.PRODUCT: dimension.id},
+        facts={"layer": kind, "galaxy": galaxy.name},
+        steps=(StepDraft(StepAction.APPEAR, target=dimension.id),),
+        world_id=world.id,
+    )
     return galaxy.id
 
 
@@ -304,16 +311,30 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
     for relation in output.relations:
         if relation.i != relation.j and relation.i < len(sons) and relation.j < len(sons):
             await repository.change_relation(sons[relation.i].id, sons[relation.j].id, relation.value, relation.note)
-    names = ", ".join(region.name for region in regions)
-    title = f", {creator.title}" if creator.title else ""
-    text = f"{creator.name}{title} made the world {world.name} around the star {sun.name}, its first regions {names}, and {star.name} in its sky."
-    await write_line(
-        session, rules, FIRST_EPOCH, ChronicleKind.CREATOR_HAND, text, key="genesis.world", entity_ids=[*(region.id for region in regions), star.id]
+    ctx = await manual_context(session, "genesis", rules, key="world")
+    await record(
+        ctx,
+        "genesis.world",
+        roles={
+            IncidentRole.MAKER: creator.id,
+            IncidentRole.PRODUCT: world.id,
+            IncidentRole.ORIGIN: sun.id,
+            IncidentRole.MEMBER: [region.id for region in regions],
+            IncidentRole.SUBJECT: star.id,
+        },
+        steps=(StepDraft(StepAction.APPEAR, actor=creator.id, target=world.id),),
+        world_id=world.id,
     )
     for son in sons:
-        domains = f"{DOMAIN_LABELS[son.domain_primary]} and {DOMAIN_LABELS[son.domain_secondary]}"
-        line = f"{creator.name}'s son {son.name}, {son.title}, awoke with the domains {domains}."
-        await write_line(session, rules, FIRST_EPOCH, ChronicleKind.BIRTH, line, key="genesis.son", son_id=son.id)
+        await record(
+            ctx,
+            "genesis.son",
+            roles={IncidentRole.CHILD: son.id, IncidentRole.PARENT: creator.id},
+            facts={"first": son.domain_primary, "second": son.domain_secondary},
+            steps=(StepDraft(StepAction.AWAKEN, actor=son.id),),
+            son_id=son.id,
+            world_id=world.id,
+        )
     layer_galaxy_id = await open_layer(session, rules, world, settings=settings, layer=output.layer) if settings is not None and layered(settings) else None
     await session.flush()
     return GenesisOutcome(world_id=world.id, layer_galaxy_id=layer_galaxy_id)

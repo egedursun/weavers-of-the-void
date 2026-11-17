@@ -25,7 +25,7 @@ from aerona.engine.cosmos.omens import seen_by
 from aerona.engine.folkways.biases import PUSHES, lean
 from aerona.engine.folkways.nutrition import lean_season, season_and_craft
 from aerona.engine.folkways.purity import TOUCHES, Touch, by_augment
-from aerona.engine.happenings.progression import PHASE_LINES
+from aerona.engine.happenings.progression import PHASE_STEPS
 from aerona.engine.interconnect.registry import MECHANICS
 from aerona.engine.lore.creed_change import merge_creeds
 from aerona.engine.lore.prophecy_tales import retell
@@ -97,8 +97,8 @@ async def test_a_prophecy_changes_in_the_telling(session: AsyncSession, world: C
 
 
 def test_every_event_phase_is_told_and_ends_in_memory() -> None:
-    assert set(PHASE_LINES) == set(EventPhase)
-    assert EventPhase.MEMORY in PHASE_LINES
+    assert set(PHASE_STEPS) == set(EventPhase)
+    assert EventPhase.MEMORY in PHASE_STEPS
 
 
 async def test_a_body_hidden_from_view_is_not_read(session: AsyncSession, world: CoreWorld) -> None:

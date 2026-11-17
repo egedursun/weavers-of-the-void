@@ -12,12 +12,13 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.made import CompanyCharter, CompanyHoldingKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import GovernmentKind
 from aerona.engine.context import TickContext
 from aerona.engine.factions.companies import realm_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.recording.record import record
 
 HOLDING_WEIGHT: Mapping[CompanyHoldingKind, int] = total(
     CompanyHoldingKind,
@@ -67,8 +68,7 @@ async def take_enclave(ctx: TickContext, company: EntityRow, town_id: int) -> bo
     if held(town_id) or await ctx.session.get(EnclaveRow, town_id) is not None:
         return False
     ctx.session.add(EnclaveRow(settlement_entity_id=town_id, company_entity_id=company.id, since_epoch=ctx.epoch, locked=[]))
-    town = await ctx.session.get(EntityRow, town_id)
-    await note(ctx, f"{company.name} came to hold {town.name if town else 'a town'} as its own enclave.", key="company.enclave", ids=[company.id, town_id])
+    await record(ctx, "company.enclave", roles={IncidentRole.OWNER: company.id, IncidentRole.PLACE: town_id}, place=town_id)
     return True
 
 
@@ -77,7 +77,9 @@ async def capture(ctx: TickContext, company: EntityRow, polity_id: int) -> None:
     if profile is None or held(polity_id) or "government" in profile.locked or profile.government is GovernmentKind.OLIGARCHY:
         return
     profile.government = GovernmentKind.OLIGARCHY
-    await note(ctx, f"{company.name} came to steer the realm it traded in.", key="company.capture", ids=[company.id, polity_id])
+    await record(
+        ctx, "company.capture", roles={IncidentRole.ACTOR: company.id, IncidentRole.SUBJECT: polity_id}, facts={"government": GovernmentKind.OLIGARCHY}
+    )
 
 
 async def secede(ctx: TickContext, company: EntityRow) -> int:
@@ -89,7 +91,7 @@ async def secede(ctx: TickContext, company: EntityRow) -> int:
         town.free_city, town.charter_entity_id = True, company.id
         freed += 1
     if freed:
-        await note(ctx, f"The enclaves of {company.name} answered to no realm but the company.", key="company.sovereign", ids=[company.id])
+        await record(ctx, "company.sovereign", roles={IncidentRole.SUBJECT: company.id}, facts={"enclaves": freed})
     return freed
 
 

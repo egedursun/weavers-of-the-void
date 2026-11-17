@@ -11,13 +11,14 @@ from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.lore.truth import ruling_truths
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import canon
+from aerona.engine.recording.record import RoleValue, record
 
 
 @dataclass
@@ -103,7 +104,13 @@ async def walk_carriers(ctx: TickContext, book: DiseaseBook, folk: dict[int, lis
         if not row.identified and knowing and "identified" not in row.locked and await physicians_among(ctx, here, table.identify_skill):
             row.identified = True
             tally.identified += 1
-            await note(ctx, f"Physicians found that {mortal.name} carries {disease.name} unseen.", key="disease.carrier_found", ids=[mortal.id, disease.id])
+            await record(
+                ctx,
+                "disease.carrier_found",
+                roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.INSTRUMENT: disease.id},
+                facts={"skill": table.identify_skill},
+                place=region_id,
+            )
             continue
         if row.identified or region_id == row.home_region_id or book.active_of(disease.id, region_id) is not None:
             continue
@@ -116,8 +123,9 @@ async def walk_carriers(ctx: TickContext, book: DiseaseBook, folk: dict[int, lis
         tally.seeded += 1
         region = await ctx.session.get(EntityRow, region_id)
         if region is not None:
-            await note(
-                ctx, f"{mortal.name} came to {region.name}, and {disease.name} came too.", key="disease.carrier_seeded", ids=[mortal.id, disease.id, region.id]
+            roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: mortal.id, IncidentRole.INSTRUMENT: disease.id, IncidentRole.DESTINATION: region.id}
+            await record(
+                ctx, "disease.carrier_seeded", roles=roles, facts={"severity": ctx.rules.carriers.seed_severity, "seeded": row.seeded}, place=region.id
             )
 
 

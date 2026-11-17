@@ -8,6 +8,8 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.promotion import dormant_ids
@@ -29,13 +31,13 @@ from aerona.engine.mortal.equipment import auto_equip
 from aerona.engine.mortal.kinship import backfill_kin
 from aerona.engine.mortal.learning import learn
 from aerona.engine.mortal.profile import ensure_profile
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation, relation
 
 
@@ -132,7 +134,6 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.incident_participants",
@@ -177,7 +178,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.conditions",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.mortal_profiles",
@@ -201,7 +202,6 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.held_identities",
     "table.incident_participants",
     "table.incidents",
@@ -226,8 +226,9 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.marriages",
     "table.memories",
@@ -278,7 +279,6 @@ async def mortal_kin(ctx: TickContext) -> None:
     "table.artwork_profiles",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -329,7 +329,6 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.examinations",
     "table.foreign_gods",
     "table.genomes",
@@ -384,7 +383,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.conditions",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -437,7 +436,6 @@ async def mortal_minds(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",
@@ -484,7 +482,18 @@ async def clash(ctx: TickContext, profile: PolityProfileRow, first: EntityRow, s
     if "stability" not in (profile.locked or []):
         profile.stability = clamp_int(profile.stability - table.strife_stability, 0, PERCENT)
     await change_relation(ctx, first.id, second.id, -table.strife_magnitude, MemoryKind.FOUGHT_US, note="strife within the realm", reverse=MemoryKind.FOUGHT_US)
-    await note(ctx, f"Strife broke out between {first.name} and {second.name} within one realm.", key="relations.ethnic_strife", ids=[first.id, second.id])
+    await record(
+        ctx,
+        "relations.ethnic_strife",
+        roles={
+            IncidentRole.ACTOR: first.id,
+            IncidentRole.OPPONENT: second.id,
+            IncidentRole.AUTHORITY: profile.polity_entity_id,
+            IncidentRole.PLACE: [town.id for town in towns],
+        },
+        facts={"unrest": table.strife_unrest, "stability": table.strife_stability, "population_pct": table.strife_population_pct},
+        steps=(StepDraft(StepAction.FEUD, actor=first.id, target=second.id),),
+    )
 
 
 SURVEY_PHASES = (Phase("mortal_survey", mortal_survey),)

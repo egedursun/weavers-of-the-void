@@ -23,13 +23,15 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.domain.models.entity_stats import CelestialStats, EntityStats, LanguageStats, PeopleStats, RegionStats, ResourceStats, SpeciesStats
@@ -48,6 +50,7 @@ from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_float, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.recording.record import StepDraft, record
 from aerona.language.alphabet import first_word
 from aerona.language.generator import NameKind
 from aerona.language.syllables import syllabify
@@ -466,9 +469,7 @@ async def _old_god(ctx: TickContext, state: BirthState, output: NewWorldOutput) 
         ),
     )
     ctx.count("old_gods")
-    await ctx.chronicle(
-        ChronicleKind.FOREIGN_GOD, f"{god.name}, an old god, already dwelt on {state.world.name}.", template_key="cosmos.old_god", world_id=state.world.id
-    )
+    await record(ctx, "cosmos.old_god", roles={IncidentRole.SUBJECT: god.id, IncidentRole.PLACE: state.world.id}, world_id=state.world.id)
 
 
 async def _son_claims(ctx: TickContext, state: BirthState) -> int | None:
@@ -500,17 +501,20 @@ async def process_world_birth(ctx: TickContext, output: NewWorldOutput, request:
     await _old_god(ctx, state, output)
     previous = await _son_claims(ctx, state)
     await connect_world(ctx, world, previous)
-    maker = son.name if son is not None else "The Creator"
-    text = f"{maker} birthed a new world: {world.name} ({WORLD_TYPES[world_type].label}). {output.description}"
+    maker = son.id if son is not None else await ctx.session.scalar(select(CreatorRow.id).limit(1))
     ids = [entity.id for entity in state.created if entity.entity_type in (EntityType.REGION, EntityType.CELESTIAL, EntityType.RESOURCE)]
-    await ctx.chronicle(
-        ChronicleKind.WORLD_BIRTH,
-        text,
-        template_key="cosmos.world_born",
-        entity_ids=ids,
+    await record(
+        ctx,
+        "cosmos.world_born",
+        roles={IncidentRole.MAKER: maker, IncidentRole.PRODUCT: world.id, IncidentRole.MEMBER: ids},
+        facts={
+            "world_type": world_type,
+            "regions": len(state.regions),
+            "peoples": sum(1 for entity in state.created if entity.entity_type is EntityType.PEOPLE),
+        },
+        steps=(StepDraft(StepAction.APPEAR, actor=maker, target=world.id, outcome=StepOutcome.SUCCESS),),
         son_id=son.id if son else None,
         world_id=world.id,
-        feed_category=FeedCategory.WORLD,
     )
     ctx.count("worlds_born")
     await ctx.session.flush()

@@ -68,7 +68,7 @@ async def custom_lines(scope: Scope, me: EntityRow) -> list[str]:
     year = scope.cosmos.epoch_start_year
     found.append(f"by your people's reckoning it is {await render_date(session, people.id, year)}")
     norms = await norms_of(session, people.id)
-    strict = sorted(((situation, behaviour), stance) for (situation, behaviour), stance in norms.items() if stance in STRICT)
+    strict = sorted(((situation_text, behaviour), stance) for (situation_text, behaviour), stance in norms.items() if stance in STRICT)
     for (where, behaviour), stance in strict[:NORM_LINES]:
         found.append(f"{spoken(behaviour)} at {an(spoken(where))} is {spoken(stance)}")
     for row in await session.scalars(select(RoleNormRow).where(RoleNormRow.holder_entity_id == people.id).order_by(RoleNormRow.role)):

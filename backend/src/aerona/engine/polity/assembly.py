@@ -11,28 +11,23 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.statecraft import SphereRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.statecraft import ResolutionKind, ResolutionState
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import relation
 
 RESOLUTION_REASON = "a resolution of the assembly"
-KIND_TEXT: dict[ResolutionKind, str] = {
-    ResolutionKind.ROUTE_SECURITY: "guard the routes between its worlds",
-    ResolutionKind.EMBARGO: "embargo a realm",
-    ResolutionKind.VOID_BAN: "ban rites of the void",
-    ResolutionKind.SANCTION: "sanction the world of a god",
-}
 STATE = "state"
 WEIGHT_DIVISOR = 1000
 
@@ -301,13 +296,26 @@ async def sit(ctx: TickContext, book: RealmBook, assembly: EntityRow, tally: Ass
             row.until_epoch = ctx.epoch + ctx.rules.affairs.resolution_epochs if passed else ctx.epoch
             tally.passed += passed
             tally.rejected += not passed
-            verdict = "passed" if passed else "voted down"
-            await note(
+            ballots = list(await ctx.session.scalars(select(ResolutionVoteRow).where(ResolutionVoteRow.resolution_id == row.id)))
+            await record(
                 ctx,
-                f"{assembly.name} {verdict} a resolution to {KIND_TEXT[row.kind]}, {row.votes_for} for and {row.votes_against} against.",
-                key=f"assembly.{'passed' if passed else 'rejected'}",
-                ids=[assembly.id, *([row.target_node_id] if row.target_node_id is not None else [])],
-                kind=ChronicleKind.CIVILIZATION,
+                f"assembly.{'passed' if passed else 'rejected'}_{row.kind.value}",
+                roles={
+                    IncidentRole.AUTHORITY: assembly.id,
+                    IncidentRole.TARGET: row.target_node_id,
+                    IncidentRole.MEMBER: [ballot.member_node_id for ballot in ballots],
+                },
+                facts={"votes_for": row.votes_for, "votes_against": row.votes_against},
+                steps=tuple(
+                    StepDraft(
+                        StepAction.VOTE,
+                        actor=ballot.member_node_id,
+                        amount=ballot.weight,
+                        unit=FactUnit.COUNT,
+                        outcome=StepOutcome.ACCEPTED if ballot.aye else StepOutcome.REFUSED,
+                    )
+                    for ballot in ballots
+                ),
             )
         if row.state is ResolutionState.PASSED and row.until_epoch is not None and ctx.epoch >= row.until_epoch:
             row.state = ResolutionState.LAPSED

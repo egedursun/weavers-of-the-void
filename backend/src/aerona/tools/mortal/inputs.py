@@ -18,12 +18,22 @@ from aerona.constants.tool_inputs import (
     SAYING_MIN,
     SUBTYPE_MAX,
 )
-from aerona.domain.enums.culture import ArtMode, CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionFunction
+from aerona.domain.enums.culture import (
+    ArtMode,
+    CalendarSlot,
+    ItemCategory,
+    LegendArchetype,
+    ProphecyConsequence,
+    ProphecyPredicate,
+    Technique,
+    TraditionFunction,
+)
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import CovertSabotage
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
@@ -38,17 +48,6 @@ Description = Annotated[str, Field(min_length=DESCRIPTION_MIN, max_length=DESCRI
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 Short = Annotated[str, Field(min_length=MESSAGE_MIN, max_length=REASON_MAX)]
 ImagePrompt = Annotated[str, Field(max_length=IMAGE_PROMPT_MAX)]
-
-
-class ItemCategory(StrEnum):
-    WEAPON = "weapon"
-    ARMOUR = "armour"
-    SHIELD = "shield"
-    TOOL = "tool"
-    JEWELLERY = "jewellery"
-    SACRED_RELIC = "sacred_relic"
-    INSTRUMENT = "instrument"
-    BOOK = "book"
 
 
 class CultureKind(StrEnum):
@@ -75,12 +74,6 @@ class RiteKind(StrEnum):
     WEALTH = "wealth"
     BLOOD = "blood"
     LIFE = "life"
-
-
-class SabotageKind(StrEnum):
-    POISON = "poison"
-    ARSON = "arson"
-    DISCORD = "discord"
 
 
 class ProduceInput(ToolInput):
@@ -276,7 +269,7 @@ class RuinsInput(ToolInput):
 
 class SabotageInput(ToolInput):
     target_id: int
-    kind: SabotageKind
+    kind: CovertSabotage
     how: Reason
 
 

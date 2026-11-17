@@ -476,7 +476,7 @@ async def test_diviners_name_the_true_caster_and_plague_war_and_zeal_drive_a_hun
     await keep_witchcraft(await at(session, 3, witchcraft={"accuse_chance": 100}, divination={"valid_truth": 100}), WitchTally())
     accusation = await session.scalar(select(AccusationRow).where(AccusationRow.settlement_entity_id == town.id))
     assert accusation is not None and accusation.accused_node_id == caster.id
-    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "witchcraft.accused"))
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "witchcraft.accused_by_diviners"))
     assert told is not None and "named by its diviners" in told
     plague = await entity(session, "The Grey Cough", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
     session.add(OutbreakRow(disease_entity_id=plague.id, region_entity_id=world.regions[0].id, path=next(iter(SpreadPath)), severity=50, started_epoch=3))

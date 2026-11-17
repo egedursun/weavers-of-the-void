@@ -12,13 +12,14 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import Emotion
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -55,11 +56,8 @@ async def birth(ctx: TickContext, atlas: RegionAtlas, tally: SpiritTally) -> Non
             )
             await add_flag(ctx.session, region_id, EntityFlag.OMEN, ctx.epoch)
             tally.born += 1
-            await note(
-                ctx,
-                f"So much {spoken(emotion)} gathered in {region.name} that it took the shape of spirits, and folk read it as an omen.",
-                key="spirits.born",
-                ids=[region_id],
+            await record(
+                ctx, "spirits.born", roles={IncidentRole.PLACE: region.id, IncidentRole.SUBJECT: region_id}, facts={"emotion": spoken(emotion)}, place=region.id
             )
 
 

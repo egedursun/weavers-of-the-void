@@ -2879,6 +2879,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/chronicle/scope': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_scoped_chronicle_api_chronicle_scope_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/chronicle/epochs': {
     parameters: {
       query?: never
@@ -6335,6 +6351,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/incidents/{incident_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['incident_account_api_incidents__incident_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/nodes/{node_id}/history': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_history_api_nodes__node_id__history_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/state-at': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['state_at_moment_api_state_at_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/records/search': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['search_by_facts_api_records_search_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/places/{place_id}/profile': {
     parameters: {
       query?: never
@@ -8057,6 +8137,54 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_council_violation_delete_api_actions_council_violation_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/council_record:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_council_record_create_api_actions_council_record_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/council_record:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_council_record_edit_api_actions_council_record_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/council_record:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_council_record_delete_api_actions_council_record_delete_post']
     delete?: never
     options?: never
     head?: never
@@ -26783,6 +26911,278 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/incident:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_hold_api_actions_incident_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_fact:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_fact_create_api_actions_incident_fact_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_fact:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_fact_edit_api_actions_incident_fact_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_fact:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_fact_delete_api_actions_incident_fact_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_step:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_step_create_api_actions_incident_step_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_step:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_step_edit_api_actions_incident_step_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_step:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_step_delete_api_actions_incident_step_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_witness:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_witness_create_api_actions_incident_witness_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_witness:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_witness_edit_api_actions_incident_witness_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_witness:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_witness_delete_api_actions_incident_witness_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rumour_distortion:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rumour_distortion_create_api_actions_rumour_distortion_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rumour_distortion:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rumour_distortion_edit_api_actions_rumour_distortion_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rumour_distortion:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rumour_distortion_delete_api_actions_rumour_distortion_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_name:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_name_set_api_actions_incident_name_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/incident_name:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_incident_name_delete_api_actions_incident_name_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/state_change:revert': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_state_change_revert_api_actions_state_change_revert_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/state_change:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_state_change_delete_api_actions_state_change_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/profile:set': {
     parameters: {
       query?: never
@@ -37439,6 +37839,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/engagement:force': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_engagement_force_api_actions_engagement_force_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/captive:take': {
     parameters: {
       query?: never
@@ -42235,7 +42651,7 @@ export interface components {
       | 'mutilation'
       | 'betrayal'
       | 'mercy_to_enemy'
-      | 'human_sacrifice'
+      | 'sacrifice_of_people'
       | 'trade_with_outsiders'
       | 'building_temples'
       | 'burning_books'
@@ -46544,6 +46960,11 @@ export interface components {
       name: string | null
       lines: number
     }
+    ChronicleFeedGroup: {
+      epoch: number
+      size: number
+      line_ids: number[]
+    }
     ChronicleKind:
       | 'creation'
       | 'speech'
@@ -46633,7 +47054,10 @@ export interface components {
     ChroniclePage: {
       items: components['schemas']['ChronicleLineRecord'][]
       total: number
+      groups?: components['schemas']['ChronicleFeedGroup'][]
     }
+    ChronicleScope:
+      'world' | 'star' | 'node' | 'son' | 'creator' | 'foreign_god'
     CipherBreakInput: {
       owner_id: number
       breaker_id: number
@@ -48542,6 +48966,19 @@ export interface components {
       passed: boolean
       created_at: string
     }
+    CouncilRecordCreateInput: {
+      topic: string
+      passed: boolean
+      epoch?: number | null
+    }
+    CouncilRecordDeleteInput: {
+      council_id: number
+    }
+    CouncilRecordEditInput: {
+      council_id: number
+      topic?: string | null
+      passed?: boolean | null
+    }
     CouncilRequest: {
       topic: string
     }
@@ -48763,6 +49200,7 @@ export interface components {
       cult: components['schemas']['EntitySummary'][]
       folk_views: components['schemas']['FolkView'][]
       traces: components['schemas']['ChronicleLineRecord'][]
+      traces_total: number
       images: components['schemas']['ImageRecord'][]
     }
     CreatorDivinity: {
@@ -52099,6 +52537,10 @@ export interface components {
       | 'feed'
       | 'belief'
       | 'void'
+    EngagementForceInput: {
+      vessel_id: number
+      foe_vessel_id: number
+    }
     EngineFinishedEvent: {
       id: number
       kind: 'engine.finished'
@@ -53197,6 +53639,41 @@ export interface components {
       stance: components['schemas']['EthicalStance']
       hold: boolean
     }
+    EventAccountView: {
+      id: number
+      kind: string
+      family: string
+      group: components['schemas']['ProcessGroup'] | null
+      known: boolean
+      name: string | null
+      name_language_id: number | null
+      name_language_name: string | null
+      moment: components['schemas']['EventMomentRecord']
+      world_id: number | null
+      place_id: number | null
+      place_name: string | null
+      origin_id: number | null
+      origin_name: string | null
+      destination_id: number | null
+      destination_name: string | null
+      tier: components['schemas']['IncidentTier']
+      locked: string[]
+      magnitude: number
+      chronicle_id: number | null
+      line: string | null
+      retold: string | null
+      note: string | null
+      thread_id: number | null
+      participants: components['schemas']['EventParticipantRecord'][]
+      witnesses: components['schemas']['EventParticipantRecord'][]
+      facts: components['schemas']['EventFactRecord'][]
+      steps: components['schemas']['EventStepRecord'][]
+      terms: components['schemas']['EventTermRecord'][]
+      changes: components['schemas']['EventChangeRecord'][]
+      rumours: components['schemas']['EventRumourRecord'][]
+      causes: components['schemas']['EventLinkRecord'][]
+      effects: components['schemas']['EventLinkRecord'][]
+    }
     EventCasualtiesInput: {
       event_id: number
       community_id: number
@@ -53214,6 +53691,31 @@ export interface components {
       social_class: components['schemas']['SocialClass']
       phase: components['schemas']['EventPhase']
       count: number
+    }
+    EventChangeRecord: {
+      id: number
+      moment: components['schemas']['EventMomentRecord']
+      table_name: string
+      row_key: string
+      node_id: number | null
+      node_name: string | null
+      operation: components['schemas']['LedgerOperation']
+      field: string | null
+      before_number: number | null
+      after_number: number | null
+      before_text: string | null
+      after_text: string | null
+      before_node_id: number | null
+      before_node_name: string | null
+      after_node_id: number | null
+      after_node_name: string | null
+      actor_kind: components['schemas']['ActorKind']
+      actor_node_id: number | null
+      actor_name: string | null
+      phase: string | null
+      incident_id: number | null
+      step_id: number | null
+      terms?: components['schemas']['EventTermRecord'][]
     }
     EventCreateInput: {
       kind: components['schemas']['EngineKind']
@@ -53237,6 +53739,18 @@ export interface components {
     }
     EventEndInput: {
       event_id: number
+    }
+    EventFactRecord: {
+      id: number
+      key: string
+      position: number
+      node_id: number | null
+      node_name: string | null
+      number: number | null
+      unit: components['schemas']['FactUnit'] | null
+      enum_name: string | null
+      enum_value: string | null
+      name: string | null
     }
     EventFootprintInput: {
       event_id: number
@@ -53308,6 +53822,13 @@ export interface components {
       | 'agent.tool_called'
       | 'agent.tool_result'
       | 'agent.writing'
+    EventLinkRecord: {
+      id: number
+      kind: string
+      epoch: number
+      year: number | null
+      text: string | null
+    }
     EventMarker: {
       id: number
       name: string
@@ -53316,6 +53837,21 @@ export interface components {
       location_id: number
       epoch: number
       kind: components['schemas']['MarkerKind']
+    }
+    EventMomentRecord: {
+      epoch: number
+      year: number | null
+      season: number | null
+      day: number | null
+      hour: number | null
+    }
+    EventParticipantRecord: {
+      node_id: number
+      name: string | null
+      role: components['schemas']['IncidentRole']
+      position: number
+      witness_mode: components['schemas']['WitnessMode'] | null
+      fidelity: number | null
     }
     EventPayload: {
       epoch?: number | null
@@ -53332,9 +53868,71 @@ export interface components {
       event_id: number
       field: 'phase' | 'start_year' | 'start_season' | 'end_year' | 'end_season'
     }
+    EventRumourDistortionRecord: {
+      id: number
+      position: number
+      distortion: components['schemas']['RumourDistortion']
+      role: components['schemas']['IncidentRole'] | null
+      fact_key: string | null
+      step_id: number | null
+      told_node_id: number | null
+      told_name: string | null
+      told_number: number | null
+      told_enum_value: string | null
+      told_year: number | null
+      told_incident_id: number | null
+      told_action: components['schemas']['StepAction'] | null
+      told_outcome: components['schemas']['StepOutcome'] | null
+      epoch: number
+      locked: string[]
+    }
+    EventRumourRecord: {
+      id: number
+      carrier_id: number
+      carrier_name: string | null
+      source_id: number | null
+      source_name: string | null
+      fidelity: number
+      hops: number
+      epoch: number
+      distortions?: components['schemas']['EventRumourDistortionRecord'][]
+    }
     EventStats: {
       kind: 'event'
       severity?: number | null
+    }
+    EventStepRecord: {
+      id: number
+      incident_id: number
+      position: number
+      round: number | null
+      parent_step_id: number | null
+      moment: components['schemas']['EventMomentRecord']
+      actor_node_id: number | null
+      actor_name: string | null
+      target_node_id: number | null
+      target_name: string | null
+      action: components['schemas']['StepAction']
+      instrument_kind: components['schemas']['InstrumentKind']
+      instrument_node_id: number | null
+      instrument_name: string | null
+      instrument_key: string | null
+      locus_kind: components['schemas']['StepLocus']
+      locus_key: string | null
+      locus_node_id: number | null
+      locus_name: string | null
+      damage_type: components['schemas']['DamageType'] | null
+      amount: number | null
+      unit: components['schemas']['FactUnit'] | null
+      outcome: components['schemas']['StepOutcome'] | null
+      record_table: string | null
+      record_key: string | null
+      states?: components['schemas']['EventStepStateRecord'][]
+    }
+    EventStepStateRecord: {
+      node_id: number
+      node_name: string | null
+      state: components['schemas']['StepState']
     }
     EventSummaryView: {
       entity_id: number
@@ -53346,6 +53944,16 @@ export interface components {
       end_year: number | null
       toll: number
       severity: number | null
+    }
+    EventTermRecord: {
+      position: number
+      term: string
+      op: components['schemas']['ModifierOp']
+      amount: number
+      source_node_id: number | null
+      source_name: string | null
+      source_incident_id: number | null
+      fact_key: string | null
     }
     EventView: {
       entity_id: number
@@ -53733,6 +54341,54 @@ export interface components {
       high_trait: components['schemas']['TraitKind'] | null
       low_trait: components['schemas']['TraitKind'] | null
     }
+    FactSearchHit: {
+      incident_id: number
+      kind: string
+      epoch: number
+      year: number | null
+      line: string | null
+      fact_key: string | null
+      node_id: number | null
+      node_name: string | null
+      number: number | null
+      unit: components['schemas']['FactUnit'] | null
+      enum_name: string | null
+      enum_value: string | null
+      name: string | null
+      step_action: components['schemas']['StepAction'] | null
+      instrument_kind: components['schemas']['InstrumentKind'] | null
+    }
+    FactSearchView: {
+      offset: number
+      limit: number
+      total: number
+      hits: components['schemas']['FactSearchHit'][]
+    }
+    FactUnit:
+      | 'count'
+      | 'people'
+      | 'coin'
+      | 'wealth_points'
+      | 'percent'
+      | 'hp'
+      | 'severity'
+      | 'years'
+      | 'seasons'
+      | 'days'
+      | 'hours'
+      | 'distance'
+      | 'area'
+      | 'mass'
+      | 'tons'
+      | 'essence'
+      | 'renown'
+      | 'standing'
+      | 'knowledge'
+      | 'strength'
+      | 'speed'
+      | 'temperature'
+      | 'energy'
+      | 'none'
     FactView: {
       id: number
       subject: components['schemas']['NodeRef'] | null
@@ -54062,7 +54718,7 @@ export interface components {
       last_epoch: number | null
       fate_debt_epoch: number | null
       limbo: components['schemas']['LimboRecord'][]
-      steps: components['schemas']['StepState'][]
+      steps: components['schemas']['FateStepState'][]
       failed_births: number
       views: components['schemas']['HistorianViewItem'][]
     }
@@ -54102,6 +54758,11 @@ export interface components {
       kind: 'fate.step'
       payload: components['schemas']['TextPayload']
       at: string
+    }
+    FateStepState: {
+      step: components['schemas']['EpochStepKind']
+      status: components['schemas']['EpochStepStatus']
+      error: string | null
     }
     FateWrit: 'doom' | 'shield' | 'clear'
     FavoriteBoard: {
@@ -54630,6 +55291,7 @@ export interface components {
       bonds: components['schemas']['BondView'][]
       bond_total: number
       chronicle: components['schemas']['ChronicleLineRecord'][]
+      chronicle_total: number
       sons_here: components['schemas']['NodeRef'][]
       folk_views: components['schemas']['FolkView'][]
       images: components['schemas']['ImageRecord'][]
@@ -55021,7 +55683,6 @@ export interface components {
       slots: number
       mounts: components['schemas']['MountKind'][]
       sections: components['schemas']['FrameSectionView'][]
-      armament: components['schemas']['VesselArmament'][]
       branch: components['schemas']['KnowledgeBranch'] | null
       level: number
       tier: number | null
@@ -57687,6 +58348,11 @@ export interface components {
       year?: number | null
       magnitude: number
       place_entity_id?: number | null
+      origin_entity_id?: number | null
+      destination_entity_id?: number | null
+      season?: number | null
+      day?: number | null
+      hour?: number | null
       cause_incident_id?: number | null
       participants?: components['schemas']['Participant'][]
     }
@@ -57699,8 +58365,44 @@ export interface components {
       kind?: string | null
       magnitude?: number | null
       year?: number | null
+      season?: number | null
+      day?: number | null
+      hour?: number | null
       place_entity_id?: number | null
       clear_place: boolean
+      origin_entity_id?: number | null
+      clear_origin: boolean
+      destination_entity_id?: number | null
+      clear_destination: boolean
+    }
+    IncidentFactCreateInput: {
+      node_id?: number | null
+      number?: number | null
+      unit?: components['schemas']['FactUnit'] | null
+      enum_name?: string | null
+      enum_value?: string | null
+      name?: string | null
+      incident_id: number
+      key: string
+      position: number
+    }
+    IncidentFactDeleteInput: {
+      incident_fact_id: number
+    }
+    IncidentFactEditInput: {
+      node_id?: number | null
+      number?: number | null
+      unit?: components['schemas']['FactUnit'] | null
+      enum_name?: string | null
+      enum_value?: string | null
+      name?: string | null
+      incident_fact_id: number
+      position?: number | null
+    }
+    IncidentHoldInput: {
+      incident_id: number
+      fields?: string[]
+      hold: boolean
     }
     IncidentLine: {
       id: number
@@ -57710,6 +58412,15 @@ export interface components {
     IncidentLinkCauseInput: {
       incident_id: number
       cause_incident_id: number
+    }
+    IncidentNameDeleteInput: {
+      incident_id: number
+    }
+    IncidentNameSetInput: {
+      incident_id: number
+      name: string
+      language_entity_id?: number | null
+      hold: boolean
     }
     IncidentParticipantRecord: {
       node_id: number
@@ -57747,11 +58458,108 @@ export interface components {
       text: string
       place_id: number | null
     }
-    IncidentRole: 'subject' | 'actor' | 'target' | 'witness' | 'place'
+    IncidentRole:
+      | 'subject'
+      | 'actor'
+      | 'co_actor'
+      | 'target'
+      | 'victim'
+      | 'beneficiary'
+      | 'opponent'
+      | 'ally'
+      | 'leader'
+      | 'member'
+      | 'giver'
+      | 'receiver'
+      | 'buyer'
+      | 'seller'
+      | 'lender'
+      | 'borrower'
+      | 'maker'
+      | 'owner'
+      | 'heir'
+      | 'predecessor'
+      | 'successor'
+      | 'accuser'
+      | 'accused'
+      | 'judge'
+      | 'advocate'
+      | 'teacher'
+      | 'learner'
+      | 'healer'
+      | 'patient'
+      | 'parent'
+      | 'child'
+      | 'spouse'
+      | 'officiant'
+      | 'host'
+      | 'guest'
+      | 'envoy'
+      | 'mediator'
+      | 'authority'
+      | 'patron'
+      | 'instrument'
+      | 'product'
+      | 'origin'
+      | 'destination'
+      | 'place'
+      | 'witness'
+      | 'teller'
     IncidentRolesInput: {
       incident_id: number
       participants: components['schemas']['Participant'][]
     }
+    IncidentStepCreateInput: {
+      round?: number | null
+      parent_step_id?: number | null
+      year?: number | null
+      season?: number | null
+      day?: number | null
+      hour?: number | null
+      actor_node_id?: number | null
+      target_node_id?: number | null
+      instrument_kind: components['schemas']['InstrumentKind']
+      instrument_node_id?: number | null
+      instrument_key?: string | null
+      locus_kind: components['schemas']['StepLocus']
+      locus_key?: string | null
+      locus_node_id?: number | null
+      damage_type?: components['schemas']['DamageType'] | null
+      amount?: number | null
+      unit?: components['schemas']['FactUnit'] | null
+      outcome?: components['schemas']['StepOutcome'] | null
+      states?: components['schemas']['StateEntry'][]
+      incident_id: number
+      step_action: components['schemas']['StepAction']
+      position?: number | null
+    }
+    IncidentStepDeleteInput: {
+      incident_step_id: number
+    }
+    IncidentStepEditInput: {
+      round?: number | null
+      parent_step_id?: number | null
+      year?: number | null
+      season?: number | null
+      day?: number | null
+      hour?: number | null
+      actor_node_id?: number | null
+      target_node_id?: number | null
+      instrument_kind: components['schemas']['InstrumentKind']
+      instrument_node_id?: number | null
+      instrument_key?: string | null
+      locus_kind: components['schemas']['StepLocus']
+      locus_key?: string | null
+      locus_node_id?: number | null
+      damage_type?: components['schemas']['DamageType'] | null
+      amount?: number | null
+      unit?: components['schemas']['FactUnit'] | null
+      outcome?: components['schemas']['StepOutcome'] | null
+      states?: components['schemas']['StateEntry'][]
+      incident_step_id: number
+      step_action?: components['schemas']['StepAction'] | null
+    }
+    IncidentTier: 'line' | 'account' | 'steps'
     IncidentUnlinkCauseInput: {
       incident_id: number
     }
@@ -57764,6 +58572,25 @@ export interface components {
       severity: number
       dead: number
       epoch: number
+    }
+    IncidentWitnessCreateInput: {
+      witness_mode: components['schemas']['WitnessMode']
+      fidelity: number
+      incident_id: number
+      node_id: number
+      teller: boolean
+    }
+    IncidentWitnessDeleteInput: {
+      incident_id: number
+      node_id: number
+      teller: boolean
+    }
+    IncidentWitnessEditInput: {
+      incident_id: number
+      node_id: number
+      teller: boolean
+      witness_mode?: components['schemas']['WitnessMode'] | null
+      fidelity?: number | null
     }
     IncitedWarView: {
       war_id: number
@@ -58073,6 +58900,21 @@ export interface components {
       orders: components['schemas']['InstructionOrderView'][]
       locked: string[]
     }
+    InstrumentKind:
+      | 'item'
+      | 'equipment_model'
+      | 'vehicle_weapon'
+      | 'vehicle'
+      | 'structure'
+      | 'creature'
+      | 'power'
+      | 'rite'
+      | 'tool_kind'
+      | 'substance'
+      | 'text'
+      | 'network'
+      | 'body'
+      | 'none'
     InsuranceCover: 'cargo' | 'house' | 'life'
     InsurancePolicyCreateInput: {
       insurer_entity_id: number
@@ -59980,6 +60822,7 @@ export interface components {
       item: string
       delta: number
     }
+    LedgerOperation: 'insert' | 'update' | 'delete'
     LedgerPage: {
       current_epoch: number
       epochs: components['schemas']['EpochCount'][]
@@ -63410,6 +64253,7 @@ export interface components {
       | 'look_at_world'
       | 'inspect_entity'
       | 'search_entities'
+      | 'recount'
       | 'found_language'
       | 'coin_words'
       | 'produce_item'
@@ -64387,6 +65231,33 @@ export interface components {
       node_id: number
       hosted: components['schemas']['GatheringView'][]
       attended: components['schemas']['GatheringView'][]
+    }
+    NodeHistoryEntry: {
+      incident_id: number
+      kind: string
+      group: components['schemas']['ProcessGroup'] | null
+      moment: components['schemas']['EventMomentRecord']
+      roles: components['schemas']['IncidentRole'][]
+      line: string | null
+      place_id: number | null
+      place_name: string | null
+      tier: components['schemas']['IncidentTier']
+      facts: number
+      steps: number
+      changes: number
+    }
+    NodeHistoryView: {
+      node_id: number
+      offset: number
+      limit: number
+      total_incidents: number
+      incidents: components['schemas']['NodeHistoryEntry'][]
+      total_steps: number
+      steps: components['schemas']['EventStepRecord'][]
+      total_changes: number
+      changes: components['schemas']['EventChangeRecord'][]
+      kinds: string[]
+      roles: components['schemas']['IncidentRole'][]
     }
     NodeKind:
       | 'entity'
@@ -67842,6 +68713,23 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    ProcessGroup:
+      | 'single_combat'
+      | 'battles'
+      | 'vessels'
+      | 'body'
+      | 'making'
+      | 'exchange'
+      | 'law'
+      | 'diplomacy'
+      | 'faith'
+      | 'movement'
+      | 'social'
+      | 'knowledge'
+      | 'nature'
+      | 'cosmos'
+      | 'gods'
+      | 'peoples'
     ProcessKind:
       | 'farming'
       | 'fishing'
@@ -68007,6 +68895,8 @@ export interface components {
       | 'geography_lines'
       | 'world_summary'
       | 'son_memory'
+      | 'event_account'
+      | 'event_records'
       | 'sky_calendar'
       | 'budget_trailer'
       | 'inspect_sibling'
@@ -70766,6 +71656,65 @@ export interface components {
       | 'spy'
       | 'current'
       | 'planted'
+    RumourDistortion:
+      | 'doer_swapped'
+      | 'target_swapped'
+      | 'amount_changed'
+      | 'outcome_changed'
+      | 'cause_changed'
+      | 'place_changed'
+      | 'moment_changed'
+      | 'step_added'
+      | 'step_dropped'
+      | 'role_changed'
+    RumourDistortionCreateInput: {
+      distortion?: components['schemas']['RumourDistortion'] | null
+      role?: components['schemas']['IncidentRole'] | null
+      fact_key?: string | null
+      step_id?: number | null
+      told_node_id?: number | null
+      told_number?: number | null
+      told_enum_value?: string | null
+      told_year?: number | null
+      told_incident_id?: number | null
+      told_action?: components['schemas']['StepAction'] | null
+      told_outcome?: components['schemas']['StepOutcome'] | null
+      rumour_id: number
+    }
+    RumourDistortionDeleteInput: {
+      rumour_distortion_id: number
+    }
+    RumourDistortionEditInput: {
+      distortion?: components['schemas']['RumourDistortion'] | null
+      role?: components['schemas']['IncidentRole'] | null
+      fact_key?: string | null
+      step_id?: number | null
+      told_node_id?: number | null
+      told_number?: number | null
+      told_enum_value?: string | null
+      told_year?: number | null
+      told_incident_id?: number | null
+      told_action?: components['schemas']['StepAction'] | null
+      told_outcome?: components['schemas']['StepOutcome'] | null
+      rumour_distortion_id: number
+      hold?: string[]
+    }
+    RumourDistortionView: {
+      id: number
+      distortion: components['schemas']['RumourDistortion']
+      role: components['schemas']['IncidentRole'] | null
+      fact_key: string | null
+      step_id: number | null
+      told: components['schemas']['NodeRef'] | null
+      told_number: number | null
+      told_enum_value: string | null
+      told_year: number | null
+      told_incident_id: number | null
+      told_action: components['schemas']['StepAction'] | null
+      told_outcome: components['schemas']['StepOutcome'] | null
+      epoch: number
+      locked: string[]
+    }
     RumourEditInput: {
       rumour_id: number
       fidelity?: number | null
@@ -70801,6 +71750,7 @@ export interface components {
       alarm: boolean
       carriers: number
       locked: string[]
+      distortions?: components['schemas']['RumourDistortionView'][]
     }
     RunView: {
       epoch: number
@@ -71087,6 +72037,7 @@ export interface components {
       cover: string | null
       images: components['schemas']['ImageRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
+      timeline_total: number
       laws?: components['schemas']['HeldLawRecord'][]
       strata?: components['schemas']['HostedStratumRecord'][]
     }
@@ -72611,6 +73562,7 @@ export interface components {
       folk_views: components['schemas']['FolkView'][]
       creations: components['schemas']['EntitySummary'][]
       chronicle: components['schemas']['ChronicleLineRecord'][]
+      chronicle_total: number
       messages: components['schemas']['MessageView'][]
       siblings: components['schemas']['SiblingView'][]
       bonds: components['schemas']['BondView'][]
@@ -72841,6 +73793,8 @@ export interface components {
       | 'inspect_entity'
       | 'search_entities'
       | 'my_memory'
+      | 'recall_event'
+      | 'retell_event'
       | 'inspect_sibling'
       | 'write_plan'
       | 'choose_anchor'
@@ -72928,6 +73882,7 @@ export interface components {
       | 'shape_image'
       | 'forge_material'
       | 'hide_secret'
+      | 'reveal_secret'
       | 'sanctify_place'
       | 'raise_nexus'
       | 'reshape_land'
@@ -74270,6 +75225,7 @@ export interface components {
       worlds: components['schemas']['OrbitingWorld'][]
       sky_events: components['schemas']['SkyEventRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
+      timeline_total: number
       images: components['schemas']['ImageRecord'][]
     }
     StarvationStage: 'none' | 'rationing' | 'famine' | 'taboo_broken'
@@ -74283,6 +75239,42 @@ export interface components {
       | 'creativity'
       | 'charisma'
       | 'might'
+    StateAtFieldRecord: {
+      field: string
+      then: string | null
+      now: string | null
+      changed: boolean
+    }
+    StateAtRowRecord: {
+      table_name: string
+      row_key: string
+      existed: boolean
+      exists_now: boolean
+      fields: components['schemas']['StateAtFieldRecord'][]
+    }
+    StateAtView: {
+      epoch: number
+      year: number | null
+      season: number | null
+      day: number | null
+      hour: number | null
+      node_id: number | null
+      table_name: string | null
+      offset: number
+      limit: number
+      total: number
+      rows: components['schemas']['StateAtRowRecord'][]
+    }
+    StateChangeDeleteInput: {
+      state_change_id: number
+    }
+    StateChangeRevertInput: {
+      state_change_id: number
+    }
+    StateEntry: {
+      node_id: number
+      state: components['schemas']['StepState']
+    }
     StateMedium:
       'record' | 'rite_vessel' | 'grown' | 'memory_of_others' | 'divine'
     StateResponse: {
@@ -74330,6 +75322,273 @@ export interface components {
       spheres: components['schemas']['SphereView'][]
       subjects: components['schemas']['SubjectView'][]
     }
+    StepAction:
+      | 'close'
+      | 'strike'
+      | 'thrust'
+      | 'cut'
+      | 'shoot'
+      | 'throw'
+      | 'cast'
+      | 'feint'
+      | 'block'
+      | 'parry'
+      | 'dodge'
+      | 'grapple'
+      | 'throw_down'
+      | 'choke'
+      | 'lock'
+      | 'bite'
+      | 'disarm'
+      | 'charge'
+      | 'trample'
+      | 'fall'
+      | 'rise'
+      | 'flee'
+      | 'pursue'
+      | 'yield'
+      | 'spare'
+      | 'finish'
+      | 'rescue'
+      | 'carry_off'
+      | 'deploy'
+      | 'advance'
+      | 'hold'
+      | 'volley'
+      | 'wheel'
+      | 'flank'
+      | 'rout'
+      | 'rally'
+      | 'reinforce'
+      | 'withdraw'
+      | 'encircle'
+      | 'breach'
+      | 'storm'
+      | 'undermine'
+      | 'bombard'
+      | 'sortie'
+      | 'surrender'
+      | 'pillage'
+      | 'take_captives'
+      | 'take_standard'
+      | 'manoeuvre'
+      | 'take_position'
+      | 'fire'
+      | 'ram'
+      | 'board'
+      | 'repel'
+      | 'ignite'
+      | 'extinguish'
+      | 'flood'
+      | 'pump'
+      | 'repair_underway'
+      | 'jettison'
+      | 'launch_craft'
+      | 'raise_shield'
+      | 'lose_shield'
+      | 'vent'
+      | 'lose_power'
+      | 'crash'
+      | 'explode'
+      | 'sink'
+      | 'strike_colours'
+      | 'escape'
+      | 'drift'
+      | 'fall_ill'
+      | 'worsen'
+      | 'ease'
+      | 'recover'
+      | 'examine'
+      | 'treat'
+      | 'operate'
+      | 'set_bone'
+      | 'suture'
+      | 'amputate'
+      | 'fit_prosthesis'
+      | 'go_into_labour'
+      | 'give_birth'
+      | 'lose_child'
+      | 'name_child'
+      | 'age'
+      | 'die'
+      | 'return_to_life'
+      | 'gather'
+      | 'prepare'
+      | 'shape'
+      | 'assemble'
+      | 'temper'
+      | 'inscribe'
+      | 'enchant'
+      | 'test'
+      | 'flaw'
+      | 'finish_work'
+      | 'sign_work'
+      | 'repair'
+      | 'break'
+      | 'copy'
+      | 'forge'
+      | 'lay_foundation'
+      | 'raise'
+      | 'complete'
+      | 'collapse'
+      | 'offer'
+      | 'bargain'
+      | 'agree'
+      | 'pay'
+      | 'deliver'
+      | 'default'
+      | 'seize_goods'
+      | 'smuggle'
+      | 'levy'
+      | 'toll'
+      | 'lend'
+      | 'repay'
+      | 'give'
+      | 'return_gift'
+      | 'hire'
+      | 'work'
+      | 'strike_work'
+      | 'dismiss'
+      | 'buy_freedom'
+      | 'accuse'
+      | 'investigate'
+      | 'find_evidence'
+      | 'testify'
+      | 'plead'
+      | 'judge'
+      | 'sentence'
+      | 'punish'
+      | 'pardon'
+      | 'appeal'
+      | 'decree'
+      | 'proclaim'
+      | 'vote'
+      | 'count_votes'
+      | 'appoint'
+      | 'swear'
+      | 'break_oath'
+      | 'negotiate'
+      | 'propose'
+      | 'counter'
+      | 'sign'
+      | 'refuse'
+      | 'threaten'
+      | 'insult'
+      | 'apologise'
+      | 'persuade'
+      | 'convert'
+      | 'teach'
+      | 'learn'
+      | 'write'
+      | 'read'
+      | 'translate'
+      | 'forge_record'
+      | 'reveal'
+      | 'conceal'
+      | 'deceive'
+      | 'discover'
+      | 'spread_word'
+      | 'pray'
+      | 'sacrifice'
+      | 'perform_rite'
+      | 'invoke'
+      | 'answer'
+      | 'deny'
+      | 'manifest'
+      | 'possess'
+      | 'exorcise'
+      | 'curse'
+      | 'bless'
+      | 'foresee'
+      | 'draw_power'
+      | 'use_power'
+      | 'backlash'
+      | 'bind'
+      | 'release'
+      | 'depart'
+      | 'travel'
+      | 'rest'
+      | 'lose_way'
+      | 'meet_danger'
+      | 'cross'
+      | 'enter'
+      | 'leave'
+      | 'arrive'
+      | 'settle'
+      | 'found'
+      | 'abandon'
+      | 'return'
+      | 'meet'
+      | 'court'
+      | 'marry'
+      | 'separate'
+      | 'adopt'
+      | 'foster'
+      | 'inherit'
+      | 'succeed'
+      | 'crown'
+      | 'depose'
+      | 'betray'
+      | 'reconcile'
+      | 'befriend'
+      | 'quarrel'
+      | 'feud'
+      | 'avenge'
+      | 'mourn'
+      | 'celebrate'
+      | 'host'
+      | 'serve_food'
+      | 'compete'
+      | 'score'
+      | 'win'
+      | 'lose'
+      | 'perform'
+      | 'honour'
+      | 'shame'
+      | 'begin'
+      | 'spread'
+      | 'peak'
+      | 'wane'
+      | 'end'
+      | 'erupt'
+      | 'quake'
+      | 'flood_land'
+      | 'burn_land'
+      | 'blow'
+      | 'freeze'
+      | 'dry'
+      | 'bloom'
+      | 'migrate'
+      | 'die_out'
+      | 'appear'
+      | 'collide'
+      | 'collapse_body'
+      | 'open'
+      | 'connect'
+      | 'intrude'
+      | 'copy_mind'
+      | 'save_mind'
+      | 'restore_mind'
+      | 'transfer_mind'
+      | 'merge_minds'
+      | 'awaken'
+      | 'link_minds'
+      | 'unlink'
+    StepLocus:
+      | 'body_part'
+      | 'vehicle_section'
+      | 'structure_section'
+      | 'room'
+      | 'district'
+      | 'settlement'
+      | 'region'
+      | 'route'
+      | 'sea'
+      | 'sky'
+      | 'orbit'
+      | 'realm'
+      | 'network_node'
+      | 'none'
     StepMetrics: {
       step: string
       calls: number
@@ -74338,11 +75597,64 @@ export interface components {
       cost: number
       errors: number
     }
-    StepState: {
-      step: components['schemas']['EpochStepKind']
-      status: components['schemas']['EpochStepStatus']
-      error: string | null
-    }
+    StepOutcome:
+      | 'success'
+      | 'partial'
+      | 'failure'
+      | 'missed'
+      | 'blocked'
+      | 'parried'
+      | 'dodged'
+      | 'glanced'
+      | 'absorbed'
+      | 'wounded'
+      | 'broken'
+      | 'severed'
+      | 'downed'
+      | 'killed'
+      | 'damaged'
+      | 'disabled'
+      | 'destroyed'
+      | 'captured'
+      | 'escaped'
+      | 'yielded'
+      | 'accepted'
+      | 'refused'
+      | 'delayed'
+      | 'interrupted'
+      | 'reversed'
+      | 'no_effect'
+    StepState:
+      | 'prone'
+      | 'risen'
+      | 'disarmed'
+      | 'stunned'
+      | 'unconscious'
+      | 'bleeding'
+      | 'burning'
+      | 'blinded'
+      | 'restrained'
+      | 'fleeing'
+      | 'yielded'
+      | 'captured'
+      | 'freed'
+      | 'hidden'
+      | 'revealed'
+      | 'exhausted'
+      | 'possessed'
+      | 'flooding'
+      | 'breached'
+      | 'depressurised'
+      | 'adrift'
+      | 'disabled'
+      | 'aground'
+      | 'grounded'
+      | 'shielded'
+      | 'unshielded'
+      | 'cut_off'
+      | 'encircled'
+      | 'routed'
+      | 'rallied'
     StockGrantInput: {
       community_id: number
       commodity: components['schemas']['CommodityKind']
@@ -75875,7 +77187,7 @@ export interface components {
       | 'sacred_suffering'
       | 'purity_of_body'
       | 'ancestor_veneration'
-      | 'human_sacrifice'
+      | 'sacrifice_of_people'
       | 'animal_sacrifice'
       | 'celibate_clergy'
       | 'proselytism'
@@ -78909,12 +80221,10 @@ export interface components {
     }
     Verdict: 'guilty' | 'acquitted' | 'fled' | 'dropped'
     VerdictChoice: 'accept' | 'reject'
-    VesselArmament: 'rams' | 'missiles' | 'siege_engines' | 'rites'
     VesselCreateInput: {
       owner_id: number
       name: string
       frame: components['schemas']['VehicleFrame']
-      armament?: components['schemas']['VesselArmament'][] | null
       hull_material?: components['schemas']['MaterialKind'] | null
       fabric_material?: components['schemas']['MaterialKind'] | null
       home_port_id?: number | null
@@ -78924,7 +80234,6 @@ export interface components {
     VesselRefitInput: {
       vessel_id: number
       frame: components['schemas']['VehicleFrame']
-      armament?: components['schemas']['VesselArmament'][] | null
       hull_material?: components['schemas']['MaterialKind'] | null
       fabric_material?: components['schemas']['MaterialKind'] | null
     }
@@ -78972,7 +80281,7 @@ export interface components {
       hull_material: string | null
       fabric_material: string | null
       condition: number
-      armament: components['schemas']['VesselArmament'][]
+      weapons: components['schemas']['VesselWeaponView'][]
       seaworthiness: number
       cargo_capacity: number
       crew: number
@@ -78982,6 +80291,15 @@ export interface components {
       status: components['schemas']['VesselStatus']
       voyages: number
       locked: string[]
+    }
+    VesselWeaponView: {
+      mount: components['schemas']['MountKind']
+      section: components['schemas']['VehicleSection'] | null
+      family: components['schemas']['EquipmentFamily']
+      model_id: number
+      model_name: string
+      count: number
+      damage_type: components['schemas']['DamageType']
     }
     VeteranGrant: 'land' | 'pension' | 'none'
     VeteranGrantCreateInput: {
@@ -79484,6 +80802,7 @@ export interface components {
       release?: string[]
       hunt_id: number
     }
+    WitnessMode: 'saw' | 'heard' | 'took_part' | 'was_told'
     WitnessRemoveInput: {
       case_id: number
       witness_id: number
@@ -80398,6 +81717,7 @@ export interface components {
       peoples: components['schemas']['PeopleBrief'][]
       sky_events: components['schemas']['SkyEventRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
+      timeline_total: number
       images: components['schemas']['ImageRecord'][]
     }
     WorshipMode: 'devotion' | 'appeasement'
@@ -86239,6 +87559,7 @@ export interface operations {
     parameters: {
       query?: {
         limit?: number
+        offset?: number
       }
       header?: never
       path?: never
@@ -86482,6 +87803,38 @@ export interface operations {
         before?: number | null
         limit?: number | null
         world_id?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ChroniclePage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_scoped_chronicle_api_chronicle_scope_get: {
+    parameters: {
+      query: {
+        scope: components['schemas']['ChronicleScope']
+        scope_id?: number | null
+        offset?: number
+        limit?: number
       }
       header?: never
       path?: never
@@ -93093,6 +94446,144 @@ export interface operations {
       }
     }
   }
+  incident_account_api_incidents__incident_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        incident_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EventAccountView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_history_api_nodes__node_id__history_get: {
+    parameters: {
+      query?: {
+        role?: components['schemas']['IncidentRole'] | null
+        kind?: string | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeHistoryView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  state_at_moment_api_state_at_get: {
+    parameters: {
+      query: {
+        epoch: number
+        year?: number | null
+        season?: number | null
+        day?: number | null
+        hour?: number | null
+        node_id?: number | null
+        table?: string | null
+        key?: string | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StateAtView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  search_by_facts_api_records_search_get: {
+    parameters: {
+      query?: {
+        fact?: string | null
+        enum_name?: string | null
+        enum_value?: string | null
+        node_id?: number | null
+        kind?: string | null
+        action?: components['schemas']['StepAction'] | null
+        instrument_kind?: components['schemas']['InstrumentKind'] | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FactSearchView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   place_profile_api_places__place_id__profile_get: {
     parameters: {
       query?: never
@@ -96213,6 +97704,99 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CouncilViolationDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_council_record_create_api_actions_council_record_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CouncilRecordCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_council_record_edit_api_actions_council_record_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CouncilRecordEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_council_record_delete_api_actions_council_record_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CouncilRecordDeleteInput']
       }
     }
     responses: {
@@ -132340,6 +133924,533 @@ export interface operations {
       }
     }
   }
+  action_incident_hold_api_actions_incident_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_fact_create_api_actions_incident_fact_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentFactCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_fact_edit_api_actions_incident_fact_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentFactEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_fact_delete_api_actions_incident_fact_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentFactDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_step_create_api_actions_incident_step_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentStepCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_step_edit_api_actions_incident_step_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentStepEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_step_delete_api_actions_incident_step_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentStepDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_witness_create_api_actions_incident_witness_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentWitnessCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_witness_edit_api_actions_incident_witness_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentWitnessEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_witness_delete_api_actions_incident_witness_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentWitnessDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_rumour_distortion_create_api_actions_rumour_distortion_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RumourDistortionCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_rumour_distortion_edit_api_actions_rumour_distortion_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RumourDistortionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_rumour_distortion_delete_api_actions_rumour_distortion_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RumourDistortionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_name_set_api_actions_incident_name_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentNameSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_incident_name_delete_api_actions_incident_name_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IncidentNameDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_state_change_revert_api_actions_state_change_revert_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StateChangeRevertInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_state_change_delete_api_actions_state_change_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StateChangeDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_profile_set_api_actions_profile_set_post: {
     parameters: {
       query?: never
@@ -152986,6 +155097,37 @@ export interface operations {
       }
     }
   }
+  action_engagement_force_api_actions_engagement_force_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EngagementForceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_captive_take_api_actions_captive_take_post: {
     parameters: {
       query?: never
@@ -161963,7 +164105,7 @@ export const actKindValues: ReadonlyArray<
   'mutilation',
   'betrayal',
   'mercy_to_enemy',
-  'human_sacrifice',
+  'sacrifice_of_people',
   'trade_with_outsiders',
   'building_temples',
   'burning_books',
@@ -163407,6 +165549,9 @@ export const chronicleKindValues: ReadonlyArray<
   'ransom',
   'prohibition',
 ]
+export const chronicleScopeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ChronicleScope']
+> = ['world', 'star', 'node', 'son', 'creator', 'foreign_god']
 export const circleKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CircleKind']
 > = [
@@ -165713,6 +167858,34 @@ export const facetValues: ReadonlyArray<
 export const facetGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FacetGroup']
 > = ['emotional', 'social', 'drive', 'mind']
+export const factUnitValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FactUnit']
+> = [
+  'count',
+  'people',
+  'coin',
+  'wealth_points',
+  'percent',
+  'hp',
+  'severity',
+  'years',
+  'seasons',
+  'days',
+  'hours',
+  'distance',
+  'area',
+  'mass',
+  'tons',
+  'essence',
+  'renown',
+  'standing',
+  'knowledge',
+  'strength',
+  'speed',
+  'temperature',
+  'energy',
+  'none',
+]
 export const factionActionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FactionActionKind']
 > = [
@@ -167039,7 +169212,57 @@ export const impuritySourceValues: ReadonlyArray<
 ]
 export const incidentRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IncidentRole']
-> = ['subject', 'actor', 'target', 'witness', 'place']
+> = [
+  'subject',
+  'actor',
+  'co_actor',
+  'target',
+  'victim',
+  'beneficiary',
+  'opponent',
+  'ally',
+  'leader',
+  'member',
+  'giver',
+  'receiver',
+  'buyer',
+  'seller',
+  'lender',
+  'borrower',
+  'maker',
+  'owner',
+  'heir',
+  'predecessor',
+  'successor',
+  'accuser',
+  'accused',
+  'judge',
+  'advocate',
+  'teacher',
+  'learner',
+  'healer',
+  'patient',
+  'parent',
+  'child',
+  'spouse',
+  'officiant',
+  'host',
+  'guest',
+  'envoy',
+  'mediator',
+  'authority',
+  'patron',
+  'instrument',
+  'product',
+  'origin',
+  'destination',
+  'place',
+  'witness',
+  'teller',
+]
+export const incidentTierValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IncidentTier']
+> = ['line', 'account', 'steps']
 export const incursionStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IncursionStage']
 > = ['probing', 'breach', 'manifestation', 'receding']
@@ -167114,6 +169337,24 @@ export const inspirationStateValues: ReadonlyArray<
 export const instructionBindingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InstructionBinding']
 > = ['none', 'order', 'oath', 'geas', 'seal', 'ownership', 'lease', 'symbiosis']
+export const instrumentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['InstrumentKind']
+> = [
+  'item',
+  'equipment_model',
+  'vehicle_weapon',
+  'vehicle',
+  'structure',
+  'creature',
+  'power',
+  'rite',
+  'tool_kind',
+  'substance',
+  'text',
+  'network',
+  'body',
+  'none',
+]
 export const insuranceCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InsuranceCover']
 > = ['cargo', 'house', 'life']
@@ -167719,6 +169960,9 @@ export const leadershipModeValues: ReadonlyArray<
 export const learnabilityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Learnability']
 > = ['anyone', 'gifted_only', 'granted_only', 'cannot_be_taught']
+export const ledgerOperationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LedgerOperation']
+> = ['insert', 'update', 'delete']
 export const ledgerUndoneEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LedgerUndoneEvent']['kind']
 > = ['ledger.undone']
@@ -168731,6 +170975,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'look_at_world',
   'inspect_entity',
   'search_entities',
+  'recount',
   'found_language',
   'coin_words',
   'produce_item',
@@ -170125,6 +172370,26 @@ export const pressureKindValues: ReadonlyArray<
   'disease_burden',
   'purposelessness',
 ]
+export const processGroupValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProcessGroup']
+> = [
+  'single_combat',
+  'battles',
+  'vessels',
+  'body',
+  'making',
+  'exchange',
+  'law',
+  'diplomacy',
+  'faith',
+  'movement',
+  'social',
+  'knowledge',
+  'nature',
+  'cosmos',
+  'gods',
+  'peoples',
+]
 export const processKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProcessKind']
 > = [
@@ -170252,6 +172517,8 @@ export const promptIdValues: ReadonlyArray<
   'geography_lines',
   'world_summary',
   'son_memory',
+  'event_account',
+  'event_records',
   'sky_calendar',
   'budget_trailer',
   'inspect_sibling',
@@ -170990,6 +173257,20 @@ export const rulesChangedEventKindValues: ReadonlyArray<
 export const rumourChannelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RumourChannel']
 > = ['witness', 'route', 'pilgrimage', 'journey', 'spy', 'current', 'planted']
+export const rumourDistortionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RumourDistortion']
+> = [
+  'doer_swapped',
+  'target_swapped',
+  'amount_changed',
+  'outcome_changed',
+  'cause_changed',
+  'place_changed',
+  'moment_changed',
+  'step_added',
+  'step_dropped',
+  'role_changed',
+]
 export const sacramentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacramentKind']
 > = ['birth_blessing', 'initiation', 'marriage', 'last_rites']
@@ -171528,6 +173809,8 @@ export const sonToolIdValues: ReadonlyArray<
   'inspect_entity',
   'search_entities',
   'my_memory',
+  'recall_event',
+  'retell_event',
   'inspect_sibling',
   'write_plan',
   'choose_anchor',
@@ -171615,6 +173898,7 @@ export const sonToolIdValues: ReadonlyArray<
   'shape_image',
   'forge_material',
   'hide_secret',
+  'reveal_secret',
   'sanctify_place',
   'raise_nexus',
   'reshape_land',
@@ -172065,6 +174349,343 @@ export const statValues: ReadonlyArray<
 export const stateMediumValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StateMedium']
 > = ['record', 'rite_vessel', 'grown', 'memory_of_others', 'divine']
+export const stepActionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepAction']
+> = [
+  'close',
+  'strike',
+  'thrust',
+  'cut',
+  'shoot',
+  'throw',
+  'cast',
+  'feint',
+  'block',
+  'parry',
+  'dodge',
+  'grapple',
+  'throw_down',
+  'choke',
+  'lock',
+  'bite',
+  'disarm',
+  'charge',
+  'trample',
+  'fall',
+  'rise',
+  'flee',
+  'pursue',
+  'yield',
+  'spare',
+  'finish',
+  'rescue',
+  'carry_off',
+  'deploy',
+  'advance',
+  'hold',
+  'volley',
+  'wheel',
+  'flank',
+  'rout',
+  'rally',
+  'reinforce',
+  'withdraw',
+  'encircle',
+  'breach',
+  'storm',
+  'undermine',
+  'bombard',
+  'sortie',
+  'surrender',
+  'pillage',
+  'take_captives',
+  'take_standard',
+  'manoeuvre',
+  'take_position',
+  'fire',
+  'ram',
+  'board',
+  'repel',
+  'ignite',
+  'extinguish',
+  'flood',
+  'pump',
+  'repair_underway',
+  'jettison',
+  'launch_craft',
+  'raise_shield',
+  'lose_shield',
+  'vent',
+  'lose_power',
+  'crash',
+  'explode',
+  'sink',
+  'strike_colours',
+  'escape',
+  'drift',
+  'fall_ill',
+  'worsen',
+  'ease',
+  'recover',
+  'examine',
+  'treat',
+  'operate',
+  'set_bone',
+  'suture',
+  'amputate',
+  'fit_prosthesis',
+  'go_into_labour',
+  'give_birth',
+  'lose_child',
+  'name_child',
+  'age',
+  'die',
+  'return_to_life',
+  'gather',
+  'prepare',
+  'shape',
+  'assemble',
+  'temper',
+  'inscribe',
+  'enchant',
+  'test',
+  'flaw',
+  'finish_work',
+  'sign_work',
+  'repair',
+  'break',
+  'copy',
+  'forge',
+  'lay_foundation',
+  'raise',
+  'complete',
+  'collapse',
+  'offer',
+  'bargain',
+  'agree',
+  'pay',
+  'deliver',
+  'default',
+  'seize_goods',
+  'smuggle',
+  'levy',
+  'toll',
+  'lend',
+  'repay',
+  'give',
+  'return_gift',
+  'hire',
+  'work',
+  'strike_work',
+  'dismiss',
+  'buy_freedom',
+  'accuse',
+  'investigate',
+  'find_evidence',
+  'testify',
+  'plead',
+  'judge',
+  'sentence',
+  'punish',
+  'pardon',
+  'appeal',
+  'decree',
+  'proclaim',
+  'vote',
+  'count_votes',
+  'appoint',
+  'swear',
+  'break_oath',
+  'negotiate',
+  'propose',
+  'counter',
+  'sign',
+  'refuse',
+  'threaten',
+  'insult',
+  'apologise',
+  'persuade',
+  'convert',
+  'teach',
+  'learn',
+  'write',
+  'read',
+  'translate',
+  'forge_record',
+  'reveal',
+  'conceal',
+  'deceive',
+  'discover',
+  'spread_word',
+  'pray',
+  'sacrifice',
+  'perform_rite',
+  'invoke',
+  'answer',
+  'deny',
+  'manifest',
+  'possess',
+  'exorcise',
+  'curse',
+  'bless',
+  'foresee',
+  'draw_power',
+  'use_power',
+  'backlash',
+  'bind',
+  'release',
+  'depart',
+  'travel',
+  'rest',
+  'lose_way',
+  'meet_danger',
+  'cross',
+  'enter',
+  'leave',
+  'arrive',
+  'settle',
+  'found',
+  'abandon',
+  'return',
+  'meet',
+  'court',
+  'marry',
+  'separate',
+  'adopt',
+  'foster',
+  'inherit',
+  'succeed',
+  'crown',
+  'depose',
+  'betray',
+  'reconcile',
+  'befriend',
+  'quarrel',
+  'feud',
+  'avenge',
+  'mourn',
+  'celebrate',
+  'host',
+  'serve_food',
+  'compete',
+  'score',
+  'win',
+  'lose',
+  'perform',
+  'honour',
+  'shame',
+  'begin',
+  'spread',
+  'peak',
+  'wane',
+  'end',
+  'erupt',
+  'quake',
+  'flood_land',
+  'burn_land',
+  'blow',
+  'freeze',
+  'dry',
+  'bloom',
+  'migrate',
+  'die_out',
+  'appear',
+  'collide',
+  'collapse_body',
+  'open',
+  'connect',
+  'intrude',
+  'copy_mind',
+  'save_mind',
+  'restore_mind',
+  'transfer_mind',
+  'merge_minds',
+  'awaken',
+  'link_minds',
+  'unlink',
+]
+export const stepLocusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepLocus']
+> = [
+  'body_part',
+  'vehicle_section',
+  'structure_section',
+  'room',
+  'district',
+  'settlement',
+  'region',
+  'route',
+  'sea',
+  'sky',
+  'orbit',
+  'realm',
+  'network_node',
+  'none',
+]
+export const stepOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepOutcome']
+> = [
+  'success',
+  'partial',
+  'failure',
+  'missed',
+  'blocked',
+  'parried',
+  'dodged',
+  'glanced',
+  'absorbed',
+  'wounded',
+  'broken',
+  'severed',
+  'downed',
+  'killed',
+  'damaged',
+  'disabled',
+  'destroyed',
+  'captured',
+  'escaped',
+  'yielded',
+  'accepted',
+  'refused',
+  'delayed',
+  'interrupted',
+  'reversed',
+  'no_effect',
+]
+export const stepStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepState']
+> = [
+  'prone',
+  'risen',
+  'disarmed',
+  'stunned',
+  'unconscious',
+  'bleeding',
+  'burning',
+  'blinded',
+  'restrained',
+  'fleeing',
+  'yielded',
+  'captured',
+  'freed',
+  'hidden',
+  'revealed',
+  'exhausted',
+  'possessed',
+  'flooding',
+  'breached',
+  'depressurised',
+  'adrift',
+  'disabled',
+  'aground',
+  'grounded',
+  'shielded',
+  'unshielded',
+  'cut_off',
+  'encircled',
+  'routed',
+  'rallied',
+]
 export const storyletIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StoryletId']
 > = [
@@ -172750,7 +175371,7 @@ export const tenetKindValues: ReadonlyArray<
   'sacred_suffering',
   'purity_of_body',
   'ancestor_veneration',
-  'human_sacrifice',
+  'sacrifice_of_people',
   'animal_sacrifice',
   'celibate_clergy',
   'proselytism',
@@ -174078,9 +176699,6 @@ export const verdictValues: ReadonlyArray<
 export const verdictChoiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VerdictChoice']
 > = ['accept', 'reject']
-export const vesselArmamentValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['VesselArmament']
-> = ['rams', 'missiles', 'siege_engines', 'rites']
 export const vesselStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VesselStats']['kind']
 > = ['vessel']
@@ -174236,6 +176854,9 @@ export const willCauseValues: ReadonlyArray<
   'oath',
   'exceeding',
 ]
+export const witnessModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WitnessMode']
+> = ['saw', 'heard', 'took_part', 'was_told']
 export const wordKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WordKind']
 > = [

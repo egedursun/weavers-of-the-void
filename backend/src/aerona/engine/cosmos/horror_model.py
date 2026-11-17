@@ -16,10 +16,10 @@ from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.horror import HorrorEffect, HorrorScope, HorrorSense, HorrorSource, HorrorTarget
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import DARK_STAR_TYPES
@@ -33,6 +33,7 @@ from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.queries import canon, subtree
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, shift_stat, stat_or
+from aerona.engine.recording.record import record
 
 PERCEIVERS = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.CULT, EntityType.FACTION})
 ERASURE_GUARDS = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
@@ -102,10 +103,6 @@ HORROR_PRESETS: Mapping[str, HorrorSpec] = {
     "light_suppressed": HorrorSpec(HorrorTarget.LIGHT, HorrorEffect.SUPPRESS, HorrorScope.WORLD, HorrorSense.SEEN, HorrorSource.UNKNOWN),
     "minds_revealed": HorrorSpec(HorrorTarget.MINDS, HorrorEffect.REVEAL, HorrorScope.PERSON, HorrorSense.HEARD, HorrorSource.OUTER_BEING),
 }
-
-
-def words(value: str) -> str:
-    return value.replace("_", " ")
 
 
 async def subject_of(ctx: TickContext, world: WorldRow, scope: HorrorScope) -> EntityRow | None:
@@ -347,12 +344,9 @@ async def perceived(ctx: TickContext, world: WorldRow, row: HorrorEventRow) -> i
     return len(touched)
 
 
-def told(world: WorldRow, row: HorrorEventRow, outcome: str | None, felt: int) -> str:
-    named = f" ({row.name})" if row.name else ""
-    how = f"{words(row.sense.value)}; source: {words(row.source.value)}"
-    lead = f"A horror{named} {EFFECT_PAST[row.effect]} the {words(row.target.value)} of {world.name} ({how})"
+def told_result(outcome: str | None, felt: int) -> str:
     parts = [part for part in (outcome, f"{several(felt, 'one', 'ones')} who perceived it lost sanity" if felt else None) if part]
-    return f"{lead}: {'; '.join(parts)}." if parts else f"{lead}."
+    return f": {'; '.join(parts)}" if parts else ""
 
 
 async def raise_horror(ctx: TickContext, world: WorldRow, spec: HorrorSpec, *, source_node_id: int | None = None) -> HorrorEventRow:
@@ -384,10 +378,25 @@ async def unleash(ctx: TickContext, world: WorldRow, row: HorrorEventRow) -> str
     felt = await perceived(ctx, world, row)
     if row.leak and not held(world.id):
         world.leakage = max(0, min(PERCENT_MAX, world.leakage + row.leak))
-    text = told(world, row, outcome, felt)
-    key = f"horror.{row.target.value}.{row.effect.value}"
-    await ctx.chronicle(ChronicleKind.HORROR, text, template_key=key, world_id=world.id, feed_category=FeedCategory.LEAK)
-    return text
+    written = await record(
+        ctx,
+        f"horror.{row.target.value}.{row.effect.value}",
+        roles={IncidentRole.SUBJECT: world.id, IncidentRole.TARGET: row.subject_node_id, IncidentRole.ACTOR: row.source_node_id},
+        facts={
+            "title": f" ({row.name})" if row.name else "",
+            "effect": row.effect,
+            "deed": EFFECT_PAST[row.effect],
+            "target_kind": row.target,
+            "sense": row.sense,
+            "source": row.source,
+            "scope": row.scope,
+            "outcome": outcome,
+            "felt": felt,
+            "result": told_result(outcome, felt),
+        },
+        world_id=world.id,
+    )
+    return written.text
 
 
 async def horror_event(ctx: TickContext, spec: HorrorSpec, world: WorldRow, *, source_node_id: int | None = None) -> str:

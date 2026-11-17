@@ -1,11 +1,11 @@
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.catalog.structures import HOLY_HOUSES
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -13,9 +13,9 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, TributeRow, WarRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.integrity import HarmForce
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.body.afflictions import desecration_curse
 from aerona.engine.context import TickContext
@@ -24,7 +24,6 @@ from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mythic.servitors import turned_back
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -32,6 +31,8 @@ from aerona.engine.primitives.population_history import loss_pct, median_of, pop
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire, retire_in
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.recording.record import FactInput, record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import end_tribute
 from aerona.engine.structures.damage import harm, ruin_profile
 from aerona.engine.structures.readers import kind_of
@@ -108,15 +109,21 @@ async def abandon_declining(ctx: TickContext, history: PopulationHistory, atlas:
         migrants = round_half_up(now * cycles.abandon_migration_pct / 100)
         remains = await turn_to_ruin(ctx, settlement, f"its people dwindled from {before} to {now} and grew poor; the last families left it")
         by_world[settlement.world_id].remove(now)
-        moved = ""
         if target is not None and migrants > 0:
             low, high = headcount_bounds(ctx.rules, target)
             set_stats(target, population=clamp_int((stat(target, "population") or 0) + migrants, low, high))
             await connect(ctx.session, settlement.id, target.id, BondKind.MIGRATED_TO, ctx.epoch, description="migration from the ruin")
-            moved = f"; its last {several(migrants, 'person', 'people')} moved to {target.name}"
-        left = f" Left behind: {', '.join(item.name for item in remains)}." if remains else ""
-        ids = [settlement.id, *([target.id] if target is not None else []), *(item.id for item in remains)]
-        await note(ctx, f"{settlement.name} dwindled and emptied, and fell to ruin{moved}.{left}", key="life_cycles.abandoned", ids=ids)
+        await record_incident(
+            ctx,
+            "life_cycles.abandoned",
+            roles={
+                IncidentRole.SUBJECT: settlement.id,
+                IncidentRole.DESTINATION: target.id if target is not None and migrants > 0 else None,
+                IncidentRole.PRODUCT: [item.id for item in remains],
+            },
+            facts={"migrants": migrants if target is not None else 0},
+            place=settlement.id,
+        )
         abandoned += 1
     ctx.count("abandoned", abandoned)
     return abandoned
@@ -127,7 +134,7 @@ async def _flag_epoch(ctx: TickContext, entity_id: int, flag: EntityFlag) -> int
     return row.epoch if row is not None else None
 
 
-async def collapse(ctx: TickContext, community: EntityRow, reason: str) -> str:
+async def collapse(ctx: TickContext, community: EntityRow, facts: Mapping[str, FactInput]) -> str:
     cycles = ctx.rules.life_cycles
     bonds = BondRepository(ctx.session)
     broken: list[EntityRow] = []
@@ -150,11 +157,17 @@ async def collapse(ctx: TickContext, community: EntityRow, reason: str) -> str:
             shift_stat(faction, "sway", -cycles.collapse_sway_loss)
     await remove_flag(ctx.session, community.id, EntityFlag.DISSOLVED)
     await add_flag(ctx.session, community.id, EntityFlag.DISSOLVED, ctx.epoch)
-    broke = f" {', '.join(subject.name for subject in broken)} broke away from its rule." if broken else ""
-    paid = " Those who paid it tribute stopped paying." if tributes else ""
-    text = f"{community.name} collapsed: {reason}.{broke}{paid}"
-    await note(ctx, text, key="life_cycles.collapse", ids=[community.id, *(subject.id for subject in broken), *(row.payer_entity_id for row in tributes)])
-    return text
+    written = await record_incident(
+        ctx,
+        "life_cycles.collapse",
+        roles={
+            IncidentRole.SUBJECT: community.id,
+            IncidentRole.SUCCESSOR: [subject.id for subject in broken],
+            IncidentRole.GIVER: [row.payer_entity_id for row in tributes],
+        },
+        facts={**facts, "broke_away": len(broken), "tributes_ended": len(tributes)},
+    )
+    return written.text
 
 
 async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
@@ -177,9 +190,7 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
             continue
         if not rng.chance(cycles.collapse_chance):
             continue
-        await collapse(
-            ctx, community, f"in {several(cycles.decline_epochs, 'epoch', 'epochs')} its people fell from {before} to {now} and its stores ran empty"
-        )
+        await collapse(ctx, community, {"population_before": before, "population_after": now, "epochs": cycles.decline_epochs})
         collapsed += 1
     ctx.count("collapsed", collapsed)
     return collapsed
@@ -188,7 +199,7 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
 async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: int | None = None, destroyer_id: int | None = None) -> None:
     holy = await kind_of(ctx.session, structure.id) in HOLY_HOUSES
     if holy and destroyer_id is not None and await turned_back(ctx, [structure.id, structure.location_id], f"raze.guard.{structure.id}.{ctx.epoch}"):
-        await note(ctx, f"A servitor turned back those who came to raze {structure.name}.", key="mythic.servitor_guarded", ids=[structure.id])
+        await record(ctx, "mythic.servitor_guarded", roles={IncidentRole.SUBJECT: structure.id})
         return
     await add_flag(ctx.session, structure.id, EntityFlag.RAZED, ctx.epoch)
     await ruin_profile(ctx.session, structure.id)
@@ -233,9 +244,12 @@ async def siege_wear(ctx: TickContext) -> int:
                 if remaining > 0:
                     continue
             await raze(ctx, structure, f"collapsed during {cause_name}", cause.id if cause is not None else None)
-            wonder = "; one of the wonders of the world is now rubble" if structure.id in wonders else ""
-            ids = [*([cause.id] if cause is not None else []), structure.id]
-            await note(ctx, f"{structure.name} fell during {cause_name}{wonder}.", key="life_cycles.siege_razed", ids=ids, feed=FeedCategory.WAR)
+            await record_incident(
+                ctx,
+                "life_cycles.siege_razed",
+                roles={IncidentRole.TARGET: structure.id, IncidentRole.ACTOR: cause.id if cause is not None else None},
+                facts={"wonder": int(structure.id in wonders)},
+            )
             razed += 1
     ctx.count("siege_razed", razed)
     return razed
@@ -257,8 +271,15 @@ async def conquest_looting(ctx: TickContext) -> int:
             if await kind_of(ctx.session, structure.id) in HOLY_HOUSES:
                 await loot_temple(ctx, structure, victor)
             await raze(ctx, structure, f"looted and razed in the conquest by {victor.name}", war.event_entity_id, victor.id)
-            text = f"When {victor.name} conquered {loser.name}, its soldiers looted the wonder {structure.name} and tore it down."
-            await note(ctx, text, key="life_cycles.looted", ids=[victor.id, loser.id, structure.id], feed=FeedCategory.WAR)
+            await record_incident(
+                ctx,
+                "life_cycles.looted",
+                roles={
+                    IncidentRole.ACTOR: victor.id,
+                    IncidentRole.VICTIM: loser.id,
+                    IncidentRole.TARGET: structure.id,
+                },
+            )
             looted += 1
     ctx.count("looted", looted)
     return looted
@@ -278,11 +299,11 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
         empty = region.id in ruined and region.id not in populated
         if empty and region.id not in desolate:
             await add_flag(session, region.id, EntityFlag.DESOLATE, ctx.epoch)
-            await note(ctx, f"{region.name} became desolate: no one lives there any more, only the ruins stand.", key="life_cycles.desolate", ids=[region.id])
+            await record_incident(ctx, "life_cycles.desolate", roles={IncidentRole.SUBJECT: region.id}, place=region.id)
             changed += 1
         elif not empty and region.id in desolate:
             await remove_flag(session, region.id, EntityFlag.DESOLATE)
-            await note(ctx, f"{region.name} was settled again; its desolation is over.", key="life_cycles.resettled", ids=[region.id])
+            await record_incident(ctx, "life_cycles.resettled", roles={IncidentRole.SUBJECT: region.id}, place=region.id)
             changed += 1
     ctx.count("desolation_changes", changed)
     return changed
@@ -301,7 +322,6 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "table.currencies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.map_snapshots",
     "table.node_materials",
     "table.nodes",
@@ -322,7 +342,6 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "table.currencies",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -342,7 +361,7 @@ async def dissolve_community(ctx: TickContext, community_id: int, reason: str) -
     community = await living_entity(ctx.session, community_id)
     if community is None or community.entity_type not in COMMUNITY_TYPES:
         raise ValidationFailedError("Only a living community can collapse.")
-    await collapse(ctx, community, reason)
+    await collapse(ctx, community, {"reason": reason})
     return community
 
 
@@ -351,7 +370,7 @@ async def raze_structure(ctx: TickContext, structure_id: int, reason: str) -> En
     if structure is None or structure.entity_type is not EntityType.STRUCTURE:
         raise ValidationFailedError("Only a standing structure can be razed.")
     await raze(ctx, structure, reason)
-    await note(ctx, f"{structure.name} was razed: {reason}.", key="life_cycles.razed_by_hand", ids=[structure.id], kind=ChronicleKind.WORLD)
+    await record_incident(ctx, "life_cycles.razed_by_hand", roles={IncidentRole.TARGET: structure.id}, facts={"reason": reason})
     return structure
 
 

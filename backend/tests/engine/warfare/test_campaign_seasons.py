@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.weather import WEATHER
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
-from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import PlaceCover, ScarKind, WaterSource, WeatherKind
@@ -65,5 +65,5 @@ async def test_wars_live_through_campaign_seasons(session: AsyncSession, world_i
     assert all(battle.season_name is not None and battle.year is not None for battle in battles)
     ground = await session.get(RegionEnvironmentRow, region.id)
     assert ground is not None and ground.scars.get(ScarKind.BATTLEFIELD.value, 0) > 0
-    texts = [row.text for row in await session.scalars(select(ChronicleRow))]
-    assert any(" of " in text and "in the " in text for text in texts)
+    fought = list(await session.scalars(select(IncidentRow).where(IncidentRow.kind.startswith("war.battle."))))
+    assert fought and all(row.year is not None and row.season is not None for row in fought)

@@ -408,3 +408,14 @@ class EffectTarget(StrEnum):
     TRAIN = "train"
     TREASURY = "treasury"
     UNREST = "unrest"
+
+
+class AbandonCause(StrEnum):
+    BUILDERS_GONE = "builders_gone"
+    STOOD_STILL = "stood_still"
+    CALLED_AWAY = "called_away"
+
+
+class RuinCause(StrEnum):
+    UNKEPT = "unkept"
+    CRUMBLED = "crumbled"

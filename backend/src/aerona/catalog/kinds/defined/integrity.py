@@ -217,7 +217,7 @@ SECTION_HAZARD = total(
         ),
         SectionHazard.FIRE: Defined(
             "Catches fire",
-            checked_by=("engine.structures.integrity.strike_rows", "engine.vehicles.sections.hazard"),
+            checked_by=("engine.structures.integrity.strike_rows", "engine.vehicles.sections.HAZARD_STEPS", "engine.vehicles.sections.hazard"),
             used_by=(
                 "catalog.structure_sections.ARENA",
                 "catalog.structure_sections.BARRACKS",
@@ -250,7 +250,7 @@ SECTION_HAZARD = total(
         ),
         SectionHazard.EXPLOSION: Defined(
             "Explodes",
-            checked_by=("engine.structures.integrity.strike_rows", "engine.vehicles.sections.hazard"),
+            checked_by=("engine.structures.integrity.strike_rows", "engine.vehicles.sections.HAZARD_STEPS", "engine.vehicles.sections.hazard"),
             used_by=(
                 "catalog.structure_sections.COLLECTOR",
                 "catalog.structure_sections.COSMIC_BEACON",
@@ -266,12 +266,17 @@ SECTION_HAZARD = total(
         ),
         SectionHazard.FLOODING: Defined(
             "Floods",
-            checked_by=("engine.vehicles.sections.hazard",),
+            checked_by=("engine.vehicles.sections.HAZARD_STEPS", "engine.vehicles.sections.hazard"),
             used_by=("catalog.structure_sections.DAM", "catalog.structure_sections.TUNNEL", "catalog.structure_sections.WATERWORK", "catalog.vehicles.LAYOUTS"),
         ),
         SectionHazard.BREACH: Defined(
             "Breaches",
-            checked_by=("engine.vehicles.sections.chain", "engine.vehicles.sections.hazard", "engine.vehicles.wrecks.wreck_cause"),
+            checked_by=(
+                "engine.vehicles.sections.HAZARD_STEPS",
+                "engine.vehicles.sections.chain",
+                "engine.vehicles.sections.hazard",
+                "engine.vehicles.wrecks.wreck_cause",
+            ),
             used_by=(
                 "catalog.structure_sections.HABITAT",
                 "catalog.structure_sections.RING",
@@ -281,13 +286,15 @@ SECTION_HAZARD = total(
         ),
         SectionHazard.CRASH: Defined(
             "Brings it down",
-            checked_by=("engine.vehicles.sections.hazard", "engine.vehicles.wrecks.wreck_cause"),
+            checked_by=("engine.vehicles.sections.HAZARD_STEPS", "engine.vehicles.sections.hazard", "engine.vehicles.wrecks.wreck_cause"),
             used_by=("catalog.vehicles.LAYOUTS", "engine.vehicles.sections.LOST_HAZARDS"),
         ),
-        SectionHazard.PANIC: Defined("Panics", checked_by=("engine.vehicles.sections.hazard",), used_by=("catalog.vehicles.LAYOUTS",)),
+        SectionHazard.PANIC: Defined(
+            "Panics", checked_by=("engine.vehicles.sections.HAZARD_STEPS", "engine.vehicles.sections.hazard"), used_by=("catalog.vehicles.LAYOUTS",)
+        ),
         SectionHazard.COLLAPSE: Defined(
             "Collapses",
-            checked_by=("engine.structures.integrity.strike_rows",),
+            checked_by=("engine.structures.integrity.strike_rows", "engine.vehicles.sections.HAZARD_STEPS"),
             used_by=(
                 "catalog.structure_sections.ARENA",
                 "catalog.structure_sections.BARRACKS",

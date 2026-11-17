@@ -10,8 +10,8 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState, StructureKind
@@ -21,12 +21,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import set_skill, skill_level
 from aerona.engine.mortal.standing import add_infamy
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import stock
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 FED = 80
 STARVED = 20
@@ -151,14 +151,22 @@ async def escape(ctx: TickContext, row: PrisonerRow, mortal: EntityRow, structur
             )
         )
     tally.escaped += 1
-    await note(ctx, f"{mortal.name} broke out of prison and was declared an outlaw.", key="prison.escaped", ids=[mortal.id], kind=ChronicleKind.CIVILIZATION)
+    await record(
+        ctx, "prison.escaped", roles={IncidentRole.ACTOR: mortal.id}, facts={"prison": structure.structure_entity_id}, place=structure.structure_entity_id
+    )
 
 
 async def release(ctx: TickContext, row: PrisonerRow, mortal: EntityRow, tally: PrisonTally) -> None:
     await ctx.session.delete(row)
     await add_infamy(ctx.session, mortal.id, ctx.rules.prisons.stigma, ctx.epoch, rules=ctx.rules)
     tally.released += 1
-    await note(ctx, f"{mortal.name} served their term and was let out of prison.", key="prison.released", ids=[mortal.id], kind=ChronicleKind.CIVILIZATION)
+    await record(
+        ctx,
+        "prison.released",
+        roles={IncidentRole.SUBJECT: mortal.id},
+        facts={"prison": row.prison_entity_id, "stigma": ctx.rules.prisons.stigma},
+        place=row.prison_entity_id,
+    )
 
 
 async def keep_prison(ctx: TickContext, structure: StructureProfileRow, tally: PrisonTally) -> None:

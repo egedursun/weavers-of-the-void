@@ -9,6 +9,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.variant_control import set_variant
 from aerona.engine.body.variants import HOLDER_TYPES
 from aerona.engine.primitives.queries import living_entity
@@ -18,7 +19,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -50,8 +50,11 @@ async def shape_biology(call: SonCall, args: ShapeBiologyInput) -> str:
     call.spend_essence(cost)
     call.target(holder.id)
     told = args.variant.value.replace("_", " ")
-    await call.chronicle(
-        ChronicleKind.DIVINE_SIGN, lines.SHAPE_BIOLOGY, entity_ids=[holder.id], son=call.son.name, holder=holder.name, variant=told, reason=args.reason
+    await call.record(
+        "tools.son.shape_biology",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: holder.id},
+        facts={"variant": str(told), "reason": args.reason},
+        kind=ChronicleKind.DIVINE_SIGN,
     )
     return result(SonResult.BIOLOGY_SHAPED, holder=holder.name, variant=told, gain=args.gain)
 

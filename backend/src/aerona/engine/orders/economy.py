@@ -6,8 +6,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.core.total import total
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -21,6 +21,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.orders import (
     AllocationMode,
     Compensation,
@@ -31,12 +32,12 @@ from aerona.domain.enums.orders import (
     TransitionStage,
 )
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.naming import seed_of
@@ -44,6 +45,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.structures.damage import open_siege
 
 C = SocialClass
@@ -220,7 +222,7 @@ async def collapse(ctx: TickContext, realm: EntityRow, towns: list[int], tally: 
         if town is not None and not held(town_id):
             shift_stat(town, "prosperity", -ctx.rules.economic_orders.centre_collapse_spread_pct // 10, ctx.rules.society.default_stat)
     tally.collapses += 1
-    await note(ctx, f"The centre of {realm.name} fell, and the goods it gave out stopped.", key="economy.centre_collapsed", ids=[realm.id])
+    await record(ctx, "economy.centre_collapsed", roles={IncidentRole.SUBJECT: realm.id, IncidentRole.VICTIM: towns}, facts={"towns": len(towns)})
 
 
 async def gather(ctx: TickContext, centre: int, towns: list[int], share: int, *, loss: int) -> int:
@@ -240,10 +242,10 @@ async def gather(ctx: TickContext, centre: int, towns: list[int], share: int, *,
 async def give_out(ctx: TickContext, centre: int, towns: list[int], amount: int) -> int:
     people = {town_id: (await ctx.session.get(EntityRow, town_id)) for town_id in towns}
     weights = {town_id: max(1, stat_or(row, "population", 1)) for town_id, row in people.items() if row is not None and not held(town_id)}
-    total = sum(weights.values())
+    summed = sum(weights.values())
     given = 0
     for town_id, weight in sorted(weights.items()):
-        part = amount * weight // max(1, total)
+        part = amount * weight // max(1, summed)
         if part > 0 and town_id != centre and await shift_stock(ctx.session, ctx.rules, centre, Commodity.FOOD, -part, epoch=ctx.epoch, flow=GoodsFlow.AID):
             await shift_stock(ctx.session, ctx.rules, town_id, Commodity.FOOD, part, epoch=ctx.epoch, flow=GoodsFlow.AID)
             given += part
@@ -288,7 +290,13 @@ async def run_flows(ctx: TickContext, order: EconomicOrderRow, realm: PolityProf
             if town is not None and not held(town_id):
                 shift_stat(town, "prosperity", -max(1, gap // 10), ctx.rules.society.default_stat)
         tally.shortfalls += 1
-        await note(ctx, f"The plans of {entity.name} fell short of what its towns needed.", key="economy.plan_shortfall", ids=[entity.id])
+        await record(
+            ctx,
+            "economy.plan_shortfall",
+            roles={IncidentRole.SUBJECT: entity.id, IncidentRole.VICTIM: towns},
+            facts={"planning": order.planning_capacity, "floor": table.command_efficiency_floor},
+            terms=(Term("economic_orders.command_efficiency_floor", table.command_efficiency_floor), Term("order.planning_capacity", -order.planning_capacity)),
+        )
 
 
 async def keep_orders(ctx: TickContext, tally: OrderTally) -> None:
@@ -383,8 +391,16 @@ async def flee(ctx: TickContext, row: OrderTransitionRow, realm: EntityRow, lose
     if refuge is None:
         return False
     loser.location_id = int(refuge)
-    await note(
-        ctx, f"{loser.name} fled {realm.name} rather than lose more to its change of order.", key="economy.transition_resisted", ids=[loser.id, realm.id]
+    await record(
+        ctx,
+        "economy.transition_fled",
+        roles={IncidentRole.SUBJECT: loser.id, IncidentRole.ORIGIN: realm.id, IncidentRole.DESTINATION: int(refuge)},
+        facts={"grievance": grievance},
+        steps=(
+            StepDraft(StepAction.LEAVE, actor=loser.id),
+            StepDraft(StepAction.ARRIVE, actor=loser.id, locus_kind=StepLocus.SETTLEMENT, locus_node=int(refuge)),
+        ),
+        destination=int(refuge),
     )
     return True
 
@@ -412,7 +428,12 @@ async def transfer_holdings(ctx: TickContext, row: OrderTransitionRow, realm: En
     row.transferred += moved
     tally.transferred += moved
     if moved:
-        await note(ctx, f"{realm.name} moved {several(moved, 'holding', 'holdings')} to new hands.", key="economy.holding_transferred", ids=[realm.id])
+        await record(
+            ctx,
+            "economy.holding_transferred",
+            roles={IncidentRole.AUTHORITY: realm.id},
+            facts={"moved": moved, "resistance": row.resistance, "compensation": row.compensation},
+        )
 
 
 async def finish(ctx: TickContext, row: OrderTransitionRow, realm: EntityRow, tally: OrderTally) -> None:
@@ -426,7 +447,12 @@ async def finish(ctx: TickContext, row: OrderTransitionRow, realm: EntityRow, ta
         order.since_epoch = ctx.epoch
     row.stage, row.ended_epoch = TransitionStage.DONE, ctx.epoch
     tally.done += 1
-    await note(ctx, f"{realm.name} completed its change of economic order.", key="economy.transition_done", ids=[realm.id])
+    await record(
+        ctx,
+        "economy.transition_done",
+        roles={IncidentRole.AUTHORITY: realm.id},
+        facts={"transition": row.kind, "transferred": row.transferred, "sector": row.sector},
+    )
 
 
 async def advance(ctx: TickContext, row: OrderTransitionRow, tally: OrderTally) -> None:
@@ -440,7 +466,7 @@ async def advance(ctx: TickContext, row: OrderTransitionRow, tally: OrderTally) 
     if row.stage is TransitionStage.PROCLAIMED:
         row.stage = TransitionStage.TRANSFERRING
         tally.stages += 1
-        await note(ctx, f"{realm.name} began to move holdings for its change of economic order.", key="economy.transition_stage", ids=[realm.id])
+        await record(ctx, "economy.transition_stage", roles={IncidentRole.AUTHORITY: realm.id}, facts={"transition": row.kind, "stage": row.stage})
         return
     await transfer_holdings(ctx, row, realm, tally)
     if row.resistance >= table.fail_from:
@@ -449,10 +475,15 @@ async def advance(ctx: TickContext, row: OrderTransitionRow, tally: OrderTally) 
         if profile is not None and "stability" not in profile.locked:
             profile.stability = clamp_int(profile.stability - table.failure_stability, 0, PERCENT)
         tally.failed += 1
-        await note(ctx, f"The change of economic order in {realm.name} broke against those who lost by it.", key="economy.transition_failed", ids=[realm.id])
+        await record(
+            ctx,
+            "economy.transition_failed",
+            roles={IncidentRole.AUTHORITY: realm.id},
+            facts={"transition": row.kind, "resistance": row.resistance, "stability_lost": table.failure_stability},
+        )
         return
     if row.resistance >= table.fail_from // 2:
-        await note(ctx, f"Those who lost holdings in {realm.name} resisted its change of order.", key="economy.transition_resisted", ids=[realm.id])
+        await record(ctx, "economy.transition_resisted", roles={IncidentRole.AUTHORITY: realm.id}, facts={"transition": row.kind, "resistance": row.resistance})
     if row.transferred >= table.transfers_to_finish or not await holdings_in(ctx, await towns_of_realm(ctx, realm.id)):
         await finish(ctx, row, realm, tally)
 
@@ -519,8 +550,13 @@ async def begin_transition(ctx: TickContext, polity_id: int, sector: str | None,
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    realm = await ctx.session.get(EntityRow, polity_id)
-    await note(ctx, f"{realm.name if realm else 'A realm'} proclaimed a change of its economic order.", key="economy.transition_begun", ids=[polity_id])
+    await record(
+        ctx,
+        "economy.transition_begun",
+        roles={IncidentRole.AUTHORITY: polity_id},
+        facts={"transition": row.kind, "compensation": row.compensation, "sector": row.sector},
+        steps=(StepDraft(StepAction.PROCLAIM, actor=polity_id),),
+    )
     return row
 
 
@@ -535,8 +571,7 @@ async def set_order(ctx: TickContext, polity_id: int, sector: str | None, axes: 
     order.since_epoch = ctx.epoch
     order.kind_id = await kind_matching(ctx, axes_of(order))
     await ctx.session.flush()
-    realm = await ctx.session.get(EntityRow, polity_id)
-    await note(ctx, f"{realm.name if realm else 'A realm'} set its economic order anew.", key="economy.order_set", ids=[polity_id])
+    await record(ctx, "economy.order_set", roles={IncidentRole.AUTHORITY: polity_id}, facts={"sector": order.sector, "axes": len(axes)})
     return order
 
 

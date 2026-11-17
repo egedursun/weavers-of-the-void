@@ -20,6 +20,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
@@ -29,6 +30,7 @@ from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.gods.stats import Trait, headcount_floor, headcount_trait, set_trait, trait, trait_or
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.queries import top_region
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 PAYMENT_TRAITS = (Trait.WEALTH, Trait.PROSPERITY, Trait.CRAFT)
@@ -178,7 +180,7 @@ async def resurrection_rite(ctx: TickContext, worshipper: EntityRow, son: SonRow
         await mortal_dies(
             ctx, chosen, god_lines.RITE_SACRIFICE_REASON.format(son=son.name), None if chosen.id == worshipper.id else worshipper.id, harm=HarmCause.SACRIFICE
         )
-        await judged(ctx, worshipper.id, chosen.id, ActKind.HUMAN_SACRIFICE, note=chosen.name)
+        await judged(ctx, worshipper.id, chosen.id, ActKind.SACRIFICE_OF_PEOPLE, note=chosen.name)
         contribution, cost = death.self_sacrifice_devotion, god_lines.RITE_COST_LIFE.format(victim=chosen.name)
     corpse = await ctx.session.get(EntityRow, son.corpse_entity_id) if son.corpse_entity_id is not None else None
     worshipper_region = await top_region(ctx.session, worshipper)
@@ -188,16 +190,20 @@ async def resurrection_rite(ctx: TickContext, worshipper: EntityRow, son: SonRow
         contribution = round(contribution * death.pilgrimage_multiplier_pct / PERCENT)
     order = await add_devotion(ctx, son, contribution, worshipper)
     devotion = trait_or(order, Trait.DEVOTION, 0)
-    line = god_lines.RITE
-    text = line.render(
-        worshipper=worshipper.name,
-        kind=god_lines.RITE_KIND_NAMES[kind.value],
-        son=son.name,
-        cost=cost,
-        pilgrimage=god_lines.RITE_PILGRIMAGE if pilgrimage else "",
-        devotion=devotion,
-    )
-    await ctx.chronicle(ChronicleKind.RESURRECTION, text, template_key=line.key, entity_ids=[worshipper.id, order.id])
+    text = (
+        await record(
+            ctx,
+            "gods.death.rite",
+            roles={IncidentRole.SUBJECT: [worshipper.id, order.id], IncidentRole.ACTOR: son.id},
+            facts={
+                "kind": str(god_lines.RITE_KIND_NAMES[kind.value]),
+                "cost": cost,
+                "pilgrimage": str(god_lines.RITE_PILGRIMAGE if pilgrimage else ""),
+                "devotion": devotion,
+            },
+            kind=ChronicleKind.RESURRECTION,
+        )
+    ).text
     ctx.count("rites")
     return DevotionResult(contribution, devotion, order.id, text)
 
@@ -252,16 +258,21 @@ async def sibling_scheme(ctx: TickContext, sibling: SonRow, son: SonRow, kind: S
     devotion = trait_or(order, Trait.DEVOTION, 0) if order is not None else 0
     if contribution:
         await SonRepository(ctx.session).change_relation(sibling.id, son.id, death.sibling_scheme_relation_gain, god_lines.SCHEME_RELATION_NOTE)
-    line = god_lines.SCHEME
-    text = line.render(
-        sibling=sibling.name,
-        kind=god_lines.SCHEME_KIND_NAMES[kind.value],
-        son=son.name,
-        cost=cost,
-        extra=extra,
-        devotion=god_lines.SCHEME_DEVOTION.format(devotion=devotion) if order is not None else "",
-    )
-    await ctx.chronicle(ChronicleKind.RESURRECTION, text, template_key=line.key, entity_ids=[order.id] if order is not None else [], son_id=sibling.id)
+    text = (
+        await record(
+            ctx,
+            "gods.death.scheme",
+            roles={IncidentRole.RECEIVER: sibling.id, IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [*([order.id] if order is not None else [])]},
+            facts={
+                "kind": str(god_lines.SCHEME_KIND_NAMES[kind.value]),
+                "cost": cost,
+                "extra": str(extra),
+                "devotion": str(god_lines.SCHEME_DEVOTION.format(devotion=devotion) if order is not None else ""),
+            },
+            kind=ChronicleKind.RESURRECTION,
+            son_id=sibling.id,
+        )
+    ).text
     ctx.count("schemes")
     await ctx.session.flush()
     return DevotionResult(contribution, devotion, order.id if order is not None else None, text, slept)
@@ -286,9 +297,16 @@ async def hinder_return(ctx: TickContext, sibling: SonRow, son: SonRow) -> Devot
                 BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.HINDERED_ENEMY.format(son=son.name), war_cause=WarCause.SCHISM)
             )
     await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.hinder_return_devotion_loss / 2, god_lines.HINDERED_NOTE)
-    line = god_lines.HINDERED
-    text = line.render(sibling=sibling.name, son=son.name, cost=cost, loss=death.hinder_return_devotion_loss)
-    await ctx.chronicle(ChronicleKind.RESURRECTION, text, template_key=line.key, entity_ids=[order.id for order in orders], son_id=sibling.id)
+    text = (
+        await record(
+            ctx,
+            "gods.death.return_hindered",
+            roles={IncidentRole.RECEIVER: sibling.id, IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: [*([order.id for order in orders])]},
+            facts={"cost": cost, "loss": death.hinder_return_devotion_loss},
+            kind=ChronicleKind.RESURRECTION,
+            son_id=sibling.id,
+        )
+    ).text
     ctx.count("returns_hindered")
     await ctx.session.flush()
     return DevotionResult(-death.hinder_return_devotion_loss, max([trait_or(order, Trait.DEVOTION, 0) for order in orders], default=0), None, text)

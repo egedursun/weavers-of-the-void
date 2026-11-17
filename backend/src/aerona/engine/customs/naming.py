@@ -11,6 +11,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.customs import NameForm, NamingPattern
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.intrigue import TrueNameCause
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -95,7 +96,7 @@ async def rename_for(ctx: TickContext, namer: Namer, mortal: EntityRow, form: Na
     await give(ctx, mortal, form, name, tally)
     true = await ctx.session.get(TrueNameRow, mortal.id)
     if true is not None and "name" not in (true.locked or []):
-        await rename(ctx, namer, true, cause=form.value, name=name)
+        await rename(ctx, namer, true, cause=TrueNameCause.NAME_FORM, name=name, form=form)
     tally.renamed += 1
 
 

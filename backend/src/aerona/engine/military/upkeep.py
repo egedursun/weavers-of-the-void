@@ -5,9 +5,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, MercenaryContractRow, OccupationRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.military import ContractStatus, Stance
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
@@ -22,6 +23,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import declare_war, ongoing_wars, raise_army, soldier_count
 from aerona.engine.services.war_geography import Neighbourhood
@@ -127,12 +129,12 @@ async def hire(
     )
     ctx.session.add(contract)
     await ctx.session.flush()
-    await ctx.chronicle(
-        ChronicleKind.WAR,
-        f"{employer.name} hired {company.name} by contract; {army.name} now marches for pay.",
-        template_key="war.mercenaries_hired",
-        entity_ids=(employer.id, company.id, army.id),
-        feed_category=FeedCategory.WAR,
+    await record(
+        ctx,
+        "war.mercenaries_hired",
+        roles={IncidentRole.ACTOR: employer.id, IncidentRole.RECEIVER: company.id, IncidentRole.INSTRUMENT: army.id},
+        facts={"wage": contract.pay_per_season},
+        steps=(StepDraft(StepAction.HIRE, actor=employer.id, target=company.id, amount=contract.pay_per_season, unit=FactUnit.COIN),),
     )
     return contract
 

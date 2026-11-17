@@ -19,17 +19,18 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, RiftState
 from aerona.domain.enums.divine import OuterHunger
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.outer import IncursionStage, OuterFate, OuterGoal, OuterPlanState, OuterPrice, OuterRelation, OuterSealKind
 from aerona.domain.enums.powers import PowerOrigin, PowerState
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.outer import found_outer_cult, outer_profile
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import FactInput, record
 
 GOAL_TEXT: Mapping[OuterGoal, str] = total(
     OuterGoal,
@@ -55,8 +56,8 @@ HUNGER_TECHNIQUE: Mapping[OuterHunger, SpellTechnique] = total(
 STAGE_ORDER = (IncursionStage.PROBING, IncursionStage.BREACH, IncursionStage.MANIFESTATION)
 
 
-async def tell(ctx: TickContext, being: EntityRow, text: str, key: str) -> None:
-    await note(ctx, text, key=key, ids=[being.id], kind=ChronicleKind.OUTER_BEING, world_id=being.world_id)
+async def tell(ctx: TickContext, being: EntityRow, key: str, facts: Mapping[str, FactInput] | None = None) -> None:
+    await record(ctx, key, roles={IncidentRole.SUBJECT: being.id}, facts=facts, kind=ChronicleKind.OUTER_BEING, world_id=being.world_id)
 
 
 async def living_beings(ctx: TickContext) -> list[EntityRow]:
@@ -115,7 +116,7 @@ async def show_sign(ctx: TickContext, being: EntityRow, plan: OuterPlanRow) -> N
     if world is not None and not held(world.id):
         world.leakage = clamp_percent(world.leakage + ctx.rules.outer_beings.sign_leak)
     plan.sign_epoch = ctx.epoch
-    await tell(ctx, being, f"Signs showed that {being.name} works {GOAL_TEXT[plan.goal]} (stage {plan.stage}).", "outer.sign")
+    await tell(ctx, being, "outer.sign", {"goal": plan.goal, "aim": GOAL_TEXT[plan.goal], "stage": plan.stage})
 
 
 Fulfil = Callable[[TickContext, EntityRow, OuterPlanRow], Awaitable[None]]
@@ -233,7 +234,7 @@ async def advance_plan(ctx: TickContext, being: EntityRow, profile: OuterBeingPr
     if plan.progress >= PERCENT and "state" not in plan.locked:
         await FULFIL[plan.goal](ctx, being, plan)
         plan.state = OuterPlanState.ACHIEVED
-        await tell(ctx, being, f"{being.name} achieved its aim {GOAL_TEXT[plan.goal]}.", "outer.plan_achieved")
+        await tell(ctx, being, "outer.plan_achieved", {"goal": plan.goal, "aim": GOAL_TEXT[plan.goal]})
         return True
     return False
 
@@ -249,9 +250,7 @@ async def open_incursion(ctx: TickContext, being: EntityRow, rift_id: int | None
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(
-        ctx, f"{being.name} began to press into the cosmos.", key="outer.incursion", ids=[being.id], kind=ChronicleKind.OUTER_BEING, world_id=being.world_id
-    )
+    await record(ctx, "outer.incursion", roles={IncidentRole.SUBJECT: being.id}, kind=ChronicleKind.OUTER_BEING, world_id=being.world_id)
     return row
 
 
@@ -295,7 +294,7 @@ async def press_incursions(ctx: TickContext) -> int:
             row.stage = stage_for(ctx, row.strength)
         if row.stage is IncursionStage.RECEDING:
             row.ended_epoch = ctx.epoch
-            await tell(ctx, being, f"{being.name} was driven back out of the cosmos.", "outer.incursion_ended")
+            await tell(ctx, being, "outer.incursion_ended")
             continue
         depth = STAGE_ORDER.index(row.stage) + 1
         land = await ctx.session.get(EntityRow, row.region_entity_id) if row.region_entity_id is not None else None
@@ -450,7 +449,7 @@ async def press_seals(ctx: TickContext, being: EntityRow, profile: OuterBeingPro
             seal.strength = max(0, seal.strength - table.seal_decay)
         if seal.strength < pressure and "strength" not in seal.locked:
             seal.broken_epoch = ctx.epoch
-            await tell(ctx, being, f"{being.name} broke the seal that held it and returned.", "outer.seal_broken")
+            await tell(ctx, being, "outer.seal_broken")
             continue
         standing = seal if standing is None or seal.kind is OuterSealKind.BANISH else standing
     if "fate" in profile.locked or profile.fate in {OuterFate.STARVED, OuterFate.DESTROYED}:
@@ -478,8 +477,7 @@ async def end_being(ctx: TickContext, being: EntityRow, profile: OuterBeingProfi
         await ctx.session.scalars(select(OuterIncursionRow).where(OuterIncursionRow.outer_entity_id == being.id, OuterIncursionRow.ended_epoch.is_(None)))
     ):
         incursion.stage, incursion.ended_epoch = IncursionStage.RECEDING, ctx.epoch
-    told = "starved, unfed and forgotten" if fate is OuterFate.STARVED else "was destroyed"
-    await tell(ctx, being, f"{being.name} {told}.", "outer.ended")
+    await tell(ctx, being, "outer.ended", {"fate": fate, "told": "starved, unfed and forgotten" if fate is OuterFate.STARVED else "was destroyed"})
 
 
 async def outer_agency(ctx: TickContext) -> int:

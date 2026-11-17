@@ -5,8 +5,8 @@ from aerona.catalog.estates import ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import EstatePrivilege
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.factions.estates import grant, revoke
 from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.polity.book import RealmBook
@@ -16,7 +16,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 PRIVILEGES = "privileges"
 
@@ -49,14 +48,10 @@ async def bargain_with_estate(call: MortalCall, args: BargainInput) -> str:
     estate = ESTATE_NAMES[row.social_class].lower()
     label = PRIVILEGE_LABELS[args.privilege].lower()
     call.target(row.faction_entity_id)
-    await call.chronicle(
-        ChronicleKind.CIVILIZATION,
-        lines.ESTATE_BARGAIN,
-        entity_ids=[call.me.id, row.faction_entity_id],
-        me=call.me.name,
-        deed=deed,
-        privilege=label,
-        estate=estate,
+    await call.record(
+        "tools.mortal.estate_granted" if args.grant else "tools.mortal.estate_revoked",
+        roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.RECEIVER: row.faction_entity_id},
+        facts={"privilege": args.privilege, "estate": row.social_class, "loyalty": row.loyalty},
     )
     return result(MortalResult.ESTATE_BARGAINED, deed=deed, privilege=label, estate=estate, loyalty=row.loyalty)
 

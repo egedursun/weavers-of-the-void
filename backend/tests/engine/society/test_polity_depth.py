@@ -10,7 +10,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import CrimeKind
-from aerona.domain.enums.polity import OathKind, OathStatus, OfficeKind
+from aerona.domain.enums.polity import HouseEnd, OathBreach, OathKind, OathStatus, OfficeKind
 from aerona.domain.enums.settlement import SizeTier, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import REVOLT_CAUSES
@@ -62,7 +62,7 @@ async def test_a_broken_oath_marks_the_swearer_and_its_recipient_remembers(realm
     vassal = await mortal(realm, "Brann")
     oath = await swear(ctx, vassal, OathKind.FEALTY, recipient_id=lord.id)
     assert await swear(ctx, vassal, OathKind.FEALTY, recipient_id=lord.id) is oath
-    await break_oath(ctx, oath, "turned against the hall")
+    await break_oath(ctx, oath, OathBreach.THRONE_SEIZED)
     assert oath.status is OathStatus.BROKEN and oath.ended_epoch == ctx.epoch
     assert await has_flag(realm.session, vassal.id, EntityFlag.OATHBREAKER)
     remembered = await realm.session.scalar(select(MemoryRow).where(MemoryRow.holder_node_id == lord.id, MemoryRow.subject_node_id == vassal.id))
@@ -91,7 +91,7 @@ async def test_a_house_is_founded_takes_in_kin_and_dies_out(realm: Realm) -> Non
     await realm.session.flush()
     members = set(await realm.session.scalars(select(HouseMemberRow.mortal_entity_id).where(HouseMemberRow.house_entity_id == house.id)))
     assert members == {founder.id, child.id}
-    await extinguish(ctx, book, house.id, "the last of the line fell")
+    await extinguish(ctx, book, house.id, HouseEnd.LAST_MEMBER_DIED)
     profile = await realm.session.get(HouseProfileRow, house.id)
     assert profile is not None and profile.extinct_epoch == ctx.epoch
     assert house.status is EntityStatus.DESTROYED

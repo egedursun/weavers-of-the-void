@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.lore import ITEM_CLASSES, KNOWLEDGE_ITEMS, REGALIA, WEAPONS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.record_context import Term
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -30,7 +31,9 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.arcana.items import use_charge
 from aerona.engine.body.afflictions import afflict
@@ -48,13 +51,14 @@ from aerona.engine.lore.kinds import ItemClassParams, kind_of, params_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.thoughts import mood_factor, mood_of, think
 from aerona.engine.mortal.standing import add_stress
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, close, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.threads import open_story
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 
 HALF = 2
 TEN = 10
@@ -597,13 +601,14 @@ async def class_powers(ctx: TickContext, item: EntityRow, row: ItemProfileRow, o
 
 
 async def broke(ctx: TickContext, item: EntityRow, owner: int | None) -> None:
-    record(ctx, item.id, ItemDeed.BROKEN, owner, "broken in use")
+    deed = record(ctx, item.id, ItemDeed.BROKEN, owner, "broken in use")
     legendary = item.id in await flags_by_entity(ctx.session, EntityFlag.LEGENDARY)
     if legendary:
         await open_story(ctx.session, f"{item.name} lies broken and waits to be made whole.", [item.id, *([owner] if owner else [])], ctx.epoch)
-        await note(ctx, f"{item.name} broke; it waits to be made whole.", key="item.reforge_quest", ids=[item.id])
-    else:
-        await note(ctx, f"{item.name} broke and is of no use until mended.", key="item.broken", ids=[item.id])
+    told = await record_incident(
+        ctx, "item.reforge_quest" if legendary else "item.broken", roles={IncidentRole.SUBJECT: item.id, IncidentRole.OWNER: owner}, place=item.location_id
+    )
+    deed.incident_id = told.incident_id
 
 
 async def humiliated(ctx: TickContext, item: EntityRow, row: ItemProfileRow, captor: int) -> None:
@@ -620,12 +625,12 @@ async def humiliated(ctx: TickContext, item: EntityRow, row: ItemProfileRow, cap
         epoch=ctx.epoch,
         note=f"took {item.name}",
     )
-    taker = await ctx.session.get(EntityRow, captor)
-    await note(
+    await record_incident(
         ctx,
-        f"{item.name} was taken by {taker.name if taker else 'strangers'}, to the shame of its people.",
-        key="item.regalia_seized",
-        ids=[item.id, realm, captor],
+        "item.regalia_seized",
+        roles={IncidentRole.SUBJECT: item.id, IncidentRole.VICTIM: realm, IncidentRole.ACTOR: captor},
+        facts={"shame": ctx.rules.regalia.humiliation},
+        place=item.location_id,
     )
 
 
@@ -802,6 +807,27 @@ async def metallurgy(ctx: TickContext, community_id: int | None) -> int:
     return row.level if row is not None else 0
 
 
+def masterwork_steps(smith_id: int | None, item_id: int, skill: int, quality: int) -> tuple[StepDraft, ...]:
+    shaped = StepDraft(StepAction.WORK, actor=smith_id, target=item_id, amount=skill, unit=FactUnit.STRENGTH)
+    finished = StepDraft(
+        StepAction.FINISH_WORK,
+        actor=smith_id,
+        target=item_id,
+        amount=quality,
+        unit=FactUnit.PERCENT,
+        outcome=StepOutcome.SUCCESS,
+        record_table=ItemProfileRow.__tablename__,
+        record_key=str(item_id),
+    )
+    if smith_id is None:
+        return (shaped, finished)
+    return (
+        shaped,
+        finished,
+        StepDraft(StepAction.SIGN_WORK, actor=smith_id, target=item_id, record_table=ItemProfileRow.__tablename__, record_key=str(item_id)),
+    )
+
+
 async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, material_quality: int, item_class: ItemClass | None = None) -> bool:
     table = ctx.rules.crafting
     powers = ctx.rules.item_powers
@@ -836,8 +862,23 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     if found is not None:
         found[0].importance = (found[0].importance or 0) + table.masterwork_renown
         await think(ctx.session, ctx.rules, found[0].id, ThoughtKind.MADE_MASTERWORK, ctx.epoch, subject_id=item.id)
-    record(ctx, item.id, ItemDeed.MADE, found[0].id if found is not None else community_id, "a masterwork")
-    await note(ctx, f"{item.name} came from the forge a masterwork.", key="item.masterwork", ids=[item.id, *([found[0].id] if found else [])])
+    deed = record(ctx, item.id, ItemDeed.MADE, found[0].id if found is not None else community_id, "a masterwork")
+    told = await record_incident(
+        ctx,
+        "item.masterwork",
+        roles={IncidentRole.PRODUCT: item.id, IncidentRole.MAKER: found[0].id if found is not None else community_id},
+        facts={"quality": row.quality, "renown_gain": table.masterwork_renown},
+        terms=(
+            Term("crafting.skill", skill * table.skill_pct / PERCENT, source_node_id=found[0].id if found is not None else None),
+            Term("crafting.material", material_quality * (HALF * workability) * table.material_pct / PERCENT),
+            Term("crafting.rest", PERCENT // HALF * rest),
+            Term("item_powers.tool_quality", tools, source_node_id=community_id),
+            Term("item_powers.knowledge_quality", knowledge, source_node_id=community_id),
+        ),
+        place=community_id,
+        steps=masterwork_steps(found[0].id if found is not None else None, item.id, round_half_up(skill), row.quality),
+    )
+    deed.incident_id = told.incident_id
     return True
 
 
@@ -865,7 +906,14 @@ async def repair(ctx: TickContext, book: MaterialBook, item: EntityRow, row: Ite
         return False
     was_broken = row.condition < ctx.rules.item_wear.broken
     row.condition = clamp_int(row.condition + ctx.rules.item_wear.repair_gain, 0, PERCENT)
-    record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a smith with {taken} {spoken(commodity)}")
+    deed = record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a smith with {taken} {spoken(commodity)}")
     if was_broken and row.condition >= ctx.rules.item_wear.broken:
-        await note(ctx, f"{item.name} was made whole again.", key="item.reforged", ids=[item.id])
+        told = await record_incident(
+            ctx,
+            "item.reforged",
+            roles={IncidentRole.SUBJECT: item.id, IncidentRole.OWNER: owner},
+            facts={"commodity": commodity, "units": taken, "condition": row.condition},
+            place=home,
+        )
+        deed.incident_id = told.incident_id
     return True

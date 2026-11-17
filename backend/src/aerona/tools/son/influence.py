@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.mind import DreamKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.afflictions import afflict, blood_curse
 from aerona.engine.body.hits import Harm
@@ -151,8 +152,11 @@ async def affect_entity(call: SonCall, args: AffectInput) -> str:
     if creator is not None:
         await shift_relation(call, creator.id, -tools.influence_foreign_relation)
     joined = NOTE_SEPARATOR.join(notes)
-    await call.chronicle(
-        ChronicleKind.CREATION, lines.AFFECT, entity_ids=[entity.id], son=call.son.name, entity=entity.name, changes=joined, reason=args.reason
+    await call.record(
+        "tools.son.affect",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: entity.id},
+        facts={"changes": str(joined), "reason": str(args.reason)},
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.AFFECTED, name=entity.name, notes=joined, creator=creator.name if creator is not None else "")
 
@@ -185,7 +189,9 @@ async def declare_chosen(call: SonCall, args: ChosenInput) -> str:
         await shift_relation(call, creator_id, -tools.chosen_foreign_relation)
     call.spend_essence(call.rules.costs.declare_chosen)
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.CHOSEN, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, boon=args.boon)
+    await call.record(
+        "tools.son.chosen", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id}, facts={"boon": str(args.boon)}, kind=ChronicleKind.CREATION
+    )
     return result(SonResult.CHOSEN, name=mortal.name)
 
 
@@ -240,7 +246,12 @@ async def curse(call: SonCall, args: CurseInput) -> str:
     call.spend_essence(cost)
     call.target(entity.id)
     joined = NOTE_SEPARATOR.join(notes)
-    await call.chronicle(ChronicleKind.CURSE, lines.CURSE, entity_ids=[entity.id], son=call.son.name, entity=entity.name, curse=args.curse, notes=joined)
+    await call.record(
+        "tools.son.curse",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: entity.id},
+        facts={"curse": str(args.curse), "notes": str(joined)},
+        kind=ChronicleKind.CURSE,
+    )
     borne = PACKAGES[laid.package].label.lower() if laid is not None else ""
     return result(SonResult.CURSED, severity=severity, notes=joined, name=entity.name, affliction=borne)
 
@@ -277,12 +288,22 @@ async def send_dream(call: SonCall, args: DreamInput) -> str:
             await shift_relation(call, old.id, -tools.dream_steal_relation)
         level = await grant(call, call.son, tools.dream_xp, tools.dream_renown)
         lost = lines.LOST_WORSHIPPER.format(old=old.name) if old is not None else ""
-        await call.chronicle(ChronicleKind.DREAM, lines.DREAM_TAKEN, entity_ids=[target.id], son=call.son.name, target=target.name, lost=lost, dream=args.dream)
+        await call.record(
+            "tools.son.dream_taken",
+            roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id},
+            facts={"lost": str(lost), "dream": str(args.dream)},
+            kind=ChronicleKind.DREAM,
+        )
         return result(SonResult.DREAM_TAKEN, roll=roll, chance=chance, name=target.name, level=level)
     if old is not None:
         await shift_relation(call, old.id, -tools.dream_fail_relation)
     sensed = lines.SENSED.format(old=old.name) if old is not None else ""
-    await call.chronicle(ChronicleKind.DREAM, lines.DREAM_FAILED, entity_ids=[target.id], son=call.son.name, target=target.name, sensed=sensed)
+    await call.record(
+        "tools.son.dream_failed",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id},
+        facts={"sensed": str(sensed)},
+        kind=ChronicleKind.DREAM,
+    )
     return result(SonResult.DREAM_FAILED, roll=roll, chance=chance)
 
 
@@ -304,14 +325,11 @@ async def teach_knowledge(call: SonCall, args: TeachInput) -> str:
     call.spend_essence(cost)
     call.target(target.id)
     level = await grant(call, call.son, tools.knowledge_xp, tools.knowledge_renown)
-    await call.chronicle(
-        ChronicleKind.KNOWLEDGE,
-        lines.TEACH,
-        entity_ids=[target.id, knowledge.id],
-        son=call.son.name,
-        target=target.name,
-        knowledge=knowledge.name,
-        how=args.how,
+    await call.record(
+        "tools.son.teach",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: knowledge.id},
+        facts={"how": str(args.how)},
+        kind=ChronicleKind.KNOWLEDGE,
     )
     return result(SonResult.TAUGHT, name=target.name, knowledge=knowledge.name, level=level)
 

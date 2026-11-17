@@ -12,11 +12,12 @@ from aerona.db.tables.living import GeneBankRow, GeneBankSampleRow, LivingLineRo
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.living import CultivationMethod, Fertility, HostPlacement, HostRelation, LineTrait
 from aerona.domain.enums.made import AugmentKind, AugmentSlot
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.agrarian.control import plant
 from aerona.engine.agrarian.lands import kind_of
@@ -35,7 +36,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import EnactLawInput
 from aerona.tools.mortal.ruler import enact_law
 
@@ -158,7 +158,7 @@ async def breed_line(call: MortalCall, args: BreedLineInput) -> str:
         fail(MortalResult.LINE_DECLINED, why="there is no such kind of life to breed from")
     draft = LineDraft(args.name, CultivationMethod.SELECTIVE_BREEDING, call.me.id, call.me.id, (species.id,), traits(args.traits))
     line = await attempt(MortalResult.LINE_DECLINED, make_line(call.tick, draft))
-    await call.chronicle(ChronicleKind.CULTURE, lines.LINE_MADE, entity_ids=[call.me.id, species.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
 
 
@@ -166,7 +166,7 @@ async def design_line(call: MortalCall, args: DesignLineInput) -> str:
     unheld(call, MortalResult.LINE_DECLINED)
     draft = LineDraft(args.name, args.method, call.me.id, call.me.id, tuple(args.source_ids), traits(args.traits), args.fertility)
     line = await attempt(MortalResult.LINE_DECLINED, make_line(call.tick, draft))
-    await call.chronicle(ChronicleKind.CULTURE, lines.LINE_MADE, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
 
 
@@ -181,7 +181,11 @@ async def bank_sample(call: MortalCall, args: BankSampleInput) -> str:
         fail(MortalResult.SAMPLE_DECLINED, why="there is nothing living there to sample")
     quality = clamp_percent(PERCENT // 2 + await best_skill(call.session, call.me.id, SAMPLE_SKILLS) // 2)
     await attempt(MortalResult.SAMPLE_DECLINED, sampled(call.tick, bank.structure_entity_id, organism.id, quality))
-    await call.chronicle(ChronicleKind.CULTURE, lines.SAMPLE_BANKED, entity_ids=[call.me.id, organism.id], me=call.me.name, name=organism.name)
+    await call.record(
+        "tools.mortal.sample_banked",
+        roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: organism.id, IncidentRole.DESTINATION: bank.structure_entity_id},
+        facts={"quality": quality},
+    )
     return result(MortalResult.SAMPLE_BANKED, name=organism.name, quality=quality)
 
 
@@ -198,7 +202,7 @@ async def plant_line(call: MortalCall, args: LineInput) -> str:
         MortalResult.PLANTING_DECLINED,
         plant(call.tick, region, kind, species_id=line.species_entity_id, owner_id=call.me.id, area=call.rules.perennials.area, line_id=line.id),
     )
-    await call.chronicle(ChronicleKind.CULTURE, lines.LINE_PLANTED, entity_ids=[call.me.id, region], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_planted", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PLACE: region}, facts={"line": line.name})
     return result(MortalResult.LINE_PLANTED, name=line.name, planting=row.id)
 
 
@@ -209,7 +213,7 @@ async def raise_line(call: MortalCall, args: SampleInput) -> str:
     if sample is None or bank is None or bank.holder_node_id not in {call.me.id, call.me.location_id}:
         fail(MortalResult.LINE_DECLINED, why="you hold no such sample")
     line = await attempt(MortalResult.LINE_DECLINED, control.raise_line(call.tick, sample.id, call.me.id))
-    await call.chronicle(ChronicleKind.CULTURE, lines.LINE_MADE, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
 
 
@@ -222,19 +226,19 @@ async def growing(call: MortalCall, args: GrowInput, declined: MortalResult) -> 
 
 async def grow_structure_tool(call: MortalCall, args: GrowInput) -> str:
     work = await attempt(MortalResult.GROWING_DECLINED, grow_structure(call.tick, await growing(call, args, MortalResult.GROWING_DECLINED)))
-    await call.chronicle(ChronicleKind.CONSTRUCTION, lines.GROWN, entity_ids=[call.me.id, work.id], me=call.me.name, name=work.name)
+    await call.record("tools.mortal.grown", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: work.id}, facts={"made": EntityType.STRUCTURE})
     return result(MortalResult.GROWN, name=work.name)
 
 
 async def grow_vessel_tool(call: MortalCall, args: GrowInput) -> str:
     vessel = await attempt(MortalResult.GROWING_DECLINED, grow_vessel(call.tick, await growing(call, args, MortalResult.GROWING_DECLINED)))
-    await call.chronicle(ChronicleKind.CONSTRUCTION, lines.GROWN, entity_ids=[call.me.id, vessel.id], me=call.me.name, name=vessel.name)
+    await call.record("tools.mortal.grown", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: vessel.id}, facts={"made": vessel.entity_type})
     return result(MortalResult.GROWN, name=vessel.name)
 
 
 async def grow_gear_tool(call: MortalCall, args: GrowInput) -> str:
     gear = await attempt(MortalResult.GROWING_DECLINED, grow_gear(call.tick, await growing(call, args, MortalResult.GROWING_DECLINED)))
-    await call.chronicle(ChronicleKind.CONSTRUCTION, lines.GROWN, entity_ids=[call.me.id, gear.id], me=call.me.name, name=gear.name)
+    await call.record("tools.mortal.grown", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: gear.id}, facts={"made": gear.entity_type})
     return result(MortalResult.GROWN, name=gear.name)
 
 
@@ -244,7 +248,9 @@ async def grow_organ_tool(call: MortalCall, args: GrowOrganInput) -> str:
     if bearer is None or held(bearer.id) or (bearer.id != call.me.id and bearer.location_id != call.me.location_id):
         fail(MortalResult.ORGAN_DECLINED, why="there is no one here to grow it for")
     await grow_organ(call.tick, bearer, args.slot, args.kind, call.me.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.ORGAN_GROWN, entity_ids=[call.me.id, bearer.id], me=call.me.name, name=bearer.name)
+    await call.record(
+        "tools.mortal.organ_grown", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PATIENT: bearer.id}, facts={"slot": args.slot, "augment": args.kind}
+    )
     return result(MortalResult.ORGAN_GROWN, name=bearer.name)
 
 
@@ -255,7 +261,7 @@ async def clone_tool(call: MortalCall, args: CloneInput) -> str:
         fail(MortalResult.CLONE_DECLINED, why="there is no body here to copy")
     copy = await attempt(MortalResult.CLONE_DECLINED, clone(call.tick, source.id, call.me.id))
     call.target(copy.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.CLONED, entity_ids=[call.me.id, source.id, copy.id], me=call.me.name, name=source.name)
+    await call.record("tools.mortal.cloned", roles={IncidentRole.MAKER: call.me.id, IncidentRole.ORIGIN: source.id, IncidentRole.PRODUCT: copy.id})
     return result(MortalResult.CLONED, name=copy.name)
 
 
@@ -266,7 +272,11 @@ async def host_symbiont(call: MortalCall, args: HostSymbiontInput) -> str:
         MortalResult.SYMBIONT_DECLINED,
         control.host(call.tick, call.me.id, line_id=line.id, placement=args.placement, relation=args.relation, strength=PERCENT // 3),
     )
-    await call.chronicle(ChronicleKind.CULTURE, lines.SYMBIONT_HOSTED, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record(
+        "tools.mortal.symbiont_hosted",
+        roles={IncidentRole.ACTOR: call.me.id},
+        facts={"line": line.name, "placement": args.placement, "relation": args.relation},
+    )
     return result(MortalResult.SYMBIONT_HOSTED, name=line.name)
 
 
@@ -276,7 +286,7 @@ async def remove_symbiont_tool(call: MortalCall, args: SymbiontInput) -> str:
     if row is None or row.host_node_id != call.me.id:
         fail(MortalResult.SYMBIONT_DECLINED, why="nothing such lives within you")
     await remove_symbiont(call.tick, row)
-    await call.chronicle(ChronicleKind.CULTURE, lines.SYMBIONT_REMOVED, entity_ids=[call.me.id], me=call.me.name)
+    await call.record("tools.mortal.symbiont_removed", roles={IncidentRole.ACTOR: call.me.id}, facts={"relation": row.relation})
     return result(MortalResult.SYMBIONT_REMOVED)
 
 
@@ -286,7 +296,11 @@ async def design_disease_tool(call: MortalCall, args: DesignDiseaseInput) -> str
         MortalResult.DISEASE_DESIGN_DECLINED,
         design_disease(call.tick, call.me, args.name, target_id=args.target_id, lethality=args.lethality, virulence=args.virulence),
     )
-    await call.chronicle(ChronicleKind.CULTURE, lines.DISEASE_DESIGNED, entity_ids=[call.me.id, disease.id], me=call.me.name, name=disease.name)
+    await call.record(
+        "tools.mortal.disease_designed",
+        roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: disease.id, IncidentRole.TARGET: args.target_id},
+        facts={"lethality": args.lethality, "virulence": args.virulence},
+    )
     return result(MortalResult.DISEASE_DESIGNED, name=disease.name)
 
 
@@ -297,14 +311,14 @@ async def design_cure_tool(call: MortalCall, args: DesignCureInput) -> str:
     if disease is None:
         fail(MortalResult.CURE_DECLINED, why="there is no such sickness")
     await attempt(MortalResult.CURE_DECLINED, design_cure(call.tick, call.me, disease.id, line.id))
-    await call.chronicle(ChronicleKind.CULTURE, lines.CURE_CULTURED, entity_ids=[call.me.id, disease.id], me=call.me.name, name=disease.name)
+    await call.record("tools.mortal.cure_cultured", roles={IncidentRole.HEALER: call.me.id, IncidentRole.TARGET: disease.id, IncidentRole.INSTRUMENT: line.id})
     return result(MortalResult.CURE_CULTURED, name=disease.name)
 
 
 async def found_living_works_tool(call: MortalCall, args: LivingWorksInput) -> str:
     unheld(call, MortalResult.GROWING_DECLINED)
     works = await attempt(MortalResult.GROWING_DECLINED, found_living_works(call.tick, call.me, MethodKind(args.method), args.name))
-    await call.chronicle(ChronicleKind.CONSTRUCTION, lines.GROWN, entity_ids=[call.me.id, works.id], me=call.me.name, name=works.name)
+    await call.record("tools.mortal.grown", roles={IncidentRole.MAKER: call.me.id, IncidentRole.PRODUCT: works.id}, facts={"made": works.entity_type})
     return result(MortalResult.GROWN, name=works.name)
 
 
@@ -312,7 +326,7 @@ async def release_line(call: MortalCall, args: LineInput) -> str:
     unheld(call, MortalResult.RELEASE_DECLINED)
     line = await my_line(call, args.line_id, MortalResult.RELEASE_DECLINED)
     await attempt(MortalResult.RELEASE_DECLINED, control.release(call.tick, line))
-    await call.chronicle(ChronicleKind.WORLD, lines.LINE_RELEASED, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_released", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.LINE_RELEASED, name=line.name)
 
 
@@ -321,7 +335,7 @@ async def raise_sapience_tool(call: MortalCall, args: LineInput) -> str:
     line = await my_line(call, args.line_id, MortalResult.SAPIENCE_DECLINED)
     skill = await best_skill(call.session, call.me.id, (SkillKind.SCIENCE, SkillKind.SPELLCRAFT, SkillKind.MEDICINE))
     trait = await attempt(MortalResult.SAPIENCE_DECLINED, raise_sapience(call.tick, line, skill))
-    await call.chronicle(ChronicleKind.CULTURE, lines.SAPIENCE_SHAPED, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.sapience_shaped", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.SAPIENCE_SHAPED, name=line.name, strength=trait.strength)
 
 
@@ -331,7 +345,7 @@ async def license_line_tool(call: MortalCall, args: LicenseLineInput) -> str:
     if line is None or line.owner_node_id in {None, call.me.id}:
         fail(MortalResult.LINE_LICENCE_DECLINED, why="there is no line of another to license")
     await attempt(MortalResult.LINE_LICENCE_DECLINED, license_line(call.tick, line, call.me, args.fee))
-    await call.chronicle(ChronicleKind.TRADE, lines.LINE_LICENSED, entity_ids=[call.me.id], me=call.me.name, name=line.name)
+    await call.record("tools.mortal.line_licensed", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
     return result(MortalResult.LINE_LICENSED, name=line.name)
 
 

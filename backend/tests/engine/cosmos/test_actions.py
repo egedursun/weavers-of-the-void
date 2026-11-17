@@ -31,14 +31,14 @@ async def test_seal_gate_and_cleanse(session: AsyncSession, cosmos: Cosmos, rule
     other = await make_world(session, "Velmor")
     other.leakage = 30
     route = await make_route(session, cosmos.home.id, other.id)
-    await seal_gate(ctx, route.id, "Aeron")
+    await seal_gate(ctx, route.id, "Aeron", cosmos.creator.id)
     assert not route.active and route.closure is RouteClosure.SEALED
     assert other.leakage == 30 - rules.pantheon.seal_leak_reduction
     being = await make_entity(session, "Unspoken", EntityType.OUTER_BEING, OuterBeingStats(influence=40), world_id=other.id)
-    text = await cleanse_leak(ctx, other.id, "Aeron")
+    text = await cleanse_leak(ctx, other.id, cosmos.creator.id)
     assert "pushed outside" in text and being.status is EntityStatus.DESTROYED
     with pytest.raises(ValidationFailedError):
-        await cleanse_leak(ctx, cosmos.home.id, "Aeron")
+        await cleanse_leak(ctx, cosmos.home.id, cosmos.creator.id)
 
 
 async def test_bargain_with_outer(ctx: TickContext, cosmos: Cosmos) -> None:
@@ -64,7 +64,7 @@ async def test_manual_services(session: AsyncSession, cosmos: Cosmos, rules: Rul
     journey = await send_expedition(session, rules, people.id, route.id, JourneyIntent.COLONY, population=500)
     assert isinstance(journey, JourneyRow)
     assert "storm" in await sever_by_hand(session, rules, route.id, "Aeron", duration=2)
-    assert "reopened the severed route" in await stitch_by_hand(session, rules, route.id, "Aeron")
+    assert "opened again" in await stitch_by_hand(session, rules, route.id)
     beast = await make_entity(session, "Graveling", EntityType.SPECIES, SpeciesStats(strength=50, danger=40), world_id=other.id, location_id=region.id)
     deer = await make_entity(session, "Glimdeer", EntityType.SPECIES, SpeciesStats(strength=20, danger=10), world_id=other.id, location_id=region.id)
     mutant = await force_mutation(session, rules, beast.id)

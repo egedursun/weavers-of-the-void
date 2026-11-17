@@ -384,6 +384,7 @@ const SON_DETAIL: Schemas['SonDetail'] = {
   ],
   creations: [ENTITY(42, 'Oskar', 'settlement'), { ...ENTITY(44, 'The Bell Choir', 'tradition'), status: 'rejected' }],
   chronicle: CHRONICLE,
+  chronicle_total: CHRONICLE.length,
   messages: [
     { id: 301, epoch: 11, sender: { id: 7, kind: 'son', name: 'Thalassir' }, recipient: { id: 1, kind: 'creator', name: 'Aeron' }, intent: 'prayer', text: 'Grant me the strength to hold the western storm.', tone: 'thanks', answered: false },
   ],
@@ -423,6 +424,7 @@ const CREATOR_DETAIL: Schemas['CreatorDetail'] = {
   cult: [ENTITY(51, 'The Dawn Watchers', 'cult')],
   folk_views: [],
   traces: CHRONICLE,
+  traces_total: CHRONICLE.length,
   images: [],
 }
 
@@ -492,6 +494,7 @@ const FOREIGN_DETAIL: Schemas['ForeignGodDetail'] = {
   bonds: [],
   bond_total: 0,
   chronicle: [],
+  chronicle_total: 0,
   sons_here: [{ id: 8, kind: 'son', name: LONG }],
   folk_views: [],
   images: [],

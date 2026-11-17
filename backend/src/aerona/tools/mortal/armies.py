@@ -11,6 +11,7 @@ from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.book import effective
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -102,7 +103,9 @@ async def raise_army(call: MortalCall, args: ArmyInput) -> str:
         set_stats(call.me, **{key: max(_floor(call, key), stat_or(call.me, key, 0) - soldiers)})
     elif funds is not None:
         set_stats(call.me, **{funds: max(0, stat_or(call.me, funds, 0) - tools.mercenary_cost)})
-    await call.chronicle(ChronicleKind.ARMY, lines.ARMY, entity_ids=[call.me.id, army.id], me=call.me.name, count=soldiers, name=army.name)
+    await call.record(
+        "tools.mortal.army", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: army.id}, facts={"count": soldiers}, kind=ChronicleKind.ARMY
+    )
     return result(MortalResult.ARMY_RAISED, id=army.id, name=army.name, count=soldiers)
 
 
@@ -133,7 +136,12 @@ async def appoint_commander(call: MortalCall, args: CommanderInput) -> str:
     set_stats(army, morale=max(0, min(PERCENT, morale)))
     await call.bump(TurnCounter.COMMANDER_APPOINTMENTS)
     call.target(mortal.id)
-    await call.chronicle(ChronicleKind.ARMY, lines.COMMANDER, entity_ids=[mortal.id, army.id], mortal=mortal.name, army=army.name)
+    await call.record(
+        "tools.mortal.commander",
+        roles={IncidentRole.LEADER: mortal.id, IncidentRole.SUBJECT: army.id, IncidentRole.ACTOR: call.me.id},
+        facts={"morale": max(0, min(PERCENT, morale))},
+        kind=ChronicleKind.ARMY,
+    )
     return result(MortalResult.COMMANDER_SET, name=mortal.name, army=army.name)
 
 

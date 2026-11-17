@@ -50,7 +50,7 @@ async def test_wrath_gathers_temple_breakers_the_cursed_and_killers(session: Asy
     entities = EntityRepository(session)
     assert await entities.has_flag(cursed.id, EntityFlag.BLOODLINE_CURSE)
     assert not await entities.has_flag(breaker.id, EntityFlag.BLOODLINE_CURSE)
-    assert god_lines.BLOODLINE_CURSE.key in await chronicle_keys(session)
+    assert "gods.power.bloodline_curse" in await chronicle_keys(session)
 
 
 async def test_a_calm_creator_curses_no_one_from_the_pool(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -81,7 +81,7 @@ async def test_digging_a_sacred_resource_angers_its_son_who_curses_the_owner(ses
     assert await entities.has_flag(digger.id, EntityFlag.CURSED)
     assert not await entities.has_flag(faithful.id, EntityFlag.CURSED)
     assert await BondRepository(session).exists_between(son.id, digger.id, BondKind.CURSED)
-    assert god_lines.ECONOMY_SACRED_CURSE.key in await chronicle_keys(session)
+    assert "gods.economy.sacred_curse" in await chronicle_keys(session)
 
 
 async def test_a_market_moves_along_an_open_route_and_leaves_its_old_trade(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -98,7 +98,7 @@ async def test_a_market_moves_along_an_open_route_and_leaves_its_old_trade(sessi
     assert market.world_id == second.id and market.location_id == far_region.id
     assert not await BondRepository(session).exists_between(market.id, folk.id, BondKind.TRADES_WITH)
     assert await BondRepository(session).exists_between(market.id, far_region.id, BondKind.INSIDE)
-    assert god_lines.ECONOMY_MARKET_MOVED.key in await chronicle_keys(session)
+    assert "gods.economy.market_moved" in await chronicle_keys(session)
 
 
 async def test_a_market_lifts_prosperity_and_opens_trade(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

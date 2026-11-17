@@ -19,15 +19,17 @@ from aerona.db.tables.integrity import (
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.integrity import Criticality, HarmForce
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import (
     STRUCTURE_LEVEL_MAX,
+    AbandonCause,
     BuilderKind,
     BuildingForm,
     BuildScale,
@@ -43,9 +45,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.economy.materials import set_node_material
 from aerona.engine.gatherings.control import Values, allowed
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.structures.construction import Commission, abandon, begin, construction_of, finish
 from aerona.engine.structures.damage import consequences, harm
 from aerona.engine.structures.integrity import StructureStrike, ensure_sections, match_condition, overall, sections_of, state_for, wound
@@ -192,7 +194,7 @@ async def finish_now(ctx: TickContext, structure_id: int) -> EntityRow:
 
 async def abandon_now(ctx: TickContext, structure_id: int, reason: str) -> ConstructionRow:
     row = await construction_of(ctx, structure_id)
-    await abandon(ctx, row, reason or "its builders were called away")
+    await abandon(ctx, row, AbandonCause.CALLED_AWAY, reason=reason.strip() or None)
     return row
 
 
@@ -320,13 +322,21 @@ async def edit_structure(
 
 async def repair(ctx: TickContext, structure_id: int) -> StructureProfileRow:
     work, profile = await structure(ctx, structure_id)
+    before = profile.condition
     profile.condition = stat_or(work, "durability", PERCENT)
     await ensure_sections(ctx.session, work, profile)
     await match_condition(ctx.session, ctx.rules, work.id, profile.condition)
     if profile.construction_state is ConstructionState.DAMAGED:
         profile.construction_state = ConstructionState.COMPLETE
     await refresh(ctx.session, ctx.rules, work, profile)
-    await note(ctx, f"{work.name} was made whole again.", key="structures.repaired", ids=[work.id], kind=ChronicleKind.CONSTRUCTION)
+    await record(
+        ctx,
+        "structures.repaired",
+        roles={IncidentRole.SUBJECT: work.id},
+        facts={"before": before, "after": profile.condition},
+        steps=(StepDraft(StepAction.REPAIR, target=work.id, amount=profile.condition - before, unit=FactUnit.PERCENT, outcome=StepOutcome.SUCCESS),),
+        place=work.location_id,
+    )
     await ctx.session.flush()
     return profile
 

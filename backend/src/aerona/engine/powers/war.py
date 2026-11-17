@@ -8,9 +8,10 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerState
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 BREACHING = frozenset({SpellForm.FORCE, SpellForm.EARTH, SpellForm.SPACE})
@@ -80,5 +81,5 @@ async def breach_by_power(ctx: TickContext, siege: SiegeRow) -> bool:
     if strong is None or "breaches" in siege.locked:
         return False
     siege.breaches += 1
-    await note(ctx, "A power broke through the walls of a besieged city.", key="power.breach", ids=[siege.besieged_entity_id])
+    await record(ctx, "power.breach", roles={IncidentRole.SUBJECT: siege.besieged_entity_id})
     return True

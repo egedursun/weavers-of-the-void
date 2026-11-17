@@ -82,6 +82,11 @@ class Notation(StrEnum):
     POSITIONAL = "positional"
 
 
+class NumberMilestone(StrEnum):
+    ZERO = "zero"
+    PLACE_VALUE = "place_value"
+
+
 class AffinityMode(StrEnum):
     CONSUMED = "consumed"
     WORN = "worn"

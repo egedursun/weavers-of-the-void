@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
+from aerona.db.record_context import Term
 from aerona.db.tables.collective import DiasporaRow
 from aerona.db.tables.cycles import IndentureRow, ManumissionRow, SlaveMarketRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
@@ -20,7 +20,9 @@ from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ActKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DebtRemedy, LawKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
@@ -40,13 +42,14 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.hooks import judged
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.regard import value_distance
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.primitives.transfers import move_amount
+from aerona.engine.recording.record import StepDraft
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.structures.construction import finish
 from aerona.engine.structures.spec import resolve
 
@@ -84,11 +87,12 @@ async def remember_suffering(ctx: TickContext, town: EntityRow, row: CorveeRow, 
         stances[row.polity_entity_id] = AccountStance.VILIFY
     await record(ctx, town, AccountKind.FOLK_MEMORY, fidelity=ctx.rules.historiography.folk_fidelity, stances=stances, subject_id=work.id, structure_id=work.id)
     tally.suffering += 1
-    await note(
+    await record_incident(
         ctx,
-        f"{town.name} remembers the {several(row.laboured_epochs, 'epoch', 'epochs')} of forced labour that raised {work.name}.",
-        key="corvee.suffering",
-        ids=[town.id, work.id, *([row.polity_entity_id] if row.polity_entity_id else [])],
+        "corvee.suffering",
+        roles={IncidentRole.VICTIM: town.id, IncidentRole.PRODUCT: work.id, IncidentRole.AUTHORITY: row.polity_entity_id},
+        facts={"laboured_epochs": row.laboured_epochs, "share": row.share_pct},
+        place=town.id,
     )
 
 
@@ -121,11 +125,12 @@ async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
         work = await ctx.session.get(EntityRow, great.structure_entity_id)
         if await forced_labour_reading(ctx, polity, towns[0]) < table.unthinkable_at:
             tally.refused += 1
-            await note(
+            await record_incident(
                 ctx,
-                f"{polity.name} would not force its folk to labour on {work.name if work else 'a great work'}; its people hold forced labour unthinkable.",
-                key="corvee.refused",
-                ids=[polity.id],
+                "corvee.refused",
+                roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.SUBJECT: great.structure_entity_id},
+                facts={"reading": await forced_labour_reading(ctx, polity, towns[0]), "unthinkable_at": table.unthinkable_at},
+                terms=(Term("corvee.unthinkable_at", table.unthinkable_at),),
             )
             continue
         laid = 0
@@ -148,11 +153,12 @@ async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
             summoned.append(town.id)
         if laid:
             tally.corvee_laid += laid
-            await note(
+            await record_incident(
                 ctx,
-                f"{polity.name} summoned {several(laid, 'town', 'towns')} to forced labour on {work.name if work else 'a great work'}.",
-                key="corvee.laid",
-                ids=[polity.id],
+                "corvee.laid",
+                roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.SUBJECT: great.structure_entity_id, IncidentRole.VICTIM: summoned},
+                facts={"towns": laid, "share": table.share_pct},
+                steps=tuple(StepDraft(StepAction.LEVY, actor=polity.id, target=town_id, amount=table.share_pct, unit=FactUnit.PERCENT) for town_id in summoned),
             )
             await judged(ctx, polity.id, summoned[0], ActKind.FORCED_LABOUR, note=f"forced labour on {work.name if work else 'a great work'}")
 
@@ -241,8 +247,13 @@ async def bind_debtors(ctx: TickContext, tally: BondageTally) -> None:
             )
         )
         tally.indentured += count
-        word = "debt peonage" if regime is LabourRegime.PEONAGE else "indenture"
-        await note(ctx, f"{count} of the poor of {town.name} were bound into {word}.", key="indenture.bound", ids=[town.id])
+        await record_incident(
+            ctx,
+            "indenture.bound",
+            roles={IncidentRole.VICTIM: town.id},
+            facts={"count": count, "regime": regime, "debt": count * table.debt_per_head, "term_epochs": table.term_epochs, "exploitation": exploitation},
+            place=town.id,
+        )
 
 
 async def contract_exploitation(ctx: TickContext, town: EntityRow, newcomers: EntityRow) -> int:
@@ -285,11 +296,13 @@ async def bind_migrants(ctx: TickContext, tally: BondageTally) -> None:
             )
         )
         tally.contracted += count
-        await note(
+        await record_incident(
             ctx,
-            f"{several(count, 'newcomer', 'newcomers')} of {newcomers.name} in {town.name} signed contracts of labour for their keep.",
-            key="indenture.contracted",
-            ids=[town.id, newcomers.id],
+            "indenture.contracted",
+            roles={IncidentRole.BORROWER: newcomers.id, IncidentRole.LENDER: town.id},
+            facts={"count": count, "debt": count * table.debt_per_head, "term_epochs": table.term_epochs},
+            steps=(StepDraft(StepAction.AGREE, actor=newcomers.id, target=town.id, amount=count, unit=FactUnit.PEOPLE),),
+            place=town.id,
         )
 
 
@@ -313,12 +326,7 @@ async def serve_terms(ctx: TickContext, tally: BondageTally) -> None:
         tally.released += row.count
         await ctx.session.delete(row)
         if town is not None:
-            await note(
-                ctx,
-                f"{several(row.count, 'bound labourer', 'bound labourers')} of {town.name} served out their bond and went free.",
-                key="indenture.released",
-                ids=[town.id],
-            )
+            await record_incident(ctx, "indenture.released", roles={IncidentRole.SUBJECT: town.id}, facts={"count": row.count, "by_hand": 0}, place=town.id)
 
 
 async def slavery_lawful(ctx: TickContext, town: EntityRow) -> bool:
@@ -424,8 +432,16 @@ async def sell(ctx: TickContext, town: EntityRow, row: SlaveMarketRow, markets: 
     if "sold" not in row.locked:
         row.sold += moved
     tally.sold += moved
-    await note(
-        ctx, f"The market of {town.name} sold {moved} bound folk to {buyer.name} at {row.price} each.", key="slave_markets.sold", ids=[town.id, buyer.id]
+    await record_incident(
+        ctx,
+        "slave_markets.sold",
+        roles={IncidentRole.SELLER: town.id, IncidentRole.BUYER: buyer.id},
+        facts={"count": moved, "price": row.price},
+        steps=(
+            StepDraft(StepAction.PAY, actor=buyer.id, target=town.id, amount=moved * row.price, unit=FactUnit.COIN),
+            StepDraft(StepAction.DELIVER, actor=town.id, target=buyer.id, amount=moved, unit=FactUnit.PEOPLE),
+        ),
+        place=town.id,
     )
 
 
@@ -449,7 +465,7 @@ async def keep_markets(ctx: TickContext, tally: BondageTally) -> None:
             )
             ctx.session.add(row)
             tally.markets += 1
-            await note(ctx, f"A market in bound folk opened in {town.name}.", key="slave_markets.opened", ids=[town.id])
+            await record_incident(ctx, "slave_markets.opened", roles={IncidentRole.SUBJECT: town.id}, facts={"price": row.price}, place=town.id)
         if "open" not in row.locked:
             row.open = lawful
         row.updated_epoch = ctx.epoch
@@ -481,7 +497,13 @@ async def slave_risings(ctx: TickContext, tally: BondageTally) -> None:
         await record_manumission(ctx, town, freed, ManumissionPath.REVOLT)
         sync_bound_share(await ctx.session.get(CommunitySocietyRow, town.id), rows)
         tally.revolts += freed
-        await note(ctx, f"The rising of {faction.name} freed the bound of {freed} in {town.name}.", key="manumission.revolt", ids=[faction.id, town.id])
+        await record_incident(
+            ctx,
+            "manumission.revolt",
+            roles={IncidentRole.ACTOR: faction.id, IncidentRole.PLACE: town.id},
+            facts={"freed": freed, "militia": settled.militia},
+            place=town.id,
+        )
 
 
 async def raise_freed(ctx: TickContext, tally: BondageTally) -> None:
@@ -497,7 +519,7 @@ async def raise_freed(ctx: TickContext, tally: BondageTally) -> None:
         if row.standing < PERCENT:
             continue
         tally.equal += row.count
-        await note(ctx, f"The {row.count} freed of {town.name} now stand as equals among the freeborn.", key="manumission.equal", ids=[town.id])
+        await record_incident(ctx, "manumission.equal", roles={IncidentRole.SUBJECT: town.id}, facts={"count": row.count, "path": row.path}, place=town.id)
 
 
 async def keep_bondage(ctx: TickContext, tally: BondageTally) -> None:

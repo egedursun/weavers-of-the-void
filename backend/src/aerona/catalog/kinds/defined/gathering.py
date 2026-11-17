@@ -30,6 +30,7 @@ COLLECTION_KIND = total(
             checked_by=("catalog.collective.COLLECTION_FORMATIVE", "catalog.gatherings.NEST_PARENTS", "catalog.norms.GATHERING_SITUATIONS"),
             used_by=(
                 "catalog.gatherings.KEY_COLLECTIONS",
+                "catalog.incident_kinds.g04_body.KINDS",
                 "engine.collective.accounts.EPIC_KINDS",
                 "engine.collective.accounts.GREAT_KINDS",
                 "engine.collective.accounts.RECORDED",
@@ -38,11 +39,21 @@ COLLECTION_KIND = total(
         CollectionKind.DUEL: Defined(
             "Duel",
             checked_by=("catalog.gatherings.NEST_PARENTS", "catalog.norms.GATHERING_SITUATIONS"),
-            used_by=("catalog.gatherings.KEY_COLLECTIONS", "engine.collective.accounts.EPIC_KINDS", "engine.collective.storylets.duel_between"),
+            used_by=(
+                "catalog.gatherings.KEY_COLLECTIONS",
+                "catalog.incident_kinds.g01_single_combat.KINDS",
+                "catalog.incident_kinds.g08_diplomacy.KINDS",
+                "engine.collective.accounts.EPIC_KINDS",
+                "engine.collective.storylets.duel_between",
+            ),
         ),
-        CollectionKind.ABDUCTION: Defined("Abduction", checked_by=(), used_by=("engine.history.collections.SCHEME_COLLECTIONS",)),
+        CollectionKind.ABDUCTION: Defined(
+            "Abduction", checked_by=(), used_by=("catalog.incident_kinds.g01_single_combat.KINDS", "engine.history.collections.SCHEME_COLLECTIONS")
+        ),
         CollectionKind.BEAST_ATTACK: Defined(
-            "Beast attack", checked_by=("catalog.collective.COLLECTION_FORMATIVE",), used_by=("catalog.gatherings.KEY_COLLECTIONS",)
+            "Beast attack",
+            checked_by=("catalog.collective.COLLECTION_FORMATIVE",),
+            used_by=("catalog.gatherings.KEY_COLLECTIONS", "catalog.incident_kinds.g01_single_combat.KINDS"),
         ),
         CollectionKind.RAID: Defined("Raid", checked_by=("catalog.gatherings.NEST_PARENTS",), used_by=("catalog.gatherings.KEY_COLLECTIONS",)),
         CollectionKind.PERSECUTION: Defined(
@@ -50,6 +61,8 @@ COLLECTION_KIND = total(
             checked_by=("catalog.gatherings.NEST_PARENTS",),
             used_by=(
                 "catalog.gatherings.KEY_COLLECTIONS",
+                "catalog.incident_kinds.g01_single_combat.KINDS",
+                "catalog.incident_kinds.g01_single_combat.accused_kind",
                 "engine.collective.accounts.FAITH_KINDS",
                 "engine.collective.accounts.GREAT_KINDS",
                 "engine.collective.accounts.GRIEF_KINDS",
@@ -84,6 +97,7 @@ COLLECTION_KIND = total(
             used_by=(
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g07_law.KINDS",
                 "engine.collective.accounts.RECORDED",
                 "engine.history.collections.SCHEME_COLLECTIONS",
             ),
@@ -91,7 +105,12 @@ COLLECTION_KIND = total(
         CollectionKind.SUCCESSION_CRISIS: Defined(
             "Succession crisis",
             checked_by=("catalog.collective.COLLECTION_FORMATIVE",),
-            used_by=("catalog.gatherings.KEY_COLLECTIONS", "catalog.gatherings.NEST_PARENTS", "engine.collective.accounts.RECORDED"),
+            used_by=(
+                "catalog.gatherings.KEY_COLLECTIONS",
+                "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g07_law.KINDS",
+                "engine.collective.accounts.RECORDED",
+            ),
         ),
         CollectionKind.OCCUPATION: Defined(
             "Occupation",
@@ -128,7 +147,7 @@ COLLECTION_KIND = total(
         CollectionKind.FUNERAL: Defined(
             "Funeral",
             checked_by=("catalog.gatherings.NEST_PARENTS", "catalog.norms.GATHERING_SITUATIONS"),
-            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.KEY_COLLECTIONS"),
+            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.KEY_COLLECTIONS", "catalog.incident_kinds.g04_body.KINDS"),
         ),
         CollectionKind.CORONATION: Defined(
             "Coronation",
@@ -152,12 +171,16 @@ COLLECTION_KIND = total(
             checked_by=("catalog.gatherings.NEST_PARENTS",),
             used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.NEST_PARENTS", "engine.collective.accounts.STAGED_KINDS"),
         ),
-        CollectionKind.HUNT: Defined("Hunt", checked_by=("catalog.gatherings.NEST_PARENTS",), used_by=("catalog.gatherings.GATHERING_COLLECTIONS",)),
+        CollectionKind.HUNT: Defined(
+            "Hunt",
+            checked_by=("catalog.gatherings.NEST_PARENTS",),
+            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.incident_kinds.g01_single_combat.KINDS"),
+        ),
         CollectionKind.COUNCIL: Defined("Council", checked_by=("catalog.norms.GATHERING_SITUATIONS",), used_by=("catalog.gatherings.GATHERING_COLLECTIONS",)),
         CollectionKind.SUMMIT: Defined(
             "Summit",
             checked_by=("catalog.norms.GATHERING_SITUATIONS",),
-            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.KEY_COLLECTIONS"),
+            used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.KEY_COLLECTIONS", "catalog.incident_kinds.g07_law.KINDS"),
         ),
         CollectionKind.PLAGUE: Defined(
             "Plague",
@@ -165,6 +188,8 @@ COLLECTION_KIND = total(
             used_by=(
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g04_body.KINDS",
+                "catalog.incident_kinds.g04_body.disease_origin",
                 "engine.collective.accounts.GRIEF_KINDS",
                 "engine.collective.accounts.RECORDED",
             ),
@@ -190,6 +215,8 @@ COLLECTION_KIND = total(
             used_by=(
                 "catalog.gatherings.KEY_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g04_body.KINDS",
+                "catalog.incident_kinds.g07_law.KINDS",
                 "engine.collective.accounts.GREAT_KINDS",
                 "engine.collective.accounts.PRIDE_KINDS",
                 "engine.collective.accounts.RECORDED",
@@ -199,7 +226,12 @@ COLLECTION_KIND = total(
         CollectionKind.INVESTIGATION: Defined(
             "Investigation",
             checked_by=(),
-            used_by=("catalog.gatherings.KEY_COLLECTIONS", "catalog.gatherings.NEST_PARENTS", "engine.collective.accounts.SWORN_KINDS"),
+            used_by=(
+                "catalog.gatherings.KEY_COLLECTIONS",
+                "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g07_law.KINDS",
+                "engine.collective.accounts.SWORN_KINDS",
+            ),
         ),
         CollectionKind.TRIAL: Defined(
             "Trial",
@@ -208,6 +240,8 @@ COLLECTION_KIND = total(
                 "catalog.gatherings.GATHERING_COLLECTIONS",
                 "catalog.gatherings.KEY_PREFIX_COLLECTIONS",
                 "catalog.gatherings.NEST_PARENTS",
+                "catalog.incident_kinds.g01_single_combat.sentence_kind",
+                "catalog.incident_kinds.g07_law.KINDS",
                 "engine.collective.accounts.SWORN_KINDS",
             ),
         ),
@@ -241,6 +275,9 @@ COLLECTION_KIND = total(
             "Heroquest",
             checked_by=(),
             used_by=(
+                "catalog.incident_kinds.g01_single_combat.KINDS",
+                "catalog.incident_kinds.g01_single_combat.quest_end",
+                "catalog.incident_kinds.g01_single_combat.quest_kind",
                 "engine.collective.accounts.EPIC_KINDS",
                 "engine.collective.accounts.FAITH_KINDS",
                 "engine.collective.accounts.RECORDED",
@@ -250,7 +287,12 @@ COLLECTION_KIND = total(
         CollectionKind.RIOT: Defined(
             "Riot",
             checked_by=(),
-            used_by=("catalog.collective.ACT_COLLECTION", "engine.collective.accounts.GRIEF_KINDS", "engine.collective.accounts.RECORDED"),
+            used_by=(
+                "catalog.collective.ACT_COLLECTION",
+                "catalog.incident_kinds.g04_body.KINDS",
+                "engine.collective.accounts.GRIEF_KINDS",
+                "engine.collective.accounts.RECORDED",
+            ),
         ),
         CollectionKind.PANIC: Defined("Panic", checked_by=(), used_by=("catalog.collective.ACT_COLLECTION", "engine.collective.accounts.RECORDED")),
         CollectionKind.MOVEMENT: Defined(
@@ -258,7 +300,7 @@ COLLECTION_KIND = total(
             checked_by=("catalog.collective.COLLECTION_FORMATIVE",),
             used_by=("catalog.collective.ACT_COLLECTION", "engine.collective.accounts.FAITH_KINDS", "engine.collective.accounts.RECORDED"),
         ),
-        CollectionKind.STORYLET: Defined("Storylet", checked_by=(), used_by=("engine.collective.storylets.begin",)),
+        CollectionKind.STORYLET: Defined("Storylet", checked_by=(), used_by=("catalog.incident_kinds.g11_social.KINDS", "engine.collective.storylets.begin")),
     },
 )
 

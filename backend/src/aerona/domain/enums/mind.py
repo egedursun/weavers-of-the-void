@@ -426,7 +426,7 @@ class ActKind(StrEnum):
     MUTILATION = "mutilation"
     BETRAYAL = "betrayal"
     MERCY_TO_ENEMY = "mercy_to_enemy"
-    HUMAN_SACRIFICE = "human_sacrifice"
+    SACRIFICE_OF_PEOPLE = "sacrifice_of_people"
     TRADE_WITH_OUTSIDERS = "trade_with_outsiders"
     BUILDING_TEMPLES = "building_temples"
     BURNING_BOOKS = "burning_books"
@@ -996,3 +996,13 @@ class RelationComponent(StrEnum):
     RIVALRY = "rivalry"
     LANGUAGE = "language"
     VALUES = "values"
+
+
+class ValuePole(StrEnum):
+    HIGH = "high"
+    LOW = "low"
+
+
+class GratitudeDeed(StrEnum):
+    GUARDED = "guarded"
+    GIFTED = "gifted"

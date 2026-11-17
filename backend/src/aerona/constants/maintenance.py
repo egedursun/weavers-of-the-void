@@ -54,7 +54,6 @@ MERGE_SKIPPED_TABLES = frozenset(
         "epoch_runs",
         "epoch_stats",
         "epoch_steps",
-        "epoch_year_cursors",
         "epochs",
         "god_conflicts",
         "jobs",

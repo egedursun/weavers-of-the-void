@@ -19,10 +19,10 @@ from aerona.domain.enums.cosmography import (
     RiftCause,
     SkyObject,
 )
+from aerona.domain.enums.environment import ClimateTurn
 from aerona.domain.enums.travel import ArrivalOutcome
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.cosmos import control
-from aerona.engine.cosmos.climate import ClimateTurn
 from aerona.engine.cosmos.encounters import JourneyCounts
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.services.player import guards
@@ -448,7 +448,7 @@ async def edit_rift(scope: PlayerScope, command: RiftEdit) -> Effect:
 @player_action("rift:seal", ActionKind.EDIT_RECORD)
 async def seal_rift(scope: PlayerScope, command: RiftTarget) -> Effect:
     creator = await scope.creator()
-    row = await control.close_rift(await scope.context("rift_seal"), command.rift_id, creator.name)
+    row = await control.close_rift(await scope.context("rift_seal"), command.rift_id, creator.id)
     return Effect("The rift is sealed.", row.world_id)
 
 
@@ -487,7 +487,7 @@ async def bind_being(scope: PlayerScope, command: BeingTarget) -> Effect:
 @player_action("cosmic_being:banish", ActionKind.EDIT_RECORD)
 async def banish_being(scope: PlayerScope, command: BeingTarget) -> Effect:
     creator = await scope.creator()
-    await control.banish(await scope.context("cosmic_being_banish"), command.being_id, creator.name)
+    await control.banish(await scope.context("cosmic_being_banish"), command.being_id, creator.name, creator.id)
     return Effect("The being is banished.", command.being_id)
 
 
@@ -512,7 +512,7 @@ async def set_footprint(scope: PlayerScope, command: Footprint) -> Effect:
 @player_action("phenomenon:contain", ActionKind.EDIT_RECORD)
 async def contain_phenomenon(scope: PlayerScope, command: Containment) -> Effect:
     creator = await scope.creator()
-    row = await control.ward_phenomenon(await scope.context("phenomenon_contain"), command.phenomenon_id, command.amount, creator.name)
+    row = await control.ward_phenomenon(await scope.context("phenomenon_contain"), command.phenomenon_id, command.amount, creator.id)
     return Effect(f"The phenomenon is held back ({row.containment}%).", command.phenomenon_id)
 
 
@@ -569,5 +569,5 @@ async def set_variant(scope: PlayerScope, command: Variant) -> Effect:
 @player_action("region_climate:turn", ActionKind.EDIT_RECORD)
 async def turn_climate(scope: PlayerScope, command: ClimateOrder) -> Effect:
     creator = await scope.creator()
-    await control.turn_climate(await scope.context("region_climate_turn"), command.region_id, command.turn, creator.name)
+    await control.turn_climate(await scope.context("region_climate_turn"), command.region_id, command.turn, creator.id)
     return Effect(f"The region turns {spoken(command.turn)}.", command.region_id)

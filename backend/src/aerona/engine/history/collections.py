@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS
+from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -36,7 +37,8 @@ def spoken(kind: CollectionKind) -> str:
 
 
 def kind_of_key(key: str) -> CollectionKind | None:
-    found = KEY_COLLECTIONS.get(key)
+    spec = INCIDENT_KINDS.get(key)
+    found = spec.collection if spec is not None and spec.collection is not None else KEY_COLLECTIONS.get(key)
     if found is not None:
         return found
     return next((kind for prefix, kind in KEY_PREFIX_COLLECTIONS.items() if key.startswith(prefix)), None)

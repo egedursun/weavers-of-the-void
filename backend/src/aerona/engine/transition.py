@@ -6,30 +6,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.stats import max_essence
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import agree, several
-from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.gods.essence import spend
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.essence import Overflow, overflow_to_land
 from aerona.engine.primitives.ledger import EssenceItem, LedgerKey, read, record_essence
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import flags_by_entity
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
-
-CALLING_TEXT = "DOOM BECAME A CALLING: {world} opened to what lies outside the cosmos. The world was not destroyed, but beings from outside can now reach it."
 
 
 async def cosmos_of(session: AsyncSession) -> CosmosRow:
@@ -71,7 +68,7 @@ async def doom_calling(ctx: TickContext) -> bool:
     if target is None:
         return False
     target.leakage = PERCENT
-    await note(ctx, CALLING_TEXT.format(world=target.name), key="doom.calling", kind=ChronicleKind.APOCALYPSE, world_id=target.id)
+    await record(ctx, "doom.calling", roles={IncidentRole.SUBJECT: target.id}, facts={"leak": PERCENT, "average_leak": average}, world_id=target.id)
     return True
 
 
@@ -105,10 +102,9 @@ async def overflow_to_sons(session: AsyncSession, rules: Rules, budget: int) -> 
     "table.bonds",
     "table.creator",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.nodes",
 )
-@writes("region.fertility", "table.chronicle", "table.creator", "table.entities", "table.epoch_year_cursors", "table.incidents")
+@writes("region.fertility", "table.chronicle", "table.creator", "table.entities", "table.incidents")
 async def creator_essence(ctx: TickContext) -> None:
     rules = ctx.rules
     balance = rules.balance
@@ -137,17 +133,18 @@ async def creator_essence(ctx: TickContext) -> None:
     if overflow > 0:
         to_sons = await overflow_to_sons(ctx.session, rules, overflow * essence.overflow_sons_pct // PERCENT)
         record_essence(ctx, EssenceItem.TO_SONS, -to_sons)
-        await overflow_to_land(ctx.session, rules, overflow - to_sons)
+        landed = await overflow_to_land(ctx.session, rules, overflow - to_sons)
         if overflow >= rules.world_epoch_transition.essence_overflow_note:
-            await note(
+            await record(
                 ctx,
-                f"{several(overflow, 'unit', 'units')} of the Creator's overflowing essence seeped into the world; the most barren lands grew fertile.",
-                key="essence.overflow",
+                "essence.overflow",
+                roles={IncidentRole.ACTOR: creator.id, IncidentRole.BENEFICIARY: list(landed.regions)},
+                facts={"overflow": overflow, "to_sons": to_sons},
             )
 
 
-@reads("table.cosmos")
-@writes("table.chronicle", "table.chronicle_entities", "table.cosmos", "table.incident_participants", "table.incidents")
+@reads("table.chronicle", "table.cosmos", "table.nodes", "table.worlds")
+@writes("table.chronicle", "table.chronicle_entities", "table.cosmos", "table.incident_facts", "table.incident_participants", "table.incidents")
 async def advance_epoch(ctx: TickContext) -> None:
     cosmos = await cosmos_of(ctx.session)
     years = ctx.rules.time.years_per_epoch
@@ -155,29 +152,26 @@ async def advance_epoch(ctx: TickContext) -> None:
     cosmos.epoch_start_year = cosmos.epoch_start_year + years
     primary = await ctx.session.get(WorldRow, cosmos.primary_world_id) if cosmos.primary_world_id is not None else None
     star = await ctx.session.get(EntityRow, primary.epoch_star_entity_id) if primary is not None and primary.epoch_star_entity_id is not None else None
-    star_text = f" Star of the epoch: {star.name}." if star is not None else ""
-    await ChronicleRepository(ctx.session).append(
-        ChronicleDraft(
-            epoch=cosmos.epoch,
-            kind=ChronicleKind.SYSTEM,
-            text=f"Epoch {cosmos.epoch} began (world year {cosmos.epoch_start_year}).{star_text}",
-            entity_ids=[star.id] if star is not None and not held(star.id) else [],
-            template_key="transition.epoch_began",
-        )
+    await record(
+        await manual_context(ctx.session, "transition", ctx.rules, key=str(cosmos.epoch)),
+        "transition.epoch_began",
+        roles={IncidentRole.SUBJECT: star.id if star is not None and not held(star.id) else None},
+        facts={"epoch": cosmos.epoch, "year": cosmos.epoch_start_year},
+        world_id=primary.id if primary is not None and not held(primary.id) else None,
     )
 
 
 async def pour_essence(ctx: TickContext, amount: int) -> Overflow:
     if amount <= 0:
         raise ValidationFailedError("Pour at least one unit of essence.")
-    spend(await creator_of(ctx.session), amount, "the pour")
+    creator = await creator_of(ctx.session)
+    spend(creator, amount, "the pour")
     result = await overflow_to_land(ctx.session, ctx.rules, amount)
-    await note(
+    await record(
         ctx,
-        f"The Creator poured {amount} essence into the land; {several(result.given, 'measure', 'measures')} of fertility "
-        f"{agree(result.given, 'was', 'were')} given to the most barren regions.",
-        key="essence.poured",
-        ids=list(result.regions),
+        "essence.poured",
+        roles={IncidentRole.ACTOR: creator.id, IncidentRole.BENEFICIARY: list(result.regions)},
+        facts={"amount": amount, "given": result.given},
     )
     return result
 

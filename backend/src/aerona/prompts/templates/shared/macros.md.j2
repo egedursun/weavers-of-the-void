@@ -37,10 +37,10 @@ NAMING LANGUAGES (each world has its own sound system; a record is named and jud
 {% for item in relations %}#{{ item.id }} {{ item.name }}: {% if item.blood_feud %}BLOOD FEUD, {% endif %}{{ item.label }} ({{ item.value }}){% if not loop.last %}; {% endif %}{% endfor %}
 {%- endmacro %}
 {% macro war_lines(wars) -%}
-{% for item in wars %}#{{ item.id }} {{ item.name }} ({{ item.clashes }} clashes){% if not loop.last %}; {% endif %}{% endfor %}
+{% for item in wars %}#{{ item.id }} {{ item.name }} ({{ item.clashes | several("clash", "clashes") }}){% if not loop.last %}; {% endif %}{% endfor %}
 {%- endmacro %}
 {% macro thread_line(thread) -%}
-story#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.worlds | join(" + ") }}{% endif %}{% if thread.advanced %}, advanced {{ thread.advanced }} times, last Age {{ thread.last_age if thread.last_age is not none else thread.age }}{% else %}, never advanced{% endif %}): {{ thread.text }}{% if thread.related_ids %} [related: {% for related in thread.related_ids %}#{{ related }}{% if not loop.last %}, {% endif %}{% endfor %}]{% endif %}
+story#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.worlds | join(" + ") }}{% endif %}{% if thread.advanced %}, advanced {{ thread.advanced | several("time", "times") }}, last Age {{ thread.last_age if thread.last_age is not none else thread.age }}{% else %}, never advanced{% endif %}): {{ thread.text }}{% if thread.related_ids %} [related: {% for related in thread.related_ids %}#{{ related }}{% if not loop.last %}, {% endif %}{% endfor %}]{% endif %}
 {%- endmacro %}
 {% macro chronicle_rows(rows) -%}
 {% for row in rows %}
@@ -68,7 +68,7 @@ Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%,
 {% for c in e.commodities %}- {{ c.label }}: {{ c.quantity }} held{% if c.quantity %}, quality {{ c.quality }}{% endif %}{% if c.lots %} [{{ c.lots | join("; ") }}]{% endif %}{% if c.price is not none %}; price {{ c.price }}, supply {{ c.supply }}, need {{ c.demand }}, in {{ c.imported }}, out {{ c.exported }}{% endif %}
 
 {% endfor %}{% endif %}
-{% if e.currency %}{% set m = e.currency %}Coin: {{ m.name }} (currency {{ m.id }}) of {{ m.metal }} struck by {{ m.issuer }}; purity {{ m.purity }}, trust {{ m.trust }}, {{ m.supply }} coins abroad{% if m.debased %}, debased{% endif %}
+{% if e.currency %}{% set m = e.currency %}Coin: {{ m.name }} (currency {{ m.id }}) of {{ m.metal }} struck by {{ m.issuer }}; purity {{ m.purity }}, trust {{ m.trust }}, {{ m.supply | several("coin", "coins") }} abroad{% if m.debased %}, debased{% endif %}
 
 {% endif %}
 {% if e.loans %}Loans:
@@ -79,13 +79,13 @@ Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%,
 {% for d in e.debts %}- debt {{ d.id }}: {{ d.role }} {{ d.other }} {{ d.amount }} {{ d.what }}{% if d.currency %} in {{ d.currency }}{% endif %}{% if d.due_epoch is not none %}, due age {{ d.due_epoch }}{% endif %}, {{ d.status }}
 {% endfor %}{% endif %}
 {% if e.routes %}Trade routes:
-{% for r in e.routes %}- route {{ r.id }} {{ r.name }} ({{ r.mode }}, {{ r.status }}) with {{ r.partner }}: {{ r.length }} lands, capacity {{ r.capacity }}, danger {{ r.danger }} (bandits {{ r.bandits }}, beasts {{ r.beasts }}, weather {{ r.weather }}, sea {{ r.sea }}), worst season keeps {{ r.season_pct }}% of the cargo moving, renown {{ r.renown }}{% if r.controller %}; kept by {{ r.controller }}{% endif %}{% if r.blockaded_by %}; BLOCKADED by {{ r.blockaded_by }}{% endif %}{% if r.chokepoint %}; a chokepoint for strategic goods{% endif %}{% if r.closed_by_player %}; CLOSED by the Creator{% endif %}{% if r.held %}; held by the Creator: {{ r.held | join(", ") }}{% endif %}{% if r.tolls %}; tolls: {% for t in r.tolls %}{{ t.region }} {{ t.rate_pct }}% to {{ t.controller }}{% if t.treasury and t.treasury != t.controller %} (a share to the treasury of {{ t.treasury }}){% endif %}{% if t.held %} (held){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if r.losses %}; losses: {{ r.losses | join("; ") }}{% endif %}
+{% for r in e.routes %}- route {{ r.id }} {{ r.name }} ({{ r.mode }}, {{ r.status }}) with {{ r.partner }}: {{ r.length | several("land", "lands") }}, capacity {{ r.capacity }}, danger {{ r.danger }} (bandits {{ r.bandits }}, beasts {{ r.beasts }}, weather {{ r.weather }}, sea {{ r.sea }}), worst season keeps {{ r.season_pct }}% of the cargo moving, renown {{ r.renown }}{% if r.controller %}; kept by {{ r.controller }}{% endif %}{% if r.blockaded_by %}; BLOCKADED by {{ r.blockaded_by }}{% endif %}{% if r.chokepoint %}; a chokepoint for strategic goods{% endif %}{% if r.closed_by_player %}; CLOSED by the Creator{% endif %}{% if r.held %}; held by the Creator: {{ r.held | join(", ") }}{% endif %}{% if r.tolls %}; tolls: {% for t in r.tolls %}{{ t.region }} {{ t.rate_pct }}% to {{ t.controller }}{% if t.treasury and t.treasury != t.controller %} (a share to the treasury of {{ t.treasury }}){% endif %}{% if t.held %} (held){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if r.losses %}; losses: {{ r.losses | join("; ") }}{% endif %}
 
 {% endfor %}{% endif %}
 {% if e.pacts %}Pacts with sentient resources:
 {% for p in e.pacts %}- {{ p }}
 {% endfor %}{% endif %}
-{% if e.labour %}Work: {% for j in e.labour %}{{ j.job }} {{ j.workers }} hands at {{ j.output_pct }}%{% if not loop.last %}, {% endif %}{% endfor %}
+{% if e.labour %}Work: {% for j in e.labour %}{{ j.job }} {{ j.workers | several("hand", "hands") }} at {{ j.output_pct }}%{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif %}
 {% if e.cohorts %}People by age, sex, class and state: {% for c in e.cohorts %}{{ c.count }} {{ c.age_band }} {{ c.sex }} {{ c.social_class }}{% if c.condition != "none" %} ({{ c.condition }}){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}

@@ -5,10 +5,10 @@ from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, SpyNetworkRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, SpyCover
 from aerona.domain.enums.mind import ActKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import receive_coin
@@ -26,6 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat
 from aerona.engine.primitives.strength import patron_bonus
+from aerona.engine.recording.record import RoleValue, record
 
 HUNDRED = 100
 
@@ -63,7 +64,7 @@ async def sacrifice(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow) 
         patron.essence += row.count * ctx.rules.captivity.sacrifice_essence_per_100 // HUNDRED
         cap_gained_essence(ctx.rules, patron, before)
     if row.origin_entity_id is not None:
-        await judged(ctx, captor.id, row.origin_entity_id, ActKind.HUMAN_SACRIFICE, note=f"{several(row.count, 'captive', 'captives')}")
+        await judged(ctx, captor.id, row.origin_entity_id, ActKind.SACRIFICE_OF_PEOPLE, note=f"{several(row.count, 'captive', 'captives')}")
     return row.count
 
 
@@ -104,8 +105,8 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         if home is not None:
             await judged(ctx, captor.id, home.id, ActKind.MERCY_TO_ENEMY)
         return CaptiveFate.RELEASED
-    sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.HUMAN_SACRIFICE in await faith_tenets(ctx.session, captor.id)
-    if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.HUMAN_SACRIFICE):
+    sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.SACRIFICE_OF_PEOPLE in await faith_tenets(ctx.session, captor.id)
+    if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.SACRIFICE_OF_PEOPLE):
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
@@ -113,8 +114,11 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     return CaptiveFate.HELD
 
 
-async def cohort_fates(ctx: TickContext) -> dict[CaptiveFate, int]:
-    found: dict[CaptiveFate, int] = {}
+CohortFate = tuple[int, int | None, CaptiveFate]
+
+
+async def cohort_fates(ctx: TickContext) -> dict[CohortFate, int]:
+    found: dict[CohortFate, int] = {}
     rows = await ctx.session.scalars(
         select(CaptiveCohortRow).where(CaptiveCohortRow.fate == CaptiveFate.HELD, CaptiveCohortRow.since_epoch < ctx.epoch).order_by(CaptiveCohortRow.id)
     )
@@ -122,7 +126,8 @@ async def cohort_fates(ctx: TickContext) -> dict[CaptiveFate, int]:
         if held(row.captor_entity_id):
             continue
         fate = await decide(ctx, row)
-        found[fate] = found.get(fate, 0) + row.count
+        key = (row.captor_entity_id, row.origin_entity_id, fate)
+        found[key] = found.get(key, 0) + row.count
         if fate is not CaptiveFate.HELD:
             row.fate, row.settled_epoch = fate, ctx.epoch
     return found
@@ -163,9 +168,9 @@ async def wring_intel(ctx: TickContext, captor: EntityRow, home: EntityRow) -> N
     await judged(ctx, captor.id, home.id, ActKind.TORTURE)
 
 
-async def announce(ctx: TickContext, fates: dict[CaptiveFate, int]) -> None:
-    moved = {fate: count for fate, count in fates.items() if fate is not CaptiveFate.HELD and count}
-    if not moved:
-        return
-    parts = ", ".join(f"{count} {fate.value}" for fate, count in sorted(moved.items()))
-    await ctx.chronicle(ChronicleKind.WAR, f"Captives of war met their fates: {parts}.", template_key="captives.fates", feed_category=FeedCategory.WAR)
+async def announce(ctx: TickContext, fates: dict[CohortFate, int]) -> None:
+    for (captor, origin, fate), count in sorted(fates.items(), key=lambda item: (item[0][0], item[0][1] or 0, item[0][2].value)):
+        if fate is CaptiveFate.HELD or not count:
+            continue
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: captor, IncidentRole.ORIGIN: origin}
+        await record(ctx, "captives.fates", roles=roles, facts={"fate": fate, "count": count})

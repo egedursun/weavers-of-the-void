@@ -8,18 +8,6 @@ from aerona.rules.registry import Rules
 UnitRandom = Callable[[], float]
 
 
-WRITING_SYSTEM_PHRASES: dict[WritingSystem, str] = {
-    WritingSystem.ALPHABET: "an alphabet",
-    WritingSystem.SYLLABARY: "a syllabary",
-    WritingSystem.PICTOGRAPHIC: "a pictographic script",
-    WritingSystem.KNOT: "a knot script",
-    WritingSystem.NOTCH: "a notch script",
-    WritingSystem.LOGOGRAPHIC: "a logographic script",
-    WritingSystem.MIXED: "a mixed script of word signs and sound signs",
-    WritingSystem.ABJAD: "an abjad",
-}
-
-
 @dataclass(frozen=True)
 class ScriptChoiceInputs:
     merchant_share: float
@@ -57,7 +45,3 @@ def complexity_after_script(complexity: int | None, rules: Rules) -> int:
     life = rules.deep_life
     base = complexity if complexity is not None else life.script_default_complexity
     return max(0, min(PERCENT, base + life.script_complexity_gain))
-
-
-def script_note(writer_name: str, language_name: str, system: WritingSystem) -> str:
-    return f"{writer_name}'s scribes developed {WRITING_SYSTEM_PHRASES[system]} for the {language_name} language; words are now permanent."

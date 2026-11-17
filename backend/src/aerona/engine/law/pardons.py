@@ -10,19 +10,19 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import REVOLT_CAUSES
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 
 CORRUPTION = "corruption"
@@ -99,7 +99,13 @@ async def grant_pardon(ctx: TickContext, granter: EntityRow, mortal: EntityRow, 
         await add_renown(ctx.session, granter.id, table.mercy_renown, ctx.epoch, rules=ctx.rules)
     await read_mercy(ctx, granter, polity_id)
     await ctx.session.flush()
-    await note(ctx, f"{granter.name} pardoned {mortal.name}.", key="law.pardon", ids=[granter.id, mortal.id], kind=ChronicleKind.CIVILIZATION)
+    await record(
+        ctx,
+        "law.pardon_corrupt" if corrupt else "law.pardon_wrongful" if unjust else "law.pardon",
+        roles={IncidentRole.AUTHORITY: granter.id, IncidentRole.SUBJECT: mortal.id},
+        facts={"realm": polity_id},
+        place=granter.location_id,
+    )
     return pardon
 
 
@@ -127,10 +133,12 @@ async def declare_amnesty(ctx: TickContext, polity_id: int, ruler: EntityRow) ->
         freed += 1
     ctx.session.add(PardonRow(granter_entity_id=ruler.id, pardoned_entity_id=None, case_id=None, amnesty=True, corrupt=False, epoch=ctx.epoch))
     await ctx.session.flush()
-    realm = await ctx.session.get(EntityRow, polity_id)
-    where = realm.name if realm is not None else "the realm"
-    await note(
-        ctx, f"{ruler.name} declared an amnesty in {where}, freeing {freed}.", key="law.amnesty", ids=[ruler.id, polity_id], kind=ChronicleKind.CIVILIZATION
+    await record(
+        ctx,
+        "law.amnesty",
+        roles={IncidentRole.AUTHORITY: ruler.id, IncidentRole.SUBJECT: polity_id},
+        facts={"freed": freed},
+        place=ruler.location_id,
     )
     return freed
 

@@ -5,19 +5,20 @@ from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import LifeComplexity
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import PeopleStats, SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.lifeforms import life_of, may_arise, raise_life, rank
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import RecordSpec, open_record
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import record
 
 NATIVE_PEOPLE_SUBTYPE = "native people"
 NATIVE_SPECIES_SUBTYPE = "native creature"
@@ -70,7 +71,13 @@ async def native_people(ctx: TickContext, world: WorldRow, region: EntityRow) ->
             flags=(EntityFlag.NATIVE,),
         ),
     )
-    await note(ctx, f"A people appeared of its own accord in {world.name} ({region.name}).", key="life.native_people", ids=[people.id, region.id])
+    await record(
+        ctx,
+        "life.native_people",
+        roles={IncidentRole.PRODUCT: people.id, IncidentRole.PLACE: region.id},
+        facts={"world": world.id, "power": people.power_level},
+        place=region.id,
+    )
     await bind_language_and_faith(ctx, people)
     ctx.count("native_peoples")
     return people
@@ -100,7 +107,13 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
             flags=(EntityFlag.NATIVE,),
         ),
     )
-    await note(ctx, f"The first species appeared in {world.name}.", key="life.native_species", ids=[species.id, region.id])
+    await record(
+        ctx,
+        "life.native_species",
+        roles={IncidentRole.PRODUCT: species.id, IncidentRole.PLACE: region.id},
+        facts={"world": world.id, "danger": stat_or(species, "danger", 0)},
+        place=region.id,
+    )
     ctx.count("native_species")
     return species
 
@@ -112,7 +125,6 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",

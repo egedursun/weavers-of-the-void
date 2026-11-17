@@ -15,19 +15,46 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
 
 
 @reads(
+    "item.curse",
+    "item.damage",
+    "item.might",
+    "item.protection",
     "mortal.creativity",
     "table.art_prices",
     "table.artwork_profiles",
     "table.bonds",
     "table.canon_works",
+    "table.collectors",
     "table.courts",
     "table.entities",
     "table.forgeries",
     "table.gatherings",
     "table.mortal_profiles",
+    "table.name_registry",
+    "table.node_materials",
     "table.nodes",
+    "table.relics",
+    "table.world_materials",
 )
-@writes("table.art_prices", "table.collectors")
+@writes(
+    "table.art_prices",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.collectors",
+    "table.entities",
+    "table.forgeries",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.item_history",
+    "table.item_profiles",
+    "table.mortal_profiles",
+    "table.name_registry",
+    "table.node_materials",
+    "table.relics",
+)
 async def art_market(ctx: TickContext) -> None:
     market, forgeries = MarketTally(), ForgeryTally()
     await keep_market(ctx, market)

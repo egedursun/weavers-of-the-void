@@ -1,8 +1,8 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
-from aerona.prompts.contexts import agent as agent_contexts
 from aerona.prompts.contexts import (
+    accounts,
     blocks,
     chronicler,
     cosmos,
@@ -16,6 +16,7 @@ from aerona.prompts.contexts import (
     opportunities,
     son_turn,
 )
+from aerona.prompts.contexts import agent as agent_contexts
 from aerona.prompts.contexts.base import EmptyContext, LoreContext, PromptContext, RulesContext
 from aerona.prompts.environment import TEMPLATE_SUFFIX, normalize, template
 from aerona.prompts.errors import PromptContextMismatchError, PromptOutputMissingError
@@ -83,6 +84,8 @@ SPECS: tuple[PromptSpec, ...] = (
     PromptSpec(P.GEOGRAPHY_LINES, A.CONTEXT, blocks.GeographyLinesContext),
     PromptSpec(P.WORLD_SUMMARY, A.CONTEXT, blocks.WorldSummaryContext),
     PromptSpec(P.SON_MEMORY, A.CONTEXT, blocks.SonMemoryContext),
+    PromptSpec(P.EVENT_ACCOUNT, A.CONTEXT, accounts.EventAccountContext),
+    PromptSpec(P.EVENT_RECORDS, A.CONTEXT, accounts.EventRecordsContext),
     PromptSpec(P.SKY_CALENDAR, A.CONTEXT, blocks.SkyCalendarContext),
     PromptSpec(P.BUDGET_TRAILER, A.CONTEXT, blocks.BudgetTrailerContext),
     PromptSpec(P.INSPECT_SIBLING, A.CONTEXT, blocks.InspectSiblingContext),

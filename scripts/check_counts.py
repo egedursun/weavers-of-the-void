@@ -202,13 +202,33 @@ def screens() -> dict[Path, str]:
     return {path: path.read_text(encoding="utf-8") for path in sorted(FRONTEND.rglob("*.ts*")) if ".test." not in path.name}
 
 
+TEMPLATES = SOURCE / "prompts" / "templates"
+TEMPLATE_COUNT = re.compile(r"\{\{ ([a-z_][a-z_0-9.]*) \}\} ([a-z][a-z-]*)")
+NAMED_FIELDS = frozenset({"captor", "patron", "people"})
+
+
+def named(field: str) -> bool:
+    last = field.split(".")[-1]
+    return last.endswith("name") or last in NAMED_FIELDS
+
+
+def template_counts() -> list[Count]:
+    found: list[Count] = []
+    for path in sorted(TEMPLATES.rglob("*.j2")):
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            for field, word in TEMPLATE_COUNT.findall(line):
+                if plural(word) and not named(field):
+                    found.append(Count(path, line_number, f"{{{{ {field} }}}} {word}"))
+    return found
+
+
 def main() -> int:
     source = {path: path.read_text(encoding="utf-8") for path in sorted(SOURCE.rglob("*.py"))}
     tests = {path: path.read_text(encoding="utf-8") for path in sorted(TESTS.rglob("*.py"))}
     misfilled = formatted({**source, **tests}, spec_templates(source))
     for item in misfilled:
         print(f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} cannot read a {{count:one|many}} template; fill it with fill()")
-    found = counts(source) + on_screen(screens())
+    found = counts(source) + on_screen(screens()) + template_counts()
     for item in found:
         where = f"{item.path.relative_to(ROOT)}:{item.line}"
         print(f"{where}: '{item.text}' reads wrong for a count of one; count through several() and agree(), or plural() and agree() on screen")

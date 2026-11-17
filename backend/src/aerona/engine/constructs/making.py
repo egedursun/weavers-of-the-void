@@ -20,6 +20,7 @@ from aerona.domain.enums.faith import AfterlifeState, BindingKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.minds import MindAffect, MindMaking, MindPurpose, MindSeat, MindUpkeep
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import BeastStats, ItemStats
@@ -28,11 +29,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
 from aerona.engine.mind.book import skill_level
 from aerona.engine.minds.making import Making, make_mind
-from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import town_of
 from aerona.engine.transform.record import record_transformation
 
@@ -263,5 +264,10 @@ async def make_constructs(ctx: TickContext, tally: MakingTally) -> None:
         row = await make_construct(ctx, maker, Design())
         tally.made += 1
         tally.souled += row.soul_entity_id is not None
-        body = await ctx.session.get(EntityRow, row.entity_id)
-        await note(ctx, f"{maker.name} made {body.name if body else 'a construct'}.", key="construct.made", ids=[maker.id, row.entity_id])
+        await record(
+            ctx,
+            "construct.made",
+            roles={IncidentRole.MAKER: maker.id, IncidentRole.PRODUCT: row.entity_id},
+            facts={"material": row.material, "power_source": row.power_source, "power": row.power, "souled": int(row.soul_entity_id is not None)},
+            place=maker.location_id,
+        )

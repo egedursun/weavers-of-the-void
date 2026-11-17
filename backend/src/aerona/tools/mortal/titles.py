@@ -5,7 +5,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.titles import TitleTenure
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.titles import record_holder, share_of
@@ -15,7 +15,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 HOLDER = "holder_node_id"
 
@@ -50,7 +49,8 @@ async def seize_title(call: MortalCall, args: SeizeTitleInput) -> str:
         realm.profile.legitimacy = max(0, realm.profile.legitimacy - call.rules.titles.usurp_legitimacy)
     deed = "restored" if dormant else "usurped"
     call.target(entity.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.TITLE_SEIZED, entity_ids=[call.me.id, entity.id], me=call.me.name, title=entity.name, deed=deed)
+    tenure = TitleTenure.RESTORED if dormant else TitleTenure.USURPED
+    await call.record("tools.mortal.title_seized", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: entity.id}, facts={"tenure": tenure})
     return result(MortalResult.TITLE_SEIZED, title=entity.name, deed=deed, rank=RANK_WORDS[row.rank].lower())
 
 

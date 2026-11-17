@@ -67,9 +67,9 @@ VOLATILE_COSMOS_COLUMNS = frozenset({"epoch", "epoch_start_year", "map_version",
 
 
 def ready_event() -> asyncio.Event:
-    event = asyncio.Event()
-    event.set()
-    return event
+    ready = asyncio.Event()
+    ready.set()
+    return ready
 
 
 @dataclass
@@ -168,7 +168,7 @@ async def build_application(
     install_change_tracking(database, feed)
     notifier = Notifier(bus)
     chronicle = ChronicleWriter(notifier)
-    ledger = Ledger(chronicle, bus)
+    ledger = Ledger(bus)
     bond_service = BondService(chronicle)
     store = media_store or create_media_store(settings)
     await store.ensure_ready()

@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ActKind, EthicalStance, HonourModel, MemoryKind, PressureKind, ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.body.customs import people_of
@@ -29,9 +30,9 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress, add_wealth
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, living_entity
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 ETHICS_LOCK = "ethics"
@@ -204,8 +205,7 @@ async def shift_conviction(ctx: TickContext, actor_id: int, amount: int, act: Ac
     await write_values(ctx.session, ValueHolder.PERSONAL, actor_id, values)
     profile.conviction = PERCENT // 2
     await think(ctx.session, ctx.rules, actor_id, ThoughtKind.DISILLUSIONED, ctx.epoch)
-    actor = await ctx.session.get(EntityRow, actor_id)
-    await note(ctx, f"{actor.name if actor else 'A mortal'} stopped believing what they once held true.", key="mind.disillusioned", ids=[actor_id])
+    await record_incident(ctx, "mind.disillusioned", roles={IncidentRole.SUBJECT: actor_id}, facts={"act": act})
 
 
 async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: int | None) -> EthicalStance | None:

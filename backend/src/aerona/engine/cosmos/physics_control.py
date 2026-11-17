@@ -17,8 +17,9 @@ from aerona.db.tables.physics import (
     WorldPhysicsRow,
     WorldSurveyRow,
 )
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.catastrophe import scorch_world
@@ -30,7 +31,8 @@ from aerona.engine.cosmos.survey import OBSERVER_TYPES
 from aerona.engine.cosmos.systems import join_system, settle_systems, system_name
 from aerona.engine.cosmos.terraform import begin
 from aerona.engine.divine.control import apply
-from aerona.engine.notes import note
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.scope import recording
 
 Values = Mapping[str, Any]
 SYSTEM_KEYS = frozenset({"system_id", "role"})
@@ -124,7 +126,7 @@ async def edit_world_physics(ctx: TickContext, world_id: int, values: Values, re
     return row
 
 
-async def break_moon(ctx: TickContext, moon_id: int, by: str) -> WorldRow:
+async def break_moon(ctx: TickContext, moon_id: int, by_id: int) -> WorldRow:
     moon = await found(ctx, WorldRow, moon_id, "world")
     parent = await ctx.session.get(WorldRow, moon.parent_world_id) if moon.parent_world_id is not None else None
     if parent is None:
@@ -133,9 +135,16 @@ async def break_moon(ctx: TickContext, moon_id: int, by: str) -> WorldRow:
         raise ValidationFailedError(f"{moon.name} is already broken.")
     if "world_type" in moon.locked:
         raise ValidationFailedError(f"The nature of {moon.name} is held.")
-    await scorch_world(ctx, moon, f"{by} broke")
-    moon.world_type = WorldType.SHATTERED
-    await note(ctx, f"{by} broke {moon.name} into a ring about {parent.name}.", key="world.ring_formed", world_id=parent.id, kind=ChronicleKind.SKY)
+    async with recording(ctx, "world.moon_broken", world_id=parent.id):
+        await scorch_world(ctx, moon, by_id)
+        moon.world_type = WorldType.SHATTERED
+        await record(
+            ctx,
+            "world.moon_broken",
+            roles={IncidentRole.ACTOR: by_id, IncidentRole.SUBJECT: moon.id, IncidentRole.DESTINATION: parent.id},
+            steps=(StepDraft(StepAction.COLLAPSE_BODY, actor=by_id, target=moon.id, outcome=StepOutcome.DESTROYED),),
+            world_id=parent.id,
+        )
     await ctx.session.flush()
     return moon
 
@@ -195,12 +204,12 @@ async def delete_feature(ctx: TickContext, feature_id: int) -> None:
     await ctx.session.flush()
 
 
-async def call(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, by: str, size: int | None) -> ImpactEventRow:
-    return await call_impact(ctx, world_id, region_id, by_node_id, by, size=size)
+async def call(ctx: TickContext, world_id: int, region_id: int | None, by_node_id: int | None, *, size: int | None) -> ImpactEventRow:
+    return await call_impact(ctx, world_id, region_id, by_node_id, size=size)
 
 
-async def deflect(ctx: TickContext, impact_id: int, by_node_id: int | None, by: str) -> ImpactEventRow:
-    return await deflect_impact(ctx, impact_id, by_node_id, by)
+async def deflect(ctx: TickContext, impact_id: int, by_node_id: int | None) -> ImpactEventRow:
+    return await deflect_impact(ctx, impact_id, by_node_id)
 
 
 async def edit_impact(ctx: TickContext, impact_id: int, values: Values, release: list[str]) -> ImpactEventRow:
@@ -215,9 +224,9 @@ async def delete_impact(ctx: TickContext, impact_id: int) -> None:
 
 
 async def start_terraform(
-    ctx: TickContext, world_id: int, aim: TerraformAim, by_node_id: int | None, *, by: str, step: int | None, epochs: int | None
+    ctx: TickContext, world_id: int, aim: TerraformAim, by_node_id: int | None, *, step: int | None, epochs: int | None
 ) -> TerraformingRow:
-    return await begin(ctx, world_id, aim, by_node_id, by, step=step, epochs=epochs)
+    return await begin(ctx, world_id, aim, by_node_id, step=step, epochs=epochs)
 
 
 async def edit_terraform(ctx: TickContext, project_id: int, values: Values, release: list[str]) -> TerraformingRow:

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from aerona.constants.telemetry import TELEMETRY_DATABASE_FILENAME
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.inline_sqlite import inline_engine
+from aerona.db.record_context import UNCAPTURED
 from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow, TelemetryBase
 from aerona.domain.enums.telemetry import LlmCallStatus
 
@@ -60,7 +61,7 @@ def prepare(connection: Connection) -> None:
 class TelemetryDatabase:
     def __init__(self, url: str) -> None:
         self.engine: AsyncEngine = inline_engine(url)
-        self.sessions = async_sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)
+        self.sessions = async_sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession, info={UNCAPTURED: True})
         event.listen(self.engine.sync_engine, "connect", _configure)
 
     async def setup(self) -> None:

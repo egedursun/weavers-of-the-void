@@ -4,11 +4,12 @@ from aerona.constants.schema import TITLE_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.meta import ScenarioRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.meta import GoalBasis, GoalComparator, GoalMetric, ScenarioKey, ScenarioStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.gods.goals import scenario_name
+from aerona.engine.recording.record import record
 from aerona.services.gods import goals
-from aerona.services.player.chronicle import tell
-from aerona.services.player.lines import SCENARIO_ABANDONED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -109,7 +110,9 @@ async def abandon_scenario(scope: PlayerScope, command: AbandonScenario) -> Effe
     await goals.abandon_scenario(scope.session, scope.rules, row.id)
     creator = await scope.creator()
     ctx = await scope.context("abandon_scenario")
-    return Effect(await tell(ctx, SCENARIO_ABANDONED, creator=creator.name, name=name))
+    return Effect(
+        (await record(ctx, "player.goals.abandoned", roles={IncidentRole.ACTOR: creator.id}, facts={"name": name}, kind=ChronicleKind.CREATOR_HAND)).text
+    )
 
 
 @player_action("scenario:delete", ActionKind.OTHER)

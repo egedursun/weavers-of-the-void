@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import PACKAGES, PackageSpec, StageSpec
+from aerona.catalog.incident_kinds.body_lines import ONSET_STEPS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -25,13 +26,14 @@ from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, 
 from aerona.domain.enums.arcana import SpellForm
 from aerona.domain.enums.body import HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueHolder
 from aerona.domain.enums.minds import MindSeat
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerState
+from aerona.domain.enums.records import StepAction, StepOutcome, StepState
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import HeroQuestStatus
 from aerona.engine.body.book import ensure_body
@@ -48,6 +50,7 @@ from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import active_bonds, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 
 AFFLICTION_KEY = "afflictions"
 STAGE_HOLD = "stage"
@@ -167,10 +170,36 @@ async def afflict(
     if spec.onset <= 0:
         await enter_stage(ctx, bearer, row, 1)
     if spec.visibility is not Visibility.HIDDEN:
-        await ctx.chronicle(
-            ChronicleKind.WORLD, f"{bearer.name} now bears {spec.label.lower()}.", template_key=f"affliction.{package.value}", entity_ids=[bearer.id]
-        )
+        roles: dict[IncidentRole, RoleValue] = {IncidentRole.PATIENT: bearer.id, IncidentRole.ACTOR: source_node_id}
+        steps = onset_steps(bearer.id, row, source_node_id)
+        await record(ctx, f"affliction.{package.value}", roles=roles, facts={"package": package, "transmission": transmission}, steps=steps)
     return row
+
+
+def onset_steps(bearer_id: int, row: AfflictionRow, source_node_id: int | None) -> tuple[StepDraft, ...]:
+    if row.package not in ONSET_STEPS:
+        return ()
+    states = ((bearer_id, StepState.POSSESSED),) if row.package is PackageKind.POSSESSION else ()
+    return (affliction_step(ONSET_STEPS[row.package], row, source_node_id, bearer_id, states=states),)
+
+
+def affliction_step(action: StepAction, row: AfflictionRow, actor: int | None, bearer_id: int, *, states: tuple[tuple[int, StepState], ...] = ()) -> StepDraft:
+    return StepDraft(
+        action,
+        actor=actor,
+        target=bearer_id,
+        outcome=StepOutcome.SUCCESS,
+        record_table=AfflictionRow.__tablename__,
+        record_key=str(row.id),
+        states=states,
+    )
+
+
+def cure_steps(bearer_id: int, row: AfflictionRow, how: CureKind | None) -> tuple[StepDraft, ...]:
+    recovered = affliction_step(StepAction.RECOVER, row, None, bearer_id)
+    if how is CureKind.MEDICINE:
+        return (affliction_step(StepAction.TREAT, row, None, bearer_id), recovered)
+    return (recovered,)
 
 
 async def cure(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, how: CureKind | None) -> None:
@@ -178,10 +207,11 @@ async def cure(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, how: Cur
     row.cured_epoch = ctx.epoch
     spec = spec_of(row)
     if spec.visibility is not Visibility.HIDDEN or how is not None:
-        reason = f" by {how.value}" if how is not None else ""
-        await ctx.chronicle(
-            ChronicleKind.WORLD, f"{bearer.name} is freed of {spec.label.lower()}{reason}.", template_key="affliction.cured", entity_ids=[bearer.id]
-        )
+        facts: dict[str, FactInput] = {"package": row.package, "stage": row.stage}
+        if how is not None:
+            facts["cure"] = how
+        key = "affliction.cured_by" if how is not None else "affliction.cured"
+        await record(ctx, key, roles={IncidentRole.PATIENT: bearer.id}, facts=facts, steps=cure_steps(bearer.id, row, how))
 
 
 async def medicine_of(ctx: TickContext, bearer: EntityRow) -> int:

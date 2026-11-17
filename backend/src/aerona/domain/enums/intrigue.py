@@ -106,3 +106,10 @@ class BeliefSource(StrEnum):
     INTRUSION = "intrusion"
     SURVEILLANCE = "surveillance"
     MADE_MIND_REPORT = "made_mind_report"
+
+
+class TrueNameCause(StrEnum):
+    REBIRTH = "a_costly_rebirth_of_its_manifestation"
+    INITIATION = "an_initiation"
+    GOD_WORD = "a_god's_word"
+    NAME_FORM = "a_name_given_by_custom"

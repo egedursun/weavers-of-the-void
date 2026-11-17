@@ -14,10 +14,10 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import PolityLoyaltyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind, MovementCause
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
@@ -27,7 +27,6 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.cycles.indenture import indentured_share, revolts_in
 from aerona.engine.mind.book import values_for
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.policy import revolution
@@ -38,6 +37,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import declare_war
 
 HALF = PERCENT // 2
@@ -267,13 +267,13 @@ async def rise(ctx: TickContext, realm: Realm, row: MovementProfileRow, stronges
             cause=WarCause.UPRISING,
             world_cap=False,
         )
-    deed = "forced the wars of" if row.cause is MovementCause.PEACE else "rose in arms against"
-    await note(
+    await record_incident(
         ctx,
-        f"The movement for {CAUSE_LABELS[row.cause].lower()} {deed} {realm.entity.name}{' toward an end' if row.cause is MovementCause.PEACE else ''}.",
-        key="movements.revolt",
-        ids=[row.faction_entity_id, realm.entity.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "movements.revolt",
+        roles={IncidentRole.ACTOR: row.faction_entity_id, IncidentRole.TARGET: realm.entity.id},
+        facts={
+            "cause": row.cause,
+        },
     )
     tally.revolts += 1
 

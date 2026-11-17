@@ -23,7 +23,6 @@ from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.customs import MemberRight
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -31,7 +30,9 @@ from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
-from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import CoupCause, GenderRule, LawKind, OathBreach, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import SpontaneousKind
@@ -51,7 +52,6 @@ from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.laws import LawBook
@@ -62,6 +62,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.regime.book import appointment_weights, coup_factor, credential_rank, plotter
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import war_event
@@ -227,8 +228,8 @@ async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: Ent
         await swear(ctx, holder, OathKind.SILENCE, recipient_id=realm.entity.id, note_text="the secrets of the realm")
 
 
-def largest_tier(book: RealmBook, region: int, towns: Mapping[int, SettlementProfileRow]) -> int:
-    return max((TIER_ORDER.index(towns[place].size_tier) for place in book.atlas.communities_in(region) if place in towns), default=0)
+def largest_tier(book: RealmBook, region: int, held_towns: Mapping[int, SettlementProfileRow]) -> int:
+    return max((TIER_ORDER.index(held_towns[place].size_tier) for place in book.atlas.communities_in(region) if place in held_towns), default=0)
 
 
 def province_seats(book: RealmBook, realm: Realm) -> list[int]:
@@ -253,9 +254,9 @@ async def embassy_targets(ctx: TickContext, book: RealmBook, realm: Realm) -> li
 
 
 def wanted_offices(
-    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, towns: Mapping[int, SettlementProfileRow]
+    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, held_towns: Mapping[int, SettlementProfileRow]
 ) -> list[tuple[OfficeKind, int | None, int | None]]:
-    seat = towns.get(realm.profile.capital_entity_id or -1)
+    seat = held_towns.get(realm.profile.capital_entity_id or -1)
     seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
     wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
     if seat_tier >= office_tier(rules, OfficeKind.JESTER):
@@ -264,7 +265,7 @@ def wanted_offices(
         wanted.extend(
             (OfficeKind.GOVERNOR, region, None)
             for region in province_seats(book, realm)
-            if largest_tier(book, region, towns) >= office_tier(rules, OfficeKind.GOVERNOR)
+            if largest_tier(book, region, held_towns) >= office_tier(rules, OfficeKind.GOVERNOR)
         )
     wanted.extend((OfficeKind.AMBASSADOR, None, target) for target in embassies)
     return wanted
@@ -541,7 +542,7 @@ async def regency(ctx: TickContext, realm: Realm, occupied: set[int]) -> str | N
 
 
 async def usurp(ctx: TickContext, realm: Realm, usurper: EntityRow, ruler: EntityRow) -> None:
-    await seize_throne(ctx, realm, usurper, f"the regent for the child {ruler.name} took the crown")
+    await seize_throne(ctx, realm, usurper, CoupCause.REGENT)
     office = next((row for row in realm.offices if row.kind is OfficeKind.REGENT), None)
     if office is not None and office.holder_entity_id is not None:
         await appoint(ctx, realm, office, None, by_id=usurper.id, reason="the regent took the crown")
@@ -662,13 +663,13 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             continue
         ctx.count("houses_took_sides", await house_sides(ctx, realm, war, claimant.id, host.id))
         wars += 1
-        await note(
+        await record(
             ctx,
-            f"{claimant.name} would not bow: a war of succession broke out over {realm.entity.name}.",
-            key="polity.succession_war",
-            ids=[claimant.id, realm.entity.id, host.id],
-            kind=ChronicleKind.CIVILIZATION,
-            cause_incident_id=await succession_incident(ctx.session, realm.entity.id, [realm.ruler_id]),
+            "polity.succession_war",
+            roles={IncidentRole.ACTOR: claimant.id, IncidentRole.TARGET: realm.entity.id, IncidentRole.ALLY: host.id, IncidentRole.OPPONENT: realm.ruler_id},
+            facts={"war": war.event_entity_id, "claim": claim.strength, "basis": claim.basis},
+            place=realm.profile.capital_entity_id,
+            cause=await succession_incident(ctx.session, realm.entity.id, [realm.ruler_id]),
         )
     return wars
 
@@ -755,7 +756,7 @@ async def govern(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
     return governed
 
 
-async def seize_throne(ctx: TickContext, realm: Realm, usurper: EntityRow, reason: str, *, backer_id: int | None = None) -> bool:
+async def seize_throne(ctx: TickContext, realm: Realm, usurper: EntityRow, reason: CoupCause, *, backer_id: int | None = None) -> bool:
     ruler = await living_entity(ctx.session, realm.ruler_id) if realm.ruler_id is not None else None
     if ruler is not None and ruler.id == usurper.id:
         return False
@@ -766,14 +767,27 @@ async def seize_throne(ctx: TickContext, realm: Realm, usurper: EntityRow, reaso
     core = realm.profile.core_entity_id
     if core is not None and not await active_bonds(ctx.session, [BondKind.RULES], sources=[usurper.id], targets=[core]):
         await connect(ctx.session, usurper.id, core, BondKind.RULES, ctx.epoch, description="seized")
-    set_ruler(ctx, realm, usurper.id, reason, usurped=True)
+    set_ruler(ctx, realm, usurper.id, spoken(reason), usurped=True)
     realm.profile.legitimacy_parts = {**realm.profile.legitimacy_parts, "usurper": ctx.epoch}
     if ruler is not None:
-        await break_on(ctx, [usurper.id], OathKind.FEALTY, "the oath-sworn seized the throne", recipient_id=ruler.id)
+        await break_on(ctx, [usurper.id], OathKind.FEALTY, OathBreach.THRONE_SEIZED, recipient_id=ruler.id)
     await shift_infamy(ctx, usurper.id, ctx.rules.legitimacy.usurper_infamy)
-    ids = [usurper.id, realm.entity.id, *([ruler.id] if ruler is not None else []), *([backer_id] if backer_id is not None else [])]
-    fallen = f" from {ruler.name}" if ruler is not None else ""
-    await note(ctx, f"{usurper.name} seized the throne of {realm.entity.name}{fallen}: {reason}.", key="polity.coup", ids=ids, kind=ChronicleKind.CIVILIZATION)
+    await record(
+        ctx,
+        "polity.coup" if ruler is not None else "polity.coup_empty_throne",
+        roles={
+            IncidentRole.ACTOR: usurper.id,
+            IncidentRole.TARGET: realm.entity.id,
+            IncidentRole.PREDECESSOR: ruler.id if ruler is not None else None,
+            IncidentRole.ALLY: backer_id,
+        },
+        facts={"cause": reason, "infamy": ctx.rules.legitimacy.usurper_infamy},
+        place=realm.profile.capital_entity_id,
+        steps=(
+            *((StepDraft(StepAction.DEPOSE, actor=usurper.id, target=ruler.id),) if ruler is not None else ()),
+            StepDraft(StepAction.CROWN, actor=usurper.id, target=realm.entity.id),
+        ),
+    )
     return True
 
 
@@ -790,13 +804,13 @@ async def coups(ctx: TickContext, realm: Realm) -> int:
     return 1 if await seize_throne(ctx, realm, holder, reason) else 0
 
 
-async def usurper_for(ctx: TickContext, realm: Realm) -> tuple[EntityRow | None, str]:
+async def usurper_for(ctx: TickContext, realm: Realm) -> tuple[EntityRow | None, CoupCause]:
     plotting = await plotter(ctx.session, realm.entity.id)
     schemer = await living_entity(ctx.session, plotting) if plotting is not None else None
     if schemer is not None:
-        return schemer, "a subject with a power base of their own turned it on the throne"
+        return schemer, CoupCause.POWER_BASE
     marshal = next((office for office in realm.offices if OfficePower.COMMAND in powers_of(office) and office.holder_entity_id is not None), None)
     holder = await living_entity(ctx.session, marshal.holder_entity_id) if marshal is not None and marshal.holder_entity_id is not None else None
     if holder is None or TraitKind.AMBITIOUS not in await traits_of(ctx.session, holder.id):
-        return None, ""
-    return holder, "the marshal turned the army on the throne"
+        return None, CoupCause.MARSHAL
+    return holder, CoupCause.MARSHAL

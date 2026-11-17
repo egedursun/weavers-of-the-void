@@ -2168,7 +2168,7 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | world_age_apocalypse_push | dunya_yasi_kiyamet | 2 | 0 | 50 | Apocalypse | Push-back of the doomsday clock at a world's age turning |
 | golden_age_min_world_age | altin_mehil | 3 | 0 | 1000 | Civilization | Minimum world age to enter a golden age (epochs) |
 | golden_age_prosperity_gain | altin_refah_artis | 1 | 0 | 100 | Civilization | Per-epoch prosperity gain of communities in a golden age |
-| golden_age_record_links | altin_kronik_bag | 6 | 0 | 100 | Chronicle | Maximum communities linked to the golden-age record |
+| ~~golden_age_record_links~~ | altin_kronik_bag | 6 | 0 | 100 | Chronicle | Retired by W49 (F58.12): every community of a golden age is linked to its record |
 
 ### DEEP_RELATIONS
 
@@ -3338,7 +3338,7 @@ Old namespace `OLUMLU_ARAC` · 223 rows · defined in `src/olumluler.js` · also
 | adopt_ap | evlat_ap | 1 | 1 | 5 | Mortal agents | adopt (evlat_edin) action cost |
 | adopt_relation | evlat_iliski | 10 | 0 | 100 | Mortal agents | Relation contribution of adoption |
 | discover_resource_per_epoch | kesif_tur | 1 | 0 | 20 | Mortal agents | discover_resource (kaynak_kesfet): maximum discoveries by one mortal per epoch |
-| chronicle_named_communities | liste_ad | 4 | 1 | 100 | Context budgets | Maximum communities named in a chronicle line (the rest as "and N more communities") |
+| ~~chronicle_named_communities~~ | liste_ad | 4 | 1 | 100 | Context budgets | Retired by W49 (F58.12): a line names every community through its roles |
 | seizure_relation_loss | el_koyma_iliski | 25 | 0 | 200 | War and diplomacy | Relation loss of a community whose resource is seized toward the seizer (when war cannot be declared) |
 | ctx_character_chars | karakter_butce | 1500 | 100 | 50,000 | Context budgets | Mortal context: character and way-of-life section (characters) |
 | ctx_event_lines | olay_satir | 12 | 1 | 200 | Context budgets | Mortal context: lines of recent events |
@@ -4591,7 +4591,7 @@ Old namespace `DUNYA_MOTORU` · 81 rows · defined in `src/sim.js`. World-engine
 
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
-| chronicle_fold_threshold | katlama_esik | 3 | 2 | 100 | Chronicle | This many chronicle lines of the same template are folded into one line |
+| chronicle_fold_threshold | katlama_esik | 3 | 2 | 100 | Chronicle | Lines of one kind in one epoch from which the feed shows them as one group, every line still reachable |
 | raid_danger_divisor | baskin_bolen | 160 | 10 | 10,000 | Creatures | Monster raid chance: danger / this number |
 | raid_loss_divisor | baskin_kayip_bolen | 400 | 10 | 10,000 | Creatures | Population lost in a raid: danger / this number |
 | monster_top_pct | canavar_yuzde | 80 | 0 | 100 | Creatures | Species counted as monsters: the world's top X% most dangerous |
@@ -4713,8 +4713,8 @@ Old namespace `DUNYA_CAG_GECISI` · 37 rows · defined in `src/sim.js`. Epoch tr
 | temples_per_apocalypse_push | tapinak_bolen | 2 | 1 | 100 | Apocalypse | Number of temples that push the apocalypse back by 1 |
 | apocalypse_disaster_severity | kiyamet_siddet | 90 | 0 | 100 | Apocalypse | Severity of the apocalypse's disasters destroying regions (%) |
 | apocalypse_event_severity | kiyamet_olay_siddet | 100 | 0 | 100 | Apocalypse | Severity of the apocalypse event record |
-| apocalypse_chronicle_regions | kiyamet_kronik_id | 12 | 0 | 1000 | Chronicle | Maximum regions linked to the apocalypse chronicle entry |
-| folded_chronicle_ids_cap | kronik_id_tavan | 40 | 0 | 1000 | Chronicle | Maximum entities linked to a folded chronicle line |
+| ~~apocalypse_chronicle_regions~~ | kiyamet_kronik_id | 12 | 0 | 1000 | Chronicle | Retired by W49 (F58.12): every region an apocalypse reaches is linked to its record |
+| ~~folded_chronicle_ids_cap~~ | kronik_id_tavan | 40 | 0 | 1000 | Chronicle | Retired by W49 (F58.10): folding is a feed view, and no entity link is capped |
 | essence_overflow_note | oz_tasma_not | 20 | 0 | 100,000 | Chronicle | When overflowing essence exceeds this, a note is added to the chronicle |
 
 ### WORLD_HUNT

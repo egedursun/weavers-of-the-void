@@ -6,11 +6,13 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import MarriageEnd
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import union_of
 from aerona.engine.mortal.kinship import end_marriage
-from aerona.engine.notes import note
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.axes import Spousing, fresh_custom
 from aerona.engine.unions.customs import TERM_FORMS
 
@@ -41,9 +43,13 @@ async def end_terms(ctx: TickContext) -> int:
         if custom is None or custom.form not in TERM_FORMS or ctx.epoch - marriage.start_epoch < custom.term_epochs:
             continue
         await end_marriage(ctx.session, marriage, ctx.epoch, MarriageEnd.TERM)
-        second = await ctx.session.get(EntityRow, marriage.second_id)
-        names = " and ".join(row.name for row in (first, second) if row is not None)
-        await note(ctx, f"The term of the union of {names} came to its end by custom.", key="union.term", ids=[marriage.first_id, marriage.second_id])
+        await record(
+            ctx,
+            "union.term",
+            roles={IncidentRole.SPOUSE: [marriage.first_id, marriage.second_id]},
+            facts={"form": custom.form, "term": custom.term_epochs},
+            steps=(StepDraft(StepAction.SEPARATE, actor=marriage.first_id, target=marriage.second_id),),
+        )
         ended += 1
     return ended
 

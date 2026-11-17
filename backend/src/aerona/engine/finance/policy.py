@@ -5,7 +5,6 @@ from sqlalchemy import func, select
 
 from aerona.catalog.finance import ILLEGAL_GOODS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.core.random import SeededRandom
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -15,13 +14,14 @@ from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import TreatyKind, TreatyStatus
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -29,14 +29,13 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.contraband import BannedMaterials, banned_materials
 from aerona.engine.industry.energy import industry_row
 from aerona.engine.intrigue.beliefs import evidence_trusts
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
 
 OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.ROUTE_RAIDERS, *sorted(CRIME_KINDS))
 MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
-NOTE_CAP = 4
 ALLIANCES = (TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE)
 
 
@@ -210,17 +209,15 @@ async def smuggle(
     if "black_market" not in row.locked:
         row.black_market += moved
     tally.smuggled += moved
-    if tally.noted < NOTE_CAP:
+    if moved:
         tally.noted += 1
-        gang_entity = book.entities.get(outlaw)
-        target = book.entities.get(buyer)
-        loads_counted = several(moved, "load", "loads")
-        await note(
+        await record(
             ctx,
-            f"{gang_entity.name if gang_entity else 'Smugglers'} slipped {loads_counted} of forbidden goods into {target.name if target else 'the market'}.",
-            key="trade_policy.smuggled",
-            ids=[item for item in (outlaw, buyer) if item],
-            kind=ChronicleKind.TRADE,
+            "trade_policy.smuggled",
+            roles={IncidentRole.ACTOR: outlaw, IncidentRole.BUYER: buyer},
+            facts={"loads": moved},
+            steps=(StepDraft(StepAction.SMUGGLE, actor=outlaw, target=buyer, amount=moved, unit=FactUnit.COUNT),),
+            place=buyer,
         )
     return moved
 

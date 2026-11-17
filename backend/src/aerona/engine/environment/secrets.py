@@ -14,7 +14,6 @@ from aerona.db.tables.made import MadeRealmRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -30,35 +29,16 @@ from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.places import KIND_LOCK, write_kind
 from aerona.engine.lore.rites import devise, rite_of
-from aerona.engine.notes import note
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import RoleValue, record
 from aerona.rules.registry import Rules
 
 SEALED_KINDS = frozenset({SecretKind.SEALED_SPIRIT, SecretKind.UNDERWORLD_ENTRANCE})
 MINEABLE = (MaterialFamily.METAL, MaterialFamily.PRECIOUS, MaterialFamily.STONE, MaterialFamily.EXOTIC)
-SECRET_LABELS: dict[SecretKind, str] = {
-    SecretKind.HIDDEN_RESOURCE: "a hidden seam",
-    SecretKind.BURIED_RELIC: "a buried relic",
-    SecretKind.SEALED_SPIRIT: "a sealed spirit",
-    SecretKind.LOST_KNOWLEDGE: "lost knowledge",
-    SecretKind.LOST_RITE: "a lost rite",
-    SecretKind.UNDERWORLD_ENTRANCE: "a way down to the underworld",
-    SecretKind.HIDDEN_PEOPLE: "a hidden people",
-    SecretKind.DORMANT_MIND: "a sleeping mind",
-    SecretKind.SEALED_REALM: "a sealed realm",
-}
-MODE_VERBS: dict[DiscoveryMode, str] = {
-    DiscoveryMode.EXPLORER: "searching",
-    DiscoveryMode.SEER: "a seer's vision",
-    DiscoveryMode.MINER: "deep digging",
-    DiscoveryMode.MYSTERY: "solving its mystery",
-    DiscoveryMode.PLAYER: "the will of the Creator",
-    DiscoveryMode.SON: "a god's sign",
-}
 
 
 @dataclass(frozen=True)
@@ -242,24 +222,24 @@ async def release(ctx: TickContext, secret: PlaceSecretRow, place: EntityRow, re
             ),
         )
         secret.result_entity_id = spirit.id
-        await note(
+        await record(
             ctx,
-            f"The seal beneath {place.name} broke and {spirit.name} went free; the land around it is haunted.",
-            key="place.secret_released",
-            ids=[place.id, spirit.id],
-            roles={spirit.id: IncidentRole.ACTOR, place.id: IncidentRole.PLACE},
+            "place.secret_released",
+            roles={IncidentRole.ACTOR: spirit.id, IncidentRole.PLACE: place.id},
+            facts={"haunting": table.haunted_depth, "strength": secret.strength},
+            place=place.id,
         )
         return spirit.name
     shift_stat(place, "danger", table.entrance_danger)
     profile = await ctx.session.get(PlaceProfileRow, place.id)
     if profile is not None and KIND_LOCK not in profile.locked and profile.kind in DEEPENS:
         await write_kind(ctx.session, ctx.rules, place.id, DEEPENS[profile.kind])
-    await note(
+    await record(
         ctx,
-        f"The way down beneath {place.name} lies open; the dead walk near it and the deep breathes out.",
-        key="place.secret_opened",
-        ids=[place.id],
-        roles={place.id: IncidentRole.PLACE},
+        "place.secret_opened",
+        roles={IncidentRole.PLACE: place.id},
+        facts={"danger": table.entrance_danger, "haunting": table.haunted_depth},
+        place=place.id,
     )
     return place.name
 
@@ -313,7 +293,13 @@ UNCOVERED: dict[SecretKind, Callable[[TickContext, EntityRow], Awaitable[EntityR
 
 
 async def reveal(
-    ctx: TickContext, secret: PlaceSecretRow, mode: DiscoveryMode, finder: EntityRow | None, region: RegionEnvironmentRow | None
+    ctx: TickContext,
+    secret: PlaceSecretRow,
+    mode: DiscoveryMode,
+    finder: EntityRow | None,
+    region: RegionEnvironmentRow | None,
+    *,
+    by_id: int | None = None,
 ) -> EntityRow | None:
     place = await living_entity(ctx.session, secret.place_entity_id)
     if place is None or secret.revealed_epoch is not None:
@@ -341,17 +327,16 @@ async def reveal(
         secret.result_entity_id = result.id
         if finder is not None:
             await connect(ctx.session, finder.id, result.id, BondKind.DISCOVERED, ctx.epoch, description=f"found in {place.name}")
-    who = finder.name if finder is not None else "No one living"
-    found = f": {result.name}" if result is not None else ""
-    ids = [item.id for item in (place, finder, result) if item is not None]
-    roles = {place.id: IncidentRole.PLACE, **({finder.id: IncidentRole.ACTOR} if finder is not None else {})}
-    await note(
+    found_roles: dict[IncidentRole, RoleValue] = {IncidentRole.PLACE: place.id, IncidentRole.PRODUCT: result.id if result is not None else None}
+    actor_id = finder.id if finder is not None else by_id
+    if actor_id is not None:
+        found_roles[IncidentRole.ACTOR] = actor_id
+    await record(
         ctx,
-        f"{who} found {SECRET_LABELS[secret.kind]} in {place.name} by {MODE_VERBS[mode]}{found}.",
-        key=f"place.secret_{secret.kind.value}",
-        ids=ids,
-        kind=ChronicleKind.KNOWLEDGE if secret.kind in (SecretKind.LOST_KNOWLEDGE, SecretKind.LOST_RITE) else ChronicleKind.WORLD,
-        roles=roles,
+        f"place.secret_{secret.kind.value}" if actor_id is not None else f"place.found_{secret.kind.value}",
+        roles=found_roles,
+        facts={"mode": mode, "strength": secret.strength},
+        place=place.id,
     )
     if secret.sealed and mode is DiscoveryMode.MINER and not secret.held:
         await release(ctx, secret, place, region)

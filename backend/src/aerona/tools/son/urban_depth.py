@@ -11,6 +11,7 @@ from aerona.db.tables.urban import ConvoyRow, TurfRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.urban import ConvoyStatus
 from aerona.engine.economy.convoys import OPEN
 from aerona.engine.primitives.numbers import clamp_int
@@ -20,7 +21,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -49,7 +49,12 @@ async def shield_convoy(call: SonCall, args: ShieldConvoyInput) -> str:
     if convoy.status is ConvoyStatus.DELAYED and "status" not in convoy.locked:
         convoy.status = ConvoyStatus.TRAVELLING
     call.target(route.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SHIELD_CONVOY, entity_ids=[route.id], son=call.son.name, route=route.name, reason=args.reason)
+    await call.record(
+        "tools.son.shield_convoy",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: route.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.CONVOY_SHIELDED, name=route.name)
 
 
@@ -65,7 +70,13 @@ async def scour_streets(call: SonCall, args: ScourStreetsInput) -> str:
             turf.strength = clamp_int(turf.strength - SCOURED, 0, PERCENT)
             scoured += 1
     call.target(town.id)
-    await call.chronicle(ChronicleKind.WORLD, lines.SCOUR_STREETS, entity_ids=[town.id], son=call.son.name, town=town.name, reason=args.reason)
+    await call.record(
+        "tools.son.scour_streets",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: town.id},
+        facts={"reason": args.reason},
+        place=town.id,
+        kind=ChronicleKind.WORLD,
+    )
     return result(SonResult.STREETS_SCOURED, name=town.name, count=scoured)
 
 

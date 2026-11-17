@@ -7,13 +7,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import CatchRight
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 from aerona.engine.context import TickContext
 from aerona.engine.couplings.closures import closures_on
 from aerona.engine.crafts.grounds import abundance_pct
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import enact
+from aerona.engine.recording.record import record
 
 
 async def keeper_town(ctx: TickContext, ground: CatchGroundRow) -> EntityRow | None:
@@ -46,10 +47,11 @@ async def closures(ctx: TickContext) -> None:
             continue
         await enact(ctx, town, LawKind.CLOSED_SEASON, {}, basis=LegitimacyBasis.CUSTOM)
         ctx.count("closures_declared")
-        await note(
+        await record(
             ctx,
-            f"{town.name} closed its waters and hunting grounds for a season so the stock could return.",
-            key="fishery.closed",
-            ids=[town.id, ground.source_entity_id],
+            "fishery.closed",
+            roles={IncidentRole.SUBJECT: town.id},
+            facts={"ground": ground.source_entity_id, "stock": left, "collapse_at": ground.collapse_at},
+            place=town.id,
         )
     await ctx.session.flush()

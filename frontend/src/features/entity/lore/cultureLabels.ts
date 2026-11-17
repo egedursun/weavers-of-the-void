@@ -84,7 +84,11 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     icon: HeartHandshake,
     tone: 'success',
   },
-  human_sacrifice: { label: 'Human sacrifice', icon: Flame, tone: 'danger' },
+  sacrifice_of_people: {
+    label: 'Sacrifice of people',
+    icon: Flame,
+    tone: 'danger',
+  },
   trade_with_outsiders: {
     label: 'Trade with outsiders',
     icon: Handshake,

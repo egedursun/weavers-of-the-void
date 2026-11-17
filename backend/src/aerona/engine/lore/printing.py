@@ -10,15 +10,15 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import held_by
 from aerona.engine.lore.learning import realm_of
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 PRINTED = (Technique.PRINTING, Technique.PRINTING_PRESS)
@@ -87,13 +87,6 @@ async def censor(ctx: TickContext) -> int:
                 continue
             ctx.session.add(BannedWorkRow(polity_entity_id=realm.id, work_entity_id=work, since_epoch=ctx.epoch, locked=[]))
             banned += 1
-            subject = await ctx.session.get(EntityRow, work)
-            await note(
-                ctx,
-                f"{realm.name} banned {subject.name if subject is not None else 'a work'}.",
-                key="discovery.work_banned",
-                ids=[realm.id, work],
-                kind=ChronicleKind.CIVILIZATION,
-            )
+            await record_incident(ctx, "discovery.work_banned", roles={IncidentRole.AUTHORITY: realm.id, IncidentRole.TARGET: work})
     await ctx.session.flush()
     return banned

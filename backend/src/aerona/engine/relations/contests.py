@@ -6,11 +6,10 @@ from itertools import pairwise
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.relations import CONTESTS, STAKE_LABELS
+from aerona.catalog.relations import CONTESTS
 from aerona.catalog.renown import CONTEST_RENOWN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
-from aerona.core.grammar import an
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import PreferenceRow
@@ -22,6 +21,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import PreferenceKind, SkillKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake, GroupKind, RelationType
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.context import TickContext
@@ -32,11 +33,11 @@ from aerona.engine.mind.split import attribute
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.standing import add_infamy, add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.relations.interactions import alignment
 from aerona.engine.relations.passions import strongest_against
@@ -257,13 +258,41 @@ async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRo
     await acclaim_deed(ctx, winner.id, axis, ctx.rules.local_renown.contest_magnitude, place_id=bout.place_id or winner.location_id, skill=skill)
     row.work_node_id = await famed(ctx, bout, winner, loser, margin)
     row.famous = row.work_node_id is not None
-    label = CONTESTS[bout.kind].label.lower()
     if row.famous:
         tally.famous += 1
-        await note(ctx, f"{winner.name} bested {loser.name} in {an(label)} that was told of long after.", key="contest.famous", ids=[winner.id, loser.id])
-    elif bout.stake in NOTED:
-        stake = STAKE_LABELS[bout.stake].lower()
-        await note(ctx, f"{winner.name} bested {loser.name} in {an(label)} for {stake}.", key="contest.won", ids=[winner.id, loser.id])
+    if row.famous or bout.stake in NOTED:
+        await record(
+            ctx,
+            "contest.famous" if row.famous else "contest.won",
+            roles={IncidentRole.ACTOR: winner.id, IncidentRole.OPPONENT: loser.id, IncidentRole.PRODUCT: row.work_node_id},
+            facts={"contest": bout.kind, "stake": bout.stake, "margin": margin},
+            steps=contest_steps(row, winner, loser),
+            place=bout.place_id or winner.location_id,
+        )
+
+
+def contest_steps(row: ContestRow, winner: EntityRow, loser: EntityRow) -> tuple[StepDraft, ...]:
+    sides = (row.challenger_node_id, row.defender_node_id)
+    scored = tuple(
+        StepDraft(
+            StepAction.SCORE,
+            actor=side,
+            target=sides[1 - index],
+            round=number,
+            parent=0,
+            amount=float(scores[index]),
+            unit=FactUnit.COUNT,
+            outcome=StepOutcome.SUCCESS if scores[index] > scores[1 - index] else StepOutcome.FAILURE,
+        )
+        for number, scores in enumerate(row.rounds, start=1)
+        for index, side in enumerate(sides)
+    )
+    return (
+        StepDraft(StepAction.COMPETE, actor=winner.id, target=loser.id),
+        *scored,
+        StepDraft(StepAction.WIN, actor=winner.id, target=loser.id),
+        StepDraft(StepAction.LOSE, actor=loser.id, target=winner.id),
+    )
 
 
 async def rival_bouts(ctx: TickContext, place_id: int, ids: list[int]) -> list[Bout]:

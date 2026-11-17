@@ -97,7 +97,7 @@ export function CreatorPage() {
         faith={data.faith}
         essence={data.cult_essence}
       />
-      <CreatorTraces traces={data.traces} />
+      <CreatorTraces traces={data.traces} total={data.traces_total} />
       <CreatorGalleries
         creatorId={creator.id}
         name={creator.name}

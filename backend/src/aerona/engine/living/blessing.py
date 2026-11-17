@@ -6,11 +6,13 @@ from aerona.db.tables.living import LivingLineRow, LivingProfileRow, SymbiontRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.living import Fertility
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.living.kin import lose_partner
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import connect
+from aerona.engine.recording.record import RoleValue, StepDraft, record
 
 
 async def line_in_world(ctx: TickContext, line_id: int, world_id: int | None) -> LivingLineRow | None:
@@ -35,7 +37,22 @@ async def bless_line(ctx: TickContext, line: LivingLineRow, god_id: int) -> Livi
             row.health = clamp_percent(row.health + ctx.rules.living.hunger_harm)
     if line.species_entity_id is not None:
         await connect(ctx.session, god_id, line.species_entity_id, BondKind.BLESSED, ctx.epoch, description=f"blessed the line {line.name}")
-    await note(ctx, f"A god blessed the line {line.name}.", key="living.line_blessed", ids=[])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PATRON: god_id, IncidentRole.SUBJECT: line.species_entity_id}
+    await record(
+        ctx,
+        "living.line_blessed",
+        roles=roles,
+        facts={"line": line.name, "stability": line.stability},
+        steps=(
+            StepDraft(
+                StepAction.BLESS,
+                actor=god_id,
+                target=line.species_entity_id,
+                record_table=LivingLineRow.__tablename__,
+                record_key=str(line.id),
+            ),
+        ),
+    )
     return line
 
 
@@ -60,5 +77,6 @@ async def curse_line(ctx: TickContext, line: LivingLineRow, god_id: int) -> Livi
             await ctx.session.delete(symbiont)
     if line.species_entity_id is not None:
         await connect(ctx.session, god_id, line.species_entity_id, BondKind.CURSED, ctx.epoch, description=f"cursed the line {line.name}")
-    await note(ctx, f"A god cursed the line {line.name}.", key="living.line_cursed", ids=[])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PATRON: god_id, IncidentRole.SUBJECT: line.species_entity_id}
+    await record(ctx, "living.line_cursed", roles=roles, facts={"line": line.name, "stability": line.stability})
     return line

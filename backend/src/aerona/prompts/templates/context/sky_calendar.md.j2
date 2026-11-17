@@ -3,5 +3,5 @@
 {% if left == 0 %}
 the planets are aligned this age; slingshot orbits are open now (Age {{ age }}), then they open again in Age {{ age + cycle }}
 {% else %}
-slingshot orbits open in Age {{ age + left }} ({{ left }} ages from now; the planets align every {{ cycle }} ages)
+slingshot orbits open in Age {{ age + left }} ({{ left | several("age", "ages") }} from now; the planets align every {{ cycle | several("age", "ages") }})
 {% endif %}

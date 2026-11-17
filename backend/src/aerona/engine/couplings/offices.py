@@ -5,13 +5,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.stress import aspirant_leader
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 
 async def sinecures(ctx: TickContext, polity_id: int) -> list[OfficeRow]:
@@ -41,7 +42,13 @@ async def found_sinecure(ctx: TickContext, profile: PolityProfileRow, polity: En
     if "treasury" not in profile.locked:
         profile.treasury = max(0, profile.treasury - table.cost)
     await ctx.session.flush()
-    await note(ctx, f"{polity.name} made a new office to hold {leader.name} and those like them.", key="office.created", ids=[polity.id, leader.id])
+    await record(
+        ctx,
+        "office.created",
+        roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.RECEIVER: leader.id},
+        facts={"office": office.kind, "cost": table.cost},
+        place=profile.capital_entity_id,
+    )
     return office
 
 
@@ -60,7 +67,12 @@ async def abolish_sinecure(ctx: TickContext, office: OfficeRow, polity: EntityRo
         )
     await ctx.session.delete(office)
     await ctx.session.flush()
-    await note(ctx, f"{polity.name} abolished an office to save its treasury.", key="office.abolished", ids=[polity.id] + ([holder.id] if holder else []))
+    await record(
+        ctx,
+        "office.abolished",
+        roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.VICTIM: holder.id if holder is not None else None},
+        facts={"office": office.kind, "grievance": ctx.rules.offices_made.grievance},
+    )
 
 
 @reads("table.entities", "table.offices", "table.polity_profiles", "table.polity_stress")

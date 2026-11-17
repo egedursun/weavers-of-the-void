@@ -24,6 +24,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import RouteClosure
@@ -42,7 +43,6 @@ from aerona.engine.divine.outer import breach_pressure, found_outer_cult, open_b
 from aerona.engine.divine.wounds import sanity_ceiling
 from aerona.engine.environment.book import scar_region
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.doom import doom_share
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -52,6 +52,7 @@ from aerona.engine.primitives.queries import BondIndex, canon, connect, flags_by
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import POPULATION_KEY, scale_stat, stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.storyteller.pace import paced_key
 from aerona.rules.registry import Rules
 
@@ -81,14 +82,13 @@ async def reopen_severed(ctx: TickContext) -> int:
         route.closure = None
         reopened += 1
         if scorched:
-            await note(
-                ctx,
-                f"The light-sail route scorched by the flare cooled and opened again (route#{route.id}).",
-                key="horror.route_cooled",
-                feed=FeedCategory.GATE,
+            await record(
+                ctx, "horror.route_cooled", roles={IncidentRole.ORIGIN: route.world_a_id, IncidentRole.DESTINATION: route.world_b_id}, feed=FeedCategory.GATE
             )
         else:
-            await note(ctx, f"The route severed by the void opened again (route#{route.id}).", key="horror.route_stitched", feed=FeedCategory.GATE)
+            await record(
+                ctx, "horror.route_stitched", roles={IncidentRole.ORIGIN: route.world_a_id, IncidentRole.DESTINATION: route.world_b_id}, feed=FeedCategory.GATE
+            )
     return reopened
 
 
@@ -101,18 +101,16 @@ async def reseal_temporary(ctx: TickContext) -> int:
         route.temp_closed_until_epoch = None
         route.closure = RouteClosure.SEALED
         resealed += 1
-        await note(ctx, f"The gate opened by the alignment closed again (route#{route.id}).", key="horror.route_resealed", feed=FeedCategory.GATE)
+        await record(
+            ctx, "horror.route_resealed", roles={IncidentRole.ORIGIN: route.world_a_id, IncidentRole.DESTINATION: route.world_b_id}, feed=FeedCategory.GATE
+        )
     return resealed
 
 
 WARNINGS = (
-    (
-        "warning_1",
-        "Leakage from outside the cosmos crossed its first threshold in {world}.",
-        "horror.warning_first",
-    ),
-    ("warning_2", "Leakage from outside the cosmos crossed its second threshold in {world}.", "horror.warning_geometry"),
-    ("outer_being_threshold", "Leakage in {world} crossed the threshold at which beings from outside the cosmos can enter.", "horror.warning_tear"),
+    ("warning_1", "horror.warning_first"),
+    ("warning_2", "horror.warning_geometry"),
+    ("outer_being_threshold", "horror.warning_tear"),
 )
 
 
@@ -139,10 +137,17 @@ async def update_leaks(ctx: TickContext, knowledge: KnowledgeMap) -> None:
         before = world.leakage
         after = apply_leak(world, change.delta, leak_cap(ctx.rules, world, ctx.epoch))
         await tear_land(ctx, world.id, before, after)
-        for field_name, text, key in WARNINGS:
+        for field_name, key in WARNINGS:
             threshold = getattr(horror, field_name)
             if before < threshold <= after:
-                await note(ctx, text.format(world=world.name), key=key, feed=FeedCategory.LEAK)
+                await record(
+                    ctx,
+                    key,
+                    roles={IncidentRole.SUBJECT: world.id},
+                    facts={"threshold": threshold, "leakage": after},
+                    feed=FeedCategory.LEAK,
+                    world_id=world.id,
+                )
     await ctx.session.flush()
 
 
@@ -210,13 +215,7 @@ async def _whisperers_born(ctx: TickContext, entity: EntityRow) -> bool:
 async def birth_whisperers(ctx: TickContext, entity: EntityRow) -> EntityRow:
     await EntityRepository(ctx.session).add_flag(entity.id, EntityFlag.WHISPER_SOURCE, ctx.epoch)
     cult = await found_outer_cult(ctx, entity)
-    await note(
-        ctx,
-        f"A cult that worships a being from outside the cosmos arose among {entity.name}: {cult.name}.",
-        key="horror.whisperers",
-        ids=[entity.id, cult.id],
-        feed=FeedCategory.LEAK,
-    )
+    await record(ctx, "horror.whisperers", roles={IncidentRole.SUBJECT: [entity.id, cult.id]}, feed=FeedCategory.LEAK)
     return cult
 
 
@@ -231,7 +230,7 @@ async def _madness(ctx: TickContext, entity: EntityRow, outer_cults: set[int]) -
         return
     if stat(entity, POPULATION_KEY) is not None:
         scale_stat(ctx.rules, entity, POPULATION_KEY, (PERCENT - horror.madness_population_loss_pct) / PERCENT)
-        await note(ctx, f"Madness epidemic in {entity.name}: people abandoned their homes.", key="horror.madness_epidemic", ids=[entity.id])
+        await record(ctx, "horror.madness_epidemic", roles={IncidentRole.SUBJECT: entity.id})
 
 
 async def update_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> None:
@@ -246,7 +245,7 @@ async def update_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> None:
         if entity.sanity != after:
             entity.sanity = after
         if before >= horror.clouding_threshold > after:
-            await note(ctx, f"{entity.name}'s mind is failing; their speech no longer makes sense to others.", key="horror.clouding", ids=[entity.id])
+            await record(ctx, "horror.clouding", roles={IncidentRole.SUBJECT: entity.id})
         if after < horror.madness_threshold:
             await _madness(ctx, entity, outer_cults)
     await ctx.session.flush()
@@ -309,16 +308,9 @@ async def update_son_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> int:
         son.sanity = after
         changed += 1
         if before >= horror.son_madness_threshold > after:
-            await ctx.chronicle(
-                ChronicleKind.HORROR,
-                f"{son.name}'s mind broke; what is outside the cosmos acts through them now.",
-                template_key="horror.son_mad",
-                son_id=son.id,
-            )
+            await record(ctx, "horror.son_mad", roles={IncidentRole.SUBJECT: son.id}, facts={"sanity": after}, kind=ChronicleKind.HORROR, son_id=son.id)
         elif before >= horror.son_clouding_threshold > after:
-            await ctx.chronicle(
-                ChronicleKind.HORROR, f"{son.name}'s mind is failing; their words have begun to wander.", template_key="horror.son_clouded", son_id=son.id
-            )
+            await record(ctx, "horror.son_clouded", roles={IncidentRole.SUBJECT: son.id}, facts={"sanity": after}, kind=ChronicleKind.HORROR, son_id=son.id)
     return changed
 
 
@@ -352,13 +344,15 @@ async def summon_outer_being(ctx: TickContext, world: WorldRow) -> EntityRow | N
     world.leakage = max(0, world.leakage - horror.outer_being_entry_leak_drop)
     profile = await outer_profile(ctx, being)
     await open_breaches(ctx, being, profile)
-    await ctx.chronicle(
-        ChronicleKind.OUTER_BEING,
-        f"A being from outside the cosmos entered {world.name}.",
-        template_key="horror.outer_entered",
-        entity_ids=[being.id],
+    await record(
+        ctx,
+        "horror.outer_entered",
+        roles={IncidentRole.SUBJECT: being.id, IncidentRole.DESTINATION: world.id, IncidentRole.PLACE: region.id},
+        place=region.id,
+        destination=region.id,
+        kind=ChronicleKind.OUTER_BEING,
         world_id=world.id,
-        feed_category=FeedCategory.LEAK,
+        feed=FeedCategory.LEAK,
     )
     return being
 
@@ -427,7 +421,6 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -457,7 +450,6 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.horror_events",
     "table.incident_participants",
     "table.incidents",

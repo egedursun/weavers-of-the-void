@@ -773,6 +773,12 @@ async def failed_birth(session: AsyncSession) -> None:
     step.status = DeferredStepStatus.FAILED
 
 
+async def older_vessel(session: AsyncSession) -> int:
+    found = await session.scalar(select(VesselProfileRow.entity_id).order_by(VesselProfileRow.entity_id.desc()).offset(1).limit(1))
+    assert found is not None
+    return int(found)
+
+
 async def battered_vessel(session: AsyncSession) -> None:
     vessel = await session.scalar(select(VesselProfileRow).order_by(VesselProfileRow.entity_id.desc()).limit(1))
     assert vessel is not None and vessel.home_port_entity_id is not None
@@ -979,6 +985,13 @@ HOLY = (
     ("faction:found", {"community_id": Pick(TOWN, 2), "kind": "warrior_order"}),
     ("faction:edit", {"faction_id": Newest(EntityType.FACTION), "values": {"kind": "holy_order"}}),
 )
+WRITTEN = ("incident:create", {"text": "A god set down a happening in the town.", "participants": [{"node_id": Pick(MORTAL), "role": "actor"}]})
+FACT_SET = ("incident_fact:create", {"incident_id": Newest("incident"), "key": "amount", "number": 12, "unit": "count"})
+STEP_SET = ("incident_step:create", {"incident_id": Newest("incident"), "step_action": "strike", "actor_node_id": Pick(MORTAL)})
+WITNESS_SET = ("incident_witness:create", {"incident_id": Newest("incident"), "node_id": Pick(MORTAL, 1)})
+WHISPER = ("rumour:plant", {"community_id": Pick(TOWN), "subject_id": Pick(MORTAL), "text": "they say the council met at night", "fidelity": 70})
+DISTORTED = ("rumour_distortion:create", {"rumour_id": Newest("rumour"), "distortion": "moment_changed", "told_year": 3})
+CRIME_SET = ("settlement:edit", {"settlement_id": Pick(TOWN), "values": {"crime": 23}})
 FEDERATION = ("federation", {"member_ids": [Pick(TOWN), Computed(far_town)], "name": "The Concord"})
 ASSEMBLY = Where("entities", "id", {"engine_kind": EngineKind.INTERWORLD_FEDERATION})
 PASSION = ("passion:set", {"holder_id": Pick(MORTAL), "kind": "love", "object_id": Pick(MORTAL, 1), "strength": 90})
@@ -1174,7 +1187,7 @@ LEVERS: dict[str, Lever] = {
     "ethics:honour": given(holder_id=Pick(EntityType.PEOPLE)),
     "ethics:set": given(holder_id=Pick(EntityType.PEOPLE)),
     "fact:add": given(object_text="the old river"),
-    "fact:remove": after(("fact:add", {"subject_id": Pick(MORTAL), "relation": "remembers", "object_text": "the old river"}), fact_id=Newest("fact")),
+    "fact:remove": after(("fact:add", {"subject_id": Pick(MORTAL), "relation": "remembers", "object_text": "the old river"}), fact_id=Newest("canon_facts")),
     "faction:spy": given(spymaster_id=Pick(REALM), target_id=Pick(TOWN)),
     "feud:end": after(("feud:start", {"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)})),
     **{name: setup_then(foreign_god, god_id=Pick("foreign_god")) for name in ("foreign_god:raise_land", "kill:foreign_god", "drain:foreign_god")},
@@ -1640,6 +1653,44 @@ LEVERS: dict[str, Lever] = {
     "incident:unlink_cause": after(
         ("incident:link_cause", {"incident_id": Newest("incident"), "cause_incident_id": Pick("incident")}), incident_id=Newest("incident")
     ),
+    "incident:hold": after(WRITTEN, incident_id=Newest("incident"), fields=["text", "steps"]),
+    "incident_fact:create": after(WRITTEN, incident_id=Newest("incident"), key="amount", number=12, unit="count"),
+    **{
+        name: after(WRITTEN, FACT_SET, incident_fact_id=Newest("incident_fact"), **values)
+        for name, values in (("incident_fact:edit", {"number": 20, "unit": "count"}), ("incident_fact:delete", {}))
+    },
+    "incident_step:create": after(
+        WRITTEN,
+        incident_id=Newest("incident"),
+        step_action="strike",
+        actor_node_id=Pick(MORTAL),
+        target_node_id=Pick(MORTAL, 1),
+        damage_type="blunt",
+        amount=3,
+        unit="hp",
+        outcome="wounded",
+        states=[{"node_id": Pick(MORTAL, 1), "state": "prone"}],
+    ),
+    **{
+        name: after(WRITTEN, STEP_SET, incident_step_id=Newest("incident_step"), **values)
+        for name, values in (("incident_step:edit", {"step_action": "parry", "outcome": "parried"}), ("incident_step:delete", {}))
+    },
+    "incident_witness:create": after(WRITTEN, incident_id=Newest("incident"), node_id=Pick(MORTAL, 1), witness_mode="heard", fidelity=60),
+    **{
+        name: after(WRITTEN, WITNESS_SET, incident_id=Newest("incident"), node_id=Pick(MORTAL, 1), **values)
+        for name, values in (("incident_witness:edit", {"witness_mode": "was_told", "fidelity": 40}), ("incident_witness:delete", {}))
+    },
+    **{name: after(CRIME_SET, state_change_id=Newest("state_change")) for name in ("state_change:revert", "state_change:delete")},
+    "rumour_distortion:create": after(WHISPER, rumour_id=Newest("rumour"), distortion="moment_changed", told_year=3),
+    **{
+        name: after(WHISPER, DISTORTED, rumour_distortion_id=Newest("rumour_distortion"), **values)
+        for name, values in (
+            ("rumour_distortion:edit", {"distortion": "place_changed", "told_node_id": Pick(TOWN, 1), "hold": ["told"]}),
+            ("rumour_distortion:delete", {}),
+        )
+    },
+    "incident_name:set": after(WRITTEN, incident_id=Newest("incident"), name="Kerovan", hold=True),
+    "incident_name:delete": after(WRITTEN, ("incident_name:set", {"incident_id": Newest("incident"), "name": "Kerovan"}), incident_id=Newest("incident")),
     "item:transfer": given(receiver_id=Pick(MORTAL, 1)),
     "kin:end_marriage": after(("kin:marry", {"first_id": Pick(MORTAL), "second_id": Pick(MORTAL, 1)}), marriage_id=Newest("marriage")),
     "kin:unbond": after(("kin:bond", {"source_id": Pick(MORTAL), "target_id": Pick(MORTAL, 1), "kind": "parent_of"}), bond_id=Newest("bond")),
@@ -1805,6 +1856,12 @@ LEVERS: dict[str, Lever] = {
     "item:content": after(
         ("lore:create", {"entity_type": "item", "name": "Ledger of Tides", "world_id": Pick("world"), "values": {"item_class": "book"}}),
         book_id=Newest(EntityType.ITEM),
+    ),
+    "engagement:force": after(
+        ("vessel:create", {"owner_id": Pick(TOWN), "name": "Gull", "frame": "warship"}),
+        ("vessel:create", {"owner_id": Pick(TOWN, 1), "name": "Tern", "frame": "warship"}),
+        vessel_id=Newest(EntityType.VESSEL),
+        foe_vessel_id=Computed(older_vessel),
     ),
     "vessel:repair": Lever(
         values={"vessel_id": Newest(EntityType.VESSEL)},
@@ -4693,6 +4750,7 @@ LEVERS.update(
     }
 )
 SEAT_UP = ("divine_seat:set", {"god_id": Pick("son"), "seat": "invited"})
+COUNCIL_UP = ("council_record:create", {"topic": "Whether the seas belong to one god", "passed": True})
 VIOLATION_UP = ("council_violation:create", {"ruling_id": Newest("council_rulings"), "violator_id": Pick("son"), "step": "censure"})
 EDITS = {
     **EDITS,
@@ -4711,6 +4769,9 @@ LEVERS.update(
         "council_violation:edit": after(DECREE, VIOLATION_UP, violation_id=Newest("council_violations"), values=EDITS["council_violation:edit"], release=[]),
         "council_violation:delete": after(DECREE, VIOLATION_UP, violation_id=Newest("council_violations")),
         "council:veto": after(DECREE, ruling_id=Newest("council_rulings")),
+        "council_record:create": given(topic="Whether the seas belong to one god", passed=True),
+        "council_record:edit": after(COUNCIL_UP, council_id=Newest("councils"), topic="Whether the seas are shared", passed=False),
+        "council_record:delete": after(COUNCIL_UP, council_id=Newest("councils")),
     }
 )
 

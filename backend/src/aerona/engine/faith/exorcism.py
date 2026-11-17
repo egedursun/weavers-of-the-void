@@ -6,13 +6,15 @@ from aerona.db.tables.faith import PossessionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import MagicSchool, RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import InstrumentKind, StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.faith.souls import burden
 from aerona.engine.lore.rites import cast, devise
-from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import StepDraft, record
 
 CLERGY = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
 
@@ -58,7 +60,19 @@ async def possessions(ctx: TickContext) -> tuple[int, int]:
         casting = await cast(ctx, priest, found[0], found[1], target=host, realms=realms, forced=True)
         if casting is not None and casting.succeeded and await ctx.session.get(PossessionRow, host.id) is None:
             exorcised += 1
-            await note(
-                ctx, f"{priest.name} worked {found[0].name} over {host.name} and drove the spirit out.", key="afterlife.exorcism", ids=[priest.id, host.id]
+            driven_out = StepDraft(
+                StepAction.EXORCISE,
+                actor=priest.id,
+                target=host.id,
+                instrument_kind=InstrumentKind.RITE,
+                instrument_node=found[0].id,
+                outcome=StepOutcome.SUCCESS,
+            )
+            await record(
+                ctx,
+                "afterlife.exorcism",
+                roles={IncidentRole.ACTOR: priest.id, IncidentRole.SUBJECT: host.id},
+                facts={"name": str(found[0].name), "host_detail": str(host.name)},
+                steps=(driven_out,),
             )
     return len(bound) - exorcised, exorcised

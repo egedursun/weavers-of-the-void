@@ -129,7 +129,7 @@ async def meet(ctx: TickContext, journey: JourneyRow, row: JourneyEncounterRow) 
         journey.population = max(0, journey.population - lost)
         if "deaths" not in journey.locked:
             journey.deaths += lost
-    add_event(journey, ctx.epoch, JourneyEventKind.ENCOUNTER, f"they met {told(row)} on the way", loss=lost)
+    await add_event(ctx, journey, JourneyEventKind.ENCOUNTER, f"they met {told(row)} on the way", loss=lost)
     return lost
 
 
@@ -141,13 +141,13 @@ async def provision(ctx: TickContext, journey: JourneyRow) -> None:
         starved = max(1, journey.population * table.starve_pct // PERCENT)
         journey.population -= starved
         journey.deaths += starved
-        add_event(journey, ctx.epoch, JourneyEventKind.DEATH, "some died on the way with nothing left to eat", loss=starved)
+        await add_event(ctx, journey, JourneyEventKind.DEATH, "some died on the way with nothing left to eat", loss=starved)
     if ctx.epoch - journey.start_epoch >= table.birth_after and journey.population and "population" not in journey.locked:
         born = journey.population * table.birth_pct // PERCENT
         if born:
             journey.population += born
             journey.births += born
-            add_event(journey, ctx.epoch, JourneyEventKind.BIRTH, "children were born on the way")
+            await add_event(ctx, journey, JourneyEventKind.BIRTH, "children were born on the way")
 
 
 async def arrive(ctx: TickContext, journey: JourneyRow, market: EntityRow | None) -> ArrivalOutcome:

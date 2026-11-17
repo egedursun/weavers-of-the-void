@@ -12,12 +12,13 @@ from aerona.db.repositories.worlds import StarDraft, WorldDraft, WorldRepository
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.lore import ChronicleRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import PartOfSpeech
+from aerona.domain.enums.chronicle import FeedCategory, PartOfSpeech
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
@@ -41,6 +42,8 @@ from aerona.domain.models.entity_stats import (
 )
 from aerona.domain.models.profiles import Personality
 from aerona.domain.models.stats import PassionBlock, StatBlock
+from aerona.engine.context import TickContext
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 WORLD_SEED = 20261031
@@ -359,3 +362,8 @@ def tuned_rules(**namespaces: dict[str, int]) -> Rules:
     for namespace, values in namespaces.items():
         rules = replace(rules, **{namespace: replace(getattr(rules, namespace), **values)})
     return rules
+
+
+async def tell_history(ctx: TickContext, text: str, *, ids: Sequence[int] = (), feed: FeedCategory | None = None) -> ChronicleRow:
+    written = await record(ctx, "player.history", roles={IncidentRole.SUBJECT: tuple(ids)}, facts={"account": text}, feed=feed)
+    return written.row

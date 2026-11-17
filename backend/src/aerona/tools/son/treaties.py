@@ -5,7 +5,8 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import TreatyBreach, TreatyKind, TreatyStatus
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.treaties import breach
 from aerona.engine.services.community_relations import change_relation
@@ -52,8 +53,10 @@ async def seal_treaty(call: SonCall, args: SealTreatyInput) -> str:
     await change_relation(call.tick, first.id, second.id, tools.treaty_relation, MemoryKind.ALLIED_WITH, note=lines.TREATY_EVENT)
     call.spend_essence(tools.treaty_cost)
     call.target(treaty.id)
-    await call.chronicle(
-        ChronicleKind.DIPLOMACY, lines.SEALED, entity_ids=[treaty.id, *[entity.id for entity in entities]], son=call.son.name, treaty=treaty.name
+    await call.record(
+        "tools.son.sealed",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [treaty.id, *[treaty.id, *[entity.id for entity in entities]]]},
+        kind=ChronicleKind.DIPLOMACY,
     )
     return result(SonResult.TREATY_SEALED, name=treaty.name)
 
@@ -65,7 +68,7 @@ async def void_treaty(call: SonCall, args: VoidTreatyInput) -> str:
     breaker = await require_canon(call.session, args.breaker_id)
     await ensure_in_reach(call, breaker)
     require_essence(call, call.rules.son_tools.treaty_cost)
-    await breach(call.tick, profile, breaker.id, clause=None, reason=f"{call.son.name} bade it break faith")
+    await breach(call.tick, profile, breaker.id, clause=None, reason=TreatyBreach.GOD_COMMANDED, occasion=call.son.id)
     call.spend_essence(call.rules.son_tools.treaty_cost)
     call.target(profile.treaty_entity_id)
     return result(SonResult.TREATY_VOIDED, name=breaker.name)

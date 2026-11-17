@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog import god_lines
 from aerona.catalog.achievements import ACHIEVEMENTS
 from aerona.catalog.scenarios import SCENARIOS, roman
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
@@ -99,7 +98,7 @@ async def test_a_repeated_goal_earns_only_what_it_adds_over_the_best_before(sess
     assert [row.tier for row in rows] == [1, 2, 3]
     assert [row.awarded_points for row in rows] == [first_points, 0, rows[2].points - first_points]
     assert third.score.parts[ScoreComponent.SCENARIOS] == rows[2].points
-    assert god_lines.GOAL_ACHIEVED.key in await chronicle_keys(session)
+    assert "gods.goals.achieved" in await chronicle_keys(session)
     assert await session.get(ScoreRow, 7) is not None
 
 
@@ -145,7 +144,7 @@ async def test_doom_scenario_fails(session: AsyncSession, world: GodsWorld, rule
     world.cosmos.doom_clock = rules.balance.apocalypse_threshold
     result = await evaluate_goals(make_context(session, rules, 3, "goals"))
     assert result.failed == (ScenarioKey.DOOM_FAR,)
-    assert god_lines.GOAL_LOST.key in await chronicle_keys(session)
+    assert "gods.goals.lost" in await chronicle_keys(session)
 
 
 async def test_loyal_pantheon_fails_on_new_rebellion(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

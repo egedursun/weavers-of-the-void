@@ -10,9 +10,9 @@ import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
 import { MindSection } from '@/features/entity/sections/MindSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { BeliefSection } from '@/features/pantheon/BeliefSection'
-import { ChronicleList } from '@/features/pantheon/ChronicleList'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { AttitudeBar } from './AttitudeBar'
+import { ForeignGodChronicle } from './ForeignGodChronicle'
 import { ForeignGodDepth } from './ForeignGodDepth'
 import { ForeignGodEditForm } from './ForeignGodEditForm'
 import { ForeignGodHero } from './ForeignGodHero'
@@ -89,12 +89,10 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
           editForeignGod(god.id, { image_prompt: prompt })
         }
       />
-      <ChronicleList
-        title='In the chronicle'
-        description='Recent records about this god and their world.'
+      <ForeignGodChronicle
+        godId={god.id}
         lines={data.chronicle}
-        emptyTitle='Not in the chronicle yet'
-        emptyText='The name does not appear in the chronicle yet.'
+        total={data.chronicle_total}
       />
       <ForeignGodEditForm
         key={`${god.id}:${god.name}:${god.status}:${god.stance}:${god.power}`}

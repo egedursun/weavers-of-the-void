@@ -15,15 +15,16 @@ from aerona.domain.enums.crafts import AssistiveAid
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.aiding import aid_quality
 from aerona.engine.crafts.reckoning import numeracy_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import shift_stock, stock
+from aerona.engine.recording.record import record
 
 HUNDREDTHS = 100
 
@@ -70,12 +71,13 @@ async def find_irregular(ctx: TickContext, tally: SeasonTally) -> None:
         if cause is None and chaotic(ctx, await ctx.session.get(WorldPhysicsRow, world.id)):
             cause = SeasonCause.ORBIT
         if cause is not None:
-            await begin(ctx, world, cause, None)
+            row = await begin(ctx, world, cause, None)
             tally.turned += 1
-            await note(
+            await record(
                 ctx,
-                f"The seasons of {world.name} lost their measure; its summers and winters now run for years of no set length.",
-                key="seasons.irregular",
+                "seasons.irregular",
+                roles={IncidentRole.SUBJECT: world.id},
+                facts={"cause": cause, "length": row.spell_length, "severity": row.severity},
                 world_id=world.id,
             )
 
@@ -90,9 +92,13 @@ async def turn(ctx: TickContext, world: WorldRow, row: IrregularSeasonRow, tally
     tally.turned += 1
     if row.spell is SeasonSpell.WINTER:
         tally.winters += 1
-        await note(ctx, f"A long winter fell on {world.name}.", key="seasons.winter", world_id=world.id)
-    else:
-        await note(ctx, f"The long winter of {world.name} broke.", key="seasons.summer", world_id=world.id)
+    await record(
+        ctx,
+        "seasons.winter" if row.spell is SeasonSpell.WINTER else "seasons.summer",
+        roles={IncidentRole.SUBJECT: world.id},
+        facts={"length": row.spell_length, "severity": row.severity},
+        world_id=world.id,
+    )
 
 
 async def winter_share(ctx: TickContext, world_id: int) -> int:
@@ -215,7 +221,7 @@ async def keep_seasons(ctx: TickContext, tally: SeasonTally) -> None:
         if await lost_cause(ctx, world, row):
             await ctx.session.delete(row)
             tally.settled += 1
-            await note(ctx, f"The seasons of {world.name} found their measure again.", key="seasons.settled", world_id=world.id)
+            await record(ctx, "seasons.settled", roles={IncidentRole.SUBJECT: world.id}, facts={"cause": row.cause}, world_id=world.id)
             continue
         await turn(ctx, world, row, tally)
         await forecast(ctx, world, row, tally)

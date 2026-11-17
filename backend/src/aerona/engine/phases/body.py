@@ -17,10 +17,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.body.afflictions import active, afflict, cure, progress
 from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_plan, species_of, species_traits
@@ -39,13 +39,13 @@ from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, canon, connect, flags_by_entity, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.services.war import ongoing_wars
 
 VIOLENT_DEATHS: dict[EntityFlag, HarmCause] = {
@@ -247,7 +247,6 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.gardens",
     "table.genomes",
@@ -310,10 +309,11 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.conditions",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.goods_flows",
     "table.griefs",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.incorporeal_rights",
     "table.injuries",
@@ -468,12 +468,12 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     reader = max(candidates, key=lambda mortal: (stat(mortal, "intellect") or 0, -mortal.id))
     await connect(ctx.session, reader.id, scholar.id, BondKind.APPRENTICE_OF, ctx.epoch, description="reads for the blind master")
     await refresh(ctx.session, ctx.rules, scholar, ctx.epoch)
-    await ctx.chronicle(
-        ChronicleKind.LINEAGE,
-        f"Blinded, {scholar.name} took {reader.name} as a reader; the young reader now carries the old learning.",
-        template_key="body.reader_taken",
-        entity_ids=[scholar.id, reader.id],
-        world_id=scholar.world_id,
+    await record(
+        ctx,
+        "body.reader_taken",
+        roles={IncidentRole.TEACHER: scholar.id, IncidentRole.LEARNER: reader.id},
+        facts={"intellect": stat_or(reader, "intellect", 0)},
+        place=home,
     )
     return reader
 
@@ -507,7 +507,6 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
-    "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",
     "table.incident_participants",
@@ -539,7 +538,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.chronicle_entities",
     "table.conditions",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
@@ -579,13 +578,12 @@ async def _wholeness(ctx: TickContext) -> None:
         if heir is None:
             continue
         people = await people_of(ctx.session, ruler)
-        law = f"the law of {people.name}" if people is not None else "the law"
-        await note(
-            ctx,
-            f"{ruler.name} was set aside, for {law} demands a ruler whole in body; {heir.name} took the throne.",
-            key="body.ruler_set_aside",
-            ids=[ruler.id, heir.id],
-        )
+        roles: dict[IncidentRole, RoleValue] = {
+            IncidentRole.PREDECESSOR: ruler.id,
+            IncidentRole.SUCCESSOR: heir.id,
+            IncidentRole.AUTHORITY: people.id if people is not None else None,
+        }
+        await record(ctx, "body.ruler_set_aside", roles=roles, facts={"injuries": len(await injuries_of(ctx.session, ruler.id))})
         ctx.count("set_aside")
 
 
@@ -613,8 +611,8 @@ async def _recruit(ctx: TickContext) -> None:
         if rng.chance(table.maimed_cult_recruit):
             cult = rng.pick(local)
             await connect(ctx.session, mortal.id, cult.id, BondKind.MEMBER_OF, ctx.epoch, description="found holiness in their wounds")
-            await note(
-                ctx, f"{mortal.name}, maimed, found a welcome in {cult.name}, which holds suffering sacred.", key="body.maimed_cult", ids=[mortal.id, cult.id]
+            await record(
+                ctx, "body.maimed_cult", roles={IncidentRole.MEMBER: mortal.id, IncidentRole.HOST: cult.id}, facts={"chance": table.maimed_cult_recruit}
             )
 
 
@@ -675,6 +673,7 @@ async def body_society(ctx: TickContext) -> None:
     "table.needs",
     "table.nodes",
     "table.personality_values",
+    "table.powers",
     "table.prostheses",
     "table.symbionts",
     "table.tradition_profiles",

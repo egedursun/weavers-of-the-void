@@ -5,9 +5,10 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.profiles import EntityDepth, Saying
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import CELESTIAL_DEPTH_EDITED
+from aerona.engine.recording.record import record
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -63,7 +64,15 @@ async def edit_world_depth(scope: PlayerScope, command: WorldDepth) -> Effect:
     if world is None:
         raise NotFoundError("No such world.")
     world.depth, fields = edited_depth(world.depth, command, await scope.epoch())
-    message = await hand(await scope.context("world_depth"), await scope.creator(), CELESTIAL_DEPTH_EDITED, name=world.name, fields=", ".join(fields))
+    message = (
+        await record(
+            await scope.context("world_depth"),
+            "player.canon.celestial_depth",
+            roles={IncidentRole.SUBJECT: world.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"fields": str(", ".join(fields))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"world_id": world.id})
 
 
@@ -73,7 +82,15 @@ async def edit_star_depth(scope: PlayerScope, command: StarDepth) -> Effect:
     if star is None:
         raise NotFoundError("No such star.")
     star.depth, fields = edited_depth(star.depth, command, await scope.epoch())
-    message = await hand(await scope.context("star_depth"), await scope.creator(), CELESTIAL_DEPTH_EDITED, name=star.name, fields=", ".join(fields))
+    message = (
+        await record(
+            await scope.context("star_depth"),
+            "player.canon.celestial_depth",
+            roles={IncidentRole.SUBJECT: star.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"fields": str(", ".join(fields))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"star_id": star.id})
 
 
@@ -88,5 +105,13 @@ async def edit_scale_depth(scope: PlayerScope, command: ScaleDepth) -> Effect:
     if node is None:
         raise NotFoundError("No such galaxy, cluster or dimension.")
     node.depth, fields = edited_depth(node.depth, command, await scope.epoch())
-    message = await hand(await scope.context("scale_depth"), await scope.creator(), CELESTIAL_DEPTH_EDITED, name=node.name, fields=", ".join(fields))
+    message = (
+        await record(
+            await scope.context("scale_depth"),
+            "player.canon.celestial_depth",
+            roles={IncidentRole.SUBJECT: node.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
+            facts={"fields": str(", ".join(fields))},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, values={"node_id": node.id})

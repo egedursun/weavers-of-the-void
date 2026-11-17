@@ -22,11 +22,11 @@ from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.split import facets_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 from aerona.engine.renown.book import acclaim
 
 FACET_SPAN = 50
@@ -247,7 +247,11 @@ async def expose(ctx: TickContext, deed: DeedRow, claim: DeedClaimRow, tally: De
         magnitude=table.exposure_memory,
         epoch=ctx.epoch,
     )
-    claimant, doer = await ctx.session.get(EntityRow, claim.claimant_node_id), await ctx.session.get(EntityRow, deed.doer_node_id)
-    if claimant is not None and doer is not None:
-        await note(ctx, f"{claimant.name} was shown to have claimed a deed that was {doer.name}'s.", key="claim.exposed", ids=[claimant.id, doer.id])
+    await record(
+        ctx,
+        "claim.exposed",
+        roles={IncidentRole.ACCUSED: claim.claimant_node_id, IncidentRole.ACTOR: deed.doer_node_id},
+        facts={"credited": claim.credited, "shame": table.exposure_shame, "deed": deed.axis},
+        place=places[0] if places else None,
+    )
     tally.exposed += 1

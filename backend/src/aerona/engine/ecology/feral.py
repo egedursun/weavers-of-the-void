@@ -8,11 +8,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import STAGE_ORDER, DomesticationStage
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -41,9 +42,13 @@ async def release_herd(ctx: TickContext, herd: HerdRow, atlas: RegionAtlas | Non
     row.updated_epoch = ctx.epoch
     if profile is not None and profile.stage is not DomesticationStage.WILD and "feral_epoch" not in profile.locked:
         profile.feral_epoch = ctx.epoch
-    region = await ctx.session.get(EntityRow, region_id)
-    if region is not None:
-        await note(ctx, f"The herds of {species.name} went loose in {region.name}.", key="ecology.herd_feral", ids=[species.id, region.id])
+    await record(
+        ctx,
+        "ecology.herd_feral",
+        roles={IncidentRole.SUBJECT: species.id, IncidentRole.PLACE: region_id},
+        facts={"abundance": row.abundance, "stage": profile.stage if profile is not None else None},
+        place=region_id,
+    )
     await ctx.session.flush()
     return row
 
@@ -83,5 +88,5 @@ async def run_wild(ctx: TickContext, tally: FeralTally) -> None:
         if ctx.epoch - profile.feral_epoch >= table.breed_after and "feral_epoch" not in profile.locked:
             profile.feral_epoch = None
             tally.wild += 1
-            await note(ctx, f"{species.name}, once kept, is a wild breed of its own now.", key="ecology.feral_breed", ids=[species.id])
+            await record(ctx, "ecology.feral_breed", roles={IncidentRole.SUBJECT: species.id}, facts={"feral_epochs": table.breed_after})
     await ctx.session.flush()

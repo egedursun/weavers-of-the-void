@@ -3,25 +3,25 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import agree, several
 from aerona.db.tables.affairs import CouncilSeatRow, ElectionRow
 from aerona.db.tables.estates import EstateProfileRow, MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.intrigue import HookDemand
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind, OfficeKind
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.communication.opinion import approval_of
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.mortal.justice import community_ruler
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.regime.book import patron_pull
 
 ALL = frozenset(SocialClass)
@@ -190,14 +190,13 @@ async def elect(ctx: TickContext, book: RealmBook, laws: LawBook, realm: Realm, 
     tally.seats += seats
     if winner is not None:
         await install(ctx, realm, winner, tally)
-    winner_name = book.entities[winner].name if winner is not None and winner in book.entities else "no one"
-    await note(
+    await record(
         ctx,
-        f"{realm.entity.name} went to the polls; {winner_name} carried the most votes, "
-        f"and {several(seats, 'seat', 'seats')} {agree(seats, 'was', 'were')} filled.",
-        key="affairs.election",
-        ids=[realm.entity.id, *([winner] if winner is not None else [])],
-        kind=ChronicleKind.CIVILIZATION,
+        "affairs.election" if winner is not None else "affairs.election_no_winner",
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUCCESSOR: winner, IncidentRole.MEMBER: sorted(votes)},
+        facts={"seats": seats, "turnout": turnout, "share": round(votes[winner] / total * PERCENT) if winner is not None else 0},
+        steps=(StepDraft(StepAction.COUNT_VOTES, actor=realm.entity.id),),
+        place=realm.profile.capital_entity_id,
     )
 
 

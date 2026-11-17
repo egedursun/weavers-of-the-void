@@ -336,6 +336,7 @@ class ExpeditionRow(Base):
     found: Mapped[int] = mapped_column(default=0)
     started_epoch: Mapped[int] = mapped_column(default=0)
     ended_epoch: Mapped[int | None]
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -380,6 +381,8 @@ class ExpeditionLogRow(Base):
     stress: Mapped[int] = mapped_column(default=0)
     resolve: Mapped[ResolveKind | None] = mapped_column(enum_type(ResolveKind, "resolve"))
     quirk: Mapped[QuirkKind | None] = mapped_column(enum_type(QuirkKind, "quirk"))
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    step_id: Mapped[int | None] = mapped_column(ForeignKey("incident_steps.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

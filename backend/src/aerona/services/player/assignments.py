@@ -25,6 +25,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.limits import MAX_STARS, MIN_STARS, PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.son import Passion, SonStatus, Stat
@@ -39,27 +40,11 @@ from aerona.engine.primitives.faith import worship_creator
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.record import record
 from aerona.events.kinds import EventKind
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand, tell
 from aerona.services.player.lines import (
-    ASCENDED,
     ASCENSION_MYTH,
-    ENTITY_MOVED,
-    PATRON_CREATOR,
-    PATRON_FOREIGN,
-    PATRON_NONE,
-    PATRON_SON,
-    SON_DISTRIBUTED,
-    SON_EDITED,
-    SON_IMAGE_PROMPT,
-    SON_PROTECTION_CLEARED,
-    SON_RARITY,
-    SON_RENAMED,
-    SON_SENT,
-    STAR_ADDED,
-    STAT_SET,
-    TAGS_SET,
 )
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -205,7 +190,16 @@ async def assign_son_world(scope: PlayerScope, command: SonWorld) -> Effect:
     son.manually_assigned_epoch = epoch
     creator = await scope.creator()
     ctx = await scope.context("son_world")
-    message = await hand(ctx, creator, SON_SENT, son_id=son.id, world_id=world.id, son=son.name, world=world.name)
+    message = (
+        await record(
+            ctx,
+            "player.son.sent",
+            roles={IncidentRole.SUBJECT: son.id, IncidentRole.PLACE: world.id, IncidentRole.AUTHORITY: creator.id},
+            kind=ChronicleKind.CREATOR_HAND,
+            son_id=son.id,
+            world_id=world.id,
+        )
+    ).text
     return Effect(message, son.id, values={"protected_until": epoch + scope.rules.god_hand.assignment_protection_epochs})
 
 
@@ -216,7 +210,7 @@ async def clear_son_protection(scope: PlayerScope, command: SonTarget) -> Effect
         raise ValidationFailedError(f"{son.name} is not protected from the distribution of sons.")
     son.manually_assigned_epoch = None
     ctx = await scope.context("son_protection")
-    return Effect(await tell(ctx, SON_PROTECTION_CLEARED, son_id=son.id, son=son.name), son.id)
+    return Effect((await record(ctx, "player.son.protection", roles={IncidentRole.ACTOR: son.id}, kind=ChronicleKind.CREATOR_HAND, son_id=son.id)).text, son.id)
 
 
 async def _worshippers_in(scope: PlayerScope, son: SonRow) -> int:
@@ -300,7 +294,16 @@ async def distribute_sons(scope: PlayerScope, ctx: TickContext) -> int:
         son = await guards.son(scope.session, candidates[0].son_id)
         son.current_world_id = world.id
         await scope.session.flush()
-        text = await tell(ctx, SON_DISTRIBUTED, son_id=son.id, world_id=world.id, kind=ChronicleKind.COSMIC, son=son.name, world=world.name)
+        text = (
+            await record(
+                ctx,
+                "player.son.distributed",
+                roles={IncidentRole.ACTOR: son.id, IncidentRole.PLACE: world.id},
+                kind=ChronicleKind.COSMIC,
+                son_id=son.id,
+                world_id=world.id,
+            )
+        ).text
         scope.publish(EventKind.SON_DISTRIBUTED, {"son_id": son.id, "world_id": world.id, "text": text})
         moved += 1
     return moved
@@ -362,7 +365,15 @@ async def move_entity(scope: PlayerScope, command: MoveEntity) -> Effect:
     cosmos.map_version += 1
     creator = await scope.creator()
     ctx = await scope.context("move")
-    message = await hand(ctx, creator, ENTITY_MOVED, ids=[target.id, location.id], entity=target.name, location=location.name)
+    message = (
+        await record(
+            ctx,
+            "player.entity.moved",
+            roles={IncidentRole.TARGET: target.id, IncidentRole.PLACE: location.id, IncidentRole.AUTHORITY: creator.id},
+            place=location.id,
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, target.id)
 
 
@@ -389,12 +400,32 @@ async def assign_patron(scope: PlayerScope, command: AssignPatron) -> Effect:
         await _close_worship(scope, target.id, epoch)
         await BondRepository(scope.session).connect(BondDraft(target.id, god.id, BondKind.WORSHIPS, epoch, "the god's command"))
         await entities.remove_flag(target.id, EntityFlag.GODLESS)
-        return Effect(await hand(ctx, creator, PATRON_FOREIGN, ids=[target.id], entity=target.name, god=god.name), target.id)
+        return Effect(
+            (
+                await record(
+                    ctx,
+                    "player.entity.patron_foreign",
+                    roles={IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: god.id, IncidentRole.AUTHORITY: creator.id},
+                    kind=ChronicleKind.CREATOR_HAND,
+                )
+            ).text,
+            target.id,
+        )
     if command.creator:
         await _close_worship(scope, target.id, epoch)
         await worship_creator(scope.session, target, epoch, "the god's command")
         await entities.remove_flag(target.id, EntityFlag.GODLESS)
-        return Effect(await hand(ctx, creator, PATRON_CREATOR, ids=[target.id], entity=target.name), target.id)
+        return Effect(
+            (
+                await record(
+                    ctx,
+                    "player.entity.patron_creator",
+                    roles={IncidentRole.TARGET: target.id, IncidentRole.AUTHORITY: creator.id},
+                    kind=ChronicleKind.CREATOR_HAND,
+                )
+            ).text,
+            target.id,
+        )
     if command.son_id is not None:
         son = await guards.son(scope.session, command.son_id)
         if not son.alive:
@@ -402,10 +433,28 @@ async def assign_patron(scope: PlayerScope, command: AssignPatron) -> Effect:
         await _close_worship(scope, target.id, epoch)
         await BondRepository(scope.session).connect(BondDraft(target.id, son.id, BondKind.WORSHIPS, epoch, "the god's command"))
         await entities.remove_flag(target.id, EntityFlag.GODLESS)
-        return Effect(await hand(ctx, creator, PATRON_SON, ids=[target.id], son_id=son.id, entity=target.name, son=son.name), target.id)
+        return Effect(
+            (
+                await record(
+                    ctx,
+                    "player.entity.patron_son",
+                    roles={IncidentRole.TARGET: target.id, IncidentRole.SUBJECT: son.id, IncidentRole.AUTHORITY: creator.id},
+                    kind=ChronicleKind.CREATOR_HAND,
+                    son_id=son.id,
+                )
+            ).text,
+            target.id,
+        )
     await _close_worship(scope, target.id, epoch)
     await entities.add_flag(target.id, EntityFlag.GODLESS, epoch)
-    return Effect(await hand(ctx, creator, PATRON_NONE, ids=[target.id], entity=target.name), target.id)
+    return Effect(
+        (
+            await record(
+                ctx, "player.entity.patron_none", roles={IncidentRole.TARGET: target.id, IncidentRole.AUTHORITY: creator.id}, kind=ChronicleKind.CREATOR_HAND
+            )
+        ).text,
+        target.id,
+    )
 
 
 @player_action("entity:stat", ActionKind.EDIT_RECORD)
@@ -417,12 +466,12 @@ async def set_stat(scope: PlayerScope, command: SetStat) -> Effect:
         target.sanity = clamp_percent(command.value)
         new: int | None = target.sanity
     else:
-        field = entity_type_spec(target.entity_type).stat(key)
+        column = entity_type_spec(target.entity_type).stat(key)
         high: int | None
-        if field is None and key == "devotion" and "devotion" in type(target.stats).model_fields:
+        if column is None and key == "devotion" and "devotion" in type(target.stats).model_fields:
             low, high = 0, scope.rules.death.devotion_cap
-        elif field is not None and key in type(target.stats).model_fields:
-            low, high = field.bounds(scope.rules)
+        elif column is not None and key in type(target.stats).model_fields:
+            low, high = column.bounds(scope.rules)
         else:
             raise ValidationFailedError(f'There is no stat "{key}" for {an(spoken(target.entity_type))}.')
         old = stat(target, key)
@@ -431,7 +480,15 @@ async def set_stat(scope: PlayerScope, command: SetStat) -> Effect:
         set_stats(target, **{key: new})
     creator = await scope.creator()
     ctx = await scope.context("stat")
-    message = await hand(ctx, creator, STAT_SET, ids=[target.id], entity=target.name, stat=key, old="-" if old is None else old, new=new)
+    message = (
+        await record(
+            ctx,
+            "player.entity.stat",
+            roles={IncidentRole.TARGET: target.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"stat": str(key), "old": str("-" if old is None else old), "new": new},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(message, target.id)
 
 
@@ -506,7 +563,18 @@ async def set_tags(scope: PlayerScope, command: SetTags) -> Effect:
         raise ValidationFailedError(f"Nothing changed on {target.name}.")
     creator = await scope.creator()
     ctx = await scope.context("tags")
-    return Effect(await hand(ctx, creator, TAGS_SET, ids=[target.id], entity=target.name, changes=changes.text()), target.id)
+    return Effect(
+        (
+            await record(
+                ctx,
+                "player.entity.tags",
+                roles={IncidentRole.TARGET: target.id, IncidentRole.AUTHORITY: creator.id},
+                facts={"changes": changes.text()},
+                kind=ChronicleKind.CREATOR_HAND,
+            )
+        ).text,
+        target.id,
+    )
 
 
 @player_action("entity:agent", ActionKind.EDIT_RECORD)
@@ -527,7 +595,9 @@ async def set_son_image_prompt(scope: PlayerScope, command: SonImagePrompt) -> E
     son = await guards.son(scope.session, command.son_id)
     son.image_prompt = command.image_prompt.strip() or None
     ctx = await scope.context("son_prompt")
-    return Effect(await tell(ctx, SON_IMAGE_PROMPT, son_id=son.id, son=son.name), son.id)
+    return Effect(
+        (await record(ctx, "player.son.image_prompt", roles={IncidentRole.ACTOR: son.id}, kind=ChronicleKind.CREATOR_HAND, son_id=son.id)).text, son.id
+    )
 
 
 async def _rename_son(scope: PlayerScope, son: SonRow, requested: str) -> str | None:
@@ -629,15 +699,43 @@ async def edit_son(scope: PlayerScope, command: EditSon) -> Effect:
     if command.name is not None:
         old = await _rename_son(scope, son, command.name)
         if old is not None:
-            messages.append(await tell(ctx, SON_RENAMED, son_id=son.id, old=old, new=son.name))
+            messages.append(
+                (
+                    await record(
+                        ctx, "player.son.renamed", roles={IncidentRole.PRODUCT: son.id}, facts={"old": old}, kind=ChronicleKind.CREATOR_HAND, son_id=son.id
+                    )
+                ).text
+            )
     changed = _apply_texts(son, command, await scope.epoch()) + _apply_numbers(scope, son, command)
     if command.rarity is not None and command.rarity is not son.rarity:
         son.rarity = command.rarity
-        messages.append(await tell(ctx, SON_RARITY, son_id=son.id, son=son.name, rarity=command.rarity.value))
+        messages.append(
+            (
+                await record(
+                    ctx,
+                    "player.son.rarity",
+                    roles={IncidentRole.ACTOR: son.id},
+                    facts={"rarity": command.rarity},
+                    kind=ChronicleKind.CREATOR_HAND,
+                    son_id=son.id,
+                )
+            ).text
+        )
     if not changed and not messages:
         raise ValidationFailedError(f"Nothing to change on {son.name}.")
     if changed:
-        messages.append(await tell(ctx, SON_EDITED, son_id=son.id, son=son.name, fields=", ".join(dict.fromkeys(changed))))
+        messages.append(
+            (
+                await record(
+                    ctx,
+                    "player.son.edited",
+                    roles={IncidentRole.ACTOR: son.id},
+                    facts={"fields": str(", ".join(dict.fromkeys(changed)))},
+                    kind=ChronicleKind.CREATOR_HAND,
+                    son_id=son.id,
+                )
+            ).text
+        )
     return Effect(" ".join(messages), son.id)
 
 
@@ -661,7 +759,16 @@ async def add_star(scope: PlayerScope, command: SonTarget) -> Effect:
         setattr(son, item.value, max(STAT_FLOOR, min(STAT_CEILING, son.stat(item) + scope.rules.god_actions.star_stat_gain)))
     son.hp = max_hp(scope.rules, son.endurance)
     ctx = await scope.context("star")
-    message = await tell(ctx, STAR_ADDED, son_id=son.id, kind=ChronicleKind.STAR, creator=creator.name, son=son.name, stars=target)
+    message = (
+        await record(
+            ctx,
+            "player.son.star",
+            roles={IncidentRole.CO_ACTOR: creator.id, IncidentRole.ACTOR: son.id},
+            facts={"stars": str(target)},
+            kind=ChronicleKind.STAR,
+            son_id=son.id,
+        )
+    ).text
     return Effect(message, son.id, essence_spent=spent)
 
 
@@ -695,7 +802,7 @@ async def ascend(scope: PlayerScope, command: SonTarget) -> Effect:
         EntityDraft(
             name=await NameRepository(scope.session).unique_name(f"Ascension of {son.name}"),
             entity_type=EntityType.LEGEND,
-            description=ASCENSION_MYTH.render(son=son.name, old=old.value, new=following.value),
+            description=ASCENSION_MYTH.format(son=son.name, old=spoken(old), new=spoken(following)),
             stats=LegendStats(spread=rules.god_actions.ascension_myth_spread),
             power_level=profile.power_cap,
             origin=EntityOrigin.ENGINE,
@@ -708,6 +815,15 @@ async def ascend(scope: PlayerScope, command: SonTarget) -> Effect:
         )
     )
     await BondRepository(scope.session).connect(BondDraft(legend.id, son.id, BondKind.TELLS_OF, ctx.epoch))
-    message = await tell(ctx, ASCENDED, ids=[legend.id], son_id=son.id, kind=ChronicleKind.ASCENSION, son=son.name, old=old.value, new=following.value)
+    message = (
+        await record(
+            ctx,
+            "player.son.ascended",
+            roles={IncidentRole.ACTOR: son.id, IncidentRole.SUBJECT: legend.id},
+            facts={"old": old, "new": str(following.value)},
+            kind=ChronicleKind.ASCENSION,
+            son_id=son.id,
+        )
+    ).text
     scope.publish(EventKind.SON_ASCENDED, {"son_id": son.id, "rarity": following.value})
     return Effect(message, son.id, essence_spent=spent, created_ids=(legend.id,))

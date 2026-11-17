@@ -125,6 +125,7 @@ from aerona.engine.phases import (
     production,
     prosperity,
     realms,
+    recording,
     refugees,
     regimes,
     regions,
@@ -165,6 +166,7 @@ from aerona.engine.phases import (
     writing,
 )
 from aerona.engine.primitives.manual import silent
+from aerona.engine.recording.scope import phase_scope
 from aerona.engine.snapshot import store_tick_flows
 from aerona.engine.stats import TickStats
 from aerona.events.kinds import EventKind
@@ -327,6 +329,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + demography.PHASES
     + happenings.PHASES
     + regions.PHASES
+    + recording.PHASES
 )
 PHASE_REGISTRY: dict[str, Phase] = {phase.name: phase for phase in EXPORTED_PHASES}
 
@@ -796,7 +799,7 @@ GODS_STAGE = stage(
     "god_goals",
     "creator_attention",
 )
-CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "advance_epoch")
+CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "record_checkpoints", "advance_epoch")
 
 TRANSITION_ORDER: tuple[Phase, ...] = GROWTH_STAGE + GODS_STAGE + CLOSING_STAGE
 POST_TRANSITION_ORDER: tuple[Phase, ...] = stage("creator_mood", "god_power", "reputation", "goals")
@@ -812,8 +815,8 @@ def disabled_by_rules(rules: Rules) -> frozenset[str]:
     return frozenset(name for name in PHASE_REGISTRY if name not in ESSENTIAL_PHASES and getattr(switches, name) == 0)
 
 
-def after_transition(environment: TickEnvironment) -> TickEnvironment:
-    return replace(environment, epoch=environment.epoch + 1, window=phase_window(environment.rules, EpochPhase.NOT_STARTED))
+def after_transition(tick_environment: TickEnvironment) -> TickEnvironment:
+    return replace(tick_environment, epoch=tick_environment.epoch + 1, window=phase_window(tick_environment.rules, EpochPhase.NOT_STARTED))
 
 
 class EnginePhaseError(AeronaError):
@@ -847,58 +850,59 @@ def find_phase(name: str) -> Phase:
     return found
 
 
-async def run_phase(environment: TickEnvironment, database: Database, phase: Phase, steps: Steps | None = None) -> None:
+async def run_phase(tick_environment: TickEnvironment, database: Database, phase: Phase, steps: Steps | None = None) -> None:
     started = time.perf_counter()
     thought = time.process_time()
     try:
-        async with database.write() if steps is None else steps.step() as session:
-            await run_guarded(phase, TickContext(environment, session, phase.name))
+        with phase_scope(tick_environment, phase.name):
+            async with database.write() if steps is None else steps.step() as session:
+                await run_guarded(phase, TickContext(tick_environment, session, phase.name))
     except AeronaError:
         raise
     except Exception as error:
         raise EnginePhaseError(phase.name, error) from error
     elapsed = time.perf_counter() - started
-    environment.stats.phase_seconds[phase.name] = environment.stats.phase_seconds.get(phase.name, 0.0) + elapsed
-    environment.stats.phase_cpu[phase.name] = environment.stats.phase_cpu.get(phase.name, 0.0) + time.process_time() - thought
-    environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": phase.name, "seconds": elapsed})
+    tick_environment.stats.phase_seconds[phase.name] = tick_environment.stats.phase_seconds.get(phase.name, 0.0) + elapsed
+    tick_environment.stats.phase_cpu[phase.name] = tick_environment.stats.phase_cpu.get(phase.name, 0.0) + time.process_time() - thought
+    tick_environment.publish(EventKind.ENGINE_PHASE, {"epoch": tick_environment.epoch, "phase": phase.name, "seconds": elapsed})
     await asyncio.sleep(0)
 
 
 async def run_phases(
-    environment: TickEnvironment,
+    tick_environment: TickEnvironment,
     database: Database,
     phases: Sequence[Phase],
     disabled: frozenset[str] = frozenset(),
     tolerant: frozenset[str] = frozenset(),
 ) -> TickStats:
-    skipped = disabled | disabled_by_rules(environment.rules)
+    skipped = disabled | disabled_by_rules(tick_environment.rules)
     async with database.steps() as steps:
         for phase in phases:
             if phase.name in skipped:
-                environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
+                tick_environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
                 continue
             try:
-                await run_phase(environment, database, phase, steps)
+                await run_phase(tick_environment, database, phase, steps)
             except EnginePhaseError as error:
                 if phase.name not in tolerant:
                     raise
                 LOGGER.exception("Engine step %s failed and was skipped", phase.name)
-                environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
-                environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": phase.name, "error": error.message})
-    return environment.stats
+                tick_environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
+                tick_environment.publish(EventKind.ENGINE_PHASE, {"epoch": tick_environment.epoch, "phase": phase.name, "error": error.message})
+    return tick_environment.stats
 
 
-def warn_over_budget(environment: TickEnvironment) -> float | None:
-    target = environment.rules.engine_budget.tick_target_seconds
-    seconds = environment.stats.over_budget(target)
+def warn_over_budget(tick_environment: TickEnvironment) -> float | None:
+    target = tick_environment.rules.engine_budget.tick_target_seconds
+    seconds = tick_environment.stats.over_budget(target)
     if seconds is not None:
-        LOGGER.warning("Engine tick of epoch %s took %.1f s, over its %s s target", environment.epoch, seconds, target)
-        environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": OVER_BUDGET_PHASE, "seconds": seconds, "target": target})
+        LOGGER.warning("Engine tick of epoch %s took %.1f s, over its %s s target", tick_environment.epoch, seconds, target)
+        tick_environment.publish(EventKind.ENGINE_PHASE, {"epoch": tick_environment.epoch, "phase": OVER_BUDGET_PHASE, "seconds": seconds, "target": target})
     return seconds
 
 
 async def run_tick(
-    environment: TickEnvironment,
+    tick_environment: TickEnvironment,
     database: Database,
     *,
     phases: Sequence[Phase] = TICK_ORDER,
@@ -907,18 +911,18 @@ async def run_tick(
 ) -> TickResult:
     async with database.read() as session:
         since = await last_chronicle_id(session)
-    await run_phases(environment, database, phases, disabled)
-    warn_over_budget(environment)
+    await run_phases(tick_environment, database, phases, disabled)
+    warn_over_budget(tick_environment)
     async with database.write() as session:
-        fold = await fold_tick_lines(session, environment.rules, environment.epoch, since)
-        await store_tick_flows(session, environment.epoch, environment.stats.flows)
+        fold = await fold_tick_lines(session, tick_environment.rules, tick_environment.epoch, since)
+        await store_tick_flows(session, tick_environment.epoch, tick_environment.stats.flows)
         if finalize is not None:
             await finalize(session)
-    return TickResult(stats=environment.stats, fold=fold, since_chronicle_id=since)
+    return TickResult(stats=tick_environment.stats, fold=fold, since_chronicle_id=since)
 
 
 async def run_epoch_transition(
-    environment: TickEnvironment,
+    tick_environment: TickEnvironment,
     database: Database,
     *,
     phases: Sequence[Phase] = TRANSITION_ORDER,
@@ -927,14 +931,14 @@ async def run_epoch_transition(
     disabled: frozenset[str] = frozenset(),
     tolerant: frozenset[str] = TOLERANT_TRANSITION_STEPS,
 ) -> TickStats:
-    await run_phases(environment, database, pre_phases, disabled, tolerant)
-    await run_phases(environment, database, phases, disabled, tolerant)
-    return await run_phases(after_transition(environment), database, post_phases, disabled, tolerant)
+    await run_phases(tick_environment, database, pre_phases, disabled, tolerant)
+    await run_phases(tick_environment, database, phases, disabled, tolerant)
+    return await run_phases(after_transition(tick_environment), database, post_phases, disabled, tolerant)
 
 
-async def run_named_phase(environment: TickEnvironment, database: Database, name: str) -> TickStats:
-    await run_phase(environment, database, find_phase(name))
-    return environment.stats
+async def run_named_phase(tick_environment: TickEnvironment, database: Database, name: str) -> TickStats:
+    await run_phase(tick_environment, database, find_phase(name))
+    return tick_environment.stats
 
 
 async def current_environment(

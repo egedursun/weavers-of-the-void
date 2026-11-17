@@ -7,6 +7,7 @@ from aerona.db.tables.divine_powers import DivinePowerRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.divine.grammar import pay, wield
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -15,7 +16,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -43,8 +43,11 @@ async def wield_power(call: SonCall, args: WieldInput) -> str:
     touched = await wield(call.tick, row, args.target_id)
     if target is not None:
         call.target(target.id)
-    await call.chronicle(
-        ChronicleKind.FATE, lines.WIELD_POWER, entity_ids=[target.id] if target is not None else [], son=call.son.name, power=row.name, reason=args.reason
+    await call.record(
+        "tools.son.wield_power",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [*([target.id] if target is not None else [])]},
+        facts={"power": row.name, "reason": args.reason},
+        kind=ChronicleKind.FATE,
     )
     return result(SonResult.POWER_WIELDED, power=row.name, touched=touched)
 

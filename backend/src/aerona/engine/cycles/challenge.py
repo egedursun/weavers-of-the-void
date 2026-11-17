@@ -9,6 +9,7 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
@@ -20,9 +21,9 @@ from aerona.engine.folkways.biases import lean_community
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import HEADCOUNT_KEY
 from aerona.engine.lore.research_depth import add_progress, research_choices
-from aerona.engine.notes import note
 from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import FactInput, record
 
 CLIMATE_PHASES = frozenset({"climate_transition", "planetary_climate"})
 FLOW_KINDS = {
@@ -91,13 +92,20 @@ async def answer(ctx: TickContext, polity: EntityRow, profile: PolityProfileRow,
         shift(standing, "value", table.response_asabiyya)
         capital = profile.capital_entity_id or polity.id
         if await civic_leap(ctx, capital, row.challenge):
-            await note(ctx, f"Hard times taught {polity.name} new ways of ordering its people.", key="challenge.civic", ids=[polity.id])
-        await note(ctx, f"{polity.name} met its trials and grew stronger for them.", key="challenge.response", ids=[polity.id])
+            await record(ctx, "challenge.civic", roles={IncidentRole.SUBJECT: polity.id}, facts={"challenge": row.challenge}, place=capital)
+        facts: dict[str, FactInput] = {"challenge": row.challenge, "asabiyya_gain": table.response_asabiyya}
+        await record(ctx, "challenge.response", roles={IncidentRole.SUBJECT: polity.id}, facts=facts)
     elif response is ChallengeResponse.COLLAPSE:
         shift(standing, "value", -table.collapse_asabiyya)
         shift(profile, "stability", -table.collapse_stability)
         shift(profile, "legitimacy", -table.collapse_legitimacy)
-        await note(ctx, f"{polity.name} buckled under more than it could bear.", key="challenge.collapse", ids=[polity.id])
+        lost: dict[str, FactInput] = {
+            "challenge": row.challenge,
+            "asabiyya_loss": table.collapse_asabiyya,
+            "stability_loss": table.collapse_stability,
+            "legitimacy_loss": table.collapse_legitimacy,
+        }
+        await record(ctx, "challenge.collapse", roles={IncidentRole.SUBJECT: polity.id}, facts=lost)
     else:
         shift(standing, "value", -table.stagnation_asabiyya)
 

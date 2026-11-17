@@ -22,6 +22,7 @@ from aerona.domain.enums.entity import HERO_ROLES, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import MantlingState
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
@@ -32,9 +33,9 @@ from aerona.engine.dominion.sites import thrones_held
 from aerona.engine.folkways.biases import lean
 from aerona.engine.gods.progress import grant_progress, xp_for_next_level
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
 from aerona.engine.primitives.faith import worshipper_count
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 
 K = GodGoalKind
 SON_ONLY = frozenset({K.FOUND_REALM, K.AWAKEN_GOD, K.DEFEAT_FOREIGN_GOD, K.RECONCILE, K.REBEL})
@@ -258,8 +259,15 @@ async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) 
                 god.rebel = False
         else:
             god.power = min(PERCENT, god.power + table.foreign_power)
-    text = f"{goal_text(god, goal, await target_name(ctx, goal))} — {CLOSED_AS[state]}."
-    await note(ctx, text, key=f"divine.goal_{state.value}", son_id=god.id if isinstance(god, SonRow) else None, kind=ChronicleKind.ASCENSION)
+    target = await target_name(ctx, goal)
+    await record(
+        ctx,
+        f"divine.goal_{state.value}",
+        roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: goal.target_node_id},
+        facts={"aim": goal.kind, "aim_label": GOAL_LABELS[goal.kind].lower(), "tail": f" ({target})" if target else "", "closed_as": CLOSED_AS[state]},
+        son_id=god.id if isinstance(god, SonRow) else None,
+        kind=ChronicleKind.ASCENSION,
+    )
 
 
 async def ascend(ctx: TickContext, god: God) -> None:
@@ -270,7 +278,7 @@ async def ascend(ctx: TickContext, god: God) -> None:
     if isinstance(god, SonRow) and not held(god.id):
         need = sum(xp_for_next_level(ctx.rules, god.level + step) for step in range(ctx.rules.god_design.rank_levels)) - god.xp
         await grant_progress(ctx, god, xp=max(0, need), fame=0)
-    await note(ctx, f"{god.name} ascended to a higher divine rank by the thrones it holds.", key="divine.ascended", ids=[god.id], kind=ChronicleKind.ASCENSION)
+    await record(ctx, "divine.ascended", roles={IncidentRole.SUBJECT: god.id}, facts={"god": str(god.name)}, kind=ChronicleKind.ASCENSION)
 
 
 async def measure(ctx: TickContext, god: God, goal: GodGoalRow) -> None:
@@ -378,12 +386,13 @@ async def pursue_goals(ctx: TickContext) -> int:
             if chosen is not None:
                 ctx.session.add(chosen)
                 current.append(chosen)
-                await note(
+                await record(
                     ctx,
-                    f"{goal_text(god, chosen, await target_name(ctx, chosen))} — a new aim.",
-                    key="divine.goal_set",
-                    son_id=god.id if isinstance(god, SonRow) else None,
+                    "divine.goal_set",
+                    roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: chosen.target_node_id},
+                    facts={"aim": chosen.kind, "goal_text": goal_text(god, chosen, await target_name(ctx, chosen))},
                     kind=ChronicleKind.ASCENSION,
+                    son_id=god.id if isinstance(god, SonRow) else None,
                 )
         if isinstance(god, SonRow):
             for goal in current:

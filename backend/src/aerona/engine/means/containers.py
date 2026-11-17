@@ -112,7 +112,7 @@ async def read_marks(ctx: TickContext, site: EntityRow) -> bool:
         select(RouteRow.id).where(RouteRow.known.is_(False), (RouteRow.world_a_id == site.world_id) | (RouteRow.world_b_id == site.world_id)).limit(1)
     )
     if hidden is not None:
-        await reveal_hidden_route(ctx, int(hidden), f"Stamped jars unearthed at {site.name}")
+        await reveal_hidden_route(ctx, int(hidden), site.id)
     return True
 
 

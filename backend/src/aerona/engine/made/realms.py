@@ -12,6 +12,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
 from aerona.domain.enums.made import RealmEntry, RealmPurpose
 from aerona.domain.enums.minds import MindSeat, MindUpkeep
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import points_of, shift_points
 from aerona.engine.interconnect.annotations import reads, writes
@@ -19,10 +21,10 @@ from aerona.engine.made.kinds import AWARE_ESCAPE, PURPOSES, entry_refused
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.seat_loss import lose_seat
 from aerona.engine.networks.book import running
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.queries import connect
+from aerona.engine.recording.record import StepDraft, record
 
 SELF_KEPT = frozenset({MindUpkeep.NONE, MindUpkeep.PLACE})
 
@@ -52,7 +54,13 @@ async def end_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
     if dimension is not None:
         dimension.stability = 0
     realm.sealed = True
-    await note(ctx, "A made realm ended with what held it.", key="realm.ended", ids=[realm.dimension_id])
+    await record(
+        ctx,
+        "realm.ended",
+        roles={IncidentRole.SUBJECT: realm.dimension_id, IncidentRole.OWNER: realm.host_node_id},
+        facts={"purpose": realm.realm_purpose},
+        steps=(StepDraft(StepAction.CLOSE, target=realm.dimension_id, outcome=StepOutcome.DESTROYED),),
+    )
 
 
 async def minds_inside(ctx: TickContext, realm: MadeRealmRow) -> list[MindProfileRow]:
@@ -83,7 +91,13 @@ async def enter_realm(ctx: TickContext, mind_id: int, realm_id: int) -> MindProf
     if realm.host_node_id is not None and realm.host_node_id != mind_id:
         await connect(ctx.session, mind_id, realm.host_node_id, BondKind.HOSTED_BY, ctx.epoch, description="runs in a realm this hosts")
     await ctx.session.flush()
-    await note(ctx, "A mind went into a made realm.", key="realm.entered", ids=[mind_id, realm.dimension_id])
+    await record(
+        ctx,
+        "realm.entered",
+        roles={IncidentRole.ACTOR: mind_id, IncidentRole.DESTINATION: realm.dimension_id},
+        facts={"purpose": realm.realm_purpose, "time_ratio": realm.time_ratio_pct},
+        steps=(StepDraft(StepAction.ENTER, actor=mind_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id),),
+    )
     return mind
 
 
@@ -99,7 +113,13 @@ async def withdraw(ctx: TickContext, people_id: int, realm_id: int) -> int:
         mind = await profile_of(ctx.session, ctx.rules, mortal, ctx.epoch)
         mind.seat, mind.seat_node_id = MindSeat.REALM, realm.dimension_id
         moved += 1
-    await note(ctx, "A people withdrew into a made realm.", key="realm.withdrawal", ids=[people_id, realm.dimension_id])
+    await record(
+        ctx,
+        "realm.withdrawal",
+        roles={IncidentRole.ACTOR: people_id, IncidentRole.DESTINATION: realm.dimension_id},
+        facts={"moved": moved, "purpose": realm.realm_purpose},
+        steps=(StepDraft(StepAction.ENTER, actor=people_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id, amount=moved, unit=FactUnit.PEOPLE),),
+    )
     return moved
 
 
@@ -111,7 +131,13 @@ async def escapes(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfile
         if held(mind.node_id) or not ctx.rng(f"realm.escape.{mind.node_id}.{ctx.epoch}").chance(chance):
             continue
         mind.seat, mind.seat_node_id = MindSeat.BODY, mind.node_id
-        await note(ctx, "A mind got out of the realm it was confined in.", key="realm.escape", ids=[mind.node_id, realm.dimension_id])
+        await record(
+            ctx,
+            "realm.escape",
+            roles={IncidentRole.ACTOR: mind.node_id, IncidentRole.ORIGIN: realm.dimension_id},
+            facts={"chance": chance, "awareness": realm.aware_inside},
+            steps=(StepDraft(StepAction.ESCAPE, actor=mind.node_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id, outcome=StepOutcome.ESCAPED),),
+        )
 
 
 async def admit_by_entry(ctx: TickContext, realm: MadeRealmRow, keeper: EntityRow | None) -> int:
@@ -141,7 +167,12 @@ async def keep_realm(ctx: TickContext, realm: MadeRealmRow) -> None:
         return
     if await host_down(ctx, realm) and "frozen_until_epoch" not in realm.locked:
         if realm.frozen_until_epoch <= ctx.epoch:
-            await note(ctx, "A made realm stood still when what held it went down.", key="realm.frozen", ids=[realm.dimension_id])
+            await record(
+                ctx,
+                "realm.frozen",
+                roles={IncidentRole.SUBJECT: realm.dimension_id, IncidentRole.OWNER: realm.host_node_id},
+                facts={"epochs": table.freeze_epochs},
+            )
         realm.frozen_until_epoch = ctx.epoch + table.freeze_epochs
     unpaid = realm.upkeep not in SELF_KEPT and keeper is not None and await points_of(ctx.session, keeper) < table.upkeep_wealth
     if unpaid and "fidelity" not in realm.locked:

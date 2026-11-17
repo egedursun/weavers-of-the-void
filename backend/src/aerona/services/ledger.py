@@ -11,16 +11,19 @@ from aerona.core.errors import BusyError, ConflictError, NotFoundError
 from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.ledger_rows import Change, compacted, to_change
 from aerona.db.ledger_undo import changes_of, creating_entry_id, undo_entry
+from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.meta import LedgerOperation
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
-from aerona.services.chronicle import ChronicleWriter
 from aerona.services.ledger_narration import label_names, narrate, node_names
 from aerona.services.player.journal import RowJournal
 from aerona.services.player.ports import ActionLedger
@@ -30,8 +33,6 @@ SUMMARY_FIELD_LIMIT = 80
 SUMMARY_SEPARATOR = " · "
 NARRATED_ROWS = 30
 EPOCH_RUNNING_MESSAGE = "A page cannot be torn from the ledger while an epoch is running."
-UNDO_TEXT = "a page was torn from Fate's ledger. {actor}'s action ({label}) is considered never to have happened."
-UNKNOWN_ACTOR = "Someone"
 
 
 @dataclass
@@ -103,8 +104,7 @@ def _touches(change: Change, entity_ids: set[int]) -> bool:
 
 
 class Ledger:
-    def __init__(self, writer: ChronicleWriter, bus: EventBus | None = None, journal: ActionLedger | None = None) -> None:
-        self._writer = writer
+    def __init__(self, bus: EventBus | None = None, journal: ActionLedger | None = None) -> None:
         self._bus = bus
         self._journal: ActionLedger = journal or RowJournal()
 
@@ -123,7 +123,8 @@ class Ledger:
     ) -> AsyncIterator[LedgerHandle]:
         handle = LedgerHandle()
         async with self._journal.capture(session) as capture:
-            yield handle
+            with acting(actor_kind, actor_node_id, epoch, key=f"actor.{tool}"):
+                yield handle
             draft = LedgerDraft(
                 epoch=epoch,
                 actor_kind=actor_kind,
@@ -209,16 +210,21 @@ class Ledger:
         changes = await changes_of(session, entry.id)
         report = await undo_entry(session, entry.id, cosmos.epoch, label_names(changes, await node_names(session, changes)))
         if chronicle:
-            text = UNDO_TEXT.format(actor=entry.actor_name or UNKNOWN_ACTOR, label=action_label(entry.tool, entry.action_kind))
-            await self._writer.creator_hand(session, rules, text)
             creator = await CosmosRepository(session).require_creator()
+            ctx = await manual_context(session, "ledger.undo", rules, key=f"undo.{entry.id}")
+            written = await record(
+                ctx,
+                "creator.hand",
+                roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.ACTOR: entry.actor_node_id},
+                facts={"act": action_label(entry.tool, entry.action_kind), "doer": entry.actor_name},
+            )
             session.add(
                 ActionRecordRow(
                     epoch=cosmos.epoch,
                     actor_kind=ActorKind.CREATOR,
                     actor_node_id=creator.id,
                     kind=ActionKind.LEDGER_UNDO,
-                    summary=text[:LEDGER_SUMMARY_MAX_LENGTH],
+                    summary=written.text[:LEDGER_SUMMARY_MAX_LENGTH],
                 )
             )
             await session.flush()

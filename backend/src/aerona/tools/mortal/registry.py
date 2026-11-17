@@ -39,6 +39,7 @@ from aerona.tools.mortal import (
     economic,
     eras,
     estates,
+    events,
     evolution,
     folkways,
     fortune,
@@ -269,6 +270,7 @@ CONDITIONS: dict[MortalToolId, Condition] = {
 
 FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     read.specs,
+    events.specs,
     language.specs,
     production.specs,
     trade.specs,

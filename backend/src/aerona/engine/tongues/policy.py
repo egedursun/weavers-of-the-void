@@ -11,17 +11,17 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.tongues import LanguagePolicyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import LanguagePolicy
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import learn_second
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import homes_for
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, connect, has_flag, spoken_language
+from aerona.engine.recording.record import record as record_incident
 
 HOLDER_TYPES = frozenset({EntityType.POLITY, EntityType.CULT, EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION})
 
@@ -70,14 +70,7 @@ async def choose_official(ctx: TickContext, polity: EntityRow, tally: PolicyTall
     language_id = max(sorted(tongues), key=lambda item: tongues[item])
     row = await set_policy(ctx, polity.id, language_id, LanguagePolicy.OFFICIAL, PERCENT // 2)
     tally.set += 1
-    language = await ctx.session.get(EntityRow, language_id)
-    await note(
-        ctx,
-        f"{polity.name} made {language.name if language is not None else 'its tongue'} the tongue of its laws and offices.",
-        key="tongues.official",
-        ids=[polity.id, language_id],
-        kind=ChronicleKind.LANGUAGE,
-    )
+    await record_incident(ctx, "tongues.official", roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.SUBJECT: language_id})
     return row
 
 
@@ -139,12 +132,8 @@ async def revive(ctx: TickContext, row: LanguagePolicyRow, tally: PolicyTally) -
     if not await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[homes[0].id], targets=[language.id]):
         await connect(ctx.session, homes[0].id, language.id, BondKind.SPEAKS, ctx.epoch, description="revived")
     tally.revived += 1
-    await note(
-        ctx,
-        f"{homes[0].name} raised its children in {language.name} again, and the dead tongue lived.",
-        key="tongues.revived",
-        ids=[homes[0].id, language.id],
-        kind=ChronicleKind.LANGUAGE,
+    await record_incident(
+        ctx, "tongues.revived", roles={IncidentRole.SUBJECT: language.id, IncidentRole.LEARNER: homes[0].id, IncidentRole.AUTHORITY: row.holder_entity_id}
     )
     return True
 

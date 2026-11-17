@@ -16,6 +16,8 @@ from aerona.domain.enums.customs import CoopPurpose
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -24,11 +26,11 @@ from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 
 TAVERN_KINDS = frozenset({StructureKind.TAVERN, StructureKind.INN})
 WELFARE_KINDS = frozenset({StructureKind.ALMSHOUSE, StructureKind.ORPHANAGE, StructureKind.HOSPITAL})
@@ -212,9 +214,17 @@ async def keep_cooperatives(ctx: TickContext, tally: TownLifeTally) -> None:
         )
         poverty = (await pressures_of(ctx.session, town.id)).get(PressureKind.POVERTY, 0)
         if poverty >= table.found_from and factions and not any(item.id in pooled for item in factions) and not held(factions[0].id):
-            ctx.session.add(CooperativeRow(faction_entity_id=factions[0].id, purpose=await purpose_for(ctx, town), locked=[]))
+            purpose = await purpose_for(ctx, town)
+            ctx.session.add(CooperativeRow(faction_entity_id=factions[0].id, purpose=purpose, locked=[]))
             pooled.add(factions[0].id)
-            await note(ctx, f"The poor of {town.name} pooled their means in {factions[0].name}.", key="cooperatives.founded", ids=[town.id, factions[0].id])
+            await record(
+                ctx,
+                "cooperatives.founded",
+                roles={IncidentRole.PRODUCT: factions[0].id, IncidentRole.PLACE: town.id},
+                facts={"purpose": purpose, "poverty": poverty},
+                steps=(StepDraft(StepAction.FOUND, target=factions[0].id),),
+                place=town.id,
+            )
     await ctx.session.flush()
     for row in list(await ctx.session.scalars(select(CooperativeRow).order_by(CooperativeRow.faction_entity_id))):
         faction = await ctx.session.get(EntityRow, row.faction_entity_id)

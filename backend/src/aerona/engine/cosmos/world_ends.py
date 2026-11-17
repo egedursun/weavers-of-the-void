@@ -19,10 +19,11 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType, WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.enums.world_view import WorldLight
@@ -30,8 +31,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.cosmos.world_views import reset_view, view_of
 from aerona.engine.lifecycle.mortal_death import die
-from aerona.engine.notes import note
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.recording.record import StepDraft, record
 
 E = WorldEnd
 LIFELESS = frozenset({E.SHATTERED, E.CONSUMED, E.FROZEN_DEAD, E.SUNK_INTO_VOID})
@@ -148,12 +149,19 @@ async def end_world(ctx: TickContext, world: WorldRow, state: WorldEnd, cause: W
         world.world_type = new_type
     if state in {E.SHATTERED, E.TRANSFIGURED}:
         await reset_view(ctx.session, ctx.rules, world, ctx.epoch)
-    told = state.value.replace("_", " ")
-    await note(
+    await record(
         ctx,
-        f"{world.name} was {told} ({spoken(cause)}): {row.lives_ended} lives ended, {row.homeless} homeward ties cut abroad.",
-        key=f"world_end.{state.value}",
-        kind=ChronicleKind.COSMIC,
+        f"world_end.{state.value}",
+        roles={IncidentRole.SUBJECT: world.id},
+        facts={
+            "end": state,
+            "cause": cause,
+            "lives": row.lives_ended,
+            "homeless": row.homeless,
+            "routes": row.routes_closed,
+            "anchors": row.anchors_lost,
+        },
+        steps=(StepDraft(StepAction.END, target=world.id, outcome=StepOutcome.DESTROYED if state in LIFELESS else StepOutcome.SUCCESS),),
         world_id=world.id,
     )
     await ctx.session.flush()

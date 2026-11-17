@@ -23,15 +23,16 @@ from aerona.domain.enums.divine import DivineCost, DivineMode, DivineObject, Div
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import MemoryKind, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import domains_of, faithful_communities, living_gods
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import pressures_of, stored_values, write_pressures, write_values
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 
 Apply = Callable[[TickContext, EntityRow, str | None, int, int], Awaitable[None]]
 DOMAIN_LIFT = 25
@@ -140,7 +141,7 @@ async def on_memory(ctx: TickContext, target: EntityRow, _key: str | None, amoun
 
 async def on_incident(ctx: TickContext, target: EntityRow, _key: str | None, amount: int, holder: int) -> None:
     shift_stat(target, "piety", abs(amount) // 2, 0)
-    await note(ctx, f"A sign of power touched {target.name}.", key="divine.power_incident", ids=[target.id, holder])
+    await record(ctx, "divine.power_incident", roles={IncidentRole.SUBJECT: [target.id, holder]})
 
 
 APPLIERS: Mapping[DivineObject, Apply] = total(

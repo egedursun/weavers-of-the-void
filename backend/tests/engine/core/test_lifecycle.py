@@ -97,7 +97,7 @@ async def test_after_death_soul_items_and_death_gods(session: AsyncSession, worl
     spirits = [item for item in await session.scalars(select(BondRow).where(BondRow.target_node_id == hero.id, BondRow.kind == BondKind.DESCENDS_FROM))]
     assert len(spirits) >= 1
     texts = list(await session.scalars(select(ChronicleRow.template_key).where(ChronicleRow.epoch == ctx.epoch)))
-    assert "mortal.spirit" in texts
+    assert {"mortal.spirit", "mortal.spirit_restless"} & set(texts)
     assert "mortal.mourning" in texts
 
 

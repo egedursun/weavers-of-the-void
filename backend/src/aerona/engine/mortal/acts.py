@@ -1,14 +1,14 @@
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
 from aerona.catalog.mind import CAREER_SKILLS, PROFESSIONS
 from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import partial
+from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
@@ -20,9 +20,11 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.mind import ActKind, Attribute, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, Attribute, Facet, GratitudeDeed, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.bands import banded
@@ -48,7 +50,6 @@ from aerona.engine.mind.values import liege_of
 from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_renown, add_wealth
-from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -56,6 +57,8 @@ from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.relations.passions import invoke
 from aerona.engine.services.war import ongoing_wars
 
@@ -185,11 +188,10 @@ async def convert(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.FOUND_FAITH, ctx.epoch, subject_id=target.id)
     if not is_held(profile, "loyalty_god"):
         profile.loyalty_god = FULL // 2
-    await note(
+    await record_incident(
         ctx,
-        f"{mortal.name} turned away from their old god to the faith of {community.name if community else 'their people'}.",
-        key="mind.conversion",
-        ids=[mortal.id],
+        "mind.conversion",
+        roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.PREDECESSOR: current.id if current is not None else None, IncidentRole.SUCCESSOR: target.id},
     )
     return True
 
@@ -236,34 +238,42 @@ async def worst_enemy(ctx: TickContext, mortal: EntityRow) -> EntityRow | None:
     return None
 
 
-async def flee(ctx: TickContext, mortal: EntityRow) -> str:
+@dataclass(frozen=True)
+class Broke:
+    key: str
+    roles: Mapping[IncidentRole, RoleValue] = field(default_factory=dict)
+    facts: Mapping[str, FactInput] = field(default_factory=dict)
+
+
+async def flee(ctx: TickContext, mortal: EntityRow) -> Broke:
     if mortal.mortal_role in FIGHTERS:
         mortal.mortal_role = MortalRole.COMMONER
         punishment = await code_punishment(ctx, mortal.location_id, CrimeKind.DESERTION)
         if ctx.rng(seed_of("desertion", mortal.id, ctx.epoch)).chance(ctx.rules.punishment.treason_chance):
             await sentence(ctx, mortal, CrimeKind.DESERTION, punishment)
-        return "deserted"
+        return Broke("stress.deserted", facts={"crime": CrimeKind.DESERTION})
     atlas = await RegionAtlas.load(ctx.session)
     home = atlas.top_region(mortal.id)
     options = [community for region in sorted(atlas.neighbour_regions(home)) for community in atlas.communities_in(region)] if home is not None else []
     if options:
+        left = mortal.location_id
         mortal.location_id = ctx.rng(seed_of("flight", mortal.id, ctx.epoch)).pick(options)
-        return "fled their home"
-    return "fled into the wilds"
+        return Broke("stress.flight", {IncidentRole.ORIGIN: left, IncidentRole.DESTINATION: mortal.location_id})
+    return Broke("stress.flight_wilds", {IncidentRole.ORIGIN: mortal.location_id})
 
 
-async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
+async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     enemy = await worst_enemy(ctx, mortal)
     await gain_condition(ctx, mortal, ConditionKind.RAGE, HarmCause.ACCIDENT, severity=banded(ctx, ctx.rules.harm_bands.rage, mortal.id))
     if enemy is None:
-        return f"{mortal.name} broke under the strain and raged at the world."
+        return Broke("stress.rage")
     harm = Harm(ctx.rules.skills.spar_hp, HarmCause.DUEL, f"attacked by {mortal.name} in a rage", killer_id=mortal.id)
     await apply_hits(ctx, enemy, harm, lethal=False)
-    return f"{mortal.name} broke under the strain and fell upon {enemy.name} in a rage."
+    return Broke("stress.rage_at", {IncidentRole.TARGET: enemy.id}, {"harm": ctx.rules.skills.spar_hp})
 
 
-async def flight(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
-    return f"{mortal.name} broke under the strain and {await flee(ctx, mortal)}."
+async def flight(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
+    return await flee(ctx, mortal)
 
 
 async def despair(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) -> bool:
@@ -275,37 +285,40 @@ async def despair(ctx: TickContext, mortal: EntityRow, rng: SeededRandom) -> boo
     return False
 
 
-async def sorrow(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
-    return f"{mortal.name} sank into despair."
+async def sorrow(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
+    return Broke("stress.despair", facts={"condition": ConditionKind.MELANCHOLY})
 
 
-async def zeal(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
+async def zeal(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     community = await living_entity(ctx.session, mortal.location_id) if mortal.location_id is not None else None
     cults = await active_bonds(ctx.session, [BondKind.MEMBER_OF], targets=[community.id]) if community is not None else []
+    joined: int | None = None
     for bond in cults:
         cult = await living_entity(ctx.session, bond.source_node_id)
         if cult is not None and cult.entity_type is EntityType.CULT:
             await connect(ctx.session, mortal.id, cult.id, BondKind.MEMBER_OF, ctx.epoch, description="sought refuge in zeal")
+            joined = cult.id
             break
     if not is_held(profile, "loyalty_god"):
         profile.loyalty_god = FULL
-    return f"{mortal.name} broke under the strain and gave themself wholly to their faith."
+    return Broke("stress.zeal", {IncidentRole.HOST: joined}, {"loyalty_god": profile.loyalty_god})
 
 
-async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
+async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     await afflict(ctx, mortal, PackageKind.DRINK_DEPENDENCE, Transmission.INGESTION)
-    return f"{mortal.name} broke under the strain and fell into vice."
+    return Broke("stress.vice", facts={"package": PackageKind.DRINK_DEPENDENCE})
 
 
-async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
+async def revelation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
     await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD, severity=banded(ctx, ctx.rules.harm_bands.revelation, mortal.id))
     seer = ctx.rules.stress.revelation_seer_chance * (1 + (await stored_attribute(ctx.session, mortal, Attribute.INTUITION) - FULL // 2) / PERCENT)
     if rng.chance(seer) and not await role_locked(ctx, mortal):
         mortal.mortal_role = MortalRole.SEER
-    return f"{mortal.name} broke under the strain, and in the breaking saw visions."
+        return Broke("stress.revelation_seer", facts={"role": MortalRole.SEER})
+    return Broke("stress.revelation", facts={"condition": ConditionKind.VISIONS})
 
 
-BREAKS: dict[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, SeededRandom], Awaitable[str]]] = {
+BREAKS: dict[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, SeededRandom], Awaitable[Broke]]] = {
     StressBreak.RAGE: rage,
     StressBreak.FLIGHT: flight,
     StressBreak.DESPAIR: sorrow,
@@ -331,11 +344,11 @@ async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfi
     kind = rng.weighted(list(weights), list(weights.values()))
     if kind is StressBreak.DESPAIR and await despair(ctx, mortal, rng):
         return kind
-    text = await BREAKS[kind](ctx, mortal, profile, rng)
+    broke: Broke = await BREAKS[kind](ctx, mortal, profile, rng)
     profile.stress = clamp_int(profile.stress - table.break_release, 0, FULL)
     profile.last_break = kind
     profile.last_break_epoch = ctx.epoch
-    await note(ctx, text, key=f"stress.{kind.value}", ids=[mortal.id])
+    await record(ctx, broke.key, roles={IncidentRole.SUBJECT: mortal.id, **broke.roles}, facts={"break": kind, "stress": profile.stress, **broke.facts})
     return kind
 
 
@@ -357,7 +370,7 @@ async def repay(ctx: TickContext, mortal: EntityRow) -> bool:
         endangered = benefactor.location_id is not None and bool(await ongoing_wars(ctx.session, benefactor.location_id))
         if endangered:
             await connect(ctx.session, mortal.id, benefactor.id, BondKind.PROTECTS, ctx.epoch, description="repaying a debt of gratitude")
-            text = f"{mortal.name} stood guard over {benefactor.name}, repaying an old debt."
+            deed = GratitudeDeed.GUARDED
         else:
             await add_wealth(ctx.session, mortal.id, -table.gift_wealth, ctx.epoch)
             await add_wealth(ctx.session, benefactor.id, table.gift_wealth, ctx.epoch)
@@ -370,9 +383,14 @@ async def repay(ctx: TickContext, mortal: EntityRow) -> bool:
                 magnitude=table.gift_magnitude,
                 epoch=ctx.epoch,
             )
-            text = f"{mortal.name} sent gifts to {benefactor.name} in thanks."
+            deed = GratitudeDeed.GIFTED
         row.magnitude = max(0, row.magnitude // 2)
-        await note(ctx, text, key="memory.gratitude", ids=[mortal.id, benefactor.id])
+        await record_incident(
+            ctx,
+            "memory.gratitude",
+            roles={IncidentRole.ACTOR: mortal.id, IncidentRole.BENEFICIARY: benefactor.id},
+            facts={"deed": deed, "wealth": 0 if endangered else table.gift_wealth},
+        )
         return True
     return False
 
@@ -420,7 +438,7 @@ async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -
             magnitude=-table.plot_success_magnitude,
             epoch=ctx.epoch,
         )
-        await note(ctx, f"{liege.name} uncovered a plot by {mortal.name}.", key="mind.plot_uncovered", ids=[mortal.id, liege.id])
+        await record_incident(ctx, "mind.plot_uncovered", roles={IncidentRole.ACCUSER: liege.id, IncidentRole.ACCUSED: mortal.id})
         if rng.chance(ctx.rules.punishment.treason_chance):
             await sentence(ctx, mortal, CrimeKind.TREASON, await code_punishment(ctx, liege.location_id, CrimeKind.TREASON), judge=liege)
         return True
@@ -430,7 +448,13 @@ async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -
     await add_wealth(ctx.session, liege.id, -table.plot_wealth, ctx.epoch)
     await add_wealth(ctx.session, mortal.id, table.plot_wealth, ctx.epoch)
     await add_renown(ctx.session, mortal.id, table.plot_renown, ctx.epoch, rules=ctx.rules)
-    await note(ctx, f"{mortal.name} plotted against {liege.name} and profited by it.", key="mind.plot", ids=[mortal.id, liege.id])
+    await record_incident(
+        ctx,
+        "mind.plot",
+        roles={IncidentRole.ACTOR: mortal.id, IncidentRole.VICTIM: liege.id},
+        facts={"wealth": table.plot_wealth, "renown": table.plot_renown},
+        terms=[Term("rules.acts.plot_wealth", table.plot_wealth), Term("rules.acts.plot_renown", table.plot_renown)],
+    )
     return True
 
 
@@ -522,11 +546,11 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
         patron = await living_patron(ctx.session, community) if community is not None else None
         if patron is not None and not await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[mortal.id], targets=[patron.id]):
             await connect(ctx.session, mortal.id, patron.id, BondKind.WORSHIPS, ctx.epoch, description="took vows")
-    await note(
+    await record(
         ctx,
-        f"{mortal.name} left the life of {an(spoken(old or MortalRole.COMMONER))} to become {an(spoken(role))}.",
-        key=f"career.{best.value}",
-        ids=[mortal.id],
+        f"career.{best.value}",
+        roles={IncidentRole.SUBJECT: mortal.id},
+        facts={"path": best, "before": old or MortalRole.COMMONER, "after": role},
     )
     return best
 
@@ -544,6 +568,14 @@ async def bribe(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
     await add_wealth(ctx.session, mortal.id, -table.bribe_cost, ctx.epoch)
     await add_wealth(ctx.session, liege.id, table.bribe_cost, ctx.epoch)
     await remember(ctx.session, ctx.rules, holder_id=liege.id, subject_id=mortal.id, kind=MemoryKind.GIFTED_ME, magnitude=table.bribe_effect, epoch=ctx.epoch)
-    await note(ctx, f"{mortal.name} bought the favour of {liege.name} with gold.", key="standing.bribe", ids=[mortal.id, liege.id])
+    await record(
+        ctx,
+        "standing.bribe",
+        roles={IncidentRole.GIVER: mortal.id, IncidentRole.RECEIVER: liege.id},
+        facts={"amount": table.bribe_cost, "resolve": resolve},
+        steps=(
+            StepDraft(StepAction.PAY, actor=mortal.id, target=liege.id, amount=table.bribe_cost, unit=FactUnit.WEALTH_POINTS, outcome=StepOutcome.ACCEPTED),
+        ),
+    )
     await judged(ctx, mortal.id, liege.id, ActKind.BRIBERY)
     return True

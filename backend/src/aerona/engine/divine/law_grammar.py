@@ -24,22 +24,21 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import LawException, LawScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_grammar import LawCondition, LawExceptionKind, LawOperator, LawTarget
-from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.derivation import Origin, replace_derived, shaped_draft
 from aerona.engine.primitives.knowledge import footprint
 from aerona.engine.primitives.modifiers import ModifierDraft
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import base_stat, has_stat, stat_or
+from aerona.engine.recording.record import record
 
 ROW_CLASSES: Mapping[str, Any] = {
     "mind_profiles": MindProfileRow,
@@ -310,12 +309,13 @@ async def contest_grammar(ctx: TickContext, rows: list[NaturalLawProfileRow], re
             if "suspended" not in loser.locked:
                 loser.suspended = True
                 broken += 1
-                await note(
+                winner = first if loser is second else second
+                await record(
                     ctx,
-                    "A natural law gave way to a stronger one and was suspended where they met.",
-                    key="law.natural_broken",
-                    ids=[loser.law_entity_id],
-                    kind=ChronicleKind.COSMIC_LAW,
+                    "law.natural_suspended",
+                    roles={IncidentRole.VICTIM: loser.law_entity_id, IncidentRole.OPPONENT: winner.law_entity_id},
+                    facts={"strength": loser.strength, "stronger": winner.strength, "margin": margin},
+                    world_id=loser.world_id,
                 )
     return broken
 
@@ -333,7 +333,14 @@ async def adopt(ctx: TickContext, row: NaturalLawProfileRow, worlds: set[int]) -
     )
     if heir is not None and not held(heir.id):
         row.author_node_id = heir.id
-        await note(ctx, f"{heir.name} took up a law no one kept.", key="law.natural_set", ids=[row.law_entity_id, heir.id], kind=ChronicleKind.COSMIC_LAW)
+        await record(
+            ctx,
+            "law.natural_set",
+            roles={IncidentRole.HEIR: heir.id, IncidentRole.SUBJECT: row.law_entity_id},
+            facts={"chance": ctx.rules.natural_laws.adopt_pct},
+            son_id=heir.id,
+            world_id=row.world_id,
+        )
 
 
 async def keep_condition(ctx: TickContext, row: NaturalLawProfileRow, worlds: set[int]) -> None:
@@ -352,7 +359,7 @@ async def expire(ctx: TickContext, row: NaturalLawProfileRow) -> bool:
     if law is None or law.status is not EntityStatus.CANON or held(law.id):
         return False
     law.status, law.end_epoch = EntityStatus.DESTROYED, ctx.epoch
-    await note(ctx, f"{law.name} ran its course and ended.", key="law.natural_broken", ids=[law.id], kind=ChronicleKind.COSMIC_LAW)
+    await record(ctx, "law.natural_ended", roles={IncidentRole.SUBJECT: law.id}, facts={"until": row.until_epoch}, world_id=row.world_id)
     return True
 
 

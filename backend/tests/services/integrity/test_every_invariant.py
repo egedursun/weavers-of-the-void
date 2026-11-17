@@ -2,17 +2,21 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.invariants import TYPED, GenericCheck, InvariantSpec, Remedy
 from aerona.db.session import Database
+from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
 from aerona.db.tables.council_order import DivineSeatRow
 from aerona.db.tables.creator_bonds import CovenantRow
 from aerona.db.tables.economy import CurrencyRow, WorldMaterialRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.kinds import GoodKindRow, KindHoldingRow
 from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
+from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.technology import TechnologyProfileRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.bond import BondKind
@@ -23,13 +27,19 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.kinds import GoodCategory, KindConcept
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.meta import LedgerOperation
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from tests.conftest import OpenDatabase
 from tests.engine.core.factories import CoreWorld, bond, mortal, seed_core_world, settlement
 from tests.engine.core.test_arcana_w15 import foreign_caster
 
 Breaker = Callable[[AsyncSession, CoreWorld], Awaitable[None]]
+PHASE_KIND = "phase.statecraft"
 
 
 @pytest.fixture
@@ -145,7 +155,87 @@ async def star_stuff_from_a_town(session: AsyncSession, world: CoreWorld) -> Non
     )
 
 
+async def happening(session: AsyncSession, *, kind: str = "uncatalogued.happening", year: int | None = None, place: int | None = None) -> IncidentRow:
+    row = IncidentRow(kind=kind, epoch=1, year=year, place_entity_id=place, magnitude=0, locked=[])
+    session.add(row)
+    await session.flush()
+    return row
+
+
+async def happening_of_a_retired_kind(session: AsyncSession, world: CoreWorld) -> None:
+    await happening(session, kind="retired.happening")
+
+
+async def fact_of_no_kind(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session)
+    session.add(IncidentFactRow(incident_id=incident.id, key="amount", number=3.0, unit=FactUnit.COUNT))
+
+
+async def step_inside_itself(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session, kind=PHASE_KIND)
+    step = IncidentStepRow(incident_id=incident.id, position=0, action=StepAction.BEGIN)
+    session.add(step)
+    await session.flush()
+    step.parent_step_id = step.id
+
+
+async def step_of_no_kind(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session)
+    session.add(IncidentStepRow(incident_id=incident.id, position=0, action=StepAction.STRIKE))
+
+
+async def effect_before_cause(session: AsyncSession, world: CoreWorld) -> None:
+    cause = await happening(session, kind=PHASE_KIND, year=40)
+    effect = await happening(session, kind=PHASE_KIND, year=12)
+    effect.cause_incident_id = cause.id
+
+
+async def steps_running_back(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session, kind=PHASE_KIND, year=30)
+    session.add(IncidentStepRow(incident_id=incident.id, position=0, year=30, action=StepAction.BEGIN))
+    session.add(IncidentStepRow(incident_id=incident.id, position=1, year=20, action=StepAction.END))
+
+
+async def witness_far_away(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session, kind=PHASE_KIND, place=world.regions[0].id)
+    onlooker = await mortal(session, "Far Onlooker", world, world.regions[1].id)
+    session.add(IncidentParticipantRow(incident_id=incident.id, node_id=onlooker.id, role=IncidentRole.WITNESS, position=0))
+
+
+async def engine_change_of_no_happening(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(
+        StateChangeRow(
+            epoch=1,
+            table_name="entities",
+            row_key=f'{{"id": {world.people.id}}}',
+            node_id=world.people.id,
+            operation=LedgerOperation.UPDATE,
+            field="power_level",
+            before_number=1.0,
+            after_number=2.0,
+            actor_kind=ActorKind.ENGINE,
+            phase="statecraft",
+        )
+    )
+
+
+async def checkpoint_that_lies(session: AsyncSession, world: CoreWorld) -> None:
+    await take_checkpoint(session, 1)
+    found = await session.scalar(select(StateCheckpointRow).where(StateCheckpointRow.table_name == "entities"))
+    assert found is not None
+    found.digest = "not the digest of anything"
+
+
 BREAKERS: dict[str, Breaker] = {
+    "fact_schema": fact_of_no_kind,
+    "kind_known": happening_of_a_retired_kind,
+    "step_nesting": step_inside_itself,
+    "step_action": step_of_no_kind,
+    "moment_after_cause": effect_before_cause,
+    "step_moment_order": steps_running_back,
+    "witness_present": witness_far_away,
+    "change_in_scope": engine_change_of_no_happening,
+    "checkpoint_holds": checkpoint_that_lies,
     "genome_alleles": genome_with_unknown_allele,
     "money_metal": paper_made_of_metal,
     "material_source": star_stuff_from_a_town,

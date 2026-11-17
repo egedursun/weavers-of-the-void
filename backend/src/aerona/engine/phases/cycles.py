@@ -5,6 +5,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import CyclePhase
 from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import AsabiyyaTally, keep_asabiyya
@@ -22,12 +23,12 @@ from aerona.engine.cycles.stress import StressTally, aspirant_leader, read_stres
 from aerona.engine.demography.bound import move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.unions.keep import keep_unions
 
 
@@ -42,12 +43,8 @@ async def counter_elites(ctx: TickContext, polity: EntityRow, capital_id: int | 
     faction = await found_faction(ctx, capital, FactionKind.NOBLE_COUNCIL)
     ctx.session.add(FactionMembershipRow(faction_entity_id=faction.id, mortal_entity_id=leader.id, rank=FactionRank.LEADER, joined_epoch=ctx.epoch, locked=[]))
     tally.counter_elites += 1
-    await note(
-        ctx,
-        f"{leader.name}, shut out of every office of {polity.name}, gathered other disappointed aspirants into {faction.name}.",
-        key="stress.counter_elites",
-        ids=[leader.id, faction.id, polity.id],
-    )
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.LEADER: leader.id, IncidentRole.PRODUCT: faction.id, IncidentRole.OPPONENT: polity.id}
+    await record(ctx, "stress.counter_elites", roles=roles, facts={"overproduction": overproduction}, place=capital.id)
 
 
 def fall_from(society: CommunitySocietyRow | None, fall_pct: int) -> float:
@@ -112,7 +109,6 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.community_cohorts",
     "table.community_societies",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_memberships",
     "table.faction_profiles",
     "table.incident_participants",
@@ -127,12 +123,7 @@ async def structural_demography(ctx: TickContext) -> None:
         if row.phase is CyclePhase.CRISIS:
             fallen = await thin_elites(ctx, polity)
             if fallen:
-                await note(
-                    ctx,
-                    f"In the strife of crisis {fallen} of the high-born of {polity.name} fell from their station.",
-                    key="stress.elites_fell",
-                    ids=[polity.id],
-                )
+                await record(ctx, "stress.elites_fell", roles={IncidentRole.SUBJECT: polity.id}, facts={"fallen": fallen, "psi": row.psi})
     count(ctx, "stress", tally)
 
 
@@ -168,7 +159,6 @@ async def asabiyya(ctx: TickContext) -> None:
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -194,7 +184,7 @@ async def asabiyya(ctx: TickContext) -> None:
     "table.challenges",
     "table.chronicle",
     "table.chronicle_entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.polity_profiles",
@@ -231,7 +221,6 @@ async def long_plans(ctx: TickContext) -> None:
     "table.divine_debts",
     "table.divine_standing",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.gathering_guests",
     "table.gatherings",
@@ -273,10 +262,11 @@ async def long_plans(ctx: TickContext) -> None:
     "table.divine_debts",
     "table.divine_standing",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.gifts",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.mortal_profiles",
@@ -349,7 +339,6 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.creator_taboos",
     "table.culture_values",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.geasa",
     "table.held_identities",
     "table.incident_participants",
@@ -384,8 +373,9 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.community_relations",
     "table.confederations",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.memories",
     "table.name_registry",
@@ -419,7 +409,6 @@ async def legacy_traits(ctx: TickContext) -> None:
     "table.corvee_levies",
     "table.diasporas",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.faction_profiles",
     "table.incident_participants",
     "table.incidents",
@@ -444,7 +433,7 @@ async def legacy_traits(ctx: TickContext) -> None:
     "table.cohorts",
     "table.constructions",
     "table.corvee_levies",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.indentures",

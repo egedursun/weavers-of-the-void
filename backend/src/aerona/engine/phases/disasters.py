@@ -23,7 +23,6 @@ from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.dominion import DivineScale
@@ -33,7 +32,9 @@ from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.integrity import HarmForce
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.loops import BalanceLoop
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.storyteller import SpontaneousKind
@@ -62,7 +63,6 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.loops.delay import lagged
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.climate import plague_pct
 from aerona.engine.phases.society_economy import population_bounds, society_of
@@ -73,6 +73,8 @@ from aerona.engine.primitives.queries import BondIndex, canon, top_region
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
+from aerona.engine.recording.scope import recording
 from aerona.engine.records import death_path
 from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.storyteller.pace import paced
@@ -112,6 +114,14 @@ class DisasterImpact:
     losses: dict[int, int | None] = field(default_factory=dict)
     dead: list[EntityRow] = field(default_factory=list)
     destroyed: list[EntityRow] = field(default_factory=list)
+    steps: list[StepDraft] = field(default_factory=list)
+    sickness: int | None = None
+
+    def lost(self) -> int:
+        return sum(value or 0 for value in self.losses.values())
+
+    def struck(self) -> list[int]:
+        return sorted({*self.losses, *(row.id for row in self.dead), *(row.id for row in self.destroyed)})
 
 
 DISTRICT_HARMS: Mapping[Disaster, DistrictHarm] = MappingProxyType(
@@ -188,20 +198,20 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
     rng = ctx.rng(f"disaster_mortal.{mortal.id}")
     phrase = DISASTERS[disaster].death_phrase
     label = DISASTERS[disaster].label.lower()
-    harm = Harm(
+    hurt = Harm(
         round_half_up(effects.disaster_injury_hp * scale), HarmCause.DISASTER, f"died of wounds suffered in the {label}", damage_type=DISASTER_DAMAGE[disaster]
     )
     exposed = await corpse_exposure(ctx.session, ctx.rules, mortal.id) if disaster is Disaster.PLAGUE else 1.0
     if rng.chance(death_chances[disaster] * scale * medicine * exposed):
         if disaster is not Disaster.PLAGUE:
-            await fatal_injury(ctx, mortal, replace(harm, death_cause=phrase))
+            await fatal_injury(ctx, mortal, replace(hurt, death_cause=phrase))
         return await death_path(ctx, mortal, phrase, manner=DeathCause.DISASTER)
     if not rng.chance(effects.disaster_injury_chance):
         return False
     profile = STRIKING.get() if disaster is Disaster.PLAGUE else None
     if profile is not None:
-        harm = await disease_harm(ctx, mortal, profile, harm)
-    wounding = await apply_hits(ctx, mortal, harm)
+        hurt = await disease_harm(ctx, mortal, profile, hurt)
+    wounding = await apply_hits(ctx, mortal, hurt)
     if disaster is Disaster.PLAGUE and wounding.outcome is WoundOutcome.WOUNDED:
         chronic = profile.chronic_rate / ctx.rules.epidemiology.neutral_chronic_rate if profile is not None else 1.0
         await lasting_illness(ctx, mortal, profile, chance=min(PERCENT, ctx.rules.conditions.plague_chronic_chance * chronic))
@@ -283,6 +293,7 @@ async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaste
     for entity in await affected_entities(ctx.session, target):
         if await repository.remove_flag(entity.id, EntityFlag.PROTECTED_FROM_DISASTER):
             impact.notes.append(f"{entity.name} was protected")
+            impact.steps.append(StepDraft(StepAction.SPREAD, target=entity.id, outcome=StepOutcome.NO_EFFECT))
             continue
         scale = severity * knowledge.ratio(ctx.rules, entity.id, KnowledgeBranch.ASTRONOMY, effects.astronomy_disaster_severity)
         scale *= (await folk_biology(ctx.session, entity)).disaster(disaster)
@@ -297,21 +308,30 @@ async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaste
             scale *= 1 - shielded
             if shielded > 0:
                 impact.notes.append(f"the works of {entity.name} held back part of it")
+                impact.steps.append(
+                    StepDraft(StepAction.SPREAD, target=entity.id, outcome=StepOutcome.ABSORBED, amount=shielded * PERCENT, unit=FactUnit.PERCENT)
+                )
         before = headcount_value(entity)
         if disaster in SHAKING and entity.entity_type is EntityType.STRUCTURE and await _quake_structure(ctx, entity, scale, knowledge, disaster):
             impact.destroyed.append(entity)
             continue
         _strike_stats(ctx.rules, entity, disaster, scale, knowledge)
-        harm = DISTRICT_HARMS.get(disaster)
-        if harm is not None and entity.entity_type is EntityType.SETTLEMENT:
-            await damage_districts(ctx, entity, harm, scale)
+        hurt = DISTRICT_HARMS.get(disaster)
+        if hurt is not None and entity.entity_type is EntityType.SETTLEMENT:
+            await damage_districts(ctx, entity, hurt, scale)
         after = headcount_value(entity)
         if entity.entity_type in STRUCK_TYPES:
-            impact.losses[entity.id] = max(0, before - after) if before is not None and after is not None else None
+            lost = max(0, before - after) if before is not None and after is not None else None
+            impact.losses[entity.id] = lost
+            impact.steps.append(
+                StepDraft(StepAction.SPREAD, target=entity.id, outcome=StepOutcome.DAMAGED, amount=lost, unit=FactUnit.COUNT if lost is not None else None)
+            )
     if impact.destroyed:
         impact.notes.append(f"{joined_names([item.name for item in impact.destroyed])} collapsed")
+        impact.steps.extend(StepDraft(StepAction.COLLAPSE, target=item.id, outcome=StepOutcome.DESTROYED) for item in impact.destroyed)
     if impact.dead:
         impact.notes.append(f"{joined_names([item.name for item in impact.dead])} perished")
+        impact.steps.extend(StepDraft(StepAction.SPREAD, target=item.id, outcome=StepOutcome.KILLED) for item in impact.dead)
     await ctx.session.flush()
     return impact
 
@@ -428,20 +448,20 @@ def region_candidates(
     shape: RegionGeomorphRow | None = None,
 ) -> list[tuple[Disaster, float]]:
     settings = ctx.rules.disasters
-    record = atlas.record(region.id)
-    if record is None:
+    entry = atlas.record(region.id)
+    if entry is None:
         return []
     candidates: list[tuple[Disaster, float]] = []
     volcanic = shape is not None and shape.volcanic
-    if record.elevation_class in HIGHLANDS or volcanic:
+    if entry.elevation_class in HIGHLANDS or volcanic:
         candidates.append((Disaster.VOLCANIC_QUAKE if volcanic else Disaster.EARTHQUAKE, settings.earthquake_chance))
     eruption = eruption_chance(ctx.rules, shape)
     if eruption:
         candidates.append((Disaster.ERUPTION, eruption))
-    flood = flood_chance(ctx.rules, record.coastal, ground, tidal)
+    flood = flood_chance(ctx.rules, entry.coastal, ground, tidal)
     if flood:
         candidates.append((Disaster.FLOOD, flood))
-    if record.coastal:
+    if entry.coastal:
         candidates.append((Disaster.STORM, settings.storm_chance))
     barren = stat_or(region, "fertility", ctx.rules.world_effects.unknown_fertility) < settings.drought_fertility_threshold
     dry = ground is not None and ground.rainfall < settings.drought_rainfall_below
@@ -497,6 +517,7 @@ async def strike_plague(
         STRIKING.reset(token)
     if chosen is not None:
         impact.notes.insert(0, f"the sickness was {chosen.name}")
+        impact.sickness = chosen.id
     await scar_land(ctx, target, Disaster.PLAGUE, severity)
     event = await record_disaster_event(ctx, target, Disaster.PLAGUE, severity, impact)
     await remember_event_year(ctx, event, await RegionAtlas.load(ctx.session), epoch=ctx.epoch)
@@ -530,16 +551,29 @@ async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, 
     await silt_land(ctx, target, disaster, severity)
     if disaster is Disaster.FLOOD and await river_after_flood(ctx, target, severity, event) is not None:
         impact.notes.append("the river left its bed")
+        impact.steps.append(StepDraft(StepAction.FLOOD_LAND, locus_kind=StepLocus.REGION, locus_node=target.id, outcome=StepOutcome.SUCCESS))
     elif disaster is Disaster.EARTHQUAKE and await river_after_quake(ctx, target, severity, event) is not None:
         impact.notes.append("the ground shook the river from its bed")
+        impact.steps.append(StepDraft(StepAction.QUAKE, locus_kind=StepLocus.REGION, locus_node=target.id, outcome=StepOutcome.SUCCESS))
     elif disaster is Disaster.ERUPTION:
         await erupted(ctx, target, severity)
         impact.notes.append("ash buried the fields")
-        if target.world_id is not None and await cold_snap(ctx, target.world_id, ctx.rules.world_life.volcano_cold, f"The eruption in {target.name}"):
+        impact.steps.append(StepDraft(StepAction.ERUPT, locus_kind=StepLocus.REGION, locus_node=target.id, outcome=StepOutcome.SUCCESS))
+        cooled = await cold_snap(ctx, target.world_id, ctx.rules.world_life.volcano_cold) if target.world_id is not None else 0
+        if cooled and target.world_id is not None:
             impact.notes.append("ash in the sky cooled the world")
+            await record(
+                ctx,
+                "climate.ash_cold",
+                roles={IncidentRole.PLACE: target.id, IncidentRole.SUBJECT: target.world_id},
+                facts={"cold": ctx.rules.world_life.volcano_cold, "regions": cooled},
+                place=target.id,
+                world_id=target.world_id,
+            )
     elif disaster is Disaster.VOLCANIC_QUAKE and await quaked(ctx, target):
         woken, _ = await strike(ctx, target, Disaster.ERUPTION, severity)
         impact.notes.append(f"the shaking woke {woken.name}")
+        impact.steps.append(StepDraft(StepAction.APPEAR, target=woken.id, outcome=StepOutcome.SUCCESS))
 
 
 async def silt_land(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int) -> None:
@@ -550,8 +584,42 @@ async def silt_land(ctx: TickContext, target: EntityRow, disaster: Disaster, sev
         await deposit(ctx, region.id, NutrientKind.MINERAL, round_half_up(gift * severity / PERCENT))
 
 
-def _sentence(impact: DisasterImpact) -> str:
-    return f" {'; '.join(impact.notes)}." if impact.notes else ""
+def disaster_steps(target: EntityRow, impact: DisasterImpact) -> tuple[StepDraft, ...]:
+    begin = StepDraft(StepAction.BEGIN, locus_kind=StepLocus.REGION if target.entity_type is EntityType.REGION else StepLocus.SETTLEMENT, locus_node=target.id)
+    return (begin, *impact.steps, StepDraft(StepAction.END, locus_node=target.id))
+
+
+async def record_strike(
+    ctx: TickContext,
+    key: str,
+    target: EntityRow,
+    struck: tuple[Disaster, int, EntityRow, DisasterImpact],
+    *,
+    extra: Mapping[str, FactInput] | None = None,
+    authority: int | None = None,
+) -> None:
+    disaster, severity, event, impact = struck
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.PLACE: target.id, IncidentRole.VICTIM: impact.struck(), IncidentRole.SUBJECT: event.id}
+    if authority is not None:
+        roles[IncidentRole.AUTHORITY] = authority
+    await record(
+        ctx,
+        key,
+        roles=roles,
+        facts={
+            "disaster": disaster,
+            "severity": severity,
+            "lost": impact.lost(),
+            "dead": len(impact.dead),
+            "destroyed": len(impact.destroyed),
+            "sickness": impact.sickness,
+            **(extra or {}),
+        },
+        steps=disaster_steps(target, impact),
+        place=target.id,
+        world_id=target.world_id,
+        magnitude=min(PERCENT, severity),
+    )
 
 
 async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
@@ -585,16 +653,12 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
                 * world.fortune_mult(ctx.rules, region.id)
             ):
                 continue
-            event, impact = await strike(ctx, region, disaster, severity_roll(ctx, f"severity.{region.id}"))
-            world.struck += 1
-            await note(
-                ctx,
-                f"Disaster struck {region.name}: {DISASTERS[disaster].label.lower()}.{_sentence(impact)}",
-                key=f"disasters.{disaster.value}",
-                ids=[region.id, event.id],
-                feed=FeedCategory.DISASTER,
-                kind=ChronicleKind.DISASTER,
-            )
+            severity = severity_roll(ctx, f"severity.{region.id}")
+            key = f"disasters.{Disaster(disaster).value}"
+            async with recording(ctx, key, place_id=region.id, world_id=region.world_id):
+                event, impact = await strike(ctx, region, disaster, severity)
+                world.struck += 1
+                await record_strike(ctx, key, region, (disaster, severity, event, impact))
             break
 
 
@@ -618,16 +682,11 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
         nature = world.nature_mult(ctx.rules, city.world_id, Disaster.PLAGUE)
         if not chance or not ctx.rng(f"city_plague.{city.id}").chance(chance * world.plague_mult(ctx.rules, city.world_id) * nature):
             continue
-        event, impact = await strike(ctx, city, Disaster.PLAGUE, severity_roll(ctx, f"city_severity.{city.id}"))
-        world.struck += 1
-        await note(
-            ctx,
-            f"An epidemic broke out in crowded {city.name}.{_sentence(impact)}",
-            key="disasters.city_plague",
-            ids=[city.id, event.id],
-            feed=FeedCategory.DISASTER,
-            kind=ChronicleKind.DISASTER,
-        )
+        severity = severity_roll(ctx, f"city_severity.{city.id}")
+        async with recording(ctx, "disasters.city_plague", place_id=city.id, world_id=city.world_id):
+            event, impact = await strike(ctx, city, Disaster.PLAGUE, severity)
+            world.struck += 1
+            await record_strike(ctx, "disasters.city_plague", city, (Disaster.PLAGUE, severity, event, impact), extra={"chance": chance})
 
 
 def route_chance(rules: Rules, volume: int) -> float:
@@ -712,13 +771,24 @@ async def _plague_spread(ctx: TickContext) -> int:
             links.add(await BondRepository(session).connect(BondDraft(plague.id, partner.id, BondKind.CAUSED, ctx.epoch, "spread along the roads")))
             await add_footprint(session, plague.id, target_region, ctx.epoch)
             spread += 1
-            await note(
+            await record(
                 ctx,
-                f"{plague.name} jumped to {partner.name}; merchants, tribute bearers and governors carried the disease too.",
-                key="disasters.plague_spread",
-                ids=[plague.id, partner.id],
-                feed=FeedCategory.DISASTER,
-                kind=ChronicleKind.DISASTER,
+                "disasters.plague_spread",
+                roles={IncidentRole.SUBJECT: plague.id, IncidentRole.ORIGIN: source, IncidentRole.DESTINATION: partner.id},
+                facts={
+                    "disaster": Disaster.PLAGUE,
+                    "severity": settings.plague_spread_severity_pct * lethal,
+                    "lost": impact.lost(),
+                    "dead": len(impact.dead),
+                    "destroyed": len(impact.destroyed),
+                    "sickness": disease.id if disease is not None else None,
+                    "chance": min(100, chance * pressure),
+                },
+                steps=disaster_steps(partner, impact),
+                place=partner.id,
+                origin=source,
+                destination=partner.id,
+                world_id=partner.world_id,
             )
     return spread
 
@@ -782,7 +852,6 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
@@ -805,6 +874,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.incorporeal_rights",
     "table.incubating_ideas",
     "table.injuries",
+    "table.insurance_policies",
+    "table.insurers",
     "table.item_profiles",
     "table.kind_holdings",
     "table.language_profiles",
@@ -888,12 +959,14 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.divine_standing",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.event_casualties",
     "table.event_footprints",
     "table.event_profiles",
     "table.griefs",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
+    "table.incident_terms",
     "table.incidents",
     "table.injuries",
     "table.item_history",
@@ -924,22 +997,17 @@ async def natural_disasters(ctx: TickContext) -> None:
     ctx.count("plague_spread", await _plague_spread(ctx))
 
 
-async def send_disaster(ctx: TickContext, target_id: int, disaster: Disaster, severity: int | None = None) -> EntityRow:
+async def send_disaster(ctx: TickContext, target_id: int, disaster: Disaster, severity: int | None = None, by_id: int | None = None) -> EntityRow:
     target = await ctx.session.get(EntityRow, target_id)
     if target is None:
         raise NotFoundError("No such place.")
     if target.entity_type not in LOCATION_TYPES or target.status is not EntityStatus.CANON:
         raise ValidationFailedError("Disasters strike regions, places and settlements.")
     rolled = severity if severity is not None else severity_roll(ctx, f"manual_severity.{target.id}")
-    event, impact = await strike(ctx, target, disaster, rolled)
-    await note(
-        ctx,
-        f"{DISASTERS[disaster].label} struck {target.name}.{_sentence(impact)}",
-        key=f"disasters.manual_{disaster.value}",
-        ids=[target.id, event.id],
-        feed=FeedCategory.DISASTER,
-        kind=ChronicleKind.DISASTER,
-    )
+    key = f"disasters.manual_{disaster.value}"
+    async with recording(ctx, key, place_id=target.id, world_id=target.world_id):
+        event, impact = await strike(ctx, target, disaster, rolled)
+        await record_strike(ctx, key, target, (disaster, rolled, event, impact), authority=by_id)
     return event
 
 

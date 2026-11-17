@@ -77,7 +77,6 @@ async def jurisdictions(ctx: TickContext) -> None:
 
 @reads(
     "table.entities",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",
@@ -88,7 +87,7 @@ async def jurisdictions(ctx: TickContext) -> None:
     "table.war_sides",
     "table.wars",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.pardons")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.pardons")
 async def pardons(ctx: TickContext) -> None:
     tally = PardonTally()
     await grant_pardons(ctx, tally)

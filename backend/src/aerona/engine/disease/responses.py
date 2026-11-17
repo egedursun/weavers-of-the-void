@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -16,20 +17,34 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import quarantine
 from aerona.engine.disease.research import institutions
 from aerona.engine.disease.stigma import values_for
 from aerona.engine.faith.judgement import funeral_custom
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.recording.record import record
 
 R = PlagueResponse
 STABILITY = "stability"
 LEANING_FLOOR = 0.05
+
+
+RESPONSE_KEYS = total(
+    PlagueResponse,
+    {
+        PlagueResponse.CLOSE_BORDERS: "disease.plague_response.close_borders",
+        PlagueResponse.QUARANTINE: "disease.plague_response.quarantine",
+        PlagueResponse.BURN_DEAD: "disease.plague_response.burn_dead",
+        PlagueResponse.EXPEL_SICK: "disease.plague_response.expel_sick",
+        PlagueResponse.PRAYER: "disease.plague_response.prayer",
+        PlagueResponse.SEEK_CURE: "disease.plague_response.seek_cure",
+    },
+)
 
 
 def bodies_left(rite: FuneralCustom | None) -> bool:
@@ -43,14 +58,6 @@ LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
     R.EXPEL_SICK: (ValueAxis.PURITY, ValueAxis.HIERARCHY),
     R.PRAYER: (ValueAxis.PIETY, ValueAxis.SUPERSTITION),
     R.SEEK_CURE: (ValueAxis.KNOWLEDGE, ValueAxis.MERCY),
-}
-RESPONSE_WORDS = {
-    R.CLOSE_BORDERS: "closed its borders",
-    R.QUARANTINE: "shut its sick away",
-    R.BURN_DEAD: "burned its dead",
-    R.EXPEL_SICK: "drove out its sick",
-    R.PRAYER: "gathered to pray",
-    R.SEEK_CURE: "set its learned to seek a cure",
 }
 
 
@@ -129,7 +136,13 @@ async def bear(ctx: TickContext, row: PlagueResponseRow, community: EntityRow, t
     ):
         shift_bounded(ctx.rules, community, STABILITY, -table.riot_unrest)
         tally.riots += 1
-        await note(ctx, f"The folk of {community.name} rose against the quarantine.", key="disease.quarantine_riot", ids=[community.id])
+        await record(
+            ctx,
+            "disease.quarantine_riot",
+            roles={IncidentRole.ACTOR: community.id, IncidentRole.INSTRUMENT: row.disease_entity_id},
+            facts={"unrest": table.riot_unrest},
+            place=community.id,
+        )
     elif row.response is R.BURN_DEAD:
         if bodies_left(await funeral_custom(ctx, community.id)):
             shift_bounded(ctx.rules, community, STABILITY, -table.burn_cohesion * weight)
@@ -179,8 +192,12 @@ async def respond(ctx: TickContext, tally: ResponseTally) -> None:
         tally.taken += 1
         disease = await ctx.session.get(EntityRow, disease_id)
         if disease is not None:
-            await note(
-                ctx, f"Against {disease.name}, {community.name} {RESPONSE_WORDS[response]}.", key="disease.plague_response", ids=[community.id, disease_id]
+            await record(
+                ctx,
+                RESPONSE_KEYS[response],
+                roles={IncidentRole.ACTOR: community.id, IncidentRole.TARGET: disease_id},
+                facts={"response": response},
+                place=community.id,
             )
     for row in list(await ctx.session.scalars(select(PlagueResponseRow).order_by(PlagueResponseRow.community_entity_id, PlagueResponseRow.disease_entity_id))):
         bearer = await ctx.session.get(EntityRow, row.community_entity_id)

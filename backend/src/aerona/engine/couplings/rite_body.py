@@ -26,12 +26,13 @@ from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.couplings import RestraintKind, RiteComponent
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import function_unhindered
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 
 
 @dataclass(frozen=True)
@@ -164,10 +165,10 @@ async def restrain_casters(ctx: TickContext) -> None:
         if added:
             ctx.count("casters_restrained")
             captor = await ctx.session.get(EntityRow, captive.captor_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"{captor.name if captor else 'Its captors'} held {entity.name} so that no rite could be worked.",
-                key="rite.restrained",
-                ids=[entity.id, captive.captor_entity_id],
+                "rite.restrained",
+                roles={IncidentRole.SUBJECT: [entity.id, captive.captor_entity_id]},
+                facts={"detail": str(captor.name if captor else "Its captors"), "entity": str(entity.name)},
             )
     await ctx.session.flush()

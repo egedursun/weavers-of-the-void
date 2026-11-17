@@ -15,6 +15,7 @@ from aerona.domain.enums.collective import NormBehaviour, NormSituation
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.folkways import DecisionBias
 from aerona.domain.enums.mind import EthicalStance
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import ruler_id
@@ -23,10 +24,10 @@ from aerona.engine.cycles.book import realm_of
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mortal.standing import add_renown
-from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.recording.record import record
 
 TOLERANT = frozenset({EthicalStance.REQUIRED, EthicalStance.ADMIRABLE, EthicalStance.ACCEPTABLE})
 
@@ -151,11 +152,16 @@ async def judge(ctx: TickContext, row: SatireRow, tally: SatireTally) -> None:
         row.punished = True
         await imprison(ctx, satirist, term=table.punish_term)
         tally.punished += 1
-        await note(
+        await record(
             ctx,
-            f"{satirist.name} was punished for mocking {target.name if target is not None else 'the ruler'}.",
-            key="satire.punished",
-            ids=[satirist.id, *([target.id] if target is not None else [])],
+            "satire.punished",
+            roles={
+                IncidentRole.ACCUSED: satirist.id,
+                IncidentRole.VICTIM: target.id if target is not None else None,
+                IncidentRole.AUTHORITY: row.polity_entity_id,
+            },
+            facts={"source": row.source, "bite": row.bite, "term": table.punish_term},
+            place=satirist.location_id,
         )
 
 

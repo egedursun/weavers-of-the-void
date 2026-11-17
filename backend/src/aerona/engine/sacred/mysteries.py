@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -23,6 +22,7 @@ from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import MillenarianStage, MysticState, TheodicyCause, TheodicyResolution, VisionKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import CultStats
@@ -36,13 +36,13 @@ from aerona.engine.loops.delay import lagged
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.thoughts import think
-from aerona.engine.notes import note
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import church_of, patron_of, plagued_regions, realm_of_town, region_of, town_of
 from aerona.engine.sacred.signs import defeated_realms, miracles_by_region, omen_worlds, struck_regions
 
@@ -114,7 +114,7 @@ async def become_mystic(ctx: TickContext, mortal: EntityRow, sender: int | None,
     await ctx.session.flush()
     tally.mystics += 1
     await see_vision(ctx, row, mortal, sender, tally)
-    await note(ctx, f"{mortal.name} had a vision.", key="sacred.mystic", ids=[mortal.id])
+    await record(ctx, "sacred.mystic", roles={IncidentRole.SUBJECT: mortal.id})
     return row
 
 
@@ -232,7 +232,7 @@ async def judge_mystic(ctx: TickContext, row: MysticRow, mortal: EntityRow, tall
         row.founded_entity_id = founded.id
         row.state = MysticState.FOUNDER
         tally.founded += 1
-        await note(ctx, f"{mortal.name} founded {founded.name} on the strength of visions.", key="sacred.mystic_founded", ids=[mortal.id, founded.id])
+        await record(ctx, "sacred.mystic_founded", roles={IncidentRole.SUBJECT: [mortal.id, founded.id]})
 
 
 async def keep_mystics(ctx: TickContext, tally: MysteryTally) -> None:
@@ -292,7 +292,7 @@ async def begin_millenarian(ctx: TickContext, town: EntityRow, *, prophet_id: in
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"The faithful of {town.name} began to await the end, set for epoch {end}.", key="sacred.millenarian", ids=[town.id])
+    await record(ctx, "sacred.millenarian", roles={IncidentRole.PLACE: town.id}, facts={"end": str(end)}, place=town.id)
     return row
 
 
@@ -347,9 +347,7 @@ async def disappoint(ctx: TickContext, row: MillenarianRow, town: EntityRow, tal
         row.end_epoch = ctx.epoch + table.horizon
         row.dates_set += 1
         tally.redated += 1
-        await note(
-            ctx, f"The day passed in {town.name}; its faithful read the prophecy anew and set epoch {row.end_epoch}.", key="sacred.redated", ids=[town.id]
-        )
+        await record(ctx, "sacred.redated", roles={IncidentRole.PLACE: town.id}, facts={"end_epoch": row.end_epoch}, place=town.id)
         return
     if ctx.rng(f"millenarian.sect.{row.id}").chance(table.sect_chance):
         sect = await found_sect(ctx, row, town)
@@ -454,7 +452,7 @@ async def open_crisis(ctx: TickContext, town: EntityRow, cult: EntityRow, cause:
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    await note(ctx, f"Suffering in {town.name} put the teaching of {cult.name} to the test.", key="sacred.theodicy", ids=[town.id, cult.id])
+    await record(ctx, "sacred.theodicy", roles={IncidentRole.PLACE: town.id, IncidentRole.SUBJECT: cult.id}, place=town.id)
     return row
 
 
@@ -543,7 +541,7 @@ async def resolve_crisis(ctx: TickContext, row: TheodicyCrisisRow, miracles: dic
         outcome = await seek_another_way(ctx, row, town, cult, tally)
     row.resolution = outcome
     row.resolved_epoch = ctx.epoch
-    await note(ctx, f"The crisis of faith in {town.name} ended: {spoken(outcome)}.", key="sacred.theodicy_resolved", ids=[town.id, cult.id])
+    await record(ctx, "sacred.theodicy_resolved", roles={IncidentRole.PLACE: town.id, IncidentRole.SUBJECT: cult.id}, facts={"outcome": outcome}, place=town.id)
 
 
 async def keep_theodicy(ctx: TickContext, tally: MysteryTally) -> None:

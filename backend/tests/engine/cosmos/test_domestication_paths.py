@@ -38,21 +38,22 @@ async def test_a_kept_herd_is_herded_then_domesticated_then_bred(ctx: TickContex
     tamed = herd(hold, grazer, stage=S.TAMED, fed_epochs=rules.domestication.herd_epochs)
     ctx.session.add(tamed)
     await ctx.session.flush()
-    assert "keeps herds" in (await advance(ctx, tamed, 0) or "")
+    herded = await advance(ctx, tamed, 0)
+    assert herded is not None and herded.key == "ecology.domestication"
     assert tamed.stage is S.HERDED
     tamed.since_epoch = ctx.epoch - rules.domestication.domesticate_epochs
     keeper = await living_entity(ctx.session, hold)
     species = await living_entity(ctx.session, grazer)
     assert keeper is not None and species is not None
-    told = await promote(ctx, tamed, species, keeper, tamed=True, bred=False)
-    assert told is not None and "tamed" in told
+    told = await promote(ctx, tamed, species, keeper, tamed=True, bred=False, tameability=50)
+    assert told is not None and told.key == "ecology.domesticated"
     kept = await ctx.session.scalar(select(HerdRow).where(HerdRow.community_entity_id == hold))
     assert kept is not None and kept.stage is S.DOMESTICATED and kept.species_entity_id != grazer
-    assert await promote(ctx, kept, species, keeper, tamed=False, bred=True) is None
+    assert await promote(ctx, kept, species, keeper, tamed=False, bred=True, tameability=50) is None
     herder = await make_entity(ctx.session, "Bram", EntityType.MORTAL, MortalStats(hp=30, age=30), world_id=cosmos.home.id, location_id=hold)
     await set_skill(ctx.session, herder.id, SkillKind.BEAST_HANDLING, 100, epoch=ctx.epoch, source=SkillSource.PRACTICE)
-    told = await promote(ctx, kept, species, keeper, tamed=False, bred=True)
-    assert told is not None and "breed" in told
+    told = await promote(ctx, kept, species, keeper, tamed=False, bred=True, tameability=50)
+    assert told is not None and told.key == "ecology.breed_raised"
     bred = await ctx.session.scalar(select(HerdRow).where(HerdRow.community_entity_id == hold))
     assert bred is not None and bred.stage is S.BREED
 

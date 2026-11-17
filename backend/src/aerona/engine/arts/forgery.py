@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.arts import ArtPriceRow, CollectorRow, ForgeryRow
 from aerona.db.tables.bonds import BondRow
@@ -17,15 +16,17 @@ from aerona.domain.enums.arts import ForgeryKind, ForgeryStatus
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis
+from aerona.domain.enums.records import StepAction
 from aerona.domain.models.entity_stats import ArtworkStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_for, region_of
 
 DOCUMENTS = frozenset({EntityType.TITLE, EntityType.LAW, EntityType.TREATY})
@@ -242,7 +243,13 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
             continue
         row = await forge(ctx, original, maker, brand=brand)
         tally.forged += 1
-        await note(ctx, f"{maker.name} made a forgery of {original.name} ({spoken(row.kind)}).", key="arts.forged", ids=[maker.id, original.id])
+        await record(
+            ctx,
+            "arts.forged",
+            roles={IncidentRole.MAKER: maker.id, IncidentRole.TARGET: original.id, IncidentRole.PRODUCT: row.item_entity_id},
+            facts={"forgery": row.kind},
+            steps=(StepDraft(StepAction.FORGE, actor=maker.id, target=original.id),),
+        )
 
 
 async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> None:
@@ -267,8 +274,13 @@ async def expose(ctx: TickContext, row: ForgeryRow, expert_id: int | None) -> No
     brand = await ctx.session.get(BrandRow, row.brand_id) if row.brand_id is not None else None
     if brand is not None and "reputation" not in brand.locked:
         brand.reputation = max(0, brand.reputation - table.infamy)
-    item = await ctx.session.get(EntityRow, row.item_entity_id)
-    await note(ctx, f"{item.name if item else 'A work'} was shown to be a forgery.", key="arts.exposed", ids=[row.item_entity_id])
+    await record(
+        ctx,
+        "arts.exposed",
+        roles={IncidentRole.SUBJECT: row.item_entity_id},
+        facts={"forgery": row.kind, "infamy": table.infamy},
+        steps=(StepDraft(StepAction.REVEAL, target=row.item_entity_id),),
+    )
 
 
 async def examine(ctx: TickContext, tally: ForgeryTally) -> None:

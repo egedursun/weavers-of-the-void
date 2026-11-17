@@ -34,7 +34,7 @@ from aerona.engine.faith.zeal import doom_omens, scandals
 from aerona.engine.faith.zealotry import heretics, inquisition, investiture
 from aerona.engine.lore.items import relic_year
 from aerona.engine.mind.book import add_trait, write_pressures
-from aerona.engine.phases.faith import human_sacrifice
+from aerona.engine.phases.faith import sacrifice_of_people
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules
@@ -201,15 +201,15 @@ async def test_devotion_gathers_and_feeds_the_living_god(session: AsyncSession, 
     assert (faith.cult.stats.devotion or 0) > 0
 
 
-async def test_human_sacrifice_takes_people_and_appals_every_other_people(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
+async def test_sacrifice_of_people_takes_people_and_appals_every_other_people(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
     ctx = tick(session, rules)
-    faith = await faithful(session, world, tenets=(TenetKind.HUMAN_SACRIFICE,))
+    faith = await faithful(session, world, tenets=(TenetKind.SACRIFICE_OF_PEOPLE,))
     others = [
         await make_entity(session, f"Watchers {index}", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id) for index in range(7)
     ]
     before = faith.town.stats.population or 0
     book = await FaithBook.load(session)
-    given = await human_sacrifice(ctx, book.churches[faith.cult.id], book)
+    given = await sacrifice_of_people(ctx, book.churches[faith.cult.id], book)
     assert given >= rules.doctrine.sacrifice_cohort
     assert (faith.town.stats.population or 0) == before - rules.doctrine.sacrifice_cohort
     appalled = set(await session.scalars(select(MemoryRow.holder_node_id).where(MemoryRow.subject_node_id == faith.cult.id)))

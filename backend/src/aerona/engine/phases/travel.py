@@ -11,6 +11,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import agree, an, several
 from aerona.core.random import SeededRandom
+from aerona.db.record_context import current_scope
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -22,13 +23,14 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.region import DangerHarm
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
@@ -42,6 +44,7 @@ from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.encounters import draw, meet, seed_encounters
 from aerona.engine.cosmos.fauna import stowaway
 from aerona.engine.cosmos.features import slingshot
+from aerona.engine.cosmos.journey_record import journey_step
 from aerona.engine.cosmos.lifeforms import habitability
 from aerona.engine.cosmos.pilgrimage import has_holy_site, reach_holy_site
 from aerona.engine.cosmos.placement import cosmography_of
@@ -72,11 +75,10 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import wayfinder
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.drives import expedition_drive
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.culture_exchange import cultural_contact
 from aerona.engine.phases.exploration import LandSearch, find_land
-from aerona.engine.phases.sky import time_difference
+from aerona.engine.phases.sky import time_gap_years
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap, knows
@@ -87,6 +89,8 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, canon, connect, count_communities, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import headcount, put_stat, shift_bounded, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.language.generator import NameKind
@@ -127,13 +131,6 @@ MEDIUM_EVENTS = {
     TravelMedium.BODY: JourneyEventKind.NOT_RELEASED,
     TravelMedium.DREAM: JourneyEventKind.DREAM_NOT_RETURNED,
     TravelMedium.DEATH: JourneyEventKind.MEMORY_LOSS,
-}
-INTENT_SENT = {
-    JourneyIntent.COLONY: "a colony expedition",
-    JourneyIntent.EXPLORATION: "an exploration expedition",
-    JourneyIntent.TRADE: "a trade expedition",
-    JourneyIntent.CONQUEST: "a conquest fleet",
-    JourneyIntent.PILGRIMAGE: "pilgrims",
 }
 LAND_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 FERTILITY_KEY = "fertility"
@@ -185,23 +182,22 @@ async def hidden_routes(ctx: TickContext) -> int:
 
 
 async def _announce_hidden(ctx: TickContext, route: RouteRow, knower: bool, sage: EntityRow | None, son: SonRow | None, *, severed: bool) -> None:
-    first, second = await world_name(ctx.session, route.world_a_id), await world_name(ctx.session, route.world_b_id)
-    credit = ""
-    if not knower and sage is not None:
-        credit = f" {sage.name} came to know of it."
-    elif not knower and son is not None:
-        credit = f" {son.name} perceived it."
-    tail = " The route is severed for now; it will open again in time." if severed else ""
-    await note(
+    finder = None if knower else sage.id if sage is not None else son.id if son is not None else None
+    await record(
         ctx,
-        f"A hidden route was revealed between {first} and {second}: {method_label(route.method)}.{credit}{tail}",
-        key="travel.hidden_revealed",
-        ids=[sage.id] if sage and not knower else [],
+        "travel.hidden_revealed",
+        roles={IncidentRole.ACTOR: finder},
+        facts={
+            "first": route.world_a_id,
+            "second": route.world_b_id,
+            "method": route.method,
+            "route_state": RouteState.SEVERED if severed else RouteState.OPEN,
+        },
     )
     for world_id in (route.world_a_id, route.world_b_id):
         world = await ctx.session.get(WorldRow, world_id)
         if world is not None:
-            await mark_world_discovered(ctx, world, f"the hidden route to it ({method_label(route.method)}) was revealed")
+            await mark_world_discovered(ctx, world, method=route.method)
 
 
 async def _route_knowledge(ctx: TickContext, community: EntityRow, route: RouteRow, branch: KnowledgeBranch) -> EntityRow:
@@ -236,12 +232,13 @@ async def teach_route(ctx: TickContext, community: EntityRow, route: RouteRow) -
     if held(knowledge.id):
         return None
     await connect(ctx.session, community.id, knowledge.id, BondKind.KNOWS, ctx.epoch, description="learned while trying to understand the route")
-    other = await world_name(ctx.session, other_end(route, community.world_id)) if touches(route, community.world_id) else "other worlds"
-    await note(
+    other = other_end(route, community.world_id) if touches(route, community.world_id) else None
+    await record(
         ctx,
-        f"{community.name} learned the secret of {method_label(route.method)}; the way to {other} is now open to them.",
-        key="travel.route_knowledge",
-        ids=[community.id, knowledge.id],
+        "travel.route_knowledge",
+        roles={IncidentRole.LEARNER: community.id, IncidentRole.PRODUCT: knowledge.id, IncidentRole.DESTINATION: other},
+        facts={"method": route.method},
+        world_id=community.world_id,
     )
     return knowledge
 
@@ -385,11 +382,17 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
     settling = intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
     carried = round(headcount(community) * ctx.rules.travel.colony_share_pct / PERCENT) if settling else 0
     try:
-        await start_journey(ctx, JourneySpec(community, route, intent, carried))
+        journey = await start_journey(ctx, JourneySpec(community, route, intent, carried))
     except ValidationFailedError:
         return False
-    text = f"{community.name} sent {INTENT_SENT[intent]} to {await world_name(ctx.session, target)} by way of {method_label(route.method)}."
-    await note(ctx, text, key="travel.expedition_sent", ids=[community.id])
+    await record(
+        ctx,
+        "travel.expedition_sent",
+        roles={IncidentRole.ACTOR: community.id, IncidentRole.DESTINATION: target, IncidentRole.INSTRUMENT: journey.vehicle_entity_id},
+        facts={"intent": intent, "method": route.method, "travellers": journey.population},
+        cause=journey.incident_id,
+        world_id=community.world_id,
+    )
     return True
 
 
@@ -406,21 +409,30 @@ async def bridge_collapse(ctx: TickContext) -> int:
         route.closure = RouteClosure.COLLAPSED
         state = "died" if builder is None or builder.status is SonStatus.DEAD else "fell asleep"
         rng = ctx.rng(f"bridge_collapse.{route.id}")
+        fallen = turned = 0
         for journey in await ctx.session.scalars(select(JourneyRow).where(JourneyRow.route_id == route.id, JourneyRow.status.in_(LIVE_JOURNEYS))):
             fell = rng.chance(ctx.rules.travel_methods.bridge_collapse_loss_pct)
-            add_event(
-                journey, ctx.epoch, JourneyEventKind.BRIDGE_COLLAPSED, "the bridge fell from under them" if fell else "the bridge fell and they turned back"
+            await add_event(
+                ctx, journey, JourneyEventKind.BRIDGE_COLLAPSED, "the bridge fell from under them" if fell else "the bridge fell and they turned back"
             )
             journey.status = JourneyStatus.LOST if fell else JourneyStatus.RECALLED
             journey.end_epoch = ctx.epoch
+            fallen += 1 if fell else 0
+            turned += 0 if fell else 1
         vehicle = await ctx.session.get(EntityRow, route.vehicle_entity_id) if route.vehicle_entity_id is not None else None
         if vehicle is not None and vehicle.status is EntityStatus.CANON:
             await retire(ctx.session, vehicle, ctx.epoch, f"Epoch {ctx.epoch}: collapsed when its builder {builder.name if builder else 'a god'} {state}.")
-        first, second = await world_name(ctx.session, route.world_a_id), await world_name(ctx.session, route.world_b_id)
-        await note(
+        await record(
             ctx,
-            f"{builder.name if builder else 'A god'}'s divine bridge between {first} and {second} collapsed because its builder {state}.",
-            key="travel.bridge_collapsed",
+            "travel.bridge_collapsed",
+            roles={IncidentRole.MAKER: builder.id if builder is not None else None},
+            facts={
+                "first": route.world_a_id,
+                "second": route.world_b_id,
+                "builder_status": builder.status if builder is not None else None,
+                "journeys_lost": fallen,
+                "journeys_turned_back": turned,
+            },
         )
         collapsed += 1
     return collapsed
@@ -543,19 +555,23 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     target = await world_name(ctx.session, journey.destination_world_id)
     if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle, rig)):
         how = LOSS_TEXT[kind]
-        add_event(journey, ctx.epoch, kind, how, loss=journey.population)
+        await add_event(ctx, journey, kind, how, loss=journey.population)
         journey.status = JourneyStatus.LOST
         journey.end_epoch = ctx.epoch
         ghost = await _ghost_ship(ctx, journey, traveller, vehicle) if vehicle is not None and vehicle.status is EntityStatus.CANON else None
         caravan = await _lost_caravan(ctx, journey, traveller, target, how) if ghost is None and journey.population > 0 else None
-        suffix = f"; {vehicle.name} is now a legend of a lost vessel" if ghost is not None and vehicle is not None else ""
-        travellers = f" ({several(journey.population, 'traveller', 'travellers')})" if journey.population else ""
-        await note(
+        await record(
             ctx,
-            f"{traveller.name}'s expedition to {target} was lost on the way: {how}{travellers}{suffix}.",
-            key="travel.vanished",
-            ids=[traveller.id, *([ghost.id] if ghost is not None else []), *([caravan.id] if caravan is not None else [])],
-            feed=None,
+            "travel.vanished",
+            roles={
+                IncidentRole.ACTOR: traveller.id,
+                IncidentRole.DESTINATION: journey.destination_world_id,
+                IncidentRole.INSTRUMENT: journey.vehicle_entity_id,
+                IncidentRole.PRODUCT: [legend.id for legend in (ghost, caravan) if legend is not None],
+            },
+            facts={"danger": kind, "travellers": journey.population},
+            steps=(StepDraft(StepAction.MEET_DANGER, actor=traveller.id, amount=journey.population, unit=FactUnit.PEOPLE, outcome=StepOutcome.DESTROYED),),
+            cause=journey.incident_id,
         )
         return False
     lost = round(
@@ -564,7 +580,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
         * escort_share(ctx.rules, journey)
     )
     journey.population = max(0, journey.population - lost)
-    add_event(journey, ctx.epoch, kind, ROAD_EVENT_TEXT[kind], loss=lost)
+    await add_event(ctx, journey, kind, ROAD_EVENT_TEXT[kind], loss=lost)
     if kind is JourneyEventKind.MEMORY_LOSS:
         journey.memory_lost = True
     if vehicle is not None and kind in ARMOUR_EVENTS:
@@ -574,8 +590,13 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
             ARMOR_KEY,
             stat_or(vehicle, ARMOR_KEY, travel.default_vessel_armor) - hull_wear(ctx.rules, rig.hull if rig else None, travel.vessel_armor_loss),
         )
-    tail = f"; {several(lost, 'person', 'people')} {agree(lost, 'was', 'were')} lost" if lost else ""
-    await note(ctx, f"On {traveller.name}'s journey to {target} {ROAD_EVENT_TEXT[kind]}{tail}.", key=f"travel.road.{kind.value}", ids=[traveller.id])
+    await record(
+        ctx,
+        f"travel.road.{kind.value}",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: journey.destination_world_id, IncidentRole.INSTRUMENT: journey.vehicle_entity_id},
+        facts={"event": kind, "lost": lost},
+        cause=journey.incident_id,
+    )
     return True
 
 
@@ -592,20 +613,30 @@ LOST_REASONS: dict[RouteState, str] = {
 
 async def _closed_route(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, route: RouteRow, scene: JourneyScene) -> None:
     status = scene.book.status(route)
-    target = await world_name(ctx.session, journey.destination_world_id)
     if status.opens_epoch is not None and status.state is not RouteState.FORGOTTEN:
         if journey.status is not JourneyStatus.WAITING:
             journey.status = JourneyStatus.WAITING
             kind = JourneyEventKind.VOID_STORM if status.state is RouteState.SEVERED else JourneyEventKind.OTHER
-            add_event(journey, ctx.epoch, kind, f"the route closed; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})")
-            text = f"{traveller.name}'s expedition to {target} waits for the route to reopen; it will continue at the start of Epoch {status.opens_epoch}."
-            await note(ctx, text, key="travel.waiting", ids=[traveller.id])
+            await add_event(ctx, journey, kind, f"the route closed; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})")
+            await record(
+                ctx,
+                "travel.waiting",
+                roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: journey.destination_world_id},
+                facts={"opens_epoch": status.opens_epoch, "route_state": status.state},
+                cause=journey.incident_id,
+            )
         return
     reason = LOST_REASONS.get(status.state, "the route collapsed")
-    add_event(journey, ctx.epoch, JourneyEventKind.OTHER, f"{reason}; travellers were left in the void")
+    await add_event(ctx, journey, JourneyEventKind.OTHER, f"{reason}; travellers were left in the void")
     journey.status = JourneyStatus.LOST
     journey.end_epoch = ctx.epoch
-    await note(ctx, f"{traveller.name}'s journey to {target} vanished in the void: {reason}.", key="travel.journey_vanished", ids=[traveller.id])
+    await record(
+        ctx,
+        "travel.journey_vanished",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: journey.destination_world_id},
+        facts={"route_state": status.state, "travellers": journey.population},
+        cause=journey.incident_id,
+    )
 
 
 async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: JourneyRow) -> None:
@@ -623,6 +654,7 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     if not await road_event(ctx, scene, journey, traveller, route):
         return
     await voyage_epoch(ctx, journey, traveller, route)
+    await journey_step(ctx, journey, StepAction.TRAVEL, amount=journey.population)
     guided = await wayfinder(ctx.session, traveller.id) or await wayfinder(ctx.session, traveller.location_id)
     journey.epochs_left = max(0, journey.epochs_left - 1 - (ctx.rules.item_powers.map_journey if guided else 0))
     if journey.epochs_left > 0 and await mount_of(ctx, traveller.id) is not None:
@@ -639,22 +671,22 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     journey.result_entity_id = result.id if result is not None else None
     target = await ctx.session.get(WorldRow, journey.destination_world_id)
     if target is not None:
-        await mark_world_discovered(ctx, target, f"{traveller.name}'s expedition arrived there")
+        await mark_world_discovered(ctx, target, discoverer=traveller.id)
     scene.arrivals.append(journey.id)
 
 
 async def ark_founding(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, colony: EntityRow) -> None:
     cosmography = await cosmography_of(ctx.session)
     origin = cosmography.place_world_id(journey.origin_world_id)
-    source = origin.galaxy.name if origin.galaxy is not None else origin.dimension.name if origin.dimension is not None else "another sky"
-    epochs = ctx.epoch - journey.start_epoch + 1
-    await note(
+    source = origin.galaxy.id if origin.galaxy is not None else origin.dimension.id if origin.dimension is not None else None
+    await record(
         ctx,
-        f"{colony.name} was founded by the void ark of {traveller.name}, which crossed from {source} in {several(epochs, 'epoch', 'epochs')}.",
-        key="travel.ark_founding",
-        ids=[colony.id, traveller.id],
+        "travel.ark_founding",
+        roles={IncidentRole.ACTOR: traveller.id, IncidentRole.PRODUCT: colony.id, IncidentRole.ORIGIN: source},
+        facts={"epochs": ctx.epoch - journey.start_epoch + 1},
+        place=colony.id,
+        cause=journey.incident_id,
         world_id=colony.world_id,
-        feed=FeedCategory.VOYAGE,
     )
 
 
@@ -710,7 +742,7 @@ class Arrival:
     region: EntityRow
     target: WorldRow
     colony: EntityRow | None = None
-    contacts: list[str] = field(default_factory=list)
+    contacts: list[StepDraft] = field(default_factory=list)
     contact_ids: list[int] = field(default_factory=list)
     subjugated: bool = False
 
@@ -726,9 +758,9 @@ async def _forget_on_crossing(ctx: TickContext, arrival: Arrival) -> None:
     bonds = BondRepository(ctx.session)
     for bond in forgotten:
         await bonds.deactivate(bond, ctx.epoch, "forgotten on the crossing of the dead")
-    add_event(
+    await add_event(
+        ctx,
         arrival.journey,
-        ctx.epoch,
         JourneyEventKind.MEMORY_LOSS,
         f"the living forgot on the crossing; {several(len(forgotten), 'kind', 'kinds')} of knowledge {agree(len(forgotten), 'was', 'were')} lost",
     )
@@ -742,11 +774,11 @@ async def _dream_toll(ctx: TickContext, arrival: Arrival) -> bool:
     if arrival.journey.population > 0 and rng.chance(costs.dream_no_return_pct):
         lost = round(arrival.journey.population * costs.dream_no_return_share_pct / PERCENT)
         arrival.journey.population -= lost
-        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DREAM_NOT_RETURNED, f"{several(lost, 'dreamer', 'dreamers')} never woke", loss=lost)
+        await add_event(ctx, arrival.journey, JourneyEventKind.DREAM_NOT_RETURNED, f"{several(lost, 'dreamer', 'dreamers')} never woke", loss=lost)
         return True
     if stat(arrival.traveller, POPULATION_KEY) is None and arrival.traveller.entity_type is EntityType.MORTAL and rng.chance(costs.dream_lone_no_return_pct):
         await retire(ctx.session, arrival.traveller, ctx.epoch, f"Epoch {ctx.epoch}: their soul never returned from the dream.")
-        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DREAM_NOT_RETURNED, "the dreamer's soul never returned")
+        await add_event(ctx, arrival.journey, JourneyEventKind.DREAM_NOT_RETURNED, "the dreamer's soul never returned")
         return False
     return True
 
@@ -756,23 +788,28 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
     journey, traveller = arrival.journey, arrival.traveller
     conquest = journey.intent is JourneyIntent.CONQUEST
     if arrival.target.atmosphere in HARSH_ATMOSPHERES and not await knows(ctx.session, traveller.id, KnowledgeBranch.VOID_LIVING):
-        sky = "airless" if arrival.target.atmosphere.value == "none" else "toxic"
-        await note(
+        await record(
             ctx,
-            f"{traveller.name}'s colonists could not live under {arrival.target.name}'s {sky} sky; the colony died out in its first year.",
-            key="travel.colony_failed",
-            ids=[traveller.id],
+            "travel.colony_failed",
+            roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: arrival.target.id},
+            facts={"atmosphere": arrival.target.atmosphere, "colonists": journey.population},
+            cause=journey.incident_id,
         )
         return None
     people = await people_of(ctx.session, traveller)
     biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
-    if await habitability(ctx.session, ctx.rules, biology, arrival.target.id) < ctx.rules.life_classes.settle_floor:
-        await note(
-            ctx,
-            f"{traveller.name}'s colonists could not live on {arrival.target.name}; the colony died out in its first years.",
-            key="travel.colony_unfit",
-            ids=[traveller.id],
-        )
+    with explaining():
+        fit = await habitability(ctx.session, ctx.rules, biology, arrival.target.id)
+        unfit = fit < ctx.rules.life_classes.settle_floor
+        if unfit:
+            await record(
+                ctx,
+                "travel.colony_unfit",
+                roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: arrival.target.id},
+                facts={"habitability": fit, "colonists": journey.population},
+                cause=journey.incident_id,
+            )
+    if unfit:
         return None
     derived = None if journey.memory_lost else await Namer(ctx.session, ctx.rules).from_speaker(traveller.id, seed_of("colony", journey.id), NameKind.PLACE)
     kind = "conquest outpost" if conquest else "colony"
@@ -817,12 +854,19 @@ async def _bind_colony(ctx: TickContext, arrival: Arrival, colony: EntityRow) ->
     await bind_language_and_faith(ctx, colony, source=None if arrival.journey.memory_lost else traveller)
     carried, left = await carry_herds(ctx, traveller.id, colony)
     if left:
-        await note(ctx, f"Of the herds {traveller.name} brought, {left} could not live on that world and were lost.", key="travel.herds_lost", ids=[colony.id])
+        await record(
+            ctx,
+            "travel.herds_lost",
+            roles={IncidentRole.ACTOR: traveller.id, IncidentRole.PLACE: colony.id},
+            facts={"lost": left, "carried": carried},
+            place=colony.id,
+            cause=arrival.journey.incident_id,
+        )
     if carried:
         ctx.count("herds_carried", carried)
 
 
-async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str:
+async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> StepDraft:
     travel = ctx.rules.travel
     rng = ctx.rng(seed_of("contact", arrival.journey.id, native.id))
     traveller, journey = arrival.traveller, arrival.journey
@@ -835,19 +879,18 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str
                 ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="conquest", reverse=MemoryKind.CONQUERED_US
             )
             arrival.subjugated = True
-            return f"{native.name} submitted without a fight"
+            return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.YIELDED)
     invasion = journey.intent is JourneyIntent.CONQUEST or (journey.intent is JourneyIntent.COLONY and rng.chance(travel.colony_invasion_chance))
     if invasion:
         invader = arrival.colony or traveller
         declared = await declare_war(ctx, invader.id, native.id, "first contact: invasion", cause=WarCause.CONQUEST_JOURNEY)
         await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="invasion")
-        return f"{native.name} saw them as invaders" if declared else f"{native.name} looked at them with hostility"
+        return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.REFUSED if declared else StepOutcome.PARTIAL)
     alive = traveller.status is EntityStatus.CANON
     if alive and (journey.intent is JourneyIntent.TRADE or rng.chance(travel.contact_trade_chance)):
         bonds = BondRepository(ctx.session)
         await bonds.connect(BondDraft(traveller.id, native.id, BondKind.TRADES_WITH, ctx.epoch, f"interworld trade ({arrival.target.name})"))
         await change_relation(ctx, traveller.id, native.id, travel.contact_trade_relation, MemoryKind.TRADED_WITH, note="first contact")
-        text = f"trade began with {native.name}"
         if rng.chance(travel.interworld_alliance_chance) and not await bonds.exists_between(traveller.id, native.id, BondKind.ALLY):
             await sign(
                 ctx,
@@ -869,13 +912,17 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str
                 witnessed=False,
             )
             await change_relation(ctx, traveller.id, native.id, travel.alliance_relation, MemoryKind.ALLIED_WITH, note="interworld alliance")
-            text += f"; an interworld alliance was formed with {native.name}"
         exchanged = await cultural_contact(ctx, traveller, native, first_contact=True) + await cultural_contact(ctx, native, traveller, first_contact=True)
-        if exchanged:
-            text += f"; {exchanged} cultural gifts passed both ways"
-        return text
+        return StepDraft(
+            StepAction.MEET,
+            actor=traveller.id,
+            target=native.id,
+            amount=exchanged or None,
+            unit=FactUnit.COUNT if exchanged else None,
+            outcome=StepOutcome.ACCEPTED,
+        )
     await change_relation(ctx, traveller.id, native.id, -travel.uneasy_relation_loss, MemoryKind.ILL_WILL, note="uneasy first contact")
-    return f"{native.name} watched them uneasily"
+    return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.DELAYED)
 
 
 async def first_contact(ctx: TickContext, arrival: Arrival) -> None:
@@ -907,13 +954,11 @@ async def _explore_arrival(ctx: TickContext, arrival: Arrival) -> EntityRow | No
     ]
     if originals:
         await connect(ctx.session, traveller.id, originals[0].id, BondKind.DISCOVERED, ctx.epoch, description=f"on the {arrival.target.name} expedition")
-        add_event(arrival.journey, ctx.epoch, JourneyEventKind.DISCOVERY, f"they discovered {originals[0].name}")
+        await add_event(ctx, arrival.journey, JourneyEventKind.DISCOVERY, f"they discovered {originals[0].name}")
     if arrival.journey.intent is JourneyIntent.EXPLORATION and ctx.rng(seed_of("land", arrival.journey.id)).chance(travel.exploration_land_chance):
-        found = await find_land(
-            ctx, LandSearch(arrival.target.id, explorer=traveller, near=arrival.region, pioneers=False, reason=f"on the {arrival.target.name} expedition")
-        )
+        found = await find_land(ctx, LandSearch(arrival.target.id, explorer=traveller, near=arrival.region, pioneers=False))
         if found is not None:
-            add_event(arrival.journey, ctx.epoch, JourneyEventKind.DISCOVERY, f"they found {found.land.name}")
+            await add_event(ctx, arrival.journey, JourneyEventKind.DISCOVERY, f"they found {found.land.name}")
         return found.land if found is not None else None
     return None
 
@@ -922,8 +967,14 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
     target = await ctx.session.get(WorldRow, journey.destination_world_id)
     region = await landing_region(ctx.session, ctx.rules, journey.destination_world_id) if target is not None else None
     if target is None or region is None:
-        name = target.name if target is not None else "another world"
-        await note(ctx, f"{traveller.name}'s travellers reached {name} but found no land to set foot on.", key="travel.no_land", ids=[traveller.id])
+        await journey_step(ctx, journey, StepAction.ARRIVE, amount=journey.population, outcome=StepOutcome.FAILURE)
+        await record(
+            ctx,
+            "travel.no_land",
+            roles={IncidentRole.ACTOR: traveller.id, IncidentRole.DESTINATION: journey.destination_world_id},
+            facts={"travellers": journey.population},
+            cause=journey.incident_id,
+        )
         return None
     arrival = Arrival(journey, traveller, route, region, target)
     await _forget_on_crossing(ctx, arrival)
@@ -931,9 +982,13 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
         return None
     carried = await stowaway(ctx, journey.origin_world_id, region)
     if carried is not None:
-        add_event(journey, ctx.epoch, JourneyEventKind.STOWAWAY, f"{carried.name} arrived with them")
-        await note(
-            ctx, f"{traveller.name}'s ships carried a stowaway species to {target.name}; it became invasive there.", key="travel.stowaway", ids=[carried.id]
+        await add_event(ctx, journey, JourneyEventKind.STOWAWAY, f"{carried.name} arrived with them")
+        await record(
+            ctx,
+            "travel.stowaway",
+            roles={IncidentRole.ACTOR: traveller.id, IncidentRole.SUBJECT: carried.id, IncidentRole.DESTINATION: target.id, IncidentRole.PLACE: region.id},
+            place=region.id,
+            cause=journey.incident_id,
         )
     result: EntityRow | None = None
     if journey.intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST) and journey.population > 0:
@@ -954,19 +1009,33 @@ async def arrive(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, ro
 
 async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | None) -> None:
     journey, traveller = arrival.journey, arrival.traveller
-    did = {
-        JourneyIntent.COLONY: "founded a colony" if arrival.colony else "landed",
-        JourneyIntent.CONQUEST: "founded a conquest outpost" if arrival.colony else "landed",
-        JourneyIntent.TRADE: "opened trade",
-        JourneyIntent.EXPLORATION: "explored",
-        JourneyIntent.PILGRIMAGE: "reached their pilgrimage",
-    }[journey.intent]
-    contact = f" First contact: {'; '.join(arrival.contacts)}." if arrival.contacts else ""
     origin = await ctx.session.get(WorldRow, journey.origin_world_id)
-    gap = time_difference(ctx.rules, traveller.name, origin, arrival.target, max(1, ctx.epoch - journey.start_epoch))
-    tail = f" {gap}" if gap else ""
-    ids = [traveller.id, arrival.region.id, *([result.id] if result else []), *arrival.contact_ids]
-    await note(ctx, f"{traveller.name}'s travellers reached {arrival.target.name} and {did}.{contact}{tail}", key="travel.arrival", ids=ids, feed=None)
+    epochs = max(1, ctx.epoch - journey.start_epoch)
+    founded = arrival.colony is not None
+    await journey_step(ctx, journey, StepAction.ARRIVE, amount=journey.population, target=arrival.region.id, outcome=StepOutcome.SUCCESS)
+    if founded:
+        await journey_step(ctx, journey, StepAction.FOUND, amount=journey.population, target=arrival.colony.id if arrival.colony else None)
+    await record(
+        ctx,
+        "travel.arrival",
+        roles={
+            IncidentRole.ACTOR: traveller.id,
+            IncidentRole.DESTINATION: arrival.target.id,
+            IncidentRole.PLACE: arrival.region.id,
+            IncidentRole.PRODUCT: result.id if result is not None else None,
+            IncidentRole.TARGET: list(arrival.contact_ids),
+            IncidentRole.INSTRUMENT: journey.vehicle_entity_id,
+        },
+        facts={
+            "intent": journey.intent,
+            "travellers": journey.population,
+            "epochs": epochs,
+            "time_gap_years": time_gap_years(ctx.rules, origin, arrival.target, epochs),
+        },
+        steps=tuple(arrival.contacts),
+        place=arrival.region.id,
+        cause=journey.incident_id,
+    )
 
 
 @reads(
@@ -997,7 +1066,6 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.galactic_structures",
     "table.geasa",
@@ -1071,7 +1139,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.journey_encounters",
@@ -1121,11 +1189,19 @@ async def send_expedition(session: AsyncSession, rules: Rules, traveller_id: int
     vehicle_id = route.vehicle_entity_id
     vehicle = await session.get(EntityRow, vehicle_id) if vehicle_id is not None else None
     journey = await start_journey(ctx, JourneySpec(traveller, route, intent, population, vehicle))
-    await note(
+    scope = current_scope()
+    await record(
         ctx,
-        f"{traveller.name} set out for {await world_name(session, journey.destination_world_id)} ({INTENT_SENT[intent]}).",
-        key="travel.expedition_ordered",
-        ids=[traveller.id],
+        "travel.expedition_ordered",
+        roles={
+            IncidentRole.ACTOR: traveller.id,
+            IncidentRole.DESTINATION: journey.destination_world_id,
+            IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None,
+            IncidentRole.INSTRUMENT: journey.vehicle_entity_id,
+        },
+        facts={"intent": intent, "travellers": journey.population},
+        cause=journey.incident_id,
+        world_id=traveller.world_id,
     )
     return journey
 
@@ -1143,8 +1219,8 @@ async def sever_by_hand(session: AsyncSession, rules: Rules, route_id: int, by: 
     return (await sever_route(ctx, route_id, duration=duration, by=by)).text
 
 
-async def stitch_by_hand(session: AsyncSession, rules: Rules, route_id: int, by: str) -> str:
-    return await repair_route(await manual_context(session, "stitch", rules, key=str(route_id)), route_id, by)
+async def stitch_by_hand(session: AsyncSession, rules: Rules, route_id: int) -> str:
+    return await repair_route(await manual_context(session, "stitch", rules, key=str(route_id)), route_id)
 
 
 async def run_travel_phase(session: AsyncSession, rules: Rules) -> None:

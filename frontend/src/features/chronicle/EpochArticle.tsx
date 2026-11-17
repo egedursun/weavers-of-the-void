@@ -17,8 +17,8 @@ import {
   type NumericStat,
   STAT_ICON,
 } from '@/features/overview/statFields'
-import { ChronicleEntry } from './ChronicleEntry'
 import { EpochNarrative } from './EpochNarrative'
+import { FeedLines } from './FeedGroups'
 import { YearStrip } from './YearStrip'
 import {
   type EpochListItem,
@@ -169,17 +169,12 @@ export function EpochArticle({
           )}
           <YearStrip lines={filtered} selected={year} onSelect={setYear} />
           {shown.length > 0 && (
-            <ol className='flex min-w-0 flex-col gap-1'>
-              {shown.map((line) => (
-                <ChronicleEntry
-                  key={line.id}
-                  line={line}
-                  showEpoch={false}
-                  kindLabel={kindLabels.get(line.kind)}
-                  highlighted={highlightLine === line.id}
-                />
-              ))}
-            </ol>
+            <FeedLines
+              lines={shown}
+              groups={lines.data?.groups ?? []}
+              kindLabels={kindLabels}
+              highlightLine={highlightLine}
+            />
           )}
         </CollapsibleContent>
       </Collapsible>

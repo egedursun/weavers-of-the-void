@@ -357,6 +357,7 @@ class ItemHistoryRow(Base):
     deed: Mapped[ItemDeed] = mapped_column(enum_type(ItemDeed, "deed"))
     actor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     note: Mapped[str] = mapped_column(String(480), default="")
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"), index=True)
 
 
 class ItemEnchantmentRow(Base):

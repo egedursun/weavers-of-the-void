@@ -16,6 +16,8 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Discovery
 from aerona.engine.cosmos.routes import RouteSpec
@@ -29,13 +31,13 @@ from aerona.engine.phases.creatures import introduce_species
 from aerona.engine.phases.life_seed import seed_life as engine_seed_life
 from aerona.engine.phases.warfare import bless_army
 from aerona.engine.polity.control import found_house_by_hand
+from aerona.engine.recording.record import StepDraft
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son import lines
 from aerona.tools.son.cosmos import SEASON_DOMAINS
 from aerona.tools.son.heavens import world_in_hand
 from aerona.tools.son.support import ensure_in_reach, require_essence
@@ -136,8 +138,11 @@ async def forge_ley_line(call: SonCall, args: ForgeLeyInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(first.id)
-    await call.chronicle(
-        ChronicleKind.COSMIC, lines.FORGE_LEY, entity_ids=[first.id, second.id], son=call.son.name, first=first.name, second=second.name, reason=args.reason
+    await call.record(
+        "tools.son.forge_ley_line",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.COSMIC,
     )
     return result(SonResult.LEY_FORGED, first=first.name, second=second.name, strength=line.strength)
 
@@ -155,7 +160,13 @@ async def add_season(call: SonCall, args: AddSeasonInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(world.id)
-    await call.chronicle(ChronicleKind.COSMIC, lines.ADD_SEASON, world_id=world.id, son=call.son.name, season=season.name, world=world.name)
+    await call.record(
+        "tools.son.add_season",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
+        facts={"season": str(season.name)},
+        kind=ChronicleKind.COSMIC,
+        world_id=world.id,
+    )
     return result(SonResult.SEASON_ADDED, season=season.name, world=world.name)
 
 
@@ -179,7 +190,12 @@ async def open_road(call: SonCall, args: OpenRoadInput) -> str:
     except AeronaError as error:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
-    await call.chronicle(ChronicleKind.COSMIC, lines.OPEN_ROAD, son=call.son.name, first=first.name, second=second.name, reason=args.reason)
+    await call.record(
+        "tools.son.open_road",
+        roles={IncidentRole.ACTOR: call.son.id},
+        facts={"first": str(first.name), "second": str(second.name), "reason": args.reason},
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.ROAD_OPENED, id=route.id, first=first.name, second=second.name)
 
 
@@ -199,7 +215,13 @@ async def raise_throne(call: SonCall, args: ThroneInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.ASCENSION, lines.RAISE_THRONE, entity_ids=[place.id], son=call.son.name, place=place.name, reason=args.reason)
+    await call.record(
+        "tools.son.raise_throne",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: place.id},
+        facts={"reason": args.reason},
+        place=place.id,
+        kind=ChronicleKind.ASCENSION,
+    )
     return result(SonResult.THRONE_RAISED, place=place.name)
 
 
@@ -213,7 +235,13 @@ async def lay_magic_site(call: SonCall, args: MagicSiteInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(place.id)
-    await call.chronicle(ChronicleKind.COSMIC, lines.LAY_MAGIC_SITE, entity_ids=[place.id], son=call.son.name, place=place.name, reason=args.reason)
+    await call.record(
+        "tools.son.lay_magic_site",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: place.id},
+        facts={"reason": args.reason},
+        place=place.id,
+        kind=ChronicleKind.COSMIC,
+    )
     return result(SonResult.MAGIC_SITE_LAID, place=place.name)
 
 
@@ -229,14 +257,12 @@ async def carry_species(call: SonCall, args: CarrySpeciesInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(carried.id)
-    await call.chronicle(
-        ChronicleKind.CREATION,
-        lines.CARRY_SPECIES,
-        entity_ids=[carried.id, region.id],
-        son=call.son.name,
-        kind=species.name,
-        place=region.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.carry_species",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [species.id, carried.id], IncidentRole.PLACE: region.id},
+        facts={"reason": args.reason},
+        place=region.id,
+        kind=ChronicleKind.CREATION,
     )
     return result(SonResult.SPECIES_CARRIED, kind=species.name, place=region.name)
 
@@ -252,7 +278,12 @@ async def seed_life(call: SonCall, args: SeedLifeInput) -> str:
     call.spend_essence(cost)
     call.remember_creation(born.id)
     call.target(born.id)
-    await call.chronicle(ChronicleKind.CREATION, lines.SEED_LIFE, entity_ids=[born.id], son=call.son.name, life=born.name, world=world.name, reason=args.reason)
+    await call.record(
+        "tools.son.seed_life",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id, IncidentRole.SUBJECT: born.id},
+        facts={"life": str(born.name), "reason": args.reason},
+        kind=ChronicleKind.CREATION,
+    )
     return result(SonResult.LIFE_SEEDED, name=born.name, world=world.name)
 
 
@@ -275,8 +306,11 @@ async def call_up_soul(call: SonCall, args: CallUpSoulInput) -> str:
     call.spend_essence(cost)
     call.remember_creation(spirit.id)
     call.target(spirit.id)
-    await call.chronicle(
-        ChronicleKind.WORSHIP, lines.CALL_UP_SOUL, entity_ids=[spirit.id, mortal.id], son=call.son.name, mortal=mortal.name, reason=args.reason
+    await call.record(
+        "tools.son.call_up_soul",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id, IncidentRole.SUBJECT: spirit.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.WORSHIP,
     )
     return result(SonResult.SOUL_CALLED_UP, name=spirit.name)
 
@@ -292,14 +326,12 @@ async def crown_ruler(call: SonCall, args: CommunityInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(ruler.id)
-    await call.chronicle(
-        ChronicleKind.ASCENSION,
-        lines.CROWN_RULER,
-        entity_ids=[ruler.id, community.id],
-        son=call.son.name,
-        ruler=ruler.name,
-        community=community.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.crown_ruler",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [community.id, ruler.id]},
+        facts={"ruler": str(ruler.name), "reason": args.reason},
+        kind=ChronicleKind.ASCENSION,
+        steps=(StepDraft(StepAction.CROWN, actor=call.son.id, target=ruler.id),),
     )
     return result(SonResult.RULER_CROWNED, ruler=ruler.name, community=community.name)
 
@@ -316,14 +348,11 @@ async def found_house(call: SonCall, args: FoundHouseInput) -> str:
     call.spend_essence(cost)
     call.remember_creation(house.id)
     call.target(house.id)
-    await call.chronicle(
-        ChronicleKind.ASCENSION,
-        lines.FOUND_HOUSE,
-        entity_ids=[house.id, mortal.id],
-        son=call.son.name,
-        house=house.name,
-        mortal=mortal.name,
-        reason=args.reason,
+    await call.record(
+        "tools.son.found_house",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: house.id, IncidentRole.TARGET: mortal.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.ASCENSION,
     )
     return result(SonResult.HOUSE_FOUNDED, house=house.name, mortal=mortal.name)
 
@@ -340,8 +369,11 @@ async def bless_host(call: SonCall, args: BlessHostInput) -> str:
         fail(SonResult.WORK_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(army.id)
-    await call.chronicle(
-        ChronicleKind.WAR, lines.BLESS_HOST, entity_ids=[army.id], son=call.son.name, army=army.name, aspect=args.aspect.value, reason=args.reason
+    await call.record(
+        "tools.son.bless_host",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.INSTRUMENT: army.id},
+        facts={"aspect": str(args.aspect.value), "reason": args.reason},
+        kind=ChronicleKind.WAR,
     )
     return result(SonResult.HOST_BLESSED, army=army.name, aspect=args.aspect.value, amount=amount)
 

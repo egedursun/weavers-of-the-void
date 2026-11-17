@@ -12,15 +12,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, RiftCause, RiftWork
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift, rift_cycles
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 LARGE = 50
@@ -90,10 +91,8 @@ async def keep_claims(ctx: TickContext, rift: RiftRow, row: RiftControlRow) -> N
     claimant = await claimant_for(ctx, rift)
     if claimant is not None and claimant != row.claimant_entity_id and not held(claimant):
         row.claimant_entity_id, row.claimed_epoch = claimant, ctx.epoch
-        polity = await ctx.session.get(EntityRow, claimant)
-        await note(
-            ctx, f"{polity.name if polity is not None else 'A realm'} claimed a rift in its land.", key="rift.claimed", world_id=rift.world_id, ids=[claimant]
-        )
+        where = rift.region_entity_id or rift.world_id
+        await record(ctx, "rift.claimed", roles={IncidentRole.ACTOR: claimant, IncidentRole.PLACE: where}, place=where, world_id=rift.world_id)
     if row.claimant_entity_id is not None and "work" not in row.locked and row.work is RiftWork.NONE:
         row.work = chosen_work(rift)
 
@@ -177,7 +176,6 @@ async def keep_rift_control(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.memories",

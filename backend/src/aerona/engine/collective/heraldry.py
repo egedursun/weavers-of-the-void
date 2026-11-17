@@ -63,12 +63,13 @@ from aerona.domain.enums.demography import MotifSource
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.armory import Design, against, beneath, contrasting, partners, settled, slots
 from aerona.engine.context import TickContext
 from aerona.engine.lore.motifs import people_motifs
 from aerona.engine.mind.book import stored_values
-from aerona.engine.notes import note
+from aerona.engine.recording.record import record
 
 H = HeraldryHolderKind
 ORDERS = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.HOLY_ORDER, FactionKind.MAGE_ORDER})
@@ -340,7 +341,12 @@ async def difference(
     await ctx.session.flush()
     await sync_emblem(ctx, row)
     tally.differenced += 1
-    await note(ctx, f"{entity.name}, a cadet branch, bore its parent's arms within a border.", key="heraldry.cadet", ids=[entity.id])
+    await record(
+        ctx,
+        "heraldry.cadet",
+        roles={IncidentRole.OWNER: entity.id, IncidentRole.PREDECESSOR: parent.holder_entity_id},
+        facts={"division": row.division, "field": row.field},
+    )
     return row
 
 
@@ -410,7 +416,12 @@ async def quarter_on_marriage(ctx: TickContext, tally: HeraldryTally) -> None:
         tally.quartered += 1
         house, other = await ctx.session.get(EntityRow, first), await ctx.session.get(EntityRow, second)
         if house is not None and other is not None:
-            await note(ctx, f"{house.name} quartered its arms with those of {other.name} after a marriage.", key="heraldry.quartered", ids=[house.id, other.id])
+            await record(
+                ctx,
+                "heraldry.quartered",
+                roles={IncidentRole.OWNER: house.id, IncidentRole.SPOUSE: other.id},
+                facts={"field": mine.field, "second": theirs.field},
+            )
 
 
 async def keep_heraldry(ctx: TickContext, tally: HeraldryTally) -> None:

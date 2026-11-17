@@ -8,15 +8,15 @@ from aerona.db.tables.affairs import MandateRow, PolicyApprovalRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, LawKind, LegitimacyBasis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import MandateState
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 
 APPROVAL = "approval"
 GOVERNMENT = "government"
@@ -112,12 +112,12 @@ async def revolution(ctx: TickContext, realm: Realm, laws: LawBook) -> bool:
             laws.laws[law.id] = law
             laws.profiles[law.id] = profile
             laws.by_node.setdefault(realm.entity.id, []).append(law.id)
-    await note(
+    await record(
         ctx,
-        f"The people of {realm.entity.name} rose and wrote a new fundamental law, giving the vote to all.",
-        key="affairs.revolution",
-        ids=[realm.entity.id],
-        kind=ChronicleKind.CIVILIZATION,
+        "affairs.revolution",
+        roles={IncidentRole.SUBJECT: realm.entity.id, IncidentRole.PREDECESSOR: realm.ruler_id},
+        facts={"government": realm.profile.government},
+        place=realm.profile.capital_entity_id,
     )
     return True
 

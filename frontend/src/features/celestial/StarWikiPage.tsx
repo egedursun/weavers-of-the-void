@@ -234,6 +234,9 @@ export function StarWikiView({ starId }: { starId: number }) {
       )}
       <CelestialTimeline
         lines={data.timeline}
+        total={data.timeline_total}
+        scope='star'
+        scopeId={data.star.id}
         emptyText='The chronicle has not named this star yet.'
       />
       <RecordGallery

@@ -4,17 +4,17 @@ from sqlalchemy import and_, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
-from aerona.core.grammar import several
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyBreach, TreatyKind, TreatyStatus
+from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import WarCause, WarEnding
@@ -34,6 +34,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
 from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.services.community_relations import (
     blood_feud_pairs,
     change_relation,
@@ -75,9 +76,9 @@ async def expire_truces_phase(ctx: TickContext) -> None:
     ctx.count("truces_expired", await expire_truces(ctx.session, ctx.rules, ctx.epoch))
 
 
-async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...], kind: ChronicleKind = ChronicleKind.DIPLOMACY) -> None:
-    feed = FeedCategory.WAR if kind is ChronicleKind.WAR else None
-    await ctx.chronicle(kind, text, template_key=key, entity_ids=ids, feed_category=feed)
+async def told(ctx: TickContext, key: str, pair: tuple[int, int], *, place: int | None = None, **facts: FactInput) -> None:
+    first = await living_entity(ctx.session, pair[0])
+    await record(ctx, key, roles={IncidentRole.SUBJECT: list(pair)}, facts=facts, place=place if place is not None else first.location_id if first else None)
 
 
 async def forget_mortal_grudges(ctx: TickContext) -> int:
@@ -140,11 +141,9 @@ async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]]
         await settle_peace(ctx, first_id, second_id, WarEnding.PEACE, "grudge faded" if improved else "grudge forgotten", apply_relation=False)
         faded.add(frozenset((first_id, second_id)))
         if improved:
-            text = f"The old grudge between {first.name} and {second.name} has faded; no one remembers why they called each other enemies."
-            await _note(ctx, text, "diplomacy.grudge_faded", (first_id, second_id))
+            await told(ctx, "diplomacy.grudge_faded", (first_id, second_id), epochs=age, relation=await relation(ctx.session, ctx.rules, first_id, second_id))
         else:
-            text = f"The grudge between {first.name} and {second.name} lasted {several(age, 'epoch', 'epochs')} without a blow struck and was forgotten."
-            await _note(ctx, text, "diplomacy.grudge_forgotten", (first_id, second_id))
+            await told(ctx, "diplomacy.grudge_forgotten", (first_id, second_id), epochs=age)
     ctx.count("grudges_faded", len(faded))
     return faded
 
@@ -166,8 +165,14 @@ async def _exhaustion_peaces(ctx: TickContext, candidates: list[tuple[int, int, 
             continue
         await end_war(ctx, war, WarEnding.EXHAUSTION, reason="exhaustion peace")
         counters.exhaustion_peaces += 1
-        text = f"The {duration}-epoch war between {first.name} and {second.name} ended in exhaustion."
-        await _note(ctx, text, "diplomacy.exhaustion_peace", (war.event_entity_id, first_id, second_id), ChronicleKind.WAR)
+        await told(
+            ctx,
+            "diplomacy.exhaustion_peace",
+            (first_id, second_id),
+            war=war.event_entity_id,
+            epochs=duration,
+            chance=min(rules.exhaustion_cap_pct, rules.exhaustion_growth_pct * duration),
+        )
 
 
 async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, sides: SideIndex, marriage: bool) -> tuple[EntityRow, EntityRow] | None:
@@ -219,9 +224,13 @@ async def abandon_mid_war(ctx: TickContext, traitor: EntityRow, victim: EntityRo
             continue
         event = await living_entity(ctx.session, item.war.event_entity_id)
         await end_war(ctx, item.war, WarEnding.BETRAYAL, victor_id=enemy.id, loser_id=item.own_id or victim.id, reason="betrayal", apply_relation=False)
-        war_name = event.name if event is not None else "the war"
-        text = f"Abandoned by its ally {traitor.name}, {victim.name} could not hold the field and {war_name} was lost to {enemy.name}."
-        await _note(ctx, text, "diplomacy.betrayal_war_lost", (victim.id, enemy.id, traitor.id))
+        await record(
+            ctx,
+            "diplomacy.betrayal_war_lost",
+            roles={IncidentRole.ACTOR: traitor.id, IncidentRole.VICTIM: victim.id, IncidentRole.OPPONENT: enemy.id},
+            facts={"war": event.id if event is not None else None, "chance": ctx.rules.diplomacy.betrayal_war_collapse_chance},
+            place=victim.location_id,
+        )
         collapsed += 1
     ctx.count("wars_lost_to_betrayal", collapsed)
     return collapsed
@@ -232,14 +241,20 @@ async def betray(ctx: TickContext, first: EntityRow, second: EntityRow, neighbou
     traitor, victim = (first, second) if _weight(ctx, first) >= _weight(ctx, second) else (second, first)
     pact = await treaty_between(ctx.session, first.id, second.id, list(ALLIANCES))
     if pact is not None:
-        await breach(ctx, pact, traitor.id, clause=None, reason="it betrayed its ally")
+        await breach(ctx, pact, traitor.id, clause=None, reason=TreatyBreach.ALLY_BETRAYED)
     await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "betrayal")
     await change_relation(ctx, victim.id, traitor.id, -rules.betrayal_relation, MemoryKind.BETRAYED_ME, note="betrayal", reverse=MemoryKind.ILL_WILL)
     await abandon_mid_war(ctx, traitor, victim)
     if war_roll:
         await declare_war(ctx, traitor.id, victim.id, "betrayal", cause=WarCause.BETRAYAL)
-    text = f"{traitor.name} betrayed its ally {victim.name} in the back; the oath was broken."
-    await _note(ctx, text, "diplomacy.betrayal", (traitor.id, victim.id))
+    await record(
+        ctx,
+        "diplomacy.betrayal_war" if war_roll else "diplomacy.betrayal",
+        roles={IncidentRole.ACTOR: traitor.id, IncidentRole.VICTIM: victim.id},
+        facts={"relation_lost": rules.betrayal_relation, "treaty": pact.treaty_entity_id if pact is not None else None},
+        place=traitor.location_id,
+        steps=(StepDraft(StepAction.BETRAY, actor=traitor.id, target=victim.id, amount=rules.betrayal_relation, unit=FactUnit.STANDING),),
+    )
     await cosmic_court(ctx, traitor.id, victim.id)
     ctx.count("betrayals")
     return traitor
@@ -297,7 +312,7 @@ async def settled_by_wergild(ctx: TickContext, first: EntityRow, second: EntityR
     if not await law_param(ctx.session, first.id, LawKind.BLOOD_FEUD, "wergild_allowed"):
         return False
     await change_relation(ctx, first.id, second.id, ctx.rules.treaties.wergild_value // 3, MemoryKind.GIFTED_ME, note="blood money paid")
-    await _note(ctx, f"{first.name} and {second.name} settled their blood feud with wergild instead of war.", "diplomacy.wergild", (first.id, second.id))
+    await told(ctx, "diplomacy.wergild", (first.id, second.id), relation_gained=ctx.rules.treaties.wergild_value // 3)
     return True
 
 
@@ -344,9 +359,7 @@ async def _neighbour_pair(
         )
     ):
         counters.declared += 1
-        tail = "; the blood feud is now a campaign" if feud else ""
-        text = f"The grudge that had built up for years between {first.name} and {second.name} turned into open enmity{tail}."
-        await _note(ctx, text, "diplomacy.war_declared", (first.id, second.id), ChronicleKind.WAR)
+        await told(ctx, "diplomacy.feud_war_declared" if feud else "diplomacy.war_declared", (first.id, second.id), relation=value)
     elif (
         enemy
         and (
@@ -362,8 +375,10 @@ async def _neighbour_pair(
     ):
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace")
         counters.peaces += 1
-        how = f"worn out by {several(duration, 'epoch', 'epochs')} of war the two sides made a truce" if tired else "envoys swore a peace oath"
-        await _note(ctx, f"{first.name} and {second.name} laid down arms; {how}.", "diplomacy.peace", (first.id, second.id))
+        if tired:
+            await told(ctx, "diplomacy.peace_exhausted", (first.id, second.id), epochs=duration, relation=value)
+        else:
+            await told(ctx, "diplomacy.peace", (first.id, second.id), relation=value)
     elif (
         not enemy
         and not ally
@@ -381,11 +396,15 @@ async def _neighbour_pair(
         spouses = await form_alliance(ctx, first, second, sides, marriage)
         counters.alliances += 1
         if marriage:
-            wed = f": {spouses[0].name} married {spouses[1].name}" if spouses is not None else ""
-            ids = (first.id, second.id, *(spouse.id for spouse in spouses or ()))
-            await _note(ctx, f"{first.name} and {second.name} were bound by a marriage{wed}.", "diplomacy.marriage_alliance", ids)
+            await record(
+                ctx,
+                "diplomacy.marriage_alliance" if spouses is not None else "diplomacy.marriage_pact",
+                roles={IncidentRole.SUBJECT: [first.id, second.id], IncidentRole.SPOUSE: [spouse.id for spouse in spouses or ()]},
+                facts={"relation": value},
+                place=first.location_id,
+            )
         else:
-            await _note(ctx, f"{first.name} and {second.name} became allies by an oath of friendship.", "diplomacy.alliance", (first.id, second.id))
+            await told(ctx, "diplomacy.alliance", (first.id, second.id), relation=value)
     elif (
         ally
         and value < 0
@@ -429,8 +448,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
             await end_treaty(ctx, pact, TreatyStatus.EXPIRED, "no common threat remained")
         await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "alliance lapsed")
         ended += 1
-        text = f"The {ctx.epoch - bond.epoch}-epoch alliance of {first.name} and {second.name} loosened once no common threat remained; the oath quietly ended."
-        await _note(ctx, text, "diplomacy.alliance_lapsed", (first.id, second.id))
+        await told(ctx, "diplomacy.alliance_lapsed", (first.id, second.id), epochs=ctx.epoch - bond.epoch, chance=settings.alliance_end_chance)
     return ended
 
 
@@ -455,7 +473,6 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.deed_claims",
     "table.deeds",
     "table.entities",
-    "table.epoch_year_cursors",
     "table.feuds",
     "table.geasa",
     "table.held_identities",
@@ -515,7 +532,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.deed_claims",
     "table.deeds",
     "table.entities",
-    "table.epoch_year_cursors",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.marriages",
@@ -569,7 +586,7 @@ async def _require_communities(ctx: TickContext, first_id: int, second_id: int) 
 async def decree_peace(ctx: TickContext, first_id: int, second_id: int, truce: bool = True) -> bool:
     first, second = await _require_communities(ctx, first_id, second_id)
     ended = await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace by decree", truce=truce)
-    await _note(ctx, f"By decree {first.name} and {second.name} laid down arms.", "diplomacy.peace_decree", (first.id, second.id))
+    await told(ctx, "diplomacy.peace_decree", (first.id, second.id))
     return ended
 
 
@@ -583,7 +600,7 @@ async def decree_alliance(ctx: TickContext, first_id: int, second_id: int, marri
     neighbourhood = await Neighbourhood.load(ctx.session, ctx.rules)
     sides = await SideIndex.load(ctx.session, neighbourhood)
     spouses = await form_alliance(ctx, first, second, sides, marriage)
-    await _note(ctx, f"By decree {first.name} and {second.name} became allies.", "diplomacy.alliance_decree", (first.id, second.id))
+    await told(ctx, "diplomacy.alliance_decree", (first.id, second.id), pact=TreatyKind.MARRIAGE_PACT if marriage else TreatyKind.ALLIANCE_DEFENSIVE)
     return spouses
 
 

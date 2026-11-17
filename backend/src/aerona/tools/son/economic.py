@@ -9,6 +9,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.orders.economy import AXIS_ENUMS, axes_of, locked_axes, order_of, set_order
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -16,7 +17,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
@@ -45,7 +45,12 @@ async def move_economic_order(call: SonCall, args: MoveEconomicOrderInput) -> st
     axes = {**(axes_of(order) if order is not None else {}), args.axis: args.value}
     await set_order(call.tick, realm.id, None, axes)
     call.target(realm.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.MOVE_ECONOMIC_ORDER, entity_ids=[realm.id], son=call.son.name, realm=realm.name, reason=args.reason)
+    await call.record(
+        "tools.son.move_economic_order",
+        roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: realm.id},
+        facts={"reason": args.reason},
+        kind=ChronicleKind.CIVILIZATION,
+    )
     return result(SonResult.ORDER_MOVED, realm=realm.name, axis=args.axis, value=args.value.replace("_", " "))
 
 

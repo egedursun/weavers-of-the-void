@@ -13,10 +13,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import AnomalyKind, TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch
@@ -27,12 +27,12 @@ from aerona.engine.lore.blueprints import books_of
 from aerona.engine.lore.research_depth import RESEARCHERS, living_researchers, trade_partners
 from aerona.engine.lore.truth import CONTRARY, holds_orthodoxy, ruling
 from aerona.engine.mind.ethics import church_of
-from aerona.engine.notes import note
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.regime.book import inquiry_factor
 from aerona.engine.renown.book import acclaim
 from aerona.rules.registry import Rules
@@ -116,13 +116,7 @@ async def found_theories(ctx: TickContext) -> int:
                 correctness=rng.integer(0, PERCENT),
             )
             founded += 1
-            await note(
-                ctx,
-                f"The scholars of {community.name} set out {theory.name}.",
-                key="theories.founded",
-                ids=[community.id, theory.id],
-                kind=ChronicleKind.KNOWLEDGE,
-            )
+            await record_incident(ctx, "theories.founded", roles={IncidentRole.MAKER: community.id, IncidentRole.PRODUCT: theory.id}, facts={"domain": domain})
     return founded
 
 
@@ -246,14 +240,11 @@ async def shift_paradigm(ctx: TickContext, community: EntityRow, old: TheoryAdhe
             community_entity_id=community.id, domain=domain, old_theory_id=old.theory_entity_id, new_theory_id=new.theory_entity_id, epoch=ctx.epoch
         )
     )
-    fallen = await ctx.session.get(EntityRow, old.theory_entity_id)
-    risen = await ctx.session.get(EntityRow, new.theory_entity_id)
-    await note(
+    await record_incident(
         ctx,
-        f"The scholars of {community.name} turned from {fallen.name if fallen else 'an old account'} to {risen.name if risen else 'a new one'}.",
-        key="theories.paradigm_shift",
-        ids=[community.id, new.theory_entity_id],
-        kind=ChronicleKind.KNOWLEDGE,
+        "theories.paradigm_shift",
+        roles={IncidentRole.SUBJECT: community.id, IncidentRole.PREDECESSOR: old.theory_entity_id, IncidentRole.SUCCESSOR: new.theory_entity_id},
+        facts={"domain": domain},
     )
 
 

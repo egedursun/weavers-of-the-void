@@ -53,6 +53,7 @@ function serveHeavens() {
     cover: null,
     images: [],
     timeline: [],
+    timeline_total: 0,
   })
   onApi('GET', '/api/cosmography/nodes/301/worship', {
     node_id: 301,
@@ -67,6 +68,7 @@ function serveHeavens() {
     cover: null,
     images: [],
     timeline: [],
+    timeline_total: 0,
   })
 }
 

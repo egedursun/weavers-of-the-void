@@ -5,7 +5,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.eras.progress import LIVE, SPECIALISMS
 from aerona.engine.mind.book import skills_of
@@ -16,7 +16,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class JoinProgrammeInput(ToolInput):
@@ -39,7 +38,9 @@ async def join_programme(call: MortalCall, args: JoinProgrammeInput) -> str:
         row.progress = clamp_int(row.progress + call.tick.rules.programmes.specialist_progress, 0, PERCENT)
     call.target(row.polity_entity_id)
     label = TECHNIQUES[row.technique].label.lower()
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.JOIN_PROGRAMME, entity_ids=[me.id, row.polity_entity_id], me=me.name, technique=label)
+    await call.record(
+        "tools.mortal.join_programme", roles={IncidentRole.ACTOR: me.id, IncidentRole.AUTHORITY: row.polity_entity_id}, facts={"technique": row.technique}
+    )
     return result(MortalResult.PROGRAMME_JOINED, technique=label, progress=row.progress)
 
 

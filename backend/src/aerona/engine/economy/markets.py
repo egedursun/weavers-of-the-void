@@ -10,10 +10,10 @@ from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.economy import CurrencyRow, MarketPriceHoldRow, MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.industry import QualityTier
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import staples_of
@@ -29,10 +29,10 @@ from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.industry.quality import at_least, premium
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.mind.preferences import Prefs, demand_factor, market_fit, material_factor
-from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount, stat
+from aerona.engine.recording.record import record
 
 
 @dataclass(frozen=True)
@@ -90,11 +90,9 @@ def income_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind) -> 
     return max(0.0, 1 + lift * ctx.rules.elasticity.income_pct / PERCENT)
 
 
-def price_of(
-    ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, premium: float = 1.0, base_price: int | None = None
-) -> int:
+def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, markup: float = 1.0, base_price: int | None = None) -> int:
     table = ctx.rules.markets
-    base = (base_price if base_price is not None else COMMODITIES[commodity].base_price) * premium
+    base = (base_price if base_price is not None else COMMODITIES[commodity].base_price) * markup
     pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT * elasticity_of(ctx, commodity))
     low = base * table.price_floor_pct / PERCENT
     high = base * table.price_cap_pct / PERCENT
@@ -191,7 +189,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value) * income_of(ctx, market, commodity))
         demand = round_half_up(demand * goods.demand_scale(ctx.rules, commodity, prosperity=prosperity, piety=piety))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
-        premium = await material_premium(ctx, book, market, commodity, tastes)
+        markup = await material_premium(ctx, book, market, commodity, tastes)
         swing = swing_of(ctx, market, commodity, growth)
         price = (
             hold.price
@@ -202,7 +200,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
                 supply,
                 demand,
                 factor * swing.factor * monopoly * plays.get(commodity, 1.0),
-                premium=premium,
+                markup=markup,
                 base_price=goods.base_price(commodity),
             )
         )
@@ -273,6 +271,5 @@ async def raise_district(ctx: TickContext, book: EconomyBook, community: EntityR
     ctx.session.add(workshop)
     book.workshops.setdefault(community.id, {})[WorkshopKind.MARKET] = workshop
     tally.districts += 1
-    if tally.noted < ctx.rules.market.note_cap:
-        tally.noted += 1
-        await note(ctx, f"{community.name} laid out a market where merchants gather.", key="markets.district", ids=[community.id], kind=ChronicleKind.TRADE)
+    tally.noted += 1
+    await record(ctx, "markets.district", roles={IncidentRole.MAKER: community.id}, facts={"timber": refining.build_timber}, place=community.id)

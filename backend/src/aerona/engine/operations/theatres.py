@@ -9,17 +9,18 @@ from aerona.db.tables.operations import TheatreRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.military.units import regrow, stacks_of, sync
 from aerona.engine.mind.book import skill_level
-from aerona.engine.notes import note
 from aerona.engine.operations.fields import keep
 from aerona.engine.operations.supply import train_of
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.recording.record import record
 from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.services.war import OngoingWar, ongoing_wars
 
@@ -95,12 +96,8 @@ async def allocate(ctx: TickContext, owner: EntityRow, wars: list[OngoingWar], a
         keep(row, "transport", assets * row.priority // PERCENT)
         await reinforce(ctx, folk, row, armies, tally)
         if row.misjudged and row.priority >= PERCENT // 2:
-            await note(
-                ctx,
-                f"{owner.name} misread its fronts and sent its reserves where the danger was smaller.",
-                key="theatres.misjudged",
-                ids=[owner.id, *([row.marshal_entity_id] if row.marshal_entity_id else [])],
-            )
+            roles = {IncidentRole.ACTOR: owner.id, **({IncidentRole.LEADER: row.marshal_entity_id} if row.marshal_entity_id else {})}
+            await record(ctx, "theatres.misjudged", roles=roles, facts={"reserves": row.reserves, "priority": row.priority})
 
 
 async def folk_of(ctx: TickContext, owner: EntityRow) -> list[EntityRow]:

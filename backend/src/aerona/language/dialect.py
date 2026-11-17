@@ -18,7 +18,6 @@ class DialectPlan:
     complexity: int
     sacredness: int
     description: str
-    note: str
     inherited_words: tuple[LexiconEntry, ...]
 
 
@@ -67,6 +66,5 @@ def plan_engine_dialect(
         complexity=effects.dialect_complexity,
         sacredness=effects.dialect_sacredness,
         description=f"The branch of the {parent_name} language that diverged over time {place}, far from its homeland.",
-        note=f"The {parent_name} spoken {place} broke from its homeland and began to diverge into a new language.",
         inherited_words=inherited,
     )

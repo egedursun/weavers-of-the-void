@@ -7,6 +7,7 @@ from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ReputationLabel
 from aerona.domain.enums.world import LoreLanguage
 from aerona.prompts.contexts import (
+    accounts,
     agent,
     blocks,
     chronicler,
@@ -858,6 +859,33 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     ),
     P.WORLD_SUMMARY: world_summary,
     P.SON_MEMORY: son_memory,
+    P.EVENT_ACCOUNT: lambda: accounts.EventAccountContext(
+        id=41,
+        name="Varo",
+        epoch=6,
+        year=312,
+        place="Ardun",
+        line="Ama beat Bel at Ardun.",
+        told="Ama beat Cel at Ardun.",
+        fidelity=60,
+        differences=["the one acted on was told as Cel"],
+        roles=[accounts.AccountRole(role="actor", name="Ama", id=3), accounts.AccountRole(role="witness", name="Dun", id=4, seen="saw it")],
+        facts=[accounts.AccountFactLine(key="exchanges", value="3")],
+        steps=[accounts.AccountStepLine(position=0, round=1, text="Ama struck Bel on the arm with a mace: broken")],
+        more_steps=2,
+        cause="a quarrel over a field",
+        effects=["Bel fell ill"],
+        witnesses=1,
+    ),
+    P.EVENT_RECORDS: lambda: accounts.EventRecordsContext(
+        title="WHAT YOU SAW OR TOOK PART IN",
+        accounts=[accounts.RecordLine(id=41, age=6, text="Ama beat Bel at Ardun.", how="saw it")],
+        more_accounts=3,
+        steps=[accounts.RecordLine(id=41, age=6, text="struck Bel on the arm: broken")],
+        changes=[accounts.RecordLine(id=9, age=6, text="health 80 to 60", how="a wound")],
+        more_changes=1,
+        tool="recount",
+    ),
     P.SKY_CALENDAR: lambda: blocks.SkyCalendarContext(age=7, period=5),
     P.BUDGET_TRAILER: lambda: blocks.BudgetTrailerContext(hidden_lines=4, hint="look with search_entities"),
     P.INSPECT_SIBLING: lambda: blocks.InspectSiblingContext(

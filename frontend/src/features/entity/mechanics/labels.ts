@@ -4,14 +4,12 @@ import {
   Brain,
   CloudSun,
   Crown,
-  Eye,
   Flame,
   Gavel,
   Hand,
   HeartPulse,
   Landmark,
   Lock,
-  MapPin,
   Mountain,
   Orbit,
   Palette,
@@ -23,8 +21,6 @@ import {
   Snowflake,
   Sparkles,
   Sun,
-  Swords,
-  Target,
   Wand2,
   Zap,
 } from 'lucide-react'
@@ -70,13 +66,5 @@ export const FORGEABLE_SOURCES = Object.keys(MODIFIER_SOURCE).filter(
 export const DERIVED_SOURCES = new Set(
   FORGEABLE_SOURCES.filter((key) => key !== 'player' && key !== 'dominion')
 )
-
-export const INCIDENT_ROLE: Record<string, Named> = {
-  actor: { label: 'Acted', icon: Swords, tone: 'success' },
-  target: { label: 'Was struck', icon: Target, tone: 'danger' },
-  subject: { label: 'Was about it', icon: Sparkles, tone: 'gold' },
-  witness: { label: 'Witnessed', icon: Eye },
-  place: { label: 'Happened here', icon: MapPin, tone: 'verdigris' },
-}
 
 export const VIRTUAL_KEYS = ['growth'] as const

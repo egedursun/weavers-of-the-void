@@ -34,16 +34,18 @@ from aerona.db.tables.regime import (
 )
 from aerona.domain.enums.cycles import LongPlanKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.genetics import Locus
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.regime import ClientRole, CredentialKind, SegmentLevel
 from aerona.engine.collective.control import of_type, saved
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.control import node_exists, put_values
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
-from aerona.engine.primitives.records import definite
+from aerona.engine.recording.record import RoleValue, record
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.regime.learning import LearningTally, grant, hold_sitting
 from aerona.engine.regime.patronage import PatronageTally, make_sinecure, measure_bases, sell_seat
 from aerona.engine.regime.rule import RegimeTally, purge_member, regime_row
@@ -196,7 +198,13 @@ async def new_breeding(
             locked=[],
         ),
     )
-    await note(ctx, f"A long design began to steer the marriages of a house: {name}.", key="breeding.begun", ids=[house_id, holder_id])
+    roles: dict[IncidentRole, RoleValue] = {IncidentRole.SUBJECT: house_id, IncidentRole.AUTHORITY: holder_id}
+    await record(
+        ctx,
+        "breeding.begun",
+        roles=roles,
+        facts={"plan_name": name, "locus": next((item for item in Locus if item.value == locus), None), "target_share": row.target_share},
+    )
     return row
 
 
@@ -242,7 +250,7 @@ async def found_school(ctx: TickContext, founder_id: int, name: str, doctrine_id
         await of_type(ctx, doctrine_id, DOCTRINES, "a theory or ideology")
     school = await saved(ctx, SchoolLineageRow(name=name, doctrine_entity_id=doctrine_id, founder_entity_id=founder.id, since_epoch=ctx.epoch, locked=[]))
     await saved(ctx, SchoolMemberRow(school_id=school.id, mortal_entity_id=founder.id, generation=0, since_epoch=ctx.epoch, locked=[]))
-    await note(ctx, f"{founder.name} founded {definite(name)}.", key="schools.founded", ids=[founder.id])
+    await record_incident(ctx, "schools.founded", roles={IncidentRole.TEACHER: founder.id, IncidentRole.LEARNER: []}, facts={"school": name, "disciples": 0})
     return school
 
 

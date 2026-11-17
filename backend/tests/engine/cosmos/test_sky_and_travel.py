@@ -19,7 +19,7 @@ from aerona.domain.enums.world import Atmosphere, Discovery, SkyEventKind, World
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import JourneySpec, start_journey
-from aerona.engine.phases.sky import SkyOrder, sky_event, spontaneous_bag, time_difference, time_echo, two_timed_hero
+from aerona.engine.phases.sky import SkyOrder, sky_event, spontaneous_bag, time_echo, time_gap_years, two_timed_hero
 from aerona.engine.phases.travel import bridge_collapse, hidden_routes, journeys, kinship, route_knowledge, spontaneous_expeditions
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, teach, tick, tuned
@@ -88,15 +88,14 @@ async def test_time_echo_brings_a_traveller(session: AsyncSession, cosmos: Cosmo
     assert traveller is not None and traveller.entity_type is EntityType.MORTAL and traveller.location_id == region.id
 
 
-async def test_two_timed_hero_and_time_difference(ctx: TickContext, cosmos: Cosmos) -> None:
+async def test_two_timed_hero_and_time_gap(ctx: TickContext, cosmos: Cosmos) -> None:
     hero = await make_entity(ctx.session, "Iska", EntityType.MORTAL, MortalStats(charisma=90, age=30, lifespan=70), world_id=cosmos.home.id)
     assert (await two_timed_hero(ctx)) is not None
     assert EntityFlag.TWO_TIMED in await EntityRepository(ctx.session).flags(hero.id)
     dream = await make_world(ctx.session, "Somnia", WorldType.DREAM)
     dream.time_factor = 3.0
-    text = time_difference(ctx.rules, "Tarn", cosmos.home, dream, 2)
-    assert text is not None and str(ctx.rules.time.years_per_epoch * 2 * 2) in text
-    assert time_difference(ctx.rules, "Tarn", cosmos.home, cosmos.home, 2) is None
+    assert time_gap_years(ctx.rules, cosmos.home, dream, 2) == ctx.rules.time.years_per_epoch * 2 * 2
+    assert time_gap_years(ctx.rules, cosmos.home, cosmos.home, 2) is None
 
 
 async def test_hidden_routes_reveal_with_certain_chance(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:

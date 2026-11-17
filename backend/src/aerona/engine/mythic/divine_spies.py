@@ -9,15 +9,16 @@ from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.mythic import ServitorRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import ServitorRole
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lore.rites import countered
 from aerona.engine.nature.effects import sensed
 from aerona.engine.nature.senses import SPIRITS
-from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.recording.record import record
 
 
 @dataclass
@@ -91,5 +92,7 @@ async def spy_for_gods(ctx: TickContext, tally: DivineSpyTally) -> None:
             if await learn(ctx, secret, row.god_node_id):
                 tally.learned += 1
                 spirit = await ctx.session.get(EntityRow, row.spirit_entity_id)
-                await note(ctx, f"{spirit.name if spirit else 'A servitor'} brought its god a secret.", key="divine.spy_secret", ids=[row.spirit_entity_id])
+                await record(
+                    ctx, "divine.spy_secret", roles={IncidentRole.SUBJECT: row.spirit_entity_id}, facts={"detail": str(spirit.name if spirit else "A servitor")}
+                )
                 break

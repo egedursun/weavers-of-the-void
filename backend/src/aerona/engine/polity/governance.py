@@ -8,7 +8,7 @@ from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an, spoken
+from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
@@ -26,7 +26,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
@@ -34,6 +33,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -49,7 +49,6 @@ from aerona.engine.industry.pollution import worst
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.ethics import ethics_of, honour_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
 from aerona.engine.polity.law_areas import area_order, lobbies_of, pressed
@@ -63,6 +62,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap, known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.record import record
 from aerona.engine.relations.persuasion import council_lift, counsel_lift
 from aerona.engine.renown.currencies import spend_prestige
 from aerona.engine.services.community_relations import change_relation
@@ -317,7 +317,7 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
         )
         if kind not in BASELINE_LAWS:
             if await propose(ctx, realm, kind, params, champion_id=realm.ruler_id, basis=basis) is not None:
-                taken.append(f"proposed {kind.value}")
+                taken.append(f"proposed {spoken(kind)}")
             continue
         law = await enact(ctx, polity, kind, params, by_id=realm.ruler_id, basis=basis)
         laws.laws[law.id] = law
@@ -325,7 +325,7 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
         if profile is not None:
             laws.profiles[law.id] = profile
             laws.by_node[polity.id].append(law.id)
-        taken.append(f"enacted {kind.value}")
+        taken.append(f"enacted {spoken(kind)}")
     taken.extend(await taxes(ctx, realm, laws, values))
     taken.extend(await temples(ctx, realm, values))
     taken.extend(await works(ctx, realm, values, fighting=fighting))
@@ -358,15 +358,15 @@ async def works(ctx: TickContext, realm: Realm, values: dict[ValueAxis, int], *,
         return []
     town = await town_of(ctx, place, knowledge)
     await add_district(ctx, town, need, material=BuildMaterial.STONE, builder_id=realm.entity.id)
-    spend(ctx, realm, -table.build_cost, TreasuryEntry.BUILDING, f"{need.value.replace('_', ' ')} in {place.name}")
-    await note(
+    spend(ctx, realm, -table.build_cost, TreasuryEntry.BUILDING, f"{spoken(need)} in {place.name}")
+    await record(
         ctx,
-        f"{realm.entity.name} paid for {an(spoken(need))} in {place.name}.",
-        key="polity.works",
-        ids=[realm.entity.id, place.id],
-        kind=ChronicleKind.CONSTRUCTION,
+        "polity.works",
+        roles={IncidentRole.PATRON: realm.entity.id, IncidentRole.BENEFICIARY: place.id},
+        facts={"district": need, "cost": table.build_cost},
+        place=place.id,
     )
-    return [f"built {need.value}"]
+    return [f"built {spoken(need)}"]
 
 
 async def consider(
@@ -386,14 +386,13 @@ async def consider(
     gap = discord(kind, merged, values)
     bar = table.proposal_threshold + sway * table.sponsor_weight_pct / PERCENT
     sponsor = await living_entity(ctx.session, sponsor_id) if sponsor_id is not None else None
-    who = sponsor.name if sponsor is not None else "the crisis"
     if gap > bar:
-        await note(
+        await record(
             ctx,
-            f"{polity.name} would not hear {who}: the {spoken(kind)} it urged was set aside.",
-            key="polity.law_rejected",
-            ids=[polity.id, *([sponsor.id] if sponsor is not None else [])],
-            kind=ChronicleKind.CIVILIZATION,
+            "polity.law_rejected" if sponsor is not None else "polity.law_rejected_in_crisis",
+            roles={IncidentRole.AUTHORITY: polity.id, IncidentRole.ACTOR: sponsor.id if sponsor is not None else None},
+            facts={"law": kind, "gap": gap, "bar": bar},
+            place=realm.profile.capital_entity_id,
         )
         return None
     current = next(
@@ -436,7 +435,7 @@ async def proposals(ctx: TickContext, realm: Realm, laws: LawBook) -> list[str]:
     taken: list[str] = []
     for kind, params in await crises(ctx, realm, laws):
         if await consider(ctx, realm, laws, kind, params, sponsor_id=None, sway=0) is not None:
-            taken.append(f"crisis {kind.value}")
+            taken.append(f"crisis {spoken(kind)}")
     church_id = realm.profile.state_religion_id
     church = await living_entity(ctx.session, church_id) if church_id is not None else None
     if church is None or not ctx.rng(f"church_law.{realm.entity.id}.{ctx.epoch}").chance(table.cult_proposal_chance):
@@ -446,7 +445,7 @@ async def proposals(ctx: TickContext, realm: Realm, laws: LawBook) -> list[str]:
         if tenet in tenets and laws.in_force(realm.entity.id, kind) is None:
             sway = stat(church, "influence") or 0
             if await consider(ctx, realm, laws, kind, dict(params), sponsor_id=church.id, sway=sway) is not None:
-                taken.append(f"church {kind.value}")
+                taken.append(f"church {spoken(kind)}")
             break
     return taken
 
@@ -469,9 +468,7 @@ async def cult_laws(ctx: TickContext, laws: LawBook) -> int:
                 if profile is not None:
                     laws.profiles[law.id] = profile
                     laws.by_node[cult.id].append(law.id)
-                await note(
-                    ctx, f"{cult.name} laid {law.name} upon its faithful.", key="polity.cult_law", ids=[cult.id, law.id], kind=ChronicleKind.CIVILIZATION
-                )
+                await record(ctx, "polity.cult_law", roles={IncidentRole.AUTHORITY: cult.id, IncidentRole.PRODUCT: law.id}, facts={"law": kind, "tenet": tenet})
                 made += 1
                 break
     return made
@@ -682,12 +679,12 @@ async def default(ctx: TickContext, book: RealmBook, realm: Realm, loan: LoanRow
                 await declare_war(ctx, lender_side, core, f"{realm.entity.name} would not pay its debts", cause=WarCause.DEBT)
     if lender.entity_type is EntityType.FACTION:
         shift_stat(lender, "sway", table.default_relation // 5, ctx.rules.society.default_stat)
-    await note(
+    await record(
         ctx,
-        f"{realm.entity.name} could not repay {lender.name}; the debt was left unpaid.",
-        key="polity.debt_default",
-        ids=[realm.entity.id, lender.id],
-        kind=ChronicleKind.DEBT,
+        "polity.debt_default",
+        roles={IncidentRole.BORROWER: realm.entity.id, IncidentRole.LENDER: lender.id},
+        facts={"principal": loan.principal, "owed": owed(loan), "interest": loan.interest_pct},
+        place=realm.profile.capital_entity_id,
     )
 
 

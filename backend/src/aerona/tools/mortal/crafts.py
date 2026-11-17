@@ -7,9 +7,9 @@ from aerona.db.tables.crafts import InsurancePolicyRow, InsurerRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.kind_crafts import GameCategory
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.crafts import control
 from aerona.engine.crafts.games import made_by, shaped
@@ -23,7 +23,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal import lines
 
 
 class BuyInsuranceInput(ToolInput):
@@ -68,7 +67,11 @@ async def buy_insurance(call: MortalCall, args: BuyInsuranceInput) -> str:
         },
     )
     call.target(insurer.id)
-    await call.chronicle(ChronicleKind.CIVILIZATION, lines.BUY_INSURANCE, entity_ids=[call.me.id, insurer.id], me=call.me.name, insurer=insurer.name)
+    await call.record(
+        "tools.mortal.buy_insurance",
+        roles={IncidentRole.BUYER: call.me.id, IncidentRole.SELLER: insurer.id},
+        facts={"cover": InsuranceCover.LIFE, "premium": premium, "sum_insured": table.sum_insured},
+    )
     return result(MortalResult.INSURANCE_BOUGHT, insurer=insurer.name, premium=premium)
 
 
@@ -86,7 +89,9 @@ async def invent_game(call: MortalCall, args: InventGameInput) -> str:
     await call.session.flush()
     call.session.add(made_by(game, people.id, call.tick.epoch))
     call.target(people.id)
-    await call.chronicle(ChronicleKind.CULTURE, lines.INVENT_GAME, entity_ids=[call.me.id, people.id], me=call.me.name, game=name, people=people.name)
+    await call.record(
+        "tools.mortal.invent_game", roles={IncidentRole.MAKER: call.me.id, IncidentRole.MEMBER: people.id}, facts={"game": name, "category": args.kind}
+    )
     return result(MortalResult.GAME_INVENTED, game=name, people=people.name, sort=GAME_LABELS[args.kind.value].lower())
 
 

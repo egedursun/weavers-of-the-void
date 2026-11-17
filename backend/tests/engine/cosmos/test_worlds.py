@@ -16,6 +16,7 @@ from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.society import ResourceMechanic
+from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, StarType, WorldType
 from aerona.domain.models.entity_stats import RegionStats
 from aerona.engine.context import TickContext
@@ -190,15 +191,15 @@ async def test_forget_world_and_rules(ctx: TickContext, cosmos: Cosmos) -> None:
     son = await make_son(ctx.session, "Velan", other.id)
     route = await make_route(ctx.session, cosmos.home.id, other.id)
     with pytest.raises(ValidationFailedError):
-        await forget_world(ctx, cosmos.home.id, "Aeron")
-    await forget_world(ctx, other.id, "Aeron")
+        await forget_world(ctx, cosmos.home.id, cosmos.creator.id)
+    await forget_world(ctx, other.id, cosmos.creator.id)
     assert other.discovery is Discovery.FORGOTTEN and not route.active and son.current_world_id == cosmos.home.id
 
 
 async def test_discovery_and_moons(ctx: TickContext, cosmos: Cosmos) -> None:
     legend = await make_world(ctx.session, "Mythra")
     legend.discovery = Discovery.LEGEND
-    assert await mark_world_discovered(ctx, legend, "an expedition arrived there")
+    assert await mark_world_discovered(ctx, legend, method=TravelMethod.ANCIENT_GATE)
     assert legend.discovery is Discovery.KNOWN
     moon = await make_world(ctx.session, "Lunet")
     moon.parent_world_id = cosmos.home.id

@@ -6,7 +6,7 @@ from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.catalog.structures import STRUCTURE_ENGINE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import an
+from aerona.core.grammar import an, spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
@@ -16,7 +16,6 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.divine import DomainHook
@@ -24,9 +23,11 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
-from aerona.domain.enums.structure import BuildScale, ConstructionState, ConstructionStatus, StructureKind
+from aerona.domain.enums.structure import AbandonCause, BuildScale, ConstructionState, ConstructionStatus, StructureKind
 from aerona.domain.models.entity_stats import LegendStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import reckoned
@@ -34,7 +35,6 @@ from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.lore.style import axis_of
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -43,7 +43,8 @@ from aerona.engine.primitives.physics import gravity_build_pct
 from aerona.engine.primitives.queries import add_flag, connect
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import shift_stock
-from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.structures.profiles import durability_from, ensure_profile, fire_resistance_from, host_for, kept_style, material_props, refresh, style_for
 from aerona.engine.structures.spec import build_cost, resolve, scale_index
 from aerona.engine.structures.types import builders_type
@@ -194,12 +195,19 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
     if order.son_id is not None:
         await connect(ctx.session, work.id, order.son_id, BondKind.WORSHIPS, ctx.epoch, description="dedicated to")
     await ctx.session.flush()
-    await note(
+    await record(
         ctx,
-        f"{order.site.name} began to raise {work.name}, {an(resolved.label.lower())}.",
-        key="structures.begun",
-        ids=[order.site.id, work.id],
-        kind=ChronicleKind.CONSTRUCTION,
+        "structures.begun",
+        roles={
+            IncidentRole.OWNER: order.site.id,
+            IncidentRole.PRODUCT: work.id,
+            IncidentRole.MAKER: builder.id if isinstance(builder, EntityRow) else None,
+            IncidentRole.PATRON: order.son_id,
+            IncidentRole.LEADER: architect.id if architect is not None else None,
+        },
+        facts={"structure": order.kind, "level": order.level, "cost": construction.cost, "funds": construction.funds, "material": material},
+        steps=(StepDraft(StepAction.LAY_FOUNDATION, actor=builder.id if isinstance(builder, EntityRow) else order.site.id, target=work.id),),
+        place=order.site.id,
     )
     ctx.count("constructions_begun")
     return work, construction
@@ -263,7 +271,7 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
     if work is None or profile is None:
         return 0
     if site is None or site.status is not EntityStatus.CANON:
-        await abandon(ctx, construction, "its builders are gone")
+        await abandon(ctx, construction, AbandonCause.BUILDERS_GONE)
         return 0
     if "progress" in construction.locked:
         return 0
@@ -288,7 +296,7 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
         construction.stalled_epochs += 1
         limit = table.wonder_stall_epochs if resolve(construction.kind).scale is BuildScale.WONDER else table.stall_epochs
         if construction.stalled_epochs >= limit and "status" not in construction.locked:
-            await abandon(ctx, construction, "the work stood still for too long")
+            await abandon(ctx, construction, AbandonCause.STOOD_STILL)
         return 0
     construction.stalled_epochs = 0
     construction.progress = min(construction.cost, construction.progress + added)
@@ -296,12 +304,13 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
     generations = (ctx.epoch - construction.started_epoch) // max(1, table.generation_epochs)
     if generations > construction.generations:
         construction.generations = generations
-        await note(
+        await record(
             ctx,
-            f"Another generation of {site.name} works on {work.name}; it is {profile.progress}% raised.",
-            key="structures.generation",
-            ids=[site.id, work.id],
-            kind=ChronicleKind.CONSTRUCTION,
+            "structures.generation",
+            roles={IncidentRole.OWNER: site.id, IncidentRole.PRODUCT: work.id},
+            facts={"generation": generations, "progress": profile.progress, "workers": construction.workers},
+            steps=(StepDraft(StepAction.RAISE, actor=site.id, target=work.id, amount=profile.progress, unit=FactUnit.PERCENT),),
+            place=site.id,
         )
     if construction.progress >= construction.cost:
         await finish(ctx, construction)
@@ -364,19 +373,25 @@ async def finish(ctx: TickContext, construction: ConstructionRow, *, by_hand: bo
     completion_gift(ctx.rules, construction.kind, site)
     if resolved.workshop is not None and profile.host_entity_id is not None:
         await link_workshop(ctx, profile.host_entity_id, resolved.workshop, work.id)
-    hand = " at the Creator's word" if by_hand else ""
-    await note(
+    await record(
         ctx,
-        f"{work.name} stands finished{hand}: {an(resolved.label.lower())} for {site.name if site else 'its builders'}.",
-        key="structures.finished",
-        ids=[*([site.id] if site else []), work.id],
-        kind=ChronicleKind.CONSTRUCTION,
+        "structures.finished_by_hand" if by_hand else "structures.finished",
+        roles={IncidentRole.PRODUCT: work.id, IncidentRole.OWNER: site.id if site is not None else None},
+        facts={
+            "structure": construction.kind,
+            "durability": durability,
+            "splendor": stat_or(work, "splendor", 0),
+            "years": ctx.epoch - construction.started_epoch,
+            "cost": construction.cost,
+        },
+        steps=(StepDraft(StepAction.COMPLETE, actor=site.id if site is not None else None, target=work.id, outcome=StepOutcome.SUCCESS),),
+        place=work.location_id,
     )
     ctx.count("constructions_finished")
     return work
 
 
-async def abandon(ctx: TickContext, construction: ConstructionRow, reason: str) -> None:
+async def abandon(ctx: TickContext, construction: ConstructionRow, cause: AbandonCause, *, reason: str | None = None) -> None:
     work = await ctx.session.get(EntityRow, construction.structure_entity_id)
     profile = await ctx.session.get(StructureProfileRow, construction.structure_entity_id)
     construction.status = ConstructionStatus.ABANDONED
@@ -397,7 +412,7 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, reason: str) 
             RecordSpec(
                 entity_type=EntityType.LEGEND,
                 name=f"The Unfinished {resolved.label} of {work.name}",
-                body=f"They say {work.name} was left {percent}% raised because {reason}.",
+                body=f"They say {work.name} was left {percent}% raised: {reason or spoken(cause)}.",
                 stats=LegendStats(spread=clamp_int(percent // 2 + scale_index(resolved.scale) * 10, 0, PERCENT)),
                 power=LEGEND_POWER,
                 location_id=work.location_id,
@@ -406,13 +421,13 @@ async def abandon(ctx: TickContext, construction: ConstructionRow, reason: str) 
             ),
         )
         await connect(ctx.session, legend.id, work.id, BondKind.TELLS_OF, ctx.epoch, description="tells of the unfinished work")
-    tail = f"; a legend of {legend.name} spreads" if legend is not None else ""
-    await note(
+    await record(
         ctx,
-        f"{work.name} was abandoned {percent}% raised: {reason}{tail}.",
-        key="structures.abandoned",
-        ids=[work.id, *([legend.id] if legend is not None else [])],
-        kind=ChronicleKind.CONSTRUCTION,
+        "structures.abandoned",
+        roles={IncidentRole.SUBJECT: work.id, IncidentRole.OWNER: construction.site_entity_id, IncidentRole.PRODUCT: legend.id if legend is not None else None},
+        facts={"cause": cause, "progress": percent, "structure": construction.kind, "reason": reason},
+        steps=(StepDraft(StepAction.ABANDON, actor=construction.site_entity_id, target=work.id, amount=percent, unit=FactUnit.PERCENT),),
+        place=work.location_id,
     )
     ctx.count("constructions_abandoned")
 

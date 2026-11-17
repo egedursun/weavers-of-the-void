@@ -17,18 +17,21 @@ from aerona.api.schemas.military_depth import (
     RecordRowView,
     RecordTableView,
     VesselView,
+    VesselWeaponView,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.vehicles import FRAMES, MOUNTS, FrameSpec, frame_layout
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.equipment import EquipmentModelRow
 from aerona.db.tables.military import BattleCasualtyRow, BattleStackRow, FeudRow, PeaceTermRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.vehicles import DesignMountRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.military import VesselArmament
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.military import records
 from aerona.engine.primitives.queries import active_bonds
@@ -39,6 +42,29 @@ from aerona.rules.registry import Rules
 router = APIRouter(tags=["military"])
 Id = Annotated[int, Path(ge=1)]
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME, MemoryKind.HUMILIATED_ME)
+
+
+async def vessel_weapons(session: AsyncSession, row: VesselProfileRow) -> list[VesselWeaponView]:
+    if row.design_id is None:
+        return []
+    statement = (
+        select(DesignMountRow, EquipmentModelRow)
+        .join(EquipmentModelRow, EquipmentModelRow.id == DesignMountRow.model_id)
+        .where(DesignMountRow.design_id == row.design_id)
+        .order_by(DesignMountRow.slot, DesignMountRow.id)
+    )
+    return [
+        VesselWeaponView(
+            mount=mount.mount,
+            section=mount.section,
+            family=model.family,
+            model_id=model.id,
+            model_name=model.name,
+            count=mount.count,
+            damage_type=FAMILIES[model.family].damage_type,
+        )
+        for mount, model in (await session.execute(statement)).all()
+    ]
 
 
 def frame_view(spec: FrameSpec, rules: Rules) -> FrameSpecView:
@@ -71,7 +97,6 @@ def frame_view(spec: FrameSpec, rules: Rules) -> FrameSpecView:
             )
             for part in frame_layout(spec.frame)
         ],
-        armament=list(spec.armament),
         branch=spec.branch,
         level=spec.level,
         tier=least_tier(rules, spec.size),
@@ -200,7 +225,7 @@ async def vessel_card(services: ServicesDep, entity_id: Id) -> VesselView:
             hull_material=row.hull_material,
             fabric_material=row.fabric_material,
             condition=row.condition,
-            armament=[VesselArmament(item) for item in row.armament if item in VesselArmament._value2member_map_],
+            weapons=await vessel_weapons(session, row),
             seaworthiness=row.seaworthiness,
             cargo_capacity=row.cargo_capacity,
             crew=row.crew,

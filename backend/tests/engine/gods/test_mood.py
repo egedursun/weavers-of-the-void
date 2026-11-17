@@ -124,7 +124,7 @@ async def test_lonely_creator_dreams_to_seer(session: AsyncSession, world: GodsW
     await creator_mood(make_context(session, tuned, epoch=3, phase="creator_mood"))
     dreams = list(await session.scalars(select(MessageRow).where(MessageRow.intent == MessageIntent.DREAM)))
     assert [dream.recipient_node_id for dream in dreams] == [seer.id]
-    assert dreams[0].text == god_lines.LONELY_DREAM.text
+    assert dreams[0].text == god_lines.LONELY_DREAM
 
 
 async def test_estranged_community_turns(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
@@ -133,7 +133,7 @@ async def test_estranged_community_turns(session: AsyncSession, world: GodsWorld
 
     await EntityRepository(session).add_flag(people.id, EntityFlag.GODLESS, 1)
     await creator_mood(make_context(session, tuned, epoch=3, phase="creator_mood"))
-    assert god_lines.ESTRANGED_TURN.key in await chronicle_keys(session)
+    assert "gods.mood.estranged_turn" in await chronicle_keys(session)
     assert not await EntityRepository(session).has_flag(people.id, EntityFlag.GODLESS)
 
 

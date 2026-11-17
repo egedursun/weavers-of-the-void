@@ -9,17 +9,18 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.tongues import ScriptFate
 from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.language_profile import has_script
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.transform.record import blocked, record_transformation
-from aerona.language.titles import community_phrase
-from aerona.language.vitality import VitalityChange, assess_vitality, death_notes_allowed, vitality_note
+from aerona.language.vitality import VitalityChange, assess_vitality
 
 
 async def living_speakers(ctx: TickContext, language_id: int) -> int:
@@ -37,7 +38,7 @@ async def kept_by_god(ctx: TickContext, language_id: int) -> bool:
     return await ctx.session.scalar(select(DivineTongueRow.god_node_id).where(DivineTongueRow.language_entity_id == language_id).limit(1)) is not None
 
 
-async def last_home_phrase(ctx: TickContext, language_id: int) -> str | None:
+async def last_home(ctx: TickContext, language_id: int) -> int | None:
     statement = (
         select(EntityRow)
         .join(BondRow, BondRow.source_node_id == EntityRow.id)
@@ -46,7 +47,7 @@ async def last_home_phrase(ctx: TickContext, language_id: int) -> str | None:
         .limit(1)
     )
     home = await ctx.session.scalar(statement)
-    return community_phrase(home.entity_type, home.name) if home is not None else None
+    return home.id if home is not None else None
 
 
 async def liturgical(ctx: TickContext, language_id: int) -> bool:
@@ -69,18 +70,9 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
     "table.people_culture",
     "table.speaker_cohorts",
 )
-@writes(
-    "language.spread",
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.entity_flags",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-)
+@writes("language.spread", "table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.incident_participants", "table.incidents")
 async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
-    notes_written = 0
     for language in unheld(await canon(ctx.session, [EntityType.LANGUAGE])):
         if await kept_by_god(ctx, language.id):
             continue
@@ -92,8 +84,7 @@ async def language_death(ctx: TickContext) -> None:
         if assessment.change is VitalityChange.DIED and await liturgical(ctx, language.id):
             await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)
             ctx.count("kept_in_liturgy")
-            text = f"No one is raised speaking {language.name} any more, yet it lives on in its liturgy."
-            await note(ctx, text, key="languages.liturgical", ids=[language.id])
+            await record_incident(ctx, "languages.liturgical", roles={IncidentRole.SUBJECT: language.id})
             continue
         kind = TransformKind.LANGUAGE_DEATH if assessment.change is VitalityChange.DIED else TransformKind.LANGUAGE_REVIVAL
         if await blocked(ctx, kind, language.id):
@@ -106,16 +97,19 @@ async def language_death(ctx: TickContext) -> None:
                 await add_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE, ctx.epoch)
             set_stats(language, spread=0)
             ctx.count("died")
-            if death_notes_allowed(notes_written, rules):
-                notes_written += 1
-                await note(ctx, vitality_note(language.name, assessment, await last_home_phrase(ctx, language.id)), key="languages.died", ids=[language.id])
+            await record_incident(
+                ctx,
+                "languages.died",
+                roles={IncidentRole.SUBJECT: language.id, IncidentRole.PLACE: await last_home(ctx, language.id)},
+                facts={"script": ScriptFate.READABLE if assessment.decipherable else ScriptFate.UNWRITTEN},
+            )
             continue
         await remove_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE)
         await remove_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE)
         await add_flag(ctx.session, language.id, EntityFlag.REVIVED_LANGUAGE, ctx.epoch)
         await record_transformation(ctx, kind, language.id, language.id)
         ctx.count("revived")
-        await note(ctx, vitality_note(language.name, assessment), key="languages.revived", ids=[language.id])
+        await record_incident(ctx, "languages.revived", roles={IncidentRole.SUBJECT: language.id})
 
 
 PHASES = (Phase("language_death", language_death),)

@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from aerona.catalog.kinds.fanaticisms import FANATICISMS, fanaticism_order
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import DemographicTransitionRow
@@ -19,6 +18,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import ClergyFunction, FanaticismKind, HoldingKind, TenetKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
@@ -66,8 +66,7 @@ async def crusade(ctx: TickContext, church: Church, book: FaithBook, atlas: Regi
     if doctrine is not None and realm is not None:
         gift = -credit(doctrine, -round_half_up(doctrine.treasury * ctx.rules.tithes.war_chest_pct / PERCENT))
         realm.war_chest += gift
-    text = f"{church.cult.name} preached a holy war; {member.name} took up arms against the unbelievers of {infidel.name}."
-    return FaithLine(text, "faith.crusade", (church.cult.id, member.id, infidel.id))
+    return FaithLine("faith.crusade", {IncidentRole.AUTHORITY: church.cult.id, IncidentRole.ACTOR: member.id, IncidentRole.TARGET: infidel.id})
 
 
 async def heretics(ctx: TickContext, church: Church) -> list[EntityRow]:
@@ -113,12 +112,11 @@ async def inquisition(ctx: TickContext, church: Church) -> FaithLine | None:
     table = ctx.rules.inquisition
     for mortal in [*await heretics(ctx, church), *await unbelievers(ctx, church)]:
         rng = ctx.rng(f"inquisition.{church.cult.id}.{mortal.id}.{ctx.epoch}")
-        ids = (church.cult.id, mortal.id)
         if rng.chance(table.execution_chance):
             await death_path(ctx, mortal, f"put to death as a heretic by {church.cult.name}", None, "the inquisition", forced=True, harm=HarmCause.PUNISHMENT)
-            return FaithLine(f"The guardians of doctrine of {church.cult.name} put {mortal.name} to death as a heretic.", "faith.inquisition_execution", ids)
+            return FaithLine("faith.inquisition_execution", {IncidentRole.JUDGE: church.cult.id, IncidentRole.ACCUSED: mortal.id})
         await apply_hits(ctx, mortal, Harm(table.punish_hp, HarmCause.TORTURE, f"questioned by the guardians of doctrine of {church.cult.name}"), lethal=False)
-        return FaithLine(f"The guardians of doctrine of {church.cult.name} put {mortal.name} to the question.", "faith.inquisition_question", ids)
+        return FaithLine("faith.inquisition_question", {IncidentRole.JUDGE: church.cult.id, IncidentRole.ACCUSED: mortal.id}, {"harm": table.punish_hp})
     return None
 
 
@@ -136,7 +134,7 @@ async def iconoclasm(ctx: TickContext, church: Church) -> FaithLine | None:
     broken = [work for home in homes for work in await smash(ctx, home, ctx.rules.art.iconoclasm_chance, f"smashed by the iconoclasts of {church.cult.name}")]
     if rival is None:
         return (
-            FaithLine(f"The iconoclasts of {church.cult.name} smashed {several(len(broken), 'image', 'images')}.", "faith.iconoclasm", (church.cult.id,))
+            FaithLine("faith.iconoclasm", {IncidentRole.ACTOR: church.cult.id, IncidentRole.TARGET: tuple(work.id for work in broken)}, {"images": len(broken)})
             if broken
             else None
         )
@@ -144,8 +142,11 @@ async def iconoclasm(ctx: TickContext, church: Church) -> FaithLine | None:
     place = await ctx.session.get(EntityRow, rival.location_id) if rival.location_id is not None else None
     if place is not None:
         shift_stat(place, "prosperity", -ctx.rules.inquisition.iconoclasm_prosperity)
-    images = f" and smashed {several(len(broken), 'image', 'images')}" if broken else ""
-    return FaithLine(f"The iconoclasts of {church.cult.name} tore down {rival.name}{images}.", "faith.iconoclasm", (church.cult.id, rival.id))
+    return FaithLine(
+        "faith.iconoclasm",
+        {IncidentRole.ACTOR: church.cult.id, IncidentRole.TARGET: (rival.id, *(work.id for work in broken))},
+        {"images": len(broken), "temple": rival.name},
+    )
 
 
 async def followers(ctx: TickContext, church: Church) -> list[EntityRow]:
@@ -177,8 +178,9 @@ async def purge(ctx: TickContext, church: Church) -> FaithLine | None:
         await banish(ctx, heretic, None)
     if not expelled:
         return None
-    names = ", ".join(heretic.name for heretic in expelled)
-    return FaithLine(f"{church.cult.name} drove its heretics from its towns: {names}.", "faith.purge", (church.cult.id, *(row.id for row in expelled)))
+    return FaithLine(
+        "faith.purge", {IncidentRole.AUTHORITY: church.cult.id, IncidentRole.VICTIM: tuple(row.id for row in expelled)}, {"expelled": len(expelled)}
+    )
 
 
 async def forced_conversion(ctx: TickContext, church: Church) -> FaithLine | None:
@@ -192,9 +194,9 @@ async def forced_conversion(ctx: TickContext, church: Church) -> FaithLine | Non
     if not converted:
         return None
     return FaithLine(
-        f"{church.cult.name} forced {several(len(converted), 'unbeliever', 'unbelievers')} to worship {church.god.name}.",
         "faith.forced_conversion",
-        (church.cult.id, church.god.id, *(row.id for row in converted)),
+        {IncidentRole.AUTHORITY: church.cult.id, IncidentRole.PATRON: church.god.id, IncidentRole.VICTIM: tuple(row.id for row in converted)},
+        {"converted": len(converted)},
     )
 
 
@@ -208,7 +210,7 @@ async def martyrdom(ctx: TickContext, church: Church) -> FaithLine | None:
     shift_stat(church.cult, "zeal", table.martyrdom)
     if church.doctrine is None or "devotion" not in church.doctrine.locked:
         set_stats(church.cult, devotion=(stat(church.cult, "devotion") or 0) + table.martyr_devotion)
-    return FaithLine(f"{martyr.name} died a martyr for the faith of {church.cult.name}.", "faith.martyrdom", (church.cult.id, martyr.id))
+    return FaithLine("faith.martyrdom", {IncidentRole.SUBJECT: martyr.id, IncidentRole.BENEFICIARY: church.cult.id}, {"zeal": table.martyrdom})
 
 
 async def mortification(ctx: TickContext, church: Church) -> FaithLine | None:
@@ -221,9 +223,9 @@ async def mortification(ctx: TickContext, church: Church) -> FaithLine | None:
     if church.doctrine is None or "devotion" not in church.doctrine.locked:
         set_stats(church.cult, devotion=(stat(church.cult, "devotion") or 0) + table.mortification_devotion * len(penitents))
     return FaithLine(
-        f"{several(len(penitents), 'follower', 'followers')} of {church.cult.name} mortified the body for the faith.",
         "faith.mortification",
-        (church.cult.id, *(row.id for row in penitents)),
+        {IncidentRole.AUTHORITY: church.cult.id, IncidentRole.MEMBER: tuple(row.id for row in penitents)},
+        {"penitents": len(penitents), "harm": table.mortification_hp},
     )
 
 
@@ -249,9 +251,9 @@ async def book_burning(ctx: TickContext, church: Church) -> FaithLine | None:
         if transition is not None and "literacy" not in transition.locked:
             transition.literacy = clamp_int(transition.literacy - ctx.rules.zeal.book_burning_literacy, 0, PERCENT)
     return FaithLine(
-        f"The fanatics of {church.cult.name} burned {several(len(burned), 'written work', 'written works')}.",
         "faith.book_burning",
-        (church.cult.id, *(work.id for work in burned)),
+        {IncidentRole.ACTOR: church.cult.id, IncidentRole.TARGET: tuple(work.id for work in burned)},
+        {"works": len(burned), "literacy_lost": ctx.rules.zeal.book_burning_literacy},
     )
 
 
@@ -271,9 +273,9 @@ async def persecution(ctx: TickContext, church: Church) -> FaithLine | None:
         if profile is not None and "unrest" not in profile.locked:
             profile.unrest = clamp_int(profile.unrest + table.persecution_unrest, 0, PERCENT)
     return FaithLine(
-        f"The fanatics of {church.cult.name} persecuted {several(len(harried), 'unbeliever', 'unbelievers')}.",
         "faith.persecution",
-        (church.cult.id, *(row.id for row in harried)),
+        {IncidentRole.ACTOR: church.cult.id, IncidentRole.VICTIM: tuple(row.id for row in harried)},
+        {"harried": len(harried), "harm": table.persecution_hp},
     )
 
 
@@ -307,11 +309,14 @@ async def millenarian_flight(ctx: TickContext, church: Church) -> FaithLine | No
         town = await ctx.session.get(EntityRow, home_id)
         if town is not None and not held(town.id):
             shift_stat(town, "prosperity", -ctx.rules.zeal.flight_prosperity)
-    where = f"for {goal.name}" if goal is not None else "into the wilds"
     return FaithLine(
-        f"{several(len(leaving), 'follower', 'followers')} of {church.cult.name} left their work and set out {where} to await the end.",
         "faith.millenarian_flight",
-        (church.cult.id, *(row.id for row in leaving)),
+        {
+            IncidentRole.AUTHORITY: church.cult.id,
+            IncidentRole.MEMBER: tuple(row.id for row in leaving),
+            **({IncidentRole.DESTINATION: goal.id} if goal is not None else {}),
+        },
+        {"followers": len(leaving)},
     )
 
 
@@ -429,16 +434,15 @@ async def investiture(ctx: TickContext, church: Church) -> FaithLine | None:
 
 
 async def quarrel_with(ctx: TickContext, church: Church, doctrine: CultDoctrineRow, ruler: EntityRow, polity_id: int) -> FaithLine:
-    ids = (church.cult.id, ruler.id, polity_id)
-    quarrel = f"{church.cult.name} and {ruler.name} quarrelled over who appoints the priests"
+    roles: dict[IncidentRole, int | tuple[int, ...]] = {IncidentRole.ACTOR: church.cult.id, IncidentRole.OPPONENT: ruler.id, IncidentRole.TARGET: polity_id}
     zealous = (stat(church.cult, "zeal") or 0) > ctx.rules.zeal.fanaticism
     if zealous and ruler.id not in doctrine.excommunicated and "excommunicated" not in doctrine.locked:
         doctrine.excommunicated = [*doctrine.excommunicated, ruler.id]
-        return FaithLine(f"{quarrel}; the head of the faith cast the ruler out of it.", "faith.investiture_excommunication", ids)
+        return FaithLine("faith.investiture_excommunication", roles)
     piety = (await values_for(ctx.session, ruler.id)).get(ValueAxis.PIETY, 0)
     if piety > 0:
-        return FaithLine(f"{quarrel}; the ruler bowed.", "faith.investiture_yielded", ids)
-    return FaithLine(f"{quarrel}; neither yielded.", "faith.investiture_standoff", ids)
+        return FaithLine("faith.investiture_yielded", roles, {"piety": piety})
+    return FaithLine("faith.investiture_standoff", roles, {"piety": piety})
 
 
 async def monastery_keeps(ctx: TickContext, community_id: int) -> bool:

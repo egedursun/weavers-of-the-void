@@ -10,15 +10,16 @@ from aerona.domain.enums.couplings import FieldAgreementKind, FieldAgreementStat
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.military import ArmyRole
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import record
 
 KEPT = FieldAgreementState.KEPT
 
@@ -100,8 +101,13 @@ async def parley(ctx: TickContext, war: WarRow, sides: tuple[EntityRow, EntityRo
         term=ctx.epoch + table.truce_epochs if averted else ctx.epoch,
         honour=margin,
     )
-    text = f"{first.name} and {second.name} parleyed before battle" + (" and agreed a truce." if averted else "; the parley failed and they fought.")
-    await note(ctx, text, key="parley.held", ids=[first.id, second.id, sides[0].id, sides[1].id])
+    await record(
+        ctx,
+        "parley.truce" if averted else "parley.held",
+        roles={IncidentRole.ENVOY: [first.id, second.id], IncidentRole.SUBJECT: [sides[0].id, sides[1].id]},
+        facts={"war": war.event_entity_id, "margin": margin, "truce_epochs": table.truce_epochs if averted else 0},
+        place=sides[1].id,
+    )
     return averted
 
 
@@ -157,7 +163,13 @@ async def break_terms(ctx: TickContext, row: FieldAgreementRow, breaker_id: int)
             magnitude=-ctx.rules.field_diplomacy.broken_memory,
             epoch=ctx.epoch,
         )
-    await note(ctx, "Terms given in the field were broken.", key="parley.broken", ids=[node for node in (breaker_id, victim) if node])
+    await record(
+        ctx,
+        "parley.broken",
+        roles={IncidentRole.ACTOR: breaker_id, IncidentRole.VICTIM: victim if victim != breaker_id else None},
+        facts={"agreement": row.kind},
+        place=row.place_entity_id,
+    )
 
 
 async def exchanges(ctx: TickContext, war: WarRow, sides: list[int]) -> int:
@@ -181,7 +193,7 @@ async def exchanges(ctx: TickContext, war: WarRow, sides: list[int]) -> int:
         captive.status = CaptiveStatus.RANSOMED
         freed += 1
     await agree(ctx, war.id, FieldAgreementKind.EXCHANGE, commander=None, counterpart=None, place=first, term=ctx.epoch, honour=freed)
-    await note(ctx, "Captives and the dead were exchanged between the lines.", key="parley.exchange", ids=[first, second])
+    await record(ctx, "parley.exchange", roles={IncidentRole.SUBJECT: [first, second]}, facts={"war": war.event_entity_id, "freed": freed}, place=first)
     return freed
 
 

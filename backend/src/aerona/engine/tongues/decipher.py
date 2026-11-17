@@ -10,17 +10,17 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sites import ExcavationRow, ExcavationStageRow
 from aerona.db.tables.tongues import DecipherWorkRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.site import ExcavationFind
 from aerona.domain.models.entity_stats import TheoryStats
 from aerona.engine.context import TickContext
-from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import has_flag, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record as record_incident
 
 THEORY_POWER = 2
 MISREAD_CORRECTNESS = 10
@@ -129,12 +129,11 @@ async def misreading(ctx: TickContext, language: EntityRow, work: DecipherWorkRo
             locked=[],
         )
     )
-    await note(
+    await record_incident(
         ctx,
-        f"{scholar.name} misread the texts of {language.name}, and the misreading took hold as a theory.",
-        key="tongues.misread",
-        ids=[scholar.id, language.id, theory.id],
-        kind=ChronicleKind.CULTURE,
+        "tongues.misread",
+        roles={IncidentRole.ACTOR: scholar.id, IncidentRole.SUBJECT: language.id, IncidentRole.PRODUCT: theory.id},
+        facts={"errors": work.errors},
     )
     return theory
 
@@ -184,12 +183,8 @@ async def study(ctx: TickContext, language: EntityRow, scholar: EntityRow, tally
         await remove_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE)
         await learn(ctx, scholar, language.id, PERCENT // 2)
         tally.deciphered += 1
-        await note(
-            ctx,
-            f"{scholar.name} deciphered the script of {language.name}.",
-            key="tongues.deciphered",
-            ids=[scholar.id, language.id],
-            kind=ChronicleKind.CULTURE,
+        await record_incident(
+            ctx, "tongues.deciphered", roles={IncidentRole.ACTOR: scholar.id, IncidentRole.SUBJECT: language.id}, facts={"errors": work.errors}
         )
     return work
 

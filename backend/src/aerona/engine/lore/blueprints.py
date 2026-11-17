@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.discovery import BLUEPRINT_KINDS
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import an
+from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -13,18 +13,18 @@ from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.discovery import BlueprintKind, BlueprintSource
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.lore.research_depth import trade_partners
-from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.stats import move_stat, stat, stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 PATTERN_QUALITY = 70
@@ -89,12 +89,12 @@ async def draw(ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject
         locked=[],
     )
     ctx.session.add(row)
-    await note(
+    await record_incident(
         ctx,
-        f"The makers of {holder.name} drew {an(BLUEPRINT_KINDS[kind].lower())} of {label}.",
-        key="discovery.design_drawn",
-        ids=[holder.id],
-        kind=ChronicleKind.KNOWLEDGE,
+        "discovery.design_drawn",
+        roles={IncidentRole.MAKER: holder.id},
+        facts={"blueprint_kind": kind, "design": row.name, "quality": row.quality},
+        terms=[Term("rules.discovery.blueprint_quality", row.quality)],
     )
     return row
 

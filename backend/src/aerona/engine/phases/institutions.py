@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
@@ -19,6 +19,8 @@ from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.lifecycle_end import DisbandReason, ForgettingCause, RepealReason
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
@@ -28,7 +30,6 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.language import intelligibility
 from aerona.engine.mind.drives import closeness
 from aerona.engine.mind.space import value_distance
-from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.life_cycles import turn_to_ruin
 from aerona.engine.phases.religion_spread import SCHISM_SUBTYPE
@@ -41,6 +42,7 @@ from aerona.engine.primitives.population_history import median_of
 from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import relation
 from aerona.rules.registry import Rules
 
@@ -100,18 +102,18 @@ async def conquered_this_epoch(ctx: TickContext) -> set[int]:
     return {item for item in losers if item is not None} | set(ruled)
 
 
-def repeal_chance(rules: Rules, law: EntityRow, *, orphaned: bool, conquered: float, rebels: bool) -> tuple[float, str | None]:
+def repeal_chance(rules: Rules, law: EntityRow, *, orphaned: bool, conquered: float, rebels: bool) -> tuple[float, RepealReason | None]:
     cycles = rules.life_cycles
     if orphaned:
-        return float(cycles.repeal_orphan_chance), "its settlement is gone"
+        return float(cycles.repeal_orphan_chance), RepealReason.SETTLEMENT_GONE
     unjust = (stat(law, "justice") or 0) < cycles.unjust_justice
     chance, reason = 0.0, None
     if conquered > 0:
-        chance, reason = chance + cycles.repeal_conquest_chance * conquered, "the new masters did not recognise it"
+        chance, reason = chance + cycles.repeal_conquest_chance * conquered, RepealReason.CONQUEST
     if unjust:
-        chance, reason = chance + cycles.repeal_unjust_chance, reason or "the people could not bear its injustice"
+        chance, reason = chance + cycles.repeal_unjust_chance, reason or RepealReason.INJUSTICE
     if rebels and unjust:
-        chance, reason = chance + cycles.repeal_rebels_bonus, "the rebels burned it"
+        chance, reason = chance + cycles.repeal_rebels_bonus, RepealReason.REBELLION
     return chance * resisted(stat(law, "rigidity"), cycles.rigidity_resistance_pct), reason
 
 
@@ -137,9 +139,14 @@ async def laws(ctx: TickContext) -> int:
         chance, reason = repeal_chance(ctx.rules, law, orphaned=orphaned, conquered=clash, rebels=place is not None and place.id in rebels)
         if not chance or reason is None or not rng.chance(chance):
             continue
-        await end_record(ctx, law, EntityFlag.REPEALED, f"repealed; {reason}")
+        await end_record(ctx, law, EntityFlag.REPEALED, f"repealed for {spoken(reason)}")
         repealed += 1
-        await note(ctx, f"The law {law.name} was repealed: {reason}.", key="institutions.repealed", ids=[law.id, *([place.id] if place is not None else [])])
+        await record_incident(
+            ctx,
+            "institutions.repealed",
+            roles={IncidentRole.SUBJECT: law.id, IncidentRole.PLACE: place.id if place is not None else None},
+            facts={"reason": reason, "chance": chance},
+        )
     ctx.count("repealed", repealed)
     return repealed
 
@@ -173,12 +180,12 @@ async def join_cult(ctx: TickContext, cult: EntityRow, into: EntityRow, *, recon
     await connect(ctx.session, cult.id, into.id, BondKind.PART_OF, ctx.epoch, description="returned to its mother cult" if reconciled else "merged")
     sentence = f"made peace with {into.name} and returned to it" if reconciled else f"merged with {into.name}"
     await end_record(ctx, cult, EntityFlag.MERGED, sentence)
-    text = (
-        f"{cult.name} made peace with {into.name}, which it had split from; {several(joining, 'follower', 'followers')} returned to their old congregation."
-        if reconciled
-        else f"{cult.name} merged with {into.name}, which worships the same god; its followers are now theirs."
+    await record_incident(
+        ctx,
+        "institutions.cult_merged",
+        roles={IncidentRole.PREDECESSOR: cult.id, IncidentRole.SUCCESSOR: into.id},
+        facts={"followers": joining, "reconciled": int(reconciled)},
     )
-    await note(ctx, text, key="institutions.cult_merged", ids=[cult.id, into.id])
 
 
 @dataclass(frozen=True)
@@ -249,11 +256,18 @@ async def cults(ctx: TickContext) -> int:
         orphaned = board.gods.get(cult.id) is None or (home is not None and home.status is not EntityStatus.CANON)
         if not ctx.rng(f"cult_disband.{cult.id}").chance(cycles.cult_disband_chance + (cycles.cult_godless_bonus if orphaned else 0)):
             continue
-        reason = "it had no god or home left to worship" if orphaned else "its last followers went to other faiths"
-        await end_record(ctx, cult, EntityFlag.DISBANDED, f"disbanded; {reason}")
+        reason = DisbandReason.ORPHANED if orphaned else DisbandReason.FOLLOWERS_LEFT
+        await end_record(ctx, cult, EntityFlag.DISBANDED, f"disbanded, {spoken(reason)}")
         ended.add(cult.id)
         disbanded += 1
-        await note(ctx, f"{cult.name} disbanded; {reason}.", key="institutions.cult_disbanded", ids=[cult.id, *([home.id] if home is not None else [])])
+        await record_incident(
+            ctx,
+            "institutions.cult_disbanded",
+            roles={IncidentRole.SUBJECT: cult.id, IncidentRole.PLACE: home.id if home is not None else None},
+            facts={
+                "reason": reason,
+            },
+        )
     ctx.count("cults_merged", merged)
     ctx.count("cults_disbanded", disbanded)
     return merged + disbanded
@@ -347,16 +361,18 @@ async def peoples(ctx: TickContext) -> int:
         if verdict is None:
             continue
         union = verdict
-        reason = f"united with {largest.name} into one people" if union else f"melted into {largest.name}"
+        reason = f"united with {largest.name} into one people" if union else f"was absorbed into {largest.name}"
         await absorb_people(ctx, people, largest, union=union, reason=reason)
         ended.add(people.id)
         done += 1
-        text = (
-            f"{people.name} and {largest.name} married into each other and joined their homelands: one people now, called {largest.name}."
-            if union
-            else f"Over the generations {people.name} melted into {largest.name}; its tongue and name live on only in what others remember."
+        await record_incident(
+            ctx,
+            "institutions.people_union" if union else "institutions.people_assimilated",
+            roles={
+                IncidentRole.PREDECESSOR: people.id,
+                IncidentRole.SUCCESSOR: largest.id,
+            },
         )
-        await note(ctx, text, key="institutions.people_union" if union else "institutions.people_assimilated", ids=[people.id, largest.id])
     ctx.count("peoples_joined", done)
     return done
 
@@ -374,7 +390,6 @@ async def peoples(ctx: TickContext) -> int:
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.law_profiles",
     "table.nodes",
     "table.routes",
@@ -390,7 +405,6 @@ async def peoples(ctx: TickContext) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.routes",
@@ -438,8 +452,12 @@ async def works(ctx: TickContext) -> int:
             continue
         await end_record(ctx, work, EntityFlag.FORGOTTEN, "no one was left to sing, keep or remember it; forgotten")
         forgotten += 1
-        tail = "its last copy was lost too" if written else "the last who knew it died"
-        await note(ctx, f"{work.name} was forgotten; {tail}.", key="institutions.work_forgotten", ids=[work.id])
+        await record_incident(
+            ctx,
+            "institutions.work_forgotten",
+            roles={IncidentRole.SUBJECT: work.id},
+            facts={"cause": ForgettingCause.LAST_COPY_LOST if written else ForgettingCause.LAST_KEEPER_DIED, "renown": renown},
+        )
     ctx.count("works_forgotten", forgotten)
     return forgotten
 
@@ -477,17 +495,15 @@ async def items(ctx: TickContext) -> int:
         at = f" in {where.name}" if where is not None else ""
         await end_record(ctx, item, EntityFlag.LOST, f"lay unowned{at} until its trail was lost")
         lost += 1
-        await note(
-            ctx, f"{item.name} lay unowned{at} and was lost; no one saw it last.", key="institutions.item_lost", ids=[item.id, *([where.id] if where else [])]
-        )
+        await record_incident(ctx, "institutions.item_lost", roles={IncidentRole.SUBJECT: item.id, IncidentRole.PLACE: where.id if where else None})
     ctx.count("items_lost", lost)
     return lost
 
 
 def swallow_sentence(event: EntityRow | None) -> str:
     if event is None:
-        return "the earth opened and swallowed it"
-    return f"{event.name} drowned it" if event.engine_kind is EngineKind.FLOOD else f"the earth split open in {event.name} and swallowed it"
+        return "the earth split open and buried it"
+    return f"{event.name} flooded it" if event.engine_kind is EngineKind.FLOOD else f"the earth split open in {event.name} and buried it"
 
 
 async def swallow(ctx: TickContext, place: EntityRow, event: EntityRow | None) -> int:
@@ -522,9 +538,12 @@ async def swallowed_places(ctx: TickContext) -> int:
             continue
         place = rng.pick(places)
         moved = await swallow(ctx, place, event)
-        region = await ctx.session.get(EntityRow, event.location_id) if event.location_id is not None else None
-        scattered = f"; what stood in it was scattered across {region.name}" if moved and region is not None else ""
-        await note(ctx, f"{event.name} swallowed {place.name}; it is no more{scattered}.", key="institutions.place_swallowed", ids=[event.id, place.id])
+        await record_incident(
+            ctx,
+            "institutions.place_swallowed",
+            roles={IncidentRole.ACTOR: event.id, IncidentRole.TARGET: place.id, IncidentRole.DESTINATION: event.location_id},
+            facts={"scattered": moved},
+        )
         swallowed += 1
     ctx.count("places_swallowed", swallowed)
     return swallowed
@@ -539,7 +558,6 @@ async def swallowed_places(ctx: TickContext) -> int:
     "table.bonds",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.nodes",
     "table.routes",
 )
@@ -551,7 +569,6 @@ async def swallowed_places(ctx: TickContext) -> int:
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
-    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
 )
@@ -572,7 +589,7 @@ async def assimilation_target(ctx: TickContext, people: EntityRow) -> EntityRow:
     ]
     target = max(others, key=lambda other: (stat(other, "population") or 0, -other.id), default=None)
     if target is None:
-        raise ValidationFailedError(f"No other people lives in the region of {people.name} for it to melt into.")
+        raise ValidationFailedError(f"No other people lives in the region of {people.name} for it to be absorbed into.")
     return target
 
 
@@ -589,7 +606,7 @@ async def order_end(ctx: TickContext, entity_id: int, end: RecordEnd, reason: st
         await turn_to_ruin(ctx, entity, f"{reason}; its people left their home")
     elif end is RecordEnd.ASSIMILATE:
         target = await assimilation_target(ctx, entity)
-        await absorb_people(ctx, entity, target, union=False, reason=f"{reason}; it melted into {target.name}")
+        await absorb_people(ctx, entity, target, union=False, reason=f"{reason}; it was absorbed into {target.name}")
     else:
         await end_record(ctx, entity, END_FLAGS[end], reason)
     return entity
@@ -608,8 +625,7 @@ async def unite_peoples(ctx: TickContext, people_id: int, into_id: int) -> Entit
     if people is None or into is None or people.entity_type is not EntityType.PEOPLE or into.entity_type is not EntityType.PEOPLE or people.id == into.id:
         raise ValidationFailedError("Choose two different living peoples.")
     await absorb_people(ctx, people, into, union=True, reason=f"united with {into.name} into one people")
-    text = f"{people.name} and {into.name} joined their homelands: one people now, called {into.name}."
-    await note(ctx, text, key="institutions.people_union", ids=[people.id, into.id])
+    await record_incident(ctx, "institutions.people_union", roles={IncidentRole.PREDECESSOR: people.id, IncidentRole.SUCCESSOR: into.id})
     return into
 
 
@@ -618,7 +634,7 @@ async def swallow_place_by_hand(ctx: TickContext, place_id: int) -> EntityRow:
     if place is None or place.entity_type is not EntityType.PLACE:
         raise ValidationFailedError("Only a living place can be swallowed.")
     await swallow(ctx, place, None)
-    await note(ctx, f"The earth opened and swallowed {place.name}; it is no more.", key="institutions.place_swallowed", ids=[place.id])
+    await record_incident(ctx, "institutions.place_swallowed", roles={IncidentRole.TARGET: place.id}, facts={"scattered": 0})
     return place
 
 

@@ -11,8 +11,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import ClaimRow, VassalageRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis, LawKind, OfficeKind
 from aerona.domain.enums.renown import Currency
 from aerona.domain.enums.statecraft import SubjectKind
@@ -22,7 +22,6 @@ from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
 from aerona.engine.environment.knowledge import charted_share
 from aerona.engine.mortal.kin import children_of
-from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity
 from aerona.engine.polity.laws import law_param
@@ -31,6 +30,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
+from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import bump, purse_of
 from aerona.engine.transform.record import blocked, record_transformation
 
@@ -221,12 +221,12 @@ async def partition(ctx: TickContext, book: RealmBook, realm: Realm, late_id: in
         if office is not None:
             office.holder_entity_id = heir
         title.polity_entity_id = share.entity.id
-        await note(
+        await record(
             ctx,
-            f"{realm.entity.name} was divided among the heirs of its late ruler; {share.entity.name} went its own way.",
-            key="titles.partition",
-            ids=[realm.entity.id, share.entity.id],
-            kind=ChronicleKind.CIVILIZATION,
+            "titles.partition",
+            roles={IncidentRole.PREDECESSOR: realm.entity.id, IncidentRole.PRODUCT: share.entity.id, IncidentRole.HEIR: heir},
+            facts={"title": title.title_entity_id, "towns": len(towns), "lands": len(lands & set(share.territory))},
+            place=towns[0].id,
         )
         split_off += 1
     return split_off
@@ -324,12 +324,12 @@ async def usurp_and_create(ctx: TickContext, book: RealmBook, tally: TitleTally)
             if purse is not None:
                 bump(purse, Currency.PRESTIGE, -table.creation_prestige)
             own.polity_entity_id, own.de_jure_liege_entity_id = None, higher.title_entity_id
-            await note(
+            await record(
                 ctx,
-                f"The rulers of {realm.entity.name} took up a higher title: the {RANK_WORDS[wanted].lower()}.",
-                key="titles.created",
-                ids=[realm.entity.id, higher.title_entity_id],
-                kind=ChronicleKind.WORLD,
+                "titles.created",
+                roles={IncidentRole.SUBJECT: realm.entity.id, IncidentRole.LEADER: ruler, IncidentRole.PRODUCT: higher.title_entity_id},
+                facts={"rank": wanted, "prestige": table.creation_prestige},
+                place=realm.profile.capital_entity_id,
             )
             tally.created += 1
             continue
@@ -343,15 +343,15 @@ async def usurp_and_create(ctx: TickContext, book: RealmBook, tally: TitleTally)
                 continue
             if await share_of(ctx, realm, liege.title_entity_id) < table.creation_share_pct:
                 continue
+            previous = liege.holder_node_id
             await record_holder(ctx, liege, ruler, TitleTenure.USURPED)
             realm.profile.legitimacy = max(0, realm.profile.legitimacy - table.usurp_legitimacy)
-            entity = await living_entity(ctx.session, liege.title_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"{realm.entity.name} usurped {entity.name if entity else 'a higher title'}.",
-                key="titles.usurped",
-                ids=[realm.entity.id, liege.title_entity_id],
-                kind=ChronicleKind.WORLD,
+                "titles.usurped",
+                roles={IncidentRole.ACTOR: realm.entity.id, IncidentRole.LEADER: ruler, IncidentRole.PREDECESSOR: previous},
+                facts={"title": liege.title_entity_id, "legitimacy_lost": table.usurp_legitimacy},
+                place=realm.profile.capital_entity_id,
             )
             tally.usurped += 1
 
@@ -379,13 +379,12 @@ async def dormancy(ctx: TickContext, book: RealmBook, tally: TitleTally) -> None
             if not ctx.rng(seed_of("title.restore", title.title_entity_id, candidate.entity.id, ctx.epoch)).chance(table.restore_pct):
                 continue
             await record_holder(ctx, title, candidate.ruler_id, TitleTenure.RESTORED)
-            entity = await living_entity(ctx.session, title.title_entity_id)
-            await note(
+            await record(
                 ctx,
-                f"{candidate.entity.name} restored the old {entity.name if entity else 'title'}.",
-                key="titles.restored",
-                ids=[candidate.entity.id, title.title_entity_id],
-                kind=ChronicleKind.WORLD,
+                "titles.restored",
+                roles={IncidentRole.ACTOR: candidate.entity.id, IncidentRole.LEADER: candidate.ruler_id},
+                facts={"title": title.title_entity_id, "chance": table.restore_pct},
+                place=candidate.profile.capital_entity_id,
             )
             tally.restored += 1
             break

@@ -1,5 +1,4 @@
 from collections import Counter
-from dataclasses import replace
 
 import pytest
 from sqlalchemy import select
@@ -251,7 +250,7 @@ async def test_society_economy_writes_baskets_wealth_and_gini(realm: Realm) -> N
 
 async def test_each_shortfall_has_its_mechanical_effect(realm: Realm) -> None:
     town = await stocked_town(realm, population=20000)
-    ctx = context(realm.session, replace(RULES, consumption=replace(RULES.consumption, notable_cold_deaths=1, notable_sick=1)))
+    ctx = context(realm.session, RULES)
     await seed(realm.session, ctx.rules, town, ctx.epoch)
     await goods_of(realm.session, ctx.epoch).add(town.id, CommodityKind.LIVESTOCK, 1000, GoodsFlow.SEED)
     before = {key: stat(town, key) or 0 for key in ("population", "piety", "prosperity", "defense")}

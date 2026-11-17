@@ -1,6 +1,11 @@
+from collections.abc import Mapping
+
 from aerona.core.errors import ValidationFailedError
+from aerona.core.total import total
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.cosmos.pilgrimage import declare_pilgrimage_site
 from aerona.engine.phases.casualties import FateWrit, write_fate
 from aerona.engine.phases.ecology import set_abundance
@@ -12,12 +17,13 @@ from aerona.engine.phases.remembrance import MemorialForm, commemorate
 from aerona.engine.phases.world_balance import appoint_guardian, revive_world
 from aerona.engine.primitives.faith import FaithIndex
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.record import record as record_incident
 from aerona.services.player import guards
-from aerona.services.player.chronicle import hand
-from aerona.services.player.lines import FATE_CLEARED, FATE_DOOMED, FATE_SHIELDED, MEMORIAL_ORDERED, RECORD_ENDED, WORLD_REVIVED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
-FATE_LINES = {FateWrit.DOOM: FATE_DOOMED, FateWrit.SHIELD: FATE_SHIELDED, FateWrit.CLEAR: FATE_CLEARED}
+FATE_KEYS: Mapping[FateWrit, str] = total(
+    FateWrit, {FateWrit.DOOM: "player.fate.doom", FateWrit.SHIELD: "player.fate.shield", FateWrit.CLEAR: "player.fate.clear"}
+)
 
 
 class CommunityEnd(Command):
@@ -88,7 +94,14 @@ async def fate(scope: PlayerScope, command: MortalFate) -> Effect:
     spent = 0 if command.fate is FateWrit.CLEAR else guards.charge(creator, scope.rules.casualties.fate_cost, "casualties.fate_cost")
     ctx = await scope.context("write_fate")
     mortal = await write_fate(ctx, command.mortal_id, command.fate)
-    text = await hand(ctx, creator, FATE_LINES[command.fate], ids=[mortal.id], mortal=mortal.name)
+    text = (
+        await record_incident(
+            ctx,
+            FATE_KEYS[command.fate],
+            roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: mortal.id},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(text, mortal.id, essence_spent=spent)
 
 
@@ -100,7 +113,15 @@ async def order_memorial(scope: PlayerScope, command: Commemoration) -> Effect:
     ctx = await scope.context("commemorate")
     created = await commemorate(ctx, subject.id, command.form)
     names = ", ".join(entity.name for entity in [await guards.entity(scope.session, record_id) for record_id in created])
-    text = await hand(ctx, creator, MEMORIAL_ORDERED, ids=[subject.id, *created], subject=subject.name, memorials=names)
+    text = (
+        await record_incident(
+            ctx,
+            "player.remembrance.ordered",
+            roles={IncidentRole.SUBJECT: [subject.id, *([subject.id, *created])], IncidentRole.AUTHORITY: creator.id},
+            facts={"memorials": str(names)},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(text, subject.id, essence_spent=spent, created_ids=tuple(created))
 
 
@@ -111,7 +132,15 @@ async def revive(scope: PlayerScope, command: WorldTarget) -> Effect:
     spent = guards.charge(creator, scope.rules.world_balance.revive_cost, "world_balance.revive_cost")
     ctx = await scope.context("revive_world")
     created = await revive_world(ctx, world.id)
-    text = await hand(ctx, creator, WORLD_REVIVED, ids=created, world_id=world.id, world=world.name)
+    text = (
+        await record_incident(
+            ctx,
+            "player.world_balance.revived",
+            roles={IncidentRole.PLACE: world.id, IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: [*(created)]},
+            kind=ChronicleKind.CREATOR_HAND,
+            world_id=world.id,
+        )
+    ).text
     return Effect(text, world.id, essence_spent=spent, created_ids=tuple(created))
 
 
@@ -142,8 +171,7 @@ class SiteTarget(Command):
 
 @player_action("pilgrimage:declare", ActionKind.DECLARE_PILGRIMAGE_SITE)
 async def declare_site(scope: PlayerScope, command: SiteTarget) -> Effect:
-    creator = await scope.creator()
-    site = await declare_pilgrimage_site(await scope.context("pilgrimage_site"), command.entity_id, creator.name)
+    site = await declare_pilgrimage_site(await scope.context("pilgrimage_site"), command.entity_id)
     return Effect(f"{site.name} became a pilgrimage site.", site.id)
 
 
@@ -161,7 +189,15 @@ async def end_record(scope: PlayerScope, command: RecordEndOrder) -> Effect:
     reason = guards.clip(command.reason, 200)
     ctx = await scope.context("order_end")
     await order_end(ctx, record.id, command.end, _because(creator.name, reason))
-    text = await hand(ctx, creator, RECORD_ENDED, ids=[record.id], record=record.name, end=command.end.value, reason=f" ({reason})" if reason else "")
+    text = (
+        await record_incident(
+            ctx,
+            "player.life_cycles.end",
+            roles={IncidentRole.SUBJECT: record.id, IncidentRole.AUTHORITY: creator.id},
+            facts={"end": str(command.end.value), "reason": str(f" ({reason})" if reason else "")},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+    ).text
     return Effect(text, record.id, essence_spent=spent)
 
 

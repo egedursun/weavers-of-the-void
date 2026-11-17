@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.models.phonology import LanguageSignature
 from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.recording.terms import plain
 from aerona.language.alphabet import fold_word
 from aerona.language.corpus import CorpusSources, world_alphabet
 from aerona.language.generator import NameKind, NamingVoice, generate_name
@@ -64,7 +65,8 @@ event.listen(Session, "after_soft_rollback", drop_pools)
 event.listen(Session, "do_orm_execute", drop_pools_on_write)
 
 
-async def registered_pool(session: AsyncSession, rules: Rules) -> NamePool:
+async def registered_pool(session: AsyncSession, given: Rules) -> NamePool:
+    rules = plain(given)
     pools = pools_of(session.sync_session)
     known = pools.get(id(rules))
     if known is not None and known[0] is rules:
@@ -75,7 +77,8 @@ async def registered_pool(session: AsyncSession, rules: Rules) -> NamePool:
     return pool
 
 
-async def alphabet_of_world(session: AsyncSession, rules: Rules, world_id: int) -> frozenset[str] | None:
+async def alphabet_of_world(session: AsyncSession, given: Rules, world_id: int) -> frozenset[str] | None:
+    rules = plain(given)
     memo = memo_of(session, "world_alphabet", ALPHABET_TABLES)
     key = (id(rules), world_id)
     known: tuple[Rules, frozenset[str] | None] | None = memo.get(key) if memo is not None else None
