@@ -9,8 +9,8 @@ class CivilizationRules:
     independence_war_chance: int = rule(60, 0, 100, RuleGroup.CIVILIZATION, "Independence turns into war (%)")
     federation_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "An inter-world federation is founded (%)")
     previous_creation_relic_chance: int = rule(35, 0, 100, RuleGroup.CIVILIZATION, "A remnant of a previous creation is found (%)")
-    city_state_population: int = rule(3000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population to become a city-state")
-    city_state_knowledge: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a city-state")
+    city_state_population: int = rule(3000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population to become a city")
+    city_state_knowledge: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a city")
     realm_population: int = rule(20000, 0, 100000000, RuleGroup.CIVILIZATION, "Minimum population of a realm with no ruled places")
     realm_ruled_places: int = rule(1, 0, 100, RuleGroup.CIVILIZATION, "Minimum ruled places to become a realm")
     realm_knowledge: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Minimum known knowledge to become a realm")
@@ -19,16 +19,16 @@ class CivilizationRules:
         0,
         100,
         RuleGroup.CIVILIZATION,
-        "Share of regions dominated for a world empire (% of settled regions; regions dominated by itself, its subjects and its tributaries)",
+        "Share of regions dominated for a world power (% of settled regions; regions dominated by itself, its subjects and its tributaries)",
     )
     empire_population_pct: int = rule(
         25,
         0,
         100,
         RuleGroup.CIVILIZATION,
-        "For a world empire (if region share is not enough): be the most populous political power of its world and hold this share of the world's population (%; including subjects and tributaries)",
+        "For a world power (if region share is not enough): be the most populous political power of its world and hold this share of the world's population (%; including subjects and tributaries)",
     )
-    empire_min_world_regions: int = rule(2, 1, 1000, RuleGroup.CIVILIZATION, "Minimum regions of a world on which a world empire can count")
+    empire_min_world_regions: int = rule(2, 1, 1000, RuleGroup.CIVILIZATION, "Minimum regions of a world on which a world power can count")
     interstellar_worlds: int = rule(2, 1, 100, RuleGroup.CIVILIZATION, "Minimum worlds spread across for an interstellar power")
     cosmic_worlds: int = rule(3, 1, 100, RuleGroup.CIVILIZATION, "Minimum worlds spread across for a cosmic power")
     stage_demotion_pct: int = rule(

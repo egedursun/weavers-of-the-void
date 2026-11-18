@@ -13,6 +13,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import Tincture
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
@@ -81,6 +82,8 @@ TITLES = total(
         GovernmentKind.COMMUNE: "Commune",
     },
 )
+
+LITERATE_RULE = Technique.WRITTEN_LAW
 
 
 async def lords(ctx: TickContext) -> tuple[dict[int, int], dict[int, int], dict[int, int]]:
@@ -176,7 +179,7 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
         (ruler is None and hierarchy <= table.republic_hierarchy, GovernmentKind.REPUBLIC),
         (peoples >= table.confederation_peoples and hierarchy < 0, GovernmentKind.TRIBAL_CONFEDERATION),
         (imperial, GovernmentKind.EMPIRE),
-        (tier <= table.chiefdom_tier, GovernmentKind.CHIEFDOM),
+        (tier <= table.chiefdom_tier and not await holders_know(ctx.session, [core.id], LITERATE_RULE), GovernmentKind.CHIEFDOM),
     )
     for matched, kind in ladder:
         if matched and await holders_know(ctx.session, [core.id], GOVERNMENT_GATES.get(kind)):
@@ -204,7 +207,7 @@ async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow, *, to
     )
     profile = PolityProfileRow(
         polity_entity_id=entity.id,
-        government=GovernmentKind.CHIEFDOM,
+        government=await government_for(ctx, core, [core], None),
         decision_rule=DecisionRule.AUTOCRATIC,
         core_entity_id=core.id,
         capital_entity_id=core.id if core.entity_type is EntityType.SETTLEMENT else None,

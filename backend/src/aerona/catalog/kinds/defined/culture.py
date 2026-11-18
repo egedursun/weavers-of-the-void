@@ -557,6 +557,7 @@ TECHNIQUE = total(
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.polity.formation.LITERATE_RULE",
                 "engine.regime.learning.license_holders",
                 "engine.regime.rule.LAW_TECHNIQUES",
                 "engine.regime.rule.charisma_turned",

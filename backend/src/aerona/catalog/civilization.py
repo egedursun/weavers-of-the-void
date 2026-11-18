@@ -16,10 +16,10 @@ class TierUnlock:
 
 
 TIER_LABELS: dict[CivilizationTier, str] = {
-    CivilizationTier.TRIBE: "Tribe",
-    CivilizationTier.CITY_STATE: "City-state",
-    CivilizationTier.KINGDOM: "Kingdom",
-    CivilizationTier.WORLD_EMPIRE: "World empire",
+    CivilizationTier.TRIBE: "Community",
+    CivilizationTier.CITY_STATE: "City",
+    CivilizationTier.KINGDOM: "Realm",
+    CivilizationTier.WORLD_EMPIRE: "World power",
     CivilizationTier.INTERSTELLAR_POWER: "Interstellar power",
     CivilizationTier.COSMIC_POWER: "Cosmic power",
 }

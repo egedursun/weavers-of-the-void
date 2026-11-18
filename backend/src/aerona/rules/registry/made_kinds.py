@@ -23,9 +23,9 @@ class ArmamentRules:
 @dataclass(frozen=True)
 class VehicleRules:
     tribe_size: int = rule(2, 0, 4, W, "Largest hull a tribe can build, counted from small (0) to colossal (4); technology alone opens a frame")
-    city_state_size: int = rule(3, 0, 4, W, "Largest hull a city-state can build, counted from small (0) to colossal (4)")
+    city_state_size: int = rule(3, 0, 4, W, "Largest hull a city can build, counted from small (0) to colossal (4)")
     realm_size: int = rule(4, 0, 4, W, "Largest hull a realm can build, counted from small (0) to colossal (4)")
-    empire_size: int = rule(4, 0, 4, W, "Largest hull a world empire can build, counted from small (0) to colossal (4)")
+    empire_size: int = rule(4, 0, 4, W, "Largest hull a world power can build, counted from small (0) to colossal (4)")
     interstellar_size: int = rule(4, 0, 4, W, "Largest hull an interstellar power can build, counted from small (0) to colossal (4)")
     cosmic_size: int = rule(4, 0, 4, W, "Largest hull a cosmic power can build, counted from small (0) to colossal (4)")
     wreck_hp: int = rule(45, 0, 200, W, "Health the captain loses when a section that keeps a vessel aloft or sealed against the void is destroyed")
