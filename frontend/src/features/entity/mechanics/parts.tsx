@@ -392,7 +392,7 @@ export function IncidentEntry({
           )}
           {incident.thread_id !== null && (
             <Badge size='sm' variant='info'>
-              Part of a story thread
+              Part of a storyline
             </Badge>
           )}
           {incident.consequences.length > 0 && (

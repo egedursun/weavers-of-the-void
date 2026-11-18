@@ -139,8 +139,8 @@ export function EngineInsight({ ctx }: { ctx: EntityContext }) {
               >
                 <Undo2 />
                 {reward.thread_reverted
-                  ? 'Fate thread reverted'
-                  : 'Moved a fate thread'}
+                  ? 'Storyline reverted'
+                  : 'Moved a storyline'}
               </Badge>
             )}
           </div>

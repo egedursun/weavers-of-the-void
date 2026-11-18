@@ -44,9 +44,9 @@ import { PERCENT, STRESS_WORDS, busyOf, clampPercent } from './possessionParts'
 const SPAN = 100
 const NO_GOD = 'none'
 const SEAL_WORDS: [string, string, string, string] = [
-  'A thread',
-  'A knot',
-  'A chain',
+  'Faint',
+  'Firm',
+  'Strong',
   'Unbreakable',
 ]
 const DEED_WORDS: [string, string, string, string] = [
@@ -119,7 +119,7 @@ export function SoulSeal({
           value={strength}
           min={0}
           max={PERCENT}
-          lowLabel='A thread'
+          lowLabel='Faint'
           highLabel='Unbreakable'
           onChange={setStrength}
         />

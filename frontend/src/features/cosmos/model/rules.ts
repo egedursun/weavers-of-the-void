@@ -18,7 +18,7 @@ export const RULE = {
   extinguishDoom: 'pantheon.extinguish_star_apocalypse',
   legendaryQuest: 'cosmic_costs.legendary_expedition',
   severCost: 'beyond.sever_route_cost',
-  stitchCost: 'beyond.reopen_route_cost',
+  reopenCost: 'beyond.reopen_route_cost',
   severEpochs: 'beyond.sever_route_epochs',
   revealCost: 'travel.reveal_route_cost',
   alignmentPeriod: 'travel.alignment_period',

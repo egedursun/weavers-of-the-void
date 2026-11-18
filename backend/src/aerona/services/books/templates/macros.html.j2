@@ -19,7 +19,7 @@
 {%- endmacro %}
 
 {% macro typed(sections) -%}
-{% for section in sections %}<section class="typed"><p class="sublabel">{{ section.title }}</p>{% if section.facts %}<dl class="facts">{% for fact in section.facts %}<div><dt>{{ fact.label }}</dt><dd>{{ fact.value }}</dd></div>{% endfor %}</dl>{% endif %}{% if section.rows %}<ul class="typed-rows">{% for row in section.rows %}<li>{{ row }}</li>{% endfor %}</ul>{% endif %}</section>{% endfor %}
+{% for section in sections %}<section class="typed"><p class="sublabel">{{ section.title }}</p>{% if section.facts %}<dl class="facts">{% for fact in section.facts %}<div><dt>{{ fact.label }}</dt><dd>{{ fact.value }}</dd></div>{% endfor %}</dl>{% endif %}{% if section.lines %}<ul class="typed-rows">{% for row in section.lines %}<li>{{ row }}</li>{% endfor %}</ul>{% endif %}</section>{% endfor %}
 {%- endmacro %}
 
 {% macro chips(items) -%}
@@ -107,9 +107,10 @@
 {% endif %}
 {%- endmacro %}
 
-{% macro entity_article(article, single, links) -%}
+{% macro entity_article(article, single, links, base=0) -%}
 {% set level = [3 + article.depth_level, 6] | min %}
-<article class="entry" id="{{ article.anchor }}">
+{% set nesting = article.depth_level - base %}
+<article class="entry{% if nesting > 0 %} nested{% endif %}" id="{{ article.anchor }}"{% if nesting > 0 %} style="margin-left: {{ nesting * 30 }}px"{% endif %}>
 <div class="head"><h{{ level }}>{{ article.entity.name }}{% if article.entity.status.value in ("dead", "destroyed") %} <span class="dagger">&#8224;</span>{% endif %}</h{{ level }}><span class="kind">{{ article.type_label }}</span></div>
 {% if article.entity.title %}<p class="subtitle">{{ article.entity.title }}</p>{% endif %}
 {{ thumb(article.cover, article.entity.name, links) }}
@@ -127,7 +128,6 @@
 {% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
 {{ chips(article.tags) }}
 <div class="clear"></div>
-{% if article.children %}<div class="children">{% for child in article.children %}{{ entity_article(child, single, links) }}{% endfor %}</div>{% endif %}
 </article>
 {%- endmacro %}
 

@@ -58,7 +58,7 @@ ALIASES = (
     Alias("DELETE", "/stars/{star_id}", "star:delete", path_fields={"star_id": "star_id"}),
     Alias("POST", "/routes", "route:open"),
     Alias("POST", "/routes/{route_id}/sever", "route", path_fields={"route_id": "route_id"}, fixed={"action": "sever"}, summary="Sever a route"),
-    Alias("POST", "/routes/{route_id}/restore", "route", path_fields={"route_id": "route_id"}, fixed={"action": "stitch"}, summary="Reopen a route"),
+    Alias("POST", "/routes/{route_id}/restore", "route", path_fields={"route_id": "route_id"}, fixed={"action": "reopen"}, summary="Reopen a route"),
     Alias("POST", "/routes/{route_id}/reveal", "route", path_fields={"route_id": "route_id"}, fixed={"action": "reveal"}, summary="Reveal a hidden route"),
     Alias("POST", "/voyages/{journey_id}/recall", "journey:recall", path_fields={"journey_id": "journey_id"}),
     Alias("PUT", "/climate", "climate"),

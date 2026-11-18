@@ -10,7 +10,7 @@ from aerona.constants.engine import ADJACENT_HOPS, LOCATION_CHAIN_MAX_HOPS, UNKN
 from aerona.db.read_memo import memo_of, register_index, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.engine.primitives.map_store import stored_regions
 from aerona.rules.registry import Rules
 
@@ -24,6 +24,7 @@ class Placement:
     entity_type: EntityType
     world_id: int
     location_id: int | None
+    living: bool = True
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ async def terrain_of(session: AsyncSession) -> Terrain:
     return terrain
 
 
-PLACEMENT_SQL = text("SELECT id, entity_type, world_id, location_id FROM entities")
+PLACEMENT_SQL = text("SELECT id, entity_type, world_id, location_id, status FROM entities")
 LIVE_PLACEMENTS = "aerona.live_placements"
 ENTITY_TYPES = {kind.value: kind for kind in EntityType}
 
@@ -62,7 +63,7 @@ def follow_placements(sync: Session, *_: object) -> None:
     new, dirty, deleted = touched_rows(sync, EntityRow)
     for row in (*new, *dirty):
         if row.id is not None:
-            live[row.id] = Placement(row.id, row.entity_type, row.world_id, row.location_id)
+            live[row.id] = Placement(row.id, row.entity_type, row.world_id, row.location_id, row.status == EntityStatus.CANON)
     for row in deleted:
         live.pop(row.id, None)
 
@@ -87,8 +88,8 @@ async def placements_of(session: AsyncSession) -> dict[int, Placement]:
     live: dict[int, Placement] | None = session.sync_session.info.get(LIVE_PLACEMENTS)
     if live is None:
         live = {
-            entity_id: Placement(entity_id, ENTITY_TYPES[kind], world_id, location_id)
-            for entity_id, kind, world_id, location_id in (await session.execute(PLACEMENT_SQL)).all()
+            entity_id: Placement(entity_id, ENTITY_TYPES[kind], world_id, location_id, status == EntityStatus.CANON.value)
+            for entity_id, kind, world_id, location_id, status in (await session.execute(PLACEMENT_SQL)).all()
         }
         session.sync_session.info[LIVE_PLACEMENTS] = live
     return dict(live)
@@ -116,7 +117,7 @@ class RegionAtlas:
         return atlas
 
     def remember(self, entity: EntityRow) -> None:
-        self._placements[entity.id] = Placement(entity.id, entity.entity_type, entity.world_id, entity.location_id)
+        self._placements[entity.id] = Placement(entity.id, entity.entity_type, entity.world_id, entity.location_id, entity.status == EntityStatus.CANON)
         self._top.clear()
         self._communities = None
 
@@ -138,11 +139,21 @@ class RegionAtlas:
         self._top[entity_id] = found
         return found
 
+    def holds(self, place_id: int, entity_id: int) -> bool:
+        current = self._placements.get(entity_id)
+        hops = 0
+        while current is not None and hops <= LOCATION_CHAIN_MAX_HOPS:
+            if current.entity_id == place_id:
+                return True
+            current = self._placements.get(current.location_id) if current.location_id is not None else None
+            hops += 1
+        return False
+
     def communities_in(self, region_id: int) -> list[int]:
         if self._communities is None:
             grouped: dict[int, list[int]] = {}
             for placement in self._placements.values():
-                if placement.entity_type in COMMUNITY_TYPES:
+                if placement.entity_type in COMMUNITY_TYPES and placement.living:
                     region = self.top_region(placement.entity_id)
                     if region is not None:
                         grouped.setdefault(region, []).append(placement.entity_id)

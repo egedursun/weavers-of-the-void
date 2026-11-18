@@ -276,7 +276,7 @@ async def open_thread(scope: PlayerScope, command: OpenThread) -> Effect:
     message = (
         await record_incident(
             ctx,
-            "player.canon.thread_opened",
+            "player.canon.story_opened",
             roles={IncidentRole.AUTHORITY: creator.id, IncidentRole.SUBJECT: [*(related)]},
             facts={"text": str(text[:THREAD_HEADLINE_LENGTH])},
             kind=ChronicleKind.CREATOR_HAND,
@@ -296,7 +296,7 @@ async def close_thread(scope: PlayerScope, command: CloseThread) -> Effect:
     message = (
         await record_incident(
             ctx,
-            "player.canon.thread_closed",
+            "player.canon.story_closed",
             roles={IncidentRole.AUTHORITY: creator.id},
             facts={"story": thread.id, "how": thread.closing_text},
             kind=ChronicleKind.CREATOR_HAND,
@@ -327,7 +327,7 @@ async def advance_thread(scope: PlayerScope, command: AdvanceThread) -> Effect:
     message = (
         await record_incident(
             await scope.context("thread_advance"),
-            "player.canon.thread_advanced",
+            "player.canon.story_advanced",
             roles={IncidentRole.TARGET: entity.id, IncidentRole.AUTHORITY: (await scope.creator()).id},
             facts={"story": thread.id},
             kind=ChronicleKind.CREATOR_HAND,

@@ -133,7 +133,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
   const [related, setRelated] = useState<number[]>([])
   const create = useLoreMutation({
     run: () => openThread(text.trim(), related),
-    success: 'A new story thread is opened',
+    success: 'A new storyline is opened',
     onDone: () => {
       setText('')
       setRelated([])
@@ -239,7 +239,7 @@ export function ChronicleThreads() {
     <Section
       id='chronicle-threads'
       title='Stories'
-      description='Open threads the sons and Fate keep weaving, and the ones that ended.'
+      description='Open storylines the sons and Fate keep going, and the ones that ended.'
       level={3}
     >
       {threads.isError && (
@@ -250,7 +250,7 @@ export function ChronicleThreads() {
           size='compact'
           icon={Spline}
           title='No stories yet'
-          description='Threads begin when a son or Fate starts a tale that outlives an epoch.'
+          description='Storylines begin when a son or Fate starts a tale that outlives an epoch.'
         />
       )}
       {open.length > 0 && (

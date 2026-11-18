@@ -34,7 +34,7 @@ from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.domain.enums.job import JobKind
 from aerona.jobs.context import JobContext
-from aerona.services.books import book_page, codex_markdown
+from aerona.services.books import book_page, codex_file
 from aerona.services.books.codex_archive import build_codex_archive
 from aerona.services.books.mapsvg import load_map
 from aerona.services.books.pdf import build_pdf, pdf_path, pdf_state, read_manifest
@@ -72,14 +72,15 @@ def _file_stem(name: str | None) -> str:
     return stem or FALLBACK_NAME
 
 
-@router.get("/codex.md", response_class=Response, responses={200: {"content": {"text/markdown": {}}}})
-async def codex(request: Request, services: ServicesDep) -> Response:
+@router.get("/codex.md", response_class=StreamingResponse, responses={200: {"content": {"text/markdown": {}}}})
+async def codex(request: Request, services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        text = await codex_markdown(session, rules, CodexLinks(base=str(request.base_url)))
+        path = await codex_file(session, rules, CodexLinks(base=str(request.base_url)), services.settings.exports_dir)
     name = f"{_file_stem(cosmos.name if cosmos else None)}{CODEX_FILENAME_SUFFIX}"
-    return Response(content=text, media_type=MARKDOWN_MEDIA_TYPE, headers={"content-disposition": f'attachment; filename="{name}"'})
+    headers = {"content-disposition": f'attachment; filename="{name}"', "content-length": str(path.stat().st_size)}
+    return StreamingResponse(stream_and_delete(path), media_type=MARKDOWN_MEDIA_TYPE, headers=headers)
 
 
 @router.get("/codex.zip", response_class=StreamingResponse, responses={200: {"content": {CODEX_ARCHIVE_MEDIA_TYPE: {}}}})
@@ -88,9 +89,12 @@ async def codex_archive(services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        text = await codex_markdown(session, rules, links)
+        codex = await codex_file(session, rules, links, services.settings.exports_dir)
     stem = _file_stem(cosmos.name if cosmos else None)
-    archive = await build_codex_archive(services, text, links, stem)
+    try:
+        archive = await build_codex_archive(services, codex, links, stem)
+    finally:
+        await to_thread.run_sync(lambda: codex.unlink(missing_ok=True))
     headers = {"content-disposition": f'attachment; filename="{stem}{CODEX_ARCHIVE_SUFFIX}"', "content-length": str(archive.stat().st_size)}
     return StreamingResponse(stream_and_delete(archive), media_type=CODEX_ARCHIVE_MEDIA_TYPE, headers=headers)
 

@@ -52,7 +52,7 @@
 {{ book.cosmos.cosmology | paragraphs }}
 {% if book.cosmos.seed_idea %}<div class="box"><span class="label">The seed of creation</span>{{ book.cosmos.seed_idea }}</div>{% endif %}
 {% if book.creation %}<h3 class="bm2">How the world was made</h3>{{ facts(book.creation) }}{% endif %}
-{% if book.laws %}<h3 class="bm2">Laws of nature</h3>{% for law in book.laws %}{{ entity_article(law, false, links) }}{% endfor %}{% endif %}
+{% if book.laws %}<h3 class="bm2">Laws of nature</h3>{% for law in book.laws | with_descendants %}{{ entity_article(law, false, links) }}{% endfor %}{% endif %}
 </section>
 {% endif %}
 
@@ -217,7 +217,7 @@
 {% if group.name %}<div class="group-head"><h3 class="bm2">{{ group.name }}</h3></div>{% endif %}
 {% for label, articles in group.groups %}
 <div class="group-head"><h4 class="{{ 'bm3' if group.name else 'bm2' }}">{{ label }}</h4><span class="count">{{ articles | length }}</span></div>
-{% for article in articles %}{{ entity_article(article, false, links) }}{% endfor %}
+{% for article in articles | with_descendants %}{{ entity_article(article, false, links) }}{% endfor %}
 {% endfor %}
 {% endfor %}
 </section>
@@ -235,7 +235,7 @@
 <section class="chapter" id="languages">
 {{ chapter_head("languages", numeral("languages"), "Tongues and Dictionaries", "Every language and every word") }}
 {% for language in book.languages %}
-{{ entity_article(language.article, false, links) }}
+{% for article in [language.article] | with_descendants %}{{ entity_article(article, false, links) }}{% endfor %}
 <p class="meta small">{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}</p>
 {% if language.words %}<table><thead><tr><th>Word</th><th>Kind</th><th>Meaning</th><th>Origin</th><th>Example</th></tr></thead><tbody>{% for word in language.words %}<tr><td class="word">{{ word.word }}</td><td class="meta">{{ word.part_of_speech | speech_part }}</td><td>{{ word.meaning }}</td><td class="small">{{ word.etymology or "" }}</td><td class="small"><i>{{ word.example or "" }}</i></td></tr>{% endfor %}</tbody></table>{% endif %}
 {% endfor %}

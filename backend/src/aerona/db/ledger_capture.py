@@ -7,7 +7,7 @@ from enum import Enum, StrEnum
 from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import Table, event, select, text, update
+from sqlalchemy import JSON, Table, event, select, text, tuple_, update
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session, UOWTransaction, configure_mappers, object_mapper
@@ -298,6 +298,9 @@ RECORD_TABLES = frozenset(
     }
 )
 UNCAPTURED_TABLES = RECORD_TABLES | BOOKKEEPING_TABLES
+FORMER = "aerona.former_values"
+KEY_BATCH = 400
+REBUILD_KEYS = "aerona.rebuild_keys"
 NODE_ROOT = "nodes"
 PENDING_CHANGES = "record_pending_changes"
 REBUILDS = "record_rebuilds"
@@ -524,10 +527,41 @@ def capture_new(session: Session, state: Any) -> None:
         )
 
 
+def mutable_column(plan: TablePlan, name: str) -> bool:
+    column_type = _table(plan.name).c[name].type
+    return isinstance(getattr(column_type, "impl_instance", column_type), JSON) or isinstance(column_type, JSON)
+
+
+def unloaded_columns(plan: TablePlan, state: Any) -> list[ColumnPlan]:
+    committed = state.committed_state
+    return [column for column in plan.columns if column.key in committed and (committed[column.key] is NO_VALUE or mutable_column(plan, column.name))]
+
+
+def load_former(session: Session, _context: UOWTransaction, _instances: object) -> None:
+    if session.info.get(UNCAPTURED):
+        return
+    wanted: dict[str, list[tuple[Any, dict[str, Any], list[ColumnPlan]]]] = {}
+    for instance in captured(session.dirty):
+        state = instance_state(instance)
+        if not state.committed_state or state.identity is None:
+            continue
+        for plan in mapper_plans(state.mapper):
+            unloaded = unloaded_columns(plan, state)
+            if unloaded:
+                wanted.setdefault(plan.name, []).append((state, state_key(plan, state), unloaded))
+    for name, items in wanted.items():
+        stored = rows_by_keys(session.connection(), _table(name), [key for _, key, _ in items])
+        for state, key, unloaded in items:
+            row = stored.get(key_text(key))
+            if row is not None:
+                state.info.setdefault(FORMER, {}).update({column.key: row[column.name] for column in unloaded})
+
+
 def capture_dirty(session: Session, state: Any) -> None:
     committed = state.committed_state
     if not committed:
         return
+    former: dict[str, Any] = state.info.get(FORMER, {})
     stamps: dict[str, Stamp] = state.info.get(COLUMN_STAMPS, {})
     for plan in mapper_plans(state.mapper):
         owner: int | None = None
@@ -537,8 +571,8 @@ def capture_dirty(session: Session, state: Any) -> None:
                 continue
             before = committed[column.key]
             after = state.dict.get(column.key)
-            if before is NO_VALUE:
-                before = None
+            if before is NO_VALUE or column.key in former:
+                before = former.get(column.key)
             if before == after:
                 continue
             if key is None:
@@ -590,6 +624,7 @@ def record_flush(session: Session, _context: UOWTransaction) -> None:
         if state.info:
             state.info.pop(COLUMN_STAMPS, None)
             state.info.pop(ROW_STAMP, None)
+            state.info.pop(FORMER, None)
 
 
 def row_world(session: Session, connection: Connection, node_id: int | None) -> int | None:
@@ -666,6 +701,7 @@ def consume_rebuilt(session: Session, plan: TablePlan, values: Mapping[str, Any]
     key = rebuild_key(plan, values)
     before = rows.pop(key, None)
     if before is None:
+        retire_reused(session, plan, rows, values, found)
         return False
     for column in plan.columns:
         if column.name in values and column.name in plan.content and jsonable(before.get(column.name)) != jsonable(values[column.name]):
@@ -684,7 +720,22 @@ def consume_rebuilt(session: Session, plan: TablePlan, values: Mapping[str, Any]
     return True
 
 
+def retire_reused(session: Session, plan: TablePlan, rows: dict[str, dict[str, Any]], values: Mapping[str, Any], found: Stamp | None) -> None:
+    if not plan.surrogate:
+        return
+    table = _table(plan.name)
+    index: dict[str, dict[str, str]] = session.info.setdefault(REBUILD_KEYS, {})
+    keys = index.get(plan.name)
+    if keys is None:
+        keys = index[plan.name] = {key_text(_pk_values(table, row)): rebuilt for rebuilt, row in rows.items()}
+    stored = keys.pop(key_text({column.name: values.get(column.name) for column in table.primary_key.columns}), None)
+    former = rows.pop(stored, None) if stored is not None else None
+    if former is not None:
+        pending(session).append(change(plan, _pk_values(table, former), LedgerOperation.DELETE, found, before=whole_row(former), owner=owner_of(plan, former)))
+
+
 def finish_rebuilds(session: Session) -> None:
+    session.info.pop(REBUILD_KEYS, None)
     baseline: dict[str, dict[str, dict[str, Any]]] | None = session.info.pop(REBUILDS, None)
     if not baseline:
         return
@@ -722,15 +773,32 @@ def bulk_wipe(state: ORMExecuteState, connection: Connection, plan: TablePlan, t
     kept = baseline.setdefault(target.name, {})
     for row in before_rows:
         kept.setdefault(rebuild_key(plan, row), row)
+    state.session.info.get(REBUILD_KEYS, {}).pop(target.name, None)
     return result
+
+
+def rows_by_keys(connection: Connection, target: Table, keys: list[RowValues]) -> dict[str, RowValues]:
+    columns = list(target.primary_key.columns)
+    found: dict[str, RowValues] = {}
+    for start in range(0, len(keys), KEY_BATCH):
+        chunk = keys[start : start + KEY_BATCH]
+        if len(columns) == 1:
+            where = columns[0].in_([key[columns[0].name] for key in chunk])
+        else:
+            where = tuple_(*columns).in_([tuple(key[column.name] for column in columns) for key in chunk])
+        for row in connection.execute(select(target).where(where)):
+            values = dict(row._mapping)
+            found[key_text(_pk_values(target, values))] = values
+    return found
 
 
 def touched_rows(state: ORMExecuteState, connection: Connection, plan: TablePlan, target: Table) -> list[RowValues]:
     if not state.is_executemany:
         return statement_rows(connection, target, getattr(state.statement, "whereclause", None))
     params = state.parameters if isinstance(state.parameters, list) else []
-    keys = [{column.name: item.get(column.name) for column in plan.primary} for item in params if isinstance(item, dict)]
-    return [row for key in keys for row in _raw_rows(connection, target, _pk_clause(target), key)]
+    keys = [{column.name: item.get(column.name) for column in target.primary_key.columns} for item in params if isinstance(item, dict)]
+    stored = rows_by_keys(connection, target, keys)
+    return [stored[key_text(key)] for key in keys if key_text(key) in stored]
 
 
 def column_changes(plan: TablePlan, key: RowValues, before: RowValues, after: RowValues, found: Stamp | None) -> list[PendingChange]:
@@ -747,14 +815,15 @@ def bulk_change(state: ORMExecuteState, connection: Connection, plan: TablePlan,
     session = state.session
     before_rows = touched_rows(state, connection, plan, target)
     result = state.invoke_statement()
+    after_rows = {} if state.is_delete else rows_by_keys(connection, target, [_pk_values(target, before) for before in before_rows])
     for before in before_rows:
         key = _pk_values(target, before)
         if state.is_delete:
             pending(session).append(change(plan, key, LedgerOperation.DELETE, found, before=whole_row(before), owner=owner_of(plan, before)))
             continue
-        rows = _raw_rows(connection, target, _pk_clause(target), key)
-        if rows:
-            pending(session).extend(column_changes(plan, key, before, rows[0], found))
+        after = after_rows.get(key_text(key))
+        if after is not None:
+            pending(session).extend(column_changes(plan, key, before, after, found))
     write_pending(session, connection)
     return result
 
@@ -778,12 +847,12 @@ def remember_insert(session: Session, instance: object) -> None:
     stamp_row(instance)
 
 
-def remember_set(target: object, value: Any, oldvalue: Any, initiator: Any) -> None:
+def remember_set(target: Any, value: Any, oldvalue: Any, initiator: Any) -> None:
     scope = SCOPE.get()
     collector = TERMS.get()
     if scope is None and collector is None:
         return
-    info = instance_state(target).info
+    info = target.info
     stamps = info.get(COLUMN_STAMPS)
     if stamps is None:
         stamps = info[COLUMN_STAMPS] = {}
@@ -803,10 +872,13 @@ def install_change_capture() -> None:
         return
     configure_mappers()
     for mapper in Base.registry.mappers:
+        if all(table.name in UNCAPTURED_TABLES for table in mapper.tables):
+            continue
         for prop in mapper.column_attrs:
             attribute = getattr(mapper.class_, prop.key, None)
             if attribute is not None and not event.contains(attribute, "set", remember_set):
-                event.listen(attribute, "set", remember_set)
+                event.listen(attribute, "set", remember_set, raw=True)
+    event.listen(Session, "before_flush", load_former)
     event.listen(Session, "after_flush", record_flush)
     event.listen(Session, "transient_to_pending", remember_insert)
     event.listen(Session, "do_orm_execute", capture_bulk)

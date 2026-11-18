@@ -766,7 +766,7 @@ export const MATERIAL_SLOT: Record<MaterialSlot, Named & { note: string }> = {
     label: 'Sails and fabric',
     icon: Wind,
     tone: 'verdigris',
-    note: 'What its sails and rigging are woven from',
+    note: 'What its sails and rigging are made from',
   },
 }
 

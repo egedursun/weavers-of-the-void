@@ -111,12 +111,16 @@ async def state_at(
     plan = table_plan(Base.metadata.tables[table_name])
     now = await present_row(session, table_name, row_key)
     changes = await changes_of(session, table_name, row_key)
+    if until_change_id is not None:
+        changes = sorted(changes, key=lambda change: change.id)
     alive, shape = exists_at(changes, point, now)
     if not alive:
         return None
-    row = dict(now if now is not None else shape or {})
+    replaced = next((change for change in changes if not point.settled(change) and change.operation is LedgerOperation.DELETE), None)
+    row = {**(now or {}), **(shape or {})} if replaced is not None else dict(now if now is not None else shape or {})
+    lived = changes[: changes.index(replaced)] if replaced is not None else changes
     for name in {column.name for column in plan.columns}:
-        updates = [change for change in changes if change.operation is LedgerOperation.UPDATE and change.field == name]
+        updates = [change for change in lived if change.operation is LedgerOperation.UPDATE and change.field == name]
         if not updates:
             continue
         settled = [change for change in updates if point.settled(change)]

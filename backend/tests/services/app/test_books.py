@@ -1,8 +1,10 @@
 import importlib
 import pkgutil
 import re
+from array import array
 from dataclasses import replace
 from enum import StrEnum
+from pathlib import Path
 
 import pytest
 from sqlalchemy import select
@@ -38,11 +40,16 @@ from aerona.engine.cosmos.ladder import ensure_ladder
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.rules.registry import Rules
 from aerona.services.books import book_page, codex_markdown
+from aerona.services.books import records as book_records
+from aerona.services.books import render as book_render
 from aerona.services.books.model import build_book, roman
 from aerona.services.books.render import CodexLinks, render_book
+from aerona.services.books.typed import TypedSection
 from aerona.services.codex import cosmic_chronicle, guide_markdown, traveller_guide
 from aerona.services.search import SearchCategory, SearchIndex, search
 from tests.services.app.factories import Cosmos, bond, make_entity, make_world
+
+MACRO = re.compile(r"\{%-?\s*macro\s+(\w+)\(")
 
 
 async def enrich(session: AsyncSession, world: Cosmos) -> int:
@@ -343,3 +350,25 @@ async def test_the_book_and_the_codex_never_show_a_raw_enum_key(session: AsyncSe
     for text in (page.html, codex):
         assert "Call for peace" in text and "Proper name" in text
         assert sorted(set(SNAKE_WORD.findall(MARKUP.sub(" ", text))) & keys) == []
+
+
+def test_no_book_template_macro_calls_itself() -> None:
+    folder = Path(book_render.__file__).parent / "templates"
+    recursive = []
+    for template in sorted(folder.glob("*.j2")):
+        text = template.read_text(encoding="utf-8")
+        for match in MACRO.finditer(text):
+            name = match.group(1)
+            body = text[match.end() : text.find("endmacro", match.end())]
+            if re.search(rf"\b{re.escape(name)}\(", body):
+                recursive.append(f"{template.name}: {name}")
+    assert recursive == []
+
+
+async def test_history_and_changes_rows_wait_on_disk_until_they_are_written(session: AsyncSession) -> None:
+    store = book_records.RowStore()
+    offsets = array("Q", [store.append(text) for text in ("first line", "second\\nline", "")])
+    rows = book_records.SpilledRows(store, offsets)
+    assert list(rows) == ["first line", "second\\nline", ""] and len(rows) == 3 and rows[1] == "second\\nline" and rows[0:2] == ["first line", "second\\nline"]
+    section = TypedSection("History", spilled=rows)
+    assert list(section.lines) == list(rows) and section.rows == []

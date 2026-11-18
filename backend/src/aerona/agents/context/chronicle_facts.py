@@ -43,7 +43,7 @@ from aerona.prompts.contexts.chronicler import (
 CREATOR_REF = "creator"
 TIMES_SUFFIX = " ({count:time|times})"
 ELLIPSIS = "…"
-VERDICT_KEYS = ("fate.thread_closed", "fate.prophecy_fulfilled")
+VERDICT_KEYS = ("fate.story_closed", "fate.prophecy_fulfilled")
 NOT_DEEDS = frozenset(
     {
         ChronicleKind.SPEECH,

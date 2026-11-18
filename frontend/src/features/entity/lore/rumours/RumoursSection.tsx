@@ -253,7 +253,7 @@ function RumourCard({
               onClick={() => pass.mutate()}
             >
               <Send />
-              Whisper it there
+              Spread it there
             </Button>
           </AdjustBlock>
         </div>
@@ -369,7 +369,7 @@ function PlantRumour({
         onClick={() => plant.mutate()}
       >
         <Megaphone />
-        Whisper it
+        Spread it
       </Button>
     </AdjustPanel>
   )

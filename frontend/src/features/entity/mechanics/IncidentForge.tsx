@@ -271,8 +271,8 @@ export function IncidentForge({
           <Text weight='semibold'>Write an incident into history</Text>
           <Muted variant='caption'>
             Name who acted and who was struck, and what it followed from, even
-            epochs ago. The chronicle, story threads and memories read it like
-            any other.
+            epochs ago. The chronicle, storylines and memories read it like any
+            other.
           </Muted>
         </div>
       </div>

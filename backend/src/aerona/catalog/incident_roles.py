@@ -25,7 +25,7 @@ INCIDENT_ROLES: MappingProxyType[str, tuple[IncidentRole, ...]] = MappingProxyTy
         "heroism.rewind": (A, T),
         "institutions.cult_merged": (T, A),
         "institutions.people_union": (T, A),
-        "institutions.place_swallowed": (A, T),
+        "institutions.place_absorbed": (A, T),
         "life_cycles.looted": (A, T, S),
         "living_stats.mystery_knowledge": (A, P, S),
         "living_stats.work_knowledge": (S, A, T),

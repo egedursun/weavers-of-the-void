@@ -242,8 +242,8 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </div>
       </OrderBlock>
       <OrderBlock
-        title='Story threads in the sky'
-        description='Send an echo of an open thread back through time, or abandon a legendary quest.'
+        title='Storylines in the sky'
+        description='Send an echo of an open storyline back through time, or abandon a legendary quest.'
       >
         <OrderFields>
           <Select
@@ -251,8 +251,8 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             onValueChange={setThread}
             disabled={threads.length === 0}
           >
-            <SelectTrigger aria-label='Thread' className='w-full'>
-              <SelectValue placeholder='No open thread' />
+            <SelectTrigger aria-label='Storyline' className='w-full'>
+              <SelectValue placeholder='No open storyline' />
             </SelectTrigger>
             <SelectContent>
               {threads.map((item) => (
@@ -270,7 +270,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             icon={Hourglass}
             pending={order.isPending}
             blockedReason={
-              threadId === '' ? 'There is no open thread.' : undefined
+              threadId === '' ? 'There is no open storyline.' : undefined
             }
             onRun={() =>
               order.mutate(() =>
@@ -289,7 +289,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             variant='destructive'
             pending={order.isPending}
             blockedReason={
-              threadId === '' ? 'There is no open thread.' : undefined
+              threadId === '' ? 'There is no open storyline.' : undefined
             }
             confirm={{
               title: 'Abandon this quest?',

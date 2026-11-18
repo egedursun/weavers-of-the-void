@@ -127,7 +127,7 @@ export function StoryThreads() {
   return (
     <Section
       title={closed ? 'Closed stories' : 'Open stories'}
-      description='Threads Fate is following through the epochs.'
+      description='Storylines Fate is following through the epochs.'
       actions={
         <Button variant='ghost' size='sm' onClick={() => setClosed(!closed)}>
           {closed ? 'Show open stories' : 'Show closed stories'}

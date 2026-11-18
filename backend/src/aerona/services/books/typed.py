@@ -1,7 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
@@ -163,6 +163,11 @@ class TypedSection:
     title: str
     facts: list[TypedFact] = field(default_factory=list)
     rows: list[str] = field(default_factory=list)
+    spilled: Sequence[str] | None = None
+
+    @property
+    def lines(self) -> Sequence[str]:
+        return self.spilled if self.spilled is not None else self.rows
 
 
 @dataclass
@@ -475,4 +480,4 @@ class TypedIndex:
         return words(key)
 
     def of(self, node_id: int) -> list[TypedSection]:
-        return [section for section in self.sections.get(node_id, []) if section.facts or section.rows]
+        return [section for section in self.sections.get(node_id, []) if section.facts or section.lines]

@@ -10,6 +10,7 @@ from aerona.db.tables.records import IncidentTermRow
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.pipeline import simulate
+from aerona.engine.recording.bands import quantity_field
 from aerona.rules.registry import Rules
 from tests.engine.core.stirring import eager, stir
 from tests.engine.integration.factories import seed_rich_cosmos
@@ -38,5 +39,14 @@ async def test_every_number_an_engine_step_changes_says_why_unless_its_kind_sets
                 )
             )
         ).all()
-    unexplained = Counter(f"{kind}: {table}.{field}" for kind, table, field in rows if not (spec := INCIDENT_KINDS.get(kind)) or not spec.direct)
+    unexplained = Counter(
+        f"{kind}: {table}.{field}"
+        for kind, table, field in rows
+        if quantity_field(table, field) and (not (spec := INCIDENT_KINDS.get(kind)) or not spec.direct)
+    )
     assert not unexplained, "Numbers changed with no terms:\n" + "\n".join(f"{count}x {line}" for line, count in unexplained.most_common(40))
+
+
+def test_a_link_to_another_record_is_not_a_quantity_that_needs_terms() -> None:
+    assert not quantity_field("structure_profiles", "design_id")
+    assert quantity_field("entities", "power_level")

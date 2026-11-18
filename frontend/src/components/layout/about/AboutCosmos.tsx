@@ -63,7 +63,7 @@ export function AboutCosmos() {
       icon: BookOpenText,
     },
     {
-      label: 'Threads',
+      label: 'Storylines',
       value: totals ? formatCompact(totals.bonds) : '-',
       icon: Waypoints,
     },

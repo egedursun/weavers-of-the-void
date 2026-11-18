@@ -267,7 +267,7 @@ export const RECORD_ACTIONS: readonly RecordActionSpec[] = [
       ctx.detail.insight.reward?.has_thread ? [] : ['thread_reverted'],
     labels: {
       taken_back_pct: 'Reward taken back (%)',
-      thread_reverted: 'Revert the fate thread it moved',
+      thread_reverted: 'Revert the storyline it moved',
     },
   },
   {
@@ -308,7 +308,7 @@ export const RECORD_ACTIONS: readonly RecordActionSpec[] = [
     self: 'entity_id',
     icon: Scroll,
     applies: (ctx) => ctx.canon,
-    labels: { thread_id: 'Story thread' },
+    labels: { thread_id: 'Storyline' },
   },
   {
     id: 'cult:merge',

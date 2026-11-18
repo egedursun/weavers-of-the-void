@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
@@ -22,6 +22,8 @@ from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.rules.registry import Rules
+
+WITNESS_BATCH = 2000
 
 HELD_PART = "witnesses"
 
@@ -151,7 +153,28 @@ def told(kind: str) -> bool:
     return spec is None or spec.told
 
 
+async def give_modes(ctx: TickContext, atlas: RegionAtlas) -> int:
+    modeless = list(
+        await ctx.session.execute(
+            select(IncidentParticipantRow, IncidentRow.place_entity_id)
+            .join(IncidentRow, IncidentRow.id == IncidentParticipantRow.incident_id)
+            .where(
+                IncidentParticipantRow.role == IncidentRole.WITNESS,
+                IncidentParticipantRow.witness_mode.is_(None),
+                IncidentRow.epoch >= ctx.epoch - 1,
+            )
+            .order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
+        )
+    )
+    for row, place in modeless:
+        mode = WitnessMode.SAW if place is None or atlas.holds(place, row.node_id) else WitnessMode.HEARD
+        row.witness_mode = mode
+        row.fidelity = fidelity_of(ctx.rules, mode)
+    return len(modeless)
+
+
 async def choose_witnesses(ctx: TickContext, atlas: RegionAtlas) -> int:
+    await give_modes(ctx, atlas)
     incidents = [
         row
         for row in await ctx.session.scalars(
@@ -172,6 +195,7 @@ async def choose_witnesses(ctx: TickContext, atlas: RegionAtlas) -> int:
     radius = ctx.rules.records.witness_radius
     loud = ctx.rules.rumours.min_magnitude
     made = 0
+    chosen: list[dict[str, object]] = []
     for incident in incidents:
         if HELD_PART in (incident.locked or []):
             continue
@@ -187,19 +211,21 @@ async def choose_witnesses(ctx: TickContext, atlas: RegionAtlas) -> int:
         for node, mode in sorted(seen.modes.items()):
             if node in involved or (node, IncidentRole.WITNESS) in taken or held(node):
                 continue
-            ctx.session.add(
-                IncidentParticipantRow(
-                    incident_id=incident.id,
-                    node_id=node,
-                    role=IncidentRole.WITNESS,
-                    position=position,
-                    witness_mode=mode,
-                    fidelity=fidelity_of(ctx.rules, mode),
-                )
+            chosen.append(
+                {
+                    "incident_id": incident.id,
+                    "node_id": node,
+                    "role": IncidentRole.WITNESS,
+                    "position": position,
+                    "witness_mode": mode,
+                    "fidelity": fidelity_of(ctx.rules, mode),
+                }
             )
             position += 1
             made += 1
     await ctx.session.flush()
+    for start in range(0, len(chosen), WITNESS_BATCH):
+        await ctx.session.execute(insert(IncidentParticipantRow), chosen[start : start + WITNESS_BATCH])
     return made
 
 

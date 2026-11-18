@@ -193,7 +193,7 @@ export const NAV_GROUPS: NavGroup[] = [
         title: 'Pantheon',
         to: '/pantheon',
         icon: Crown,
-        description: 'Your sons, their cards, threads and rivalries.',
+        description: 'Your sons, their cards, storylines and rivalries.',
         shortcut: '3',
       },
       {

@@ -53,7 +53,7 @@ STAR_NAME = "The {ordinal} Star of {world}'s sky"
 
 class RouteAction(StrEnum):
     SEVER = "sever"
-    STITCH = "stitch"
+    REOPEN = "reopen"
     REVEAL = "reveal"
 
 
@@ -169,7 +169,7 @@ async def route_action(scope: PlayerScope, command: RouteCommand) -> Effect:
         result = await sever_route(ctx, route.id, duration=command.duration, by=creator.name, by_id=creator.id)
         message = f"The route was severed until epoch {result.severed_until}."
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.SEVER_ROUTE, tool=tool, values={"until": result.severed_until})
-    if command.action is RouteAction.STITCH:
+    if command.action is RouteAction.REOPEN:
         spent = guards.charge(creator, scope.rules.beyond.reopen_route_cost, "beyond.reopen_route_cost")
         message = await repair_route(ctx, route.id)
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.REPAIR_ROUTE, tool=tool)

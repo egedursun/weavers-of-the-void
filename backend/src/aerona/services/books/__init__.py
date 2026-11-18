@@ -1,9 +1,14 @@
+import os
+import tempfile
+from pathlib import Path
+
+from anyio import to_thread
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
 from aerona.rules.registry import Rules
-from aerona.services.books.model import build_book, entry_chronicle
-from aerona.services.books.render import CodexLinks, PdfState, RenderedBook, find_entity, find_son, render_book, render_codex, render_entry
+from aerona.services.books.model import BookModel, build_book, entry_chronicle
+from aerona.services.books.render import CodexLinks, PdfState, RenderedBook, codex_chunks, find_entity, find_son, render_book, render_codex, render_entry
 
 
 async def book_page(
@@ -24,3 +29,19 @@ async def book_page(
 
 async def codex_markdown(session: AsyncSession, rules: Rules, links: CodexLinks) -> str:
     return render_codex(await build_book(session, rules), rules, links)
+
+
+def write_codex(target: Path, model: BookModel | None, rules: Rules, links: CodexLinks) -> None:
+    with target.open("w", encoding="utf-8") as out:
+        for chunk in codex_chunks(model, rules, links):
+            out.write(chunk)
+
+
+async def codex_file(session: AsyncSession, rules: Rules, links: CodexLinks, folder: Path) -> Path:
+    model = await build_book(session, rules)
+    await to_thread.run_sync(lambda: folder.mkdir(parents=True, exist_ok=True))
+    handle, name = tempfile.mkstemp(suffix=".md", dir=folder)
+    os.close(handle)
+    target = Path(name)
+    await to_thread.run_sync(write_codex, target, model, rules, links)
+    return target

@@ -138,21 +138,22 @@ export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {
 
 export const SKY_EVENT_DESCRIPTION: Record<SkyEventKind, string> = {
   eclipse:
-    'The light fails for a while; prophets read omens and the faithful tremble.',
-  comet: 'A burning wanderer crosses the sky and every people sees a sign.',
+    'The light of the star is blocked for a while; its worlds darken and their zeal and crowds can stir.',
+  comet:
+    'A comet crosses the sky; prophecies can name it and it may strike a world.',
   alignment:
     'The worlds stand in a line; slingshot and gate routes open for a time.',
   supernova:
-    'A star bursts; nearby worlds are lit and the fabric of the cosmos thins.',
-  black_sun: 'A star turns black and eats light; leakage rises in its worlds.',
+    'A star bursts; nearby worlds are lit and ash enters their weather.',
+  black_sun:
+    'A star turns dark and gives no light; leakage rises in its worlds.',
   void_storm:
-    'A storm of the void tears a route apart for a few epochs; voyages on it wait or are lost.',
+    'A storm of the void closes a route for a few epochs; voyages on it wait or are lost.',
   flare:
-    'A star flares: its worlds lose harvest, auroras burn as omens, and light sails bound to it may be scorched shut.',
-  aurora:
-    'After a flare, worlds with a strong field glow at night; their peoples read it as a sign.',
+    'A star flares: its worlds lose harvest, auroras follow, and light sails bound to it may be scorched shut.',
+  aurora: 'After a flare, worlds with a strong field show lights in their sky.',
   transit:
-    'An inner world crosses the face of the star as seen from an outer one; its peoples take note.',
+    'An inner world crosses the face of the star as seen from an outer one.',
 }
 
 export const DISCOVERY_LABEL: Record<Discovery, string> = {

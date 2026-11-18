@@ -1,5 +1,6 @@
 import argparse
 import ast
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -430,12 +431,55 @@ def collect(families: set[str] | None) -> dict[str, list[str]]:
     }
 
 
+CATALOG = SOURCE / "catalog" / "incident_kinds"
+VERSIONS = SOURCE / "db" / "alembic" / "versions"
+
+
+def catalog_keys(text: str) -> set[str]:
+    return {
+        node.args[0].value
+        for node in ast.walk(ast.parse(text))
+        if isinstance(node, ast.Call)
+        and getattr(node.func, "id", "") == "IncidentKindSpec"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    }
+
+
+def shipped_keys(revision: str = "HEAD") -> set[str]:
+    root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, cwd=SOURCE).stdout.strip()
+    listed = subprocess.run(["git", "ls-tree", "--name-only", revision, f"{CATALOG.relative_to(root)}/"], capture_output=True, text=True, cwd=root)
+    keys: set[str] = set()
+    for name in listed.stdout.split():
+        if name.endswith(".py"):
+            keys |= catalog_keys(subprocess.run(["git", "show", f"{revision}:{name}"], capture_output=True, text=True, cwd=root).stdout)
+    return keys
+
+
+def renamed_kinds(versions: Path = VERSIONS) -> set[str]:
+    former: set[str] = set()
+    for path in sorted(versions.glob("*.py")):
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
+            if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "RENAMED_KINDS" for target in node.targets):
+                former |= {pair[0] for pair in ast.literal_eval(node.value)}
+    return former
+
+
+def retired_kind_problems(shipped: set[str], current: set[str], renamed: set[str]) -> list[str]:
+    return [f"{key}: a shipped incident kind left the catalog without a RENAMED_KINDS migration for stored incidents" for key in sorted(shipped - current - renamed)]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--family", action="append", default=None)
     parser.add_argument("--summary", action="store_true")
     args = parser.parse_args()
     problems = collect(set(args.family) if args.family else None)
+    current = set(INCIDENT_KINDS).union(*(catalog_keys(path.read_text(encoding="utf-8")) for path in sorted(CATALOG.glob("*.py"))))
+    retired = retired_kind_problems(shipped_keys(), current, renamed_kinds())
+    if retired:
+        problems["retired"] = retired
     total = sum(len(lines) for lines in problems.values())
     if args.summary:
         for family, lines in sorted(problems.items(), key=lambda item: -len(item[1])):

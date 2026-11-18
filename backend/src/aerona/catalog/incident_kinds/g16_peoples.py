@@ -630,7 +630,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.WORLD,
     ),
     IncidentKindSpec(
-        "institutions.place_swallowed",
+        "institutions.place_absorbed",
         G.PEOPLES,
         "{target} was swallowed and is no more; {scattered:thing was|things were} scattered.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.ACTOR, required=False), RoleSpec(R.DESTINATION, required=False)),

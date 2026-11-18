@@ -434,3 +434,26 @@ def test_text_that_assumes_every_world_has_nights_is_caught() -> None:
     for text in ("{subject} is haunted by the same nightmare night after night.", "began to dream the same nightmare every night"):
         assert "assumed day and night" in rules_hit(module, PROMPT, text), text
     assert "assumed day and night" not in rules_hit(module, PROMPT, "{subject} is haunted by the same nightmare again and again.")
+
+
+def test_imagery_in_a_kind_key_is_caught(tmp_path: Path) -> None:
+    module = checker()
+    catalog = tmp_path / "kinds.py"
+    lines = ('IncidentKindSpec("travel.route_stitched", G.MOVEMENT, "The route opened again.")', 'IncidentKindSpec("travel.route_reopened", G.MOVEMENT, "x")')
+    catalog.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    keys = module.kind_keys(catalog)
+    assert keys == [(1, "travel.route_stitched"), (2, "travel.route_reopened")]
+    rules = [{finding.rule for finding in module.matches(catalog, line, module.spaced(key), True, False, enum_value=True)} for line, key in keys]
+    assert "borrowed imagery in a value" in rules[0]
+    assert "borrowed imagery in a value" not in rules[1]
+
+
+def test_screen_text_is_read_for_imagery_but_code_is_not() -> None:
+    module = checker()
+    screen = REPOSITORY_ROOT / "frontend/src/features/cosmos/Sample.tsx"
+    assert "borrowed imagery" in rules_hit(module, screen, "          label='Stitch it again'")
+    assert "borrowed imagery" in rules_hit(module, screen, "      Every record is bound to every other. Pull one thread and")
+    assert "borrowed imagery" not in rules_hit(module, screen, "  const stitch = useCosmicAction({")
+    assert "borrowed imagery" not in rules_hit(module, screen, "      queryKey: loreKeys.threads,")
+    assert "borrowed imagery" not in rules_hit(module, screen, "  thread: 'a story',")
+    assert "borrowed imagery" not in rules_hit(module, screen, "          label='Open it again'")

@@ -9,6 +9,12 @@ BACKEND = ROOT / "backend/src/aerona"
 PROMPTS = BACKEND / "prompts"
 ENUMS = BACKEND / "domain/enums"
 FRONTEND = ROOT / "frontend/src"
+SCREEN_SUFFIXES = frozenset({".ts", ".tsx"})
+SHOWN_WORD = re.compile(r"[A-Z][a-z]+")
+QUOTED = re.compile(r"(['\"`])((?:(?!\1).)*)\1")
+TEMPLATE_HOLE = re.compile(r"\$\{[^}]*\}")
+CODE_MARKS = re.compile(r"[=(){};<>\[\]]|^(?:import|export|const|let|return|if|case|type|interface)\b|^//|^\*|^[\w$]+\??:|\w\.\w|,$")
+KEYED_SPECS = frozenset({"IncidentKindSpec"})
 MODEL_FEEDING = (
     BACKEND / "catalog/genesis.py",
     FRONTEND / "features/onboarding",
@@ -391,9 +397,18 @@ def frontend_strings(path: Path) -> list[tuple[int, str]]:
 JINJA = re.compile(r"\{[{%#].*?[}%#]\}")
 
 
+def screen_text(line: str) -> str:
+    quoted = [TEMPLATE_HOLE.sub(" ", match.group(2)) for match in QUOTED.finditer(line)]
+    bare = line.strip()
+    spoken_line = [bare] if bare and not CODE_MARKS.search(bare) else []
+    return " | ".join([*quoted, *spoken_line])
+
+
 def prose(path: Path, value: str) -> str:
     if path.suffix == ".j2":
         return JINJA.sub(" ", value)
+    if path.suffix in SCREEN_SUFFIXES:
+        return " | ".join(part for part in screen_text(value).split(" | ") if any(character.isspace() for character in part.strip()) or SHOWN_WORD.fullmatch(part))
     return value if path.suffix == ".py" and any(character.isspace() for character in value.strip()) else ""
 
 
@@ -427,11 +442,33 @@ def enum_values(path: Path) -> list[tuple[int, str]]:
     ]
 
 
+def spaced(value: str) -> str:
+    return value.replace("_", " ").replace(".", " ")
+
+
+def kind_keys(path: Path) -> list[tuple[int, str]]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return [
+        (node.lineno, node.args[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and getattr(node.func, "id", "") in KEYED_SPECS
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    ]
+
+
 def enum_findings() -> list[Finding]:
     found: list[Finding] = []
     for path in sorted(ENUMS.glob("*.py")):
         for line, value in enum_values(path):
-            found.extend(matches(path, line, value.replace("_", " "), True, False, enum_value=True))
+            found.extend(matches(path, line, spaced(value), True, False, enum_value=True))
+    for path in backend_targets():
+        if path.suffix != ".py" or path.is_relative_to(ENUMS):
+            continue
+        for line, value in kind_keys(path):
+            found.extend(matches(path, line, spaced(value), True, False, enum_value=True))
     return found
 
 
@@ -499,7 +536,7 @@ def kind_findings() -> list[Finding]:
         if path.suffix != ".py" or path.is_relative_to(BACKEND / "db/tables"):
             continue
         for line, value in kind_text(path, rows):
-            found.extend(matches(path, line, value.replace("_", " "), True, False, enum_value=True))
+            found.extend(matches(path, line, spaced(value), True, False, enum_value=True))
     return found
 
 

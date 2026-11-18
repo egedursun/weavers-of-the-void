@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
+from aerona.db.base import Base
 from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -51,9 +52,16 @@ def rows_per_thousand(before: RecordCounts, after: RecordCounts, epochs: int) ->
     return (after.rows - before.rows) / max(1, epochs) / mortals * THOUSAND
 
 
+def quantity_field(table_name: str, field: str | None) -> bool:
+    table = Base.metadata.tables.get(table_name)
+    if table is None or field is None or field not in table.c:
+        return True
+    return not table.c[field].foreign_keys
+
+
 async def terms_share(session: AsyncSession, since_change_id: int = 0) -> float:
     numeric = (
-        select(StateChangeRow.id, StateChangeRow.incident_id, IncidentRow.kind)
+        select(StateChangeRow.id, StateChangeRow.incident_id, IncidentRow.kind, StateChangeRow.table_name, StateChangeRow.field)
         .outerjoin(IncidentRow, IncidentRow.id == StateChangeRow.incident_id)
         .where(
             StateChangeRow.id > since_change_id,
@@ -66,7 +74,9 @@ async def terms_share(session: AsyncSession, since_change_id: int = 0) -> float:
     reasoned = set(await session.scalars(select(IncidentTermRow.incident_id).distinct()))
     total = 0
     held = 0
-    for change_id, incident_id, kind in await session.execute(numeric):
+    for change_id, incident_id, kind, table_name, field in await session.execute(numeric):
+        if not quantity_field(table_name, field):
+            continue
         total += 1
         spec = INCIDENT_KINDS.get(kind) if kind is not None else None
         if change_id in explained or incident_id in reasoned or (spec is not None and spec.direct):

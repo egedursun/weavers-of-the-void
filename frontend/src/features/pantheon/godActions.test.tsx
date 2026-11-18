@@ -280,7 +280,7 @@ describe('open a new story', () => {
   })
 })
 
-describe('story threads', () => {
+describe('storylines', () => {
   const thread = (
     id: number,
     status: 'open' | 'closed',

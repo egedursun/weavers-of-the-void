@@ -175,14 +175,14 @@ async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling,
         if not await advance_story(session, thread, record.id, epoch):
             continue
         if thread.id not in closed_ids:
-            await record_line(session, rules, "fate.thread_advanced", roles={IncidentRole.SUBJECT: record.id}, facts={"how": how}, kind=ChronicleKind.FATE)
+            await record_line(session, rules, "fate.story_advanced", roles={IncidentRole.SUBJECT: record.id}, facts={"how": how}, kind=ChronicleKind.FATE)
     for item in first_by_id(closing, lambda closed: closed.id):
         thread = await session.get(ThreadRow, item.id)
         if thread is None or thread.status is ThreadStatus.CLOSED or not await thread_closable(session, rules, thread, epoch):
             continue
         how = clean_fate_note(item.how) or ""
         related = await close_story(session, thread, how or None, epoch)
-        await record_line(session, rules, "fate.thread_closed", roles={IncidentRole.SUBJECT: list(related)}, facts={"how": how}, kind=ChronicleKind.FATE)
+        await record_line(session, rules, "fate.story_closed", roles={IncidentRole.SUBJECT: list(related)}, facts={"how": how}, kind=ChronicleKind.FATE)
 
 
 async def new_stories(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, limit: int) -> None:

@@ -429,7 +429,7 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
 
 async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     tools = call.rules.son_tools
-    await call.within_limit(TurnCounter.LEAK_CLOSED, tools.seal_per_epoch, "son_tools.seal_per_epoch", SonResult.STITCH_LIMIT)
+    await call.within_limit(TurnCounter.LEAK_CLOSED, tools.seal_per_epoch, "son_tools.seal_per_epoch", SonResult.SEAL_LIMIT)
     world = await call.session.get(WorldRow, call.world_id) if call.world_id is not None else None
     if world is None:
         fail(SonResult.WORLD_UNREGISTERED)
@@ -442,13 +442,13 @@ async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     call.target(world.id)
     await call.bump(TurnCounter.LEAK_CLOSED)
     await call.record(
-        "tools.son.stitch",
+        "tools.son.seal_leak",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: world.id},
         facts={"how": str(args.how), "old": str(old), "new": world.leakage},
         kind=ChronicleKind.COSMIC,
         world_id=world.id,
     )
-    return result(SonResult.STITCHED, old=old, new=world.leakage)
+    return result(SonResult.SEALED, old=old, new=world.leakage)
 
 
 async def bargain_with_outsider(call: SonCall, args: OuterBargainInput) -> str:

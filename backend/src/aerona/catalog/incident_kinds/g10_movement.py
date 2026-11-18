@@ -1154,7 +1154,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         feed=F.GATE,
     ),
     IncidentKindSpec(
-        "travel.route_stitched",
+        "travel.route_reopened",
         G.MOVEMENT,
         "The route between {first} and {second} was opened again.",
         roles=(RoleSpec(R.AUTHORITY, required=False),),

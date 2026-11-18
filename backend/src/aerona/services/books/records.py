@@ -1,9 +1,15 @@
 import json
+import os
+import struct
+import tempfile
+import weakref
+from array import array
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
+from typing import overload
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
@@ -17,6 +23,7 @@ from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentS
 from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, ProcessGroup, StepLocus
 from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection, title_of, words
 
@@ -53,6 +60,88 @@ def moment_text(epoch: int, year: int | None, season: int | None, day: int | Non
     return ", ".join(parts)
 
 
+@dataclass(frozen=True, slots=True)
+class ChangeLine:
+    id: int
+    epoch: int
+    year: int | None
+    season: int | None
+    day: int | None
+    hour: int | None
+    table_name: str
+    field: str | None
+    node_id: int | None
+    incident_id: int | None
+    operation: LedgerOperation
+    before_number: float | None
+    before_text: str | None
+    before_node_id: int | None
+    after_number: float | None
+    after_text: str | None
+    after_node_id: int | None
+    actor_kind: ActorKind
+    actor_node_id: int | None
+    phase: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class TermLine:
+    op: ModifierOp
+    term: str
+    amount: float
+    source_node_id: int | None
+    source_incident_id: int | None
+
+
+class RowStore:
+    def __init__(self) -> None:
+        handle, path = tempfile.mkstemp(prefix="aerona-book-")
+        os.unlink(path)
+        self.handle = handle
+        self.end = 0
+        weakref.finalize(self, os.close, handle)
+
+    def append(self, text: str) -> int:
+        data = text.encode()
+        offset = self.end
+        os.pwrite(self.handle, LENGTH.pack(len(data)) + data, offset)
+        self.end = offset + LENGTH.size + len(data)
+        return offset
+
+    def read(self, offset: int) -> str:
+        (size,) = LENGTH.unpack(os.pread(self.handle, LENGTH.size, offset))
+        return os.pread(self.handle, size, offset + LENGTH.size).decode()
+
+
+class SpilledRows(Sequence[str]):
+    def __init__(self, store: RowStore, offsets: array[int]) -> None:
+        self.store = store
+        self.offsets = offsets
+
+    def __len__(self) -> int:
+        return len(self.offsets)
+
+    @overload
+    def __getitem__(self, index: int) -> str: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> list[str]: ...
+
+    def __getitem__(self, index: int | slice) -> str | list[str]:
+        if isinstance(index, slice):
+            return [self.store.read(offset) for offset in self.offsets[index]]
+        return self.store.read(self.offsets[index])
+
+    def __iter__(self) -> Iterator[str]:
+        for offset in self.offsets:
+            yield self.store.read(offset)
+
+
+CHANGE_COLUMNS = tuple(StateChangeRow.__table__.c[name] for name in ChangeLine.__dataclass_fields__)
+CHANGE_CHUNK = 50_000
+LENGTH = struct.Struct("<I")
+
+
 @dataclass
 class Ledger:
     names: dict[int, str]
@@ -63,9 +152,12 @@ class Ledger:
     steps: dict[int, list[IncidentStepRow]] = field(default_factory=lambda: defaultdict(list))
     states: dict[int, list[IncidentStepStateRow]] = field(default_factory=lambda: defaultdict(list))
     terms: dict[int, list[IncidentTermRow]] = field(default_factory=lambda: defaultdict(list))
-    changes: dict[int | None, list[StateChangeRow]] = field(default_factory=lambda: defaultdict(list))
-    change_terms: dict[int, list[StateChangeTermRow]] = field(default_factory=lambda: defaultdict(list))
-    by_incident: dict[int, list[StateChangeRow]] = field(default_factory=lambda: defaultdict(list))
+    store: RowStore = field(default_factory=RowStore)
+    changes: dict[int | None, array[int]] = field(default_factory=lambda: defaultdict(lambda: array("Q")))
+    by_incident: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
+    phase_counts: dict[int, int] = field(default_factory=lambda: defaultdict(int))
+    first_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
+    last_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
     named: dict[int, IncidentNameRow] = field(default_factory=dict)
     rumours: dict[int, list[RumourRow]] = field(default_factory=lambda: defaultdict(list))
     distortions: dict[int, list[RumourDistortionRow]] = field(default_factory=lambda: defaultdict(list))
@@ -87,14 +179,45 @@ class Ledger:
             ledger.states[state.step_id].append(state)
         for term in await session.scalars(select(IncidentTermRow).order_by(IncidentTermRow.incident_id, IncidentTermRow.position)):
             ledger.terms[term.incident_id].append(term)
-        for change in await session.scalars(select(StateChangeRow).order_by(StateChangeRow.id)):
-            ledger.changes[change.node_id].append(change)
-            if change.incident_id is not None:
-                ledger.by_incident[change.incident_id].append(change)
-        for change_term in await session.scalars(select(StateChangeTermRow).order_by(StateChangeTermRow.change_id, StateChangeTermRow.position)):
-            ledger.change_terms[change_term.change_id].append(change_term)
         await ledger.load_tellings(session)
+        await ledger.load_changes(session)
         return ledger
+
+    async def load_changes(self, session: AsyncSession) -> None:
+        last = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
+        for start in range(0, last, CHANGE_CHUNK):
+            end = start + CHANGE_CHUNK
+            terms: dict[int, list[TermLine]] = defaultdict(list)
+            term_rows = await session.execute(
+                select(
+                    StateChangeTermRow.change_id,
+                    StateChangeTermRow.op,
+                    StateChangeTermRow.term,
+                    StateChangeTermRow.amount,
+                    StateChangeTermRow.source_node_id,
+                    StateChangeTermRow.source_incident_id,
+                )
+                .where(StateChangeTermRow.change_id > start, StateChangeTermRow.change_id <= end)
+                .order_by(StateChangeTermRow.change_id, StateChangeTermRow.position)
+            )
+            for change_id, op, term, amount, source_node_id, source_incident_id in term_rows:
+                terms[change_id].append(TermLine(op, term, amount, source_node_id, source_incident_id))
+            rows = await session.execute(select(*CHANGE_COLUMNS).where(StateChangeRow.id > start, StateChangeRow.id <= end).order_by(StateChangeRow.id))
+            for row in rows:
+                self.take_change(ChangeLine(*row), terms.get(row[0], []))
+
+    def take_change(self, change: ChangeLine, terms: list[TermLine]) -> None:
+        text = self.change_text(change, terms)
+        self.changes[change.node_id].append(self.store.append(text))
+        happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
+        if happening is not None and happening.kind.startswith(PHASE_PREFIX):
+            self.phase_counts[happening.id] += 1
+        elif change.incident_id is not None:
+            self.by_incident[change.incident_id].append(text)
+        if change.node_id is not None and change.operation is LedgerOperation.UPDATE and change.field is not None:
+            key = (change.table_name, change.field)
+            self.first_seen[change.node_id].setdefault(key, change)
+            self.last_seen[change.node_id][key] = change
 
     async def load_tellings(self, session: AsyncSession) -> None:
         for name in await session.scalars(select(IncidentNameRow).order_by(IncidentNameRow.incident_id)):
@@ -197,7 +320,7 @@ class Ledger:
             parts.append(f"[{', '.join(states)}]")
         return " ".join(parts)
 
-    def value_text(self, change: StateChangeRow, before: bool) -> str:
+    def value_text(self, change: ChangeLine, before: bool) -> str:
         node = change.before_node_id if before else change.after_node_id
         if node is not None:
             return self.name(node)
@@ -207,13 +330,13 @@ class Ledger:
         text = change.before_text if before else change.after_text
         return text if text is not None else "none"
 
-    def shift_text(self, before: StateChangeRow, after: StateChangeRow) -> str:
+    def shift_text(self, before: ChangeLine, after: ChangeLine) -> str:
         rewritten = rewritten_parts(before.before_text, after.after_text)
         if rewritten is not None:
             return f"rewrote {rewritten}"
         return f"{self.value_text(before, True)} → {self.value_text(after, False)}"
 
-    def change_text(self, change: StateChangeRow) -> str:
+    def change_text(self, change: ChangeLine, terms: list[TermLine]) -> str:
         record = title_of(change.table_name).lower()
         owner = f" of {self.name(change.node_id)}" if change.node_id is not None else ""
         if change.operation is LedgerOperation.UPDATE:
@@ -222,8 +345,8 @@ class Ledger:
             body = f"{'created' if change.operation is LedgerOperation.INSERT else 'removed'} {an(record)} record{owner}"
         actor = f" by {self.name(change.actor_node_id)}" if change.actor_node_id is not None else f" by the {spoken(change.actor_kind)}"
         phase = f" in {spoken(change.phase)}" if change.phase else ""
-        terms = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in self.change_terms.get(change.id, [])]
-        why = f" because {'; '.join(terms)}" if terms else ""
+        reasons = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in terms]
+        why = f" because {'; '.join(reasons)}" if reasons else ""
         happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
         cause = f" (during: {self.line_of(happening)})" if happening is not None and not happening.kind.startswith(PHASE_PREFIX) else ""
         when = moment_text(change.epoch, change.year, change.season, change.day, change.hour)
@@ -253,7 +376,7 @@ class Ledger:
         steps = [self.step_text(step) for step in self.steps.get(incident.id, [])]
         if steps:
             parts.append("steps: " + " ".join(steps))
-        changes = [self.change_text(change) for change in self.by_incident.get(incident.id, [])]
+        changes = self.by_incident.get(incident.id, [])
         if changes:
             parts.append("changes: " + "; ".join(changes))
         rumours = [self.rumour_text(rumour) for rumour in self.rumours.get(incident.id, [])]
@@ -265,20 +388,14 @@ class Ledger:
         return " · ".join(parts)
 
     def changes_cell(self, incident: IncidentRow) -> str:
-        changes = self.by_incident.get(incident.id, [])
         if incident.kind.startswith(PHASE_PREFIX):
-            return f"{several(len(changes), 'change', 'changes')}, each told under the record it changed" if changes else ""
-        return "; ".join(self.change_text(change) for change in changes)
+            count = self.phase_counts.get(incident.id, 0)
+            return f"{several(count, 'change', 'changes')}, each told under the record it changed" if count else ""
+        return "; ".join(self.by_incident.get(incident.id, []))
 
     def then_and_now(self, node_id: int) -> list[tuple[str, str]]:
-        first: dict[tuple[str, str], StateChangeRow] = {}
-        last: dict[tuple[str, str], StateChangeRow] = {}
-        for change in self.changes.get(node_id, []):
-            if change.operation is not LedgerOperation.UPDATE or change.field is None:
-                continue
-            key = (change.table_name, change.field)
-            first.setdefault(key, change)
-            last[key] = change
+        first = self.first_seen.get(node_id, {})
+        last = self.last_seen.get(node_id, {})
         found: list[tuple[str, str]] = []
         for key, earliest in first.items():
             latest = last[key]
@@ -329,10 +446,11 @@ async def add_history_sections(session: AsyncSession, index: TypedIndex) -> Ledg
     for node_id in sorted(node_ids_of(ledger)):
         incidents = sorted((ledger.incidents[item] for item in taking_part.get(node_id, []) if item in ledger.incidents), key=lambda row: (row.epoch, row.id))
         if incidents:
-            index.sections[node_id].append(TypedSection(HISTORY_TITLE, rows=[ledger.account_text(row, node_id) for row in incidents]))
-        changes = ledger.changes.get(node_id, [])
+            told = array("Q", (ledger.store.append(ledger.account_text(row, node_id)) for row in incidents))
+            index.sections[node_id].append(TypedSection(HISTORY_TITLE, spilled=SpilledRows(ledger.store, told)))
+        changes = ledger.changes.get(node_id)
         if changes:
-            index.sections[node_id].append(TypedSection(CHANGES_TITLE, rows=[ledger.change_text(change) for change in changes]))
+            index.sections[node_id].append(TypedSection(CHANGES_TITLE, spilled=SpilledRows(ledger.store, changes)))
         then = ledger.then_and_now(node_id)
         if then:
             section = TypedSection(THEN_TITLE)
@@ -407,7 +525,7 @@ async def record_tables(session: AsyncSession, ledger: Ledger) -> list[RecordTab
         if report is not None and ledger.steps.get(incident.id):
             tables.append(report_table(ledger, incident, report))
     loose = RecordTable("Changes to records of no single node", ["Change"])
-    loose.rows = [[ledger.change_text(change)] for change in ledger.changes.get(None, [])]
+    loose.rows = [[text] for text in SpilledRows(ledger.store, ledger.changes.get(None, array("Q")))]
     if loose.rows:
         tables.append(loose)
     checkpoints = RecordTable("Checkpoints of the past", ["Epoch", "Table", "Rows", "Digest", "Last change"])

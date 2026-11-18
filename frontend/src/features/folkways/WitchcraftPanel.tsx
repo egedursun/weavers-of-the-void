@@ -192,8 +192,8 @@ export function WitchcraftPanel({
         chart='chart-hunts'
         title='Fervour of the witch hunts'
         legend={[
-          { text: 'Burning', variant: 'destructive' },
-          { text: 'Burned out', variant: 'secondary' },
+          { text: 'Active', variant: 'destructive' },
+          { text: 'Ended', variant: 'secondary' },
         ]}
         rows={data.hunts.map((row) => ({
           key: row.id,

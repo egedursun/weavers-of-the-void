@@ -52,7 +52,7 @@ const SECTION_TITLE: Record<CommandSection, string> = {
   economy: 'Economy: resources, deposits and cravings',
   mechanics: 'World mechanics: run them now',
   orders: 'Cosmic orders: exile, souls, markets and stars',
-  beyond: 'The Beyond: archive, plague, horrors and threads',
+  beyond: 'The Beyond: archive, plague, horrors and storylines',
 }
 
 const SECTION_ICON: Record<CommandSection, LucideIcon> = {

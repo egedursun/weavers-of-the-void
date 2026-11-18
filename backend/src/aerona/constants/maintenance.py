@@ -73,3 +73,5 @@ MERGE_SKIPPED_NODE_KINDS = frozenset({"son", "creator"})
 MERGE_IMAGE_PREFIX = "merged"
 MERGE_PRAGMA_DEFER = "PRAGMA defer_foreign_keys = ON"
 MERGE_FOREIGN_KEY_CHECK = "PRAGMA foreign_key_check"
+SQLITE_CACHE_KIB = 131_072
+SQLITE_MMAP_BYTES = 2_147_483_648

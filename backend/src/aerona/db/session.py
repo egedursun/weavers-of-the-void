@@ -6,6 +6,7 @@ from typing import Any
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from aerona.constants.maintenance import SQLITE_CACHE_KIB, SQLITE_MMAP_BYTES
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.activity import install_activity_capture
 from aerona.db.bond_index import drop_lookup
@@ -39,6 +40,8 @@ class Database:
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.execute("PRAGMA trusted_schema=OFF")
         cursor.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
+        cursor.execute(f"PRAGMA cache_size=-{SQLITE_CACHE_KIB}")
+        cursor.execute(f"PRAGMA mmap_size={SQLITE_MMAP_BYTES}")
         cursor.close()
 
     @asynccontextmanager

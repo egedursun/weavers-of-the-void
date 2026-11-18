@@ -29,7 +29,7 @@ from aerona.prompts.contexts.common import WorldItem
 from aerona.prompts.contexts.fate import AgeEventRow, AgeEventsContext, WorldEvents
 
 DIGITS = re.compile(r"\d+")
-PREVIOUS_VERDICT_KEYS = ("fate.thread_advanced",)
+PREVIOUS_VERDICT_KEYS = ("fate.story_advanced",)
 CREATOR_FOLD_KINDS = frozenset({ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.STAR})
 
 

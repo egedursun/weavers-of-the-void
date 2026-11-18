@@ -75,7 +75,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Leakage',
     meaning:
-      'The Outside seeping into a world, from 0 to 100. As it rises, cosmic horror follows; sons can stitch the leak.',
+      'The Outside seeping into a world, from 0 to 100. As it rises, cosmic horror follows; sons can seal the leak.',
   },
   {
     term: 'World rules',

@@ -21,7 +21,7 @@ from aerona.engine.phases.civilization import set_tier
 from aerona.engine.phases.creatures import cross_species, force_mutation
 from aerona.engine.phases.horror import order_horror_event, set_son_sanity
 from aerona.engine.phases.sky import SkyOrder, order_sky_event
-from aerona.engine.phases.travel import send_expedition, sever_by_hand, stitch_by_hand
+from aerona.engine.phases.travel import reopen_by_hand, send_expedition, sever_by_hand
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, teach, tick, tuned
 
@@ -64,7 +64,7 @@ async def test_manual_services(session: AsyncSession, cosmos: Cosmos, rules: Rul
     journey = await send_expedition(session, rules, people.id, route.id, JourneyIntent.COLONY, population=500)
     assert isinstance(journey, JourneyRow)
     assert "storm" in await sever_by_hand(session, rules, route.id, "Aeron", duration=2)
-    assert "opened again" in await stitch_by_hand(session, rules, route.id)
+    assert "opened again" in await reopen_by_hand(session, rules, route.id)
     beast = await make_entity(session, "Graveling", EntityType.SPECIES, SpeciesStats(strength=50, danger=40), world_id=other.id, location_id=region.id)
     deer = await make_entity(session, "Glimdeer", EntityType.SPECIES, SpeciesStats(strength=20, danger=10), world_id=other.id, location_id=region.id)
     mutant = await force_mutation(session, rules, beast.id)

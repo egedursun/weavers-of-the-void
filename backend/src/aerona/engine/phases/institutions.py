@@ -540,7 +540,7 @@ async def swallowed_places(ctx: TickContext) -> int:
         moved = await swallow(ctx, place, event)
         await record_incident(
             ctx,
-            "institutions.place_swallowed",
+            "institutions.place_absorbed",
             roles={IncidentRole.ACTOR: event.id, IncidentRole.TARGET: place.id, IncidentRole.DESTINATION: event.location_id},
             facts={"scattered": moved},
         )
@@ -634,7 +634,7 @@ async def swallow_place_by_hand(ctx: TickContext, place_id: int) -> EntityRow:
     if place is None or place.entity_type is not EntityType.PLACE:
         raise ValidationFailedError("Only a living place can be swallowed.")
     await swallow(ctx, place, None)
-    await record_incident(ctx, "institutions.place_swallowed", roles={IncidentRole.TARGET: place.id}, facts={"scattered": 0})
+    await record_incident(ctx, "institutions.place_absorbed", roles={IncidentRole.TARGET: place.id}, facts={"scattered": 0})
     return place
 
 

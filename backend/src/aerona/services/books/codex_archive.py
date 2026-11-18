@@ -11,15 +11,15 @@ from aerona.services.books.render import CodexLinks
 from aerona.services.container import Services
 
 
-def _pack(directory: Path, text: str, stem: str, target: Path) -> None:
+def _pack(directory: Path, codex: Path, stem: str, target: Path) -> None:
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr(f"{stem}/{CODEX_FILENAME}", text)
+        archive.write(codex, f"{stem}/{CODEX_FILENAME}")
         for path in sorted(directory.rglob("*")):
             if path.is_file():
                 archive.write(path, f"{stem}/{path.relative_to(directory).as_posix()}", compress_type=zipfile.ZIP_STORED)
 
 
-async def build_codex_archive(services: Services, text: str, links: CodexLinks, stem: str) -> Path:
+async def build_codex_archive(services: Services, codex: Path, links: CodexLinks, stem: str) -> Path:
     exports = services.settings.exports_dir
     await to_thread.run_sync(lambda: exports.mkdir(parents=True, exist_ok=True))
     handle, name = tempfile.mkstemp(suffix=".zip", dir=exports)
@@ -37,5 +37,5 @@ async def build_codex_archive(services: Services, text: str, links: CodexLinks, 
             path = directory / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             await to_thread.run_sync(path.write_text, figure)
-        await to_thread.run_sync(_pack, directory, text, stem, target)
+        await to_thread.run_sync(_pack, directory, codex, stem, target)
     return target

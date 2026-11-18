@@ -154,7 +154,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         feed=F.GATE,
     ),
     IncidentKindSpec(
-        "horror.route_stitched",
+        "horror.route_reopened",
         G.FAITH,
         "The route between {origin} and {destination}, severed by the void, opened again.",
         roles=(RoleSpec(R.ORIGIN), RoleSpec(R.DESTINATION)),
@@ -444,7 +444,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
-        "magic.eternal_storm",
+        "magic.lasting_storm",
         G.FAITH,
         "A rite gone wrong left a storm over {place} that will not die.",
         roles=(RoleSpec(R.PLACE),),

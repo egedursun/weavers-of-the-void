@@ -1219,8 +1219,8 @@ async def sever_by_hand(session: AsyncSession, rules: Rules, route_id: int, by: 
     return (await sever_route(ctx, route_id, duration=duration, by=by)).text
 
 
-async def stitch_by_hand(session: AsyncSession, rules: Rules, route_id: int) -> str:
-    return await repair_route(await manual_context(session, "stitch", rules, key=str(route_id)), route_id)
+async def reopen_by_hand(session: AsyncSession, rules: Rules, route_id: int) -> str:
+    return await repair_route(await manual_context(session, "reopen", rules, key=str(route_id)), route_id)
 
 
 async def run_travel_phase(session: AsyncSession, rules: Rules) -> None:

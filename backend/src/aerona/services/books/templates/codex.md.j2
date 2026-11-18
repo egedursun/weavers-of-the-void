@@ -65,7 +65,7 @@
 {% for section in sections %}
 **{{ section.title }}.**{% for fact in section.facts %} {{ fact.label }}: {{ fact.value }}{% if not loop.last %};{% endif %}{% endfor %}
 
-{% for row in section.rows %}
+{% for row in section.lines %}
 - {{ row }}
 {% endfor %}
 
@@ -240,7 +240,6 @@
 
 
 {% endif %}
-{% for child in article.children %}{{ codex_entity(child) }}{% endfor %}
 {%- endmacro %}
 {% if not book %}
 # There is no world yet
@@ -748,7 +747,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 {% for label, articles in group.groups %}
 ### {{ label }} · {{ articles | length }}
 
-{% for article in articles %}{{ codex_entity(article) }}{% endfor %}
+{% for article in articles | with_descendants %}{{ codex_entity(article) }}{% endfor %}
 
 {% endfor %}
 {% endfor %}
@@ -774,7 +773,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 ## Tongues and Dictionaries
 
 {% for language in book.languages %}
-{{ codex_entity(language.article) }}
+{% for article in [language.article] | with_descendants %}{{ codex_entity(article) }}{% endfor %}
 *{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}*
 
 {% if language.words %}

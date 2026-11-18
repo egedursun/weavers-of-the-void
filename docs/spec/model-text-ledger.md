@@ -151,7 +151,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/tellings.py` | 5 | 2026-11-17 | `6319f7aed2dddd67` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 36 | 2026-11-16 | `e8ac2f8a150c56d6` |
-| `backend/src/aerona/catalog/invariants.py` | 63 | 2026-11-17 | `cbf63fd67d2dd292` |
+| `backend/src/aerona/catalog/invariants.py` | 65 | 2026-11-18 | `4074f8c9f78ed4d3` |
 | `backend/src/aerona/catalog/kinds/crafts_labels.py` | 13 | 2026-11-16 | `c8bc0757593d4742` |
 | `backend/src/aerona/catalog/kinds/defined/ages.py` | 9 | 2026-11-17 | `2c26d32b0e830d97` |
 | `backend/src/aerona/catalog/kinds/defined/agrarian.py` | 2 | 2026-11-17 | `5a19bd7ff9388c1e` |
@@ -767,7 +767,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/prehistory/control.py` | 17 | 2026-11-16 | `0a0851b33e76543e` |
 | `backend/src/aerona/engine/prehistory/run.py` | 1 | 2026-11-16 | `08d9bc6f5564b3de` |
 | `backend/src/aerona/engine/primitives/canon_facts.py` | 7 | 2026-11-16 | `04cf7a1bf680fdce` |
-| `backend/src/aerona/engine/primitives/distance.py` | 1 | 2026-11-16 | `b5f998736ee5de55` |
+| `backend/src/aerona/engine/primitives/distance.py` | 1 | 2026-11-18 | `681596ee45a4f852` |
 | `backend/src/aerona/engine/primitives/edits.py` | 6 | 2026-11-16 | `39b43d9aa2fc5e7d` |
 | `backend/src/aerona/engine/primitives/first_bonds.py` | 2 | 2026-11-17 | `3efc955c3287d555` |
 | `backend/src/aerona/engine/primitives/ledger.py` | 13 | 2026-11-16 | `01fdd6c710808cd5` |
@@ -1080,12 +1080,12 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/model.py` | 37 | 2026-11-16 | `029bc1caae8c2a7b` |
 | `backend/src/aerona/services/books/pdf.py` | 2 | 2026-11-16 | `6431fef84261e750` |
 | `backend/src/aerona/services/books/records.py` | 7 | 2026-11-17 | `ed6deef434b0c5d8` |
-| `backend/src/aerona/services/books/templates/book.html.j2` | 213 | 2026-11-16 | `95c4e2c5f9fb4a87` |
-| `backend/src/aerona/services/books/templates/codex.md.j2` | 398 | 2026-11-16 | `3d2edd4253f60b3c` |
+| `backend/src/aerona/services/books/templates/book.html.j2` | 213 | 2026-11-18 | `7b97ad07ce34559b` |
+| `backend/src/aerona/services/books/templates/codex.md.j2` | 397 | 2026-11-18 | `b1d07f606580c7b6` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
-| `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-16 | `65731a75526e073f` |
-| `backend/src/aerona/services/books/templates/layout.html.j2` | 331 | 2026-11-16 | `a703b6f16e9f2f69` |
-| `backend/src/aerona/services/books/templates/macros.html.j2` | 123 | 2026-11-16 | `3cef4b6c312994ab` |
+| `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-18 | `7f1335c9cd560b4b` |
+| `backend/src/aerona/services/books/templates/layout.html.j2` | 331 | 2026-11-18 | `8c73edeec5cdbc30` |
+| `backend/src/aerona/services/books/templates/macros.html.j2` | 123 | 2026-11-18 | `37f4b25b99608737` |
 | `backend/src/aerona/services/books/typed.py` | 9 | 2026-11-16 | `3f7d1efb192d4c08` |
 | `backend/src/aerona/services/bulk_deepen.py` | 15 | 2026-11-16 | `e6ba12e5fc751475` |
 | `backend/src/aerona/services/chronicle.py` | 1 | 2026-11-17 | `467a876e63825a82` |
@@ -1419,7 +1419,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/cosmography/parts.tsx` | 2 | 2026-11-16 | `a28e16eea9ea9452` |
 | `frontend/src/features/cosmography/wiki/GalaxyWiki.tsx` | 1 | 2026-11-16 | `bcf79d65385e303c` |
 | `frontend/src/features/cosmography/wiki/SkyWorship.tsx` | 1 | 2026-11-16 | `fd4d62a0900f7f2e` |
-| `frontend/src/features/cosmos/BeyondForm.tsx` | 6 | 2026-11-16 | `ca0edf0f98f76a95` |
+| `frontend/src/features/cosmos/BeyondForm.tsx` | 6 | 2026-11-18 | `4fbf1272c96a0cab` |
 | `frontend/src/features/cosmos/CosmicOrdersForm.tsx` | 9 | 2026-11-16 | `00537a6d6c67ff94` |
 | `frontend/src/features/cosmos/CosmicResourceForm.tsx` | 4 | 2026-11-16 | `58fdbe501f11e261` |
 | `frontend/src/features/cosmos/CreateWorldForm.tsx` | 4 | 2026-11-16 | `e25ed1a043288ce9` |

@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.invariants import TYPED, GenericCheck, InvariantSpec, Remedy
+from aerona.db.record_context import RecordScope, scoped
 from aerona.db.session import Database
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
@@ -30,10 +31,11 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.records import FactUnit, StepAction
+from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
+from aerona.services.integrity.record_links import absent_witnesses
 from tests.conftest import OpenDatabase
 from tests.engine.core.factories import CoreWorld, bond, mortal, seed_core_world, settlement
 from tests.engine.core.test_arcana_w15 import foreign_caster
@@ -199,6 +201,14 @@ async def steps_running_back(session: AsyncSession, world: CoreWorld) -> None:
 async def witness_far_away(session: AsyncSession, world: CoreWorld) -> None:
     incident = await happening(session, kind=PHASE_KIND, place=world.regions[0].id)
     onlooker = await mortal(session, "Far Onlooker", world, world.regions[1].id)
+    session.add(
+        IncidentParticipantRow(incident_id=incident.id, node_id=onlooker.id, role=IncidentRole.WITNESS, position=0, witness_mode=WitnessMode.SAW, fidelity=90)
+    )
+
+
+async def witness_who_does_not_say_how(session: AsyncSession, world: CoreWorld) -> None:
+    incident = await happening(session, kind=PHASE_KIND, place=world.regions[0].id)
+    onlooker = await mortal(session, "Silent Onlooker", world, world.regions[0].id)
     session.add(IncidentParticipantRow(incident_id=incident.id, node_id=onlooker.id, role=IncidentRole.WITNESS, position=0))
 
 
@@ -234,6 +244,7 @@ BREAKERS: dict[str, Breaker] = {
     "moment_after_cause": effect_before_cause,
     "step_moment_order": steps_running_back,
     "witness_present": witness_far_away,
+    "witness_mode": witness_who_does_not_say_how,
     "change_in_scope": engine_change_of_no_happening,
     "checkpoint_holds": checkpoint_that_lies,
     "genome_alleles": genome_with_unknown_allele,
@@ -288,3 +299,23 @@ async def test_the_generic_checks_mend_ranges_epochs_and_report_stray_holds(sess
     await resolve(session, stray[0])
     await session.refresh(row)
     assert row.locked == ["level"]
+
+
+async def test_one_who_heard_from_afar_or_moved_later_is_not_called_absent(session: AsyncSession) -> None:
+    world = await seed_core_world(session)
+    incident = await happening(session, kind=PHASE_KIND, place=world.regions[0].id)
+    heard = await mortal(session, "Far Listener", world, world.regions[1].id)
+    moved = await mortal(session, "Later Traveller", world, world.regions[0].id)
+    session.add_all(
+        [
+            IncidentParticipantRow(
+                incident_id=incident.id, node_id=heard.id, role=IncidentRole.WITNESS, position=0, witness_mode=WitnessMode.HEARD, fidelity=60
+            ),
+            IncidentParticipantRow(incident_id=incident.id, node_id=moved.id, role=IncidentRole.WITNESS, position=1, witness_mode=WitnessMode.SAW, fidelity=90),
+        ]
+    )
+    await session.flush()
+    with scoped(RecordScope(key="test.move", epoch=incident.epoch + 1)):
+        moved.location_id = world.regions[1].id
+        await session.flush()
+    assert await absent_witnesses(session) == []

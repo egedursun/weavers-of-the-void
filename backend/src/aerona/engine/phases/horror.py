@@ -87,7 +87,7 @@ async def reopen_severed(ctx: TickContext) -> int:
             )
         else:
             await record(
-                ctx, "horror.route_stitched", roles={IncidentRole.ORIGIN: route.world_a_id, IncidentRole.DESTINATION: route.world_b_id}, feed=FeedCategory.GATE
+                ctx, "horror.route_reopened", roles={IncidentRole.ORIGIN: route.world_a_id, IncidentRole.DESTINATION: route.world_b_id}, feed=FeedCategory.GATE
             )
     return reopened
 

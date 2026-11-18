@@ -12,6 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import WitnessMode
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.moment import Moment
 from aerona.engine.recording.record import RoleValue, record
@@ -120,7 +121,15 @@ async def _replace_participants(scope: PlayerScope, incident: IncidentRow, parti
         await scope.session.delete(row)
     await scope.session.flush()
     scope.session.add_all(
-        IncidentParticipantRow(incident_id=incident.id, node_id=item.node_id, role=item.role, position=position) for position, item in enumerate(participants)
+        IncidentParticipantRow(
+            incident_id=incident.id,
+            node_id=item.node_id,
+            role=item.role,
+            position=position,
+            witness_mode=WitnessMode.SAW if item.role is IncidentRole.WITNESS else None,
+            fidelity=scope.rules.records.fidelity_saw if item.role is IncidentRole.WITNESS else None,
+        )
+        for position, item in enumerate(participants)
     )
     await scope.session.flush()
 

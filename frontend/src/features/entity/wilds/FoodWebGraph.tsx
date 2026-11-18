@@ -39,7 +39,7 @@ export function FoodWebGraph({ web }: { web: FoodWeb }) {
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         className='h-auto w-full'
         role='img'
-        aria-label={`Food web of ${plural(layout.nodes.length, 'kind', 'kinds')} in ${plural(layout.tiers, 'tier', 'tiers')}, ${plural(layout.edges.length, 'hunt', 'hunts')}`}
+        aria-label={`Who eats whom among ${plural(layout.nodes.length, 'kind', 'kinds')} in ${plural(layout.tiers, 'tier', 'tiers')}, ${plural(layout.edges.length, 'hunt', 'hunts')}`}
       >
         <defs>
           <marker

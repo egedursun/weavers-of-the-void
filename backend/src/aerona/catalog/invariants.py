@@ -108,7 +108,20 @@ TYPED: tuple[InvariantSpec, ...] = (
     InvariantSpec(
         "step_moment_order", "incident_steps", "a step is never earlier than the step before it", Remedy.REPAIR, "moved to the moment of the step before"
     ),
-    InvariantSpec("witness_present", "incident_participants", "a witness was at the place of the happening", Remedy.REPAIR, "the witness dropped"),
+    InvariantSpec(
+        "witness_present",
+        "incident_participants",
+        "one who saw or took part stood within the place, unless it moved afterwards",
+        Remedy.REPAIR,
+        "the witness dropped",
+    ),
+    InvariantSpec(
+        "witness_mode",
+        "incident_participants",
+        "a witness always says how it knows the happening",
+        Remedy.REPAIR,
+        "set down as one who saw it within the place, or heard of it from elsewhere",
+    ),
     InvariantSpec("change_in_scope", "state_changes", "every change the engine made belongs to a happening", Remedy.REPAIR, "linked to the phase that made it"),
     InvariantSpec(
         "checkpoint_holds", "state_checkpoints", "the past rebuilt from the changes equals each checkpoint", Remedy.REPAIR, "the checkpoint taken again"

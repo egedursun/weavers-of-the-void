@@ -1,5 +1,6 @@
-from sqlalchemy import ColumnElement, delete, func, select, update
+from sqlalchemy import ColumnElement, delete, event, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from aerona.db.ledger_capture import finish_rebuilds
 from aerona.db.record_context import RecordScope, acting, scoped, stepping
@@ -105,3 +106,69 @@ async def test_a_date_set_to_the_present_epoch_says_so(session: AsyncSession) ->
     plain = await changes(session, StateChangeRow.table_name == "worlds", StateChangeRow.field == "magnetism")
     assert list(await session.scalars(select(StateChangeTermRow.term).where(StateChangeTermRow.change_id == dated[0].id))) == ["epoch.present"]
     assert list(await session.scalars(select(StateChangeTermRow.term).where(StateChangeTermRow.change_id == plain[0].id))) == []
+
+
+async def test_a_value_set_before_it_was_loaded_keeps_its_stored_value_as_before(session: AsyncSession) -> None:
+    world = await seed_world(session)
+    await session.flush()
+    stored = world.magnetism
+    session.expire(world, ["magnetism"])
+    with scoped(RecordScope(key="test.change", epoch=4)):
+        world.magnetism = stored + 7
+        await session.flush()
+    updated = await changes(session, StateChangeRow.table_name == "worlds", StateChangeRow.field == "magnetism")
+    assert [(row.before_number, row.after_number) for row in updated] == [(stored, stored + 7)]
+    assert await value_at(session, "worlds", {"id": world.id}, "magnetism", epoch=3) == stored
+
+
+async def test_a_bulk_update_is_recorded_with_a_fixed_number_of_reads(session: AsyncSession) -> None:
+    world = await seed_world(session)
+    rows = [modifier(world.id, 1.0, f"bulk{index}") for index in range(60)]
+    session.add_all(rows)
+    await session.flush()
+    reads: list[str] = []
+
+    def count(_connection: object, _cursor: object, statement: str, *_: object) -> None:
+        if statement.lstrip().upper().startswith("SELECT"):
+            reads.append(statement)
+
+    engine = session.bind.sync_engine if session.bind is not None else None
+    assert engine is not None
+    event.listen(engine, "before_cursor_execute", count)
+    try:
+        await session.execute(update(ModifierRow).where(ModifierRow.target_node_id == world.id).values(magnitude=3.0))
+        await session.execute(update(ModifierRow), [{"id": row.id, "magnitude": 4.0} for row in rows])
+    finally:
+        event.remove(engine, "before_cursor_execute", count)
+    assert len(reads) <= 6
+    recorded = await changes(session, StateChangeRow.table_name == "modifiers", StateChangeRow.field == "magnitude")
+    assert len(recorded) == 120
+
+
+async def test_a_table_wiped_and_written_again_keeps_its_past_when_ids_are_reused(session: AsyncSession) -> None:
+    with scoped(RecordScope(key="test.one", epoch=1)):
+        world = await seed_world(session)
+        session.add_all([modifier(world.id, 1.0, "first"), modifier(world.id, 2.0, "second")])
+        await session.flush()
+    await take_checkpoint(session, 1)
+    with scoped(RecordScope(key="test.two", epoch=2)):
+        await session.execute(delete(ModifierRow))
+        session.add_all([modifier(world.id, 5.0, "first"), modifier(world.id, 6.0, "second")])
+        await session.flush()
+        await session.run_sync(finish_rebuilds)
+    checkpoint = await session.scalar(select(StateCheckpointRow).where(StateCheckpointRow.table_name == "modifiers"))
+    assert checkpoint is not None and await checkpoint_holds(session, checkpoint)
+
+
+async def test_json_changed_in_place_keeps_its_stored_value_as_before(session: AsyncSession) -> None:
+    world = await seed_world(session)
+    world.calendar_locked = ["year"]
+    await session.flush()
+    with scoped(RecordScope(key="test.change", epoch=4)):
+        world.calendar_locked.append("season")
+        flag_modified(world, "calendar_locked")
+        await session.flush()
+    updated = await changes(session, StateChangeRow.table_name == "worlds", StateChangeRow.field == "calendar_locked")
+    assert updated and updated[-1].epoch == 4
+    assert await value_at(session, "worlds", {"id": world.id}, "calendar_locked", epoch=3) == ["year"]
+    assert await value_at(session, "worlds", {"id": world.id}, "calendar_locked", epoch=4) == ["year", "season"]

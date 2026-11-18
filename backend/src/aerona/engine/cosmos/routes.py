@@ -828,7 +828,7 @@ async def connect_world(ctx: TickContext, world: WorldRow, target_id: int | None
     return await open_route(
         session,
         ctx.rules,
-        ctx.rng("stitch"),
+        ctx.rng("reopen"),
         ctx.epoch,
         RouteSpec(chosen.id, world.id, method, known=False, description="A passage the cosmos opened by itself, known to nobody yet."),
     )
@@ -858,7 +858,7 @@ async def connect_all_worlds(ctx: TickContext) -> int:
         await open_route(
             session,
             ctx.rules,
-            ctx.rng("stitch"),
+            ctx.rng("reopen"),
             ctx.epoch,
             RouteSpec(
                 partner.id,
@@ -1029,7 +1029,7 @@ async def repair_route(ctx: TickContext, route_id: int) -> str:
     scope = current_scope()
     written = await record(
         ctx,
-        "travel.route_stitched",
+        "travel.route_reopened",
         roles={IncidentRole.AUTHORITY: scope.actor_node_id if scope is not None else None},
         facts={"first": route.world_a_id, "second": route.world_b_id, "closure": closure},
     )

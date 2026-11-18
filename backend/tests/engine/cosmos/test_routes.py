@@ -99,7 +99,7 @@ async def test_start_journey_moves_people_and_charges_the_gate(ctx: TickContext,
     assert people.stats.population == 4000 + journey.population
 
 
-async def test_sever_and_stitch(ctx: TickContext, cosmos: Cosmos) -> None:
+async def test_sever_and_reopen(ctx: TickContext, cosmos: Cosmos) -> None:
     other = await make_world(ctx.session, "Velmor")
     route = await make_route(ctx.session, cosmos.home.id, other.id, known=False)
     rules = tuned(ctx.rules, "beyond", storm_reveal_chance=100, storm_loss_chance=0)
@@ -135,7 +135,7 @@ async def test_alignment_reveals_and_unseals(ctx: TickContext, cosmos: Cosmos) -
     assert book.status(sealed).state is RouteState.TEMPORARY
 
 
-async def test_connect_world_stitches_isolated_worlds(ctx: TickContext, cosmos: Cosmos) -> None:
+async def test_connect_world_joins_isolated_worlds(ctx: TickContext, cosmos: Cosmos) -> None:
     dead = await make_world(ctx.session, "Nethis", WorldType.DEAD)
     route = await connect_world(ctx, dead)
     assert route is not None and not route.known and route.method is TravelMethod.DEATH_CURRENT

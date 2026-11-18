@@ -10,6 +10,7 @@ from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.tellings import RumourDistortionRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import RumourChannel
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import IncidentTier, InstrumentKind, RumourDistortion, StepAction, StepLocus, StepOutcome, WitnessMode
 from aerona.engine.context import TickContext
@@ -186,3 +187,33 @@ async def test_a_planted_rumour_is_an_untold_account_with_its_subject_and_its_fa
     facts = list(await session.scalars(select(IncidentFactRow).where(IncidentFactRow.incident_id == incident.id)))
     assert [(fact.key, fact.name) for fact in facts] == [("account", "Ama opened the gates at night.")]
     assert incident.chronicle_id is None
+
+
+async def test_a_ruined_town_hears_nothing_and_a_named_witness_says_how_it_knows(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    town = await settlement(session, "Ardun", world, world.regions[0])
+    near = await settlement(session, "Velm", world, world.regions[1])
+    ruin = await settlement(session, "Osk", world, world.regions[1])
+    ruin.status, ruin.end_epoch = EntityStatus.DESTROYED, ctx.epoch
+    doer = await mortal(session, "Ama", world, town.id)
+    named = await mortal(session, "Dun", world, town.id)
+    await session.flush()
+    atlas = await RegionAtlas.load(session)
+    assert ruin.id not in atlas.communities_in(world.regions[1].id) and near.id in atlas.communities_in(world.regions[1].id)
+    loud = IncidentRow(
+        kind="player.history", epoch=ctx.epoch, world_id=world.world.id, place_entity_id=town.id, magnitude=ctx.rules.rumours.min_magnitude, locked=[]
+    )
+    session.add(loud)
+    await session.flush()
+    session.add(IncidentParticipantRow(incident_id=loud.id, node_id=doer.id, role=IncidentRole.ACTOR, position=0))
+    session.add(IncidentParticipantRow(incident_id=loud.id, node_id=named.id, role=IncidentRole.WITNESS, position=1))
+    await session.flush()
+    await choose_witnesses(ctx, atlas)
+    witnesses = {
+        row.node_id: row
+        for row in await session.scalars(
+            select(IncidentParticipantRow).where(IncidentParticipantRow.incident_id == loud.id, IncidentParticipantRow.role == IncidentRole.WITNESS)
+        )
+    }
+    assert ruin.id not in witnesses
+    assert witnesses[near.id].witness_mode is WitnessMode.HEARD
+    assert witnesses[named.id].witness_mode is WitnessMode.SAW and witnesses[named.id].fidelity == ctx.rules.records.fidelity_saw

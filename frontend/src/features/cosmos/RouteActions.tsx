@@ -64,7 +64,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
       ),
     success: 'Route severed',
   })
-  const stitch = useCosmicAction({
+  const reopen = useCosmicAction({
     run: () =>
       unwrap(
         api.POST('/api/routes/{route_id}/restore', {
@@ -169,12 +169,12 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
       {!state.open && RESTORABLE_ROUTE_STATES.has(state.key) && (
         <CosmicActionButton
           actionId='route'
-          label='Stitch again'
+          label='Open it again'
           icon={Link2}
           size='sm'
-          cost={rules.get('stitchCost')}
-          pending={stitch.isPending}
-          onRun={() => stitch.mutate()}
+          cost={rules.get('reopenCost')}
+          pending={reopen.isPending}
+          onRun={() => reopen.mutate()}
         />
       )}
       {!route.known && (

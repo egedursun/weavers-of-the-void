@@ -242,8 +242,8 @@ export function AboutVision() {
         </ul>
         <figcaption className='pt-2 text-center'>
           <Label>
-            Every kind of record is bound to every other. Pull one thread and
-            the whole web moves.
+            Every kind of record is bound to every other. Change one and the
+            whole world moves.
           </Label>
         </figcaption>
       </figure>

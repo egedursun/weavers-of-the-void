@@ -438,7 +438,7 @@ describe('route actions', () => {
     })
   })
 
-  it('stitches a severed route again', async () => {
+  it('opens a severed route again', async () => {
     const { screen } = await renderApp(<Harness />)
     const dream = screen
       .getByRole('listitem')
@@ -447,7 +447,7 @@ describe('route actions', () => {
     await expect
       .element(dream.getByRole('button', { name: /^Seal/ }))
       .not.toBeInTheDocument()
-    await dream.getByRole('button', { name: /^Stitch again/ }).click()
+    await dream.getByRole('button', { name: /^Open it again/ }).click()
     await expect
       .poll(() => calls('POST', '/api/routes/6/restore').length)
       .toBe(1)

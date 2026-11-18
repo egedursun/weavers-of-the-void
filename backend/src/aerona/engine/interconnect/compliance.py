@@ -6009,7 +6009,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("RiteCard", "RiteEffects", "CastRite", "Castings", "Enchantments", "RiteDesigner"),
         ("mortal_context",),
         ("design_rite", "cast_rite"),
-        ("magic.rite", "magic.dark_rite", "magic.war_mages", "magic.eternal_storm"),
+        ("magic.rite", "magic.dark_rite", "magic.war_mages", "magic.lasting_storm"),
         ("lore.rite_profiles",),
     ),
     ComplianceRow(

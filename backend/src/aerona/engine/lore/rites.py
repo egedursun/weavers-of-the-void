@@ -973,7 +973,7 @@ async def phenomenon(ctx: TickContext, region: EntityRow) -> None:
             stacking_group="eternal_storm",
         ),
     )
-    await record(ctx, "magic.eternal_storm", roles={IncidentRole.PLACE: region.id}, place=region.id)
+    await record(ctx, "magic.lasting_storm", roles={IncidentRole.PLACE: region.id}, place=region.id)
     await form_phenomenon(ctx, PhenomenonKind.LASTING_STORM, region, PhenomenonCause.RITE_BACKLASH)
 
 

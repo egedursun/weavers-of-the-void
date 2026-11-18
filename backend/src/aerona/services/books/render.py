@@ -1,5 +1,6 @@
 import re
 import secrets
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
@@ -54,6 +55,7 @@ HEADING_LINE = re.compile(r"^[ \t]*#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", re.MULTILI
 BULLET = re.compile(r"^[-*•]\s+(.+)$")
 BOLD = re.compile(r"\*\*(.+?)\*\*")
 EXTRA_BLANK_LINES = re.compile(r"\n[ \t]*(?:\n[ \t]*){2,}")
+CODEX_CHUNK = 1_048_576
 NONCE_BYTES = 16
 PIPE = "|"
 ESCAPED_PIPE = "\\|"
@@ -217,6 +219,14 @@ def heading(level: int) -> str:
     return "#" * max(1, min(6, level))
 
 
+def with_descendants(articles: Iterable[EntityArticle]) -> Iterator[EntityArticle]:
+    waiting = list(reversed(list(articles)))
+    while waiting:
+        article = waiting.pop()
+        yield article
+        waiting.extend(reversed(article.children))
+
+
 def _html_environment() -> Environment:
     environment = Environment(
         loader=FileSystemLoader(TEMPLATE_DIRECTORY),
@@ -230,6 +240,7 @@ def _html_environment() -> Environment:
     environment.filters["keys"] = key_words
     environment.filters["motion"] = motion_label
     environment.filters["speech_part"] = speech_part
+    environment.filters["with_descendants"] = with_descendants
     return environment
 
 
@@ -238,6 +249,7 @@ def _markdown_environment() -> Environment:
     environment.filters["cell"] = table_cell
     environment.filters["prose"] = prose
     environment.filters["heading"] = heading
+    environment.filters["with_descendants"] = with_descendants
     environment.filters["plain"] = plain_text
     environment.filters["keys"] = key_words
     environment.filters["motion"] = motion_label
@@ -269,9 +281,30 @@ def render_entry(model: BookModel, rules: Rules, *, son: SonArticle | None = Non
     return RenderedBook(html, nonce)
 
 
+def codex_chunks(model: BookModel | None, rules: Rules, links: CodexLinks) -> Iterator[str]:
+    buffer = ""
+    started = False
+    for piece in MARKDOWN.get_template(CODEX_TEMPLATE).generate(book=model, rules=rules, links=links):
+        buffer += piece
+        if len(buffer) < CODEX_CHUNK:
+            continue
+        cut = len(buffer.rstrip(" \t\n"))
+        if cut == 0:
+            continue
+        ready = EXTRA_BLANK_LINES.sub("\n\n", buffer[:cut])
+        buffer = buffer[cut:]
+        if not started:
+            ready = ready.lstrip()
+            started = bool(ready)
+        if ready:
+            yield ready
+    tail = EXTRA_BLANK_LINES.sub("\n\n", buffer)
+    tail = tail.strip() if not started else tail.rstrip()
+    yield tail + "\n"
+
+
 def render_codex(model: BookModel | None, rules: Rules, links: CodexLinks) -> str:
-    text = MARKDOWN.get_template(CODEX_TEMPLATE).render(book=model, rules=rules, links=links)
-    return EXTRA_BLANK_LINES.sub("\n\n", text).strip() + "\n"
+    return "".join(codex_chunks(model, rules, links))
 
 
 def find_son(model: BookModel, son_id: int) -> SonArticle | None:

@@ -3176,7 +3176,7 @@ The record answers questions like "why did the prosperity of X fall from 60 to 4
 
 #### F58.9 Witnesses, tellings and memory
 
-- **Witnesses.** Participants with role `witness` are chosen by presence at the place and moment (`present_among`, `folk_among` in `engine/primitives/folk.py`), within the rules radius. A happening lighter than the weight at which happenings are told (`rumours.min_magnitude`) is seen only where it happened, by the community there and the mortals present; a weightier one is also heard by the communities within the radius. Each has a `WitnessMode` (`saw`, `heard`, `took_part`, `was_told`) and a fidelity.
+- **Witnesses.** Participants with role `witness` are chosen by presence at the place and moment (`present_among`, `folk_among` in `engine/primitives/folk.py`), within the rules radius. A happening lighter than the weight at which happenings are told (`rumours.min_magnitude`) is seen only where it happened, by the community there and the mortals present; a weightier one is also heard by the communities within the radius. Each has a `WitnessMode` (`saw`, `heard`, `took_part`, `was_told`) and a fidelity. Only living communities hear (`RegionAtlas.communities_in` lists canon ones), and a witness a kind names without a mode is set down as `saw` when it stands within the place (the whole location chain) and `heard` when it does not. The integrity checks hold this: `witness_mode` (every witness says how it knows) and `witness_present` (one who saw or took part stood within the place, unless it moved afterwards).
 - **Rumours** (spec 13 F11) take their content from facts and steps and keep `incident_id`. Their distortions are typed (`RumourDistortion`: `doer_swapped`, `target_swapped`, `amount_changed`, `outcome_changed`, `cause_changed`, `place_changed`, `moment_changed`, `step_added`, `step_dropped`, `role_changed`), each naming the fact or step it changes.
 - **Memories** (spec 13 F7) point at the incident and the step they remember.
 - **Tellers.** Bards, chroniclers, the model and gods that spread an account are stored with role `teller`.
@@ -3209,7 +3209,7 @@ Everything is kept, for ever, in every world (K.42): every incident, fact, step,
 - bulk inserts at flush;
 - integer keys and indexes on `node_id`, `incident_id`, `epoch` and `moment`;
 - checkpoints for F58.11;
-- streamed reads for the book and the Codex;
+- streamed reads for the book and the Codex: changes are read in id chunks as plain columns, the History and Changes rows of every entry wait in a temporary row store on disk until the template writes them, entity trees are walked flat (no template macro calls itself), and the Codex is written to a file in chunks and streamed to the download;
 - paged screens.
 
 The rows per epoch and the epoch time are measured as balance bands (49.8).
@@ -3327,6 +3327,11 @@ Spec 13 5.6 reference pass 2 (planned) is the duel model. Whichever wave builds 
 | `tests/engine/core/test_every_change_recorded.py` | on the rich cosmos of `test_god_control.py`, any write by any engine step leaves no `state_changes` row, or a row with no incident |
 | `tests/engine/core/test_moments.py` | an incident is earlier than its cause, or a step earlier than the one before it |
 | `tests/engine/core/test_terms.py` | a numeric change in an engine step has no terms and its kind is not `direct` |
+| `scripts/check_incident_kinds.py` (retired kinds) | a kind key shipped in the last commit leaves the catalogue without a `RENAMED_KINDS` migration that carries the stored incidents and chronicle lines to their new key |
+| `scripts/check_prompt_bias.py` (kind keys and screens) | a kind key carries imagery once its dots and underscores read as words, or a screen string or line of screen text does |
+| `tests/engine/core/test_eager_epochs.py` (past) | after five lived epochs the state rebuilt at the starting checkpoint from the change log differs from that checkpoint, in any captured table: a before lost to an unloaded or in-place changed value, a reused key, or changes read out of order |
+| `tests/services/app/test_books.py` (streaming) | a book or Codex template macro calls itself, which would hold a whole entity tree in memory, or History and Changes rows are kept in memory instead of the row store |
+| `tests/db/test_state_changes.py` (reads) | a bulk update or delete is recorded with more than a fixed number of reads, whatever its row count |
 | `tests/unit/test_every_incident_kind.py` | a kind cannot be rendered from sample facts, or a `StepAction`, `StepOutcome`, `StepState`, `InstrumentKind`, `StepLocus`, `FactUnit`, `WitnessMode` or `RumourDistortion` value is never produced and read |
 | `scripts/check_wiring.py` | a record table is missing from the book or the Codex typed sections |
 | `scripts/check_record_cuts.py` | any reader of records (book, Codex, API, search, prompts) slices, limits or filters out records by visibility or kind, except paged screens with show-more |
@@ -7225,10 +7230,10 @@ Generated on 2026-11-14 from every template key written literally in `backend/sr
 | `afterlife.*` | 9 (faith, rites, powers and the uncanny) | 3 | `exorcism`, `possession`, `reborn` | `faith/exorcism`, `phases/faith` |
 | `curses.*` | 9 (faith, rites, powers and the uncanny) | 2 | `lifted`, `spread` | `phases/curses` |
 | `dream.*` | 9 (faith, rites, powers and the uncanny) | 2 | `reading`, `recurring` | `mind/dreams` |
-| `horror.*` | 9 (faith, rites, powers and the uncanny) | 10 | `clouding`, `madness_epidemic`, `outer_entered`, `route_cooled`, `route_resealed`, `route_stitched`, `son_clouded`, `son_mad`, `whisperers`, `{kind.value}` | `phases/horror` |
+| `horror.*` | 9 (faith, rites, powers and the uncanny) | 10 | `clouding`, `madness_epidemic`, `outer_entered`, `route_cooled`, `route_resealed`, `route_reopened`, `son_clouded`, `son_mad`, `whisperers`, `{kind.value}` | `phases/horror` |
 | `inspiration.*` | 9 (faith, rites, powers and the uncanny) | 1 | `masterwork` | `mind/inspiration` |
 | `lore.*` | 9 (faith, rites, powers and the uncanny) | 17 | `commemoration`, `commemoration_miracle`, `commemoration_year`, `creed_founded`, `festival_absorbed`, `godless_miracle`, `godless_persecuted`, `guest_killing`, `infanticide`, `legend_consequence`, `legend_drift`, `legend_memory`, `propaganda`, `prophecy_fulfilled`, `prophecy_pressure`, `revolution`, `taboo_broken` | `lore/ideology`, `lore/prophecy`, `lore/taboos`, `phases/lore`, `phases/made_things`, `phases/religion_spread` |
-| `magic.*` | 9 (faith, rites, powers and the uncanny) | 6 | `dark_rite`, `eternal_storm`, `rite`, `storm`, `war_mages`, `wizard` | `lore/rites`, `phases/magic` |
+| `magic.*` | 9 (faith, rites, powers and the uncanny) | 6 | `dark_rite`, `lasting_storm`, `rite`, `storm`, `war_mages`, `wizard` | `lore/rites`, `phases/magic` |
 | `native_faith.*` | 9 (faith, rites, powers and the uncanny) | 5 | `returned`, `returned_note`, `syncretized`, `turned`, `turned_note` | `phases/native_faith` |
 | `order.*` | 9 (faith, rites, powers and the uncanny) | 3 | `feud`, `outlawed`, `tribunal` | `factions/mage_orders` |
 | `religion.*` | 9 (faith, rites, powers and the uncanny) | 2 | `godless`, `schism` | `phases/religion_spread` |
@@ -7246,7 +7251,7 @@ Generated on 2026-11-14 from every template key written literally in `backend/sr
 | `settlement.*` | 10 (movement and settling) | 5 | `abandoned`, `district_{harm.value}`, `fire_wind`, `homeless_mob`, `tier` | `phases/settlement_life`, `settlement/districts`, `settlement/life`, `urban/housing` |
 | `settlements.*` | 10 (movement and settling) | 1 | `resettled` | `phases/settlements` |
 | `settling.*` | 10 (movement and settling) | 3 | `creator_faith`, `primitive_language`, `seeking_god` | `primitives/first_bonds` |
-| `travel.*` | 10 (movement and settling) | 23 | `ark_founding`, `arrival`, `bridge_collapsed`, `cargo_delivered`, `colony_failed`, `colony_unfit`, `expedition_ordered`, `expedition_sent`, `herds_lost`, `hidden_revealed`, `journey_recalled`, `journey_vanished`, `no_land`, `pilgrimage_site`, `road.{kind.value}`, `route_knowledge`, `route_revealed_by_hand`, `route_severed`, `route_stitched`, `sick_arrival`, `stowaway`, `vanished`, `waiting` | `cosmos/pilgrimage`, `cosmos/routes`, `cosmos/voyages`, `phases/travel` |
+| `travel.*` | 10 (movement and settling) | 23 | `ark_founding`, `arrival`, `bridge_collapsed`, `cargo_delivered`, `colony_failed`, `colony_unfit`, `expedition_ordered`, `expedition_sent`, `herds_lost`, `hidden_revealed`, `journey_recalled`, `journey_vanished`, `no_land`, `pilgrimage_site`, `road.{kind.value}`, `route_knowledge`, `route_revealed_by_hand`, `route_severed`, `route_reopened`, `sick_arrival`, `stowaway`, `vanished`, `waiting` | `cosmos/pilgrimage`, `cosmos/routes`, `cosmos/voyages`, `phases/travel` |
 | `affair.*` | 11 (social, family and cultural life) | 1 | `discovered` | `relations/affairs` |
 | `age_sets.*` | 11 (social, family and cultural life) | 1 | `promoted` | `customs/age_sets` |
 | `arts.*` | 11 (social, family and cultural life) | 8 | `canonised`, `exposed`, `forged`, `lured`, `movement`, `orthodox`, `scandal`, `sold` | `arts/forgery`, `arts/market`, `arts/movements` |
@@ -7361,7 +7366,7 @@ Generated on 2026-11-14 from every template key written literally in `backend/sr
 | `dig.*` | 16 (peoples, societies and history) | 1 | `{dig.id}` | `sites/digs` |
 | `excavation.*` | 16 (peoples, societies and history) | 2 | `begun`, `{stage.stage.value}` | `sites/digs` |
 | `faction.*` | 16 (peoples, societies and history) | 9 | `exposed`, `hired`, `raid`, `riot`, `schism`, `strike`, `suppressed`, `turncoat`, `turned_bandit` | `factions/agenda`, `factions/outlaws` |
-| `institutions.*` | 16 (peoples, societies and history) | 7 | `cult_disbanded`, `cult_merged`, `item_lost`, `people_union`, `place_swallowed`, `repealed`, `work_forgotten` | `phases/institutions` |
+| `institutions.*` | 16 (peoples, societies and history) | 7 | `cult_disbanded`, `cult_merged`, `item_lost`, `people_union`, `place_absorbed`, `repealed`, `work_forgotten` | `phases/institutions` |
 | `life_cycles.*` | 16 (peoples, societies and history) | 7 | `abandoned`, `collapse`, `desolate`, `looted`, `razed_by_hand`, `resettled`, `siege_razed` | `phases/life_cycles` |
 | `movements.*` | 16 (peoples, societies and history) | 1 | `revolt` | `factions/movements` |
 | `peoples.*` | 16 (peoples, societies and history) | 2 | `funeral_rite`, `martial_style` | `phases/demography` |
@@ -7391,7 +7396,7 @@ Families added by W44–W48 after this appendix was generated (found on 2026-11-
 | `epoch.*` | 15 (gods, sons and Fate) | 1 | `son_distributed` | `epoch/phases/distribution` |
 | `exchange.*` | 6 (exchange, money and labour) | 1 | `shock` | `orders/exchange` |
 | `fashion.*` | 11 (social, family and cultural life) | 1 | `revival` | `couplings/novelty` |
-| `fate.*` | 15 (gods, sons and Fate) | 6 | `fixed`, `prophecy_fulfilled`, `rejected`, `reward`, `thread_advanced`, `thread_closed` | `agents/fate/apply` |
+| `fate.*` | 15 (gods, sons and Fate) | 6 | `fixed`, `prophecy_fulfilled`, `rejected`, `reward`, `story_advanced`, `story_closed` | `agents/fate/apply` |
 | `fishery.*` | 13 (nature, land and seasons) | 1 | `closed` | `couplings/fisheries` |
 | `fossil.*` | 13 (nature, land and seasons) | 1 | `{…}` | `ecology/fossils` |
 | `genesis.*` | 14 (cosmos and the great scales) | 3 | `layer`, `son`, `world` | `agents/genesis` |

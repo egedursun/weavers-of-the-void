@@ -34,7 +34,7 @@ async def test_route_actions_cost_and_effect(scope: PlayerScope, session: AsyncS
     severed = await cosmic.route_action(scope, cosmic.RouteCommand(route_id=route.id, action=cosmic.RouteAction.SEVER, duration=3))
     assert not route.active
     assert severed.essence_spent == rules.beyond.sever_route_cost
-    await cosmic.route_action(scope, cosmic.RouteCommand(route_id=route.id, action=cosmic.RouteAction.STITCH))
+    await cosmic.route_action(scope, cosmic.RouteCommand(route_id=route.id, action=cosmic.RouteAction.REOPEN))
     assert route.active
     with pytest.raises(ValidationFailedError):
         await cosmic.route_action(scope, cosmic.RouteCommand(route_id=route.id, action=cosmic.RouteAction.REVEAL))

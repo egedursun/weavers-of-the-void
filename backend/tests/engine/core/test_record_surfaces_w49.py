@@ -202,13 +202,13 @@ async def test_the_book_tells_every_tier_of_a_happening_in_each_entry(session: A
     index = TypedIndex(names)
     ledger = await add_history_sections(session, index)
     history = next(section for section in index.of(second) if section.title == "History")
-    told = history.rows[0]
+    told = history.lines[0]
     assert "Arem fought Bessa for honour." in told and "as target" in told and "stake honour" in told
     assert "Arem strike Bessa with mace" in told or ("strike" in told and "mace" in told)
     assert "named The Honour Fight" in told and "role changed (instrument) told as axe" in told
     assert "Bessa prone" in told and "power level of entities of Bessa: 3 → 2" in told and "during: Arem fought Bessa for honour." in told
     changes = next(section for section in index.of(second) if section.title == "Changes")
-    assert any("power level of entities of Bessa: 3 → 2" in row for row in changes.rows)
+    assert any("power level of entities of Bessa: 3 → 2" in row for row in changes.lines)
     tables = await book_records.record_tables(session, ledger)
     ages = [table for table in tables if table.title.startswith("Happenings")]
     assert ages and any(row[2] == "Arem fought Bessa for honour." and "stake honour" in row[6] for table in ages for row in table.rows)

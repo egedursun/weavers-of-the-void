@@ -3050,7 +3050,7 @@ BRANCH_LEVERS: Mapping[tuple[str, str], Lever] = {
         knowledge_id=Pick(EntityType.KNOWLEDGE),
     ),
     ("route", "reveal"): Lever(values={"route_id": Pick("route")}, setup=hidden_route),
-    ("route", "stitch"): after(("route", {"route_id": Pick("route"), "action": "sever", "duration": 3}), route_id=Pick("route")),
+    ("route", "reopen"): after(("route", {"route_id": Pick("route"), "action": "sever", "duration": 3}), route_id=Pick("route")),
 }
 
 

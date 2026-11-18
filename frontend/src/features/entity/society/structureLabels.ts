@@ -628,7 +628,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     label: 'Textile mill',
     icon: Shirt,
     tone: 'warning',
-    hint: 'Spins and weaves cloth in quantity; works as a workshop',
+    hint: 'Makes cloth in quantity; works as a workshop',
   },
   dye_works: {
     label: 'Dye works',

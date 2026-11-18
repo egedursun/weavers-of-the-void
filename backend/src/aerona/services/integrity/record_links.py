@@ -5,18 +5,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec
+from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS
 from aerona.db.base import Base
 from aerona.db.ledger_capture import jsonable, key_text
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.records import FactValue, IncidentTier
+from aerona.domain.enums.records import FactValue, IncidentTier, WitnessMode
 from aerona.engine.recording.checkpoints import digest_of, kept_columns, present_rows, take_checkpoint
 from aerona.engine.recording.legacy import retire_one
 from aerona.engine.recording.past import state_at
+from aerona.rules.registry import Rules
 
 PHASE_PREFIX = "phase."
 WITNESS_KEY = 1_000_000_000
@@ -140,28 +143,82 @@ async def follow_step(session: AsyncSession, step_id: int) -> None:
         step.year, step.season, step.day, step.hour = previous.year, previous.season, previous.day, previous.hour
 
 
+PRESENT_MODES = (WitnessMode.SAW, WitnessMode.TOOK_PART)
+
+
 def witness_key(incident_id: int, node_id: int) -> int:
     return incident_id * WITNESS_KEY + node_id
 
 
-async def absent_witnesses(session: AsyncSession) -> list[int]:
-    found: list[int] = []
+async def last_moves(session: AsyncSession) -> dict[int, int]:
     statement = (
-        select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id, IncidentRow.place_entity_id, EntityRow.location_id)
+        select(StateChangeRow.node_id, func.max(StateChangeRow.epoch))
+        .where(StateChangeRow.table_name == EntityRow.__tablename__, StateChangeRow.field == "location_id", StateChangeRow.node_id.is_not(None))
+        .group_by(StateChangeRow.node_id)
+    )
+    return {int(node_id): int(epoch) for node_id, epoch in await session.execute(statement) if node_id is not None}
+
+
+def held_by(places: dict[int, int | None], place_id: int, entity_id: int) -> bool:
+    current: int | None = entity_id
+    for _ in range(LOCATION_CHAIN_MAX_HOPS + 1):
+        if current is None:
+            return False
+        if current == place_id:
+            return True
+        current = places.get(current)
+    return False
+
+
+async def absent_witnesses(session: AsyncSession) -> list[int]:
+    statement = (
+        select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id, IncidentRow.place_entity_id, IncidentRow.epoch)
         .join(IncidentRow, IncidentRow.id == IncidentParticipantRow.incident_id)
-        .join(EntityRow, EntityRow.id == IncidentParticipantRow.node_id)
-        .where(IncidentParticipantRow.role == IncidentRole.WITNESS, IncidentRow.place_entity_id.is_not(None), EntityRow.location_id.is_not(None))
+        .where(
+            IncidentParticipantRow.role == IncidentRole.WITNESS,
+            IncidentParticipantRow.witness_mode.in_(PRESENT_MODES),
+            IncidentRow.place_entity_id.is_not(None),
+        )
         .order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
     )
-    places: dict[int, int | None] = {}
-    for incident_id, node_id, place_id, location_id in await session.execute(statement):
-        if location_id is None or location_id == place_id:
-            continue
-        if location_id not in places:
-            places[location_id] = await session.scalar(select(EntityRow.location_id).where(EntityRow.id == location_id))
-        if places[location_id] != place_id:
-            found.append(witness_key(incident_id, node_id))
-    return found
+    witnesses = list(await session.execute(statement))
+    if not witnesses:
+        return []
+    places = {int(entity_id): location_id for entity_id, location_id in await session.execute(select(EntityRow.id, EntityRow.location_id))}
+    moved = await last_moves(session)
+    return [
+        witness_key(incident_id, node_id)
+        for incident_id, node_id, place_id, epoch in witnesses
+        if node_id in places
+        and places[node_id] is not None
+        and moved.get(node_id, -1) < epoch
+        and place_id is not None
+        and not held_by(places, place_id, node_id)
+    ]
+
+
+async def modeless_witnesses(session: AsyncSession) -> list[int]:
+    statement = (
+        select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
+        .where(IncidentParticipantRow.role == IncidentRole.WITNESS, IncidentParticipantRow.witness_mode.is_(None))
+        .order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
+    )
+    return [witness_key(incident_id, node_id) for incident_id, node_id in await session.execute(statement)]
+
+
+async def give_witness_mode(session: AsyncSession, key: int) -> None:
+    incident_id, node_id = divmod(key, WITNESS_KEY)
+    row = await session.get(IncidentParticipantRow, (incident_id, node_id, IncidentRole.WITNESS))
+    if row is None:
+        return
+    cosmos = CosmosRepository(session)
+    rules = await cosmos.rules() if await cosmos.get() is not None else Rules()
+    incident = await session.get(IncidentRow, incident_id)
+    place = incident.place_entity_id if incident is not None else None
+    places = {int(entity_id): location_id for entity_id, location_id in await session.execute(select(EntityRow.id, EntityRow.location_id))}
+    present = place is None or node_id not in places or held_by(places, place, node_id)
+    row.witness_mode = WitnessMode.SAW if present else WitnessMode.HEARD
+    row.fidelity = rules.records.fidelity_saw if present else rules.records.fidelity_heard
 
 
 async def drop_witness(session: AsyncSession, key: int) -> None:

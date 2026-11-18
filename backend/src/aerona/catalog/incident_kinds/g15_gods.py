@@ -459,7 +459,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.INSTANT,
     ),
     IncidentKindSpec(
-        "fate.thread_advanced",
+        "fate.story_advanced",
         G.GODS,
         "A story advanced: {how}",
         roles=(RoleSpec(R.SUBJECT),),
@@ -468,7 +468,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.INSTANT,
     ),
     IncidentKindSpec(
-        "fate.thread_closed",
+        "fate.story_closed",
         G.GODS,
         "A story closed: {how}",
         roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
@@ -1559,7 +1559,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
-        "player.canon.thread_advanced",
+        "player.canon.story_advanced",
         G.GODS,
         "{authority}'s hand: moved a story forward (story #{story}) through {target}.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.AUTHORITY)),
@@ -1568,7 +1568,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
-        "player.canon.thread_closed",
+        "player.canon.story_closed",
         G.GODS,
         "{authority}'s hand: closed a story (story #{story}): {how}",
         roles=(RoleSpec(R.AUTHORITY),),
@@ -1577,7 +1577,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         clock=ProcessClock.PHASE,
     ),
     IncidentKindSpec(
-        "player.canon.thread_opened",
+        "player.canon.story_opened",
         G.GODS,
         "{authority}'s hand: opened a new story: {text}",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT, required=False, many=True)),
@@ -4440,7 +4440,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.WORSHIP,
     ),
     IncidentKindSpec(
-        "tools.son.stitch",
+        "tools.son.seal_leak",
         G.GODS,
         "{actor} sealed the leak of the {place} world ({how}); leakage {old} to {new}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),

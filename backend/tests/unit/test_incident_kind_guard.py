@@ -52,3 +52,21 @@ def test_a_step_a_helper_appends_to_a_kind_that_does_not_declare_it_is_caught(mo
     narrowed = {**module.INCIDENT_KINDS, "travel.journey": replace(journey, steps=journey.steps - {StepAction.FOUND})}
     monkeypatch.setattr(module, "INCIDENT_KINDS", narrowed)
     assert any("FOUND to travel.journey" in line for line in module.helper_step_problems())
+
+
+def test_a_shipped_kind_that_leaves_the_catalog_needs_a_rename_migration(tmp_path: Path) -> None:
+    module = guard()
+    assert module.catalog_keys('IncidentKindSpec("travel.route_stitched", G.MOVEMENT, "x")') == {"travel.route_stitched"}
+    shipped = {"travel.route_stitched", "travel.arrival"}
+    assert module.retired_kind_problems(shipped, {"travel.arrival", "travel.route_reopened"}, set())
+    (tmp_path / "rename.py").write_text('RENAMED_KINDS = (("travel.route_stitched", "travel.route_reopened"),)\n', encoding="utf-8")
+    renamed = module.renamed_kinds(tmp_path)
+    assert renamed == {"travel.route_stitched"}
+    assert module.retired_kind_problems(shipped, {"travel.arrival", "travel.route_reopened"}, renamed) == []
+
+
+def test_every_retired_kind_key_is_renamed_in_stored_records() -> None:
+    module = guard()
+    renamed = module.renamed_kinds()
+    assert {"travel.route_stitched", "tools.son.stitch", "fate.thread_closed", "institutions.place_swallowed"} <= renamed
+    assert not renamed & set(INCIDENT_KINDS)

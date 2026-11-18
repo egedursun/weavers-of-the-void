@@ -37,7 +37,7 @@ export const GAME_TAGLINE =
   'You are the Creator. Your sons are gods. The Void is listening.'
 
 export const GAME_PITCH =
-  'Weavers of the Void is a self-generating lore engine. You rule as the Creator while your sons, living god cards, wake once per epoch as AI agents to scheme, pray and wage war. Between their turns a deterministic engine weaves the world forward, so no two cosmoses ever tell the same story.'
+  'Weavers of the Void is a self-generating lore engine. You rule as the Creator while your sons, living god cards, wake once per epoch as AI agents to scheme, pray and wage war. Between their turns a deterministic engine moves the world forward, so no two cosmoses ever tell the same story.'
 
 export const GAME_PILLARS: readonly GamePillar[] = [
   {
@@ -94,7 +94,7 @@ export const CREATOR_PATH: readonly GamePillar[] = [
     icon: HandHeart,
   },
   {
-    title: 'Read What Was Woven',
+    title: 'Read What Was Written',
     body: 'Chronicles, maps, tongues and portraits remember every age.',
     icon: BookOpenText,
   },
@@ -114,11 +114,11 @@ export const TECH_RUNES: readonly TechRune[] = [
   { name: 'MLX & Diffusers', role: 'The painters', icon: ImagePlus },
 ]
 
-export const VISION_TITLE = 'The Deepest World Ever Woven'
+export const VISION_TITLE = 'The Deepest World Ever Made'
 
 export const VISION_MANIFESTO = [
   'Weavers of the Void exists to build the deepest, most interconnected fantasy universe ever simulated. Deeper than any game world. Richer than any written canon.',
-  'Not a backdrop of flavour text, but a living web: every god, mortal, war, tongue, relic and prophecy is bound to the rest, and every thread can be pulled back to the moment it was spun.',
+  'Not a backdrop of flavour text, but a living whole: every god, mortal, war, tongue, relic and prophecy is bound to the rest, and every record can be followed back to the moment it began.',
 ]
 
 export const VISION_VOWS: readonly GamePillar[] = [
