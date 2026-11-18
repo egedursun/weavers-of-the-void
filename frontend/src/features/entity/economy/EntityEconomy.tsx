@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useId, useState } from 'react'
 import {
   ArrowRight,
   Ban,
@@ -38,13 +38,14 @@ import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
   EntityLink,
+  FieldTile,
   IconStat,
   type KpiTone,
+  LoadingBlock,
   Medallion,
   MiniStat,
-  Section,
   Paged,
-  LoadingBlock,
+  Section,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -251,12 +252,11 @@ export function NumberField({
   aria?: string
   disabled?: boolean
 }) {
+  const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Input
+        id={id}
         type='number'
         inputMode='numeric'
         min={min}
@@ -266,7 +266,7 @@ export function NumberField({
         aria-label={aria ?? label}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }
 

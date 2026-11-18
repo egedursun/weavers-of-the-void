@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import {
   Feather,
   Link2,
@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog, Medallion, Paged } from '@/components/domain'
+import { ConfirmDialog, FieldTile, Medallion, Paged } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -191,10 +191,11 @@ function CausePicker({
         })),
     [incidents, exclude]
   )
+  const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>Caused by</Label>
+    <FieldTile id={id} label='Caused by'>
       <RecordCombobox
+        id={id}
         options={options}
         value={value === null ? null : String(value)}
         onChange={(next) => onChange(next === null ? null : Number(next))}
@@ -204,7 +205,7 @@ function CausePicker({
         clearable
         aria-label='Caused by'
       />
-    </div>
+    </FieldTile>
   )
 }
 

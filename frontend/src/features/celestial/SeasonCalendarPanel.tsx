@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Bed,
@@ -28,11 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  FieldTile,
   KpiTile,
   MiniStat,
+  Paged,
   ShowMore,
   useShowMore,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { NOTABLE, named } from '@/features/entity/environment/labels'
@@ -311,11 +312,11 @@ function SeasonPicker({
   value: string
   onChange: (value: string) => void
 }) {
+  const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>Season</Label>
+    <FieldTile id={id} label='Season'>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger aria-label='Season'>
+        <SelectTrigger id={id} aria-label='Season'>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -327,7 +328,7 @@ function SeasonPicker({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 

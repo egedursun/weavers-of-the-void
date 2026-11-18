@@ -5,9 +5,14 @@ import { unitHash } from '@/lib/hash'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Medallion, ShowMore, useShowMore } from '@/components/domain'
+import {
+  FieldTile,
+  Medallion,
+  ShowMore,
+  useShowMore,
+} from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { FORMS, table } from '@/features/arcana/labels'
 import { CosmicActionButton } from '@/features/cosmos/CosmicActionButton'
 import { useRuleBook } from '@/features/cosmos/model/rules'
@@ -121,10 +126,7 @@ function NameField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id}>
-        Name
-      </Label>
+    <FieldTile id={id} label='Name'>
       <Input
         id={id}
         value={value}
@@ -132,7 +134,7 @@ function NameField({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }
 

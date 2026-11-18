@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import {
   ChangeChip,
   EntityLink,
+  FieldTile,
   type KpiTone,
   Medallion,
   Paged,
@@ -191,10 +192,7 @@ export function RecordField({
     [names.data, types]
   )
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -206,7 +204,7 @@ export function RecordField({
         clearable
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }
 
@@ -341,10 +339,7 @@ export function NumberField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <div className='flex min-w-0 items-center gap-2'>
         {Icon && (
           <Icon
@@ -364,7 +359,7 @@ export function NumberField({
           onChange={(event) => onChange(event.target.value)}
         />
       </div>
-    </div>
+    </FieldTile>
   )
 }
 

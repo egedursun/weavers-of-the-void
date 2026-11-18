@@ -3,7 +3,7 @@ import { type LucideIcon, Plus, X } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { PagedList } from '@/components/domain'
+import { FieldTile, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { Chip } from '@/features/cosmography/parts'
 import { NodePicker } from '@/features/dominion/parts'
@@ -145,16 +145,13 @@ export function TextField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Input
         id={id}
         value={value}
         disabled={blocked !== null}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }

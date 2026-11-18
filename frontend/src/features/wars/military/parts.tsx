@@ -14,7 +14,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import {
   Select,
@@ -24,7 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { type KpiTone, Medallion, PagedList } from '@/components/domain'
+import {
+  FieldTile,
+  type KpiTone,
+  Medallion,
+  PagedList,
+} from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { ControlPanel } from '@/features/entity/mind/parts'
 import {
@@ -173,50 +177,6 @@ export function Adjust({
 export function FieldGrid({ children }: { children: ReactNode }) {
   return (
     <div className='grid min-w-0 grid-cols-1 gap-2 @sm/mil:grid-cols-2 @3xl/mil:grid-cols-4'>
-      {children}
-    </div>
-  )
-}
-
-function FieldTile({
-  id,
-  label,
-  icon: Icon,
-  aside,
-  framed = true,
-  children,
-}: {
-  id: string
-  label: string
-  icon?: LucideIcon
-  aside?: string
-  framed?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div
-      className={cn(
-        'flex min-w-0 flex-col justify-between gap-1.5',
-        framed &&
-          'rounded-md border surface-framed border-gild/70 bg-card p-2.5'
-      )}
-    >
-      <div className='flex min-w-0 items-center gap-1.5'>
-        {Icon && (
-          <Icon
-            aria-hidden='true'
-            className='size-icon-xs shrink-0 text-muted-foreground'
-          />
-        )}
-        <FieldLabel htmlFor={id} className='min-w-0 flex-1 truncate'>
-          {label}
-        </FieldLabel>
-        {aside && (
-          <Muted as='span' variant='caption' className='shrink-0'>
-            {aside}
-          </Muted>
-        )}
-      </div>
       {children}
     </div>
   )

@@ -1,6 +1,7 @@
 import { useId, useMemo } from 'react'
+import { FieldTile } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { Label, Muted } from '@/components/typography'
+import { Muted } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { RefLink } from '@/features/entity/realm/parts'
 
@@ -58,10 +59,7 @@ export function ThingPicker({
     [names.data, types, kinds]
   )
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -77,6 +75,6 @@ export function ThingPicker({
         clearable
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }

@@ -25,7 +25,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EntityLink, type KpiTone, Medallion, Paged } from '@/components/domain'
+import {
+  EntityLink,
+  FieldTile,
+  type KpiTone,
+  Medallion,
+  Paged,
+} from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { MindPicker } from '../mind/parts'
 import { type Named, STAGE, named } from './labels'
@@ -366,10 +372,7 @@ export function NumberField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Input
         id={id}
         type='number'
@@ -380,7 +383,7 @@ export function NumberField({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }
 
@@ -397,10 +400,7 @@ export function SwitchField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <div className='flex h-control-md min-w-0 items-center gap-2'>
         <Switch
           id={id}
@@ -410,7 +410,7 @@ export function SwitchField({
         />
         <Text as='span'>{checked ? 'Yes' : 'No'}</Text>
       </div>
-    </div>
+    </FieldTile>
   )
 }
 

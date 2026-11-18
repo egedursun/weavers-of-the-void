@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Medallion } from '@/components/domain'
+import { FieldTile, Medallion } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
@@ -63,11 +63,11 @@ export function MindPicker({
   placeholder?: string
   onPick: (value: string) => void
 }) {
+  const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>{label}</Label>
+    <FieldTile id={id} label={label}>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
-        <SelectTrigger aria-label={label} className='w-full'>
+        <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -78,7 +78,7 @@ export function MindPicker({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 
@@ -165,10 +165,7 @@ export function NodePicker({
   )
   const kinds = [...new Set(types.map((type) => PLURALS[type] ?? `${type}s`))]
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -180,7 +177,7 @@ export function NodePicker({
         clearable
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }
 

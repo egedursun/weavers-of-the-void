@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, FieldTile } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
@@ -246,10 +246,7 @@ export function TextField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Input
         id={id}
         value={value}
@@ -258,7 +255,7 @@ export function TextField({
         aria-label={label}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }
 
@@ -277,10 +274,7 @@ export function NoteField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Textarea
         id={id}
         value={value}
@@ -289,6 +283,6 @@ export function NoteField({
         aria-label={label}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }

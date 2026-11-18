@@ -14,7 +14,7 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Paged, PagedList } from '@/components/domain'
+import { FieldTile, Paged, PagedList } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted } from '@/components/typography'
 import {
@@ -81,10 +81,7 @@ export function NodePicker({
     .map((kind) => kind.replaceAll('_', ' '))
     .join(', ')
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -98,7 +95,7 @@ export function NodePicker({
         clearable
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }
 
