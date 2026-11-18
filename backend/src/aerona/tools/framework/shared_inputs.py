@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.tool_inputs import BOND_DESCRIPTION_MAX, ETYMOLOGY_MAX, MEANING_MAX, WORD_MAX
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.domain.enums.bond import BondKind
@@ -61,19 +62,20 @@ async def add_words(session: AsyncSession, language: EntityRow, words: Sequence[
     ]
     existing = list(await session.scalars(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id)))
     admitted = admissible_entries(entries, existing)
-    session.add_all(
-        LexemeRow(
-            language_entity_id=language.id,
-            word=entry.word,
-            meaning=entry.meaning,
-            part_of_speech=entry.part_of_speech,
-            etymology=entry.origin or None,
-            example=entry.example or None,
-            added_by_kind=actor[0],
-            added_by_node_id=actor[1],
-            epoch=epoch,
+    for entry in admitted:
+        await add_lexeme(
+            session,
+            LexemeRow(
+                language_entity_id=language.id,
+                word=entry.word,
+                meaning=entry.meaning,
+                part_of_speech=entry.part_of_speech,
+                etymology=entry.origin or None,
+                example=entry.example or None,
+                added_by_kind=actor[0],
+                added_by_node_id=actor[1],
+                epoch=epoch,
+            ),
         )
-        for entry in admitted
-    )
     await session.flush()
     return [entry.word for entry in admitted]

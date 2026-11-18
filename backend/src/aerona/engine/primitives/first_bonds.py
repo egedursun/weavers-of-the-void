@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
@@ -43,20 +44,21 @@ class FaithBinding:
 async def store_words(ctx: TickContext, language: EntityRow, entries: Sequence[LexiconEntry], added_by: int | None) -> int:
     existing = list(await ctx.session.scalars(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id)))
     admitted = admissible_entries(entries, existing)
-    ctx.session.add_all(
-        LexemeRow(
-            language_entity_id=language.id,
-            word=entry.word,
-            meaning=entry.meaning,
-            part_of_speech=entry.part_of_speech,
-            etymology=entry.origin or None,
-            example=entry.example or None,
-            added_by_kind=ActorKind.ENGINE,
-            added_by_node_id=added_by,
-            epoch=ctx.epoch,
+    for entry in admitted:
+        await add_lexeme(
+            ctx.session,
+            LexemeRow(
+                language_entity_id=language.id,
+                word=entry.word,
+                meaning=entry.meaning,
+                part_of_speech=entry.part_of_speech,
+                etymology=entry.origin or None,
+                example=entry.example or None,
+                added_by_kind=ActorKind.ENGINE,
+                added_by_node_id=added_by,
+                epoch=ctx.epoch,
+            ),
         )
-        for entry in admitted
-    )
     await ctx.session.flush()
     return len(admitted)
 

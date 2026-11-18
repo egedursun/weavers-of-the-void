@@ -13,6 +13,7 @@ from aerona.agents.text import clean_fate_note, sanitize, shorten_rationale, str
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.db.tables.lore import FateRewardRow, LexemeRow, ThreadRow, lexeme_key
 from aerona.db.tables.sons import SonRow
@@ -206,7 +207,8 @@ async def apply_words(session: AsyncSession, rules: Rules, ruling: FateRuling, o
         exists = await session.scalar(select(LexemeRow.id).where(LexemeRow.language_entity_id == language.id, LexemeRow.word_key == lexeme_key(word)).limit(1))
         if exists is not None:
             continue
-        session.add(
+        await add_lexeme(
+            session,
             LexemeRow(
                 language_entity_id=language.id,
                 word=word,
@@ -215,7 +217,7 @@ async def apply_words(session: AsyncSession, rules: Rules, ruling: FateRuling, o
                 etymology=item.origin.strip() or f"Born in Age {ruling.epoch}",
                 added_by_kind=ActorKind.FATE,
                 epoch=ruling.epoch,
-            )
+            ),
         )
 
 

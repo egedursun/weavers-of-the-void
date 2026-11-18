@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.record_context import Term
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import BookContentRow, HolderLevelRow
 from aerona.db.tables.entities import EntityRow
@@ -214,7 +215,8 @@ async def borrow_word(ctx: TickContext, lender: EntityRow, borrower: EntityRow) 
     if not candidates:
         return None
     chosen = ctx.rng(f"loanword.{lender.id}.{borrower.id}").pick(candidates)
-    session.add(
+    await add_lexeme(
+        session,
         LexemeRow(
             language_entity_id=borrower_language.id,
             word=chosen.word,
@@ -224,7 +226,7 @@ async def borrow_word(ctx: TickContext, lender: EntityRow, borrower: EntityRow) 
             added_by_kind=ActorKind.ENGINE,
             added_by_node_id=borrower.id,
             epoch=ctx.epoch,
-        )
+        ),
     )
     await session.flush()
     return Borrowing(chosen.word, borrower_language.id)

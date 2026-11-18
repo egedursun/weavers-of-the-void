@@ -166,6 +166,21 @@ async def test_a_word_takes_in_another_meaning_and_the_name_of_a_dreaded_beast_i
     assert old.word == "Graw"
 
 
+async def test_a_veiled_name_already_in_the_tongue_keeps_its_one_word(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await tuned(session, semantic_drift={"drift_pct": 0, "taboo_pct": 100, "taboo_terror": 50})
+    town = await settlement(session, "Hollow", world, world.regions[0])
+    language = await tongue(session, world, "Hollowish")
+    await bond(session, town.id, language.id, BondKind.SPEAKS)
+    words(session, language, ("Ama", "water"), ("Bena", "stone"), ("Graw", "the beast of the hills"))
+    await entity(session, "Graw", EntityType.BEAST, BeastStats(terror=90), world_id=world.world.id, location_id=world.regions[0].id)
+    await session.flush()
+    tally = DriftTally()
+    await lift_names(ctx, tally)
+    assert tally.veiled >= 1
+    named = list(await session.scalars(select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.word_key == "graw")))
+    assert len(named) == 1
+
+
 async def test_a_merchant_tongue_wears_its_script_simpler_and_an_unwritten_one_borrows(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await tuned(session, script_evolution={"evolve_pct": 100, "merchant_share": 0, "borrow_pct": 100})
     writer = await tongue(session, world, "Scribal")

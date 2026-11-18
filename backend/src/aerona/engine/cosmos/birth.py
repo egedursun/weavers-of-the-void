@@ -20,6 +20,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -381,7 +382,8 @@ async def _language(ctx: TickContext, state: BirthState, output: NewWorldOutput)
         if not key or key in seen:
             continue
         seen.add(key)
-        ctx.session.add(
+        await add_lexeme(
+            ctx.session,
             LexemeRow(
                 language_entity_id=language.id,
                 word=word.word,
@@ -391,7 +393,7 @@ async def _language(ctx: TickContext, state: BirthState, output: NewWorldOutput)
                 added_by_kind=actor,
                 added_by_node_id=actor_id,
                 epoch=ctx.epoch,
-            )
+            ),
         )
     await ctx.session.flush()
     return language

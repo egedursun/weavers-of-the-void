@@ -15,6 +15,7 @@ from aerona.agents.text import sanitize
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
@@ -166,19 +167,20 @@ async def awaken_one(
         region=region,
         located=False,
     )
-    session.add_all(
-        LexemeRow(
-            language_entity_id=language.id,
-            word=word.word,
-            meaning=word.meaning,
-            part_of_speech=word.kind,
-            etymology=word.origin or None,
-            added_by_kind=ActorKind.MORTAL,
-            added_by_node_id=people.id,
-            epoch=epoch,
+    for word in {entry.word.casefold(): entry for entry in item.language.words if entry.word.strip()}.values():
+        await add_lexeme(
+            session,
+            LexemeRow(
+                language_entity_id=language.id,
+                word=word.word,
+                meaning=word.meaning,
+                part_of_speech=word.kind,
+                etymology=word.origin or None,
+                added_by_kind=ActorKind.MORTAL,
+                added_by_node_id=people.id,
+                epoch=epoch,
+            ),
         )
-        for word in {entry.word.casefold(): entry for entry in item.language.words if entry.word.strip()}.values()
-    )
     bonds = BondRepository(session)
     for source, target, kind in (
         (people, language, BondKind.SPEAKS),

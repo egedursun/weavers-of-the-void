@@ -9,6 +9,7 @@ from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
@@ -439,7 +440,8 @@ async def reconstruct(ctx: TickContext, tally: SoundTally) -> None:
         meaning = shared[0]
         source = first[meaning]
         word = source.proto_word or source.word
-        ctx.session.add(
+        await add_lexeme(
+            ctx.session,
             LexemeRow(
                 language_entity_id=parent.id,
                 word=word,
@@ -451,7 +453,7 @@ async def reconstruct(ctx: TickContext, tally: SoundTally) -> None:
                 epoch=ctx.epoch,
                 proto_word=word,
                 register=WordRegister.ARCHAIC,
-            )
+            ),
         )
         tally.reconstructed += 1
 

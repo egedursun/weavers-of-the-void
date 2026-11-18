@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.discovery import EpithetRow, NameExonymRow, NameMeaningRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -84,18 +85,20 @@ async def coin(ctx: TickContext, language: EntityRow, word: str, meaning: str) -
     found = await ctx.session.scalar(select(LexemeRow).where(LexemeRow.language_entity_id == language.id, LexemeRow.word_key == lexeme_key(word)).limit(1))
     if found is not None:
         return found
-    row = LexemeRow(
-        language_entity_id=language.id,
-        word=word,
-        meaning=meaning,
-        part_of_speech=PartOfSpeech.NOUN,
-        etymology=None,
-        example=None,
-        added_by_kind=ActorKind.ENGINE,
-        added_by_node_id=None,
-        epoch=ctx.epoch,
+    row = await add_lexeme(
+        ctx.session,
+        LexemeRow(
+            language_entity_id=language.id,
+            word=word,
+            meaning=meaning,
+            part_of_speech=PartOfSpeech.NOUN,
+            etymology=None,
+            example=None,
+            added_by_kind=ActorKind.ENGINE,
+            added_by_node_id=None,
+            epoch=ctx.epoch,
+        ),
     )
-    ctx.session.add(row)
     await ctx.session.flush()
     return row
 

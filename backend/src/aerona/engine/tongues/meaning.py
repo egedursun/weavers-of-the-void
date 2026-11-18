@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.schema import LEXEME_TEXT_MAX_LENGTH, LEXEME_WORD_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.discovery import NameExonymRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
@@ -117,18 +118,21 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
     first, second = (head, modifier) if await head_first(ctx.session, language.id) else (modifier, head)
     joined = f"{first.word}{second.word.casefold()}" if await compounds(ctx.session, language.id) else f"{first.word} {second.word.casefold()}"
     gloss = clipped(f"the {first.meaning.split(ALSO)[0]} {second.meaning.split(ALSO)[0]}", LEXEME_TEXT_MAX_LENGTH)
-    euphemism = LexemeRow(
-        language_entity_id=language.id,
-        word=clipped(joined, LEXEME_WORD_MAX_LENGTH),
-        meaning=clipped(f"{gloss}, said instead of {name}", LEXEME_TEXT_MAX_LENGTH),
-        etymology=f"from {first.word} and {second.word}",
-        added_by_kind=ActorKind.ENGINE,
-        added_by_node_id=None,
-        epoch=ctx.epoch,
-        register=WordRegister.COMMON,
+    euphemism = await add_lexeme(
+        ctx.session,
+        LexemeRow(
+            language_entity_id=language.id,
+            word=clipped(joined, LEXEME_WORD_MAX_LENGTH),
+            meaning=clipped(f"{gloss}, said instead of {name}", LEXEME_TEXT_MAX_LENGTH),
+            etymology=f"from {first.word} and {second.word}",
+            added_by_kind=ActorKind.ENGINE,
+            added_by_node_id=None,
+            epoch=ctx.epoch,
+            register=WordRegister.COMMON,
+        ),
     )
-    ctx.session.add(euphemism)
-    ctx.session.add(
+    await add_lexeme(
+        ctx.session,
         LexemeRow(
             language_entity_id=language.id,
             word=clipped(name, LEXEME_WORD_MAX_LENGTH),
@@ -137,7 +141,7 @@ async def veil(ctx: TickContext, language: EntityRow, node_id: int, name: str) -
             added_by_node_id=None,
             epoch=ctx.epoch,
             register=WordRegister.SACRED,
-        )
+        ),
     )
     await ctx.session.flush()
     exonym = await ctx.session.get(NameExonymRow, (node_id, language.id))

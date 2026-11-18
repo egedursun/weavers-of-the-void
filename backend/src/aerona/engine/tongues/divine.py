@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.lore import LexemeRow
@@ -96,7 +97,8 @@ async def give_tongue(ctx: TickContext, son: SonRow) -> DivineTongueRow | None:
         for index, meaning in enumerate(await meanings_for(ctx, son)):
             word = await namer.from_language(language, seed_of("divine.word", son.id, index), NameKind.GENERAL)
             if word:
-                ctx.session.add(
+                await add_lexeme(
+                    ctx.session,
                     LexemeRow(
                         language_entity_id=language.id,
                         word=word,
@@ -107,7 +109,7 @@ async def give_tongue(ctx: TickContext, son: SonRow) -> DivineTongueRow | None:
                         added_by_node_id=son.id,
                         epoch=ctx.epoch,
                         register=WordRegister.SACRED,
-                    )
+                    ),
                 )
     if name is not None and name.language_node_id is None and "language_node_id" not in name.locked:
         name.language_node_id = language.id

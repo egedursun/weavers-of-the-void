@@ -8,6 +8,7 @@ from aerona.agents.context.scope import load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
 from aerona.domain.enums.entity import EntityType
@@ -80,7 +81,8 @@ async def translate(runtime: AgentRuntime, language_id: int, text: str) -> Trans
                 continue
             known.add(key)
             added.append(word)
-            session.add(
+            await add_lexeme(
+                session,
                 LexemeRow(
                     language_entity_id=language_id,
                     word=word.word.strip(),
@@ -91,7 +93,7 @@ async def translate(runtime: AgentRuntime, language_id: int, text: str) -> Trans
                     added_by_kind=ActorKind.CREATOR,
                     added_by_node_id=scope.creator.id,
                     epoch=epoch,
-                )
+                ),
             )
     runtime.publish(EventKind.TRANSLATED, {"language_id": language_id, "new_words": len(added)})
     return output.model_copy(update={"new_words": added})

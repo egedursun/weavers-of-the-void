@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.language import EPOCH_WORD_SEED_PREFIX
 from aerona.core.grammar import several
+from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import LexemeRow
@@ -70,19 +71,20 @@ async def add_epoch_words(session: AsyncSession, rules: Rules, epoch: int) -> in
     for language_id, word in await session.execute(select(LexemeRow.language_entity_id, LexemeRow.word).where(LexemeRow.language_entity_id.in_(list(by_id)))):
         known[language_id].add(word)
     planned = plan_epoch_words(sources, epoch, lambda language_id, seed: words.get((language_id, seed)), known, rules)
-    session.add_all(
-        LexemeRow(
-            language_entity_id=item.language_id,
-            word=item.entry.word,
-            meaning=item.entry.meaning,
-            part_of_speech=item.entry.part_of_speech,
-            etymology=item.entry.origin or None,
-            added_by_kind=ActorKind.ENGINE,
-            added_by_node_id=item.entity_id,
-            epoch=epoch,
+    for item in planned:
+        await add_lexeme(
+            session,
+            LexemeRow(
+                language_entity_id=item.language_id,
+                word=item.entry.word,
+                meaning=item.entry.meaning,
+                part_of_speech=item.entry.part_of_speech,
+                etymology=item.entry.origin or None,
+                added_by_kind=ActorKind.ENGINE,
+                added_by_node_id=item.entity_id,
+                epoch=epoch,
+            ),
         )
-        for item in planned
-    )
     await session.flush()
     return len(planned)
 
