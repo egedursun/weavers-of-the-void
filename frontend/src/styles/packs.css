@@ -23,10 +23,10 @@
   inherits: true;
   initial-value: 0;
 }
-@property --ring {
-  syntax: '<number>';
-  inherits: true;
-  initial-value: 0;
+@property --rim-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
 }
 @property --charge {
   syntax: '<number>';
@@ -38,6 +38,11 @@
   --pack-w: 260px;
   --pack-h: calc(var(--pack-w) * 1.72);
   --reveal: var(--gild-hi);
+  --pack-top: 57%;
+  --reveal-y: 44%;
+  --beam-strong: color-mix(in oklch, white 55%, var(--reveal));
+  --beam-mid: color-mix(in oklch, var(--reveal) 70%, transparent);
+  --beam-soft: color-mix(in oklch, var(--reveal) 34%, transparent);
   position: relative;
   height: clamp(480px, 68svh, 760px);
   overflow: hidden;
@@ -69,81 +74,102 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    60% 50% at 50% 44%,
+    60% 50% at 50% var(--reveal-y),
     oklch(0.06 0.03 285 / 30%),
     oklch(0.04 0.02 285 / 92%)
   );
   opacity: calc(var(--dim) * 0.85);
 }
 
-.pack-rays {
+.pack-beams {
   position: absolute;
   left: 50%;
-  top: 44%;
-  width: 180vmax;
-  height: 180vmax;
+  top: var(--reveal-y);
+  width: 170vmax;
+  height: 170vmax;
   translate: -50% -50%;
   pointer-events: none;
-  background: repeating-conic-gradient(
-    from 0deg,
-    color-mix(in oklch, var(--reveal) 62%, transparent) 0deg 1.4deg,
-    transparent 1.4deg 4.5deg,
-    color-mix(in oklch, var(--reveal) 26%, transparent) 4.5deg 5.4deg,
-    transparent 5.4deg 13deg
-  );
+  background: var(--beams);
   -webkit-mask-image: radial-gradient(
     circle,
     #000 0%,
-    rgb(0 0 0 / 50%) 12%,
-    transparent 36%
+    rgb(0 0 0 / 75%) 5%,
+    rgb(0 0 0 / 30%) 14%,
+    transparent 30%
   );
   mask-image: radial-gradient(
     circle,
     #000 0%,
-    rgb(0 0 0 / 50%) 12%,
-    transparent 36%
+    rgb(0 0 0 / 75%) 5%,
+    rgb(0 0 0 / 30%) 14%,
+    transparent 30%
   );
-  filter: blur(0.6px);
+  filter: blur(3px);
   mix-blend-mode: screen;
-  opacity: var(--rays);
-  animation: pack-spin 70s linear infinite;
+  opacity: calc(var(--rays) * 0.85);
+  animation: pack-spin 150s linear infinite;
 }
 
-.pack-stage[data-material='mythic'] .pack-rays {
-  background: repeating-conic-gradient(
-    from 0deg,
-    color-mix(in oklch, var(--rarity-mythic) 75%, transparent) 0deg 1.6deg,
-    transparent 1.6deg 4deg,
-    color-mix(in oklch, var(--rarity-rare) 70%, transparent) 4deg 5.6deg,
-    transparent 5.6deg 8deg,
-    color-mix(in oklch, var(--rarity-legendary) 70%, transparent) 8deg 9.6deg,
-    transparent 9.6deg 14deg
+.pack-beams[data-layer='far'] {
+  background: var(--beams-far);
+  -webkit-mask-image: radial-gradient(
+    circle,
+    rgb(0 0 0 / 80%) 0%,
+    rgb(0 0 0 / 35%) 12%,
+    transparent 38%
   );
+  mask-image: radial-gradient(
+    circle,
+    rgb(0 0 0 / 80%) 0%,
+    rgb(0 0 0 / 35%) 12%,
+    transparent 38%
+  );
+  filter: blur(12px);
+  opacity: calc(var(--rays) * 0.6);
+  animation-duration: 240s;
+  animation-direction: reverse;
+}
+
+.pack-stage[data-material='mythic'] {
+  --prism-1: color-mix(in oklch, var(--rarity-mythic) 75%, transparent);
+  --prism-2: color-mix(in oklch, var(--rarity-rare) 70%, transparent);
+  --prism-3: color-mix(in oklch, var(--rarity-legendary) 70%, transparent);
+  --prism-4: color-mix(in oklch, var(--rarity-epic) 70%, transparent);
+  --prism-5: color-mix(in oklch, white 50%, var(--rarity-mythic));
 }
 
 .pack-halo {
   position: absolute;
   left: 50%;
-  top: 44%;
-  width: 95vmin;
-  height: 95vmin;
+  top: var(--reveal-y);
+  width: 110vmin;
+  height: 110vmin;
   translate: -50% -50%;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklch, var(--reveal) 60%, transparent) 0%,
-    color-mix(in oklch, var(--reveal) 18%, transparent) 30%,
-    transparent 62%
-  );
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in oklch, white 35%, var(--reveal)) 0%,
+      color-mix(in oklch, var(--reveal) 42%, transparent) 9%,
+      transparent 26%
+    ),
+    radial-gradient(
+      circle,
+      color-mix(in oklch, var(--reveal) 26%, transparent) 0%,
+      color-mix(in oklch, var(--reveal) 10%, transparent) 30%,
+      transparent 58%
+    );
+  mix-blend-mode: screen;
   opacity: var(--halo);
-  filter: blur(14px);
+  filter: blur(18px);
+  animation: pack-halo-breathe 5s ease-in-out infinite;
 }
 
 .pack-floor {
   position: absolute;
   left: 50%;
-  top: calc(57% + var(--pack-h) / 2 + 22px);
+  top: calc(var(--pack-top) + var(--pack-h) / 2 + 22px);
   width: calc(var(--pack-w) * 1.15);
   height: 34px;
   translate: -50% -50%;
@@ -156,7 +182,7 @@
 .pack-float {
   position: absolute;
   left: 50%;
-  top: 57%;
+  top: var(--pack-top);
   width: var(--pack-w);
   height: var(--pack-h);
   translate: -50% -50%;
@@ -173,6 +199,11 @@
 
 .pack-tilt[data-tilting] {
   transition: transform 110ms linear;
+}
+
+.pack-stage[data-phase='opening'] .pack-tilt,
+.pack-stage[data-phase='revealed'] .pack-tilt {
+  transition: transform 180ms ease-out;
 }
 
 .pack {
@@ -235,7 +266,56 @@
   aspect-ratio: 3 / 5;
   z-index: 1;
   perspective: 1600px;
+  container-type: inline-size;
   will-change: transform;
+}
+
+.pack-card::before {
+  content: '';
+  position: absolute;
+  inset: 3%;
+  border-radius: 5cqw;
+  pointer-events: none;
+  box-shadow:
+    0 0 10cqw 2cqw color-mix(in oklch, var(--reveal) 45%, transparent),
+    0 0 3cqw 0.4cqw color-mix(in oklch, white 30%, var(--reveal));
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.pack-stage[data-settled] .pack-card::before {
+  opacity: 0.85;
+}
+
+.pack-rim {
+  position: absolute;
+  inset: -2.2cqw;
+  z-index: 2;
+  padding: 2.6cqw;
+  border-radius: 7cqw;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--rim-angle),
+    transparent 0deg,
+    transparent 200deg,
+    color-mix(in oklch, var(--reveal) 60%, transparent) 270deg,
+    color-mix(in oklch, white 75%, var(--reveal)) 322deg,
+    white 332deg,
+    color-mix(in oklch, var(--reveal) 70%, transparent) 346deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: blur(0.5cqw) drop-shadow(0 0 3cqw var(--reveal))
+    drop-shadow(0 0 1cqw color-mix(in oklch, white 50%, var(--reveal)));
+  mix-blend-mode: screen;
+  opacity: 0;
 }
 
 .pack-card-flip {
@@ -429,22 +509,95 @@
   animation: pack-guide-run 2.6s cubic-bezier(0.55, 0, 0.45, 1) infinite;
 }
 
-.pack-ring {
+.pack-shock {
   position: absolute;
   left: 50%;
-  top: 44%;
-  width: 46vmin;
-  height: 46vmin;
-  translate: -50% -50%;
+  top: var(--reveal-y);
+  width: 64vmin;
+  height: 64vmin;
+  margin: -32vmin 0 0 -32vmin;
   z-index: 3;
   border-radius: 50%;
   pointer-events: none;
-  border: 2px solid color-mix(in oklch, white 55%, var(--reveal));
-  box-shadow:
-    0 0 28px var(--reveal),
-    inset 0 0 28px var(--reveal);
-  scale: calc(0.35 + var(--ring) * 2.4);
-  opacity: calc(var(--ring) * (1 - var(--ring)) * 3.4);
+  background: radial-gradient(
+    circle,
+    transparent 0 58%,
+    color-mix(in oklch, var(--reveal) 22%, transparent) 62.5%,
+    color-mix(in oklch, white 70%, var(--reveal)) 65.5%,
+    color-mix(in oklch, var(--reveal) 30%, transparent) 67.5%,
+    transparent 71%
+  );
+  filter: blur(1.4px);
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.pack-shock[data-wave='echo'] {
+  filter: blur(4px);
+}
+
+.pack-bloom {
+  position: absolute;
+  left: 50%;
+  top: var(--reveal-y);
+  width: 80vmin;
+  height: 80vmin;
+  margin: -40vmin 0 0 -40vmin;
+  z-index: 4;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    white 0%,
+    color-mix(in oklch, white 70%, var(--reveal)) 7%,
+    color-mix(in oklch, var(--reveal) 55%, transparent) 18%,
+    color-mix(in oklch, var(--reveal) 16%, transparent) 34%,
+    transparent 56%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.pack-streak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--reveal-y);
+  height: 3px;
+  margin-top: -1.5px;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--reveal) 50%, transparent) 22%,
+    color-mix(in oklch, white 75%, var(--reveal)) 44%,
+    white 50%,
+    color-mix(in oklch, white 75%, var(--reveal)) 56%,
+    color-mix(in oklch, var(--reveal) 50%, transparent) 78%,
+    transparent 100%
+  );
+  filter: blur(0.5px);
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.pack-streak::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 50%;
+  height: 54px;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, white 35%, var(--reveal)),
+    transparent
+  );
+  filter: blur(10px);
+  opacity: 0.55;
 }
 
 .pack-flash {
@@ -453,14 +606,13 @@
   z-index: 4;
   pointer-events: none;
   background: radial-gradient(
-    circle at 50% 44%,
-    oklch(1 0 0) 0%,
-    color-mix(in oklch, white 45%, var(--reveal)) 22%,
-    color-mix(in oklch, var(--reveal) 30%, transparent) 46%,
-    transparent 70%
+    80% 70% at 50% var(--reveal-y),
+    color-mix(in oklch, white 40%, var(--reveal)) 0%,
+    color-mix(in oklch, var(--reveal) 25%, transparent) 40%,
+    transparent 75%
   );
   mix-blend-mode: screen;
-  opacity: var(--flash);
+  opacity: calc(var(--flash) * 0.4);
 }
 
 .pack-fx {
@@ -1314,6 +1466,16 @@
   animation: pack-spin 220s linear infinite reverse;
 }
 
+@keyframes pack-halo-breathe {
+  0%,
+  100% {
+    scale: 0.97;
+  }
+  50% {
+    scale: 1.04;
+  }
+}
+
 @keyframes pack-spin {
   to {
     rotate: 360deg;
@@ -1415,7 +1577,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pack-backdrop,
-  .pack-rays,
+  .pack-beams,
+  .pack-halo,
   .pack-face-void,
   .pack-face-sheen::after,
   .card-reverse-glint::after,
@@ -1430,8 +1593,9 @@
   }
 }
 
+.reduce-motion .pack-halo,
+.reduce-motion .pack-beams,
 .reduce-motion .pack-backdrop,
-.reduce-motion .pack-rays,
 .reduce-motion .pack-face-void,
 .reduce-motion .pack-face-sheen::after,
 .reduce-motion .card-reverse-glint::after,

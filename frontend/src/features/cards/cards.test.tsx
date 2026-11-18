@@ -17,6 +17,16 @@ import {
   statMeta,
   typeLine,
 } from './cardModel'
+import {
+  CARD_RATIO,
+  CARD_SPAN,
+  CARD_TOP,
+  PACK_RATIO,
+  PACK_TOP,
+  REVEAL_Y,
+  beamsOf,
+  landingOf,
+} from './packModel'
 import { everyOpen, everySealed, sealedIn, useCardSeals } from './sealStore'
 
 function card(overrides: Partial<CharacterCard> = {}): CharacterCard {
@@ -206,6 +216,51 @@ describe('card seals', () => {
     expect(useCardSeals.getState().turned).toEqual([])
     useCardSeals.getState().sealAll()
     expect(everySealed(useCardSeals.getState())).toBe(true)
+  })
+})
+
+describe('pack staging', () => {
+  it('lands the opened card on the centre of the light at every stage size', () => {
+    for (const [width, height, pack] of [
+      [1000, 600, 220],
+      [390, 640, 230],
+      [1400, 760, 280],
+    ]) {
+      const landing = landingOf(width, height, pack)
+      const packHeight = pack * PACK_RATIO
+      const cardHeight = pack * CARD_SPAN * CARD_RATIO
+      const laidOut =
+        height * PACK_TOP -
+        packHeight / 2 +
+        packHeight * CARD_TOP +
+        cardHeight / 2
+      expect(laidOut + landing.dy).toBeCloseTo(height * REVEAL_Y, 6)
+      expect(landing.height * landing.scale).toBeLessThanOrEqual(
+        height * 0.7 + 1e-6
+      )
+      expect(landing.width * landing.scale).toBeLessThanOrEqual(
+        width * 0.84 + 1e-6
+      )
+    }
+  })
+
+  it('draws soft beams in order around the whole circle', () => {
+    let seed = 7
+    const random = () => {
+      seed = (seed * 16807) % 2147483647
+      return seed / 2147483647
+    }
+    const beams = beamsOf(random, 26, [0.5, 2.6], ['--beam-strong'])
+    const angles = [...beams.matchAll(/(-?[\d.]+)deg/g)].map((match) =>
+      Number(match[1])
+    )
+    expect(beams.startsWith('conic-gradient(from 0deg, transparent 0deg')).toBe(
+      true
+    )
+    expect(angles.slice(1)).toEqual([...angles.slice(1)].sort((a, b) => a - b))
+    expect(Math.min(...angles.slice(1))).toBeGreaterThanOrEqual(0)
+    expect(Math.max(...angles)).toBe(360)
+    expect(beams.match(/var\(--beam-strong\)/g)).toHaveLength(26)
   })
 })
 

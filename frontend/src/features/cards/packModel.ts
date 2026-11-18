@@ -9,51 +9,81 @@ export type Staging = {
   rays: number
   shake: number
   gather: number
+  embers: number
 }
 
 export const STAGING: Record<CardMaterial, Staging> = {
-  common: { pulses: 0, spin: 180, burst: 40, rays: 0.18, shake: 0, gather: 0 },
+  common: {
+    pulses: 0,
+    spin: 180,
+    burst: 36,
+    rays: 0.22,
+    shake: 0,
+    gather: 0,
+    embers: 0,
+  },
   uncommon: {
     pulses: 1,
     spin: 180,
-    burst: 60,
-    rays: 0.28,
+    burst: 54,
+    rays: 0.32,
     shake: 0,
     gather: 0,
+    embers: 0,
   },
-  rare: { pulses: 1, spin: 540, burst: 95, rays: 0.45, shake: 0, gather: 30 },
-  epic: { pulses: 2, spin: 540, burst: 140, rays: 0.6, shake: 3, gather: 60 },
+  rare: {
+    pulses: 1,
+    spin: 540,
+    burst: 80,
+    rays: 0.5,
+    shake: 0,
+    gather: 26,
+    embers: 10,
+  },
+  epic: {
+    pulses: 2,
+    spin: 540,
+    burst: 110,
+    rays: 0.65,
+    shake: 2,
+    gather: 44,
+    embers: 16,
+  },
   legendary: {
     pulses: 3,
     spin: 900,
-    burst: 200,
-    rays: 0.8,
-    shake: 5,
-    gather: 100,
+    burst: 150,
+    rays: 0.82,
+    shake: 4,
+    gather: 64,
+    embers: 24,
   },
   mythic: {
     pulses: 3,
     spin: 900,
-    burst: 250,
+    burst: 180,
     rays: 0.9,
-    shake: 6,
-    gather: 130,
+    shake: 4,
+    gather: 80,
+    embers: 30,
   },
   sovereign: {
     pulses: 3,
     spin: 900,
-    burst: 260,
+    burst: 190,
     rays: 0.95,
-    shake: 6,
-    gather: 140,
+    shake: 5,
+    gather: 84,
+    embers: 32,
   },
   obsidian: {
     pulses: 3,
     spin: 540,
-    burst: 180,
-    rays: 0.7,
-    shake: 5,
-    gather: 90,
+    burst: 140,
+    rays: 0.72,
+    shake: 4,
+    gather: 60,
+    embers: 22,
   },
 }
 
@@ -83,6 +113,74 @@ export const SPIN_TIME: Record<number, number> = {
 }
 
 export const PACK_RATIO = 1.72
+export const PACK_TOP = 0.57
+export const CARD_TOP = 0.116
+export const CARD_SPAN = 0.86
+export const CARD_RATIO = 5 / 3
+export const REVEAL_Y = 0.44
+
+export const BEAM_TOKENS = [
+  '--beam-strong',
+  '--beam-mid',
+  '--beam-soft',
+] as const
+export const PRISM_BEAM_TOKENS = [
+  '--prism-1',
+  '--prism-2',
+  '--prism-3',
+  '--prism-4',
+  '--prism-5',
+] as const
+
+export function beamsOf(
+  random: () => number,
+  count: number,
+  [narrow, wide]: [number, number],
+  tokens: readonly string[]
+): string {
+  const slot = 360 / count
+  const stops = ['transparent 0deg']
+  for (let index = 0; index < count; index += 1) {
+    const half = narrow + random() * (wide - narrow)
+    const room = Math.max(0, slot / 2 - half)
+    const center = index * slot + slot / 2 + (random() - 0.5) * 2 * room
+    const token = tokens[Math.floor(random() * tokens.length)]
+    stops.push(
+      `transparent ${(center - half).toFixed(2)}deg`,
+      `var(${token}) ${center.toFixed(2)}deg`,
+      `transparent ${(center + half).toFixed(2)}deg`
+    )
+  }
+  stops.push('transparent 360deg')
+  return `conic-gradient(from 0deg, ${stops.join(', ')})`
+}
+
+export type Landing = {
+  rise: number
+  dy: number
+  scale: number
+  width: number
+  height: number
+}
+
+export function landingOf(
+  stageWidth: number,
+  stageHeight: number,
+  packWidth: number
+): Landing {
+  const packHeight = packWidth * PACK_RATIO
+  const width = packWidth * CARD_SPAN
+  const height = width * CARD_RATIO
+  const center =
+    stageHeight * PACK_TOP - packHeight / 2 + packHeight * CARD_TOP + height / 2
+  return {
+    rise: height * 0.6,
+    dy: stageHeight * REVEAL_Y - center,
+    scale: Math.min((stageHeight * 0.7) / height, (stageWidth * 0.84) / width),
+    width,
+    height,
+  }
+}
 export const TEAR_AT = 0.104
 export const TEAR_FINISH = 0.42
 export const STRIP_ZONE = 0.26

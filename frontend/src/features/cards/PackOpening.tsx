@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { Hand, Repeat2 } from 'lucide-react'
+import { fnv1a, seededRandom } from '@/lib/hash'
 import { ParticleField, tokenColor } from '@/lib/particles'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { Button } from '@/components/ui/button'
@@ -17,17 +18,23 @@ import { PackFace, CardReverse } from './PackArt'
 import { type CharacterCard } from './api'
 import { FRAME_ICON, frameOf, materialOf, tierLabel } from './cardModel'
 import {
+  BEAM_TOKENS,
   PACK_RATIO,
+  PACK_TOP,
+  PRISM_BEAM_TOKENS,
   PRISM_TOKENS,
   type PackPhase,
   type Point,
   REVEAL_TOKEN,
+  REVEAL_Y,
   SPIN_TIME,
   STAGING,
   STRIP_ZONE,
   TEAR_AT,
   TEAR_FINISH,
+  beamsOf,
   jagged,
+  landingOf,
   pathOf,
   polygonOf,
   serration,
@@ -37,9 +44,8 @@ const INSPECT_ART_WIDTH = 960
 const PACK_MAX_WIDTH = 300
 const STAGE_SHARE = 0.7
 const STAGE_HEIGHTS = 2.75
-const CARD_HEIGHT_SHARE = 0.7
-const CARD_WIDTH_SHARE = 0.84
-const CARD_CENTER = 0.44
+const EMBER_SPELL_MS = 4200
+const EMBER_EVERY_MS = 160
 const DRAG_START = 6
 const DRAG_GAIN = 1.1
 
@@ -112,6 +118,12 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
   const tearEdgeLow = useRef<SVGPathElement>(null)
   const perforation = useRef<SVGPathElement>(null)
   const bob = useRef<Animation | null>(null)
+  const bloom = useRef<HTMLSpanElement>(null)
+  const streak = useRef<HTMLSpanElement>(null)
+  const shock = useRef<HTMLSpanElement>(null)
+  const echo = useRef<HTMLSpanElement>(null)
+  const rim = useRef<HTMLSpanElement>(null)
+  const embers = useRef(0)
 
   const D = useCallback(
     (ms: number) => (reduced ? Math.min(ms, 240) : ms),
@@ -134,6 +146,15 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
     const node = stage.current
     if (!node) return
     node.style.setProperty('--reveal', `var(${REVEAL_TOKEN[material]})`)
+    node.style.setProperty('--pack-top', `${PACK_TOP * 100}%`)
+    node.style.setProperty('--reveal-y', `${REVEAL_Y * 100}%`)
+    const random = seededRandom(fnv1a(`beams:${card.node_id}`))
+    const tokens = material === 'mythic' ? PRISM_BEAM_TOKENS : BEAM_TOKENS
+    node.style.setProperty('--beams', beamsOf(random, 26, [0.5, 2.6], tokens))
+    node.style.setProperty(
+      '--beams-far',
+      beamsOf(random, 14, [2.5, 6.5], tokens)
+    )
     const measure = () => {
       const box = node.getBoundingClientRect()
       const width = Math.min(
@@ -158,13 +179,14 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
     const observer = new ResizeObserver(measure)
     observer.observe(node)
     return () => observer.disconnect()
-  }, [material])
+  }, [material, card.node_id])
 
   useEffect(() => {
     alive.current = true
     if (canvas.current) field.current = new ParticleField(canvas.current)
     return () => {
       alive.current = false
+      window.clearInterval(embers.current)
       field.current?.dispose()
       field.current = null
     }
@@ -330,13 +352,14 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
       motion.rz += speed.rz
       motion.rx += speed.rx
       speed.rz *= 0.985
-      if (motion.frame > 34) motion.opacity = Math.max(0, motion.opacity - 0.05)
+      if (motion.frame > 24) motion.opacity = Math.max(0, motion.opacity - 0.06)
       strip.style.setProperty(
         'transform',
         `translate(${motion.x}px, ${motion.y}px) rotateZ(${motion.rz}deg) rotateX(${motion.rx}deg)`
       )
-      strip.style.setProperty('opacity', String(motion.opacity))
-      if (motion.opacity > 0 && motion.y < height) requestAnimationFrame(step)
+      const gone = motion.opacity <= 0 || motion.y > height
+      strip.style.setProperty('opacity', gone ? '0' : String(motion.opacity))
+      if (!gone) requestAnimationFrame(step)
     }
     requestAnimationFrame(step)
   }, [geometry, reduced])
@@ -386,20 +409,11 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
         )
     await wait(D(240))
     if (!alive.current) return
-    const cardBox = card.getBoundingClientRect()
-    const frame = host.getBoundingClientRect()
-    const rise = cardBox.height * 0.6
-    const scale = Math.min(
-      (frame.height * CARD_HEIGHT_SHARE) / cardBox.height,
-      (frame.width * CARD_WIDTH_SHARE) / cardBox.width
-    )
-    const dx = frame.left + frame.width / 2 - (cardBox.left + cardBox.width / 2)
-    const dy =
-      frame.top +
-      frame.height * CARD_CENTER -
-      (cardBox.top + cardBox.height / 2)
-    const raised = `translate(0, ${-rise}px) scale(1)`
-    const resting = `translate(${dx}px, ${dy}px) scale(${scale})`
+    const stageWidth = host.clientWidth
+    const stageHeight = host.clientHeight
+    const landing = landingOf(stageWidth, stageHeight, geometry.width)
+    const raised = `translate(0, ${-landing.rise}px) scale(1)`
+    const resting = `translate(0, ${landing.dy}px) scale(${landing.scale})`
     const rising = card.animate(
       [{ transform: 'translate(0, 0) scale(1)' }, { transform: raised }],
       {
@@ -442,23 +456,40 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
       })
     )
     if (!alive.current) return
-    const center = { x: frame.width / 2, y: frame.height * CARD_CENTER }
+    const center = { x: stageWidth / 2, y: stageHeight * REVEAL_Y }
+    const face = {
+      x: center.x,
+      y: center.y,
+      width: landing.width * landing.scale,
+      height: landing.height * landing.scale,
+    }
     if (!reduced && staging.pulses > 0) {
       host.style.setProperty('--charge', '1')
-      if (staging.gather)
-        field.current?.gather(center.x, center.y, {
-          count: staging.gather,
-          colors,
-          distance: Math.max(frame.width, frame.height) * 0.5,
-        })
       host.animate(
-        [{ '--halo': 0 } as Keyframe, { '--halo': 0.45 } as Keyframe],
+        [
+          { '--halo': 0, '--rays': 0 } as Keyframe,
+          { '--halo': 0.55, '--rays': staging.rays * 0.3 } as Keyframe,
+        ],
         {
           duration: D(420 * staging.pulses),
+          easing: 'ease-in',
           fill: 'forwards',
         }
       )
       for (let beat = 0; beat < staging.pulses; beat += 1) {
+        if (staging.gather)
+          field.current?.gather(center.x, center.y, {
+            count: Math.round((staging.gather * 1.6) / staging.pulses),
+            colors,
+            kinds: ['spark', 'spark', 'ember'],
+            size: [1.2, 2.6],
+            life: [70, 110],
+            trail: [5, 9],
+            gravity: 0,
+            drag: 0.95,
+            speed: [1.2, 2.6],
+            distance: Math.min(stageWidth, stageHeight) * 0.5,
+          })
         const lift = 1.035 + beat * 0.012
         await settle(
           card.animate(
@@ -503,46 +534,119 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
     host.animate(
       [
         { '--flash': 0 } as Keyframe,
-        { '--flash': 1, offset: 0.18 } as Keyframe,
+        { '--flash': 1, offset: 0.12 } as Keyframe,
         { '--flash': 0 } as Keyframe,
       ],
-      { duration: D(700), easing: 'ease-out' }
+      { duration: D(620), easing: 'ease-out' }
     )
-    host.animate([{ '--ring': 0 } as Keyframe, { '--ring': 1 } as Keyframe], {
-      duration: D(1000),
-      easing: 'cubic-bezier(.1,.7,.3,1)',
-      fill: 'forwards',
-    })
+    bloom.current?.animate(
+      [
+        { opacity: 0, transform: 'scale(0.15)' },
+        { opacity: 1, transform: 'scale(0.75)', offset: 0.18 },
+        { opacity: 0, transform: 'scale(1.6)' },
+      ],
+      { duration: D(720), easing: 'cubic-bezier(.2,.7,.3,1)' }
+    )
+    streak.current?.animate(
+      [
+        { opacity: 0, transform: 'scaleX(0.08) scaleY(1.6)' },
+        { opacity: 1, transform: 'scaleX(0.85) scaleY(1)', offset: 0.16 },
+        { opacity: 0, transform: 'scaleX(1.15) scaleY(0.6)' },
+      ],
+      { duration: D(900), easing: 'cubic-bezier(.15,.8,.3,1)' }
+    )
+    shock.current?.animate(
+      [
+        { opacity: 0, transform: 'scale(0.3)' },
+        { opacity: 0.95, transform: 'scale(0.6)', offset: 0.12 },
+        { opacity: 0, transform: 'scale(2.5)' },
+      ],
+      { duration: D(1050), easing: 'cubic-bezier(.12,.75,.3,1)' }
+    )
+    echo.current?.animate(
+      [
+        { opacity: 0, transform: 'scale(0.3)' },
+        { opacity: 0.5, transform: 'scale(0.55)', offset: 0.15 },
+        { opacity: 0, transform: 'scale(1.9)' },
+      ],
+      { duration: D(1250), delay: D(140), easing: 'cubic-bezier(.12,.75,.3,1)' }
+    )
     host.animate(
       [
-        { '--rays': 0, '--halo': 0.45 } as Keyframe,
+        {
+          '--rays': staging.pulses > 0 ? staging.rays * 0.3 : 0,
+          '--halo': staging.pulses > 0 ? 0.55 : 0,
+        } as Keyframe,
         { '--rays': staging.rays, '--halo': 1 } as Keyframe,
       ],
-      { duration: D(900), easing: 'ease-out', fill: 'forwards' }
+      {
+        duration: D(1400),
+        easing: 'cubic-bezier(.2,.7,.2,1)',
+        fill: 'forwards',
+      }
     )
-    if (staging.shake && !reduced) jolt(host, staging.shake, D(420))
+    if (staging.shake && !reduced) jolt(host, staging.shake, D(380))
     if (!reduced) {
-      field.current?.emit(center.x, center.y, {
-        count: staging.burst,
+      field.current?.burst(face, {
+        count: Math.round(staging.burst * 0.65),
         colors,
-        kinds: ['star', 'spark', 'spark', 'mote'],
-        speed: [2, 10 + staging.pulses * 2.4],
-        size: [1.2, 3.6],
-        life: [45, 110],
-        gravity: 0.05,
-        drag: 0.955,
-        radius: 30,
+        kinds: ['spark'],
+        spread: 0.3,
+        speed: [3, 9 + staging.pulses * 2],
+        size: [1, 2.2],
+        life: [26, 52],
+        trail: [3, 6],
+        gravity: 0.02,
+        drag: 0.93,
       })
-      field.current?.emit(center.x, center.y, {
-        count: Math.round(staging.burst * 0.3),
+      field.current?.burst(face, {
+        count: Math.round(staging.burst * 0.14),
+        colors: [...colors, 'white'],
+        kinds: ['star'],
+        spread: 0.6,
+        speed: [0.8, 3.2],
+        size: [1.4, 3.2],
+        life: [60, 110],
+        gravity: -0.004,
+        drag: 0.965,
+      })
+      field.current?.burst(face, {
+        count: Math.round(staging.burst * 0.22),
         colors: [tokenColor('--gild-hi'), tokenColor('--gild')],
         kinds: ['flake'],
-        speed: [3, 9],
-        size: [1.6, 3.4],
-        life: [70, 130],
-        gravity: 0.12,
-        drag: 0.97,
+        spread: 0.7,
+        speed: [1.5, 5],
+        size: [1.2, 2.4],
+        life: [80, 140],
+        gravity: 0.05,
+        drag: 0.965,
       })
+      if (staging.embers) {
+        const began = performance.now()
+        window.clearInterval(embers.current)
+        embers.current = window.setInterval(() => {
+          if (!alive.current || performance.now() - began > EMBER_SPELL_MS) {
+            window.clearInterval(embers.current)
+            return
+          }
+          field.current?.emit(
+            center.x + (Math.random() - 0.5) * face.width * 1.1,
+            center.y + face.height * (0.25 + Math.random() * 0.3),
+            {
+              count: Math.max(1, Math.round(staging.embers / 12)),
+              colors,
+              kinds: ['ember'],
+              angle: -Math.PI / 2,
+              spread: 0.35,
+              speed: [0.4, 1.2],
+              size: [0.8, 1.8],
+              life: [90, 150],
+              gravity: -0.006,
+              drag: 0.99,
+            }
+          )
+        }, EMBER_EVERY_MS)
+      }
     }
     setPhase('revealed')
     if (!revealedOnce.current) {
@@ -550,7 +654,19 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
       onRevealed()
     }
     await settle(spinning)
-    if (!alive.current || reduced) return
+    if (!alive.current) return
+    host.setAttribute('data-settled', '')
+    if (reduced) return
+    rim.current?.animate(
+      [
+        { opacity: 0, '--rim-angle': '0deg' } as Keyframe,
+        { opacity: 1, offset: 0.15 },
+        { opacity: 1, offset: 0.7 },
+        { opacity: 0, '--rim-angle': '360deg' } as Keyframe,
+      ],
+      { duration: D(1300), easing: 'cubic-bezier(.3,.1,.3,1)' }
+    )
+
     card.animate(
       [
         { transform: `${resting} translateY(-0.6%) rotate(-0.5deg)` },
@@ -661,7 +777,8 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
         onPointerLeave={onStageLeave}
       >
         <span className='pack-backdrop' />
-        <span className='pack-rays' />
+        <span className='pack-beams' data-layer='far' />
+        <span className='pack-beams' data-layer='near' />
         <span className='pack-halo' />
         <span className='pack-floor' />
         <div ref={floatNode} className='pack-float'>
@@ -702,6 +819,7 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
                     />
                   </div>
                 </div>
+                <span ref={rim} className='pack-rim' />
               </div>
               <div className='pack-body-shadow'>
                 <div ref={bodyNode} className='pack-body'>
@@ -737,7 +855,10 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
             </div>
           </div>
         </div>
-        <span className='pack-ring' />
+        <span ref={shock} className='pack-shock' />
+        <span ref={echo} className='pack-shock' data-wave='echo' />
+        <span ref={bloom} className='pack-bloom' />
+        <span ref={streak} className='pack-streak' />
         <span className='pack-flash' />
         <canvas ref={canvas} className='pack-fx' aria-hidden='true' />
         <div className='pack-hint' aria-hidden={!sealed || undefined}>
