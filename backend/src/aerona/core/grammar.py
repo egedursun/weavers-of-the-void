@@ -69,9 +69,10 @@ class ArticleFormatter(Formatter):
     def format_field(self, value: Any, format_spec: str) -> str:
         if format_spec in ARTICLE_SPECS:
             return an(str(value), capital=ARTICLE_SPECS[format_spec])
-        if "|" in format_spec and isinstance(value, int):
+        if "|" in format_spec and isinstance(value, (int, float)) and not isinstance(value, bool):
             one, many = format_spec.split("|", 1)
-            return several(value, one, many)
+            count = int(value) if float(value).is_integer() else value
+            return f"{count} {agree(1 if count == 1 else 0, one, many)}"
         formatted: str = super().format_field(value, format_spec)
         return formatted
 
