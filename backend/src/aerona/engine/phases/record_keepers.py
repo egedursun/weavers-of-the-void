@@ -12,6 +12,7 @@ from aerona.engine.record_keepers.legacy import recover_keepers
     "table.entities",
     "table.epochs",
     "table.historian_views",
+    "table.node_births",
     "table.nodes",
     "table.record_keepers",
     "table.skills",

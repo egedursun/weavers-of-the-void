@@ -724,6 +724,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.place_environment",
     "table.routes",
@@ -748,6 +749,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.routes",
     "table.vessel_profiles",
 )

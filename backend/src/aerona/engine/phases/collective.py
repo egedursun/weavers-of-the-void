@@ -59,6 +59,7 @@ class ArmedTally:
     "table.incidents",
     "table.indentures",
     "table.mind_facets",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.outbreaks",
@@ -140,6 +141,7 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.incidents",
     "table.movements",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
 )
 @writes(
@@ -157,6 +159,7 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.incidents",
     "table.movements",
     "table.name_registry",
+    "table.node_births",
 )
 async def popular_movements(ctx: TickContext) -> None:
     tally = CrowdTally()
@@ -240,6 +243,7 @@ async def historiography(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
@@ -298,6 +302,7 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.polity_members",
@@ -441,6 +446,7 @@ async def heraldry(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.vessel_profiles",
 )
@@ -456,6 +462,7 @@ async def heraldry(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.vessel_profiles",
 )
 async def designs(ctx: TickContext) -> None:

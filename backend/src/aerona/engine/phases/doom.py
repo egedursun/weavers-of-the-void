@@ -306,6 +306,7 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.modifiers",
+    "table.node_births",
     "table.nodes",
     "table.phenomenon_profiles",
     "table.polity_members",

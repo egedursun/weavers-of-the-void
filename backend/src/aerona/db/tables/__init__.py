@@ -544,7 +544,7 @@ from aerona.db.tables.networks import (
     NetworkOutageRow,
     NetworkProfileRow,
 )
-from aerona.db.tables.node import NameRegistryRow, NodeRow
+from aerona.db.tables.node import NameRegistryRow, NodeBirthRow, NodeRow
 from aerona.db.tables.operations import (
     AdmiraltyRow,
     ArmyOperationRow,
@@ -1244,6 +1244,7 @@ __all__ = [
     "NetworkProfileRow",
     "NetworkReviewRow",
     "NobleDemandRow",
+    "NodeBirthRow",
     "NodeMaterialRow",
     "NodeRow",
     "NormChangeRow",

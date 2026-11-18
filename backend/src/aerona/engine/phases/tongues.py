@@ -61,6 +61,7 @@ async def grammar(ctx: TickContext) -> None:
     "table.lexemes",
     "table.meaning_shifts",
     "table.name_exonyms",
+    "table.node_births",
     "table.nodes",
     "table.sons",
     "table.tradition_profiles",
@@ -120,7 +121,9 @@ async def pidgins(ctx: TickContext) -> None:
     count(ctx, "pidgin", tally)
 
 
-@reads("table.entities", "table.incident_participants", "table.incidents", "table.language_policies", "table.nodes", "table.polity_members")
+@reads(
+    "table.entities", "table.incident_participants", "table.incidents", "table.language_policies", "table.node_births", "table.nodes", "table.polity_members"
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.language_policies")
 async def language_policy(ctx: TickContext) -> None:
     tally = PolicyTally()

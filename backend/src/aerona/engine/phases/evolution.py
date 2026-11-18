@@ -40,6 +40,7 @@ async def trait_evolution(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.species_profiles",
     "table.species_ranges",

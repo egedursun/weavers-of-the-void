@@ -184,6 +184,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.place_environment",
     "table.place_profiles",
@@ -200,6 +201,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.place_environment",
     "table.place_profiles",
 )

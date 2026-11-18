@@ -151,6 +151,7 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.god_scales",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.region_dominion",
     "table.reverences",

@@ -124,6 +124,7 @@ async def curse_decay(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
@@ -190,6 +191,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.nutrition_scores",

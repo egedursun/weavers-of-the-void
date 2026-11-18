@@ -228,6 +228,7 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.entity_flags",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.wars",
     "table.world_maps",

@@ -33,6 +33,7 @@ from aerona.engine.phase import Phase
     "table.movement_profiles",
     "table.movement_support",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.policy_approval",

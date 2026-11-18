@@ -1,7 +1,7 @@
 from types import MappingProxyType
 from typing import Any
 
-from sqlalchemy import ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH
@@ -28,3 +28,14 @@ class NameRegistryRow(Base):
     node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), unique=True)
     display: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     single_word: Mapped[bool]
+
+
+class NodeBirthRow(Base):
+    __tablename__ = "node_births"
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    year: Mapped[int]
+    season: Mapped[int | None]
+    day: Mapped[int | None]
+    hour: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

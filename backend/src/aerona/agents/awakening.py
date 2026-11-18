@@ -200,7 +200,7 @@ async def awaken_one(
     await found_kinds(session, rules, seeds, holder_id=people.id, world_id=region.world_id, epoch=epoch, spread=KindSpread.GENESIS)
     created = [people, language, settlement, resource, knowledge, tradition]
     await record_incident(
-        await manual_context(session, "awakening", rules, key=str(people.id)),
+        await manual_context(session, "awakening", rules, key=str(people.id), progress=0.0),
         "awakening.people",
         roles={
             IncidentRole.PRODUCT: people.id,

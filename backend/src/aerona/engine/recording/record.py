@@ -11,6 +11,7 @@ from aerona.core.grammar import spoken
 from aerona.db.record_context import Term, active_terms, current_scope
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository, scoped_cause
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow, IncidentTermRow
@@ -31,6 +32,7 @@ from aerona.domain.enums.records import (
 )
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
+from aerona.engine.recording.births import born_floor, mark_born
 from aerona.engine.recording.moments import incident_moment, moment_for, step_moments
 from aerona.engine.recording.render import indexed, render_incident
 from aerona.events.kinds import EventKind
@@ -211,6 +213,12 @@ def tier_of(text: str | None, steps: Sequence[StepDraft]) -> IncidentTier:
 async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[int], cause: int | None, world_id: int | None) -> Moment:
     scope = current_scope()
     if scope is not None and scope.key == spec.key and scope.incident_id is not None and scope.moment is not None:
+        floor = await born_floor(ctx.session, nodes)
+        if floor is not None and scope.moment.before(floor):
+            scope.moment = floor
+            incident = await ctx.session.get(IncidentRow, scope.incident_id)
+            if incident is not None:
+                incident.year, incident.season, incident.day, incident.hour = floor.year, floor.season, floor.day, floor.hour
         return scope.moment
     return await moment_for(ctx, spec.clock, key=spec.key, participants=nodes, cause_moment=await incident_moment(ctx.session, cause), world_id=world_id)
 
@@ -308,6 +316,7 @@ async def record(
     ctx.session.add_all(term_rows(incident_id, terms if terms is not None else active_terms()))
     if steps:
         await write_steps(ctx, incident_id, steps, moment, spec.clock, world_id=world_id)
+    await mark_born(ctx.session, participants, moment, epoch)
     ctx.count("records")
     ctx.publish(
         EventKind.ENGINE_NOTE,

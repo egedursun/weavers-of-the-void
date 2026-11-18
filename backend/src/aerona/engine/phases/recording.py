@@ -516,6 +516,7 @@ from aerona.engine.recording.checkpoints import due, take_checkpoint
     "table.network_profiles",
     "table.network_reviews",
     "table.noble_demands",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.norm_changes",

@@ -433,6 +433,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.passions",
     "table.people_culture",
@@ -486,6 +487,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.mind_facets",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.personality_values",
     "table.quirks",
     "table.room_contents",
@@ -563,6 +565,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.reverences",
     "table.sons",
@@ -577,6 +580,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
 )
 async def hero_births(ctx: TickContext) -> None:
     settings = ctx.rules.heroes

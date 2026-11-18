@@ -570,6 +570,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("records_legacy_w49",),
     ),
     ComplianceRow(
+        "F58.1",
+        ("node_births",),
+        (),
+        ("profile:set", "record_row:create", "record_row:edit", "record_row:delete"),
+        ("RecordRowsSection", "section-records"),
+        ("event_records",),
+        (),
+        (),
+        ("birth_dated",),
+    ),
+    ComplianceRow(
         "F58.4",
         ("incident_steps", "incident_step_states"),
         (),

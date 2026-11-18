@@ -152,7 +152,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/tellings.py` | 5 | 2026-11-17 | `6319f7aed2dddd67` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 36 | 2026-11-16 | `e8ac2f8a150c56d6` |
-| `backend/src/aerona/catalog/invariants.py` | 67 | 2026-11-18 | `005d242415ad9cc4` |
+| `backend/src/aerona/catalog/invariants.py` | 73 | 2026-11-18 | `16899b85127df334` |
 | `backend/src/aerona/catalog/kinds/crafts_labels.py` | 13 | 2026-11-16 | `c8bc0757593d4742` |
 | `backend/src/aerona/catalog/kinds/defined/ages.py` | 9 | 2026-11-17 | `2c26d32b0e830d97` |
 | `backend/src/aerona/catalog/kinds/defined/agrarian.py` | 2 | 2026-11-17 | `5a19bd7ff9388c1e` |

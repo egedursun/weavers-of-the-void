@@ -23,6 +23,7 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.entities",
     "table.entity_flags",
     "table.messages",
+    "table.node_births",
     "table.nodes",
     "table.resurrection_orders",
     "table.sons",

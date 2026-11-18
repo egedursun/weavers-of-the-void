@@ -12,6 +12,7 @@ from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.node import NodeBirthRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -153,10 +154,19 @@ def told(kind: str) -> bool:
     return spec is None or spec.told
 
 
+PRESENT = frozenset({WitnessMode.SAW, WitnessMode.TOOK_PART})
+
+
+async def born_keys(session: AsyncSession) -> dict[int, tuple[int, int, int, int]]:
+    rows = await session.execute(select(NodeBirthRow.node_id, NodeBirthRow.year, NodeBirthRow.season, NodeBirthRow.day, NodeBirthRow.hour))
+    return {int(node): (int(year), season or 0, day or 0, hour or 0) for node, year, season, day, hour in rows}
+
+
 async def give_modes(ctx: TickContext, atlas: RegionAtlas) -> int:
+    births = await born_keys(ctx.session)
     modeless = list(
         await ctx.session.execute(
-            select(IncidentParticipantRow, IncidentRow.place_entity_id)
+            select(IncidentParticipantRow, IncidentRow.place_entity_id, IncidentRow.year, IncidentRow.season, IncidentRow.day, IncidentRow.hour)
             .join(IncidentRow, IncidentRow.id == IncidentParticipantRow.incident_id)
             .where(
                 IncidentParticipantRow.role == IncidentRole.WITNESS,
@@ -166,8 +176,9 @@ async def give_modes(ctx: TickContext, atlas: RegionAtlas) -> int:
             .order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)
         )
     )
-    for row, place in modeless:
-        mode = WitnessMode.SAW if place is None or atlas.holds(place, row.node_id) else WitnessMode.HEARD
+    for row, place, year, season, day, hour in modeless:
+        unborn = year is not None and row.node_id in births and births[row.node_id] > (year, season or 0, day or 0, hour or 0)
+        mode = WitnessMode.SAW if not unborn and (place is None or atlas.holds(place, row.node_id)) else WitnessMode.HEARD
         row.witness_mode = mode
         row.fidelity = fidelity_of(ctx.rules, mode)
     return len(modeless)
@@ -192,6 +203,7 @@ async def choose_witnesses(ctx: TickContext, atlas: RegionAtlas) -> int:
             casts[row.incident_id].append(row)
     people = await folk(ctx.session)
     scene_gods = await gods(ctx.session)
+    births = await born_keys(ctx.session)
     radius = ctx.rules.records.witness_radius
     loud = ctx.rules.rumours.min_magnitude
     made = 0
@@ -208,8 +220,11 @@ async def choose_witnesses(ctx: TickContext, atlas: RegionAtlas) -> int:
             present(atlas, people, place, involved, radius=radius if incident.magnitude >= loud else None, seen=seen)
         god_witnesses(scene_gods, incident, involved, seen)
         position = max((row.position for row in cast), default=-1) + 1
+        moment = (incident.year, incident.season or 0, incident.day or 0, incident.hour or 0) if incident.year is not None else None
         for node, mode in sorted(seen.modes.items()):
             if node in involved or (node, IncidentRole.WITNESS) in taken or held(node):
+                continue
+            if mode in PRESENT and moment is not None and node in births and births[node] > moment:
                 continue
             chosen.append(
                 {

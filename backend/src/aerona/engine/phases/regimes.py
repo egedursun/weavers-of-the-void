@@ -47,6 +47,7 @@ from aerona.engine.regime.rule import RegimeTally, keep_regimes
     "table.miracle_records",
     "table.mortal_profiles",
     "table.natural_law_profiles",
+    "table.node_births",
     "table.nodes",
     "table.oaths",
     "table.offices",

@@ -14,6 +14,7 @@ from aerona.domain.enums.records import ProcessClock
 from aerona.domain.models.calendar import YearWindow, epoch_start_year
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
+from aerona.engine.recording.births import born_floor
 from aerona.rules.registry.records import RecordsRules
 
 CALENDARS = "record_calendars"
@@ -120,17 +121,20 @@ async def moment_for(
     progress: float | None = None,
     world_id: int | None = None,
 ) -> Moment:
+    participants = tuple(participants)
     start, span = epoch_span(ctx)
     calendar = await calendar_of(ctx.session, world_id)
+    progress = progress if progress is not None else ctx.environment.progress
     if progress is not None:
         position = min(max(progress, 0.0), 1.0) * span
     else:
         position = ctx.environment.rng(stream_of(key, participants)).random() * span * spread_of(ctx, clock) / PERCENT
     year = start + min(span - 1, int(position))
     moment = calendar.place(year, position - int(position))
-    if cause_moment is not None and moment.before(cause_moment):
-        years, days, hours = STEP_UNITS[clock]
-        moment = calendar.advance(cause_moment, years=years, days=days, hours=hours if (years or days or hours) else 0).at_least(cause_moment)
+    for floor in (cause_moment, await born_floor(ctx.session, participants)):
+        if floor is not None and moment.before(floor):
+            years, days, hours = STEP_UNITS[clock]
+            moment = calendar.advance(floor, years=years, days=days, hours=hours if (years or days or hours) else 0).at_least(floor)
     return moment
 
 

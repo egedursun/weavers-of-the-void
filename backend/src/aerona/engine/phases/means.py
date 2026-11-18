@@ -41,7 +41,14 @@ async def vaults(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.entities", "table.nodes", "table.polity_members", "table.polity_profiles", "table.region_environment", "table.resource_profiles", "table.water_lifts"
+    "table.entities",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.resource_profiles",
+    "table.water_lifts",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.water_lifts")
 async def water_lifting(ctx: TickContext) -> None:

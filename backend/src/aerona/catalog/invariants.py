@@ -106,6 +106,19 @@ TYPED: tuple[InvariantSpec, ...] = (
     InvariantSpec("step_action", "incident_steps", "every step of a happening is an action its kind declares", Remedy.REPORT, "the step dropped"),
     InvariantSpec("moment_after_cause", "incidents", "a happening is never earlier than its cause", Remedy.REPAIR, "moved to the moment of its cause"),
     InvariantSpec(
+        "genesis_at_start", "incidents", "the making of the cosmos happens at the very start of its first age", Remedy.REPAIR, "moved to the first year"
+    ),
+    InvariantSpec(
+        "moment_after_births",
+        "incidents",
+        "a happening is never earlier than the coming into being of everyone and everything that takes part in it",
+        Remedy.REPAIR,
+        "moved to the moment its latest-born participant came into being",
+    ),
+    InvariantSpec(
+        "birth_dated", "node_births", "every thing a record brings into being knows the moment it came into being", Remedy.REPAIR, "dated by that record"
+    ),
+    InvariantSpec(
         "step_moment_order", "incident_steps", "a step is never earlier than the step before it", Remedy.REPAIR, "moved to the moment of the step before"
     ),
     InvariantSpec(

@@ -67,6 +67,7 @@ async def told(ctx: TickContext, key: str, payer: EntityRow, receiver: EntityRow
     "table.memories",
     "table.minds",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.oaths",
     "table.offices",

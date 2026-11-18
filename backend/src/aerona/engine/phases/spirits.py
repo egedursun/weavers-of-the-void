@@ -123,6 +123,7 @@ async def spirits_rest(ctx: TickContext) -> None:
     "table.incidents",
     "table.legend_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.region_environment",
     "table.region_memories",

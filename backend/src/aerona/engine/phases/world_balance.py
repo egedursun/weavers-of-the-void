@@ -453,6 +453,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.lexemes",
     "table.mind_attributes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.sons",
     "table.storytellers",
@@ -475,6 +476,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
+    "table.node_births",
 )
 async def world_balance(ctx: TickContext) -> None:
     ctx.count("guardians", await guard_patronless(ctx))

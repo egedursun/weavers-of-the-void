@@ -55,6 +55,7 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.incidents",
     "table.mantlings",
     "table.network_nodes",
+    "table.node_births",
     "table.nodes",
     "table.personality_values",
     "table.polity_members",

@@ -16,9 +16,10 @@ from aerona.db.session import Database
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.write_guard import chosen_bonds
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.turn import LongJobTrace, PendingJob
-from aerona.engine.context import Publisher, TickContext, TickEnvironment
+from aerona.engine.context import Publisher, TickContext, TickEnvironment, phase_window
 from aerona.engine.interconnect.tool_holds import tool_holds
 from aerona.engine.stats import TickStats
 from aerona.prompts import PromptId, render
@@ -201,6 +202,8 @@ class ToolRuntime[CallT: ToolCall]:
             lore_language=settings.lore_language,
             publish=settings.publish,
             stats=TickStats(),
+            window=phase_window(settings.rules, EpochPhase.GODS if self.agent is AgentKind.SON else EpochPhase.MORTALS),
+            progress=1 - 1 / (self._calls + 2),
         )
         return TickContext(environment, session, f"tool.{spoken(self.agent)}.{settings.actor_node_id}.{self._calls}.{spec.name}")
 

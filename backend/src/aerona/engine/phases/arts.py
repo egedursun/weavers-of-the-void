@@ -31,6 +31,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.gatherings",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.relics",
@@ -52,6 +53,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.item_profiles",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.relics",
 )

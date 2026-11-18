@@ -1799,6 +1799,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.natural_law_profiles",
     "table.network_nodes",
     "table.network_profiles",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.nutrition_scores",

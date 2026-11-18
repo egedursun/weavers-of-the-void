@@ -25,6 +25,7 @@ from aerona.engine.phase import Phase
     "table.kind_holdings",
     "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.settlement_profiles",
     "table.structure_designs",

@@ -650,6 +650,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.people_culture",
@@ -680,6 +681,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.incidents",
     "table.memories",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.structure_profiles",
 )

@@ -164,7 +164,7 @@ async def open_layer(session: AsyncSession, rules: Rules, world: WorldRow, *, se
     dimension = await create_dimension(session, rules, DimensionDraft(name, kind, FIRST_EPOCH, description=description or None))
     galaxy = await create_galaxy(session, rules, GalaxyDraft(f"{dimension.name} Galaxy", LAYER_GALAXY_TYPE, FIRST_EPOCH, dimension_id=dimension.id))
     await record(
-        await manual_context(session, "genesis", rules, key="layer"),
+        await manual_context(session, "genesis", rules, key="layer", progress=0.0),
         "genesis.layer",
         roles={IncidentRole.SUBJECT: world.id, IncidentRole.PRODUCT: dimension.id},
         facts={"layer": kind, "galaxy": galaxy.name},
@@ -311,7 +311,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
     for relation in output.relations:
         if relation.i != relation.j and relation.i < len(sons) and relation.j < len(sons):
             await repository.change_relation(sons[relation.i].id, sons[relation.j].id, relation.value, relation.note)
-    ctx = await manual_context(session, "genesis", rules, key="world")
+    ctx = await manual_context(session, "genesis", rules, key="world", progress=0.0)
     await record(
         ctx,
         "genesis.world",

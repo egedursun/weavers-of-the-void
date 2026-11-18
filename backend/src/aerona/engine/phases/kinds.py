@@ -39,6 +39,7 @@ from aerona.engine.phase import Phase
     "table.market_prices",
     "table.music_traditions",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.organisation_kinds",
     "table.polity_members",

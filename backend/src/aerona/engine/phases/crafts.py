@@ -74,6 +74,7 @@ async def trades(ctx: TickContext) -> None:
     "table.lexemes",
     "table.minds",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.number_systems",
     "table.offices",

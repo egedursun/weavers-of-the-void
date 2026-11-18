@@ -65,6 +65,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.place_environment",
     "table.plague_responses",

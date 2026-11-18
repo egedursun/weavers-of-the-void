@@ -397,6 +397,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.mortal_profiles",
     "table.name_registry",
     "table.natural_law_profiles",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.nutrition_scores",

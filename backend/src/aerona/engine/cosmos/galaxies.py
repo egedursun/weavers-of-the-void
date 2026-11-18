@@ -577,6 +577,7 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.node_births",
     "table.nodes",
     "table.routes",
     "table.stars",

@@ -349,6 +349,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.museum_collections",
     "table.museum_pieces",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.number_systems",
     "table.offices",
@@ -378,6 +379,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
 )
 async def knowledge_levels(ctx: TickContext) -> None:
     scene = await KnowledgeScene.load(ctx)

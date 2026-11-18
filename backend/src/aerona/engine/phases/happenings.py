@@ -53,6 +53,7 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.outbreaks",
     "table.personality_values",

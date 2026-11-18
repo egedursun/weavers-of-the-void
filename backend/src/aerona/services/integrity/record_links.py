@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
@@ -12,10 +12,13 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.node import NodeBirthRow, NodeRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactValue, IncidentTier, WitnessMode
+from aerona.engine.recording.births import CREATION_ROLES
 from aerona.engine.recording.checkpoints import digest_of, kept_columns, present_rows, take_checkpoint
 from aerona.engine.recording.legacy import retire_one
 from aerona.engine.recording.past import state_at
@@ -144,6 +147,9 @@ async def follow_step(session: AsyncSession, step_id: int) -> None:
 
 
 PRESENT_MODES = (WitnessMode.SAW, WitnessMode.TOOK_PART)
+FAR = 2**62
+KNOWING_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+GENESIS_PREFIX = "genesis."
 
 
 def witness_key(incident_id: int, node_id: int) -> int:
@@ -297,3 +303,94 @@ async def retire_kind(session: AsyncSession, incident_id: int) -> None:
     incident = await session.get(IncidentRow, incident_id)
     if incident is not None:
         await retire_one(session, incident)
+
+
+async def participants_by_incident(session: AsyncSession) -> dict[int, list[tuple[int, IncidentRole]]]:
+    found: dict[int, list[tuple[int, IncidentRole]]] = {}
+    statement = select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id, IncidentParticipantRow.role, IncidentParticipantRow.witness_mode)
+    for incident_id, node_id, role, mode in await session.execute(statement.order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)):
+        if role in KNOWING_ROLES and mode not in PRESENT_MODES:
+            continue
+        found.setdefault(int(incident_id), []).append((int(node_id), role))
+    return found
+
+
+async def ahead_of_births(session: AsyncSession) -> list[int]:
+    nodes = await participants_by_incident(session)
+    born: dict[int, tuple[int, int, int, int]] = {}
+    found: list[int] = []
+    for incident in await session.scalars(select(IncidentRow).where(IncidentRow.year.is_not(None)).order_by(IncidentRow.id)):
+        own = moment_key(incident)
+        if own is None:
+            continue
+        floor = max((born[node] for node, _ in nodes.get(incident.id, []) if node in born), default=None)
+        if floor is not None and own < floor:
+            found.append(incident.id)
+            own = floor
+        for node, role in nodes.get(incident.id, []):
+            if role in CREATION_ROLES:
+                born.setdefault(node, own)
+    return found
+
+
+async def first_seen(session: AsyncSession, node_id: int, before: int) -> IncidentRow | None:
+    earlier = select(IncidentParticipantRow.incident_id).where(
+        IncidentParticipantRow.node_id == node_id, IncidentParticipantRow.incident_id < before, IncidentParticipantRow.role.in_(sorted(CREATION_ROLES))
+    )
+    found: IncidentRow | None = await session.scalar(
+        select(IncidentRow).where(IncidentRow.id.in_(earlier), IncidentRow.year.is_not(None)).order_by(IncidentRow.id).limit(1)
+    )
+    return found
+
+
+async def follow_births(session: AsyncSession, incident_id: int) -> None:
+    incident = await session.get(IncidentRow, incident_id)
+    own = moment_key(incident) if incident is not None else None
+    if incident is None or own is None:
+        return
+    floor: IncidentRow | None = None
+    nodes = select(IncidentParticipantRow.node_id).where(
+        IncidentParticipantRow.incident_id == incident_id,
+        or_(IncidentParticipantRow.role.not_in(sorted(KNOWING_ROLES)), IncidentParticipantRow.witness_mode.in_(PRESENT_MODES)),
+    )
+    for node in await session.scalars(nodes.order_by(IncidentParticipantRow.node_id)):
+        seen = await first_seen(session, node, incident_id)
+        if seen is not None and (floor is None or (moment_key(seen) or own) > (moment_key(floor) or own)):
+            floor = seen
+    if floor is None or own >= (moment_key(floor) or own):
+        return
+    incident.year, incident.season, incident.day, incident.hour = floor.year, floor.season, floor.day, floor.hour
+    line = await session.get(ChronicleRow, incident.chronicle_id) if incident.chronicle_id is not None else None
+    if line is not None:
+        line.year = floor.year
+    for step in await session.scalars(select(IncidentStepRow).where(IncidentStepRow.incident_id == incident_id).order_by(IncidentStepRow.position)):
+        mark = moment_key(step)
+        if mark is not None and mark < (moment_key(floor) or mark):
+            step.year, step.season, step.day, step.hour = floor.year, floor.season, floor.day, floor.hour
+
+
+async def births_unknown(session: AsyncSession) -> list[int]:
+    seen = select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.role.in_(sorted(CREATION_ROLES)))
+    dated = select(NodeBirthRow.node_id)
+    return list(await session.scalars(select(NodeRow.id).where(NodeRow.id.in_(seen), NodeRow.id.not_in(dated)).order_by(NodeRow.id)))
+
+
+async def date_birth(session: AsyncSession, node_id: int) -> None:
+    first = await first_seen(session, node_id, before=FAR)
+    if first is not None and first.year is not None and await session.get(NodeBirthRow, node_id) is None:
+        session.add(NodeBirthRow(node_id=node_id, year=first.year, season=first.season, day=first.day, hour=first.hour, locked=[]))
+
+
+async def late_beginnings(session: AsyncSession) -> list[int]:
+    statement = select(IncidentRow.id).where(IncidentRow.kind.startswith(GENESIS_PREFIX), IncidentRow.epoch == 1, IncidentRow.year != 0)
+    return list(await session.scalars(statement.order_by(IncidentRow.id)))
+
+
+async def begin_at_start(session: AsyncSession, incident_id: int) -> None:
+    incident = await session.get(IncidentRow, incident_id)
+    if incident is None:
+        return
+    incident.year, incident.season, incident.day, incident.hour = 0, None, None, None
+    line = await session.get(ChronicleRow, incident.chronicle_id) if incident.chronicle_id is not None else None
+    if line is not None:
+        line.year = 0

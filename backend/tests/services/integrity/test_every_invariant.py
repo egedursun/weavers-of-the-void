@@ -194,6 +194,23 @@ async def effect_before_cause(session: AsyncSession, world: CoreWorld) -> None:
     effect.cause_incident_id = cause.id
 
 
+async def world_made_late(session: AsyncSession, world: CoreWorld) -> None:
+    made = await happening(session, kind="genesis.world", year=7)
+    made.epoch = 1
+
+
+async def people_before_its_world(session: AsyncSession, world: CoreWorld) -> None:
+    made = await happening(session, kind=PHASE_KIND, year=31)
+    session.add(IncidentParticipantRow(incident_id=made.id, node_id=world.regions[0].id, role=IncidentRole.PRODUCT, position=0))
+    woke = await happening(session, kind=PHASE_KIND, year=0)
+    session.add(IncidentParticipantRow(incident_id=woke.id, node_id=world.regions[0].id, role=IncidentRole.SUBJECT, position=0))
+
+
+async def undated_birth(session: AsyncSession, world: CoreWorld) -> None:
+    made = await happening(session, kind=PHASE_KIND, year=9)
+    session.add(IncidentParticipantRow(incident_id=made.id, node_id=world.people.id, role=IncidentRole.PRODUCT, position=0))
+
+
 async def steps_running_back(session: AsyncSession, world: CoreWorld) -> None:
     incident = await happening(session, kind=PHASE_KIND, year=30)
     session.add(IncidentStepRow(incident_id=incident.id, position=0, year=30, action=StepAction.BEGIN))
@@ -249,6 +266,9 @@ BREAKERS: dict[str, Breaker] = {
     "step_nesting": step_inside_itself,
     "step_action": step_of_no_kind,
     "moment_after_cause": effect_before_cause,
+    "genesis_at_start": world_made_late,
+    "moment_after_births": people_before_its_world,
+    "birth_dated": undated_birth,
     "step_moment_order": steps_running_back,
     "witness_present": witness_far_away,
     "witness_mode": witness_who_does_not_say_how,

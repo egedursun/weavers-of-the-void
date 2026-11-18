@@ -111,6 +111,7 @@ JUSTICE_FULL = 100
     "table.name_registry",
     "table.natural_law_profiles",
     "table.network_outages",
+    "table.node_births",
     "table.nodes",
     "table.occupations",
     "table.offices",

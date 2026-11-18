@@ -639,6 +639,7 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.incidents",
     "table.journeys",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.routes",
     "table.worlds",
@@ -654,6 +655,7 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.routes",
 )
 async def cosmic_economy(ctx: TickContext) -> None:

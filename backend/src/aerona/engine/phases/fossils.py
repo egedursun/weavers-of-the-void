@@ -13,6 +13,7 @@ from aerona.engine.phases.dominion import count
     "table.incidents",
     "table.legend_profiles",
     "table.lifecycle_states",
+    "table.node_births",
     "table.nodes",
     "table.outbreaks",
     "table.region_environment",

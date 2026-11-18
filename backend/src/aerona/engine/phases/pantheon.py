@@ -554,6 +554,7 @@ async def outer_gnaw(ctx: TickContext) -> int:
     "table.journeys",
     "table.memories",
     "table.minds",
+    "table.node_births",
     "table.nodes",
     "table.prostheses",
     "table.routes",

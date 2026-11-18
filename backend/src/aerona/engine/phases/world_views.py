@@ -12,6 +12,7 @@ from aerona.engine.phases.dominion import count
     "table.entities",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.people_biology",
     "table.region_environment",

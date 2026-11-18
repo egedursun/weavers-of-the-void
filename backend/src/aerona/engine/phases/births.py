@@ -749,6 +749,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.maimed_cohorts",
     "table.mind_attributes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
@@ -774,6 +775,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
+    "table.node_births",
 )
 async def spontaneous_births(ctx: TickContext) -> None:
     await single_rule(ctx)

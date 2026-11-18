@@ -138,7 +138,16 @@ async def advance_world(ctx: TickContext, world: WorldRow) -> None:
     await apply_climate_effect(ctx, world, era)
 
 
-@reads("people.population", "settlement.population", "table.climate_orders", "table.entities", "table.nodes", "table.world_physics", "table.worlds")
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.climate_orders",
+    "table.entities",
+    "table.node_births",
+    "table.nodes",
+    "table.world_physics",
+    "table.worlds",
+)
 @writes(
     "people.population",
     "settlement.population",

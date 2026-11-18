@@ -90,6 +90,7 @@ async def customs(ctx: TickContext) -> None:
     "table.entities",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.pressures",
     "table.settlement_infrastructure",
@@ -100,10 +101,12 @@ async def customs(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.commutes",
     "table.cooperatives",
+    "table.entities",
     "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.node_births",
 )
 async def town_life(ctx: TickContext) -> None:
     tally = TownLifeTally()

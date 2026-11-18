@@ -10,6 +10,7 @@ from aerona.db.tables.records import IncidentStepRow
 from aerona.domain.models.moment import Moment
 from aerona.engine.pipeline import simulate
 from aerona.rules.registry import Rules
+from aerona.services.integrity.record_links import ahead_of_births
 from tests.engine.core.stirring import eager, stir
 from tests.engine.integration.factories import seed_rich_cosmos
 
@@ -70,5 +71,8 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
         if any(moment is None for moment in moments) or any(later.before(earlier) for earlier, later in pairwise(moments) if earlier and later):
             early.append(f"the steps of #{incident_id} go back in time")
     told = [f"{kind}: incident year {year} but line year {line}" for kind, year, line in years if year != line]
+    async with database.read() as session:
+        unborn = await ahead_of_births(session)
     assert early == []
     assert told == []
+    assert unborn == [], f"happenings earlier than the first record of someone in them: {unborn[:20]}"

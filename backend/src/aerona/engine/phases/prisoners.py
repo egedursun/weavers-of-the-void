@@ -230,6 +230,7 @@ async def _fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: E
     "table.memories",
     "table.mercenary_contracts",
     "table.minds",
+    "table.node_births",
     "table.nodes",
     "table.oaths",
     "table.offices",

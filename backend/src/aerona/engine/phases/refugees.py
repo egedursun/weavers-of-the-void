@@ -157,6 +157,7 @@ async def flee(
     "table.entities",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.world_maps",
 )

@@ -42,6 +42,7 @@ class TickEnvironment:
     publish: Publisher
     stats: TickStats
     window: YearWindow | None = None
+    progress: float | None = None
 
     def rng(self, stream: str) -> SeededRandom:
         return SeededRandom.for_epoch(self.world_seed, self.epoch, stream)
