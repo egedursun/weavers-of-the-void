@@ -34,8 +34,6 @@ export type Emission = {
   trail?: Range
 }
 
-export type Frame = { x: number; y: number; width: number; height: number }
-
 const SPRITE = 128
 const CENTER = SPRITE / 2
 const TINT_ALPHA = 0.7
@@ -165,27 +163,14 @@ export function tokenColor(
   return getComputedStyle(scope).getPropertyValue(name).trim() || 'white'
 }
 
-function edgePoint(frame: Frame): { x: number; y: number } {
-  const perimeter = 2 * (frame.width + frame.height)
-  let along = Math.random() * perimeter
-  const left = frame.x - frame.width / 2
-  const top = frame.y - frame.height / 2
-  if (along < frame.width) return { x: left + along, y: top }
-  along -= frame.width
-  if (along < frame.height) return { x: left + frame.width, y: top + along }
-  along -= frame.height
-  if (along < frame.width)
-    return { x: left + frame.width - along, y: top + frame.height }
-  along -= frame.width
-  return { x: left, y: top + frame.height - along }
-}
-
 export class ParticleField {
   private canvas: HTMLCanvasElement
   private context: CanvasRenderingContext2D | null
   private particles: Particle[] = []
   private frame = 0
   private ratio = 1
+  private width = 0
+  private height = 0
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -194,10 +179,21 @@ export class ParticleField {
   }
 
   resize() {
-    const box = this.canvas.getBoundingClientRect()
+    const width = this.canvas.clientWidth
+    const height = this.canvas.clientHeight
     this.ratio = Math.min(MAX_RATIO, window.devicePixelRatio || 1)
-    this.canvas.width = Math.max(1, Math.round(box.width * this.ratio))
-    this.canvas.height = Math.max(1, Math.round(box.height * this.ratio))
+    this.width = width
+    this.height = height
+    this.canvas.width = Math.max(1, Math.round(width * this.ratio))
+    this.canvas.height = Math.max(1, Math.round(height * this.ratio))
+  }
+
+  private fit() {
+    if (
+      this.canvas.clientWidth !== this.width ||
+      this.canvas.clientHeight !== this.height
+    )
+      this.resize()
   }
 
   dispose() {
@@ -212,17 +208,6 @@ export class ParticleField {
         (emission.angle ?? 0) +
         (Math.random() - 0.5) * 2 * (emission.spread ?? Math.PI)
       this.spawn(x, y, angle, emission, null)
-    }
-    this.wake()
-  }
-
-  burst(frame: Frame, emission: Emission) {
-    for (let index = 0; index < emission.count; index += 1) {
-      const point = edgePoint(frame)
-      const outward = Math.atan2(point.y - frame.y, point.x - frame.x)
-      const angle =
-        outward + (Math.random() - 0.5) * 2 * (emission.spread ?? 0.35)
-      this.spawn(point.x, point.y, angle, emission, null)
     }
     this.wake()
   }
@@ -285,6 +270,7 @@ export class ParticleField {
       this.frame = 0
       return
     }
+    this.fit()
     context.setTransform(1, 0, 0, 1, 0, 0)
     context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     if (this.particles.length === 0) {

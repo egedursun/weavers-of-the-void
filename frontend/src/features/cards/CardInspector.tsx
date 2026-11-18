@@ -47,7 +47,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
-import { Label, Muted, PageTitle, Text } from '@/components/typography'
+import { Label, Muted, PageTitle, Stat, Text } from '@/components/typography'
 import { GenerateImageButton } from '@/features/images/GenerateImageButton'
 import { useRuleLookup } from '@/features/pantheon/gate'
 import { useLabels } from '@/features/pantheon/labels'
@@ -141,23 +141,29 @@ function GroupPanel({
           const meta = statMeta(stat, divine)
           return (
             <div key={stat.key} className='flex min-w-0 flex-col gap-1'>
-              {measured(stat) ? (
-                <StatBar
-                  label={stat.label}
-                  icon={meta.icon}
-                  value={stat.value}
-                  max={stat.maximum}
-                  tone={BAR_TONE[stat.key] ?? tone}
-                  showMax={stat.key === 'hp' || stat.key === 'essence'}
-                />
-              ) : (
-                <MiniStat
-                  icon={meta.icon}
-                  label={stat.label}
-                  value={formatInteger(stat.value)}
-                  tone={VITAL_TONE[stat.key] ?? 'muted'}
-                />
-              )}
+              <div className='flex min-w-0 flex-1 flex-col justify-center rounded-md border surface-sheen border-gild/60 bg-card p-2.5'>
+                {measured(stat) ? (
+                  <StatBar
+                    label={stat.label}
+                    icon={meta.icon}
+                    value={stat.value}
+                    max={stat.maximum}
+                    tone={BAR_TONE[stat.key] ?? tone}
+                    showMax={stat.key === 'hp' || stat.key === 'essence'}
+                  />
+                ) : (
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <meta.icon
+                      aria-hidden='true'
+                      className='size-icon-sm shrink-0 text-muted-foreground'
+                    />
+                    <Label truncate className='flex-1'>
+                      {stat.label}
+                    </Label>
+                    <Stat value={stat.value} />
+                  </div>
+                )}
+              </div>
               {meta.effect && (
                 <Muted variant='caption' truncate={2}>
                   {meta.effect}

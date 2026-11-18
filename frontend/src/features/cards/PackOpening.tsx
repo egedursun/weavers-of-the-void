@@ -156,11 +156,10 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
       beamsOf(random, 14, [2.5, 6.5], tokens)
     )
     const measure = () => {
-      const box = node.getBoundingClientRect()
       const width = Math.min(
         PACK_MAX_WIDTH,
-        box.width * STAGE_SHARE,
-        box.height / STAGE_HEIGHTS
+        node.clientWidth * STAGE_SHARE,
+        node.clientHeight / STAGE_HEIGHTS
       )
       node.style.setProperty('--pack-w', `${width}px`)
       field.current?.resize()
@@ -266,9 +265,15 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
       const point = path.getPointAtLength(path.getTotalLength() * amount)
       const box = node.getBoundingClientRect()
       const frame = host.getBoundingClientRect()
+      const scaleX = frame.width > 0 ? host.clientWidth / frame.width : 1
+      const scaleY = frame.height > 0 ? host.clientHeight / frame.height : 1
       return {
-        x: box.left - frame.left + (point.x / geometry.width) * box.width,
-        y: box.top - frame.top + (point.y / geometry.height) * box.height,
+        x:
+          (box.left - frame.left + (point.x / geometry.width) * box.width) *
+          scaleX,
+        y:
+          (box.top - frame.top + (point.y / geometry.height) * box.height) *
+          scaleY,
       }
     },
     [geometry]
@@ -587,35 +592,32 @@ export function PackOpening({ card, onRevealed, children }: PackOpeningProps) {
     )
     if (staging.shake && !reduced) jolt(host, staging.shake, D(380))
     if (!reduced) {
-      field.current?.burst(face, {
+      field.current?.emit(center.x, center.y, {
         count: Math.round(staging.burst * 0.65),
         colors,
         kinds: ['spark'],
-        spread: 0.3,
-        speed: [3, 9 + staging.pulses * 2],
+        speed: [3, 10 + staging.pulses * 2],
         size: [1, 2.2],
-        life: [26, 52],
+        life: [30, 58],
         trail: [3, 6],
         gravity: 0.02,
-        drag: 0.93,
+        drag: 0.94,
       })
-      field.current?.burst(face, {
+      field.current?.emit(center.x, center.y, {
         count: Math.round(staging.burst * 0.14),
         colors: [...colors, 'white'],
         kinds: ['star'],
-        spread: 0.6,
-        speed: [0.8, 3.2],
+        speed: [1.2, 4.6],
         size: [1.4, 3.2],
         life: [60, 110],
         gravity: -0.004,
         drag: 0.965,
       })
-      field.current?.burst(face, {
+      field.current?.emit(center.x, center.y, {
         count: Math.round(staging.burst * 0.22),
         colors: [tokenColor('--gild-hi'), tokenColor('--gild')],
         kinds: ['flake'],
-        spread: 0.7,
-        speed: [1.5, 5],
+        speed: [2, 6.5],
         size: [1.2, 2.4],
         life: [80, 140],
         gravity: 0.05,

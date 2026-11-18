@@ -53,6 +53,12 @@ function card(overrides: Partial<CharacterCard> = {}): CharacterCard {
     stats: [
       { key: 'strength', label: 'Strength', value: 61, maximum: 100 },
       { key: 'faith', label: 'Faith', value: 12, maximum: null },
+      {
+        key: 'mood_temperament',
+        label: 'Temperament',
+        value: -1,
+        maximum: 100,
+      },
     ],
     abilities: [{ name: 'Stillwater', text: 'Calms every river it touches.' }],
     notes: [{ label: 'Fear', text: 'Being forgotten.' }],
@@ -422,6 +428,15 @@ describe('CardsScreen', () => {
     await expect
       .element(dialog.getByText('Faith', { exact: true }).last())
       .toBeVisible()
+    const values = dialog.getByRole('region', { name: 'Every value' })
+    for (const label of ['Strength', 'Temperament'])
+      expect(
+        values
+          .getByText(label, { exact: true })
+          .last()
+          .element()
+          .closest('.surface-sheen')
+      ).not.toBeNull()
     await dialog.getByRole('button', { name: 'Next card' }).click()
     await expect
       .element(dialog.getByRole('heading', { name: 'Corran Vey' }))
