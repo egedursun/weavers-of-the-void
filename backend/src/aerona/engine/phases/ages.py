@@ -41,6 +41,7 @@ async def ages(ctx: TickContext) -> None:
 
 @reads(
     "table.age_echoes",
+    "table.arc_beats",
     "table.arc_figures",
     "table.arcs",
     "table.bonds",

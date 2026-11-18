@@ -1,9 +1,10 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -15,7 +16,7 @@ from aerona.db.tables.polity import HouseProfileRow, OathRow, OfficeHistoryRow, 
 from aerona.db.write_guard import held
 from aerona.domain.enums.ages import ArcOutcome, ArcRole, ArcStage, ArcTemplate
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
@@ -34,7 +35,7 @@ FALLEN = 15
 INFAMOUS = 50
 RENOWNED = 30
 RECENT = 3
-ENDS_IN_DEATH = frozenset({ArcTemplate.TRAGEDY, ArcTemplate.FALL_OF_A_HOUSE, ArcTemplate.RISE_AND_FALL})
+ENDS_IN_DEATH = frozenset({ArcTemplate.TRAGEDY, ArcTemplate.FALL_OF_A_HOUSE, ArcTemplate.RISE_AND_FALL, ArcTemplate.CORRUPTION})
 
 Figure = tuple[int, ArcRole]
 
@@ -265,7 +266,7 @@ async def open_arc(ctx: TickContext, subject_id: int, template: ArcTemplate, fig
     for node_id, role in figures:
         if node_id != subject_id and await ctx.session.get(ArcFigureRow, (row.id, node_id)) is None:
             ctx.session.add(ArcFigureRow(arc_id=row.id, node_id=node_id, role=role, locked=[]))
-    ctx.session.add(ArcBeatRow(arc_id=row.id, stage=first, text=template.value.replace("_", " "), epoch=ctx.epoch, locked=[]))
+    ctx.session.add(ArcBeatRow(arc_id=row.id, stage=first, text=f"The tale of {spoken(template)} began.", epoch=ctx.epoch, locked=[]))
     await ctx.session.flush()
     return row
 
@@ -301,13 +302,21 @@ async def detect(ctx: TickContext, tally: ArcTally) -> None:
             )
 
 
-async def shared_incident(ctx: TickContext, subject_id: int, figure_ids: list[int], since: int) -> ChronicleRow | None:
-    mine = select(ChronicleEntityRow.chronicle_id).where(ChronicleEntityRow.entity_id == subject_id)
-    query = select(ChronicleRow).where(ChronicleRow.id.in_(mine), ChronicleRow.epoch > since)
+async def last_line(ctx: TickContext, arc: ArcRow) -> int:
+    found = await ctx.session.scalar(select(func.max(ArcBeatRow.line_id)).where(ArcBeatRow.arc_id == arc.id))
+    if found is not None:
+        return int(found)
+    opened = await ctx.session.scalar(select(func.max(ChronicleRow.id)).where(ChronicleRow.epoch < arc.started_epoch))
+    return int(opened or 0)
+
+
+async def shared_lines(ctx: TickContext, arc: ArcRow, figure_ids: list[int], limit: int) -> list[ChronicleRow]:
+    mine = select(ChronicleEntityRow.chronicle_id).where(ChronicleEntityRow.entity_id == arc.subject_node_id)
+    query = select(ChronicleRow).where(ChronicleRow.id.in_(mine), ChronicleRow.id > await last_line(ctx, arc), ChronicleRow.template_key != "arcs.begun")
     if figure_ids:
         theirs = select(ChronicleEntityRow.chronicle_id).where(ChronicleEntityRow.entity_id.in_(figure_ids))
         query = query.where(ChronicleRow.id.in_(theirs))
-    return await ctx.session.scalar(query.order_by(ChronicleRow.id.desc()).limit(1))
+    return list(await ctx.session.scalars(query.order_by(ChronicleRow.id).limit(limit)))
 
 
 async def figures_of(ctx: TickContext, arc_id: int) -> list[ArcFigureRow]:
@@ -315,9 +324,74 @@ async def figures_of(ctx: TickContext, arc_id: int) -> list[ArcFigureRow]:
     return list(rows)
 
 
-def outcome_on_death(arc: ArcRow, subject_alive: bool, foes_alive: bool, killed_by_subject: bool) -> ArcOutcome | None:
-    if not subject_alive:
-        return ArcOutcome.FULFILLED if arc.template in ENDS_IN_DEATH else ArcOutcome.FAILED
+def reached_climax(arc: ArcRow) -> bool:
+    stages = stages_of(arc.template)
+    return arc.stage in stages and stages.index(arc.stage) >= len(stages) - 2
+
+
+async def house_stands(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
+    houses = select(HouseProfileRow.house_entity_id).where(HouseProfileRow.founder_entity_id == arc.subject_node_id)
+    standing = await ctx.session.scalar(select(EntityRow.id).where(EntityRow.id.in_(houses), EntityRow.status == EntityStatus.CANON).limit(1))
+    return standing is not None
+
+
+async def risen(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
+    profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
+    return profile is not None and profile.renown >= RENOWNED
+
+
+async def redeemed(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
+    profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
+    return profile is not None and profile.infamy < INFAMOUS
+
+
+async def grown(ctx: TickContext, arc: ArcRow, _others: list[int]) -> bool:
+    profile = await ctx.session.get(MortalProfileRow, arc.subject_node_id)
+    return profile is not None and profile.life_stage not in YOUNG
+
+
+async def wed(ctx: TickContext, arc: ArcRow, others: list[int]) -> bool:
+    subject = arc.subject_node_id
+    union = await ctx.session.scalar(
+        select(BondRow.id)
+        .where(
+            BondRow.kind == BondKind.SPOUSE_OF,
+            BondRow.state == BondState.ACTIVE,
+            ((BondRow.source_node_id == subject) & BondRow.target_node_id.in_(others or [0]))
+            | ((BondRow.target_node_id == subject) & BondRow.source_node_id.in_(others or [0])),
+        )
+        .limit(1)
+    )
+    return union is not None
+
+
+async def outlived(ctx: TickContext, _arc: ArcRow, others: list[int]) -> bool:
+    return bool(others) and not any([await living(ctx, node) for node in others])
+
+
+Judge = Callable[[TickContext, ArcRow, list[int]], Awaitable[bool]]
+GOALS: Mapping[ArcTemplate, Judge] = {
+    ArcTemplate.FOUNDING: house_stands,
+    ArcTemplate.RAGS_TO_RICHES: risen,
+    ArcTemplate.REDEMPTION: redeemed,
+    ArcTemplate.COMING_OF_AGE: grown,
+    ArcTemplate.FORBIDDEN_LOVE: wed,
+    ArcTemplate.RIVALRY: outlived,
+    ArcTemplate.MENTOR_AND_HEIR: outlived,
+    ArcTemplate.QUEST: outlived,
+}
+
+
+async def achieved(ctx: TickContext, arc: ArcRow, figures: list[ArcFigureRow]) -> bool:
+    judge = GOALS.get(arc.template)
+    return reached_climax(arc) or (judge is not None and await judge(ctx, arc, [row.node_id for row in figures]))
+
+
+async def outcome_on_death(ctx: TickContext, arc: ArcRow, figures: list[ArcFigureRow], foes_alive: bool, killed_by_subject: bool) -> ArcOutcome | None:
+    if not await living(ctx, arc.subject_node_id):
+        if arc.template in ENDS_IN_DEATH or await achieved(ctx, arc, figures):
+            return ArcOutcome.TWISTED if arc.drama >= PERCENT else ArcOutcome.FULFILLED
+        return ArcOutcome.FAILED
     if arc.template is ArcTemplate.REVENGE and not foes_alive:
         return ArcOutcome.FULFILLED if killed_by_subject else ArcOutcome.IRONIC
     return None
@@ -328,39 +402,40 @@ async def close(ctx: TickContext, arc: ArcRow, outcome: ArcOutcome, tally: ArcTa
     arc.ended_epoch = ctx.epoch
     arc.stage = ArcStage.RESOLUTION
     setattr(tally, outcome.value, getattr(tally, outcome.value) + 1)
-    ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=ArcStage.RESOLUTION, text=outcome.value, epoch=ctx.epoch, locked=[]))
-    await record_incident(ctx, "arcs.ended", roles={IncidentRole.SUBJECT: arc.subject_node_id}, facts={"template": arc.template, "outcome": outcome})
+    told = await record_incident(ctx, "arcs.ended", roles={IncidentRole.SUBJECT: arc.subject_node_id}, facts={"template": arc.template, "outcome": outcome})
+    ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=ArcStage.RESOLUTION, text=told.text, line_id=told.row.id, epoch=ctx.epoch, locked=[]))
 
 
 async def advance(ctx: TickContext, arc: ArcRow, tally: ArcTally) -> bool:
     figures = await figures_of(ctx, arc.id)
     foe_ids = [row.node_id for row in figures if row.role in (ArcRole.FOE, ArcRole.RIVAL)]
-    subject_alive = await living(ctx, arc.subject_node_id)
     foes_alive = not foe_ids or any([await living(ctx, node) for node in foe_ids])
     killed = await ctx.session.scalar(
         select(BondRow.id)
         .where(BondRow.kind == BondKind.KILLED, BondRow.source_node_id == arc.subject_node_id, BondRow.target_node_id.in_(foe_ids or [0]))
         .limit(1)
     )
-    ending = outcome_on_death(arc, subject_alive, foes_alive, killed is not None)
+    ending = await outcome_on_death(ctx, arc, figures, foes_alive, killed is not None)
     if ending is not None and "outcome" not in arc.locked:
         await close(ctx, arc, ending, tally)
         return True
-    incident = await shared_incident(ctx, arc.subject_node_id, [row.node_id for row in figures], arc.last_beat_epoch)
-    if incident is None or "stage" in arc.locked:
+    if "stage" in arc.locked:
         return False
-    stages = stages_of(arc.template)
-    position = stages.index(arc.stage) if arc.stage in stages else 0
-    if position + 1 >= len(stages) - 1:
-        if "outcome" not in arc.locked:
-            await close(ctx, arc, ArcOutcome.TWISTED if arc.drama >= PERCENT else ArcOutcome.FULFILLED, tally)
-        return True
-    arc.stage = stages[position + 1]
-    arc.beats += 1
-    arc.last_beat_epoch = ctx.epoch
-    ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=arc.stage, text=incident.text, epoch=ctx.epoch, locked=[]))
-    tally.beats += 1
-    return True
+    moved = resolving = False
+    for line in await shared_lines(ctx, arc, [row.node_id for row in figures], ctx.rules.arcs.beats_per_epoch):
+        if reached_climax(arc):
+            resolving = True
+            break
+        stages = stages_of(arc.template)
+        arc.stage = stages[(stages.index(arc.stage) if arc.stage in stages else 0) + 1]
+        arc.beats += 1
+        arc.last_beat_epoch = ctx.epoch
+        ctx.session.add(ArcBeatRow(arc_id=arc.id, stage=arc.stage, text=line.text, line_id=line.id, epoch=ctx.epoch, locked=[]))
+        tally.beats += 1
+        moved = True
+    if resolving and "outcome" not in arc.locked:
+        await close(ctx, arc, ArcOutcome.TWISTED if arc.drama >= PERCENT else ArcOutcome.FULFILLED, tally)
+    return moved or resolving
 
 
 async def keep_arcs(ctx: TickContext, tally: ArcTally) -> list[ArcRow]:

@@ -27,6 +27,7 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.physics import ImpactEventRow
+from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.tables.sacred import ForesightRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.ages import AgeCycle, ArcOutcome, ArcRole, ArcStage, ArcTemplate, FormationZone, PayoffKind, SeasonCause, SeasonSpell, SetupKind
@@ -39,7 +40,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.sacred import ForesightSource, ForesightStatus
 from aerona.domain.enums.society import Commodity, NaturalLaw, SocialClass
-from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, PeopleStats
+from aerona.domain.models.entity_stats import HouseStats, KnowledgeStats, LegendStats, PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.formation import FormationTally, form_worlds
 from aerona.engine.cosmos.orbits import infer
@@ -312,7 +313,7 @@ async def test_a_foresight_is_set_up_and_paid_off_and_the_chronicler_is_told(ses
     assert [item.template for item in await tales_of(scope, world.son.id)] == ["apotheosis"]
 
 
-async def test_integrity_fails_the_tales_of_vanished_lives_and_lapses_their_setups(session: AsyncSession, world: CoreWorld) -> None:
+async def test_integrity_lapses_the_setups_of_vanished_lives_and_leaves_their_tales_to_be_judged(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Gone", world, world.regions[0])
     ghost = await mortal(session, "Wisp", world, town.id)
     ctx = await at(session, 3)
@@ -321,10 +322,44 @@ async def test_integrity_fails_the_tales_of_vanished_lives_and_lapses_their_setu
     session.add(setup)
     ghost.status, ghost.end_epoch = EntityStatus.DEAD, 3
     await session.flush()
-    assert await mend_ages_links(session, 4) >= 2
+    assert await mend_ages_links(session, 4) >= 1
     await session.refresh(arc)
     await session.refresh(setup)
-    assert arc.outcome is ArcOutcome.FAILED and setup.payoff is PayoffKind.LAPSED
+    assert arc.outcome is ArcOutcome.OPEN and setup.payoff is PayoffKind.LAPSED
+    await keep_arcs(await at(session, 4), ArcTally())
+    assert arc.outcome is ArcOutcome.FAILED
+
+
+async def test_a_founder_who_dies_with_the_house_standing_fulfils_the_tale_of_founding(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Hearthold", world, world.regions[0])
+    founder = await mortal(session, "Aldis", world, town.id)
+    house = await entity(session, "House Aldis", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+    session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=founder.id))
+    ctx = await at(session, 3)
+    arc = await open_arc(ctx, founder.id, ArcTemplate.FOUNDING)
+    founder.status, founder.end_epoch = EntityStatus.DEAD, 4
+    await session.flush()
+    tally = ArcTally()
+    await keep_arcs(await at(session, 4), tally)
+    assert arc.outcome is ArcOutcome.FULFILLED and tally.fulfilled == 1
+    ending = await session.scalar(select(ArcBeatRow).where(ArcBeatRow.arc_id == arc.id, ArcBeatRow.stage == ArcStage.RESOLUTION))
+    assert ending is not None and ending.text != ArcOutcome.FULFILLED.value and "Aldis" in ending.text
+
+
+async def test_a_tale_takes_a_beat_for_each_shared_happening_and_ends_within_a_life(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Brackmoor", world, world.regions[0])
+    rival = await mortal(session, "Ovan", world, town.id)
+    hero = await mortal(session, "Ysa", world, town.id)
+    ctx = await at(session, 3)
+    arc = await open_arc(ctx, hero.id, ArcTemplate.RIVALRY, ((rival.id, ArcRole.RIVAL),))
+    for line in ("Ysa and Ovan argued at the well.", "Ysa outbid Ovan at the market.", "Ovan shamed Ysa at the feast."):
+        await tell_history(ctx, line, ids=[hero.id, rival.id])
+    await keep_arcs(await at(session, 3, arcs={"beats_per_epoch": 3}), ArcTally())
+    assert arc.stage is ArcStage.CLIMAX and arc.beats == 3
+    await tell_history(ctx, "Ysa and Ovan made peace.", ids=[hero.id, rival.id])
+    tally = ArcTally()
+    await keep_arcs(await at(session, 3, arcs={"beats_per_epoch": 3}), tally)
+    assert arc.outcome is ArcOutcome.FULFILLED and tally.fulfilled == 1
 
 
 async def test_mortals_and_gods_read_their_tales_and_seasons_in_context(session: AsyncSession, world: CoreWorld) -> None:

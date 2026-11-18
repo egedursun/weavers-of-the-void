@@ -62,6 +62,7 @@ class ArcRules:
     detect_chance: int = rule(40, 0, 100, F, "Chance each epoch that a pattern in a life is read as the start of an arc (%)")
     arcs_per_epoch: int = rule(6, 0, 1000, F, "Arcs that may start across the cosmos in one epoch")
     open_arcs: int = rule(3, 1, 20, F, "Open arcs one subject may carry at once")
+    beats_per_epoch: int = rule(3, 1, 20, F, "Beats an arc may take in one epoch, one for each happening its subject and figures share since its last beat")
     stall_epochs: int = rule(3, 1, 100, F, "Epochs without a beat after which an arc stalls and the drama manager presses it")
     drama_step: int = rule(20, 0, 100, F, "Drama a stalled arc gains each epoch")
     drama_boost: int = rule(50, 0, 500, F, "Share by which full drama raises the chance of the scheme or tale that would bring the next beat (%)")

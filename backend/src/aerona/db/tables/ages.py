@@ -176,6 +176,7 @@ class ArcBeatRow(Base):
     arc_id: Mapped[int] = mapped_column(ForeignKey("arcs.id", ondelete="CASCADE"))
     stage: Mapped[ArcStage] = mapped_column(enum_type(ArcStage, "stage"))
     text: Mapped[str] = mapped_column(Text, default="")
+    line_id: Mapped[int | None] = mapped_column(ForeignKey("chronicle.id", ondelete="SET NULL"), index=True)
     epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

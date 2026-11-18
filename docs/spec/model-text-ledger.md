@@ -806,6 +806,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/sites/rooms.py` | 7 | 2026-11-17 | `ac426d1f07388a67` |
 | `backend/src/aerona/engine/snapshot.py` | 1 | 2026-11-16 | `60148897eca457ba` |
 | `backend/src/aerona/engine/storyteller/ages.py` | 1 | 2026-11-17 | `d976d9f859cf3f0f` |
+| `backend/src/aerona/engine/storyteller/arcs.py` | 1 | 2026-11-18 | `999bd22316d30f08` |
 | `backend/src/aerona/engine/storyteller/control.py` | 6 | 2026-11-16 | `932d711023d1be03` |
 | `backend/src/aerona/engine/storyteller/drama.py` | 12 | 2026-11-17 | `55509fb45f20137d` |
 | `backend/src/aerona/engine/structures/construction.py` | 4 | 2026-11-17 | `409f90b740c49d46` |

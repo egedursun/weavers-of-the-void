@@ -11,7 +11,9 @@ ARC_TEMPLATE = total(
             used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.deposed", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.RAGS_TO_RICHES: Defined(
-            "From poverty to wealth", checked_by=(), used_by=("engine.storyteller.arcs.rulers", "engine.storyteller.drama.ADVANCED_BY")
+            "From poverty to wealth",
+            checked_by=("engine.storyteller.arcs.GOALS",),
+            used_by=("engine.storyteller.arcs.rulers", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.REVENGE: Defined(
             "Revenge",
@@ -24,10 +26,12 @@ ARC_TEMPLATE = total(
                 "tools.mortal.ages.swear_vengeance",
             ),
         ),
-        ArcTemplate.REDEMPTION: Defined("Redemption", checked_by=(), used_by=("engine.storyteller.arcs.redemption", "engine.storyteller.drama.ADVANCED_BY")),
+        ArcTemplate.REDEMPTION: Defined(
+            "Redemption", checked_by=("engine.storyteller.arcs.GOALS",), used_by=("engine.storyteller.arcs.redemption", "engine.storyteller.drama.ADVANCED_BY")
+        ),
         ArcTemplate.QUEST: Defined(
             "Quest",
-            checked_by=("engine.storyteller.arcs.stages_of",),
+            checked_by=("engine.storyteller.arcs.GOALS", "engine.storyteller.arcs.stages_of"),
             used_by=(
                 "engine.storyteller.arcs.quests",
                 "engine.storyteller.drama.ADVANCED_BY",
@@ -41,29 +45,41 @@ ARC_TEMPLATE = total(
             used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.rulers", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.FORBIDDEN_LOVE: Defined(
-            "Forbidden love", checked_by=(), used_by=("engine.storyteller.arcs.forbidden_love", "engine.storyteller.drama.ADVANCED_BY")
+            "Forbidden love",
+            checked_by=("engine.storyteller.arcs.GOALS",),
+            used_by=("engine.storyteller.arcs.forbidden_love", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.RIVALRY: Defined(
             "Rivalry",
-            checked_by=(),
+            checked_by=("engine.storyteller.arcs.GOALS",),
             used_by=("engine.storyteller.arcs.rivalry", "engine.storyteller.drama.ADVANCED_BY", "engine.storyteller.drama.CONFRONTING"),
         ),
         ArcTemplate.MENTOR_AND_HEIR: Defined(
-            "Mentor and heir", checked_by=(), used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY")
+            "Mentor and heir",
+            checked_by=("engine.storyteller.arcs.GOALS",),
+            used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.EXILE_AND_RETURN: Defined(
             "Exile and return", checked_by=(), used_by=("engine.storyteller.arcs.exile", "engine.storyteller.drama.ADVANCED_BY")
         ),
-        ArcTemplate.CORRUPTION: Defined("Corruption", checked_by=(), used_by=("engine.storyteller.arcs.corruption", "engine.storyteller.drama.ADVANCED_BY")),
+        ArcTemplate.CORRUPTION: Defined(
+            "Corruption",
+            checked_by=(),
+            used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.corruption", "engine.storyteller.drama.ADVANCED_BY"),
+        ),
         ArcTemplate.COMING_OF_AGE: Defined(
-            "Coming of age", checked_by=(), used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY")
+            "Coming of age",
+            checked_by=("engine.storyteller.arcs.GOALS",),
+            used_by=("engine.storyteller.arcs.apprenticeship", "engine.storyteller.drama.ADVANCED_BY"),
         ),
         ArcTemplate.FALL_OF_A_HOUSE: Defined(
             "Fall of a house",
             checked_by=(),
             used_by=("engine.storyteller.arcs.ENDS_IN_DEATH", "engine.storyteller.arcs.houses", "engine.storyteller.drama.ADVANCED_BY"),
         ),
-        ArcTemplate.FOUNDING: Defined("Founding", checked_by=(), used_by=("engine.storyteller.arcs.houses", "engine.storyteller.drama.ADVANCED_BY")),
+        ArcTemplate.FOUNDING: Defined(
+            "Founding", checked_by=("engine.storyteller.arcs.GOALS",), used_by=("engine.storyteller.arcs.houses", "engine.storyteller.drama.ADVANCED_BY")
+        ),
         ArcTemplate.APOTHEOSIS: Defined("Apotheosis", checked_by=(), used_by=("engine.storyteller.arcs.apotheosis", "engine.storyteller.drama.ADVANCED_BY")),
     },
 )
