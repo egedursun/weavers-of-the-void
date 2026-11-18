@@ -44,6 +44,7 @@ import {
   StatBar,
   Timeline,
   TimelineItem,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
@@ -136,8 +137,7 @@ function ClimateAge({
         </div>
       </div>
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>New age</Label>
+        <FieldTile label='New age'>
           <Select
             value={era}
             onValueChange={(value) => setEra(value as ClimateEra)}
@@ -153,11 +153,12 @@ function ClimateAge({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className='flex w-32 min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`climate-epochs-${data.world_id}`}>
-            Epochs
-          </Label>
+        </FieldTile>
+        <FieldTile
+          id={`climate-epochs-${data.world_id}`}
+          label='Epochs'
+          className='w-32'
+        >
           <Input
             id={`climate-epochs-${data.world_id}`}
             inputMode='numeric'
@@ -165,7 +166,7 @@ function ClimateAge({
             value={epochs}
             onChange={(event) => setEpochs(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <Button
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
@@ -406,16 +407,17 @@ function CalendarCard({
         </div>
       )}
       <div className='flex min-w-0 items-end gap-2'>
-        <div className='flex min-w-0 flex-1 flex-col gap-1'>
-          <Label as='label' htmlFor={`months-${calendar.knowledge_id}`}>
-            Month names, in order
-          </Label>
+        <FieldTile
+          id={`months-${calendar.knowledge_id}`}
+          label='Month names, in order'
+          className='flex-1'
+        >
           <Input
             id={`months-${calendar.knowledge_id}`}
             value={names}
             onChange={(event) => setNames(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <Button
           variant='outline'
           disabled={renameReason !== null}
@@ -472,8 +474,7 @@ function Calendars({
       )}
       {data.astronomy_records.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-end gap-2'>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Make a record keep a calendar</Label>
+          <FieldTile label='Make a record keep a calendar'>
             <Select value={record} onValueChange={setRecord}>
               <SelectTrigger aria-label='Astronomy record'>
                 <SelectValue placeholder='Astronomy record' />
@@ -486,7 +487,7 @@ function Calendars({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FieldTile>
           <Button
             variant='outline'
             disabled={reason !== null}
@@ -621,16 +622,17 @@ function SeasonName({
         if (reason === null) save.mutate()
       }}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <Label as='label' htmlFor={`season-name-${season.id}`} truncate>
-          {`Name of season ${season.position + 1}`}
-        </Label>
+      <FieldTile
+        id={`season-name-${season.id}`}
+        label={`Name of season ${season.position + 1}`}
+        className='flex-1'
+      >
         <Input
           id={`season-name-${season.id}`}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <Button
         type='submit'
         variant='outline'

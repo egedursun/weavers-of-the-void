@@ -14,7 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -24,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, PagedList } from '@/components/domain'
+import { FormRow, PagedList, FieldTile } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { toastWithUndo } from '@/features/ledger/undoToast'
 import { type ActionItem, useRunAction } from './api'
@@ -88,20 +87,19 @@ function FieldControl({
       >
         {(option) => (
           <div key={option} className='flex items-center gap-2'>
-            <Checkbox
-              id={`${id}-${option}`}
-              checked={chosen.includes(option)}
-              onCheckedChange={(checked) =>
-                onChange(
-                  checked === true
-                    ? [...chosen, option]
-                    : chosen.filter((item) => item !== option)
-                )
-              }
-            />
-            <FieldLabel htmlFor={`${id}-${option}`}>
-              {humanizeName(option)}
-            </FieldLabel>
+            <FieldTile id={`${id}-${option}`} label={humanizeName(option)}>
+              <Checkbox
+                id={`${id}-${option}`}
+                checked={chosen.includes(option)}
+                onCheckedChange={(checked) =>
+                  onChange(
+                    checked === true
+                      ? [...chosen, option]
+                      : chosen.filter((item) => item !== option)
+                  )
+                }
+              />
+            </FieldTile>
           </div>
         )}
       </PagedList>

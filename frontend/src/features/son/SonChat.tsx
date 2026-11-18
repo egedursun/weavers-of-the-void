@@ -13,10 +13,9 @@ import { unwrap } from '@/api/errors'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { EmptyState, Portrait, Section } from '@/components/domain'
+import { EmptyState, Portrait, Section, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type SonRecord } from '@/features/pantheon/api'
@@ -256,26 +255,28 @@ export function SonChat({
       )}
       {send.isError && <Text tone='destructive'>{send.error.message}</Text>}
       <div className='flex min-w-0 flex-col gap-2'>
-        <FieldLabel
-          htmlFor={`chat-${son.id}`}
-        >{`What do you say to ${son.name}?`}</FieldLabel>
-        <Textarea
+        <FieldTile
           id={`chat-${son.id}`}
-          value={draft}
-          maxLength={maxChars}
-          disabled={dead || send.isPending}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (
-              event.key === 'Enter' &&
-              !event.shiftKey &&
-              !event.nativeEvent.isComposing
-            ) {
-              event.preventDefault()
-              submit()
-            }
-          }}
-        />
+          label={`What do you say to ${son.name}?`}
+        >
+          <Textarea
+            id={`chat-${son.id}`}
+            value={draft}
+            maxLength={maxChars}
+            disabled={dead || send.isPending}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (
+                event.key === 'Enter' &&
+                !event.shiftKey &&
+                !event.nativeEvent.isComposing
+              ) {
+                event.preventDefault()
+                submit()
+              }
+            }}
+          />
+        </FieldTile>
         <div className='flex min-w-0 flex-wrap items-center gap-3'>
           <ActionButton
             label={send.isPending ? 'Waiting' : 'Say'}

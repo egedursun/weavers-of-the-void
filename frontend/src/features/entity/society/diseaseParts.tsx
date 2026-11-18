@@ -41,6 +41,7 @@ import {
   ShowMore,
   StatBar,
   useShowMore,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -660,23 +661,25 @@ export function EndemicControls({
         tone='warning'
         hint='An endemic disease weighs on its land, guards locals against invaders and repels settlers'
       >
-        <RecordCombobox
-          options={options.lands}
-          value={land}
-          onChange={(value) => {
-            setLand(value)
-            const row = view.endemic.find(
-              (item) => String(item.region_id) === value
-            )
-            if (row) {
-              setLoad(row.load)
-              setHold(row.locked)
-            }
-          }}
-          placeholder='Choose a land'
-          aria-label='Land where it lingers'
-          disabled={busy !== null}
-        />
+        <FieldTile label='Land where it lingers'>
+          <RecordCombobox
+            options={options.lands}
+            value={land}
+            onChange={(value) => {
+              setLand(value)
+              const row = view.endemic.find(
+                (item) => String(item.region_id) === value
+              )
+              if (row) {
+                setLoad(row.load)
+                setHold(row.locked)
+              }
+            }}
+            placeholder='Choose a land'
+            aria-label='Land where it lingers'
+            disabled={busy !== null}
+          />
+        </FieldTile>
         <RangeField
           label='Load'
           icon={Gauge}
@@ -688,17 +691,18 @@ export function EndemicControls({
           highLabel='Crushing'
           onChange={setLoad}
         />
-        <div className='flex min-w-0 items-center justify-between gap-2'>
-          <FieldLabel htmlFor={`endemic-hold-${view.entity_id}`}>
-            Hold it against fading
-          </FieldLabel>
+        <FieldTile
+          id={`endemic-hold-${view.entity_id}`}
+          label='Hold it against fading'
+          className='items-center'
+        >
           <Switch
             id={`endemic-hold-${view.entity_id}`}
             checked={hold}
             disabled={busy !== null}
             onCheckedChange={setHold}
           />
-        </div>
+        </FieldTile>
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
             className='self-start'
@@ -802,14 +806,16 @@ export function ImmunityControls({
       tone='info'
       hint='Set the immune share of one age band, or of every age, and hold it against fading'
     >
-      <RecordCombobox
-        options={options.communities}
-        value={community}
-        onChange={(value) => setCommunity(value)}
-        placeholder='Choose a community'
-        aria-label='Community to make immune'
-        disabled={busy !== null}
-      />
+      <FieldTile label='Community to make immune'>
+        <RecordCombobox
+          options={options.communities}
+          value={community}
+          onChange={(value) => setCommunity(value)}
+          placeholder='Choose a community'
+          aria-label='Community to make immune'
+          disabled={busy !== null}
+        />
+      </FieldTile>
       <IconPicker
         label='Age band'
         value={band}
@@ -828,17 +834,18 @@ export function ImmunityControls({
         highLabel='All'
         onChange={setPct}
       />
-      <div className='flex min-w-0 items-center justify-between gap-2'>
-        <FieldLabel htmlFor={`immunity-hold-${view.entity_id}`}>
-          Hold it against fading
-        </FieldLabel>
+      <FieldTile
+        id={`immunity-hold-${view.entity_id}`}
+        label='Hold it against fading'
+        className='items-center'
+      >
         <Switch
           id={`immunity-hold-${view.entity_id}`}
           checked={hold}
           disabled={busy !== null}
           onCheckedChange={setHold}
         />
-      </div>
+      </FieldTile>
       <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
         <Button
           className='self-start'
@@ -880,11 +887,7 @@ function DesignNumber({
 }) {
   const id = `forge-${field.key}`
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id} className='flex items-center gap-1.5'>
-        <field.icon aria-hidden='true' className='size-icon-xs text-primary' />
-        {fieldLabel(field.key)}
-      </FieldLabel>
+    <FieldTile id={id} icon={field.icon} label={fieldLabel(field.key)}>
       <Input
         id={id}
         type='number'
@@ -895,7 +898,7 @@ function DesignNumber({
         disabled={blocked !== null}
         onChange={(event) => onChange(Number(event.target.value))}
       />
-    </div>
+    </FieldTile>
   )
 }
 
@@ -977,8 +980,7 @@ export function ForgeDisease({
         </div>
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`forge-name-${anchorId}`}>Name</FieldLabel>
+        <FieldTile id={`forge-name-${anchorId}`} label='Name'>
           <Input
             id={`forge-name-${anchorId}`}
             value={name}
@@ -987,9 +989,8 @@ export function ForgeDisease({
             disabled={busy !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel>Rises in</FieldLabel>
+        </FieldTile>
+        <FieldTile label='Rises in'>
           <RecordCombobox
             options={options.lands}
             value={land}
@@ -998,7 +999,7 @@ export function ForgeDisease({
             aria-label='Land where it rises'
             disabled={busy !== null}
           />
-        </div>
+        </FieldTile>
         <IconPicker
           label='Spreads by'
           value={vector}
@@ -1032,8 +1033,7 @@ export function ForgeDisease({
           }
         />
       </div>
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel>Carried by</FieldLabel>
+      <FieldTile label='Carried by'>
         <RecordCombobox
           options={options.species}
           value={host}
@@ -1047,7 +1047,7 @@ export function ForgeDisease({
           clearable
           disabled={busy !== null}
         />
-      </div>
+      </FieldTile>
       <div className='grid min-w-0 grid-cols-2 gap-3 @md:grid-cols-4'>
         {DESIGN_NUMBERS.map((field) => (
           <DesignNumber
@@ -1060,8 +1060,7 @@ export function ForgeDisease({
         ))}
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel>Loose it at once on</FieldLabel>
+        <FieldTile label='Loose it at once on'>
           <RecordCombobox
             options={options.targets}
             value={looseOn}
@@ -1071,7 +1070,7 @@ export function ForgeDisease({
             clearable
             disabled={busy !== null}
           />
-        </div>
+        </FieldTile>
         <RangeField
           label='First outbreak'
           icon={Gauge}
@@ -1086,15 +1085,17 @@ export function ForgeDisease({
       </div>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
         <div className='flex min-w-0 items-center gap-2'>
-          <Switch
+          <FieldTile
             id={`forge-hold-${anchorId}`}
-            checked={hold}
-            disabled={busy !== null}
-            onCheckedChange={setHold}
-          />
-          <FieldLabel htmlFor={`forge-hold-${anchorId}`}>
-            Hold the design against the world
-          </FieldLabel>
+            label='Hold the design against the world'
+          >
+            <Switch
+              id={`forge-hold-${anchorId}`}
+              checked={hold}
+              disabled={busy !== null}
+              onCheckedChange={setHold}
+            />
+          </FieldTile>
         </div>
         <Button
           size='sm'

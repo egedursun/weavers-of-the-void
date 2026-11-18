@@ -25,7 +25,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { type KpiTone, Medallion, PagedList } from '@/components/domain'
+import {
+  type KpiTone,
+  Medallion,
+  PagedList,
+  FieldTile,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type Spec } from './labels'
 import { PIP_TONE, WORKING } from './tones'
@@ -333,8 +338,7 @@ export function IconPicker({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <FieldTile id={id} label={label}>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue />
@@ -351,7 +355,7 @@ export function IconPicker({
           })}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 

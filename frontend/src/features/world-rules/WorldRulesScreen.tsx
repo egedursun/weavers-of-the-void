@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -31,6 +30,7 @@ import {
   EmptyState,
   MiniStat,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
 import { HarshnessDial } from './HarshnessDial'
@@ -270,12 +270,13 @@ function RulesEditor({ rules }: RulesEditorProps) {
           </SelectContent>
         </Select>
         <div className='flex items-center gap-2'>
-          <Checkbox
-            id='rules-only-changed'
-            checked={onlyChanged}
-            onCheckedChange={(checked) => setOnlyChanged(checked === true)}
-          />
-          <FieldLabel htmlFor='rules-only-changed'>Only changed</FieldLabel>
+          <FieldTile id='rules-only-changed' label='Only changed'>
+            <Checkbox
+              id='rules-only-changed'
+              checked={onlyChanged}
+              onCheckedChange={(checked) => setOnlyChanged(checked === true)}
+            />
+          </FieldTile>
         </div>
       </div>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>

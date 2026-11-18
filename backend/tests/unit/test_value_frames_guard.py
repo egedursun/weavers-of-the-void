@@ -46,6 +46,23 @@ export function HistoryForm() {
 """
 
 
+NAMED_ANY_WAY = """
+import { Label } from '@/components/typography'
+import { Select, SelectTrigger } from '@/components/ui/select'
+
+export function MaterialSelect({ label }: { label: string }) {
+  return (
+    <div className='flex min-w-0 flex-col gap-1'>
+      <Label as='label' htmlFor='metal'>{label}</Label>
+      <Select>
+        <SelectTrigger id='metal' />
+      </Select>
+    </div>
+  )
+}
+"""
+
+
 def guard(tmp_path: Path, source: str) -> subprocess.CompletedProcess[str]:
     node = shutil.which("node")
     if node is None:
@@ -63,3 +80,9 @@ def test_an_inline_labelled_input_beside_a_framed_field_is_caught(tmp_path: Path
 def test_fields_framed_alike_pass(tmp_path: Path) -> None:
     run = guard(tmp_path, FRAMED_FIELDS)
     assert run.returncode == 0, run.stdout
+
+
+def test_a_labelled_control_outside_a_frame_is_caught_whatever_its_component_is_called(tmp_path: Path) -> None:
+    run = guard(tmp_path, NAMED_ANY_WAY)
+    assert run.returncode == 1
+    assert "holds a labelled control outside a frame" in run.stdout

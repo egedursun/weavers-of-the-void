@@ -10,7 +10,13 @@ import {
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { Section, ToolList, toolTitle, Paged } from '@/components/domain'
+import {
+  Section,
+  ToolList,
+  toolTitle,
+  Paged,
+  FieldTile,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { humanize } from '../actions/schema'
 import { useEntityAgentContext } from '../api/queries'
@@ -56,18 +62,19 @@ export function EntityAgentContext({
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className='flex min-w-0 flex-col gap-3'>
-                <Label variant='overline'>System prompt</Label>
-                <Textarea
-                  readOnly
-                  value={data.system_prompt}
-                  aria-label='System prompt'
-                />
-                <Label variant='overline'>Turn prompt</Label>
-                <Textarea
-                  readOnly
-                  value={data.user_prompt}
-                  aria-label='Turn prompt'
-                />
+                <FieldTile group label='System prompt'>
+                  <Textarea
+                    readOnly
+                    value={data.system_prompt}
+                    aria-label='System prompt'
+                  />
+                  <Label variant='overline'>Turn prompt</Label>
+                  <Textarea
+                    readOnly
+                    value={data.user_prompt}
+                    aria-label='Turn prompt'
+                  />
+                </FieldTile>
               </CollapsibleContent>
             </Collapsible>
             <div className='flex min-w-0 flex-col gap-2'>

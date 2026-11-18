@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Label, Muted, Text } from '@/components/typography'
+import { FieldTile } from '@/components/domain/FieldTile'
+import { Muted, Text } from '@/components/typography'
 import { AdjustBlock, ChoicePicker } from './LoreFields'
 import { type LearningCard } from './api'
 import { KindForge } from './forge/KindForge'
@@ -86,8 +87,7 @@ export function LearningShaping({
           <Muted variant='caption'>{`Level ${current.level} of a frontier at ${current.frontier}, ${current.progress}% toward the next, ${plural(current.practitioners, 'practitioner', 'practitioners')}.`}</Muted>
         )}
         <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Practitioners</Label>
+          <FieldTile label='Practitioners'>
             <Input
               type='number'
               min={0}
@@ -96,9 +96,8 @@ export function LearningShaping({
               placeholder={String(current?.practitioners ?? 0)}
               onChange={(event) => setPractitioners(event.target.value)}
             />
-          </div>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Progress (0–100)</Label>
+          </FieldTile>
+          <FieldTile label='Progress (0–100)'>
             <Input
               type='number'
               min={0}
@@ -108,7 +107,7 @@ export function LearningShaping({
               placeholder={String(current?.progress ?? 0)}
               onChange={(event) => setProgress(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <label className='flex min-w-0 items-center gap-2'>
             <Switch
               checked={secret}

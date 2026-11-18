@@ -12,9 +12,8 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Paged, Section } from '@/components/domain'
+import { EmptyState, Paged, Section, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ExpeditionNote } from '@/features/cosmos/ExpeditionCard'
 import { useExpeditionOfThread } from '@/features/cosmos/expeditionsApi'
@@ -52,14 +51,19 @@ function CloseThread({ thread }: { thread: ThreadRecord }) {
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col gap-2'>
-        <FieldLabel htmlFor={inputId}>How did it close? (optional)</FieldLabel>
-        <div className='flex min-w-0 flex-col gap-2 sm:flex-row'>
-          <Input
+        <div className='flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end'>
+          <FieldTile
             id={inputId}
-            value={how}
-            maxLength={HOW_MAX}
-            onChange={(event) => setHow(event.target.value)}
-          />
+            label='How did it close? (optional)'
+            className='flex-1'
+          >
+            <Input
+              id={inputId}
+              value={how}
+              maxLength={HOW_MAX}
+              onChange={(event) => setHow(event.target.value)}
+            />
+          </FieldTile>
           <ActionButton
             label='Close'
             blocked={reason()}

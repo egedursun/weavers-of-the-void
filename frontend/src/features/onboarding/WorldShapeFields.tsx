@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -24,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { RangeField } from '@/components/domain'
+import { FieldTile, RangeField } from '@/components/domain'
 import { Medallion } from '@/components/domain/KpiTile'
 import {
   type Choice,
@@ -88,11 +87,8 @@ function SeedField<T extends string>({
   const noteId = useId()
   const chosen = options.find((option) => option.value === value)
   const note = blocked ?? chosen?.description ?? null
-  return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id} className={cn(quiet && 'sr-only')}>
-        {label}
-      </FieldLabel>
+  const control = (
+    <>
       <Select
         value={value ?? SEED_DECIDES}
         onValueChange={(next) =>
@@ -134,7 +130,14 @@ function SeedField<T extends string>({
           {note}
         </Text>
       )}
-    </div>
+    </>
+  )
+  if (quiet)
+    return <div className='flex min-w-0 flex-col gap-1.5'>{control}</div>
+  return (
+    <FieldTile id={id} label={label}>
+      {control}
+    </FieldTile>
   )
 }
 

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { SearchProvider } from '@/context/SearchProvider'
 import { useFeedPreferences } from '@/features/feed/feedStore'
+import { useFeedOverlay } from '@/features/feed/useFeedDock'
 import { CommandPalette } from './CommandPalette'
 
 afterEach(() => useFeedPreferences.setState({ open: false }))
@@ -366,7 +367,8 @@ describe('command palette actions', () => {
     })
     await userEvent.keyboard('{Control>}k{/Control}')
     await screen.getByRole('option', { name: 'Open the live feed' }).click()
-    expect(useFeedPreferences.getState().open).toBe(true)
+    expect(useFeedOverlay.getState().open).toBe(true)
+    useFeedOverlay.setState({ open: false })
   })
 
   it('lists catalogue actions with their cost and runs one through its form', async () => {

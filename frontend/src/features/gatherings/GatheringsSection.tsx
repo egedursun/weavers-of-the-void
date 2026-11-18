@@ -21,6 +21,7 @@ import {
   LoadingBlock,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import {
@@ -494,15 +495,14 @@ function ConveneForm({
       action={
         <div className='flex min-w-0 flex-wrap items-center justify-end gap-3'>
           <div className='flex items-center gap-2'>
-            <Switch
-              id={`convene-now-${nodeId}`}
-              checked={now}
-              disabled={busy !== null}
-              onCheckedChange={setNow}
-            />
-            <Label as='label' htmlFor={`convene-now-${nodeId}`}>
-              Hold it at once
-            </Label>
+            <FieldTile id={`convene-now-${nodeId}`} label='Hold it at once'>
+              <Switch
+                id={`convene-now-${nodeId}`}
+                checked={now}
+                disabled={busy !== null}
+                onCheckedChange={setNow}
+              />
+            </FieldTile>
           </div>
           <Button
             size='sm'

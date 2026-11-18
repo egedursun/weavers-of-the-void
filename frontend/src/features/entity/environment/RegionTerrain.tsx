@@ -43,6 +43,7 @@ import {
   Section,
   StatBar,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -535,10 +536,11 @@ function SanctityControls({
             onPick={setKind}
           />
         </div>
-        <div className='min-w-48 flex-1'>
-          <Label as='label' htmlFor={`memory-title-${regionId}`}>
-            Called
-          </Label>
+        <FieldTile
+          id={`memory-title-${regionId}`}
+          label='Called'
+          className='min-w-48 flex-1'
+        >
           <Input
             id={`memory-title-${regionId}`}
             value={title}
@@ -547,7 +549,7 @@ function SanctityControls({
             disabled={blocked !== null}
             onChange={(event) => setTitle(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='w-28'>
           <NumberField
             label='Magnitude'

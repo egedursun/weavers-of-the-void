@@ -34,7 +34,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Medallion } from '@/components/domain'
+import { Medallion, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
   FONT_CHOICE,
@@ -228,56 +228,58 @@ export function ThemeSwitch() {
           <ThemeTiles />
         </div>
         <div className='flex min-w-0 flex-col gap-2'>
-          <Label variant='overline'>Font</Label>
-          <ToggleGroup
-            type='single'
-            size='sm'
-            variant='outline'
-            value={font}
-            onValueChange={(value) => isFont(value) && setFont(value)}
-            aria-label='Font'
-            className='w-full'
-          >
-            {fonts.map((option) => (
-              <ToggleGroupItem
-                key={option}
-                value={option}
-                title={FONT_CHOICE[option].label}
-                className={cn('flex-1', FONT_CLASS[option])}
-              >
-                {FONT_SHORT[option]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <FieldTile group label='Font'>
+            <ToggleGroup
+              type='single'
+              size='sm'
+              variant='outline'
+              value={font}
+              onValueChange={(value) => isFont(value) && setFont(value)}
+              aria-label='Font'
+              className='w-full'
+            >
+              {fonts.map((option) => (
+                <ToggleGroupItem
+                  key={option}
+                  value={option}
+                  title={FONT_CHOICE[option].label}
+                  className={cn('flex-1', FONT_CLASS[option])}
+                >
+                  {FONT_SHORT[option]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </FieldTile>
         </div>
         <div className='flex min-w-0 flex-col gap-2'>
-          <Label variant='overline'>Text size</Label>
-          <ToggleGroup
-            type='single'
-            size='sm'
-            variant='outline'
-            value={accessibility.textSize}
-            onValueChange={(value) =>
-              isTextSize(value) && accessibility.setTextSize(value)
-            }
-            aria-label='Text size'
-            className='w-full'
-          >
-            {TEXT_SIZE_CHOICES.map((option) => {
-              const Icon = option.icon
-              return (
-                <ToggleGroupItem
-                  key={option.value}
-                  value={option.value}
-                  title={option.hint}
-                  className='flex-1'
-                >
-                  <Icon aria-hidden='true' />
-                  {option.label}
-                </ToggleGroupItem>
-              )
-            })}
-          </ToggleGroup>
+          <FieldTile group label='Text size'>
+            <ToggleGroup
+              type='single'
+              size='sm'
+              variant='outline'
+              value={accessibility.textSize}
+              onValueChange={(value) =>
+                isTextSize(value) && accessibility.setTextSize(value)
+              }
+              aria-label='Text size'
+              className='w-full'
+            >
+              {TEXT_SIZE_CHOICES.map((option) => {
+                const Icon = option.icon
+                return (
+                  <ToggleGroupItem
+                    key={option.value}
+                    value={option.value}
+                    title={option.hint}
+                    className='flex-1'
+                  >
+                    <Icon aria-hidden='true' />
+                    {option.label}
+                  </ToggleGroupItem>
+                )
+              })}
+            </ToggleGroup>
+          </FieldTile>
         </div>
         <div className='flex min-w-0 flex-col gap-2'>
           <QuickSwitch

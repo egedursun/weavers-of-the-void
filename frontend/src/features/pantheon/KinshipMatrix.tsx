@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { EmptyState, EntityLink, Section } from '@/components/domain'
+import { EmptyState, EntityLink, Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ActionButton } from './ActionButton'
 import {
@@ -95,16 +95,17 @@ function Cell({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='flex flex-col gap-2'>
-        <Label>{title}</Label>
-        <div className='flex min-w-0 items-center gap-2'>
-          <Input
-            aria-label='New relation'
-            type='number'
-            min={-RELATION_SCALE}
-            max={RELATION_SCALE}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
+        <div className='flex min-w-0 items-end gap-2'>
+          <FieldTile label={title} className='flex-1'>
+            <Input
+              aria-label='New relation'
+              type='number'
+              min={-RELATION_SCALE}
+              max={RELATION_SCALE}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+          </FieldTile>
           <ActionButton
             label='Set'
             blocked={reason() ?? (draft === '' ? 'Enter a value.' : null)}

@@ -34,6 +34,7 @@ import {
   Medallion,
   Paged,
   PagedList,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import { type LoreValue } from './api'
@@ -706,19 +707,21 @@ export function LoreFields({
         <div className='grid min-w-0 grid-cols-1 gap-3 @xs/lore:grid-cols-2 @2xl/lore:grid-cols-3'>
           {values.map((spec) => (
             <div key={spec.key} className='flex min-w-0 flex-col gap-1'>
-              <Label as='label' htmlFor={`${id}-${spec.key}`} truncate>
-                {`${fieldLabel(spec.key)}${rangeOf(spec)}`}
-              </Label>
-              <Input
+              <FieldTile
                 id={`${id}-${spec.key}`}
-                type={spec.kind === 'number' ? 'number' : 'text'}
-                inputMode={spec.kind === 'number' ? 'numeric' : undefined}
-                min={spec.kind === 'number' ? spec.min : undefined}
-                max={spec.kind === 'number' ? spec.max : undefined}
-                value={String(draft[spec.key])}
-                aria-label={fieldLabel(spec.key)}
-                onChange={(event) => put(spec.key, event.target.value)}
-              />
+                label={`${fieldLabel(spec.key)}${rangeOf(spec)}`}
+              >
+                <Input
+                  id={`${id}-${spec.key}`}
+                  type={spec.kind === 'number' ? 'number' : 'text'}
+                  inputMode={spec.kind === 'number' ? 'numeric' : undefined}
+                  min={spec.kind === 'number' ? spec.min : undefined}
+                  max={spec.kind === 'number' ? spec.max : undefined}
+                  value={String(draft[spec.key])}
+                  aria-label={fieldLabel(spec.key)}
+                  onChange={(event) => put(spec.key, event.target.value)}
+                />
+              </FieldTile>
             </div>
           ))}
         </div>
@@ -822,19 +825,12 @@ export function RowEditor({
         if (reason === null) onSave(next)
       }}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <Label
-          as='label'
-          htmlFor={id}
-          className='flex min-w-0 items-center gap-1.5'
-        >
-          {Icon && (
-            <Icon aria-hidden='true' className='size-icon-xs shrink-0' />
-          )}
-          <span className='min-w-0'>
-            {max === undefined ? label : `${label} (${min}–${max})`}
-          </span>
-        </Label>
+      <FieldTile
+        id={id}
+        icon={Icon}
+        label={max === undefined ? label : `${label} (${min}–${max})`}
+        className='flex-1'
+      >
         <Input
           id={id}
           type='number'
@@ -845,7 +841,7 @@ export function RowEditor({
           aria-label={label}
           onChange={(event) => setDraft(event.target.value)}
         />
-      </div>
+      </FieldTile>
       {children}
       <Button
         type='submit'
@@ -975,14 +971,13 @@ export function DictField({
               onPick={setFresh}
             />
           ) : (
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label>{`Add to ${spec.label.toLowerCase()}`}</Label>
+            <FieldTile label={`Add to ${spec.label.toLowerCase()}`}>
               <Input
                 value={typed}
                 aria-label='New entry'
                 onChange={(event) => setTyped(event.target.value)}
               />
-            </div>
+            </FieldTile>
           )}
         </div>
         <Button

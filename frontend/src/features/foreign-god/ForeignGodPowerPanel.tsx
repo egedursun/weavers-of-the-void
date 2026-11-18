@@ -11,9 +11,8 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { FormRow, Section } from '@/components/domain'
+import { FormRow, Section, FieldTile } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { NamePicker } from '@/features/pantheon/NamePicker'
@@ -143,24 +142,28 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
       </div>
       <Separator />
       <div className='flex min-w-0 flex-col gap-3'>
-        <FieldLabel htmlFor={`fg-reason-${godId}`}>
-          Why? Written in the chronicle
-        </FieldLabel>
-        <Input
+        <FieldTile
           id={`fg-reason-${godId}`}
-          value={why}
-          maxLength={REASON_MAX}
-          onChange={(event) => setWhy(event.target.value)}
-        />
-        <div className='flex min-w-0 items-center gap-2'>
-          <Checkbox
-            id={`fg-devour-${godId}`}
-            checked={devour}
-            onCheckedChange={(value) => setDevour(value === true)}
+          label='Why? Written in the chronicle'
+        >
+          <Input
+            id={`fg-reason-${godId}`}
+            value={why}
+            maxLength={REASON_MAX}
+            onChange={(event) => setWhy(event.target.value)}
           />
-          <FieldLabel htmlFor={`fg-devour-${godId}`}>
-            Devour: the power passes to you
-          </FieldLabel>
+        </FieldTile>
+        <div className='flex min-w-0 items-center gap-2'>
+          <FieldTile
+            id={`fg-devour-${godId}`}
+            label='Devour: the power passes to you'
+          >
+            <Checkbox
+              id={`fg-devour-${godId}`}
+              checked={devour}
+              onCheckedChange={(value) => setDevour(value === true)}
+            />
+          </FieldTile>
         </div>
         <div>
           <ActionButton

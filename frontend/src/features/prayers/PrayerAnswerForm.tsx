@@ -4,7 +4,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
+import { FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
@@ -48,28 +48,28 @@ export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
   return (
     <div className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
-        <div className='flex min-w-0 flex-col gap-1 sm:col-span-2'>
-          <FieldLabel htmlFor={textId}>
-            {mortal ? 'What should fall into their dream?' : 'Your answer'}
-          </FieldLabel>
+        <FieldTile
+          id={textId}
+          label={mortal ? 'What should fall into their dream?' : 'Your answer'}
+          className='sm:col-span-2'
+        >
           <Input
             id={textId}
             value={text}
             onChange={(event) => setText(event.target.value)}
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <FieldLabel
-            htmlFor={essenceId}
-          >{`Give essence (at most ${max})`}</FieldLabel>
-          <Input
-            id={essenceId}
-            type='number'
-            min={0}
-            max={max}
-            value={essence}
-            onChange={(event) => setEssence(event.target.value)}
-          />
+        </FieldTile>
+        <div className='flex min-w-0 flex-col gap-2'>
+          <FieldTile id={essenceId} label={`Give essence (at most ${max})`}>
+            <Input
+              id={essenceId}
+              type='number'
+              min={0}
+              max={max}
+              value={essence}
+              onChange={(event) => setEssence(event.target.value)}
+            />
+          </FieldTile>
           {max > 0 && (
             <div className='flex min-w-0 flex-wrap gap-1.5'>
               {QUICK_SHARES.map((share) => {

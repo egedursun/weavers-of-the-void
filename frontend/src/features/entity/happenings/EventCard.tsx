@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   EmptyState,
   EntityLink,
@@ -32,6 +31,7 @@ import {
   useShowMore,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -575,8 +575,11 @@ function CasualtyControls({
           />
         </div>
         <div className='flex min-w-0 items-end gap-2'>
-          <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-            <FieldLabel htmlFor={`toll-${view.entity_id}`}>Dead</FieldLabel>
+          <FieldTile
+            id={`toll-${view.entity_id}`}
+            label='Dead'
+            className='flex-1'
+          >
             <Input
               id={`toll-${view.entity_id}`}
               type='number'
@@ -585,7 +588,7 @@ function CasualtyControls({
               disabled={busy !== null}
               onChange={(event) => setCount(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <Button
             size='sm'
             variant='outline'

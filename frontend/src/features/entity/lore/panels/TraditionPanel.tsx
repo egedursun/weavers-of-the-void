@@ -20,8 +20,8 @@ import { commodityKindValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { KpiTile, Paged } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { KpiTile, Paged, FieldTile } from '@/components/domain'
+import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CustomKindChoice, HeldBadge, OptionalChoice } from '../CultureParts'
 import {
@@ -188,8 +188,7 @@ function EffectEditor({
             onPick={setTarget}
           />
         )}
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Strength</Label>
+        <FieldTile label='Strength'>
           <Input
             type='number'
             min={-PERCENT}
@@ -198,7 +197,7 @@ function EffectEditor({
             aria-label='Strength of the effect'
             onChange={(event) => setMagnitude(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='flex min-w-0 items-end gap-2'>
           <Button
             size='sm'

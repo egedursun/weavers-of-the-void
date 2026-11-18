@@ -4,9 +4,14 @@ import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, EntityLink, Paged, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Paged,
+  Section,
+  FieldTile,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { Chip, RecordRow } from '@/features/cosmography/parts'
 import { type Named, named } from '@/features/entity/environment/labels'
@@ -49,15 +54,14 @@ function TextInput({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <FieldTile id={id} label={label}>
       <Input
         id={id}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
 }
 

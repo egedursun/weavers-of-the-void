@@ -32,6 +32,7 @@ import {
   Paged,
   Section,
   StatBar,
+  FieldTile,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
@@ -433,8 +434,7 @@ function GiveForm({
         </Muted>
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/afflictions:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Affliction</Label>
+        <FieldTile label='Affliction'>
           <Select
             value={chosen?.kind ?? ''}
             onValueChange={setKind}
@@ -451,9 +451,8 @@ function GiveForm({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Passed through</Label>
+        </FieldTile>
+        <FieldTile label='Passed through'>
           <Select
             value={route}
             onValueChange={setTransmission}
@@ -470,7 +469,7 @@ function GiveForm({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FieldTile>
       </div>
       {chosen && <PackagePreview spec={chosen} />}
       <div className='flex justify-end'>

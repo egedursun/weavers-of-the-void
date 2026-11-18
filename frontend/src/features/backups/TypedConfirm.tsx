@@ -1,7 +1,6 @@
 import { type ReactNode, useId, useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, FieldTile } from '@/components/domain'
 
 type TypedConfirmProps = {
   open: boolean
@@ -42,8 +41,7 @@ export function TypedConfirm({
       isLoading={loading}
       handleConfirm={() => onConfirm(typed.trim())}
     >
-      <div className='flex min-w-0 flex-col gap-2'>
-        <FieldLabel htmlFor={id}>{`Type ${word} to confirm`}</FieldLabel>
+      <FieldTile id={id} label={`Type ${word} to confirm`}>
         <Input
           id={id}
           autoComplete='off'
@@ -51,7 +49,7 @@ export function TypedConfirm({
           aria-invalid={typed !== '' && !matches}
           onChange={(event) => setTyped(event.target.value)}
         />
-      </div>
+      </FieldTile>
     </ConfirmDialog>
   )
 }

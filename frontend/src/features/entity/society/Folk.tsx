@@ -33,8 +33,13 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
-import { EntityLink, Medallion, MiniStat, Paged } from '@/components/domain'
+import {
+  EntityLink,
+  Medallion,
+  MiniStat,
+  Paged,
+  FieldTile,
+} from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
@@ -1065,17 +1070,15 @@ export function FoundPeoplePanel({
       </div>
       <CollapsibleContent className='@container flex min-w-0 flex-col gap-4 border-t border-dashed p-3'>
         <div className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2'>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <FieldLabel htmlFor='found-people-name'>Name</FieldLabel>
+          <FieldTile id='found-people-name' label='Name'>
             <Input
               id='found-people-name'
               value={name}
               placeholder='The name they call themselves'
               onChange={(event) => setName(event.target.value)}
             />
-          </div>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <FieldLabel htmlFor='found-people-count'>How many</FieldLabel>
+          </FieldTile>
+          <FieldTile id='found-people-count' label='How many'>
             <Input
               id='found-people-count'
               type='number'
@@ -1085,9 +1088,8 @@ export function FoundPeoplePanel({
               value={population}
               onChange={(event) => setPopulation(event.target.value)}
             />
-          </div>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <Label>Land they rise in</Label>
+          </FieldTile>
+          <FieldTile label='Land they rise in'>
             <RecordCombobox
               aria-label='Land they rise in'
               options={regions}
@@ -1095,9 +1097,8 @@ export function FoundPeoplePanel({
               placeholder='Choose a land'
               onChange={(next) => setRegion(next)}
             />
-          </div>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <Label>Kind they spring from</Label>
+          </FieldTile>
+          <FieldTile label='Kind they spring from'>
             <RecordCombobox
               aria-label='Kind they spring from'
               options={[
@@ -1108,7 +1109,7 @@ export function FoundPeoplePanel({
               placeholder='A folk of their own'
               onChange={(next) => setSpecies(next === NONE ? null : next)}
             />
-          </div>
+          </FieldTile>
         </div>
         <div className='grid min-w-0 grid-cols-1 gap-3 @md:grid-cols-2 @4xl:grid-cols-4'>
           {choices.map((item) => (

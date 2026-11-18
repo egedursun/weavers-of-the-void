@@ -10,9 +10,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  PagedList,
+  Section,
+  FieldTile,
+} from '@/components/domain'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
-import { Label } from '@/components/typography'
 import { capitalized } from '@/features/graph/families'
 import {
   type SkyWorshipView,
@@ -184,8 +189,7 @@ export function SkyWorship({ nodeId }: { nodeId: number }) {
               onChange={setChosen}
             />
           ) : (
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label>People</Label>
+            <FieldTile label='People'>
               <Select
                 value={chosen !== null ? String(chosen) : ''}
                 onValueChange={(next) => setChosen(Number(next))}
@@ -202,7 +206,7 @@ export function SkyWorship({ nodeId }: { nodeId: number }) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FieldTile>
           )}
         </ForgeCard>
       </div>

@@ -31,6 +31,7 @@ from aerona.services.epoch_wiring import BackgroundPool
 from aerona.services.rules import RulesService
 from tests.agents.fakes import FakeModel
 from tests.agents.world import AgentWorld
+from tests.polling import until
 
 
 class Spawns:
@@ -252,10 +253,7 @@ async def test_the_background_pool_leaves_slots_for_manual_jobs(database: Databa
     assert pool.spare() == 0
     assert not pool.spawn("entity:0:depth", wait)
     gate.set()
-    for _ in range(200):
-        if pool.spare() == pool.capacity:
-            break
-        await asyncio.sleep(0.01)
+    await until(lambda: pool.spare() == pool.capacity)
     assert pool.spare() == pool.capacity
     await jobs.shutdown()
 
@@ -276,9 +274,6 @@ async def test_the_background_pool_refuses_content_jobs_during_genesis(database:
     await jobs.submit(JobKind.GENESIS, genesis, exclusive_group="world")
     assert not pool.spawn("entity:1:depth", work)
     genesis_gate.set()
-    for _ in range(200):
-        if not jobs.kind_running(JobKind.GENESIS):
-            break
-        await asyncio.sleep(0.01)
+    await until(lambda: not jobs.kind_running(JobKind.GENESIS))
     assert pool.spawn("entity:1:depth", work)
     await jobs.shutdown()

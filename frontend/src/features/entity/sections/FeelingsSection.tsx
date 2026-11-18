@@ -14,10 +14,11 @@ import {
   Paged,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -704,16 +705,17 @@ function FeelingControls({ view }: { view: Feelings }) {
           </Button>
         </div>
         <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
-          <Label>Make them mourn</Label>
-          <RecordCombobox
-            options={people}
-            value={lost}
-            onChange={(next) => setLost(next)}
-            placeholder='Choose who they lost'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            aria-label='Who they mourn'
-          />
+          <FieldTile group label='Make them mourn'>
+            <RecordCombobox
+              options={people}
+              value={lost}
+              onChange={(next) => setLost(next)}
+              placeholder='Choose who they lost'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              aria-label='Who they mourn'
+            />
+          </FieldTile>
           <Button
             size='sm'
             disabled={busy !== null || lost === null}

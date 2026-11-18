@@ -13,7 +13,6 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, FieldTile } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { Label } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { MATERIAL_FAMILY, type MaterialKind, type Named } from './labels'
 import { NONE, iconTone, useMaterialChoices } from './model'
@@ -117,10 +116,7 @@ export function ChoiceSelect({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue placeholder={placeholder} />
@@ -134,7 +130,7 @@ export function ChoiceSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 
@@ -211,10 +207,7 @@ export function EntityChoice({
       hint: row.type.replaceAll('_', ' '),
     }))
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id} truncate>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -227,7 +220,7 @@ export function EntityChoice({
         disabledReason={blocked ?? undefined}
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }
 

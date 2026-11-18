@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Section, Timeline, Paged } from '@/components/domain'
+import { Section, Timeline, Paged, FieldTile } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -307,8 +307,7 @@ export function EntityMechanics({
           columns={2}
         />
         <div className='grid min-w-0 grid-cols-1 gap-3 @lg/mech:grid-cols-3'>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Field</Label>
+          <FieldTile label='Field'>
             <Select value={field} onValueChange={setField}>
               <SelectTrigger aria-label='Field'>
                 <SelectValue placeholder='Field' />
@@ -321,22 +320,19 @@ export function EntityMechanics({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label as='label' htmlFor={`modifier-magnitude-${nodeId}`}>
-              {op === 'multiply' ? 'Factor' : 'Amount'}
-            </Label>
+          </FieldTile>
+          <FieldTile
+            id={`modifier-magnitude-${nodeId}`}
+            label={op === 'multiply' ? 'Factor' : 'Amount'}
+          >
             <Input
               id={`modifier-magnitude-${nodeId}`}
               inputMode='decimal'
               value={magnitude}
               onChange={(event) => setMagnitude(event.target.value)}
             />
-          </div>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label as='label' htmlFor={`modifier-epochs-${nodeId}`}>
-              Epochs
-            </Label>
+          </FieldTile>
+          <FieldTile id={`modifier-epochs-${nodeId}`} label='Epochs'>
             <Input
               id={`modifier-epochs-${nodeId}`}
               inputMode='numeric'
@@ -344,7 +340,7 @@ export function EntityMechanics({
               value={epochs}
               onChange={(event) => setEpochs(event.target.value)}
             />
-          </div>
+          </FieldTile>
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
@@ -372,8 +368,7 @@ export function EntityMechanics({
           </Button>
         </div>
         <div className='flex min-w-0 flex-wrap items-end gap-2'>
-          <div className='flex min-w-0 flex-1 flex-col gap-1'>
-            <Label>Mechanic</Label>
+          <FieldTile label='Mechanic' className='flex-1'>
             <Select value={mechanic} onValueChange={setMechanic}>
               <SelectTrigger aria-label='Mechanic'>
                 <SelectValue placeholder='Pick a mechanic' />
@@ -386,7 +381,7 @@ export function EntityMechanics({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FieldTile>
           <Button
             variant='outline'
             disabled={needs(!mechanic ? PICK_MECHANIC : null) !== undefined}

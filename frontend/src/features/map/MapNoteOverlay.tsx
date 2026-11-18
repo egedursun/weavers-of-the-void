@@ -4,8 +4,8 @@ import { MapPin, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ConfirmDialog } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { ConfirmDialog, FieldTile } from '@/components/domain'
+import { Muted, Text } from '@/components/typography'
 import { type MapNote } from './api'
 import { NOTE_COLORS, NOTE_TOKEN, type NoteColor, noteColor } from './mapScene'
 
@@ -119,10 +119,7 @@ export function MapNoteOverlay({
       </div>
       {popup.kind === 'new' ? (
         <>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <Label as='label' htmlFor={fieldId}>
-              What will happen here?
-            </Label>
+          <FieldTile id={fieldId} label='What will happen here?'>
             <Textarea
               id={fieldId}
               autoFocus
@@ -133,7 +130,7 @@ export function MapNoteOverlay({
               onKeyDown={onKeyDown}
             />
             <Muted variant='caption'>{`${text.length} / ${NOTE_MAX_LENGTH}`}</Muted>
-          </div>
+          </FieldTile>
           <ToggleGroup
             type='single'
             size='sm'

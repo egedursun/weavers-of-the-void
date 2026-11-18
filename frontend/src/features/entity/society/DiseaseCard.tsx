@@ -31,7 +31,6 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
@@ -53,6 +52,7 @@ import {
   type TimelineTone,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -641,18 +641,17 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
         tone='info'
         hint='Close roads and ports; 0 epochs lifts it'
       >
-        <RecordCombobox
-          options={options.lands}
-          value={land}
-          onChange={(value) => setLand(value)}
-          placeholder='Choose a land'
-          aria-label='Land to seal'
-          disabled={busy !== null}
-        />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`seal-${view.entity_id}`}>
-            For how many epochs
-          </FieldLabel>
+        <FieldTile label='Land to seal'>
+          <RecordCombobox
+            options={options.lands}
+            value={land}
+            onChange={(value) => setLand(value)}
+            placeholder='Choose a land'
+            aria-label='Land to seal'
+            disabled={busy !== null}
+          />
+        </FieldTile>
+        <FieldTile id={`seal-${view.entity_id}`} label='For how many epochs'>
           <Input
             id={`seal-${view.entity_id}`}
             type='number'
@@ -661,7 +660,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             disabled={busy !== null}
             onChange={(event) => setEpochs(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <Button
           size='sm'
           variant='outline'

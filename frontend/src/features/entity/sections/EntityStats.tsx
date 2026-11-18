@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { KeyValueList, Section, StatBar } from '@/components/domain'
+import { KeyValueList, Section, StatBar, FieldTile } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { type EntityContext, isThinking } from '../actions/context'
 import { humanize } from '../actions/schema'
@@ -79,10 +79,13 @@ function StatEditor({
         if (parsed !== null) mutation.mutate(parsed)
       }}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <Label as='label' htmlFor={`stat-${stat}`} truncate>
-          {percent ? `${humanize(stat)} (0–${PERCENT_MAX})` : humanize(stat)}
-        </Label>
+      <FieldTile
+        id={`stat-${stat}`}
+        label={
+          percent ? `${humanize(stat)} (0–${PERCENT_MAX})` : humanize(stat)
+        }
+        className='flex-1'
+      >
         <Input
           id={`stat-${stat}`}
           type='number'
@@ -92,7 +95,7 @@ function StatEditor({
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <Button
         type='submit'
         variant='outline'

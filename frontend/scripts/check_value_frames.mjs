@@ -203,6 +203,47 @@ for (const [file, source] of parsed) {
   visit(source)
 }
 
+const GROUP_CONTROLS = new Set([...FIELD_CONTROLS, 'Checkbox', 'RadioGroup', 'ToggleGroup'])
+const HIDDEN_LABEL = /(^|\s)sr-only(\s|$)/
+
+function tagOfNode(node) {
+  return (ts.isJsxElement(node) ? node.openingElement : node).tagName.getText()
+}
+
+function framedElement(node) {
+  return tagOfNode(node) === 'FieldTile' || TILE_SURFACE.test(classText(node))
+}
+
+function holdsBareControl(node, depth) {
+  if (framedElement(node)) return false
+  if (GROUP_CONTROLS.has(tagOfNode(node))) return true
+  if (depth <= 0 || !ts.isJsxElement(node)) return false
+  return rendered([...node.children]).some((child) => holdsBareControl(child, depth - 1))
+}
+
+function namesControl(label) {
+  const element = ts.isJsxElement(label) ? label.openingElement : label
+  return element.attributes.properties.some((attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === 'htmlFor')
+}
+
+for (const [file, source] of parsed) {
+  if (file.includes(`${path.sep}components${path.sep}ui${path.sep}`) || file.endsWith('FieldTile.tsx')) continue
+  if (!file.startsWith(SRC) && !file.startsWith(SOURCE)) continue
+  const visit = (node) => {
+    if (ts.isJsxElement(node) && !framedElement(node) && tagOfNode(node) !== 'li') {
+      const kids = node.children.filter((child) => ts.isJsxElement(child) || ts.isJsxSelfClosingElement(child))
+      const label = kids.find((child) => LABELS.has(tagOfNode(child)) && !HIDDEN_LABEL.test(classText(child)))
+      const reach = label && namesControl(label) ? 3 : 1
+      if (label && kids.some((child) => child !== label && holdsBareControl(child, reach))) {
+        const { line } = source.getLineAndCharacterOfPosition(node.getStart())
+        problems.push(`${path.relative(ROOT, file)}:${line + 1} holds a labelled control outside a frame; put the label and its control in a FieldTile`)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+}
+
 for (const problem of problems) console.log(problem)
 console.log(`value frames: ${problems.length}`)
 process.exit(problems.length > 0 ? 1 : 0)

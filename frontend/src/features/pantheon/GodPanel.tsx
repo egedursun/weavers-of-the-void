@@ -31,14 +31,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { KpiTile, MiniStat, Portrait } from '@/components/domain'
+import { KpiTile, MiniStat, Portrait, FieldTile } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { RedrawLikenessButton } from '@/features/creator/CreatorHero'
@@ -93,12 +92,13 @@ function PromptBox({ prompt }: { prompt: string | null }) {
   })
   return (
     <div className='flex min-w-0 flex-col gap-2'>
-      <FieldLabel htmlFor='creator-prompt'>Portrait prompt</FieldLabel>
-      <Textarea
-        id='creator-prompt'
-        value={draft}
-        onChange={(event) => setDraft(event.target.value)}
-      />
+      <FieldTile id='creator-prompt' label='Portrait prompt'>
+        <Textarea
+          id='creator-prompt'
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+      </FieldTile>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <ActionButton
           label='Save prompt'

@@ -10,6 +10,7 @@ from aerona.events.bus import EventBus
 from aerona.jobs.context import JobContext
 from aerona.jobs.manager import JobManager
 from tests.conftest import OpenDatabase
+from tests.polling import until
 
 
 async def build_manager(tmp_path: Path, open_database: OpenDatabase) -> tuple[JobManager, Database]:
@@ -18,11 +19,11 @@ async def build_manager(tmp_path: Path, open_database: OpenDatabase) -> tuple[Jo
 
 
 async def wait_for_status(manager: JobManager, job_id: str, status: JobStatus) -> None:
-    for _ in range(200):
-        if (await manager.get(job_id)).status == status.value:
-            return
-        await asyncio.sleep(0.01)
-    raise AssertionError(f"job never reached {status}")
+    async def reached() -> bool:
+        return bool((await manager.get(job_id)).status == status.value)
+
+    if not await until(reached):
+        raise AssertionError(f"job never reached {status}")
 
 
 async def test_job_runs_and_records_result(tmp_path: Path, open_database: OpenDatabase) -> None:

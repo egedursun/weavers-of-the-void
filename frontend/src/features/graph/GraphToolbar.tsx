@@ -28,7 +28,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Label, Muted } from '@/components/typography'
+import { FieldTile } from '@/components/domain/FieldTile'
+import { Muted } from '@/components/typography'
 import { MapSearch } from '@/features/map/MapSearch'
 import { type LinkGroup, type LinkGroupInfo } from './api'
 import { type GraphMode, RADII } from './graphModel'
@@ -171,75 +172,73 @@ export function GraphToolbar(props: GraphToolbarProps) {
         </Toggle>
       )}
       <div className='flex min-w-0 items-center gap-1.5'>
-        <Label as='span' variant='overline'>
-          Depth
-        </Label>
-        <ToggleGroup
-          type='single'
-          size='sm'
-          variant='outline'
-          value={props.whole ? WHOLE : String(props.radius)}
-          aria-label='How many steps around the focus'
-          onValueChange={(value) => {
-            if (!value) return
-            if (value === WHOLE) {
-              props.onWhole(true)
-              return
-            }
-            props.onRadius(Number(value))
-            if (props.whole) props.onWhole(false)
-          }}
-        >
-          {RADII.map((radius) => (
-            <Tooltip key={radius}>
+        <FieldTile group label='Depth'>
+          <ToggleGroup
+            type='single'
+            size='sm'
+            variant='outline'
+            value={props.whole ? WHOLE : String(props.radius)}
+            aria-label='How many steps around the focus'
+            onValueChange={(value) => {
+              if (!value) return
+              if (value === WHOLE) {
+                props.onWhole(true)
+                return
+              }
+              props.onRadius(Number(value))
+              if (props.whole) props.onWhole(false)
+            }}
+          >
+            {RADII.map((radius) => (
+              <Tooltip key={radius}>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value={String(radius)}
+                    aria-label={`${radius} ${radius === 1 ? 'step' : 'steps'} around the focus`}
+                  >
+                    {radius}
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{`Records up to ${radius} ${radius === 1 ? 'bond' : 'bonds'} away from the focus`}</TooltipContent>
+              </Tooltip>
+            ))}
+            <Tooltip>
               <TooltipTrigger asChild>
-                <ToggleGroupItem
-                  value={String(radius)}
-                  aria-label={`${radius} ${radius === 1 ? 'step' : 'steps'} around the focus`}
-                >
-                  {radius}
+                <ToggleGroupItem value={WHOLE} aria-label='The whole network'>
+                  <Waypoints />
+                  All
                 </ToggleGroupItem>
               </TooltipTrigger>
-              <TooltipContent>{`Records up to ${radius} ${radius === 1 ? 'bond' : 'bonds'} away from the focus`}</TooltipContent>
+              <TooltipContent>
+                Every record and bond, with no limit
+              </TooltipContent>
             </Tooltip>
-          ))}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ToggleGroupItem value={WHOLE} aria-label='The whole network'>
-                <Waypoints />
-                All
-              </ToggleGroupItem>
-            </TooltipTrigger>
-            <TooltipContent>
-              Every record and bond, with no limit
-            </TooltipContent>
-          </Tooltip>
-        </ToggleGroup>
+          </ToggleGroup>
+        </FieldTile>
       </div>
       {!props.whole && (
-        <div className='flex min-w-0 items-center gap-1.5'>
-          <Label as='label' variant='overline' htmlFor={limitId}>
-            Up to
-          </Label>
-          <Input
-            id={limitId}
-            type='number'
-            inputMode='numeric'
-            min={1}
-            max={props.total}
-            step={1}
-            value={draft}
-            aria-label='Most records shown around the focus'
-            className='w-24'
-            onChange={(event) => setDraft(event.target.value)}
-            onBlur={commit}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') commit()
-            }}
-          />
-          <Muted as='span' variant='caption'>
-            records
-          </Muted>
+        <div className='flex min-w-0 flex-col gap-2'>
+          <FieldTile id={limitId} label='Up to' className='items-center'>
+            <Input
+              id={limitId}
+              type='number'
+              inputMode='numeric'
+              min={1}
+              max={props.total}
+              step={1}
+              value={draft}
+              aria-label='Most records shown around the focus'
+              className='w-24'
+              onChange={(event) => setDraft(event.target.value)}
+              onBlur={commit}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') commit()
+              }}
+            />
+            <Muted as='span' variant='caption'>
+              records
+            </Muted>
+          </FieldTile>
           {props.capOverridden && (
             <Tooltip>
               <TooltipTrigger asChild>

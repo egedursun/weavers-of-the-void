@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Chip, Facts, ForgeCard } from '@/features/cosmography/parts'
@@ -441,24 +441,25 @@ function RoleCard({
         ]}
       />
       <div className='flex min-w-0 flex-col gap-2'>
-        <Label variant='overline'>Open only to these classes</Label>
-        <ToggleGroup
-          type='multiple'
-          variant='outline'
-          size='sm'
-          value={classes}
-          onValueChange={setClasses}
-          disabled={action.busy !== null}
-          className='flex min-w-0 flex-wrap justify-start'
-          aria-label='Classes the role is open to'
-        >
-          {Object.entries(CLASS_SPEC).map(([key, spec]) => (
-            <ToggleGroupItem key={key} value={key} aria-label={spec.label}>
-              <spec.icon />
-              {spec.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <FieldTile group label='Open only to these classes'>
+          <ToggleGroup
+            type='multiple'
+            variant='outline'
+            size='sm'
+            value={classes}
+            onValueChange={setClasses}
+            disabled={action.busy !== null}
+            className='flex min-w-0 flex-wrap justify-start'
+            aria-label='Classes the role is open to'
+          >
+            {Object.entries(CLASS_SPEC).map(([key, spec]) => (
+              <ToggleGroupItem key={key} value={key} aria-label={spec.label}>
+                <spec.icon />
+                {spec.label}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </FieldTile>
         <Button
           size='sm'
           variant='outline'

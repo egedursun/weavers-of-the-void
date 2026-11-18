@@ -27,7 +27,6 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import {
   Tooltip,
@@ -46,6 +45,7 @@ import {
   Section,
   StatBar,
   ValueRadar,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -487,10 +487,7 @@ function MoveCohort({
           blocked={busy}
           onPick={setTarget}
         />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`move-count-${view.entity_id}`}>
-            How many
-          </FieldLabel>
+        <FieldTile id={`move-count-${view.entity_id}`} label='How many'>
           <Input
             id={`move-count-${view.entity_id}`}
             type='number'
@@ -499,7 +496,7 @@ function MoveCohort({
             disabled={busy !== null}
             onChange={(event) => setCount(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <IconPicker
           label='Of age'
           value={band}

@@ -18,8 +18,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Paged, PagedList } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Paged, PagedList, FieldTile } from '@/components/domain'
+import { Muted, Text } from '@/components/typography'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
 import { type LoreCard as LoreCardData } from '../api'
 import { KindForge } from '../forge/KindForge'
@@ -148,8 +148,7 @@ function Requirements({
           placeholder='Any season'
           onPick={(value) => put('slot', value)}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Spellcraft needed</Label>
+        <FieldTile label='Spellcraft needed'>
           <Input
             type='number'
             min={0}
@@ -165,9 +164,8 @@ function Requirements({
               )
             }
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Hands needed</Label>
+        </FieldTile>
+        <FieldTile label='Hands needed'>
           <Input
             type='number'
             min={0}
@@ -182,7 +180,7 @@ function Requirements({
               )
             }
           />
-        </div>
+        </FieldTile>
         <label className='flex min-w-0 items-center gap-2'>
           <Switch
             checked={Boolean(needs.ley)}

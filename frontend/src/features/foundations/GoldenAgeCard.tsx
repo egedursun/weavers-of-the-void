@@ -17,9 +17,14 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, KpiTile, Section, LoadingBlock } from '@/components/domain'
+import {
+  EmptyState,
+  KpiTile,
+  Section,
+  LoadingBlock,
+  FieldTile,
+} from '@/components/domain'
 import { Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -91,10 +96,7 @@ function GoldenAgeControls({
         </Button>
       </div>
       <div className='grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-3'>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`golden-since-${worldId}`}>
-            Began in age
-          </FieldLabel>
+        <FieldTile id={`golden-since-${worldId}`} label='Began in age'>
           <Input
             id={`golden-since-${worldId}`}
             type='number'
@@ -104,7 +106,7 @@ function GoldenAgeControls({
             disabled={!age.active}
             onChange={(event) => setSince(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
           <Switch
             checked={hold}

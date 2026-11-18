@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select'
 import { Medallion, FieldTile } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '../actions/schema'
 import { named } from '../environment/labels'
@@ -293,8 +293,7 @@ export function ModifierForge({
         </div>
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @lg/forge:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Source</Label>
+        <FieldTile label='Source'>
           <Select
             value={source}
             onValueChange={(value) => setSource(value as Source)}
@@ -316,9 +315,8 @@ export function ModifierForge({
               })}
             </SelectContent>
           </Select>
-        </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Value</Label>
+        </FieldTile>
+        <FieldTile label='Value'>
           <Select value={key} onValueChange={setKey}>
             <SelectTrigger aria-label='Value to bend'>
               <SelectValue placeholder='Value' />
@@ -331,7 +329,7 @@ export function ModifierForge({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FieldTile>
       </div>
       <ChoiceTiles
         label='Operation'

@@ -50,6 +50,7 @@ import {
   StatBar,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -164,8 +165,7 @@ function SonSelect({
   const sons = useSons()
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id}>Dedicated to</FieldLabel>
+    <FieldTile id={id} label='Dedicated to'>
       <Select
         value={value === null ? NONE : String(value)}
         onValueChange={(next) => onChange(next === NONE ? null : Number(next))}
@@ -183,7 +183,7 @@ function SonSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 
@@ -277,8 +277,7 @@ function CommissionPanel({
           blocked={blocked}
           onPick={setMaterial}
         />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`level-${hostId}`}>Level</FieldLabel>
+        <FieldTile id={`level-${hostId}`} label='Level'>
           <Input
             id={`level-${hostId}`}
             type='number'
@@ -287,18 +286,16 @@ function CommissionPanel({
             value={level}
             onChange={(event) => setLevel(event.target.value)}
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`name-${hostId}`}>Name</FieldLabel>
+        </FieldTile>
+        <FieldTile id={`name-${hostId}`} label='Name'>
           <Input
             id={`name-${hostId}`}
             placeholder='Leave empty to let its builders name it'
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`funds-${hostId}`}>Gift of coin</FieldLabel>
+        </FieldTile>
+        <FieldTile id={`funds-${hostId}`} label='Gift of coin'>
           <Input
             id={`funds-${hostId}`}
             type='number'
@@ -306,7 +303,7 @@ function CommissionPanel({
             value={funds}
             onChange={(event) => setFunds(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='flex min-w-0 flex-col gap-1.5'>
           <FieldLabel>Architect</FieldLabel>
           <EntityPicker
@@ -565,17 +562,17 @@ function DesignsPanel({
         className='flex min-w-0 flex-col gap-3'
       >
         <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md:grid-cols-3'>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <FieldLabel htmlFor={`design-name-${worldId ?? 0}`}>
-              Name of the design
-            </FieldLabel>
+          <FieldTile
+            id={`design-name-${worldId ?? 0}`}
+            label='Name of the design'
+          >
             <Input
               id={`design-name-${worldId ?? 0}`}
               placeholder='The name of the work'
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <IconPicker
             label='Base kind'
             value={base}

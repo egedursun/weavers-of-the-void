@@ -15,7 +15,6 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
@@ -26,6 +25,7 @@ import {
   ShowMore,
   useShowMore,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -203,8 +203,7 @@ function CreateEvent({
           blocked={busy}
           onPick={setKind}
         />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`event-name-${locationId}`}>Name</FieldLabel>
+        <FieldTile id={`event-name-${locationId}`} label='Name'>
           <Input
             id={`event-name-${locationId}`}
             value={name}
@@ -212,16 +211,17 @@ function CreateEvent({
             disabled={busy !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         {PAIRED.has(kind) && (
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <FieldLabel>
-              {kind === 'wedding'
+          <FieldTile
+            label={
+              kind === 'wedding'
                 ? 'The other house'
                 : kind === 'coronation'
                   ? 'Who is crowned'
-                  : 'The breakaway sect'}
-            </FieldLabel>
+                  : 'The breakaway sect'
+            }
+          >
             <RecordCombobox
               options={partners}
               value={partner}
@@ -230,7 +230,7 @@ function CreateEvent({
               aria-label='Partner'
               disabled={busy !== null}
             />
-          </div>
+          </FieldTile>
         )}
         <RangeField
           label='Severity'
@@ -251,8 +251,7 @@ function CreateEvent({
         hint='Its year, season and phase'
       >
         <div className='grid min-w-0 grid-cols-1 gap-2 @md:grid-cols-2'>
-          <div className='flex min-w-0 flex-col gap-1.5'>
-            <FieldLabel htmlFor={`event-year-${locationId}`}>Year</FieldLabel>
+          <FieldTile id={`event-year-${locationId}`} label='Year'>
             <Input
               id={`event-year-${locationId}`}
               type='number'
@@ -262,7 +261,7 @@ function CreateEvent({
               disabled={busy !== null}
               onChange={(event) => setYear(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <IconPicker
             label='Season'
             value={season}

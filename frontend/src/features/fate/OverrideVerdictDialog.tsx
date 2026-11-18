@@ -1,8 +1,7 @@
 import { useId, useState } from 'react'
 import { formatInteger } from '@/lib/format'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { fixedCost } from '@/features/entity/actions/gate'
 import { useCostText, useGodGate } from '@/features/pantheon/gate'
@@ -79,8 +78,7 @@ export function OverrideVerdictDialog({
         })
       }
     >
-      <div className='flex min-w-0 flex-col gap-2'>
-        <FieldLabel htmlFor={fieldId}>Your reason</FieldLabel>
+      <FieldTile id={fieldId} label='Your reason'>
         <Textarea
           id={fieldId}
           value={rationale}
@@ -92,7 +90,7 @@ export function OverrideVerdictDialog({
           {blocked ??
             'Kept with the verdict. Leave it empty and the Creator simply overrules.'}
         </Muted>
-      </div>
+      </FieldTile>
     </ConfirmDialog>
   )
 }

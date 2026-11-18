@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { FormRow, JobProgress } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { FormRow, JobProgress, FieldTile } from '@/components/domain'
+import { Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
 import { PaletteStrip } from './Glyphs'
 import { StarOptions } from './StarOptions'
@@ -167,22 +167,23 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
         )}
       </FormRow>
       <div className='flex min-w-0 flex-col gap-2'>
-        <Label>Where should it be born?</Label>
-        <ToggleGroup
-          type='single'
-          variant='outline'
-          size='sm'
-          value={placement}
-          onValueChange={(value) => value && setPlacement(value as Placement)}
-          className='flex-wrap'
-        >
-          {(Object.keys(PLACEMENT_LABEL) as Placement[]).map((key) => (
-            <ToggleGroupItem key={key} value={key}>
-              {PLACEMENT_LABEL[key]}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-        <Muted variant='caption'>{PLACEMENT_NOTE[placement]}</Muted>
+        <FieldTile group label='Where should it be born?'>
+          <ToggleGroup
+            type='single'
+            variant='outline'
+            size='sm'
+            value={placement}
+            onValueChange={(value) => value && setPlacement(value as Placement)}
+            className='flex-wrap'
+          >
+            {(Object.keys(PLACEMENT_LABEL) as Placement[]).map((key) => (
+              <ToggleGroupItem key={key} value={key}>
+                {PLACEMENT_LABEL[key]}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+          <Muted variant='caption'>{PLACEMENT_NOTE[placement]}</Muted>
+        </FieldTile>
       </div>
       {placement === 'star' && (
         <FormRow label='Star'>

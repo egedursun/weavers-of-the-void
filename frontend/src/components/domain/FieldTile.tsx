@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useId } from 'react'
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Label as FieldLabel } from '@/components/ui/label'
@@ -12,6 +12,7 @@ export function FieldTile({
   icon: Icon,
   aside,
   framed = true,
+  group = false,
   className,
   children,
 }: {
@@ -20,13 +21,17 @@ export function FieldTile({
   icon?: LucideIcon
   aside?: string
   framed?: boolean
+  group?: boolean
   className?: string
   children: ReactNode
 }) {
-  const Root = id === undefined ? 'label' : 'div'
+  const labelId = useId()
+  const Root = id === undefined && !group ? 'label' : 'div'
   return (
     <Root
       data-domain='field-tile'
+      role={group ? 'group' : undefined}
+      aria-labelledby={group ? labelId : undefined}
       className={cn(
         'flex min-w-0 flex-col justify-between gap-1.5',
         framed &&
@@ -41,8 +46,10 @@ export function FieldTile({
             className='size-icon-xs shrink-0 text-muted-foreground'
           />
         )}
-        {id === undefined ? (
-          <span className={LABEL_TEXT}>{label}</span>
+        {id === undefined || group ? (
+          <span id={labelId} className={LABEL_TEXT}>
+            {label}
+          </span>
         ) : (
           <FieldLabel htmlFor={id} className='min-w-0 flex-1 truncate'>
             {label}

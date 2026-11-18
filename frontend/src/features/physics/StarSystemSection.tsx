@@ -10,8 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { EmptyState, EntityLink, PagedList } from '@/components/domain'
-import { Label } from '@/components/typography'
+import {
+  EmptyState,
+  EntityLink,
+  PagedList,
+  FieldTile,
+} from '@/components/domain'
 import { useCosmography } from '@/features/cosmography/api'
 import {
   Chip,
@@ -245,8 +249,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                 </Button>
               }
             >
-              <div className='flex min-w-0 flex-col gap-1'>
-                <Label>Star</Label>
+              <FieldTile label='Star'>
                 <Select
                   value={joining}
                   onValueChange={setJoining}
@@ -266,7 +269,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </FieldTile>
             </ForgeCard>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button

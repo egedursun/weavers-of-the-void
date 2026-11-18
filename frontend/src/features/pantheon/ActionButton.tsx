@@ -4,8 +4,7 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
-import { ConfirmDialog, RuleInfo } from '@/components/domain'
+import { ConfirmDialog, RuleInfo, FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 
 export type ConfirmSpec = {
@@ -118,10 +117,7 @@ export function ActionButton({
           }}
         >
           {word && (
-            <div className='flex min-w-0 flex-col gap-2'>
-              <FieldLabel
-                htmlFor={wordId}
-              >{`Type ${word} to confirm`}</FieldLabel>
+            <FieldTile id={wordId} label={`Type ${word} to confirm`}>
               <Input
                 id={wordId}
                 value={typed}
@@ -129,7 +125,7 @@ export function ActionButton({
                 onChange={(event) => setTyped(event.target.value)}
               />
               <Muted variant='caption'>This cannot be taken back.</Muted>
-            </div>
+            </FieldTile>
           )}
         </ConfirmDialog>
       )}

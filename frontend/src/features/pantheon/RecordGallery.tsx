@@ -5,7 +5,7 @@ import { unwrap } from '@/api/errors'
 import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, Section, FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { Gallery } from '@/features/images/Gallery'
 import { Lightbox } from '@/features/images/Lightbox'
@@ -137,12 +137,13 @@ export function RecordGallery({
       />
       {onSavePrompt && (
         <div className='flex min-w-0 flex-col gap-2'>
-          <FieldLabel htmlFor={promptId}>{promptLabel}</FieldLabel>
-          <Textarea
-            id={promptId}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
+          <FieldTile id={promptId} label={promptLabel}>
+            <Textarea
+              id={promptId}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+          </FieldTile>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
               label='Save prompt'

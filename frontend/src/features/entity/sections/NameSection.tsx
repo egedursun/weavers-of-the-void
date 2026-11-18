@@ -23,6 +23,7 @@ import {
   Paged,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -65,14 +66,13 @@ function TextEditor({
         if ((blocked ?? problem) === null) onSave(draft.trim())
       }}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <Label>{label}</Label>
+      <FieldTile label={label} className='flex-1'>
         <Input
           aria-label={label}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <Button
         type='submit'
         size='sm'
@@ -279,14 +279,13 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                   placeholder='Choose a tongue'
                 />
               </div>
-              <div className='flex min-w-0 flex-col gap-1'>
-                <Label>Its name there</Label>
+              <FieldTile label='Its name there'>
                 <Input
                   aria-label='Its name there'
                   value={form}
                   onChange={(event) => setForm(event.target.value)}
                 />
-              </div>
+              </FieldTile>
             </div>
             <Button
               size='sm'

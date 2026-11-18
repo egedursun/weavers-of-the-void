@@ -19,7 +19,6 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   EmptyState,
   KpiTile,
@@ -30,6 +29,7 @@ import {
   TimelineItem,
   type TimelineTone,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -197,10 +197,7 @@ function ImposeDrift({
         blocked={busy}
         onPick={setAxis}
       />
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`drift-amount-${view.entity_id}`}>
-          Push each epoch
-        </FieldLabel>
+      <FieldTile id={`drift-amount-${view.entity_id}`} label='Push each epoch'>
         <Input
           id={`drift-amount-${view.entity_id}`}
           type='number'
@@ -210,11 +207,11 @@ function ImposeDrift({
           disabled={busy !== null}
           onChange={(event) => setAmount(event.target.value)}
         />
-      </div>
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`drift-epochs-${view.entity_id}`}>
-          For how many epochs
-        </FieldLabel>
+      </FieldTile>
+      <FieldTile
+        id={`drift-epochs-${view.entity_id}`}
+        label='For how many epochs'
+      >
         <Input
           id={`drift-epochs-${view.entity_id}`}
           type='number'
@@ -224,7 +221,7 @@ function ImposeDrift({
           disabled={busy !== null}
           onChange={(event) => setEpochs(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <div className='col-span-full flex min-w-0 justify-end'>
         <Button
           size='sm'
@@ -671,10 +668,7 @@ function MobilityControls({
         blocked={busy}
         onPick={setSocialClass}
       />
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`mobility-count-${view.entity_id}`}>
-          How many
-        </FieldLabel>
+      <FieldTile id={`mobility-count-${view.entity_id}`} label='How many'>
         <Input
           id={`mobility-count-${view.entity_id}`}
           type='number'
@@ -683,7 +677,7 @@ function MobilityControls({
           disabled={busy !== null}
           onChange={(event) => setCount(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <Button
         size='sm'
         variant='outline'

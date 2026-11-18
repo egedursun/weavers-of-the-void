@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, Section } from '@/components/domain'
+import { FormRow, Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type Rarity, type SonPublic } from '@/features/pantheon/api'
@@ -159,123 +159,127 @@ export function SonEditForm({ view }: { view: SonPublic }) {
       </CollapsibleTrigger>
       <CollapsibleContent>
         <Section title={`Edit ${son.name}`} surface='card' level={3}>
-          <FormRow label='Name'>
-            {(id) => (
-              <Input
-                id={id}
-                value={name}
-                maxLength={NAME_MAX}
-                onChange={(event) => setName(event.target.value)}
-              />
-            )}
-          </FormRow>
-          <FormRow label='Title'>
-            {(id) => (
-              <Input
-                id={id}
-                value={title}
-                maxLength={TITLE_MAX}
-                onChange={(event) => setTitle(event.target.value)}
-              />
-            )}
-          </FormRow>
-          <FormRow label='Plan'>
-            {(id) => (
-              <Textarea
-                id={id}
-                value={plan}
-                maxLength={PLAN_MAX}
-                onChange={(event) => setPlan(event.target.value)}
-              />
-            )}
-          </FormRow>
-          {PERSONALITY.map((field) => (
-            <FormRow key={field.key} label={field.label}>
+          <FieldTile group label='Passions'>
+            <FormRow label='Name'>
               {(id) => (
-                <Textarea
+                <Input
                   id={id}
-                  value={personality[field.key]}
-                  onChange={(event) =>
-                    setPersonality({
-                      ...personality,
-                      [field.key]: event.target.value,
-                    })
-                  }
+                  value={name}
+                  maxLength={NAME_MAX}
+                  onChange={(event) => setName(event.target.value)}
                 />
               )}
             </FormRow>
-          ))}
-          <Label variant='overline'>Passions</Label>
-          <div className='grid min-w-0 grid-cols-2 gap-3'>
-            {SON_PASSIONS.map((passion) => (
-              <NumberField
-                key={passion.key}
-                label={passion.label}
-                min={0}
-                max={STAT_SCALE}
-                value={passions[passion.key]}
-                onChange={(value) =>
-                  setPassions({ ...passions, [passion.key]: value })
-                }
-              />
+            <FormRow label='Title'>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={title}
+                  maxLength={TITLE_MAX}
+                  onChange={(event) => setTitle(event.target.value)}
+                />
+              )}
+            </FormRow>
+            <FormRow label='Plan'>
+              {(id) => (
+                <Textarea
+                  id={id}
+                  value={plan}
+                  maxLength={PLAN_MAX}
+                  onChange={(event) => setPlan(event.target.value)}
+                />
+              )}
+            </FormRow>
+            {PERSONALITY.map((field) => (
+              <FormRow key={field.key} label={field.label}>
+                {(id) => (
+                  <Textarea
+                    id={id}
+                    value={personality[field.key]}
+                    onChange={(event) =>
+                      setPersonality({
+                        ...personality,
+                        [field.key]: event.target.value,
+                      })
+                    }
+                  />
+                )}
+              </FormRow>
             ))}
-          </div>
-          <Label variant='overline'>Stats</Label>
-          <div className='grid min-w-0 grid-cols-2 gap-3'>
-            {STATS.map((stat) => (
-              <NumberField
-                key={stat.key}
-                label={stat.label}
-                min={1}
-                max={STAT_SCALE}
-                value={stats[stat.key]}
-                onChange={(value) => setStats({ ...stats, [stat.key]: value })}
-              />
-            ))}
-          </div>
-          <Muted variant='caption'>
-            Life and essence clamp to the new caps; every edit can be undone
-            from the ledger.
-          </Muted>
-          <Label variant='overline'>Class and resources</Label>
-          <FormRow
-            label='Class'
-            description='Changing class by hand is free and goes into the chronicle.'
-          >
-            {(id) => (
-              <Select
-                value={rarity}
-                onValueChange={(value) => setRarity(value as Rarity)}
-              >
-                <SelectTrigger id={id} className='w-48'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RARITIES.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {RARITY_LABEL[item]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </FormRow>
-          <div className='grid min-w-0 grid-cols-2 gap-3'>
-            {RESOURCES.map((resource) => (
-              <NumberField
-                key={resource.key}
-                label={resource.label}
-                min={0}
-                value={resources[resource.key]}
-                onChange={(value) =>
-                  setResources({ ...resources, [resource.key]: value })
-                }
-              />
-            ))}
-          </div>
-          <Muted variant='caption'>
-            Changes are canon; they know themselves this way on their next turn.
-          </Muted>
+            <div className='grid min-w-0 grid-cols-2 gap-3'>
+              {SON_PASSIONS.map((passion) => (
+                <NumberField
+                  key={passion.key}
+                  label={passion.label}
+                  min={0}
+                  max={STAT_SCALE}
+                  value={passions[passion.key]}
+                  onChange={(value) =>
+                    setPassions({ ...passions, [passion.key]: value })
+                  }
+                />
+              ))}
+            </div>
+            <Label variant='overline'>Stats</Label>
+            <div className='grid min-w-0 grid-cols-2 gap-3'>
+              {STATS.map((stat) => (
+                <NumberField
+                  key={stat.key}
+                  label={stat.label}
+                  min={1}
+                  max={STAT_SCALE}
+                  value={stats[stat.key]}
+                  onChange={(value) =>
+                    setStats({ ...stats, [stat.key]: value })
+                  }
+                />
+              ))}
+            </div>
+            <Muted variant='caption'>
+              Life and essence clamp to the new caps; every edit can be undone
+              from the ledger.
+            </Muted>
+            <Label variant='overline'>Class and resources</Label>
+            <FormRow
+              label='Class'
+              description='Changing class by hand is free and goes into the chronicle.'
+            >
+              {(id) => (
+                <Select
+                  value={rarity}
+                  onValueChange={(value) => setRarity(value as Rarity)}
+                >
+                  <SelectTrigger id={id} className='w-48'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RARITIES.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {RARITY_LABEL[item]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </FormRow>
+            <div className='grid min-w-0 grid-cols-2 gap-3'>
+              {RESOURCES.map((resource) => (
+                <NumberField
+                  key={resource.key}
+                  label={resource.label}
+                  min={0}
+                  value={resources[resource.key]}
+                  onChange={(value) =>
+                    setResources({ ...resources, [resource.key]: value })
+                  }
+                />
+              ))}
+            </div>
+            <Muted variant='caption'>
+              Changes are canon; they know themselves this way on their next
+              turn.
+            </Muted>
+          </FieldTile>
           <div>
             <ActionButton
               label='Save'

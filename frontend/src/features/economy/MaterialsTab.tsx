@@ -27,8 +27,9 @@ import {
   Medallion,
   PagedList,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { NodePicker } from '@/features/dominion/parts'
 import {
   AdjustPanel,
@@ -147,18 +148,7 @@ function PropertyField({
 }) {
   const id = useId()
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label
-        as='label'
-        htmlFor={id}
-        className='flex min-w-0 items-center gap-1.5'
-      >
-        <property.icon
-          aria-hidden='true'
-          className='size-icon-xs shrink-0 text-muted-foreground'
-        />
-        {property.label}
-      </Label>
+    <FieldTile id={id} icon={property.icon} label={property.label}>
       <Input
         id={id}
         type='number'
@@ -172,7 +162,7 @@ function PropertyField({
       <Muted variant='caption' truncate>
         {property.hint}
       </Muted>
-    </div>
+    </FieldTile>
   )
 }
 
@@ -219,16 +209,15 @@ function SwitchRow({
   const id = useId()
   return (
     <div className='flex min-w-0 items-center gap-2'>
-      <Switch
-        id={id}
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={onChange}
-        aria-label={label}
-      />
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
+      <FieldTile id={id} label={label}>
+        <Switch
+          id={id}
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={onChange}
+          aria-label={label}
+        />
+      </FieldTile>
     </div>
   )
 }

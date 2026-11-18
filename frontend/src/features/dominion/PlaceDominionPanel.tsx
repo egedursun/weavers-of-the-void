@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Crown, Gem, PawPrint, Sparkles, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, KpiTile, PagedList } from '@/components/domain'
+import { EmptyState, KpiTile, PagedList, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { Facts, ForgeCard, RecordRow } from '@/features/cosmography/parts'
 import { SCHOOLS } from '@/features/divine/labels'
@@ -176,15 +176,17 @@ export function SiteForm({
       action={
         <div className='flex min-w-0 flex-wrap items-center justify-end gap-3'>
           <div className='flex items-center gap-2'>
-            <Switch
+            <FieldTile
               id={`site-now-${placeId ?? 'any'}`}
-              checked={now}
-              disabled={busy !== null}
-              onCheckedChange={setNow}
-            />
-            <Label as='label' htmlFor={`site-now-${placeId ?? 'any'}`}>
-              Found at once
-            </Label>
+              label='Found at once'
+            >
+              <Switch
+                id={`site-now-${placeId ?? 'any'}`}
+                checked={now}
+                disabled={busy !== null}
+                onCheckedChange={setNow}
+              />
+            </FieldTile>
           </div>
           <Button
             size='sm'

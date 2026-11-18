@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Section } from '@/components/domain'
+import { Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import { CosmicActionButton } from './CosmicActionButton'
@@ -140,38 +140,42 @@ export function CreatorHandPanel({
       </Muted>
       {!forgotten && (
         <div className='flex min-w-0 flex-col gap-2'>
-          <Label>World wrath</Label>
-          <div className='flex min-w-0 flex-wrap items-center gap-2'>
-            <Select
-              value={disaster}
-              onValueChange={(value) => setDisaster(value as Disaster)}
-            >
-              <SelectTrigger aria-label='Disaster' className='w-full sm:w-auto'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DISASTERS.map((kind) => (
-                  <SelectItem key={kind} value={kind}>
-                    {DISASTER_LABEL[kind]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <CosmicActionButton
-              actionId='wrath:world'
-              label='Bring down on the whole world'
-              icon={Flame}
-              variant='destructive'
-              cost={rules.get('worldWrathCost')}
-              pending={wrath.isPending}
-              confirm={{
-                title: `Shake all of ${world.name}?`,
-                description: `${DISASTER_LABEL[disaster]} strikes every region at ${ruleText(rules.get('worldWrathSeverity'))}% severity.`,
-                confirmText: 'Bring it down',
-              }}
-              onRun={() => wrath.mutate()}
-            />
-          </div>
+          <FieldTile group label='World wrath'>
+            <div className='flex min-w-0 flex-wrap items-center gap-2'>
+              <Select
+                value={disaster}
+                onValueChange={(value) => setDisaster(value as Disaster)}
+              >
+                <SelectTrigger
+                  aria-label='Disaster'
+                  className='w-full sm:w-auto'
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISASTERS.map((kind) => (
+                    <SelectItem key={kind} value={kind}>
+                      {DISASTER_LABEL[kind]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <CosmicActionButton
+                actionId='wrath:world'
+                label='Bring down on the whole world'
+                icon={Flame}
+                variant='destructive'
+                cost={rules.get('worldWrathCost')}
+                pending={wrath.isPending}
+                confirm={{
+                  title: `Shake all of ${world.name}?`,
+                  description: `${DISASTER_LABEL[disaster]} strikes every region at ${ruleText(rules.get('worldWrathSeverity'))}% severity.`,
+                  confirmText: 'Bring it down',
+                }}
+                onRun={() => wrath.mutate()}
+              />
+            </div>
+          </FieldTile>
         </div>
       )}
       <div className='flex min-w-0 flex-col gap-2'>
@@ -326,38 +330,44 @@ export function CreatorHandPanel({
         </div>
       </div>
       <div className='flex min-w-0 flex-col gap-2'>
-        <Label>Guardian</Label>
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          <Select value={guardian} onValueChange={setGuardian}>
-            <SelectTrigger aria-label='Guardian son' className='w-full sm:w-60'>
-              <SelectValue placeholder='Choose a son' />
-            </SelectTrigger>
-            <SelectContent>
-              {sons.map((view) => (
-                <SelectItem key={view.son.id} value={String(view.son.id)}>
-                  {view.son.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CosmicActionButton
-            actionId='world:guardian'
-            label='Appoint as guardian'
-            icon={ShieldCheck}
-            size='sm'
-            pending={order.isPending}
-            blockedReason={guardian === '' ? 'Choose a son first.' : undefined}
-            onRun={() =>
-              order.mutate(() =>
-                unwrap(
-                  api.POST('/api/actions/world:guardian', {
-                    body: { world_id: worldId, son_id: Number(guardian) },
-                  })
+        <FieldTile group label='Guardian'>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <Select value={guardian} onValueChange={setGuardian}>
+              <SelectTrigger
+                aria-label='Guardian son'
+                className='w-full sm:w-60'
+              >
+                <SelectValue placeholder='Choose a son' />
+              </SelectTrigger>
+              <SelectContent>
+                {sons.map((view) => (
+                  <SelectItem key={view.son.id} value={String(view.son.id)}>
+                    {view.son.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <CosmicActionButton
+              actionId='world:guardian'
+              label='Appoint as guardian'
+              icon={ShieldCheck}
+              size='sm'
+              pending={order.isPending}
+              blockedReason={
+                guardian === '' ? 'Choose a son first.' : undefined
+              }
+              onRun={() =>
+                order.mutate(() =>
+                  unwrap(
+                    api.POST('/api/actions/world:guardian', {
+                      body: { world_id: worldId, son_id: Number(guardian) },
+                    })
+                  )
                 )
-              )
-            }
-          />
-        </div>
+              }
+            />
+          </div>
+        </FieldTile>
       </div>
     </Section>
   )

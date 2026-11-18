@@ -26,7 +26,6 @@ import { plural } from '@/lib/units'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -36,7 +35,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { Section } from '@/components/domain'
+import { Section, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { ActionJob } from '@/features/pantheon/ActionJob'
@@ -287,10 +286,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       surface='card'
       level={3}
     >
-      <div className='flex min-w-0 flex-col gap-2'>
-        <FieldLabel htmlFor={`order-${sonId}`}>
-          Order for their next action
-        </FieldLabel>
+      <FieldTile id={`order-${sonId}`} label='Order for their next action'>
         <Textarea
           id={`order-${sonId}`}
           value={order}
@@ -305,7 +301,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             </Badge>
           </div>
         )}
-      </div>
+      </FieldTile>
       <Row
         title='Orders'
         note='An absolute command is done first on their next turn and costs a little loyalty.'
@@ -531,17 +527,17 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       {!dead && (
         <>
           <Separator />
-          <div className='flex min-w-0 flex-col gap-2'>
-            <FieldLabel htmlFor={`reason-${sonId}`}>
-              Why? Written in the chronicle
-            </FieldLabel>
+          <FieldTile
+            id={`reason-${sonId}`}
+            label='Why? Written in the chronicle'
+          >
             <Input
               id={`reason-${sonId}`}
               value={reasonText}
               maxLength={REASON_MAX}
               onChange={(event) => setReasonText(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <Row title='Essence and death'>
             <ActionButton
               label='Drain their essence'

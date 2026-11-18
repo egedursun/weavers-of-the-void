@@ -71,6 +71,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { FieldTile } from '@/components/domain'
 import { Label } from '@/components/typography'
 import { MapSearch } from './MapSearch'
 import {
@@ -169,53 +170,54 @@ function LayerControls({
 }: Pick<MapToolbarProps, 'mode' | 'onMode' | 'overlays' | 'onOverlay'>) {
   return (
     <div className='flex min-w-0 flex-col gap-2'>
-      <Label variant='overline'>Map layer</Label>
-      <ToggleGroup
-        type='single'
-        size='sm'
-        variant='outline'
-        value={mode}
-        aria-label='Map layer'
-        className='flex-wrap justify-start'
-        onValueChange={(value) => value && onMode(value as LayerMode)}
-      >
-        {LAYER_MODES.map((option) => {
-          const Icon = LAYER_ICON[option]
-          return (
-            <ToggleGroupItem
-              key={option}
-              value={option}
-              data-surface={LAYER_SURFACE[option]}
-            >
-              <Icon aria-hidden='true' />
-              {LAYER_LABEL[option]}
-            </ToggleGroupItem>
-          )
-        })}
-      </ToggleGroup>
-      <Label variant='overline'>Overlays</Label>
-      <div
-        role='group'
-        aria-label='Map overlays'
-        className='flex min-w-0 flex-wrap items-center gap-2'
-      >
-        {OVERLAYS.map((overlay) => {
-          const Icon = OVERLAY_ICON[overlay]
-          return (
-            <Toggle
-              key={overlay}
-              size='sm'
-              variant='outline'
-              data-surface={OVERLAY_SURFACE[overlay]}
-              pressed={overlays[overlay]}
-              onPressedChange={(pressed) => onOverlay(overlay, pressed)}
-            >
-              <Icon aria-hidden='true' />
-              {OVERLAY_LABEL[overlay]}
-            </Toggle>
-          )
-        })}
-      </div>
+      <FieldTile group label='Map layer'>
+        <ToggleGroup
+          type='single'
+          size='sm'
+          variant='outline'
+          value={mode}
+          aria-label='Map layer'
+          className='flex-wrap justify-start'
+          onValueChange={(value) => value && onMode(value as LayerMode)}
+        >
+          {LAYER_MODES.map((option) => {
+            const Icon = LAYER_ICON[option]
+            return (
+              <ToggleGroupItem
+                key={option}
+                value={option}
+                data-surface={LAYER_SURFACE[option]}
+              >
+                <Icon aria-hidden='true' />
+                {LAYER_LABEL[option]}
+              </ToggleGroupItem>
+            )
+          })}
+        </ToggleGroup>
+        <Label variant='overline'>Overlays</Label>
+        <div
+          role='group'
+          aria-label='Map overlays'
+          className='flex min-w-0 flex-wrap items-center gap-2'
+        >
+          {OVERLAYS.map((overlay) => {
+            const Icon = OVERLAY_ICON[overlay]
+            return (
+              <Toggle
+                key={overlay}
+                size='sm'
+                variant='outline'
+                data-surface={OVERLAY_SURFACE[overlay]}
+                pressed={overlays[overlay]}
+                onPressedChange={(pressed) => onOverlay(overlay, pressed)}
+              >
+                <Icon aria-hidden='true' />
+                {OVERLAY_LABEL[overlay]}
+              </Toggle>
+            )
+          })}
+        </div>
+      </FieldTile>
     </div>
   )
 }

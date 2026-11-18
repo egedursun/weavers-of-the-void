@@ -9,12 +9,11 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { FormRow } from '@/components/domain'
+import { FormRow, FieldTile } from '@/components/domain'
 import {
   type ComboboxOption,
   RecordCombobox,
 } from '@/components/domain/RecordCombobox'
-import { Label } from '@/components/typography'
 import { type EntityContext } from './context'
 import { type PickerData, type PickerSpec, optionsFor } from './pickers'
 import {
@@ -60,23 +59,22 @@ function MapField({
     <div className='grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
       {field.keys.map((key) => (
         <div key={key} className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`${field.key}-${key}`} truncate>
-            {humanize(key)}
-          </Label>
-          <Input
-            id={`${field.key}-${key}`}
-            type='number'
-            inputMode='numeric'
-            disabled={disabled}
-            value={value[key] ?? ''}
-            onChange={(event) => {
-              const next = { ...value }
-              const parsed = numberOrNull(event.target.value)
-              if (parsed === null) delete next[key]
-              else next[key] = parsed
-              onChange(next)
-            }}
-          />
+          <FieldTile id={`${field.key}-${key}`} label={humanize(key)}>
+            <Input
+              id={`${field.key}-${key}`}
+              type='number'
+              inputMode='numeric'
+              disabled={disabled}
+              value={value[key] ?? ''}
+              onChange={(event) => {
+                const next = { ...value }
+                const parsed = numberOrNull(event.target.value)
+                if (parsed === null) delete next[key]
+                else next[key] = parsed
+                onChange(next)
+              }}
+            />
+          </FieldTile>
         </div>
       ))}
     </div>

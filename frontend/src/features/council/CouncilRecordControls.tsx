@@ -4,9 +4,8 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { ConfirmDialog } from '@/components/domain'
+import { ConfirmDialog, FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -59,24 +58,27 @@ export function CouncilRecordControls({
       aria-label='Rewrite the council record'
       className='flex min-w-0 flex-col gap-2'
     >
-      <Label htmlFor={`council-topic-${councilId}`}>Topic of the council</Label>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Input
+      <div className='flex min-w-0 flex-wrap items-stretch gap-2'>
+        <FieldTile
           id={`council-topic-${councilId}`}
-          maxLength={TOPIC_MAX}
-          className='min-w-0 flex-1'
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <div className='flex items-center gap-2'>
+          label='Topic of the council'
+          className='flex-1'
+        >
+          <Input
+            id={`council-topic-${councilId}`}
+            maxLength={TOPIC_MAX}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+        </FieldTile>
+        <FieldTile id={`council-passed-${councilId}`} label='Passed'>
           <Switch
             id={`council-passed-${councilId}`}
             checked={carried}
             onCheckedChange={setCarried}
             aria-label='The motion passed'
           />
-          <Label htmlFor={`council-passed-${councilId}`}>Passed</Label>
-        </div>
+        </FieldTile>
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
@@ -136,28 +138,31 @@ export function CouncilRecordForge() {
       aria-label='Set down a council'
       className='flex min-w-0 flex-col gap-2'
     >
-      <Label htmlFor='council-new-topic'>Set down a council of the gods</Label>
       <Muted variant='caption'>
         Write a council into the record with its topic and whether its motion
         passed.
       </Muted>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Input
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <FieldTile
           id='council-new-topic'
-          maxLength={TOPIC_MAX}
-          className='min-w-0 flex-1'
-          value={topic}
-          onChange={(event) => setTopic(event.target.value)}
-        />
-        <div className='flex items-center gap-2'>
+          label='Set down a council of the gods'
+          className='flex-1'
+        >
+          <Input
+            id='council-new-topic'
+            maxLength={TOPIC_MAX}
+            value={topic}
+            onChange={(event) => setTopic(event.target.value)}
+          />
+        </FieldTile>
+        <FieldTile id='council-new-passed' label='Passed'>
           <Switch
             id='council-new-passed'
             checked={carried}
             onCheckedChange={setCarried}
             aria-label='The motion passed'
           />
-          <Label htmlFor='council-new-passed'>Passed</Label>
-        </div>
+        </FieldTile>
         <Button
           size='sm'
           disabled={busy !== null || empty !== null}

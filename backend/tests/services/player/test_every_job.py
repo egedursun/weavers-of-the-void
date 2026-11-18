@@ -1,4 +1,3 @@
-import asyncio
 import shutil
 from collections.abc import Mapping
 from pathlib import Path
@@ -15,6 +14,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player.catalog import ACTIONS, action, run_job
 from aerona.services.player.ports import ContentJob, CreativePorts, RevelationRequest, WorldCreationRequest
 from aerona.services.player.runtime import PlayerRuntime
+from tests.polling import until
 from tests.services.player.every_lever import Lever, Newest, Pick, foreign_god, lore_free_world, payload_for, planned_prehistory
 
 JOB_ACTIONS = sorted(spec.id for spec in ACTIONS if spec.job is not None)
@@ -81,12 +81,15 @@ class Ports:
 
 async def finished(runtime: PlayerRuntime, job_id: Any) -> tuple[JobStatus, str | None]:
     assert isinstance(job_id, str)
-    for _ in range(500):
-        row = await runtime.jobs.get(job_id)
-        if row.status in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value):
-            return JobStatus(row.status), row.error
-        await asyncio.sleep(0.01)
-    raise AssertionError("the job did not finish")
+    rows: list[Any] = []
+
+    async def settled() -> bool:
+        rows.append(await runtime.jobs.get(job_id))
+        return bool(rows[-1].status in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value))
+
+    if not await until(settled):
+        raise AssertionError("the job did not finish")
+    return JobStatus(rows[-1].status), rows[-1].error
 
 
 def test_every_job_case_names_a_real_job() -> None:

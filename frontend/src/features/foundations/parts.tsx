@@ -2,7 +2,6 @@ import { useId } from 'react'
 import { type QueryKey } from '@tanstack/react-query'
 import { Lock, LockOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -11,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { FieldTile } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -91,8 +91,7 @@ export function SonSelect({
   const sons = useSons()
   const living = (sons.data ?? []).filter((item) => item.son.status !== 'dead')
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <FieldTile id={id} label={label}>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue placeholder='Choose a god' />
@@ -106,6 +105,6 @@ export function SonSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }

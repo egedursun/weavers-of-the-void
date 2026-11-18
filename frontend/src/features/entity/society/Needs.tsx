@@ -15,7 +15,6 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
@@ -30,6 +29,7 @@ import {
   StatBar,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -252,10 +252,10 @@ function HoldNeed({
         blocked={busy}
         onPick={setCommodity}
       />
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`need-pct-${view.entity_id}`}>
-          Share of the want met
-        </FieldLabel>
+      <FieldTile
+        id={`need-pct-${view.entity_id}`}
+        label='Share of the want met'
+      >
         <Input
           id={`need-pct-${view.entity_id}`}
           type='number'
@@ -265,7 +265,7 @@ function HoldNeed({
           disabled={busy !== null}
           onChange={(event) => setPct(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <div className='flex min-w-0 items-end'>
         <Button
           size='sm'

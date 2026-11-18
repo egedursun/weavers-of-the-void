@@ -9,8 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
-import { ConfirmDialog, FormRow } from '@/components/domain'
+import { ConfirmDialog, FormRow, FieldTile } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
 import { type EntityContext } from '../actions/context'
@@ -177,10 +176,7 @@ export function DangerZone({
           if (other !== null) merge.mutate(other)
         }}
       >
-        <div className='flex min-w-0 flex-col gap-2'>
-          <FieldLabel
-            htmlFor={wordId}
-          >{`Type ${MERGE_WORD} to confirm`}</FieldLabel>
+        <FieldTile id={wordId} label={`Type ${MERGE_WORD} to confirm`}>
           <Input
             id={wordId}
             value={typed}
@@ -188,7 +184,7 @@ export function DangerZone({
             onChange={(event) => setTyped(event.target.value)}
           />
           <Muted variant='caption'>This cannot be taken back.</Muted>
-        </div>
+        </FieldTile>
       </ConfirmDialog>
     </Collapsible>
   )

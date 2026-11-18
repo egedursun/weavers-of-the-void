@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import fields
 
 from aerona.constants.llm import HAIKU_MODEL_ID
@@ -6,8 +5,8 @@ from aerona.llm.client import LlmClient
 from aerona.settings import Settings
 from tests.agents.fakes import FakeModel
 from tests.api.conftest import ApiWorld, open_api
+from tests.polling import until
 
-POLLS = 200
 POLL_SECONDS = 0.02
 
 
@@ -46,10 +45,7 @@ async def test_background_pool_refuses_duplicate_keys(api: ApiWorld) -> None:
 
     assert hooks.spawn("probe", work) is True
     assert hooks.spawn("probe", work) is False
-    for _ in range(POLLS):
-        if ran:
-            break
-        await asyncio.sleep(POLL_SECONDS)
+    await until(lambda: bool(ran), step=POLL_SECONDS)
     await api.settle()
     assert ran == ["done"]
 

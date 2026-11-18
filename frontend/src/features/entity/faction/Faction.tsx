@@ -802,13 +802,14 @@ function Levers({
           />
         </div>
         <label className='flex items-center gap-2'>
-          <Switch
-            checked={armed}
-            disabled={busy !== null}
-            aria-label='Armed'
-            onCheckedChange={setArmed}
-          />
-          <Label>Bears arms</Label>
+          <FieldTile label='Bears arms'>
+            <Switch
+              checked={armed}
+              disabled={busy !== null}
+              aria-label='Armed'
+              onCheckedChange={setArmed}
+            />
+          </FieldTile>
         </label>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button

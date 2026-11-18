@@ -16,6 +16,7 @@ from aerona.rules.registry import Rules
 from aerona.services.player import catalog, creation, creator, interventions
 from aerona.services.player.ports import ContentJob, CreativePorts, RevelationRequest, WorldCreationRequest
 from aerona.services.player.runtime import PlayerRuntime
+from tests.polling import until
 from tests.services.player.factories import make_entity, make_son, seed_player_world
 
 
@@ -77,12 +78,15 @@ async def runtime(database: Database, seeded: int) -> AsyncIterator[PlayerRuntim
 
 async def _finish(runtime: PlayerRuntime, job_id: object) -> JobStatus:
     assert isinstance(job_id, str)
-    for _ in range(200):
-        row = await runtime.jobs.get(job_id)
-        if row.status in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value):
-            return JobStatus(row.status)
-        await asyncio.sleep(0.01)
-    raise AssertionError("job did not finish")
+    statuses: list[str] = []
+
+    async def settled() -> bool:
+        statuses.append((await runtime.jobs.get(job_id)).status)
+        return statuses[-1] in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value)
+
+    if not await until(settled):
+        raise AssertionError("job did not finish")
+    return JobStatus(statuses[-1])
 
 
 async def _essence(database: Database) -> int:

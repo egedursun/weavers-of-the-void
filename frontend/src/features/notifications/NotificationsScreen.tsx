@@ -26,7 +26,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -38,6 +37,7 @@ import {
   PagedList,
   PageHeader,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Label, Muted, Text } from '@/components/typography'
@@ -555,12 +555,13 @@ export function NotificationsScreen() {
           actions={
             <div className='flex min-w-0 flex-wrap items-center gap-3'>
               <div className='flex items-center gap-2'>
-                <Switch
-                  id='only-unread'
-                  checked={unreadOnly}
-                  onCheckedChange={setUnreadOnly}
-                />
-                <FieldLabel htmlFor='only-unread'>Only unread</FieldLabel>
+                <FieldTile id='only-unread' label='Only unread'>
+                  <Switch
+                    id='only-unread'
+                    checked={unreadOnly}
+                    onCheckedChange={setUnreadOnly}
+                  />
+                </FieldTile>
               </div>
               <Button
                 variant='outline'

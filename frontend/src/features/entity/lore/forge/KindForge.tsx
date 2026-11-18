@@ -5,8 +5,8 @@ import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, Paged } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { EmptyState, Paged, FieldTile } from '@/components/domain'
+import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { AdjustBlock, ChoicePicker, NamedChip, ShiftChips } from '../LoreFields'
@@ -45,8 +45,7 @@ function ParamInput({
     )
   if (field.kind === 'number')
     return (
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>{`${field.label} (${field.min}–${field.max})`}</Label>
+      <FieldTile label={`${field.label} (${field.min}–${field.max})`}>
         <Input
           type='number'
           min={field.min}
@@ -62,7 +61,7 @@ function ParamInput({
             put(next)
           }}
         />
-      </div>
+      </FieldTile>
     )
   const table =
     value && typeof value === 'object' && !Array.isArray(value)
@@ -70,26 +69,27 @@ function ParamInput({
       : {}
   return (
     <div className='flex min-w-0 flex-col gap-2'>
-      <Label>{field.label}</Label>
-      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
-        {Object.entries(field.table).map(([key, spec]) => (
-          <div key={key} className='flex min-w-0 flex-col gap-1'>
-            <Muted variant='caption'>{spec.label}</Muted>
-            <Input
-              type='number'
-              aria-label={`${field.label}: ${spec.label}`}
-              value={key in table ? String(table[key]) : ''}
-              onChange={(event) => {
-                const raw = event.target.value
-                const next = { ...table }
-                if (raw === '') delete next[key]
-                else next[key] = Math.round(Number(raw) || 0)
-                put({ ...params, [field.key]: next })
-              }}
-            />
-          </div>
-        ))}
-      </div>
+      <FieldTile label={field.label}>
+        <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
+          {Object.entries(field.table).map(([key, spec]) => (
+            <div key={key} className='flex min-w-0 flex-col gap-1'>
+              <Muted variant='caption'>{spec.label}</Muted>
+              <Input
+                type='number'
+                aria-label={`${field.label}: ${spec.label}`}
+                value={key in table ? String(table[key]) : ''}
+                onChange={(event) => {
+                  const raw = event.target.value
+                  const next = { ...table }
+                  if (raw === '') delete next[key]
+                  else next[key] = Math.round(Number(raw) || 0)
+                  put({ ...params, [field.key]: next })
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </FieldTile>
     </div>
   )
 }
@@ -146,14 +146,13 @@ function KindEditor({
   return (
     <div className='flex min-w-0 flex-col gap-3 rounded-md p-3 sealed-well'>
       <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Name</Label>
+        <FieldTile label='Name'>
           <Input
             aria-label='Name of the kind'
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <ChoicePicker
           label={spec.baseLabel}
           value={base}

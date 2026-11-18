@@ -26,6 +26,7 @@ import {
   MiniStat,
   StatBar,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -288,10 +289,10 @@ export function SetCohort({
           blocked={busy}
           onPick={(value) => setCondition(value as CohortCondition)}
         />
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`cohort-count-${view.entity_id}`}>
-            {`Headcount (now ${formatInteger(present)})`}
-          </FieldLabel>
+        <FieldTile
+          id={`cohort-count-${view.entity_id}`}
+          label={`Headcount (now ${formatInteger(present)})`}
+        >
           <Input
             id={`cohort-count-${view.entity_id}`}
             type='number'
@@ -301,7 +302,7 @@ export function SetCohort({
             disabled={busy !== null}
             onChange={(event) => setCount(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <Button
           size='sm'
           disabled={busy !== null || invalid}

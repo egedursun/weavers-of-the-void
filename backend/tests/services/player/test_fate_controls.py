@@ -1,4 +1,3 @@
-import asyncio
 from collections.abc import AsyncIterator
 
 import pytest
@@ -23,6 +22,7 @@ from aerona.services.player import catalog, fate_controls
 from aerona.services.player.ports import CreativePorts
 from aerona.services.player.runtime import PlayerRuntime
 from aerona.services.player.scope import PlayerScope
+from tests.polling import until
 from tests.services.player.factories import PlayerWorld, action_kinds, make_entity, seed_player_world
 
 
@@ -68,12 +68,15 @@ async def runtime(database: Database) -> AsyncIterator[PlayerRuntime]:
 
 async def finish(runtime: PlayerRuntime, job_id: object) -> JobStatus:
     assert isinstance(job_id, str)
-    for _ in range(200):
-        row = await runtime.jobs.get(job_id)
-        if row.status in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value):
-            return JobStatus(row.status)
-        await asyncio.sleep(0.01)
-    raise AssertionError("job did not finish")
+    statuses: list[str] = []
+
+    async def settled() -> bool:
+        statuses.append((await runtime.jobs.get(job_id)).status)
+        return statuses[-1] in (JobStatus.SUCCEEDED.value, JobStatus.FAILED.value)
+
+    if not await until(settled):
+        raise AssertionError("job did not finish")
+    return JobStatus(statuses[-1])
 
 
 async def test_every_fate_control_is_in_the_catalog(rules: Rules) -> None:

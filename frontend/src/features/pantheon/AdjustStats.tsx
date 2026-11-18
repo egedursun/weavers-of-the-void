@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
+import { FieldTile } from '@/components/domain/FieldTile'
 import { Label, Muted } from '@/components/typography'
 import { type ActionResponse } from './api'
 import { useGodGate } from './gate'
@@ -74,10 +75,11 @@ function FieldEditor({
         if (reason === null && parsed !== null) onSet(parsed)
       }}
     >
-      <div className='flex min-w-0 flex-1 flex-col gap-1'>
-        <Label as='label' htmlFor={inputId} truncate>
-          {`${field.label} (${range(field)})`}
-        </Label>
+      <FieldTile
+        id={inputId}
+        label={`${field.label} (${range(field)})`}
+        className='flex-1'
+      >
         <Input
           id={inputId}
           type='number'
@@ -87,7 +89,7 @@ function FieldEditor({
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <Button
         type='submit'
         variant='outline'

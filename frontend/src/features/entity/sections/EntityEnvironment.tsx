@@ -46,6 +46,7 @@ import {
   Paged,
   Section,
   StatBar,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { LandSection } from '@/features/city/LandSection'
@@ -492,8 +493,7 @@ function ChoiceRow({
   onPick: (value: string) => void
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>{label}</Label>
+    <FieldTile label={label}>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
         <SelectTrigger aria-label={label}>
           <SelectValue />
@@ -506,7 +506,7 @@ function ChoiceRow({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 

@@ -4,7 +4,6 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { FieldTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type RouteRecord } from './api'
@@ -124,10 +124,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
             </Button>
           </PopoverTrigger>
           <PopoverContent align='start' className='flex flex-col gap-3'>
-            <div className='flex min-w-0 flex-col gap-2'>
-              <FieldLabel htmlFor={epochsId}>
-                Closed for how many epochs
-              </FieldLabel>
+            <FieldTile id={epochsId} label='Closed for how many epochs'>
               <Input
                 id={epochsId}
                 type='number'
@@ -141,7 +138,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
                 Voyages on it fall into uncertainty. Leave blank for the rule
                 default.
               </Muted>
-            </div>
+            </FieldTile>
             <CosmicActionButton
               actionId='route'
               label='Sever the route'
@@ -196,10 +193,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent align='start' className='flex flex-col gap-3'>
-          <div className='flex min-w-0 flex-col gap-2'>
-            <FieldLabel htmlFor={dangerId}>
-              Danger of this route (0 to 100)
-            </FieldLabel>
+          <FieldTile id={dangerId} label='Danger of this route (0 to 100)'>
             <Input
               id={dangerId}
               type='number'
@@ -209,7 +203,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
               value={danger}
               onChange={(event) => setDanger(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <CosmicActionButton
             actionId='route:danger'
             label='Set danger'

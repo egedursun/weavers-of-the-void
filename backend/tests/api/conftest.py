@@ -1,4 +1,3 @@
-import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Any
@@ -14,12 +13,12 @@ from aerona.main import create_app
 from aerona.services.container import Services
 from aerona.settings import Settings
 from tests.agents.world import AgentWorld, seed_agent_world
+from tests.polling import until
 
 STARTUP_SECONDS = 120
 
 LOCAL_BASE_URL = "http://localhost"
 JOB_POLL_SECONDS = 0.05
-JOB_POLL_ATTEMPTS = 600
 
 
 @dataclass
@@ -30,19 +29,18 @@ class ApiWorld:
     world: AgentWorld | None = None
 
     async def wait_job(self, job_id: str) -> dict[str, Any]:
-        for _ in range(JOB_POLL_ATTEMPTS):
-            response = await self.http.get(f"/api/jobs/{job_id}")
-            body: dict[str, Any] = response.json()
-            if JobStatus(body["status"]) in TERMINAL_JOB_STATUSES:
-                return body
-            await asyncio.sleep(JOB_POLL_SECONDS)
-        raise AssertionError(f"job {job_id} did not finish")
+        bodies: list[dict[str, Any]] = []
+
+        async def done() -> bool:
+            bodies.append((await self.http.get(f"/api/jobs/{job_id}")).json())
+            return JobStatus(bodies[-1]["status"]) in TERMINAL_JOB_STATUSES
+
+        if not await until(done, step=JOB_POLL_SECONDS):
+            raise AssertionError(f"job {job_id} did not finish")
+        return bodies[-1]
 
     async def settle(self) -> None:
-        for _ in range(JOB_POLL_ATTEMPTS):
-            if not self.services.application.background and not self.services.jobs.running_count:
-                return
-            await asyncio.sleep(JOB_POLL_SECONDS)
+        await until(lambda: not self.services.application.background and not self.services.jobs.running_count, step=JOB_POLL_SECONDS)
 
 
 async def open_api(settings: Settings, *, model: LanguageModel | None = None, seeded: bool) -> AsyncIterator[ApiWorld]:

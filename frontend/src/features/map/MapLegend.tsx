@@ -17,7 +17,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Switch } from '@/components/ui/switch'
-import { EntityLink, Paged } from '@/components/domain'
+import { EntityLink, Paged, FieldTile } from '@/components/domain'
 import { type ThemeColorName } from '@/components/domain/useThemeColors'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { ALL_FAMILIES, familyOf } from '@/features/graph/families'
@@ -381,17 +381,16 @@ export function MapLegend({
       <Block title='Markers' defaultOpen={!layerTitle}>
         {!anyMarker && <Muted>No markers on this map yet.</Muted>}
         {fallenCount > 0 && (
-          <div className='flex min-w-0 items-center gap-2'>
-            <Switch
-              id={fallenId}
-              checked={filter.fallen}
-              onCheckedChange={onFallen}
-            />
-            <Label as='label' htmlFor={fallenId} className='min-w-0 flex-1'>
-              Show the fallen
-            </Label>
-            <Stat value={fallenCount} />
-          </div>
+          <FieldTile id={fallenId} label='Show the fallen'>
+            <div className='flex min-w-0 items-center justify-between gap-2'>
+              <Switch
+                id={fallenId}
+                checked={filter.fallen}
+                onCheckedChange={onFallen}
+              />
+              <Stat value={fallenCount} />
+            </div>
+          </FieldTile>
         )}
         <ul className='flex min-w-0 flex-col gap-1.5'>
           <Paged items={families} as='li'>

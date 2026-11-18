@@ -27,6 +27,7 @@ import {
   Section,
   StatBar,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -195,8 +196,7 @@ function RumourCard({
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
           <AdjustBlock title='How true it runs' icon={Ear}>
             <div className='flex min-w-0 flex-wrap items-end gap-2'>
-              <div className='flex min-w-0 flex-col gap-1'>
-                <Label>Truth (0–100)</Label>
+              <FieldTile label='Truth (0–100)'>
                 <Input
                   type='number'
                   min={0}
@@ -206,7 +206,7 @@ function RumourCard({
                   value={truth}
                   onChange={(event) => setTruth(event.target.value)}
                 />
-              </div>
+              </FieldTile>
               <Button
                 size='sm'
                 disabled={busy !== null}
@@ -333,8 +333,7 @@ function PlantRumour({
             placeholder='Choose the one it names…'
           />
         </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>How true it runs (0–100)</Label>
+        <FieldTile label='How true it runs (0–100)'>
           <Input
             type='number'
             min={0}
@@ -343,16 +342,15 @@ function PlantRumour({
             value={truth}
             onChange={(event) => setTruth(event.target.value)}
           />
-        </div>
+        </FieldTile>
       </div>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>What it tells</Label>
+      <FieldTile label='What it tells'>
         <Textarea
           aria-label='What the rumour tells'
           value={text}
           onChange={(event) => setText(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <label className='flex min-w-0 items-center gap-2'>
         <Switch
           checked={atrocity}

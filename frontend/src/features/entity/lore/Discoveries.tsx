@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { Medallion, Paged, PagedList } from '@/components/domain'
+import { Medallion, Paged, PagedList, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import {
@@ -620,17 +620,15 @@ function BlueprintsCard({
               placeholder='Choose'
               onPick={setKind}
             />
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label>Design of</Label>
+            <FieldTile label='Design of'>
               <Input
                 aria-label='Design of'
                 value={subject}
                 placeholder='Its subject'
                 onChange={(event) => setSubject(event.target.value)}
               />
-            </div>
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label>Quality (0–100)</Label>
+            </FieldTile>
+            <FieldTile label='Quality (0–100)'>
               <Input
                 type='number'
                 min={0}
@@ -639,7 +637,7 @@ function BlueprintsCard({
                 value={quality}
                 onChange={(event) => setQuality(event.target.value)}
               />
-            </div>
+            </FieldTile>
           </div>
           <Button
             size='sm'

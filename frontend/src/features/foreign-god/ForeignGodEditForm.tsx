@@ -14,7 +14,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -23,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, Section } from '@/components/domain'
+import { FormRow, Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { type Domain } from '@/features/pantheon/api'
@@ -317,14 +316,16 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
               )}
             </FormRow>
             <div className='flex min-w-0 items-center gap-2'>
-              <Checkbox
+              <FieldTile
                 id={`fg-contact-${god.id}`}
-                checked={contacted}
-                onCheckedChange={(value) => setContacted(value === true)}
-              />
-              <FieldLabel htmlFor={`fg-contact-${god.id}`}>
-                Contact made with the pantheon
-              </FieldLabel>
+                label='Contact made with the pantheon'
+              >
+                <Checkbox
+                  id={`fg-contact-${god.id}`}
+                  checked={contacted}
+                  onCheckedChange={(value) => setContacted(value === true)}
+                />
+              </FieldTile>
             </div>
             <FormRow label='Description'>
               {(id) => (
@@ -365,176 +366,181 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <Section title={`Shape ${god.name}`} surface='card' level={3}>
-            <Label variant='overline'>Stats</Label>
-            <div className='grid min-w-0 grid-cols-2 gap-3'>
-              {STATS.map((stat) => (
-                <FormRow key={stat.key} label={stat.label}>
+            <FieldTile group label='Stats'>
+              <div className='grid min-w-0 grid-cols-2 gap-3'>
+                {STATS.map((stat) => (
+                  <FormRow key={stat.key} label={stat.label}>
+                    {(id) => (
+                      <Input
+                        id={id}
+                        type='number'
+                        min={1}
+                        max={STAT_SCALE}
+                        value={stats[stat.key]}
+                        className='w-32'
+                        onChange={(event) =>
+                          setStats({
+                            ...stats,
+                            [stat.key]: Number(event.target.value),
+                          })
+                        }
+                      />
+                    )}
+                  </FormRow>
+                ))}
+              </div>
+              <Label variant='overline'>Powers</Label>
+              <Muted variant='caption'>
+                Clearing a name removes that power; the last empty row adds a
+                new one.
+              </Muted>
+              {rows.map((row, index) => (
+                <div
+                  key={index}
+                  className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'
+                >
+                  <Input
+                    aria-label={`Power ${index + 1} name`}
+                    value={row.name}
+                    placeholder='Power name'
+                    onChange={(event) =>
+                      updateRow(index, { name: event.target.value })
+                    }
+                  />
+                  <Select
+                    value={row.effect || undefined}
+                    onValueChange={(value) =>
+                      updateRow(index, { effect: value as ForeignPowerEffect })
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={`Power ${index + 1} effect`}
+                      className='w-full'
+                    >
+                      <SelectValue placeholder='Effect' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {foreignGodPowerEffectValues.map((effect) => (
+                        <SelectItem key={effect} value={effect}>
+                          {FOREIGN_EFFECT_LABEL[effect]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    aria-label={`Power ${index + 1} description`}
+                    value={row.description}
+                    placeholder='What it does'
+                    onChange={(event) =>
+                      updateRow(index, { description: event.target.value })
+                    }
+                  />
+                </div>
+              ))}
+              <Label variant='overline'>Personality</Label>
+              {PERSONALITY_FIELDS.map(([key, label]) => (
+                <FormRow key={key} label={label}>
                   {(id) => (
-                    <Input
+                    <Textarea
                       id={id}
-                      type='number'
-                      min={1}
-                      max={STAT_SCALE}
-                      value={stats[stat.key]}
-                      className='w-32'
+                      value={personality[key]}
                       onChange={(event) =>
-                        setStats({
-                          ...stats,
-                          [stat.key]: Number(event.target.value),
+                        setPersonality({
+                          ...personality,
+                          [key]: event.target.value,
                         })
                       }
                     />
                   )}
                 </FormRow>
               ))}
-            </div>
-            <Label variant='overline'>Powers</Label>
-            <Muted variant='caption'>
-              Clearing a name removes that power; the last empty row adds a new
-              one.
-            </Muted>
-            {rows.map((row, index) => (
-              <div
-                key={index}
-                className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'
-              >
-                <Input
-                  aria-label={`Power ${index + 1} name`}
-                  value={row.name}
-                  placeholder='Power name'
-                  onChange={(event) =>
-                    updateRow(index, { name: event.target.value })
-                  }
-                />
-                <Select
-                  value={row.effect || undefined}
-                  onValueChange={(value) =>
-                    updateRow(index, { effect: value as ForeignPowerEffect })
-                  }
-                >
-                  <SelectTrigger
-                    aria-label={`Power ${index + 1} effect`}
-                    className='w-full'
-                  >
-                    <SelectValue placeholder='Effect' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {foreignGodPowerEffectValues.map((effect) => (
-                      <SelectItem key={effect} value={effect}>
-                        {FOREIGN_EFFECT_LABEL[effect]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  aria-label={`Power ${index + 1} description`}
-                  value={row.description}
-                  placeholder='What it does'
-                  onChange={(event) =>
-                    updateRow(index, { description: event.target.value })
-                  }
-                />
-              </div>
-            ))}
-            <Label variant='overline'>Personality</Label>
-            {PERSONALITY_FIELDS.map(([key, label]) => (
-              <FormRow key={key} label={label}>
+              <Label variant='overline'>Existence</Label>
+              <FormRow label='State'>
                 {(id) => (
-                  <Textarea
+                  <Select value={mode} onValueChange={setMode}>
+                    <SelectTrigger id={id} className='w-48'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Not set</SelectItem>
+                      {existenceModeValues.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {humanize(item)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </FormRow>
+              <FormRow label='Nature'>
+                {(id) => (
+                  <Input
                     id={id}
-                    value={personality[key]}
-                    onChange={(event) =>
-                      setPersonality({
-                        ...personality,
-                        [key]: event.target.value,
-                      })
-                    }
+                    value={nature}
+                    onChange={(event) => setNature(event.target.value)}
                   />
                 )}
               </FormRow>
-            ))}
-            <Label variant='overline'>Existence</Label>
-            <FormRow label='State'>
-              {(id) => (
-                <Select value={mode} onValueChange={setMode}>
-                  <SelectTrigger id={id} className='w-48'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>Not set</SelectItem>
-                    {existenceModeValues.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {humanize(item)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <FormRow label='Manifestation'>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={manifestation}
+                    onChange={(event) => setManifestation(event.target.value)}
+                  />
+                )}
+              </FormRow>
+              <FormRow label='True name'>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={trueName}
+                    onChange={(event) => setTrueName(event.target.value)}
+                  />
+                )}
+              </FormRow>
+              {god.depth && (
+                <>
+                  <Label variant='overline'>Depth</Label>
+                  {DEPTH_TEXTS.map(([key, label]) => (
+                    <FormRow key={key} label={label}>
+                      {(id) => (
+                        <Textarea
+                          id={id}
+                          value={depthTexts[key]}
+                          onChange={(event) =>
+                            setDepthTexts({
+                              ...depthTexts,
+                              [key]: event.target.value,
+                            })
+                          }
+                        />
+                      )}
+                    </FormRow>
+                  ))}
+                  {DEPTH_LISTS.map(([key, label]) => (
+                    <FormRow
+                      key={key}
+                      label={label}
+                      description='One per line.'
+                    >
+                      {(id) => (
+                        <Textarea
+                          id={id}
+                          value={depthLists[key]}
+                          onChange={(event) =>
+                            setDepthLists({
+                              ...depthLists,
+                              [key]: event.target.value,
+                            })
+                          }
+                        />
+                      )}
+                    </FormRow>
+                  ))}
+                </>
               )}
-            </FormRow>
-            <FormRow label='Nature'>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={nature}
-                  onChange={(event) => setNature(event.target.value)}
-                />
-              )}
-            </FormRow>
-            <FormRow label='Manifestation'>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={manifestation}
-                  onChange={(event) => setManifestation(event.target.value)}
-                />
-              )}
-            </FormRow>
-            <FormRow label='True name'>
-              {(id) => (
-                <Input
-                  id={id}
-                  value={trueName}
-                  onChange={(event) => setTrueName(event.target.value)}
-                />
-              )}
-            </FormRow>
-            {god.depth && (
-              <>
-                <Label variant='overline'>Depth</Label>
-                {DEPTH_TEXTS.map(([key, label]) => (
-                  <FormRow key={key} label={label}>
-                    {(id) => (
-                      <Textarea
-                        id={id}
-                        value={depthTexts[key]}
-                        onChange={(event) =>
-                          setDepthTexts({
-                            ...depthTexts,
-                            [key]: event.target.value,
-                          })
-                        }
-                      />
-                    )}
-                  </FormRow>
-                ))}
-                {DEPTH_LISTS.map(([key, label]) => (
-                  <FormRow key={key} label={label} description='One per line.'>
-                    {(id) => (
-                      <Textarea
-                        id={id}
-                        value={depthLists[key]}
-                        onChange={(event) =>
-                          setDepthLists({
-                            ...depthLists,
-                            [key]: event.target.value,
-                          })
-                        }
-                      />
-                    )}
-                  </FormRow>
-                ))}
-              </>
-            )}
+            </FieldTile>
             <div>
               <ActionButton
                 label='Save'

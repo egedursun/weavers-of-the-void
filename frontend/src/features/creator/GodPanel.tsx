@@ -24,9 +24,8 @@ import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { FormRow, KpiTile, Section } from '@/components/domain'
+import { FormRow, KpiTile, Section, FieldTile } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { NamePicker } from '@/features/pantheon/NamePicker'
@@ -255,14 +254,13 @@ export function GodPanel({ doom }: { doom: number }) {
         </FormRow>
         <div className='flex min-w-0 flex-wrap items-center gap-3'>
           <div className='flex min-w-0 items-center gap-2'>
-            <Switch
-              id='doom-calling'
-              checked={calling}
-              onCheckedChange={setCalling}
-            />
-            <FieldLabel htmlFor='doom-calling'>
-              Turn it into the Calling
-            </FieldLabel>
+            <FieldTile id='doom-calling' label='Turn it into the Calling'>
+              <Switch
+                id='doom-calling'
+                checked={calling}
+                onCheckedChange={setCalling}
+              />
+            </FieldTile>
           </div>
           <ActionButton
             label='Bring the apocalypse now'

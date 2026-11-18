@@ -2,9 +2,14 @@ import { useId, useMemo, useState } from 'react'
 import { Feather, Pencil, Trash2 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Button } from '@/components/ui/button'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { EmptyState, EntityLink, Paged, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Paged,
+  Section,
+  FieldTile,
+} from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { fixedCost } from '@/features/entity/actions/gate'
 import { ActionButton } from '@/features/pantheon/ActionButton'
@@ -105,13 +110,14 @@ function ViewRow({
         <Text variant='prose'>{view.text}</Text>
       ) : (
         <div className='flex min-w-0 flex-col gap-2'>
-          <FieldLabel htmlFor={fieldId}>The amended account</FieldLabel>
-          <Textarea
-            id={fieldId}
-            value={draft}
-            maxLength={HISTORIAN_TEXT_MAX}
-            onChange={(event) => setDraft(event.target.value)}
-          />
+          <FieldTile id={fieldId} label='The amended account'>
+            <Textarea
+              id={fieldId}
+              value={draft}
+              maxLength={HISTORIAN_TEXT_MAX}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+          </FieldTile>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
               label='Save the account'

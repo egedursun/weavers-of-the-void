@@ -48,6 +48,7 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
+  FieldTile,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
@@ -187,8 +188,7 @@ function Picker({
   onPick: (value: string) => void
 }) {
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label>{label}</Label>
+    <FieldTile label={label}>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
         <SelectTrigger aria-label={label}>
           <SelectValue />
@@ -201,7 +201,7 @@ function Picker({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </FieldTile>
   )
 }
 
@@ -750,10 +750,7 @@ function ProsthesisRework({
             onPick={setMade}
           />
         )}
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`rework-${prosthesis.id}`}>
-            Quality (0–100)
-          </Label>
+        <FieldTile id={`rework-${prosthesis.id}`} label='Quality (0–100)'>
           <Input
             id={`rework-${prosthesis.id}`}
             type='number'
@@ -767,7 +764,7 @@ function ProsthesisRework({
               )
             }
           />
-        </div>
+        </FieldTile>
       </div>
       <div className='flex justify-end'>
         <Button
@@ -1452,10 +1449,7 @@ function ProsthesisForm({
             onPick={setMade}
           />
         )}
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`quality-${body.node_id}`}>
-            Quality (0–100)
-          </Label>
+        <FieldTile id={`quality-${body.node_id}`} label='Quality (0–100)'>
           <Input
             id={`quality-${body.node_id}`}
             type='number'
@@ -1469,7 +1463,7 @@ function ProsthesisForm({
               )
             }
           />
-        </div>
+        </FieldTile>
       </div>
       <div className='flex justify-end'>
         <Button

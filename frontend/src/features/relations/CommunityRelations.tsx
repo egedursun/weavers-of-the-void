@@ -11,6 +11,7 @@ import {
   FormRow,
   Section,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
@@ -253,47 +254,50 @@ function NewRelation({
   const fail = (error: Error) => toast.error(error.message)
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      <Label variant='overline'>Change a relation</Label>
-      <FormRow label='Other community'>
-        {(id) => (
-          <RecordCombobox
-            id={id}
-            options={optionsFor(
-              {
-                source: 'entity',
-                types: ['people', 'settlement', 'faction', 'cult'],
-                sameType: false,
-              },
-              ctx,
-              data
-            )}
-            value={otherId === null ? null : String(otherId)}
-            onChange={(next) => setOtherId(next === null ? null : Number(next))}
-            placeholder='Choose a community'
-            clearable
-            aria-label='Other community'
-          />
+      <FieldTile group label='Change a relation'>
+        <FormRow label='Other community'>
+          {(id) => (
+            <RecordCombobox
+              id={id}
+              options={optionsFor(
+                {
+                  source: 'entity',
+                  types: ['people', 'settlement', 'faction', 'cult'],
+                  sameType: false,
+                },
+                ctx,
+                data
+              )}
+              value={otherId === null ? null : String(otherId)}
+              onChange={(next) =>
+                setOtherId(next === null ? null : Number(next))
+              }
+              placeholder='Choose a community'
+              clearable
+              aria-label='Other community'
+            />
+          )}
+        </FormRow>
+        {otherId !== null && (
+          <PairStanding entityId={ctx.entity.id} otherId={otherId} />
         )}
-      </FormRow>
-      {otherId !== null && (
-        <PairStanding entityId={ctx.entity.id} otherId={otherId} />
-      )}
-      <FormRow
-        label='Relation value'
-        description={`From ${RELATION_MIN} to ${RELATION_MAX}`}
-      >
-        {(id) => (
-          <Input
-            id={id}
-            type='number'
-            inputMode='numeric'
-            min={RELATION_MIN}
-            max={RELATION_MAX}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-          />
-        )}
-      </FormRow>
+        <FormRow
+          label='Relation value'
+          description={`From ${RELATION_MIN} to ${RELATION_MAX}`}
+        >
+          {(id) => (
+            <Input
+              id={id}
+              type='number'
+              inputMode='numeric'
+              min={RELATION_MIN}
+              max={RELATION_MAX}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+            />
+          )}
+        </FormRow>
+      </FieldTile>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
           disabled={
