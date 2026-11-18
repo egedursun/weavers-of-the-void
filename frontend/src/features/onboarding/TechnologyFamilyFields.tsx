@@ -6,6 +6,7 @@ import { SettingGroup } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
 import { FAMILIES } from '@/features/technology/labels'
 import { type TechFamily } from './api'
+import { eraAtLevel } from './wizardModel'
 import { type StepProps } from './wizardTypes'
 
 const FAMILY_KEYS = Object.keys(FAMILIES) as TechFamily[]
@@ -17,6 +18,14 @@ export function TechnologyFamilyFields({ draft, update, options }: StepProps) {
   const era = (
     options.technology[draft.technology] ?? draft.technology
   ).toLowerCase()
+  const levelLabel = (value: number) => {
+    const reached = eraAtLevel(
+      options.technology_levels,
+      options.technology,
+      value
+    )
+    return reached ? `${value} of ${max} · ${reached}` : `${value} of ${max}`
+  }
   const fill = (on: boolean) =>
     update({
       technologyLevels: on
@@ -37,7 +46,7 @@ export function TechnologyFamilyFields({ draft, update, options }: StepProps) {
             </Text>
             <Muted variant='caption'>
               {set
-                ? `Families you leave as they are stay at ${eraLevel} of ${max}.`
+                ? `Families you leave as they are stay at ${eraLevel} of ${max}, the level of ${era}. Each slider names the age its level reaches.`
                 : `Every family starts at ${eraLevel} of ${max}, the level of ${era}.`}
             </Muted>
           </div>
@@ -60,7 +69,7 @@ export function TechnologyFamilyFields({ draft, update, options }: StepProps) {
                   value={value}
                   min={0}
                   max={max}
-                  level={`${value} of ${max}`}
+                  level={levelLabel(value)}
                   lowLabel='None'
                   highLabel='Highest'
                   onChange={(level) =>

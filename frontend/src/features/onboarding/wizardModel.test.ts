@@ -8,6 +8,7 @@ import {
   resizeFirstSons,
   shapeBlocked,
   shapeLand,
+  eraAtLevel,
   stepProblem,
   toRequest,
 } from './wizardModel'
@@ -123,5 +124,19 @@ describe('genesis wizard model', () => {
     ])
     expect(resizeFirstSons(['rare', 'epic'], 1, 'common')).toEqual(['rare'])
     expect(resizeFirstSons([], 2, 'common')).toEqual(['common', 'common'])
+  })
+
+  it('names the age a family level reaches', () => {
+    const levels = { stone: 0, bronze: 1, iron: 2, steam: 6 }
+    const names = {
+      stone: 'Stone age',
+      bronze: 'Bronze age',
+      iron: 'Iron age',
+      steam: 'Steam age',
+    }
+    expect(eraAtLevel(levels, names, 2)).toBe('Iron age')
+    expect(eraAtLevel(levels, names, 5)).toBe('Iron age')
+    expect(eraAtLevel(levels, names, 8)).toBe('Steam age')
+    expect(eraAtLevel({ iron: 2 }, names, 1)).toBeNull()
   })
 })

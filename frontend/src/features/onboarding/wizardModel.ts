@@ -285,3 +285,15 @@ export function toRequest(
     },
   }
 }
+
+export function eraAtLevel(
+  levels: Record<string, number>,
+  names: Record<string, string>,
+  level: number
+): string | null {
+  const reached = Object.entries(levels)
+    .filter(([, at]) => at <= level)
+    .sort(([, first], [, second]) => first - second)
+  const era = reached.at(-1)?.[0]
+  return era === undefined ? null : (names[era] ?? era)
+}

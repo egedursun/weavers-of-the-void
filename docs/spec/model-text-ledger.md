@@ -1585,7 +1585,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/onboarding/GenesisScreen.tsx` | 28 | 2026-11-16 | `061811bb09f6b596` |
 | `frontend/src/features/onboarding/GenesisStepper.tsx` | 13 | 2026-11-18 | `e169b68f1d130fd4` |
 | `frontend/src/features/onboarding/GenesisWizard.tsx` | 16 | 2026-11-18 | `5ca5b7dcf5690733` |
-| `frontend/src/features/onboarding/TechnologyFamilyFields.tsx` | 10 | 2026-11-16 | `079f339fdf1bf403` |
+| `frontend/src/features/onboarding/TechnologyFamilyFields.tsx` | 11 | 2026-11-18 | `7394731a6a6b3c3e` |
 | `frontend/src/features/onboarding/WizardSteps.tsx` | 48 | 2026-11-18 | `1e5f9e3aee760cb5` |
 | `frontend/src/features/onboarding/WorldBorn.tsx` | 16 | 2026-11-16 | `b3aafb21d5da919e` |
 | `frontend/src/features/onboarding/WorldShapeFields.tsx` | 49 | 2026-11-16 | `1e7e7efd1aae70e7` |
