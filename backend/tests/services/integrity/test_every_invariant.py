@@ -17,6 +17,7 @@ from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.kinds import GoodKindRow, KindHoldingRow
 from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
+from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.technology import TechnologyProfileRow
 from aerona.db.tables.warfare import CaptiveRow
@@ -31,6 +32,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.recording.checkpoints import take_checkpoint
@@ -236,9 +238,14 @@ async def checkpoint_that_lies(session: AsyncSession, world: CoreWorld) -> None:
     found.digest = "not the digest of anything"
 
 
+async def chronicle_kept_by_a_people(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(RecordKeeperRow(kind=RecordKeeperKind.CHRONICLER, scope_node_id=world.creator.id, keeper_entity_id=world.people.id, since_epoch=1, locked=[]))
+
+
 BREAKERS: dict[str, Breaker] = {
     "fact_schema": fact_of_no_kind,
     "kind_known": happening_of_a_retired_kind,
+    "keeper_mortal": chronicle_kept_by_a_people,
     "step_nesting": step_inside_itself,
     "step_action": step_of_no_kind,
     "moment_after_cause": effect_before_cause,

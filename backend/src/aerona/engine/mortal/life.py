@@ -13,7 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.mortal import LifeStage
-from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat, stat_or
@@ -74,7 +74,7 @@ def sex_of_stats(mortal: EntityRow) -> Sex:
 def assign_sex(mortal: EntityRow, sex: Sex | None = None) -> Sex:
     chosen = sex or sex_of_stats(mortal)
     if isinstance(mortal.stats, MortalStats) and mortal.stats.sex != chosen.value:
-        mortal.stats = mortal.stats.model_copy(update={"sex": chosen.value})
+        mortal.stats = revised(mortal.stats, {"sex": chosen.value})
     return chosen
 
 

@@ -23,6 +23,7 @@ from aerona.db.tables.lore import ChronicleRow as ChronicleRecord
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.interconnect.incidents import chains_in
+from aerona.engine.record_keepers.keepers import chronicler_now, identity_of
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.chronicler import ChroniclerContinuity, ChroniclerLink, ChroniclerUserContext, NameKind
 from aerona.prompts.contexts.common import WorldItem
@@ -121,20 +122,13 @@ async def continuity(scope: Scope, epoch: int) -> ChroniclerContinuity:
     rows = list(
         await scope.session.scalars(select(EpochRow).where(EpochRow.epoch < epoch, EpochRow.chronicler_name.is_not(None)).order_by(EpochRow.epoch.desc()))
     )
-    if not rows:
-        return ChroniclerContinuity()
-    current = rows[0]
-    streak = 0
-    for row in rows:
-        if row.chronicler_name != current.chronicler_name:
-            break
-        streak += 1
     links = [
         ChroniclerLink(age=row.epoch, name=row.chronicler_name or "", who=row.chronicler_identity or "")
         for row in reversed(rows[: scope.rules.fate.banned_previous_openings])
     ]
-    head = ChroniclerLink(age=current.epoch, name=current.chronicler_name or "", who=current.chronicler_identity or "")
-    return ChroniclerContinuity(current=head, streak=streak, chain=links)
+    keeper = await chronicler_now(scope.session)
+    head = ChroniclerLink(age=epoch, name=keeper.name, who=await identity_of(scope.session, keeper)) if keeper is not None else None
+    return ChroniclerContinuity(current=head, chain=links)
 
 
 async def name_kinds(scope: Scope, epoch: int) -> list[NameKind]:

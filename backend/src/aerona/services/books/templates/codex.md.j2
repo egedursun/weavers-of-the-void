@@ -627,7 +627,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 ### {{ chapter.numeral }}. {% if chapter.row and chapter.row.name %}{{ chapter.row.name }}{% else %}Epoch {{ chapter.epoch }}{% endif %}
 
 
-*Epoch {{ chapter.epoch }}{% if chapter.row and chapter.row.year_start is not none %} · years {{ chapter.row.year_start }}–{{ chapter.row.year_end }}{% endif %}{% if chapter.row and chapter.row.chronicler_name %} · set down by {{ chapter.row.chronicler_name }}{% if chapter.row.chronicler_identity %}, {{ chapter.row.chronicler_identity }}{% endif %}{% endif %}*
+*Epoch {{ chapter.epoch }}{% if chapter.row and chapter.row.year_start is not none %} · years {{ chapter.row.year_start }}–{{ chapter.row.year_end }}{% endif %}{% if chapter.row and chapter.row.chronicler_name %} · set down by {% if chapter.row.chronicler_entity_id %}[{{ chapter.row.chronicler_name }}](#entity-{{ chapter.row.chronicler_entity_id }}){% else %}{{ chapter.row.chronicler_name }}{% endif %}{% if chapter.row.chronicler_identity %}, {{ chapter.row.chronicler_identity }}{% endif %}{% endif %}*
 
 {% if chapter.row and chapter.row.summary %}
 > {{ chapter.row.summary }}
@@ -649,7 +649,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {% endif %}
 {% for people, view in chapter.perspectives %}
 > *{{ view.text }}*
-> — as {{ people }}'s historian tells it{% if view.historian %} · {{ view.historian }}{% endif %}
+> — as {{ people }}'s historian tells it{% if view.historian %} · {% if view.historian_entity_id %}[{{ view.historian }}](#entity-{{ view.historian_entity_id }}){% else %}{{ view.historian }}{% endif %}{% endif %}
 
 
 {% endfor %}

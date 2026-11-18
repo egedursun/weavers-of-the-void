@@ -17,14 +17,10 @@ WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not 
 {% if previous_names %}
 NAMES OF PREVIOUS AGES (this age takes a name of its own): {{ previous_names[-f.previous_epoch_names_shown:] | join("; ") }}
 {% endif %}
-{% if not continuity.current %}
-Put the mortal who writes this narrative in the "chronicler" field.
-{% elif continuity.streak >= f.chronicler_min_tenure %}
-CHRONICLER: {{ continuity.current.name }} has been writing for {{ continuity.streak | several("age", "ages") }}; this age they may hand the pen to a successor (the successor introduces themselves and whom they took over from in one sentence) or keep writing. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
-
+{% if continuity.current %}
+CHRONICLER: this age is written by {{ continuity.current.name }}, {{ continuity.current.who }}, a mortal living in this world; write the narrative in their voice and do not name another writer.{% if continuity.chain %} Those who wrote the ages before: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}{% endif %}
 {% else %}
-CHRONICLER: this age too is written by {{ continuity.current.name }} ({{ continuity.current.who }}): write the SAME name and identity in the "chronicler" field; do not introduce yourself again, do not say the previous record was lost. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
-
+CHRONICLER: no living mortal keeps the chronicle in this age; tell it as the plain record of the age, with no named writer.
 {% endif %}
 Do NOT copy verbatim the world engine's sentences, the council minutes or the wording of the event lines; tell the fact with the chronicler's own eyes and own words; an event folded as "(this age N times)" is told once, with its repetition. Do not write record numbers (#12), stat names or values in the text (not even in words: "an anger at seventy-five", "twenty-two life"), star glyphs, mood scores; do not mention ledger lines such as bond counts.
 {% if facts %}

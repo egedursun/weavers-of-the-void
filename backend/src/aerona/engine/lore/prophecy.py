@@ -22,7 +22,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.world import SkyEventKind
-from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.progress import grant_progress
@@ -304,7 +304,7 @@ async def reward_fulfilment(ctx: TickContext, prophecy: EntityRow, *, misread: b
     if seer is not None and seer.status is EntityStatus.CANON and isinstance(seer.stats, MortalStats):
         change = -fate.seer_wrong_charisma_loss if misread else fate.seer_correct_charisma
         charisma = max(0, min(PERCENT, (seer.stats.charisma if seer.stats.charisma is not None else fate.seer_default_charisma) + change))
-        seer.stats = seer.stats.model_copy(update={"charisma": charisma})
+        seer.stats = revised(seer.stats, {"charisma": charisma})
     son = await ctx.session.get(SonRow, prophecy.creator_son_id) if prophecy.creator_son_id is not None else None
     if son is not None:
         factor = fate.seer_power_mult if await seer_power(ctx, son) else 1

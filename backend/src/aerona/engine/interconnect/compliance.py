@@ -548,6 +548,17 @@ class ComplianceRow:
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
     ComplianceRow(
+        "F36",
+        ("record_keepers",),
+        ("record_keepers",),
+        ("record_row:create", "record_row:edit", "record_row:delete"),
+        ("KeepersPanel", "section-record-keepers"),
+        ("mortal_context", "chronicler_user", "voices_user"),
+        (),
+        ("record_keeper.",),
+        ("record_keepers",),
+    ),
+    ComplianceRow(
         "F58.1",
         ("incidents", "incident_facts", "incident_participants"),
         (),

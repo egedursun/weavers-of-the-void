@@ -127,7 +127,7 @@ async def test_voices_write_views_and_beliefs(runtime: AgentRuntime, model: Fake
     people = world.core.people.id
     output = payload(
         PromptId.VOICES_USER,
-        views=[{"people_id": people, "historian": "Ehmel", "text": "We were first."}],
+        views=[{"people_id": people, "text": "We were first."}],
         beliefs=[{"people_id": people, "son_id": world.core.son.id, "name": "Ithrenu", "story": "He walks the furrows.", "wrong": "They think he sleeps."}],
     )
     model.script(type(output), output)

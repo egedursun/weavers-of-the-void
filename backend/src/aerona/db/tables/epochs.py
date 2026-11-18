@@ -83,6 +83,7 @@ class EpochRow(Base):
     closed_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     chronicler_name: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
     chronicler_identity: Mapped[str | None] = mapped_column(String(SHORT_TEXT_MAX_LENGTH))
+    chronicler_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     audit: Mapped[ChronicleAuditReport | None] = mapped_column(PydanticJSON(ChronicleAuditReport))
 
 

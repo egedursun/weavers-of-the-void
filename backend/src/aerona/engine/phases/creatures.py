@@ -20,7 +20,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.war import WarCause
-from aerona.domain.models.entity_stats import PeopleStats, ResourceStats, SpeciesStats
+from aerona.domain.models.entity_stats import PeopleStats, ResourceStats, SpeciesStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import (
     BESTOWED,
@@ -138,7 +138,7 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int, chance
             key: clamp_percent(stat_or(species, key, creatures.merged_default_stat) + rng.die(creatures.mutation_die) - creatures.mutation_shift)
             for key in SPECIES_STAT_KEYS
         }
-        stats = stats.model_copy(update=changes)
+        stats = revised(stats, changes)
     cause = "what leaked in from outside" if leak >= creatures.mutation_leak_text_threshold else "curse and magic"
     born = f": {new_trait.value.replace('_', ' ')}" if new_trait is not None else ""
     mutant = await open_record(
@@ -678,7 +678,7 @@ async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityR
             for key in SPECIES_STAT_KEYS
             if stat(species, key) is not None
         }
-        stats = stats.model_copy(update=changes)
+        stats = revised(stats, changes)
     child = await open_record(
         ctx.session,
         ctx.epoch,

@@ -10,7 +10,8 @@ import {
   Section,
   FieldTile,
 } from '@/components/domain'
-import { Label, Text } from '@/components/typography'
+import { Text } from '@/components/typography'
+import { KeeperByline } from '@/features/chronicle/KeeperByline'
 import { fixedCost } from '@/features/entity/actions/gate'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useNames } from '@/features/pantheon/api'
@@ -75,7 +76,12 @@ function ViewRow({
               {people}
             </EntityLink>
           </Text>
-          <Label truncate>{view.historian ?? 'An unnamed historian'}</Label>
+          <KeeperByline
+            lead='Written by'
+            id={view.historian_entity_id}
+            name={view.historian}
+            fallback='a historian whose name is lost'
+          />
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           {draft === null && (

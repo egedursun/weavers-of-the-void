@@ -533,6 +533,7 @@ from aerona.rules.registry.prehistory import PrehistoryRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
+from aerona.rules.registry.record_keepers import RecordKeeperRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.records import RecordsRules
 from aerona.rules.registry.regime import (
@@ -682,6 +683,7 @@ class Rules:
     agents: AgentsRules = field(default_factory=AgentsRules)
     modifiers: ModifiersRules = field(default_factory=ModifiersRules)
     incidents: IncidentRules = field(default_factory=IncidentRules)
+    record_keepers: RecordKeeperRules = field(default_factory=RecordKeeperRules)
     environment: EnvironmentRules = field(default_factory=EnvironmentRules)
     scars: ScarsRules = field(default_factory=ScarsRules)
     regional_danger: RegionalDangerRules = field(default_factory=RegionalDangerRules)

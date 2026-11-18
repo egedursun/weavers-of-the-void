@@ -5,7 +5,7 @@ SON: {{ name }}, {{ title }} ({{ rarity_label }} {{ stars | stars }}, {{ domain_
 Temperament: {{ temperament }}{% if traits %} (its traits, which the temperament must agree with: {{ traits | join(", ") }}){% endif %}
 
 Obsession: {{ obsession }}
-Secret (as much as the bard senses): {{ secret }}
+Secret (only as much as the world has come to know): {{ secret }}
 Plan: {{ plan if plan else "-" }}
 
 CREATIONS: {% if creations %}{% for item in creations %}{{ item.name }} ({{ item.type_label }}{% if item.subtype %}/{{ item.subtype }}{% endif %}, A{{ item.age }}{% if item.status_label %}, {{ item.status_label }}{% endif %}){% if not loop.last %}; {% endif %}{% endfor %}{% else %}none{% endif %}

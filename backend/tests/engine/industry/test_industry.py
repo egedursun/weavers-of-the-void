@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.methods import METHODS
 from aerona.catalog.production import STEPS
+from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
@@ -104,7 +105,7 @@ async def test_a_place_takes_up_a_better_method_displaces_artisans_and_stirs_its
     dated = book.methods[town.id][ProcessKind.SMELTING]
     assert dated.method is MethodKind.BLOOMERY and dated.obsolete_since == ctx.epoch
     assert outdated(book, ctx.rules, town.id, ProcessKind.SMELTING) == 1 - ctx.rules.discovery.obsolete_pct / 100
-    set_stats(town, wealth=ctx.rules.discovery.refit_cost * 10)
+    set_stats(town, wealth=PERCENT)
     tally = MethodTally()
     await choose_methods(ctx, book, town, tally)
     chosen = book.methods[town.id][ProcessKind.SMELTING]
@@ -352,7 +353,7 @@ async def test_a_place_never_chooses_a_method_it_cannot_run_for_want_of_power_or
     assert book.methods[town.id][ProcessKind.FARMING].method is not MethodKind.DIVINE_HARVEST
     realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.INCENSE, quantity=5000, quality=50))
     row.divine = 5000
-    set_stats(town, wealth=ctx.rules.discovery.refit_cost * 10)
+    set_stats(town, wealth=PERCENT)
     await realm.session.flush()
     await choose_methods(ctx, book, town, MethodTally())
     assert book.methods[town.id][ProcessKind.FARMING].method is MethodKind.DIVINE_HARVEST

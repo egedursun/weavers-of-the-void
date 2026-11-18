@@ -224,7 +224,15 @@ async def read_entity(services: ServicesDep, entity_id: int = Path(ge=1)) -> Ent
                 for fact in facts
             ],
             perspectives=[
-                Perspective(id=row.id, epoch=row.epoch, people_id=row.people_entity_id, people_name=entity.name, historian=row.historian, text=row.text)
+                Perspective(
+                    id=row.id,
+                    epoch=row.epoch,
+                    people_id=row.people_entity_id,
+                    people_name=entity.name,
+                    historian=row.historian,
+                    historian_entity_id=row.historian_entity_id,
+                    text=row.text,
+                )
                 for row in histories
             ],
             similar=[

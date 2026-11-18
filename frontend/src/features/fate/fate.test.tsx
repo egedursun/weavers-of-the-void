@@ -65,7 +65,26 @@ function controls(overrides: Partial<FateControls> = {}): FateControls {
         id: 9,
         people_entity_id: 44,
         historian: 'Ossa',
+        historian_entity_id: 51,
         text: 'We remember the salt.',
+      },
+    ],
+    keepers: [
+      {
+        id: 3,
+        kind: 'chronicler',
+        scope_node_id: 1,
+        keeper_entity_id: 51,
+        since_epoch: 4,
+        locked: [],
+      },
+      {
+        id: 4,
+        kind: 'historian',
+        scope_node_id: 44,
+        keeper_entity_id: null,
+        since_epoch: 6,
+        locked: ['keeper_entity_id'],
       },
     ],
     ...overrides,
@@ -133,7 +152,12 @@ describe('fate controls page', () => {
       .element(screen.getByText('The Glass Ossuary'))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByText('The Salt Harbours'))
+      .element(
+        screen
+          .getByRole('listitem')
+          .filter({ hasText: 'We remember the salt.' })
+          .getByText('The Salt Harbours')
+      )
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('We remember the salt.'))
@@ -249,6 +273,41 @@ describe('fate controls page', () => {
     await expect
       .poll(() => server.callsTo('POST /api/actions/voices:delete_view').length)
       .toBe(1)
+  })
+
+  it('shows who keeps the record and lets the world choose again', async () => {
+    const { screen, server } = await renderScreen(<FateControlsPage />, {
+      ...routes(),
+      'POST /api/actions/record_row:edit': {
+        action: 'record_row:edit',
+        message: 'Set.',
+      },
+    })
+    await expect
+      .element(screen.getByText('Keepers of the record'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Chronicler of the cosmos'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('No living mortal keeps it'))
+      .toBeVisible()
+    await screen
+      .getByRole('button', { name: /Let the world choose/ })
+      .nth(1)
+      .click()
+    await expect
+      .poll(() => server.callsTo('POST /api/actions/record_row:edit').length)
+      .toBe(1)
+    expect(server.callsTo('POST /api/actions/record_row:edit')[0].body).toEqual(
+      {
+        table: 'record_keepers',
+        key: { id: 4 },
+        values: {},
+        hold: false,
+        release: ['keeper_entity_id'],
+      }
+    )
   })
 
   it('shows the server error when the controls cannot load', async () => {

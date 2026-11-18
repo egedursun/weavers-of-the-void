@@ -4,9 +4,10 @@ import { formatDateTime } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MentionText } from '@/components/domain/MentionText'
-import { Label, Muted, Text } from '@/components/typography'
+import { Label, Text } from '@/components/typography'
 import { ChronicleAudit } from './ChronicleAudit'
 import { EpochEditForm } from './EpochEditForm'
+import { KeeperByline } from './KeeperByline'
 import { type EpochListItem, type PerspectiveLine } from './api'
 
 type EpochNarrativeProps = {
@@ -68,18 +69,19 @@ export function EpochNarrative({ epoch, perspectives }: EpochNarrativeProps) {
         </TabsList>
       </div>
       <TabsContent value={CHRONICLER} className='flex min-w-0 flex-col gap-4'>
-        {(epoch.chronicler_name ||
-          epoch.chronicler_identity ||
-          epoch.closed_at) && (
-          <Muted variant='caption'>
-            {[
-              epoch.chronicler_name,
+        {(epoch.chronicler_name || epoch.closed_at) && (
+          <KeeperByline
+            lead='Set down by'
+            id={epoch.chronicler_entity_id}
+            name={epoch.chronicler_name}
+            detail={[
               epoch.chronicler_identity,
               epoch.closed_at && `closed ${formatDateTime(epoch.closed_at)}`,
             ]
               .filter(Boolean)
               .join(' · ')}
-          </Muted>
+            fallback='the plain record of the age'
+          />
         )}
         {epoch.narrative && (
           <div className='flex min-w-0 items-start gap-3'>
@@ -130,7 +132,13 @@ export function EpochNarrative({ epoch, perspectives }: EpochNarrativeProps) {
           value={`people-${item.id}`}
           className='flex min-w-0 flex-col gap-2'
         >
-          <Muted variant='caption'>{`As told by ${item.historian ?? 'a nameless historian'} of ${item.people_name ?? 'a people'}; biased, as every people is.`}</Muted>
+          <KeeperByline
+            lead='As told by'
+            id={item.historian_entity_id}
+            name={item.historian}
+            detail={`historian of ${item.people_name ?? 'a people'}; biased, as every people is`}
+            fallback='a historian whose name is lost'
+          />
           <Text variant='prose' italic>
             <MentionText text={item.text} />
           </Text>

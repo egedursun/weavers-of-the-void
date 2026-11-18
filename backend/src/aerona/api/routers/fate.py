@@ -7,8 +7,10 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRunRow, EpochStepRow
 from aerona.db.tables.lore import HistorianViewRow
+from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus, EpochStepKind, EpochStepStatus
+from aerona.domain.enums.record_keepers import RecordKeeperKind
 
 router = APIRouter(tags=["fate"])
 
@@ -32,7 +34,17 @@ class HistorianViewItem(ApiModel):
     id: int
     people_entity_id: int
     historian: str | None
+    historian_entity_id: int | None
     text: str
+
+
+class RecordKeeperItem(ApiModel):
+    id: int
+    kind: RecordKeeperKind
+    scope_node_id: int
+    keeper_entity_id: int | None
+    since_epoch: int
+    locked: list[str]
 
 
 class FateControlsView(ApiModel):
@@ -42,6 +54,7 @@ class FateControlsView(ApiModel):
     steps: list[FateStepState]
     failed_births: int
     views: list[HistorianViewItem]
+    keepers: list[RecordKeeperItem]
 
 
 @router.get("/fate/controls", response_model=FateControlsView)
@@ -76,4 +89,8 @@ async def fate_controls(services: ServicesDep) -> FateControlsView:
             steps=steps,
             failed_births=len(failed),
             views=views,
+            keepers=[
+                RecordKeeperItem.model_validate(row)
+                for row in await session.scalars(select(RecordKeeperRow).order_by(RecordKeeperRow.kind, RecordKeeperRow.id))
+            ],
         )

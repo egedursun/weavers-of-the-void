@@ -100,11 +100,6 @@ class ExtraJudgmentOutput(OutputModel):
     verdicts: list[VerdictOutput]
 
 
-class ChroniclerIdentityOutput(OutputModel):
-    name: str
-    who: str = Field(description="Who they are: their name, their people, their trade and their link to the previous voice")
-
-
 SUMMARY = "One but full sentence (at least {{ rules.fate.summary_min_chars }} characters): who, what, where, and its concrete consequence"
 
 
@@ -152,10 +147,9 @@ class ChronicleOutput(OutputModel):
         description="The mythic name to give this age, drawn from what most defined this age in this world; do NOT REPEAT the names or the shape of the names of previous ages"
     )
     narrative: str = Field(
-        description="This age's narrative of 3 to 5 paragraphs in this world's own tone; from the mouth of a mortal chronicler, binding events together by cause and effect"
+        description="This age's narrative of 3 to 5 paragraphs in this world's own tone; in the voice of the chronicler named in the prompt, binding events together by cause and effect"
     )
     summary: str = Field(description=SUMMARY)
-    chronicler: ChroniclerIdentityOutput = Field(description="The mortal chronicler who writes this age")
     worlds: list[WorldSectionOutput] | None = Field(
         default=None,
         description="A separate section for EACH world (all mandatory, each world once): what happened in that world this age; even if there were few events, how that world's age passed",

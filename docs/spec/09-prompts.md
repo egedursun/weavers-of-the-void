@@ -982,11 +982,10 @@ BORN OF THE WORLD'S OWN COURSE:
 {pending or "(none)"}
 ```
 
-- `chronicler_line` (old chronicler continuity, `kronikciDurumu`):
-  - no previous chronicler: `Put the mortal who writes this narrative in the "chronicler" field.`
-  - previous chronicler has written `streak >= fate.chronicler_tenure` ages: `CHRONICLER: {name} has been writing for {streak} ages; this age they may hand the pen to a successor (the successor introduces themselves and whom they took over from in one sentence) or keep writing. Chain: {Age a: name (who) → …}`
-  - otherwise: `CHRONICLER: this age too is written by {name} ({who}): write the SAME name and identity in the "chronicler" field; do not introduce yourself again, do not say the previous record was lost. Chain: {…}`
-  - chain = last `fate.previous_openings` chroniclers before this age, oldest first, `Age {a}: {name} ({who})`.
+- `chronicler_line`: the chronicler is a living mortal of the world, chosen by the engine step `record_keepers` (a scribe, sage, court chronicler or skilled writer; on death the apprentice or another writer succeeds; the god may hold a choice):
+  - a keeper lives: `CHRONICLER: this age is written by {name}, {who}, a mortal living in this world; write the narrative in their voice and do not name another writer. Those who wrote the ages before: {Age a: name (who) → …}`; `who` is built from typed facts (trade, people, place).
+  - no keeper: `CHRONICLER: no living mortal keeps the chronicle in this age; tell it as the plain record of the age, with no named writer.`
+  - the model never names the chronicler; the old continuity rule (`fate.chronicler_tenure`) is retired.
 - `previous_names` = all previous age names (last `fate.previous_names` shown).
 - `piled_roots` (old `sikAdKokleri`): stems (len ≥ `lang.motif_root_min`, excluding the word "age") appearing in ≥
   `fate.name_root_threshold` previous age names. LANGUAGE-SPECIFIC stemmer.
@@ -1009,9 +1008,8 @@ BORN OF THE WORLD'S OWN COURSE:
 | field | type | description |
 |---|---|---|
 | age_name (cag_adi) | string | The mythic name to give this age, e.g. "Age of the Salt Rains"; do NOT REPEAT the names of previous ages |
-| narrative (anlati) | string | This age's epic narrative of 3–5 paragraphs; from the mouth of a mortal chronicler, binding events together by cause and effect |
+| narrative (anlati) | string | This age's narrative of 3–5 paragraphs in the voice of the chronicler the prompt names, binding events together by cause and effect |
 | summary (ozet) | string, minLength `fate.summary_min` | One but full sentence (at least {fate.summary_min} characters): who, what, where, and what it cost ("without using the word 'price'", with a concrete loss or consequence) |
-| chronicler (kronikci) | object {name (ad), who (kim) "Who they are: their people, their trade, their link to the previous one (e.g. 'Ehmel the Scribe, apprentice of Lemir')"}, both required | The mortal chronicler who writes this age |
 | worlds (dunyalar) — only if > 1 world | array, minItems = maxItems = number of worlds, items {world_id enum [ids], narrative "1–2 paragraphs", summary minLength summary_min same description as above}; all required | A separate section for EACH world (all mandatory, each world once): what happened in that world this age; even if there were few events, how that world's age passed |
 
 required: age_name, narrative, summary, chronicler, [worlds].
@@ -1111,7 +1109,8 @@ rendered "as of that age": epoch/year set to that age, no climate, no age star, 
   7. misunderstands a word and builds the whole belief on that misunderstanding
   8. attributes something the god did to a natural phenomenon (the wind, drought, salt)
 - **schema.voices**:
-  - `views (bakislar)`: array of {people_id int, historian (tarihci) "The historian's name and title, in the people's language", text (metin) "1–2 paragraphs; through this people's eyes, partisan, magnifying its own heroes, belittling its enemies, never mentioning some things"} all required
+  - each historian is a living mortal of that people seated by the engine step `record_keepers`; the prompt names them and the model never invents one.
+  - `views (bakislar)`: array of {people_id int, text (metin) "1–2 paragraphs; through this people's eyes, partisan, magnifying its own heroes, belittling its enemies, never mentioning some things"} all required
   - `beliefs (inanclar)`: array of {people_id int, son_id int "0 for the creator god", name (ad) "The name this people gave him: if given in the prompt, EXACTLY that; if not, a new name with the sounds of the people's own language (NOT the god's name or title)", story (anlati) "2–3 sentences: how this people tells of that god, by the name they gave him", wrong (yanlis) "One sentence: where their account really deviates, in the form of distortion given for that belief in the prompt. Do NOT USE these patterns: {«…they think, whereas…», «In truth …», + piled-up patterns}"} all required
   - required: views, beliefs.
 - Forbidden belief patterns (old `INANC_KALIP_HEP` + `INANC_KALIPLAR`): always `«…they think, whereas…»`,

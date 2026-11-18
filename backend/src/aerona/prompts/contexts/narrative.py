@@ -35,6 +35,9 @@ class NamingContext(LoreContext):
 
 class HistorianEntry(ContextItem):
     people: EntityLineItem
+    historian: str
+    historian_id: int
+    historian_who: str
     world: str | None = None
     society: str = ""
     previous_historian: str | None = None

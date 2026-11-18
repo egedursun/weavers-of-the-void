@@ -8,6 +8,7 @@ export type FateControls = components['schemas']['FateControlsView']
 export type LimboRecord = components['schemas']['LimboRecord']
 export type StepState = components['schemas']['FateStepState']
 export type HistorianView = components['schemas']['HistorianViewItem']
+export type RecordKeeper = components['schemas']['RecordKeeperItem']
 export type VerdictChoice = components['schemas']['VerdictChoice']
 export type ActionResponse = components['schemas']['ActionResponse']
 

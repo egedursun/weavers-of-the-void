@@ -550,6 +550,13 @@ class EnginePhasesRules:
     arcs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arcs read in lives, their beats and outcomes, setups and payoffs, and the drama manager"
     )
+    record_keepers: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the living mortals who keep the chronicle and each people's history, and who takes up the pen when one dies",
+    )
     equipment_forging: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forging weapons, armour and engines into the models of each realm")
     unit_types: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: realms drawing, refitting and sharing their own kinds of soldier")
     vehicle_works: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: yards building vehicles, and the fuel and upkeep of every vehicle group")

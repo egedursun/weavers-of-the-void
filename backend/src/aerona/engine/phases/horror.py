@@ -29,7 +29,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import RouteClosure
 from aerona.domain.enums.world import Discovery
-from aerona.domain.models.entity_stats import OuterBeingStats
+from aerona.domain.models.entity_stats import OuterBeingStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.horror_model import HorrorSpec, drawn_spec, horror_event, keep_horrors, raise_horror, unleash
 from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_breakdown
@@ -377,7 +377,7 @@ async def outer_influence(ctx: TickContext) -> None:
     repository = EntityRepository(ctx.session)
     for being in await canon(ctx.session, [EntityType.OUTER_BEING]):
         interest = clamp_percent(stat_or(being, INTEREST_KEY, horror.default_interest) + rng.die(horror.interest_die) - horror.interest_decay)
-        being.stats = being.stats.model_copy(update={INTEREST_KEY: interest})
+        being.stats = revised(being.stats, {INTEREST_KEY: interest})
         neighbours = (
             [item for item in await repository.contents(being.location_id) if item.entity_type in OUTER_PREY_TYPES] if being.location_id is not None else []
         )

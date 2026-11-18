@@ -31,7 +31,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
-from aerona.domain.models.entity_stats import SpeciesStats
+from aerona.domain.models.entity_stats import SpeciesStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import can_live_on
@@ -133,7 +133,7 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
     word = "Domestic" if stage is S.DOMESTICATED else keeper.name
     stats = parent.stats
     if isinstance(stats, SpeciesStats):
-        stats = stats.model_copy(update={"danger": clamp_int((stat(parent, "danger") or 0) - table.tame_drift, 0, PERCENT)})
+        stats = revised(stats, {"danger": clamp_int((stat(parent, "danger") or 0) - table.tame_drift, 0, PERCENT)})
     child = await create_record(
         ctx,
         RecordSpec(

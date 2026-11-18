@@ -66,9 +66,6 @@ class FateRules:
     historian_opening_chars: int = rule(
         160, 20, 2000, RuleGroup.FATE_AND_CHRONICLE, "Historian prompt: length of the previous narrative opening shown (characters)"
     )
-    chronicler_min_tenure: int = rule(
-        6, 1, 1000, RuleGroup.FATE_AND_CHRONICLE, "Chronicler continuity: minimum epochs a chronicler writes before handing over to a successor"
-    )
     summary_min_chars: int = rule(120, 0, 2000, RuleGroup.FATE_AND_CHRONICLE, "Shortest form of the epoch summary (characters)")
     thread_recent_advancers: int = rule(3, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Recent creations advancing each story in the Fate prompt")
     closure_candidates_shown: int = rule(6, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Stories written into the Fate prompt as priority closure candidates")

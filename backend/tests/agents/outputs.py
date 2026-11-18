@@ -1,6 +1,5 @@
 from aerona.prompts.schemas.fate import (
     ChronicleOutput,
-    ChroniclerIdentityOutput,
     FactOutput,
     FateJudgmentOutput,
     FateWordOutput,
@@ -47,5 +46,4 @@ def chronicle(name: str = "Age of Dry Wells") -> ChronicleOutput:
         age_name=name,
         narrative="Under the stone the diggers sang. The river left. A well was dug where the tale said it would be.",
         summary="The river people lost their river and dug a well that the drought tale had promised, and paid for it with a year of thirst.",
-        chronicler=ChroniclerIdentityOutput(name="Ehmel", who="Ehmel the Scribe of Harrowmere"),
     )

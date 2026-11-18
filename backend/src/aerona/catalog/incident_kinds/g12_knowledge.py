@@ -7,6 +7,7 @@ from aerona.domain.enums.constructs import MindWill
 from aerona.domain.enums.couplings import SignCause, TeachingKind
 from aerona.domain.enums.culture import ArtMode, BoostTrigger, SpeakerKind, Technique
 from aerona.domain.enums.discovery import AgeKind, BlueprintKind, GreatField, ResearchIncident, TheoryDomain
+from aerona.domain.enums.entity import EntityType as E
 from aerona.domain.enums.eras import ProgrammeStage
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.domain.enums.kinds import KindConcept
@@ -17,6 +18,7 @@ from aerona.domain.enums.minds import DisputeOutcome, MindSeat, WillCause
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.networks import NetworkCarrier, OutageCause
 from aerona.domain.enums.polity import ClaimBasis
+from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, ProcessClock, StepAction
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.records import StepAction as A
@@ -1507,5 +1509,29 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(FactSpec("system", FactValue.ENUM, enum=WritingSystem),),
         clock=ProcessClock.YEAR,
         chronicle_kind=K.LANGUAGE,
+    ),
+    IncidentKindSpec(
+        "record_keeper.seated",
+        G.KNOWLEDGE,
+        "{subject} became the {kind} of {authority}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=RecordKeeperKind),),
+        clock=ProcessClock.SEASON,
+    ),
+    IncidentKindSpec(
+        "record_keeper.succeeded",
+        G.KNOWLEDGE,
+        "{subject} became the {kind} of {authority}, taking up the work after {predecessor}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY), RoleSpec(R.PREDECESSOR, frozenset({E.MORTAL}))),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=RecordKeeperKind),),
+        clock=ProcessClock.SEASON,
+    ),
+    IncidentKindSpec(
+        "record_keeper.recovered",
+        G.KNOWLEDGE,
+        "{subject} is remembered in the written record as {kind:an}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})),),
+        facts=(FactSpec("kind", FactValue.ENUM, enum=RecordKeeperKind),),
+        clock=ProcessClock.INSTANT,
     ),
 )

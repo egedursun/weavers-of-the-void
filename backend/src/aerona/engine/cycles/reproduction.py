@@ -10,7 +10,7 @@ from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.breeding import caste_for
 from aerona.engine.mortal.profile import ensure_profile
@@ -55,7 +55,7 @@ async def change_sex(ctx: TickContext, mortal: EntityRow, row: PeopleReproductio
     age = stat_or(mortal, "age", 0)
     if not age >= row.change_age > age - ctx.rules.time.years_per_epoch:
         return
-    mortal.stats = mortal.stats.model_copy(update={"sex": FLIPPED[mortal.stats.sex]})
+    mortal.stats = revised(mortal.stats, {"sex": FLIPPED[mortal.stats.sex]})
     tally.changed += 1
     await record(
         ctx,

@@ -9,7 +9,6 @@ from aerona.prompts.schemas.shared import ExistenceOutput
 
 class HistorianViewOutput(OutputModel):
     people_id: int
-    historian: str = Field(description="The historian's name and title, in the people's language")
     text: str = Field(
         description="1 to 2 paragraphs; from this people's own side and interests: partial where its standing is at stake, silent on what it would rather forget"
     )
@@ -123,7 +122,7 @@ class ForeignGodDepthOutput(OutputModel):
 
 class SonEpicOutput(OutputModel):
     title: str = Field(description="The epic's name")
-    epic: str = Field(description="4 to 6 paragraphs; from the mouth of a mortal bard, binding events by cause and effect")
+    epic: str = Field(description="4 to 6 paragraphs, binding events by cause and effect")
     line: str = Field(description="The single best-known line of the epic")
 
 

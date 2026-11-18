@@ -53140,6 +53140,7 @@ export interface components {
       closed_at: string | null
       chronicler_name: string | null
       chronicler_identity: string | null
+      chronicler_entity_id: number | null
       audit?: components['schemas']['ChronicleAuditReport'] | null
       worlds?: components['schemas']['WorldNarrative'][]
     }
@@ -53178,6 +53179,7 @@ export interface components {
       closed_at: string | null
       chronicler_name: string | null
       chronicler_identity: string | null
+      chronicler_entity_id: number | null
       audit?: components['schemas']['ChronicleAuditReport'] | null
     }
     EpochResumedEvent: {
@@ -54722,6 +54724,7 @@ export interface components {
       steps: components['schemas']['FateStepState'][]
       failed_births: number
       views: components['schemas']['HistorianViewItem'][]
+      keepers: components['schemas']['RecordKeeperItem'][]
     }
     FateFinishedEvent: {
       id: number
@@ -57508,6 +57511,7 @@ export interface components {
       id: number
       people_entity_id: number
       historian: string | null
+      historian_entity_id: number | null
       text: string
     }
     HistoryDetail: {
@@ -67090,6 +67094,7 @@ export interface components {
       people_id: number
       people_name: string | null
       historian: string | null
+      historian_entity_id: number | null
       text: string
     }
     PerspectiveLine: {
@@ -67098,6 +67103,7 @@ export interface components {
       people_id: number
       people_name: string | null
       historian: string | null
+      historian_entity_id: number | null
       text: string
     }
     PersuasionAim: 'belief' | 'decision' | 'faith' | 'vote' | 'treaty'
@@ -69813,6 +69819,15 @@ export interface components {
       end: components['schemas']['RecordEnd']
       reason: string
     }
+    RecordKeeperItem: {
+      id: number
+      kind: components['schemas']['RecordKeeperKind']
+      scope_node_id: number
+      keeper_entity_id: number | null
+      since_epoch: number
+      locked: string[]
+    }
+    RecordKeeperKind: 'chronicler' | 'historian'
     RecordRetireInput: {
       entity_id: number
       reason: string
@@ -172880,6 +172895,9 @@ export const rechargeRuleValues: ReadonlyArray<
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
+export const recordKeeperKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RecordKeeperKind']
+> = ['chronicler', 'historian']
 export const recruitMotiveValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecruitMotive']
 > = ['money', 'ideology', 'compromise', 'ego']

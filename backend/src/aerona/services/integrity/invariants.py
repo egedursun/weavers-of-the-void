@@ -23,6 +23,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.constructs import OrderKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.war import CaptiveStatus
+from aerona.services.integrity.ages_links import free_keeper_seat, keepers_not_mortal
 from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
 from aerona.services.integrity.kind_links import bring_into_range, cut_lineage, drop_holding, kinds_out_of_range, stray_holdings, tangled_lineage
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
@@ -357,6 +358,7 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "change_in_scope": (unscoped_changes, scope_change),
     "checkpoint_holds": (broken_checkpoints, retake_checkpoint),
     "kind_known": (unknown_kinds, retire_kind),
+    "keeper_mortal": (keepers_not_mortal, free_keeper_seat),
 }
 
 

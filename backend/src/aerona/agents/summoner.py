@@ -40,6 +40,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.world import Discovery
+from aerona.domain.models.entity_stats import revised
 from aerona.domain.models.profiles import ExistenceProfile, Personality
 from aerona.domain.models.stats import PassionBlock
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
@@ -178,7 +179,7 @@ async def insert_son(
     ]
     stats = inherited_stats(rules, rng, stats, parents)
     checked = fate_check(rules, budget_of(rules, rarity, MIN_STARS), design_of(profile))
-    stats = stats.model_copy(update=scaled_stats(stats.model_dump(), checked.stats_pct))
+    stats = revised(stats, scaled_stats(stats.model_dump(), checked.stats_pct))
     first, second = inherited_domains(rng, (profile.domain_1, second), parents)
     home = world_id if world_id is not None else await son_world(session, rules, parentage.parent_id, None)
     name = await NameRepository(session).unique_name(await distinct_god_name(session, rules, profile.name, home))

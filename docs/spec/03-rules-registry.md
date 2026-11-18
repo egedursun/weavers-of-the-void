@@ -2793,7 +2793,6 @@ Old namespace `KADER` · 74 rows · defined in `src/agents.js`. Fate (judge) and
 | budget_previous_judgments_chars | butce_onceki_hukum | 2500 | 0 | 50,000 | Context budgets | Chronicler prompt: Fate's judgments from the previous epoch (characters) |
 | historian_opening_chars | bakis_acilis | 160 | 20 | 2000 | Fate and chronicle | Historian prompt: length of the previous narrative opening shown (characters) |
 | prescreen_tired_images | on_eleme_motif | 3 | 1 | 50 | Fate and chronicle | Prescreen: warning if this many tired images appear in the description |
-| chronicler_min_tenure | kronikci_sure | 6 | 1 | 1000 | Fate and chronicle | Chronicler continuity: minimum epochs a chronicler writes before handing over to a successor |
 | shared_tic_forms | soz_ortak_bicim | 3 | 1 | 20 | Fate and chronicle | Shared message tic: forms shown from the root family |
 | shared_tic_cap | soz_ortak_tavan | 3 | 0 | 20 | Fate and chronicle | Shared message tic: maximum forbidden roots |
 | message_tic_min_messages | soz_tik_en_az | 4 | 1 | 200 | Fate and chronicle | Message tic: minimum messages before checking starts |

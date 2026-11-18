@@ -14,6 +14,7 @@ import { Text } from '@/components/typography'
 import { FateJobRow } from './FateJobRow'
 import { FateStepList } from './FateStepList'
 import { HistorianViewsPanel } from './HistorianViewsPanel'
+import { KeepersPanel } from './KeepersPanel'
 import { LimboPanel } from './LimboPanel'
 import { type FateControls, useFateControls } from './api'
 import { FATE_JOBS } from './fateModel'
@@ -123,6 +124,7 @@ export function FateControlsPage() {
           <FateState controls={controls.data} />
           <FateJobs controls={controls.data} />
           <LimboPanel limbo={controls.data.limbo} />
+          <KeepersPanel keepers={controls.data.keepers} />
           <HistorianViewsPanel
             views={controls.data.views}
             epoch={controls.data.last_epoch}

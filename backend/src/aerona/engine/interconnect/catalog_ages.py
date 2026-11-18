@@ -10,6 +10,7 @@ from aerona.db.tables.ages import (
     SetupRow,
     WinterForecastRow,
 )
+from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 S = Subsystem
@@ -50,7 +51,7 @@ AGES_MECHANICS = (
         tools=("unsettle_seasons", "lengthen_winter", "forecast_seasons"),
         targets=("world", "people", "settlement", "mortal"),
         couplings=(
-            Coupling(S.ECONOMY, "a long winter eats the food of every town", E.FLOW, "long_seasons.winter_loss_pct"),
+            Coupling(S.ECONOMY, "a long winter uses up the food of every town", E.FLOW, "long_seasons.winter_loss_pct"),
             Coupling(S.ENVIRONMENT, "a long winter cuts the harvest of its world by its severity", E.MODIFIER, "long_seasons.winter_harvest_pct"),
             Coupling(S.KNOWLEDGE, "scholars of the sky forecast the turn of a long season", E.TRIGGER, "long_seasons.scholar_skill"),
             Coupling(S.SOCIAL, "a people that heeds its scholars stores food against the winter", E.MODIFIER, "long_seasons.prepared_share"),
@@ -116,6 +117,24 @@ AGES_MECHANICS = (
         couplings=(
             Coupling(S.SOCIAL, "a killing of kin, a rivalry, an apprenticeship or a forbidden love starts a tale", E.TRIGGER, "arcs.detect_chance"),
             Coupling(S.CULTURE, "the chronicler tells events as parts of the tales they belong to", E.FLOW, "arcs.open_arcs"),
+        ),
+    ),
+    Mechanic(
+        key="record_keepers",
+        spec_item="F36",
+        title="Keepers of the record: living mortals write the chronicle of every age and each people's history; a successor takes up the pen when one dies",
+        subsystem=S.CULTURE,
+        phases=("record_keepers",),
+        surface=Surface(drawer="section-record-keepers"),
+        backfill="record_keepers: chroniclers and historians named in old ages become mortals of the world, the latest still writing",
+        templates=("record_keeper.seated", "record_keeper.succeeded", "record_keeper.recovered"),
+        tables=(RecordKeeperRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people"),
+        couplings=(
+            Coupling(S.KNOWLEDGE, "a scribe, a court chronicler or a skilled writer keeps the record", E.TRIGGER, "record_keepers.writing_weight_pct"),
+            Coupling(S.SOCIAL, "an apprentice of the dead keeper takes up the work", E.TRIGGER, "record_keepers.apprentice_weight"),
+            Coupling(S.CULTURE, "the chronicle and each people's account are written in the voice of their keeper", E.FLOW, "record_keepers.lettered_weight"),
         ),
     ),
     Mechanic(

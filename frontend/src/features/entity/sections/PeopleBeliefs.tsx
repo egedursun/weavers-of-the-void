@@ -15,6 +15,7 @@ import {
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label } from '@/components/typography'
+import { KeeperByline } from '@/features/chronicle/KeeperByline'
 import { type EntityContext } from '../actions/context'
 import { optionsFor } from '../actions/pickers'
 import { usePickerData } from '../actions/usePickerData'
@@ -158,9 +159,13 @@ export function PeopleBeliefs({
           >
             {(item) => (
               <li className='flex min-w-0 flex-col gap-1 rounded-md border surface-sheen border-gild/60 bg-card px-3 py-2'>
-                <Label>
-                  {`Epoch ${formatInteger(item.epoch)} · ${item.historian ?? 'a nameless historian'}`}
-                </Label>
+                <Label>{`Epoch ${formatInteger(item.epoch)}`}</Label>
+                <KeeperByline
+                  lead='Written by'
+                  id={item.historian_entity_id}
+                  name={item.historian}
+                  fallback='a historian whose name is lost'
+                />
                 <ExpandableText lines={4}>{item.text}</ExpandableText>
               </li>
             )}

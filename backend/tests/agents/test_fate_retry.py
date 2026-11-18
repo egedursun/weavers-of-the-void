@@ -78,7 +78,7 @@ async def test_rejudge_limbo_without_limbo_is_refused(runtime: AgentRuntime, dat
 
 async def test_retry_voices_writes_views_again(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
     await seed_run(database)
-    output = payload(PromptId.VOICES_USER, views=[{"people_id": world.core.people.id, "historian": "Ehmel", "text": "We were first."}], beliefs=[])
+    output = payload(PromptId.VOICES_USER, views=[{"people_id": world.core.people.id, "text": "We were first."}], beliefs=[])
     model.script(type(output), output)
     result = await retry.retry_voices(runtime)
     async with database.read() as session:

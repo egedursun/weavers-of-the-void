@@ -26,12 +26,14 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import Epic
 from aerona.engine.interconnect.incidents import chains_in
 from aerona.engine.mind.book import traits_of
 from aerona.engine.primitives.folk_names import clashes, folk_god_name, guarded_names
 from aerona.engine.primitives.naming import Namer
+from aerona.engine.record_keepers.keepers import identity_of, keeper_of
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.common import ChronicleRow as ChronicleLine
@@ -70,9 +72,11 @@ async def historians(scope: Scope, peoples: list[EntityRow]) -> list[HistorianEn
             select(HistorianViewRow.people_entity_id, func.max(HistorianViewRow.epoch)).group_by(HistorianViewRow.people_entity_id)
         )
     )
-    chosen = sorted(peoples, key=lambda people: (last.get(people.id, -1), -population(people)))[: scope.rules.fate.historians_per_epoch]
+    kept = {people.id: keeper for people in peoples if (keeper := await keeper_of(scope.session, RecordKeeperKind.HISTORIAN, people.id)) is not None}
+    chosen = sorted((people for people in peoples if people.id in kept), key=lambda people: (last.get(people.id, -1), -population(people)))
     entries = []
-    for people in chosen:
+    for people in chosen[: scope.rules.fate.historians_per_epoch]:
+        keeper = kept[people.id]
         world = scope.world_name(people.world_id) if scope.multi_world else ""
         previous = await scope.session.scalar(
             select(HistorianViewRow).where(HistorianViewRow.people_entity_id == people.id).order_by(HistorianViewRow.epoch.desc()).limit(1)
@@ -80,6 +84,9 @@ async def historians(scope: Scope, peoples: list[EntityRow]) -> list[HistorianEn
         entries.append(
             HistorianEntry(
                 people=line_item(people),
+                historian=keeper.name,
+                historian_id=keeper.id,
+                historian_who=await identity_of(scope.session, keeper),
                 world=world or None,
                 previous_historian=previous.historian if previous else None,
                 previous_age=previous.epoch if previous else None,
@@ -190,7 +197,7 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
         output=VoicesOutput,
         time_limit=rules.fate.voices_timeout,
     )
-    allowed_views = {entry.people.id for entry in writers}
+    allowed_views = {entry.people.id: entry for entry in writers}
     allowed_pairs = {(pair.people_id, pair.son_id): pair for pair in pairs}
     views = beliefs = 0
     async with runtime.database.write() as session:
@@ -200,7 +207,10 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             if view.people_id not in allowed_views or not text:
                 continue
             await session.execute(delete(HistorianViewRow).where(HistorianViewRow.epoch == epoch, HistorianViewRow.people_entity_id == view.people_id))
-            session.add(HistorianViewRow(epoch=epoch, people_entity_id=view.people_id, historian=view.historian.strip() or None, text=text))
+            writer = allowed_views[view.people_id]
+            session.add(
+                HistorianViewRow(epoch=epoch, people_entity_id=view.people_id, historian=writer.historian, historian_entity_id=writer.historian_id, text=text)
+            )
             views += 1
         for belief in output.beliefs:
             pair = allowed_pairs.get((belief.people_id, belief.son_id))

@@ -498,6 +498,7 @@ class EpochRecord(ApiModel):
     closed_at: datetime | None
     chronicler_name: str | None
     chronicler_identity: str | None
+    chronicler_entity_id: int | None
     audit: ChronicleAuditReport | None = None
 
 

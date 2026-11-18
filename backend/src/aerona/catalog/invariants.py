@@ -122,6 +122,13 @@ TYPED: tuple[InvariantSpec, ...] = (
         Remedy.REPAIR,
         "set down as one who saw it within the place, or heard of it from elsewhere",
     ),
+    InvariantSpec(
+        "keeper_mortal",
+        "record_keepers",
+        "the chronicle and each people's history are kept by a mortal",
+        Remedy.REPAIR,
+        "the seat is freed for the world to choose a living mortal",
+    ),
     InvariantSpec("change_in_scope", "state_changes", "every change the engine made belongs to a happening", Remedy.REPAIR, "linked to the phase that made it"),
     InvariantSpec(
         "checkpoint_holds", "state_checkpoints", "the past rebuilt from the changes equals each checkpoint", Remedy.REPAIR, "the checkpoint taken again"

@@ -1,6 +1,7 @@
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from aerona.domain.models.base import ValueObject
 
@@ -368,3 +369,8 @@ EntityStats = Annotated[
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]
+
+
+def revised[S: BaseModel](stats: S, changes: Mapping[str, object]) -> S:
+    made: S = type(stats).model_validate({**stats.model_dump(), **changes})
+    return made

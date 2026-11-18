@@ -101,7 +101,15 @@ async def perspectives(services: ServicesDep, epoch: int | None = Query(default=
             statement = statement.where(HistorianViewRow.epoch == epoch)
         rows = await session.execute(statement.order_by(HistorianViewRow.epoch.desc(), HistorianViewRow.id))
         return [
-            PerspectiveLine(id=row.id, epoch=row.epoch, people_id=row.people_entity_id, people_name=name, historian=row.historian, text=row.text)
+            PerspectiveLine(
+                id=row.id,
+                epoch=row.epoch,
+                people_id=row.people_entity_id,
+                people_name=name,
+                historian=row.historian,
+                historian_entity_id=row.historian_entity_id,
+                text=row.text,
+            )
             for row, name in rows
         ]
 

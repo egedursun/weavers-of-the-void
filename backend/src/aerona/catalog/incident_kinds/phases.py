@@ -318,6 +318,7 @@ PHASE_NAMES: tuple[str, ...] = (
     "rebel_theft",
     "reciprocity",
     "record_checkpoints",
+    "record_keepers",
     "refining",
     "refugees",
     "regimes",

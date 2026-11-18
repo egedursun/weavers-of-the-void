@@ -19,7 +19,6 @@ class ChroniclerLink(ContextItem):
 
 class ChroniclerContinuity(ContextItem):
     current: ChroniclerLink | None = None
-    streak: int = 0
     chain: list[ChroniclerLink] = Field(default_factory=list)
 
 

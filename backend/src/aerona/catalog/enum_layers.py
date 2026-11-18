@@ -885,6 +885,7 @@ ENUM_LAYERS: dict[str, EnumLayer] = {
     "quests.QuestScale": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "quests.QuestTargetKind": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "rarity.Rarity": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
+    "record_keepers.RecordKeeperKind": EnumLayer("process", "process: a state, outcome, source, role or rule the engine keeps"),
     "records.FactUnit": EnumLayer("process", "process: the typed outcome, cause or measure a record of events keeps (49.2)"),
     "records.FactValue": EnumLayer("process", "process: the typed outcome, cause or measure a record of events keeps (49.2)"),
     "records.IncidentTier": EnumLayer("process", "process: the typed outcome, cause or measure a record of events keeps (49.2)"),

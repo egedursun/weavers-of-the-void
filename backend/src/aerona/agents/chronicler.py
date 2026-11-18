@@ -11,12 +11,13 @@ from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import replace_name, sanitize
-from aerona.constants.agents import AGE_NAME_ORDINALS, CHRONICLER_IDENTITY_CHARS, CHRONICLER_NAME_CHARS
+from aerona.constants.agents import AGE_NAME_ORDINALS
 from aerona.db.repositories.names import normalize_name
 from aerona.db.tables.epochs import EpochRow, EpochWorldNarrativeRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
 from aerona.domain.models.records import ChronicleAuditReport, ChronicleCoverage
+from aerona.engine.record_keepers.keepers import chronicler_now, identity_of
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.chronicler import ChroniclerSystemContext, ChroniclerUserContext
 from aerona.prompts.contexts.common import WorldItem
@@ -34,6 +35,7 @@ class Chronicle:
     summary: str
     chronicler_name: str | None = None
     chronicler_identity: str | None = None
+    chronicler_id: int | None = None
     worlds: dict[int, WorldSectionOutput] = field(default_factory=dict)
     coverage: ChronicleCoverage = field(default_factory=ChronicleCoverage)
     audit: ChronicleAuditReport | None = None
@@ -56,11 +58,17 @@ def from_output(output: ChronicleOutput) -> Chronicle:
         age_name=sanitize(output.age_name),
         narrative=sanitize(output.narrative),
         summary=sanitize(output.summary),
-        chronicler_name=output.chronicler.name.strip()[:CHRONICLER_NAME_CHARS] or None,
-        chronicler_identity=output.chronicler.who.strip()[:CHRONICLER_IDENTITY_CHARS] or None,
         worlds={section.world_id: section for section in output.worlds or []},
         coverage=coverage_from(output.coverage),
     )
+
+
+async def signed(runtime: AgentRuntime, chronicle: Chronicle) -> Chronicle:
+    async with runtime.database.read() as session:
+        keeper = await chronicler_now(session)
+        if keeper is not None:
+            chronicle.chronicler_name, chronicle.chronicler_identity, chronicle.chronicler_id = keeper.name, await identity_of(session, keeper), keeper.id
+    return chronicle
 
 
 def system_context(scope: Scope) -> ChroniclerSystemContext:
@@ -83,7 +91,7 @@ async def write_chronicle(runtime: AgentRuntime, epoch: int, engine_notes: Seque
         time_limit=rules.fate.fate_timeout,
         constraints=chronicle_constraints(context.worlds),
     )
-    return from_output(output)
+    return await signed(runtime, from_output(output))
 
 
 async def missing_world_sections(runtime: AgentRuntime, epoch: int, missing: Sequence[WorldItem], prompt: PromptId) -> dict[int, WorldSectionOutput]:
@@ -171,6 +179,7 @@ async def record_age(scope: Scope, chronicle: Chronicle, epoch: int) -> EpochRow
     row.closed_at = datetime.now(UTC)
     row.chronicler_name = chronicle.chronicler_name or row.chronicler_name
     row.chronicler_identity = chronicle.chronicler_identity or row.chronicler_identity
+    row.chronicler_entity_id = chronicle.chronicler_id or row.chronicler_entity_id
     row.audit = chronicle.audit or row.audit
     for world_id, section in chronicle.worlds.items():
         if world_id not in scope.worlds:
@@ -229,7 +238,7 @@ async def backfill_epoch(runtime: AgentRuntime, epoch: int) -> None:
         time_limit=rules.fate.backfill_timeout,
         constraints=chronicle_constraints(context.worlds),
     )
-    chronicle = from_output(output)
+    chronicle = await signed(runtime, from_output(output))
     await audit_chronicle(runtime, chronicle, epoch)
     async with runtime.database.write() as session:
         await record_age(await load_scope(session, rules), chronicle, epoch)

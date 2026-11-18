@@ -631,6 +631,7 @@ from aerona.db.tables.powers import (
     SystemRestrictionRow,
 )
 from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
+from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow, IncidentTermRow
 from aerona.db.tables.regime import (
     AcademicFreedomRow,
@@ -1346,6 +1347,7 @@ __all__ = [
     "ReadingKindRow",
     "RealmKindRow",
     "ReconstructionRow",
+    "RecordKeeperRow",
     "RegimeRow",
     "RegionCropRow",
     "RegionDangerRow",

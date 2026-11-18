@@ -16,6 +16,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.models.entity_stats import revised
 from aerona.engine.divine import control
 from aerona.engine.divine.foreign import friendship, pact_between, seal_pact
 from aerona.engine.divine.goals import GOAL_LABELS, active_goals
@@ -107,7 +108,7 @@ async def ward_against_outer(call: SonCall, args: WardInput) -> str:
     require_essence(call, cost)
     call.spend_essence(cost)
     call.son.sanity = clamp_percent((call.son.sanity if call.son.sanity is not None else PERCENT) - table.oppose_sanity)
-    being.stats = being.stats.model_copy(update={"interest": clamp_percent(stat_or(being, "interest", 0) - table.ward_interest)})
+    being.stats = revised(being.stats, {"interest": clamp_percent(stat_or(being, "interest", 0) - table.ward_interest)})
     for breach in await call.session.scalars(select(BreachPointRow).where(BreachPointRow.outer_entity_id == being.id)):
         if "strength" not in breach.locked:
             breach.strength = clamp_int(breach.strength - table.ward_breach, 1, PERCENT)

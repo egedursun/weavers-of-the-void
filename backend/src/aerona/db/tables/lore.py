@@ -77,6 +77,7 @@ class HistorianViewRow(CreatedAtMixin, Base):
     epoch: Mapped[int] = mapped_column(index=True)
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     historian: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))
+    historian_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     text: Mapped[str] = mapped_column(Text)
 
 

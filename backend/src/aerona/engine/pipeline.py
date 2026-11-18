@@ -125,6 +125,7 @@ from aerona.engine.phases import (
     production,
     prosperity,
     realms,
+    record_keepers,
     recording,
     refugees,
     regimes,
@@ -185,6 +186,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + interconnect.PHASES
     + interconnect.THREAD_PHASES
     + afterlife.PHASES
+    + record_keepers.PHASES
     + belief_memory.PHASES
     + births.PHASES
     + body.PHASES
@@ -697,6 +699,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "concealment",
     "ages",
     "arcs",
+    "record_keepers",
 )
 AGING_STAGE = stage(
     "body_healing",

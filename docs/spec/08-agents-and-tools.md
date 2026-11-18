@@ -202,7 +202,6 @@ count for agent turns), input_tokens (input + cache_read + cache_creation), outp
 | fate.previous_verdicts_budget | butce_onceki_hukum | 2500 | 0 | 50000 | CB | Chronicler prompt: previous age's Fate verdicts (chars) |
 | fate.view_opening | bakis_acilis | 160 | 20 | 2000 | FC | Historian prompt: length of the previous account's opening shown (chars) |
 | fate.prescreen_motif | on_eleme_motif | 3 | 1 | 50 | FC | Pre-screen: warning if this many tired images appear in the description |
-| fate.chronicler_tenure | kronikci_sure | 6 | 1 | 1000 | FC | Chronicler continuity: min ages a chronicler writes before handing over |
 | fate.shared_tic_forms | soz_ortak_bicim | 3 | 1 | 20 | FC | Shared tic: forms shown from a root family |
 | fate.shared_tic_max | soz_ortak_tavan | 3 | 0 | 20 | FC | Shared tic: max roots forbidden |
 | fate.word_tic_min | soz_tik_en_az | 4 | 1 | 200 | FC | Word tic: min words before looking |

@@ -223,6 +223,7 @@ class HomeLine(ContextItem):
     means: list[str] = Field(default_factory=list)
     economy: list[str] = Field(default_factory=list)
     honours: list[str] = Field(default_factory=list)
+    record_keeping: list[str] = Field(default_factory=list)
     world_nature: list[str] = Field(default_factory=list)
     biology: list[str] = Field(default_factory=list)
     grounds: list[str] = Field(default_factory=list)

@@ -28,4 +28,5 @@ class PerspectiveLine(ApiModel):
     people_id: int
     people_name: str | None
     historian: str | None
+    historian_entity_id: int | None
     text: str

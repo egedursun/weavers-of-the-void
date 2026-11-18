@@ -241,6 +241,7 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.entity_flags",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
 )
 async def dark_ages(ctx: TickContext) -> None:

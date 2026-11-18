@@ -23,7 +23,7 @@ from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
 from aerona.domain.enums.world import DARK_STAR_TYPES
-from aerona.domain.models.entity_stats import CultStats
+from aerona.domain.models.entity_stats import CultStats, revised
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.wounds import inflict
@@ -169,7 +169,7 @@ async def outer_feeding(ctx: TickContext) -> int:
             row.unfed_epochs = 0 if eaten else row.unfed_epochs + 1
         if eaten:
             influence = clamp_percent(stat_or(being, "influence", 0) + table.influence_per_meal)
-            being.stats = being.stats.model_copy(update={"influence": influence})
+            being.stats = revised(being.stats, {"influence": influence})
             fed += eaten
             await record(
                 ctx,

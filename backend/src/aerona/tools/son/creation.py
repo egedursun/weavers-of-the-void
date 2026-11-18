@@ -31,7 +31,7 @@ from aerona.domain.enums.mind import TraitKind, TraitSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
-from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
 from aerona.engine.ecology.anatomy import beast_anatomy, give_attacks
@@ -470,7 +470,7 @@ def _foreign_sounds(name: str, phonology: Phonology | None) -> str | None:
 async def _mortal_nature(call: SonCall, args: CreationInput, created: EntityRow) -> None:
     sex = args.option("sex")
     if sex is not None and isinstance(created.stats, MortalStats):
-        created.stats = created.stats.model_copy(update={"sex": Sex(sex).value})
+        created.stats = revised(created.stats, {"sex": Sex(sex).value})
     for trait in args.option("traits") or []:
         await add_trait(call.session, created.id, TraitKind(trait), TraitSource.BIRTH, call.epoch)
 

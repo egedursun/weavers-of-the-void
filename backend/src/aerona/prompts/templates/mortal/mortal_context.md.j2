@@ -100,6 +100,7 @@ YOUR WORK: {{ stores.job }}{% endif %}{% endif %}
 {% endif %}{% if home and home.means %}WATER, PILOTS, CONTAINERS AND WRITING: {{ home.means | join('; ') }}
 {% endif %}{% if home and home.economy %}ECONOMIC ORDER AND SAVING: {{ home.economy | join('; ') }}
 {% endif %}{% if home and home.honours %}UNITS AND VETERANS: {{ home.honours | join('; ') }}
+{% endif %}{% if home and home.record_keeping %}THE RECORD YOU KEEP: {{ home.record_keeping | join('; ') }}
 {% endif %}{% if home and home.world_nature %}THE NATURE OF YOUR WORLD: {{ home.world_nature | join('; ') }}
 {% endif %}{% if home and home.biology %}THE NATURE OF YOUR BODY: {{ home.biology | join('; ') }}
 {% endif %}{% if home and home.grounds %}COLLECTIONS, GARDENS AND FINDS OF YOUR TOWN: {{ home.grounds | join('; ') }}

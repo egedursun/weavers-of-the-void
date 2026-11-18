@@ -6,13 +6,13 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 864 |
-| enum | 1259 |
-| step | 450 |
+| table | 865 |
+| enum | 1260 |
+| step | 451 |
 | incident | 2 |
 | tool | 556 |
 | lever | 2255 |
-| screen | 1345 |
+| screen | 1348 |
 | text | 195 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
@@ -648,6 +648,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | reading_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | realm_kinds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | reconstructions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | record_keepers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | regimes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | region_crops | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | region_dangers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -1772,6 +1773,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.quests.QuestScale | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.quests.QuestTargetKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.rarity.Rarity | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.record_keepers.RecordKeeperKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.FactUnit | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.FactValue | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.records.IncidentTier | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2455,6 +2457,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | rebel_theft | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | reciprocity | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | record_checkpoints | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | record_keepers | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refining | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | refugees | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | regimes | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
@@ -5566,6 +5569,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/chronicle/EpochStrip | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/EpochTraces | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/FeedLines | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/chronicle/KeeperByline | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/chronicle/KeeperName | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/OlderLinesButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/RecordSearch | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/chronicle/YearStrip | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6243,6 +6248,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/fate/FateStatusCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/FateStepList | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/HistorianViewsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/fate/KeepersPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/LimboPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/fate/OverrideVerdictDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/feed/FeedCollector | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

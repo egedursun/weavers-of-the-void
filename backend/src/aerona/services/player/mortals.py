@@ -17,7 +17,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import MemoryKind, Profession
 from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, EquipmentSlot, LifeStage, MarriageEnd, PunishmentKind
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
-from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.equipment import SLOT_CLASSES, SLOT_COLUMNS, fits_slot
 from aerona.engine.mortal.justice import sentence
@@ -185,7 +185,7 @@ async def set_sex(scope: PlayerScope, command: SetSex) -> Effect:
     mortal = await mortal_of(scope, command.mortal_id)
     if not isinstance(mortal.stats, MortalStats):
         raise ValidationFailedError("Only mortals have a sex.")
-    mortal.stats = mortal.stats.model_copy(update={"sex": command.sex.value})
+    mortal.stats = revised(mortal.stats, {"sex": command.sex.value})
     return Effect(f"{mortal.name} is now {spoken(command.sex)}.", target_node_id=mortal.id)
 
 

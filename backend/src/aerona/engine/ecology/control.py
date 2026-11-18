@@ -32,7 +32,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
-from aerona.domain.models.entity_stats import BeastStats, SpeciesStats
+from aerona.domain.models.entity_stats import BeastStats, SpeciesStats, revised
 from aerona.engine.body.book import ensure_species_body
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import fall, hand_over, owned_items, profile_beast
@@ -421,7 +421,7 @@ async def create_beast(ctx: TickContext, draft: NewBeast, *, world_id: int | Non
     world = lair.world_id if lair is not None else species.world_id if species is not None else world_id
     stats = draft.stats
     if stats.hp is None:
-        stats = stats.model_copy(update={"hp": (stat_or(species, "hp", PERCENT)) * 2 if species is not None else PERCENT * 2})
+        stats = revised(stats, {"hp": (stat_or(species, "hp", PERCENT)) * 2 if species is not None else PERCENT * 2})
     beast = await create_record(
         ctx,
         RecordSpec(

@@ -21,12 +21,12 @@ WHAT REALLY HAPPENED DURING AGE {{ age }}:
 {% endif %}
 {% if chains %}
 
-CHAINS OF CAUSE (a bard tells why, each people from its own side):
+CHAINS OF CAUSE (each people tells why from its own side):
 {{ chains | join("\n") }}
 {% endif %}
 
 {% if tales %}
-TALES UNDER WAY IN LIVES THIS AGE (a historian or bard who tells these events tells them as parts of these tales, from its own people's side):
+TALES UNDER WAY IN LIVES THIS AGE (the historian who tells these events tells them as parts of these tales, from its own people's side):
 {% for tale in tales %}
 - {{ tale.subject }}: a tale of {{ tale.template }}, now at its {{ tale.stage }}{% if tale.outcome != "open" %}, ended {{ tale.outcome }}{% endif %}
 {% endfor %}
@@ -40,9 +40,10 @@ PAYOFFS THIS AGE (each pays off what was set up in an earlier age; a people that
 
 {% endif %}
 {% if historians %}
-HISTORIANS (for each, this age's account from its own people's side; do not open with "We …", do not repeat the opening of the previous account; the previous historian continues or their apprentice takes over{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
+HISTORIANS (for each, this age's account from its own people's side; do not open with "We …", do not repeat the opening of the previous account; each account is written by the historian named for it, a mortal of that people{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
 {% for entry in historians %}
 people_id {{ entry.people.id }}{% if entry.world %} (its world: {{ entry.world }}){% endif %}: {{ entity_line(entry.people) }}
+Its historian, who writes this account: {{ entry.historian }}, {{ entry.historian_who }}, a mortal of this people.
 {% if entry.society %}
 {{ entry.society }}
 {% endif %}
@@ -58,7 +59,7 @@ Previous historian: {{ entry.previous_historian if entry.previous_historian else
 {% if beliefs %}
 BELIEFS (how each people tells of this god by the name it gave the god; each belief's distortion is written in the form given to it, no two beliefs use the same sentence construction):
 {% for pair in beliefs %}
-people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id }}, in truth {{ pair.son_name }}, {{ pair.son_title }} ({{ pair.domain_1 }}/{{ pair.domain_2 }}); {% if pair.known_name %}this people calls the god "{{ pair.known_name }}"{% else %}this people has not yet given the god a name: give one with the sounds of the {{ pair.people_name }} people's language{% endif %}. Form of distortion: {{ distortions[(pair.people_id + pair.son_id + loop.index0) % (distortions | length)] }}.{% if pair.son_id == 0 %} This is the creator of all the gods; how they know the creator follows their own beliefs and what the creator has done among them.{% elif pair.worshipped %} They worship this god.{% else %} They do not worship this god; they regard them with their own mix of awe, curiosity, indifference, suspicion or hostility.{% endif %}
+people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id }}, in truth {{ pair.son_name }}, {{ pair.son_title }} ({{ pair.domain_1 }}/{{ pair.domain_2 }}); {% if pair.known_name %}this people calls the god "{{ pair.known_name }}"{% else %}this people has not yet given the god a name: give one with the sounds of the {{ pair.people_name }} people's language{% endif %}. Form of distortion: {{ distortions[(pair.people_id + pair.son_id + loop.index0) % (distortions | length)] }}.{% if pair.son_id == 0 %} This is the creator of all the gods; how they know the creator follows their own beliefs and what the creator has done among them.{% elif pair.worshipped %} They worship this god.{% else %} They do not worship this god; how they regard the god follows what the god has done among them.{% endif %}
 
 {% endfor %}
 

@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.ages import AgeEchoRow, ArcRow, SetupRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.record_keepers import RecordKeeperRow
 from aerona.domain.enums.ages import ArcOutcome, PayoffKind
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 
 
 async def mend_ages_links(session: AsyncSession, epoch: int) -> int:
@@ -18,3 +19,19 @@ async def mend_ages_links(session: AsyncSession, epoch: int) -> int:
         result = await session.execute(statement)
         mended += max(0, getattr(result, "rowcount", 0) or 0)
     return mended
+
+
+async def keepers_not_mortal(session: AsyncSession) -> list[int]:
+    found: list[int] = []
+    for row in await session.scalars(select(RecordKeeperRow).where(RecordKeeperRow.keeper_entity_id.is_not(None)).order_by(RecordKeeperRow.id)):
+        keeper = await session.get(EntityRow, row.keeper_entity_id)
+        if keeper is None or keeper.entity_type is not EntityType.MORTAL:
+            found.append(row.id)
+    return found
+
+
+async def free_keeper_seat(session: AsyncSession, key: int) -> None:
+    row = await session.get(RecordKeeperRow, key)
+    if row is not None:
+        row.keeper_entity_id = None
+        row.locked = [field for field in row.locked or [] if field != "keeper_entity_id"]

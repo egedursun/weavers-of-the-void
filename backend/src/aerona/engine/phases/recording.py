@@ -619,6 +619,7 @@ from aerona.engine.recording.checkpoints import due, take_checkpoint
     "table.reading_kinds",
     "table.realm_kinds",
     "table.reconstructions",
+    "table.record_keepers",
     "table.regimes",
     "table.region_crops",
     "table.region_dangers",

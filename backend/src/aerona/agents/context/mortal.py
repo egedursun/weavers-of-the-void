@@ -23,6 +23,7 @@ from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
 from aerona.agents.context.justice import case_lines, proposal_lines
+from aerona.agents.context.keeper_lines import mortal_keeper_lines
 from aerona.agents.context.kinds_lines import mortal_kinds_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.law_lines import mortal_law_lines
@@ -234,6 +235,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "means": await mortal_means_lines(scope, me),
             "economy": await mortal_economy_lines(scope, me),
             "honours": await mortal_honours_lines(scope, me),
+            "record_keeping": await mortal_keeper_lines(scope, me),
             "world_nature": await mortal_world_lines(scope, me),
             "biology": await mortal_biology_lines(scope, me),
             "grounds": await mortal_grounds_lines(scope, me),

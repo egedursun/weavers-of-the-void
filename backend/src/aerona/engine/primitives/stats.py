@@ -5,6 +5,7 @@ from aerona.constants.engine import UNBOUNDED_STAT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.models.entity_stats import revised
 from aerona.engine.interconnect.guards import READ_MODE, WRITE_MODE, blocked, observed, record_flow
 from aerona.engine.primitives.modifiers import LIVE_MODIFIERS, base_for, combine, live_contributions
 from aerona.engine.primitives.numbers import round_half_up
@@ -86,7 +87,7 @@ def set_stats(entity: EntityRow, **values: int | None) -> bool:
         before = getattr(entity.stats, key)
         if isinstance(before, int) and isinstance(value, int):
             record_flow(entity.id, key, value - before)
-    entity.stats = entity.stats.model_copy(update=update)
+    entity.stats = revised(entity.stats, update)
     return True
 
 

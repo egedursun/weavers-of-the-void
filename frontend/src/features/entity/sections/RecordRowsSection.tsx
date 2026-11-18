@@ -252,6 +252,7 @@ const TABLE_LOOKS: Record<string, Look> = {
   mobs: CROWDS_LOOK,
   movements: CROWDS_LOOK,
   accounts: MEMORY_LOOK,
+  record_keepers: MEMORY_LOOK,
   account_stances: MEMORY_LOOK,
   memory_strikes: MEMORY_LOOK,
   founding_myths: MEMORY_LOOK,

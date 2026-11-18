@@ -192,7 +192,6 @@ def chronicler_user() -> chronicler.ChroniclerUserContext:
         previous_names=["Age of Brine"],
         continuity=chronicler.ChroniclerContinuity(
             current=chronicler.ChroniclerLink(age=4, name="Ehmel", who="scribe of the Kael"),
-            streak=2,
             chain=[chronicler.ChroniclerLink(age=4, name="Ehmel", who="scribe of the Kael")],
         ),
         name_kinds=[
@@ -513,7 +512,14 @@ def voices() -> narrative.VoicesContext:
         age_events="A war began.",
         historians=[
             narrative.HistorianEntry(
-                people=PEOPLE, society="Civilization tier: kingdom", previous_historian="Ehmel", previous_age=4, previous_opening="The salt woke"
+                people=PEOPLE,
+                historian="Ehmel",
+                historian_id=12,
+                historian_who="scribe of the Kael in Harrowmere",
+                society="Civilization tier: kingdom",
+                previous_historian="Ehmel",
+                previous_age=4,
+                previous_opening="The salt woke",
             )
         ],
         beliefs=[
