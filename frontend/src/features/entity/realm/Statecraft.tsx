@@ -42,6 +42,7 @@ import {
   PagedList,
   RangeField,
   StatBar,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -431,14 +432,13 @@ function OfficeEditor({
         title='Shape this office'
         note='Name it, give or take its powers, seat a holder, or abolish the seat.'
       >
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Title</Label>
+        <FieldTile label='Title'>
           <Input
             value={title}
             disabled={busy !== null}
             onChange={(event) => setTitle(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div
           role='group'
           aria-label='Powers'
@@ -551,15 +551,14 @@ function CreateOffice({
         blocked={busy}
         onPick={setKind}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Title</Label>
+      <FieldTile label='Title'>
         <Input
           value={title}
           placeholder='The title of the office'
           disabled={busy !== null}
           onChange={(event) => setTitle(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <RecordField
         label='First holder'
         types={MORTALS}
@@ -1067,15 +1066,14 @@ export function FoundRealm({ blocked }: { blocked: string | null }) {
         onChange={setCore}
         blocked={busy}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Name</Label>
+      <FieldTile label='Name'>
         <Input
           value={name}
           placeholder='The name of the realm'
           disabled={busy !== null}
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <ChoiceGrid
         label='Government'
         table={GOVERNMENTS}

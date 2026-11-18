@@ -3,8 +3,8 @@ import { Eye, Footprints, HeartPulse, Swords, Zap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { KpiTile } from '@/components/domain'
-import { Label, Muted } from '@/components/typography'
+import { KpiTile, FieldTile } from '@/components/domain'
+import { Muted } from '@/components/typography'
 import { SPAN } from '@/features/cycles/model'
 import { why } from '@/features/dominion/model'
 import { NumberField } from '@/features/entity/realm/parts'
@@ -155,10 +155,7 @@ export function WoundsPanel({
             blocked={busy}
             onChange={setForce}
           />
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label as='label' htmlFor={reasonId} truncate>
-              Why it falls
-            </Label>
+          <FieldTile id={reasonId} label='Why it falls'>
             <Input
               id={reasonId}
               value={reason}
@@ -167,7 +164,7 @@ export function WoundsPanel({
               disabled={busy !== null}
               onChange={(event) => setReason(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <Button
             size='sm'
             variant='destructive'

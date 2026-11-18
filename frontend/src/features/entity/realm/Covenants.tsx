@@ -30,6 +30,7 @@ import {
   Paged,
   PagedList,
   RangeField,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -279,14 +280,13 @@ export function HouseEditor({
           blocked={busy}
           onChange={setWealth}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Motto</Label>
+        <FieldTile label='Motto'>
           <Input
             value={motto}
             disabled={busy !== null}
             onChange={(event) => setMotto(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <RecordField
           label='Head of the house'
           types={MORTALS}

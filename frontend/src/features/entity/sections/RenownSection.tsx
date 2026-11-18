@@ -12,6 +12,7 @@ import {
   KpiTile,
   Paged,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -821,10 +822,7 @@ function LoreCard({ view, blocked }: Props) {
           blocked={busy}
           onPick={setKind}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`lore-key-${view.node_id}`}>
-            Which piece
-          </Label>
+        <FieldTile id={`lore-key-${view.node_id}`} label='Which piece'>
           <Input
             id={`lore-key-${view.node_id}`}
             placeholder='Technique key, or site, region or prophecy'
@@ -832,7 +830,7 @@ function LoreCard({ view, blocked }: Props) {
             onChange={(event) => setKey(event.target.value)}
             disabled={busy !== null}
           />
-        </div>
+        </FieldTile>
         <NodePicker
           label='About'
           types={ABOUT}

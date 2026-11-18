@@ -59,6 +59,7 @@ import {
   StatBar,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -1280,17 +1281,14 @@ function YieldControls({ id, card, blocked }: Blocked) {
           </Paged>
         </ul>
         <div className='grid min-w-0 grid-cols-1 items-end gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label as='label' htmlFor={`yield-product-${id}`}>
-              Product
-            </Label>
+          <FieldTile id={`yield-product-${id}`} label='Product'>
             <Input
               id={`yield-product-${id}`}
               value={product}
               placeholder='What it gives'
               onChange={(event) => setProduct(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <MindPicker
             label='Counts as goods'
             value={commodity}

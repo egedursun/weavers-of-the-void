@@ -113,7 +113,7 @@ for (const file of sourceFiles(SOURCE)) {
 const FIELD_CONTROLS = new Set(['Input', 'RecordCombobox', 'Textarea', 'SelectTrigger', 'MultiSelect', 'Select', 'Switch', 'Slider'])
 const SRC = path.join(ROOT, 'src')
 const parsed = new Map(
-  sourceFiles(SRC).map((file) => [file, ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)])
+  [...new Set([...sourceFiles(SRC), ...sourceFiles(SOURCE)])].map((file) => [file, ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)])
 )
 const fieldFaces = new Map()
 for (const [file, source] of parsed) {
@@ -133,6 +133,25 @@ for (const [file, source] of parsed) {
     visit(statement)
     if (control) fieldFaces.set(`${file}#${statement.name.text}`, framed ? 'framed' : 'bare')
   }
+}
+
+const LABELS = new Set(['Label', 'FieldLabel'])
+
+function unframedProp(element) {
+  return element.attributes.properties.some(
+    (attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === 'framed' && attribute.initializer?.getText() === '{false}'
+  )
+}
+
+function inlineFace(node) {
+  const element = ts.isJsxElement(node) ? node.openingElement : node
+  const tag = element.tagName.getText()
+  if (tag === 'FieldTile') return unframedProp(element) ? 'bare' : 'framed'
+  if (FIELD_CONTROLS.has(tag) && tag !== 'Select') return 'bare'
+  if (!/^[a-z]/.test(tag) || !ts.isJsxElement(node)) return undefined
+  const inner = rendered([...node.children]).map((child) => (ts.isJsxElement(child) ? child.openingElement : child).tagName.getText())
+  if (!inner.some((name) => LABELS.has(name)) || !inner.some((name) => FIELD_CONTROLS.has(name))) return undefined
+  return TILE_SURFACE.test(classText(node)) ? 'framed' : 'bare'
 }
 
 function moduleFile(from, specifier) {
@@ -158,15 +177,14 @@ for (const [file, source] of parsed) {
       if (faceOf) fields.set(statement.name.text, faceOf)
     }
   }
-  if (fields.size === 0) continue
   const visit = (node) => {
     if (ts.isJsxElement(node)) {
       const bare = new Set()
       const framed = new Set()
-      for (const child of node.children) {
-        const element = ts.isJsxElement(child) ? child.openingElement : ts.isJsxSelfClosingElement(child) ? child : null
-        const tag = element?.tagName.getText()
-        const faceOf = tag ? fields.get(tag) : undefined
+      for (const child of rendered([...node.children])) {
+        const element = ts.isJsxElement(child) ? child.openingElement : child
+        const tag = element.tagName.getText()
+        const faceOf = fields.get(tag) ?? inlineFace(child)
         if (!faceOf) continue
         const unframed = element.attributes.properties.some(
           (attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === 'framed' && attribute.initializer?.getText() === '{false}'

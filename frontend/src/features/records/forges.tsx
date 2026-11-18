@@ -17,8 +17,7 @@ import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { ConfirmDialog, RangeField } from '@/components/domain'
-import { Label } from '@/components/typography'
+import { ConfirmDialog, RangeField, FieldTile } from '@/components/domain'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { DAMAGE } from '@/features/entity/body/labels'
@@ -188,15 +187,14 @@ export function FactForge({
         />
       }
     >
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Name of the fact</Label>
+      <FieldTile label='Name of the fact'>
         <Input
           aria-label='Name of the fact'
           value={key}
           disabled={reason !== null}
           onChange={(event) => setKey(event.target.value.trim().toLowerCase())}
         />
-      </div>
+      </FieldTile>
       <ChoiceField
         label='What it holds'
         value={valueKind}
@@ -229,15 +227,14 @@ export function FactForge({
           blocked={reason}
         />
       ) : (
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>The name</Label>
+        <FieldTile label='The name'>
           <Input
             aria-label='The name'
             value={name}
             disabled={reason !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
       )}
     </ForgeCard>
   )
@@ -744,15 +741,14 @@ export function FactEditor({
           blocked={reason}
         />
       ) : kind === 'name' ? (
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>The name</Label>
+        <FieldTile label='The name'>
           <Input
             aria-label='The name'
             value={name}
             disabled={reason !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
       ) : null}
       <StepButton
         icon={Check}
@@ -1126,15 +1122,14 @@ export function IncidentEditor({
         </div>
       }
     >
-      <div className='flex min-w-0 flex-col gap-1 @lg/forge:col-span-3'>
-        <Label>How it is told</Label>
+      <FieldTile label='How it is told' className='@lg/forge:col-span-3'>
         <Textarea
           aria-label='How it is told'
           value={text}
           disabled={reason !== null || account.locked.includes('text')}
           onChange={(event) => setText(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <RangeField
         label='How much it weighed'
         icon={ScrollText}
@@ -1147,15 +1142,14 @@ export function IncidentEditor({
         onChange={setMagnitude}
         disabledReason={reason}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Kind of happening</Label>
+      <FieldTile label='Kind of happening'>
         <Input
           aria-label='Kind of happening'
           value={kind}
           disabled={reason !== null}
           onChange={(event) => setKind(event.target.value.trim().toLowerCase())}
         />
-      </div>
+      </FieldTile>
       <NumberField
         label='Year'
         value={year}

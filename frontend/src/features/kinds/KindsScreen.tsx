@@ -9,8 +9,8 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  FieldTile,
 } from '@/components/domain'
-import { Label } from '@/components/typography'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
@@ -112,17 +112,14 @@ function KindForge({
         />
       }
     >
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor='kind-forge-name'>
-          Name of the kind
-        </Label>
+      <FieldTile id='kind-forge-name' label='Name of the kind'>
         <Input
           id='kind-forge-name'
           value={name}
           disabled={blocked !== null}
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <ChoiceField
         label='Category'
         value={category}

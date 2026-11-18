@@ -266,19 +266,17 @@ function HolyDayRow({
         )}
       </div>
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='flex min-w-0 flex-1 basis-40 flex-col gap-1'>
-          <Label
-            as='label'
-            htmlFor={`holy-${calendar.knowledge_id}-${day.index}`}
-          >
-            Name
-          </Label>
+        <FieldTile
+          id={`holy-${calendar.knowledge_id}-${day.index}`}
+          label='Name'
+          className='flex-1 basis-40'
+        >
           <Input
             id={`holy-${calendar.knowledge_id}-${day.index}`}
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <SeasonPicker seasons={seasons} value={season} onChange={setSeason} />
         <Button
           variant='outline'
@@ -367,24 +365,24 @@ function NewHolyDay({
     (add.isPending ? WORKING : null)
   return (
     <div className='flex min-w-0 flex-wrap items-end gap-2 rounded-md p-2 sealed-well'>
-      <div className='flex min-w-0 flex-1 basis-40 flex-col gap-1'>
-        <Label as='label' htmlFor={`holy-new-${calendar.knowledge_id}`}>
-          New holy day
-        </Label>
+      <FieldTile
+        id={`holy-new-${calendar.knowledge_id}`}
+        label='New holy day'
+        className='flex-1 basis-40'
+      >
         <Input
           id={`holy-new-${calendar.knowledge_id}`}
           value={name}
           placeholder='The name of the holy day'
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <SeasonPicker
         seasons={data.seasons}
         value={season}
         onChange={setSeason}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Remembers</Label>
+      <FieldTile label='Remembers'>
         <Select value={year} onValueChange={setYear}>
           <SelectTrigger aria-label='Remembered year'>
             <SelectValue />
@@ -398,7 +396,7 @@ function NewHolyDay({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FieldTile>
       <SwitchField label='Found its fast' checked={fast} onChange={setFast} />
       <Button
         disabled={reason !== null}
@@ -634,17 +632,14 @@ function NewSeason({
     (add.isPending ? WORKING : null)
   return (
     <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`season-new-${data.world_id}`}>
-          Add a season
-        </Label>
+      <FieldTile id={`season-new-${data.world_id}`} label='Add a season'>
         <Input
           id={`season-new-${data.world_id}`}
           value={name}
           placeholder='The name of the season'
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <div className='grid min-w-0 grid-cols-2 gap-2 @lg/year:grid-cols-5'>
         {(Object.keys(NEW_SEASON) as (keyof typeof NEW_SEASON)[]).map((key) => (
           <NumberField
@@ -789,16 +784,17 @@ function NotableRow({
         size='sm'
         variant='secondary'
       >{`${kind.label} · ${year.year}`}</Badge>
-      <div className='flex min-w-0 flex-1 basis-40 flex-col gap-1'>
-        <Label as='label' htmlFor={`notable-${year.id}`}>
-          Name
-        </Label>
+      <FieldTile
+        id={`notable-${year.id}`}
+        label='Name'
+        className='flex-1 basis-40'
+      >
         <Input
           id={`notable-${year.id}`}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <NumberField
         label='Magnitude'
         value={magnitude}

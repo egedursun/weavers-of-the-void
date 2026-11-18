@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { KpiTile, Paged } from '@/components/domain'
+import { KpiTile, Paged, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
   AdjustPanel,
@@ -345,8 +345,7 @@ function ForcedRow({
     (save.isPending ? WORKING : null)
   return (
     <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label>Weather</Label>
+      <FieldTile label='Weather'>
         <Select value={kind} onValueChange={setKind}>
           <SelectTrigger aria-label='Held weather'>
             <SelectValue />
@@ -359,7 +358,7 @@ function ForcedRow({
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FieldTile>
       <NumberField
         label='Until epoch'
         value={until}

@@ -33,6 +33,7 @@ import {
   Paged,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
@@ -402,15 +403,14 @@ function StructureForm({
           blocked={busy}
           onPick={setKind}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Name</Label>
+        <FieldTile label='Name'>
           <Input
             value={name}
             placeholder='Named by the heavens if left empty'
             onChange={(event) => setName(event.target.value)}
             aria-label='Structure name'
           />
-        </div>
+        </FieldTile>
         <NumberField
           label='Radius'
           value={radius}

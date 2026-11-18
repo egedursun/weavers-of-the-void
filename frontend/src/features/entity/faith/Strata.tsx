@@ -6,7 +6,7 @@ import { funeralCustomValues, tenetKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { PagedList } from '@/components/domain'
+import { PagedList, FieldTile } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { useCosmography } from '@/features/cosmography/api'
 import { useSons } from '@/features/pantheon/api'
@@ -216,14 +216,13 @@ export function StratumEditor({
     >
       <div data-surface='StratumEditor' className='flex min-w-0 flex-col gap-3'>
         <div className='grid min-w-0 grid-cols-1 gap-3 @md/soul:grid-cols-2'>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Name</Label>
+          <FieldTile label='Name'>
             <Input
               value={name}
               aria-label='Name'
               onChange={(event) => setName(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <NumberField
             label='Priority'
             min={0}

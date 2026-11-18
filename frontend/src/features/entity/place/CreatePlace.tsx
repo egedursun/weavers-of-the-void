@@ -3,8 +3,8 @@ import { Plus } from 'lucide-react'
 import { placeKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Section } from '@/components/domain'
-import { Label, Muted } from '@/components/typography'
+import { Section, FieldTile } from '@/components/domain'
+import { Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { busyOf, PERCENT } from '../lore/model'
 import { MindPicker } from '../mind/parts'
@@ -43,17 +43,14 @@ export function CreatePlace({ regionId }: { regionId: number }) {
           label='Create'
         >
           <div className='grid min-w-0 grid-cols-1 gap-3 @md/place:grid-cols-2 @3xl/place:grid-cols-3'>
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label as='label' htmlFor={`place-name-${regionId}`}>
-                Name
-              </Label>
+            <FieldTile id={`place-name-${regionId}`} label='Name'>
               <Input
                 id={`place-name-${regionId}`}
                 value={name}
                 maxLength={60}
                 onChange={(event) => setName(event.target.value)}
               />
-            </div>
+            </FieldTile>
             <MindPicker
               label='Kind'
               value={kind}

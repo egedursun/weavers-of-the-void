@@ -9,8 +9,9 @@ import {
   LoadingBlock,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
-import { Label } from '@/components/typography'
+import { Text } from '@/components/typography'
 import { Chip, ForgeCard } from '@/features/cosmography/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { HistoryById, HistoryCard } from './HistoryCard'
@@ -18,6 +19,7 @@ import {
   type CollectionKind,
   type CollectionRole,
   useGatheringAction,
+  useHistory,
   useLifeLog,
 } from './api'
 import { useOpenHistory, why } from './history'
@@ -26,6 +28,26 @@ import { ThingPicker } from './parts'
 
 const NAME_MAX = 120
 const PLACE_TYPES = ['place', 'settlement', 'structure', 'region']
+
+function ParentHistoryNote({ id }: { id: number | null }) {
+  const parent = useHistory(id)
+  const text =
+    id === null
+      ? 'Stands on its own.'
+      : parent.isPending
+        ? 'Looking for that history…'
+        : parent.isError
+          ? 'No history has that number.'
+          : `Within ${parent.data.collection.name}.`
+  return (
+    <Text
+      variant='caption'
+      tone={id !== null && parent.isError ? 'destructive' : 'muted'}
+    >
+      {text}
+    </Text>
+  )
+}
 
 export function SetDownHistory({
   nodeId,
@@ -98,10 +120,7 @@ export function SetDownHistory({
         blocked={busy}
         onPick={(value) => setKind(value as CollectionKind)}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`history-name-${nodeId ?? 'all'}`}>
-          History name
-        </Label>
+      <FieldTile id={`history-name-${nodeId ?? 'all'}`} label='History name'>
         <Input
           id={`history-name-${nodeId ?? 'all'}`}
           value={name}
@@ -110,7 +129,7 @@ export function SetDownHistory({
           disabled={busy !== null}
           onChange={(event) => setName(event.target.value)}
         />
-      </div>
+      </FieldTile>
       {nodeId !== undefined && (
         <MindPicker
           label='Part this one plays'
@@ -174,10 +193,10 @@ export function SetDownHistory({
         blocked={busy}
         types={PLACE_TYPES}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`history-parent-${nodeId ?? 'all'}`}>
-          Within history number
-        </Label>
+      <FieldTile
+        id={`history-parent-${nodeId ?? 'all'}`}
+        label='Within history number'
+      >
         <Input
           id={`history-parent-${nodeId ?? 'all'}`}
           inputMode='numeric'
@@ -186,7 +205,8 @@ export function SetDownHistory({
           disabled={busy !== null}
           onChange={(event) => setParent(event.target.value.replace(/\D/g, ''))}
         />
-      </div>
+        <ParentHistoryNote id={parent === '' ? null : Number(parent)} />
+      </FieldTile>
     </ForgeCard>
   )
 }

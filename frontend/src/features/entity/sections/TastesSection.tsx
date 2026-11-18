@@ -12,6 +12,7 @@ import {
   Paged,
   PagedList,
   Section,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
@@ -192,8 +193,7 @@ function TasteControls({ view }: { view: CultureMind }) {
             setTarget(null)
           }}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>What</Label>
+        <FieldTile label='What'>
           <RecordCombobox
             options={options}
             value={target}
@@ -203,7 +203,7 @@ function TasteControls({ view }: { view: CultureMind }) {
             disabledReason={busy ?? undefined}
             aria-label='What they feel for'
           />
-        </div>
+        </FieldTile>
         <MindPicker
           label='How much'
           value={strength}

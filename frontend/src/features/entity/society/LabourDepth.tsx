@@ -7,13 +7,18 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { IconStat, Medallion, MiniStat, Paged } from '@/components/domain'
+import {
+  IconStat,
+  Medallion,
+  MiniStat,
+  Paged,
+  FieldTile,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NodePicker } from '@/features/dominion/parts'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -203,10 +208,10 @@ function LabourControls({
         />
       </EditorGroup>
       <EditorGroup title='Corvee' icon={HardHat} pairs>
-        <div className='flex min-w-0 flex-col gap-1.5'>
-          <FieldLabel htmlFor={`corvee-${view.entity_id}`}>
-            Share of the farmhands taken
-          </FieldLabel>
+        <FieldTile
+          id={`corvee-${view.entity_id}`}
+          label='Share of the farmhands taken'
+        >
           <Input
             id={`corvee-${view.entity_id}`}
             type='number'
@@ -216,7 +221,7 @@ function LabourControls({
             disabled={busy !== null}
             onChange={(event) => setShare(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='flex min-w-0 items-end gap-2'>
           <Button
             size='sm'

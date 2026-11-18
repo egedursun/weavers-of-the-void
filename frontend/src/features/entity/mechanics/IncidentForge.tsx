@@ -277,16 +277,13 @@ export function IncidentForge({
           </Muted>
         </div>
       </div>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`incident-text-${nodeId}`}>
-          What happened
-        </Label>
+      <FieldTile id={`incident-text-${nodeId}`} label='What happened'>
         <Textarea
           id={`incident-text-${nodeId}`}
           value={text}
           onChange={(event) => setText(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <div className='grid min-w-0 grid-cols-1 gap-3 @lg/inc:grid-cols-3'>
         <NumberField
           label='Weight (0 to 100)'
@@ -540,14 +537,13 @@ export function IncidentControls({
       )}
       {mode === 'edit' && (
         <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
-          <Label as='label' htmlFor={`incident-edit-${incident.id}`}>
-            What happened
-          </Label>
-          <Textarea
-            id={`incident-edit-${incident.id}`}
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
+          <FieldTile id={`incident-edit-${incident.id}`} label='What happened'>
+            <Textarea
+              id={`incident-edit-${incident.id}`}
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+            />
+          </FieldTile>
           <NumberField
             label='Weight'
             value={magnitude}

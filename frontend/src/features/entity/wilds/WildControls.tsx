@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState, Medallion, Paged } from '@/components/domain'
+import { EmptyState, Medallion, Paged, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { busyOf } from '../lore/model'
@@ -566,17 +566,14 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
         </ul>
       )}
       <div className='grid min-w-0 grid-cols-1 items-end gap-2 @md/wild:grid-cols-4'>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`keeping-name-${id}`}>
-            Name
-          </Label>
+        <FieldTile id={`keeping-name-${id}`} label='Name'>
           <Input
             id={`keeping-name-${id}`}
             value={name}
             placeholder='Name the way of keeping'
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <MindPicker
           label='Works as'
           value={base}

@@ -15,7 +15,7 @@ import { postAction } from '@/api/actions'
 import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/typography'
+import { FieldTile } from '@/components/domain/FieldTile'
 import { table } from '@/features/arcana/labels'
 import {
   Facts,
@@ -427,15 +427,14 @@ export function LandForge({
           </Button>
         }
       >
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label variant='overline'>Deposit name</Label>
+        <FieldTile label='Deposit name'>
           <Input
             aria-label='Deposit name'
             value={name}
             disabled={blocked !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <MindPicker
           label='Yields'
           value={commodity}

@@ -15,7 +15,7 @@ import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, Medallion, Paged } from '@/components/domain'
+import { EmptyState, Medallion, Paged, FieldTile } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { CONDITIONS } from '@/features/entity/body/labels'
 import { SKILL_ICONS, TRAIT_ICONS } from '@/features/entity/mind/labels'
@@ -121,10 +121,7 @@ function VariantRow({
         </Text>
         <Muted variant='caption'>{`A kind of ${(spec.bases[variant.base]?.label ?? variant.base).toLowerCase()}`}</Muted>
       </div>
-      <div className='flex flex-col gap-1'>
-        <Label as='label' htmlFor={`variant-strength-${variant.id}`}>
-          Strength %
-        </Label>
+      <FieldTile id={`variant-strength-${variant.id}`} label='Strength %'>
         <Input
           id={`variant-strength-${variant.id}`}
           type='number'
@@ -134,12 +131,9 @@ function VariantRow({
           disabled={reason !== null}
           onChange={(event) => setStrength(event.target.value)}
         />
-      </div>
+      </FieldTile>
       {variant.family === 'skill' && (
-        <div className='flex flex-col gap-1'>
-          <Label as='label' htmlFor={`variant-learning-${variant.id}`}>
-            Learning %
-          </Label>
+        <FieldTile id={`variant-learning-${variant.id}`} label='Learning %'>
           <Input
             id={`variant-learning-${variant.id}`}
             type='number'
@@ -149,7 +143,7 @@ function VariantRow({
             disabled={reason !== null}
             onChange={(event) => setLearning(event.target.value)}
           />
-        </div>
+        </FieldTile>
       )}
       {variant.held.map((field) => (
         <Button
@@ -255,21 +249,15 @@ export function VariantForge() {
           placeholder='Choose a base'
           onPick={setBase}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor='variant-name'>
-            Name
-          </Label>
+        <FieldTile id='variant-name' label='Name'>
           <Input
             id='variant-name'
             value={name}
             disabled={busy !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor='variant-strength'>
-            Strength %
-          </Label>
+        </FieldTile>
+        <FieldTile id='variant-strength' label='Strength %'>
           <Input
             id='variant-strength'
             type='number'
@@ -279,7 +267,7 @@ export function VariantForge() {
             disabled={busy !== null}
             onChange={(event) => setStrength(event.target.value)}
           />
-        </div>
+        </FieldTile>
       </div>
       <div className='flex justify-end'>
         <Button

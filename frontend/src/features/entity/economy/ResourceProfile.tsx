@@ -35,6 +35,7 @@ import {
   Section,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -310,8 +311,7 @@ function WorkersForm({
         />
       </div>
       <div className={cn(FIELD_GRID, '@lg/res:grid-cols-3')}>
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Community</Label>
+        <FieldTile label='Community'>
           <RecordCombobox
             options={options}
             value={community}
@@ -322,7 +322,7 @@ function WorkersForm({
             disabledReason={busy ?? undefined}
             aria-label='Working community'
           />
-        </div>
+        </FieldTile>
         <NumberField
           label='Workers'
           aria='Workers'
@@ -532,8 +532,7 @@ function ProfileForm({
       <div className='flex min-w-0 flex-col gap-3'>
         <Label variant='overline'>Its master</Label>
         <div className={cn(FIELD_GRID, '@lg/res:grid-cols-2')}>
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>New owner</Label>
+          <FieldTile label='New owner'>
             <RecordCombobox
               options={owners}
               value={owner}
@@ -544,7 +543,7 @@ function ProfileForm({
               disabledReason={busy ?? undefined}
               aria-label='New owner'
             />
-          </div>
+          </FieldTile>
           <Button
             size='sm'
             variant='outline'

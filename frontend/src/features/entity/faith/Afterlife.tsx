@@ -38,6 +38,7 @@ import {
   useShowMore,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -294,15 +295,14 @@ function SoulLevers({
                 blocked={busy}
                 onPick={setStratum}
               />
-              <div className='flex min-w-0 flex-col gap-1'>
-                <Label>Reason</Label>
+              <FieldTile label='Reason'>
                 <Input
                   value={reason}
                   aria-label='Reason'
                   placeholder='Why the soul goes there'
                   onChange={(event) => setReason(event.target.value)}
                 />
-              </div>
+              </FieldTile>
             </div>
             <div>
               <Button
@@ -943,15 +943,14 @@ export function AfterlifeSection({
               blocked={busy}
               onPick={setKind}
             />
-            <div className='flex min-w-0 flex-col gap-1'>
-              <Label>Its name</Label>
+            <FieldTile label='Its name'>
               <Input
                 value={name}
                 aria-label='Its name'
                 placeholder='Named after its kind'
                 onChange={(event) => setName(event.target.value)}
               />
-            </div>
+            </FieldTile>
             <div>
               <Button
                 size='sm'

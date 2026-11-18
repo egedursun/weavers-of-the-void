@@ -16,10 +16,11 @@ import {
   TimelineItem,
   type TimelineTone,
   Paged,
+  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
-import { Label, Muted, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { useNames } from '../api/queries'
@@ -107,10 +108,10 @@ function MemoryEditor({
     inRange(decay, 0, PERCENT) === null
   return (
     <div className='flex min-w-0 flex-wrap items-end gap-2'>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`memory-size-${memory.id}`}>
-          Strength (−100 to +100)
-        </Label>
+      <FieldTile
+        id={`memory-size-${memory.id}`}
+        label='Strength (−100 to +100)'
+      >
         <Input
           id={`memory-size-${memory.id}`}
           type='number'
@@ -121,11 +122,8 @@ function MemoryEditor({
           onChange={(event) => setSize(event.target.value)}
           className='w-28'
         />
-      </div>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`memory-decay-${memory.id}`}>
-          Fades per epoch (%)
-        </Label>
+      </FieldTile>
+      <FieldTile id={`memory-decay-${memory.id}`} label='Fades per epoch (%)'>
         <Input
           id={`memory-decay-${memory.id}`}
           type='number'
@@ -136,7 +134,7 @@ function MemoryEditor({
           onChange={(event) => setDecay(event.target.value)}
           className='w-28'
         />
-      </div>
+      </FieldTile>
       <Button
         size='sm'
         variant='outline'
@@ -386,10 +384,10 @@ function PlantMemory({ mind }: { mind: Mind }) {
         placeholder='Choose a memory'
         onPick={setKind}
       />
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`plant-size-${mind.node_id}`}>
-          Strength (−100 to +100)
-        </Label>
+      <FieldTile
+        id={`plant-size-${mind.node_id}`}
+        label='Strength (−100 to +100)'
+      >
         <Input
           id={`plant-size-${mind.node_id}`}
           type='number'
@@ -399,11 +397,11 @@ function PlantMemory({ mind }: { mind: Mind }) {
           disabled={busy !== null}
           onChange={(event) => setSize(event.target.value)}
         />
-      </div>
-      <div className='flex min-w-0 flex-col gap-1'>
-        <Label as='label' htmlFor={`plant-decay-${mind.node_id}`}>
-          Fades per epoch (%, blank for its kind)
-        </Label>
+      </FieldTile>
+      <FieldTile
+        id={`plant-decay-${mind.node_id}`}
+        label='Fades per epoch (%, blank for its kind)'
+      >
         <Input
           id={`plant-decay-${mind.node_id}`}
           type='number'
@@ -413,7 +411,7 @@ function PlantMemory({ mind }: { mind: Mind }) {
           disabled={busy !== null}
           onChange={(event) => setDecay(event.target.value)}
         />
-      </div>
+      </FieldTile>
       <div className='flex justify-end @md/mind:col-span-2 @3xl/mind:col-span-4'>
         <Button
           size='sm'

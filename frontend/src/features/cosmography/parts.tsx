@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { type ProgressTone } from '@/components/ui/progress'
 import { Textarea } from '@/components/ui/textarea'
-import { EntityLink, Medallion, StatBar } from '@/components/domain'
+import { EntityLink, Medallion, StatBar, FieldTile } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
@@ -94,10 +94,7 @@ function LinkField({
     .map((kind) => kind.replaceAll('_', ' '))
     .join(', ')
   return (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
+    <FieldTile id={id} label={label}>
       <RecordCombobox
         id={id}
         options={options}
@@ -111,7 +108,7 @@ function LinkField({
         clearable
         aria-label={label}
       />
-    </div>
+    </FieldTile>
   )
 }
 
@@ -237,15 +234,11 @@ function TextField({
 }) {
   const id = useId()
   return (
-    <div
-      className={cn(
-        'flex min-w-0 flex-col gap-1',
-        long && '@sm/fields:col-span-2'
-      )}
+    <FieldTile
+      id={id}
+      label={label}
+      className={long ? '@sm/fields:col-span-2' : undefined}
     >
-      <Label as='label' htmlFor={id}>
-        {label}
-      </Label>
       {long ? (
         <Textarea
           id={id}
@@ -261,7 +254,7 @@ function TextField({
           onChange={(event) => onChange(event.target.value)}
         />
       )}
-    </div>
+    </FieldTile>
   )
 }
 

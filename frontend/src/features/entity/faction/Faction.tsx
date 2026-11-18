@@ -59,6 +59,7 @@ import {
   StatBar,
   Paged,
   LoadingBlock,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -346,14 +347,13 @@ function AgendaCard({
           onChange={setTarget}
           blocked={busy}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Law kind or commodity</Label>
+        <FieldTile label='Law kind or commodity'>
           <Input
             value={key}
             disabled={busy !== null}
             onChange={(event) => setKey(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <RangeField
           label='Priority'
           icon={Flag}
@@ -669,15 +669,13 @@ function Levers({
           <Ban />
           Drain
         </Button>
-        <label className='flex items-center gap-2'>
+        <FieldTile label='Outlawed'>
           <Switch
             checked={faction.outlawed}
             disabled={busy !== null}
-            aria-label='Outlawed'
             onCheckedChange={(on) => outlaw.mutate(on)}
           />
-          <Label>Outlawed</Label>
-        </label>
+        </FieldTile>
       </div>
       <AdjustPanel
         trigger='Charter or hire'
@@ -691,15 +689,14 @@ function Levers({
           onChange={setRealm}
           blocked={busy}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Monopoly over</Label>
+        <FieldTile label='Monopoly over'>
           <Input
             value={monopoly}
             placeholder='The goods it holds alone'
             disabled={busy !== null}
             onChange={(event) => setMonopoly(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
             size='sm'

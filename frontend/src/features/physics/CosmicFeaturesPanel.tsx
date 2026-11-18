@@ -4,8 +4,13 @@ import { type ActionBody, type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, EntityLink, PagedList } from '@/components/domain'
-import { Label, Muted } from '@/components/typography'
+import {
+  EmptyState,
+  EntityLink,
+  PagedList,
+  FieldTile,
+} from '@/components/domain'
+import { Muted } from '@/components/typography'
 import { useCosmography } from '@/features/cosmography/api'
 import {
   Chip,
@@ -346,10 +351,7 @@ export function CosmicFeaturesPanel({
           blocked={busy}
           onPick={(kind) => setDraft((previous) => ({ ...previous, kind }))}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor='feature-name'>
-            Name
-          </Label>
+        <FieldTile id='feature-name' label='Name'>
           <Input
             id='feature-name'
             value={draft.name}
@@ -361,7 +363,7 @@ export function CosmicFeaturesPanel({
               }))
             }
           />
-        </div>
+        </FieldTile>
         {draft.kind === 'wormhole' ? (
           <>
             <WorldPicker

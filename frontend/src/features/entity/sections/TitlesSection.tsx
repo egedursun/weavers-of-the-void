@@ -6,7 +6,13 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, KpiTile, Paged, Section } from '@/components/domain'
+import {
+  EmptyState,
+  KpiTile,
+  Paged,
+  Section,
+  FieldTile,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -430,10 +436,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
           </Button>
         }
       >
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`arms-${id}`}>
-            Arms
-          </Label>
+        <FieldTile id={`arms-${id}`} label='Arms'>
           <Input
             id={`arms-${id}`}
             value={emblem}
@@ -441,7 +444,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
             disabled={busy !== null}
             onChange={(event) => setEmblem(event.target.value)}
           />
-        </div>
+        </FieldTile>
       </AddBar>
       {detail.vassal_titles.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
@@ -684,10 +687,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
           </Button>
         }
       >
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`title-name-${view.node_id}`}>
-            Title name
-          </Label>
+        <FieldTile id={`title-name-${view.node_id}`} label='Title name'>
           <Input
             id={`title-name-${view.node_id}`}
             value={name}
@@ -695,7 +695,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
             disabled={busy !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <MindPicker
           label='Rank'
           value={rank}

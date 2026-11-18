@@ -7,7 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { EmptyState, KpiTile, Paged, Section } from '@/components/domain'
+import {
+  EmptyState,
+  KpiTile,
+  Paged,
+  Section,
+  FieldTile,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -841,10 +847,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
       </MindCard>
     )
   const nameField = (
-    <div className='flex min-w-0 flex-col gap-1'>
-      <Label as='label' htmlFor={`false-name-${view.node_id}`}>
-        False name
-      </Label>
+    <FieldTile id={`false-name-${view.node_id}`} label='False name'>
       <Input
         id={`false-name-${view.node_id}`}
         value={name}
@@ -852,7 +855,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
         disabled={busy !== null}
         onChange={(event) => setName(event.target.value)}
       />
-    </div>
+    </FieldTile>
   )
   return (
     <MindCard
@@ -1416,10 +1419,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
           </div>
         }
       >
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`true-name-${view.node_id}`}>
-            True name
-          </Label>
+        <FieldTile id={`true-name-${view.node_id}`} label='True name'>
           <Input
             id={`true-name-${view.node_id}`}
             value={name}
@@ -1427,7 +1427,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
             disabled={busy !== null}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
       </AddBar>
       {view.names_known.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
@@ -1630,10 +1630,7 @@ function BeliefsCard({ ctx }: { ctx: Ctx }) {
           blocked={busy}
           onPick={setSource}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`belief-value-${view.node_id}`}>
-            Believed value
-          </Label>
+        <FieldTile id={`belief-value-${view.node_id}`} label='Believed value'>
           <Input
             id={`belief-value-${view.node_id}`}
             type='number'
@@ -1641,7 +1638,7 @@ function BeliefsCard({ ctx }: { ctx: Ctx }) {
             disabled={busy !== null}
             onChange={(event) => setValue(Number(event.target.value) || 0)}
           />
-        </div>
+        </FieldTile>
       </AddBar>
     </MindCard>
   )

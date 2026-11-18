@@ -43,6 +43,7 @@ import {
   Section,
   ShowMore,
   useShowMore,
+  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -197,15 +198,17 @@ function TenetCard({
       <Muted className='flex-1'>{tenet.effect}</Muted>
       {renaming && (
         <div className='flex min-w-0 flex-wrap items-end gap-2'>
-          <div className='flex min-w-40 flex-1 flex-col gap-1'>
-            <Label>Its name among the faithful</Label>
+          <FieldTile
+            label='Its name among the faithful'
+            className='min-w-40 flex-1'
+          >
             <Input
               value={name}
               aria-label='Its name among the faithful'
               placeholder={spec.label}
               onChange={(event) => setName(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <Button
             size='sm'
             disabled={busy !== null}
@@ -290,25 +293,23 @@ function AddTenet({
           blocked={busy}
           onPick={setTenet}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label>Its name among the faithful</Label>
+        <FieldTile label='Its name among the faithful'>
           <Input
             value={name}
             aria-label='Its name among the faithful'
             placeholder={look.label}
             onChange={(event) => setName(event.target.value)}
           />
-        </div>
+        </FieldTile>
         {spec?.targeted && (
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label>Its object</Label>
+          <FieldTile label='Its object'>
             <Input
               value={target}
               aria-label='Its object'
               placeholder='A food, a beast or a place'
               onChange={(event) => setTarget(event.target.value)}
             />
-          </div>
+          </FieldTile>
         )}
       </div>
       <div className='flex min-w-0 items-center gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>

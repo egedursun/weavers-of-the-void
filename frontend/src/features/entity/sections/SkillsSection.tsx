@@ -6,8 +6,14 @@ import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, Section, StatBar, Paged } from '@/components/domain'
-import { Label, Muted } from '@/components/typography'
+import {
+  EmptyState,
+  Section,
+  StatBar,
+  Paged,
+  FieldTile,
+} from '@/components/domain'
+import { Muted } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -272,10 +278,7 @@ function SkillControls({ mind }: { mind: Mind }) {
           placeholder='Choose a skill'
           onPick={setPicked}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`skill-level-${mind.node_id}`}>
-            Level (0–100)
-          </Label>
+        <FieldTile id={`skill-level-${mind.node_id}`} label='Level (0–100)'>
           <Input
             id={`skill-level-${mind.node_id}`}
             type='number'
@@ -285,7 +288,7 @@ function SkillControls({ mind }: { mind: Mind }) {
             disabled={busy !== null}
             onChange={(event) => setLevel(event.target.value)}
           />
-        </div>
+        </FieldTile>
         <div className='flex justify-end'>
           <Button
             size='sm'

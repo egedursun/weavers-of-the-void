@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Medallion } from '@/components/domain'
+import { Medallion, FieldTile } from '@/components/domain'
 import { ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -210,17 +210,14 @@ export function ModifierCard({
             blocked={busy ?? null}
             onChange={setEpochs}
           />
-          <div className='flex min-w-0 flex-col gap-1'>
-            <Label as='label' htmlFor={`group-${modifier.id}`}>
-              Stacking group
-            </Label>
+          <FieldTile id={`group-${modifier.id}`} label='Stacking group'>
             <Input
               id={`group-${modifier.id}`}
               value={group}
               placeholder='Stacks freely'
               onChange={(event) => setGroup(event.target.value)}
             />
-          </div>
+          </FieldTile>
           <Button
             size='sm'
             className='self-start'
@@ -367,17 +364,14 @@ export function ModifierForge({
           blocked={busy ?? null}
           onChange={setDecay}
         />
-        <div className='flex min-w-0 flex-col gap-1'>
-          <Label as='label' htmlFor={`forge-group-${nodeId}`}>
-            Stacking group
-          </Label>
+        <FieldTile id={`forge-group-${nodeId}`} label='Stacking group'>
           <Input
             id={`forge-group-${nodeId}`}
             value={group}
             placeholder='Stacks freely'
             onChange={(event) => setGroup(event.target.value)}
           />
-        </div>
+        </FieldTile>
       </div>
       <RecordField
         label='Coming from (optional)'
