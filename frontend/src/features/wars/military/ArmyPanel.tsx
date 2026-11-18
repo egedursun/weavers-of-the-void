@@ -388,6 +388,7 @@ function StackCard({
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-2 @xs/stack:grid-cols-2'>
         <StatBar
+          framed
           label='Morale'
           icon={Flame}
           value={stack.morale}
@@ -395,6 +396,7 @@ function StackCard({
           tone={percentTone(stack.morale)}
         />
         <StatBar
+          framed
           label='Gear condition'
           icon={Wrench}
           value={stack.condition}
@@ -402,6 +404,7 @@ function StackCard({
           tone={percentTone(stack.condition)}
         />
         <StatBar
+          framed
           label='Experience'
           icon={Medal}
           value={stack.experience}
@@ -409,6 +412,7 @@ function StackCard({
           tone='info'
         />
         <StatBar
+          framed
           label='Fatigue'
           icon={Hourglass}
           value={stack.fatigue}
@@ -416,6 +420,7 @@ function StackCard({
           tone={percentTone(stack.fatigue, true)}
         />
         <StatBar
+          framed
           label='Organisation'
           icon={Network}
           value={stack.organisation}
@@ -423,6 +428,7 @@ function StackCard({
           tone={percentTone(stack.organisation)}
         />
         <StatBar
+          framed
           label='Discipline'
           icon={Swords}
           value={stack.discipline}
@@ -870,6 +876,7 @@ export function ArmyPanel({
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @lg/mil:grid-cols-3'>
         <StatBar
+          framed
           label='Cohesion'
           icon={Activity}
           value={army.cohesion}
@@ -877,6 +884,7 @@ export function ArmyPanel({
           tone={percentTone(army.cohesion)}
         />
         <StatBar
+          framed
           label='Earthworks'
           icon={Shovel}
           value={army.entrenchment}
@@ -884,6 +892,7 @@ export function ArmyPanel({
           tone='verdigris'
         />
         <StatBar
+          framed
           label='Camp sickness'
           icon={Biohazard}
           value={army.disease}

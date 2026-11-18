@@ -1,5 +1,6 @@
 import { type LucideIcon } from 'lucide-react'
 import { type NumberFormat, formatInteger } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { Progress, type ProgressTone } from '@/components/ui/progress'
 import { Label, Stat } from '@/components/typography'
 
@@ -13,6 +14,7 @@ type StatBarProps = {
   tone?: ProgressTone
   format?: NumberFormat
   showMax?: boolean
+  framed?: boolean
 }
 
 export function StatBar({
@@ -23,10 +25,18 @@ export function StatBar({
   tone = 'default',
   format = 'integer',
   showMax = true,
+  framed = false,
 }: StatBarProps) {
   const percent = max > 0 ? (value / max) * PERCENT : 0
   return (
-    <div data-domain='stat-bar' className='flex min-w-0 flex-col gap-1.5'>
+    <div
+      data-domain='stat-bar'
+      className={cn(
+        'flex min-w-0 flex-col gap-1.5',
+        framed &&
+          'justify-center rounded-md border surface-sheen border-gild/60 bg-card p-2.5'
+      )}
+    >
       <div className='flex min-w-0 items-center gap-2'>
         {Icon && (
           <Icon

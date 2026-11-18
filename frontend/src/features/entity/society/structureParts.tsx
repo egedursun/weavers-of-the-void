@@ -209,6 +209,7 @@ export function StructureCard({
       {raising(view) && build ? (
         <>
           <StatBar
+            framed
             label='Raised'
             icon={Hammer}
             value={build.percent}
@@ -254,6 +255,7 @@ export function StructureCard({
       ) : standing(view) ? (
         <>
           <StatBar
+            framed
             label='Working strength'
             icon={HeartPulse}
             value={view.effect_pct}
@@ -261,6 +263,7 @@ export function StructureCard({
             tone={METER_TONE[goodTone(view.effect_pct)]}
           />
           <StatBar
+            framed
             label='Condition'
             icon={Wrench}
             value={view.condition}

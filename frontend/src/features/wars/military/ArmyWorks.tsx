@@ -64,6 +64,7 @@ export function ArmyWorks({ army }: { army: ArmyCard }) {
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @lg/mil:grid-cols-3'>
         <StatBar
+          framed
           label='Earthworks left here'
           icon={Shovel}
           value={works.earthworks}
@@ -71,6 +72,7 @@ export function ArmyWorks({ army }: { army: ArmyCard }) {
           tone='verdigris'
         />
         <StatBar
+          framed
           label='Military road'
           icon={Route}
           value={works.military_road}
@@ -79,6 +81,7 @@ export function ArmyWorks({ army }: { army: ArmyCard }) {
         />
         {works.river ? (
           <StatBar
+            framed
             label='Bridge down'
             icon={Bomb}
             value={works.bridge_down}

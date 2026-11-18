@@ -462,6 +462,7 @@ function Defences({ plan }: { plan: Plan }) {
         />
       </div>
       <StatBar
+        framed
         label='Wall repair'
         icon={Wrench}
         value={works.walls_condition}

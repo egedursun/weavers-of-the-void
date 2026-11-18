@@ -116,18 +116,21 @@ function Budget({ preview }: { preview: SonPromptPreview }) {
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-4 md:grid-cols-3'>
         <StatBar
+          framed
           label='Whole prompt'
           value={preview.total_characters}
           max={preview.prompt_limit}
           tone={budgetTone(preview.total_characters, preview.prompt_limit)}
         />
         <StatBar
+          framed
           label='World summary'
           value={preview.summary_characters}
           max={preview.summary_limit}
           tone={budgetTone(preview.summary_characters, preview.summary_limit)}
         />
         <StatBar
+          framed
           label='Memory'
           value={preview.memory_characters}
           max={preview.memory_limit}
@@ -139,6 +142,7 @@ function Budget({ preview }: { preview: SonPromptPreview }) {
           {preview.summary_sections.map((section) =>
             section.limit !== null && section.limit !== undefined ? (
               <StatBar
+                framed
                 key={section.section}
                 label={sectionLabel(section.section)}
                 value={section.characters}

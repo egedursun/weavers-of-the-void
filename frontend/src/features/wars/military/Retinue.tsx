@@ -133,6 +133,7 @@ function ContractCard({
         />
       </div>
       <StatBar
+        framed
         label='Loyalty'
         icon={Heart}
         value={loyalty}

@@ -141,6 +141,18 @@ describe('domain components', () => {
       .toBeInTheDocument()
   })
 
+  it('frames a stat bar like the value tiles beside it when asked', async () => {
+    await render(
+      <>
+        <StatBar label='Bare' value={3} max={10} />
+        <StatBar framed label='Framed' value={7} max={10} />
+      </>
+    )
+    const [bare, framed] = document.querySelectorAll('[data-domain="stat-bar"]')
+    expect(bare.classList.contains('surface-sheen')).toBe(false)
+    expect(framed.classList.contains('surface-sheen')).toBe(true)
+  })
+
   it('renders a timeline as an ordered list', async () => {
     await render(
       <Timeline label='History'>

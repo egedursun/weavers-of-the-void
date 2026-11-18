@@ -113,6 +113,7 @@ function FeudCard({
       {feud.cause && <Muted variant='caption'>{feud.cause}</Muted>}
       <div className='grid min-w-0 grid-cols-1 gap-1.5 @sm/mil:grid-cols-2'>
         <StatBar
+          framed
           label='Intensity'
           value={feud.intensity}
           max={PERCENT}
@@ -120,6 +121,7 @@ function FeudCard({
           tone={feud.intensity >= HOT ? 'destructive' : 'warning'}
         />
         <StatBar
+          framed
           label='Grievance'
           value={feud.grievance}
           max={PERCENT}

@@ -210,6 +210,7 @@ export function TravelPanel({ view }: { view: Disease }) {
       hint={vector.hint}
     >
       <StatBar
+        framed
         label='Spreads unseen in its first age'
         icon={EyeOff}
         value={view.unseen_pct}

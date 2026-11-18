@@ -385,6 +385,7 @@ export function WorldCard({
         </div>
         <div className='flex min-w-0 flex-col gap-3'>
           <StatBar
+            framed
             label='Danger'
             icon={TriangleAlert}
             value={world.danger}
@@ -393,6 +394,7 @@ export function WorldCard({
             showMax={false}
           />
           <StatBar
+            framed
             label='Leakage'
             icon={Waves}
             value={world.leakage}

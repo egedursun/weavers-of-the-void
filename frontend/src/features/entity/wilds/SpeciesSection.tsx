@@ -386,6 +386,7 @@ function LifeCycle({ card }: { card: SpeciesCard }) {
         />
       </div>
       <StatBar
+        framed
         label='Metabolism'
         value={card.metabolism}
         max={PERCENT}
@@ -393,6 +394,7 @@ function LifeCycle({ card }: { card: SpeciesCard }) {
         tone='warning'
       />
       <StatBar
+        framed
         label='Water need'
         value={card.water_need}
         max={PERCENT}

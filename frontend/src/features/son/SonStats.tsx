@@ -197,6 +197,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
       <Section title='Resources' level={3}>
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
           <StatBar
+            framed
             label='Life'
             icon={Heart}
             value={son.hp}
@@ -204,14 +205,22 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
             tone='destructive'
           />
           <StatBar
+            framed
             label='Essence'
             icon={Sparkles}
             value={son.essence}
             max={view.max_essence}
           />
-          <StatBar label='Fame' icon={Star} value={son.fame} max={STAT_SCALE} />
+          <StatBar
+            framed
+            label='Fame'
+            icon={Star}
+            value={son.fame}
+            max={STAT_SCALE}
+          />
           {needed !== null && (
             <StatBar
+              framed
               label='Experience'
               icon={TrendingUp}
               value={son.xp}
@@ -221,6 +230,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
           )}
           {son.sanity !== null && (
             <StatBar
+              framed
               label='Sanity'
               icon={CloudFog}
               value={son.sanity}
@@ -228,8 +238,6 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
               tone='muted'
             />
           )}
-        </div>
-        <div className='flex min-w-0'>
           <MiniStat
             icon={HandHeart}
             tone='gold'
@@ -239,6 +247,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
         </div>
         <div className='flex min-w-0 flex-col gap-1'>
           <StatBar
+            framed
             label={`Existence · ${BAND_LABEL[view.band]}`}
             icon={Orbit}
             value={son.existence}

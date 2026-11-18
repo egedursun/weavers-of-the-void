@@ -81,6 +81,7 @@ run kind_layers "$PYTHON" scripts/check_kind_layers.py
 run kind_definitions "$PYTHON" scripts/check_kind_definitions.py
 run raw_enums sh -c 'cd frontend && node scripts/check_raw_enums.mjs'
 run panel_stacks sh -c 'cd frontend && node scripts/check_panel_stacks.mjs'
+run value_frames sh -c 'cd frontend && node scripts/check_value_frames.mjs'
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 run inventory "$PYTHON" scripts/check_inventory.py check
 

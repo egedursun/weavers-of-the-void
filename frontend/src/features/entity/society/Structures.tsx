@@ -1224,6 +1224,7 @@ export function StructureSection({
               hint='Builders times engineering times materials, against the labour it needs'
             >
               <StatBar
+                framed
                 label='Raised'
                 icon={Construction}
                 value={data.construction.percent}

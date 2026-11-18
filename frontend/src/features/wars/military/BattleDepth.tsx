@@ -248,12 +248,14 @@ export function BattleDepthPanel({
                     )}
                   </div>
                   <StatBar
+                    framed
                     label={`Lost of ${formatInteger(stack.start)}`}
                     value={stack.lost}
                     max={Math.max(1, stack.start)}
                     tone='destructive'
                   />
                   <StatBar
+                    framed
                     label='Organisation left'
                     value={stack.organisation}
                     max={PERCENT}

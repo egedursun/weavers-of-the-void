@@ -361,6 +361,7 @@ export function VesselCard({
       </div>
       <Weapons weapons={vessel.weapons} />
       <StatBar
+        framed
         label='Frame'
         value={vessel.condition}
         max={100}
@@ -374,6 +375,7 @@ export function VesselCard({
         }
       />
       <StatBar
+        framed
         label='Seaworthiness'
         value={vessel.seaworthiness}
         max={100}
@@ -381,6 +383,7 @@ export function VesselCard({
         tone='info'
       />
       <StatBar
+        framed
         label='Seamanship'
         value={vessel.seamanship}
         max={100}
