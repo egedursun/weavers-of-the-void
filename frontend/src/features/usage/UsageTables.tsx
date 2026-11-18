@@ -11,7 +11,7 @@ import {
   Medal,
   RotateCcw,
 } from 'lucide-react'
-import { formatCompact, formatInteger } from '@/lib/format'
+import { formatInteger, formatTokens } from '@/lib/format'
 import { formatMilliseconds } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -276,7 +276,7 @@ export function BreakdownTable({
                   </div>
                 </TableCell>
                 <TableCell className='text-end'>
-                  {formatCompact(totalOf(share) / Math.max(1, share.calls))}
+                  {formatTokens(totalOf(share) / Math.max(1, share.calls))}
                 </TableCell>
                 <TableCell className='text-end'>
                   <Stat
@@ -320,7 +320,7 @@ function CallDetail({ call }: { call: UsageCall }) {
           label: 'Tokens per second',
           value:
             call.duration_ms > 0
-              ? formatCompact(call.output_tokens / (call.duration_ms / 1000))
+              ? formatTokens(call.output_tokens / (call.duration_ms / 1000))
               : 'Not measured',
         },
         { label: 'Error', value: call.error ?? 'No error' },

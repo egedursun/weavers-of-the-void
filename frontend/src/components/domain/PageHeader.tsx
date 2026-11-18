@@ -25,36 +25,42 @@ export function PageHeader({
   return (
     <header
       data-domain='page-header'
-      className='grid min-w-0 grid-cols-1 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto] md:gap-x-6'
+      className='@container/page-header min-w-0'
     >
-      {eyebrow && <Label variant='overline'>{eyebrow}</Label>}
-      <div className='flex min-w-0 items-center gap-4 md:col-start-1'>
-        {icon && <Medallion icon={icon} tone='gold' />}
-        <div className='flex min-w-0 flex-col gap-1'>
-          <PageTitle truncate className='text-gilded'>
-            {title}
-          </PageTitle>
-          <Divider className='w-64' />
+      <div className='grid min-w-0 grid-cols-1 gap-y-2 @3xl/page-header:grid-cols-[minmax(0,1fr)_auto] @3xl/page-header:gap-x-6'>
+        {eyebrow && <Label variant='overline'>{eyebrow}</Label>}
+        <div className='flex min-w-0 items-center gap-4 @3xl/page-header:col-start-1'>
+          {icon && <Medallion icon={icon} tone='gold' />}
+          <div className='flex min-w-0 flex-col gap-1'>
+            <PageTitle truncate className='text-gilded'>
+              {title}
+            </PageTitle>
+            <Divider className='w-64' />
+          </div>
         </div>
+        {description && (
+          <Muted className='max-w-reading @3xl/page-header:col-start-1'>
+            {description}
+          </Muted>
+        )}
+        {meta && (
+          <div className='flex min-w-0 flex-wrap items-center gap-2 @3xl/page-header:col-start-1'>
+            {meta}
+          </div>
+        )}
+        {actions && (
+          <div
+            className={cn(
+              'flex min-w-0 flex-wrap items-center gap-2 pt-2 @3xl/page-header:col-start-2 @3xl/page-header:justify-end @3xl/page-header:self-center @3xl/page-header:pt-0',
+              eyebrow
+                ? '@3xl/page-header:row-start-2'
+                : '@3xl/page-header:row-start-1'
+            )}
+          >
+            {actions}
+          </div>
+        )}
       </div>
-      {description && (
-        <Muted className='max-w-reading md:col-start-1'>{description}</Muted>
-      )}
-      {meta && (
-        <div className='flex min-w-0 flex-wrap items-center gap-2 md:col-start-1'>
-          {meta}
-        </div>
-      )}
-      {actions && (
-        <div
-          className={cn(
-            'flex min-w-0 flex-wrap items-center gap-2 pt-2 md:col-start-2 md:justify-end md:self-center md:pt-0',
-            eyebrow ? 'md:row-start-2' : 'md:row-start-1'
-          )}
-        >
-          {actions}
-        </div>
-      )}
     </header>
   )
 }

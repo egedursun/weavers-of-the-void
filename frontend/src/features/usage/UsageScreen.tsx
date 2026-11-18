@@ -21,20 +21,20 @@ import {
   RefreshCw,
   Repeat,
   RotateCcw,
-  Ruler,
   Sigma,
   Timer,
-  Trophy,
   TriangleAlert,
   Workflow,
 } from 'lucide-react'
 import { usageBucketValues, usageSortValues } from '@/api/generated/schema'
-import { formatCompact, formatDateTime, formatPercent } from '@/lib/format'
+import {
+  formatCompact,
+  formatDateTime,
+  formatPercent,
+  formatTokens,
+} from '@/lib/format'
 import { agree, formatMilliseconds, plural } from '@/lib/units'
-import { RARITY_LABEL } from '@/constants/rarity'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -46,21 +46,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import {
   EmptyState,
-  HeroFrame,
   KpiTile,
-  Medallion,
   MiniStat,
   PageHeader,
-  RarityBadge,
   Section,
 } from '@/components/domain'
-import { Label, Muted, Stat, Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { useRuleValue } from '@/features/world-rules/api'
 import {
   ModelDonut,
@@ -69,6 +61,7 @@ import {
   TokenTimeline,
 } from './UsageCharts'
 import { UsageFilters } from './UsageFilters'
+import { UsageRankHero } from './UsageRank'
 import { BreakdownTable, CallLog } from './UsageTables'
 import {
   type UsageBucket,
@@ -93,14 +86,12 @@ import {
   type RangeKey,
   SORT_LABEL,
   pointLabel,
-  rankOf,
   shareOf,
   totalOf,
 } from './usageVisuals'
 
 const ITEM = navItem('usage')
 const RETENTION_RULE = 'metrics.keep_epochs'
-const PERCENT = 100
 const TEXT_SORTS: UsageSort[] = ['model', 'step']
 
 const clockFormat = new Intl.DateTimeFormat('en-US', {
@@ -120,65 +111,6 @@ function isFiltered(search: UsageSearch): boolean {
   return (
     chosen.some((value) => value !== undefined) ||
     (search.range ?? 'all') !== 'all'
-  )
-}
-
-function RankHero({ report }: { report: UsageReport }) {
-  const lifetime = report.facets.tokens
-  const rank = rankOf(lifetime)
-  const missing = rank.next ? rank.next.floor - lifetime : 0
-  return (
-    <HeroFrame>
-      <div className='flex min-w-0 items-center gap-4'>
-        <Medallion icon={Trophy} tone='gold' />
-        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-          <Label variant='overline'>Lifetime usage rank</Label>
-          <div className='flex min-w-0 flex-wrap items-center gap-2'>
-            <RarityBadge rarity={rank.current.rarity} />
-            <Stat
-              value={formatCompact(lifetime)}
-              size='kpi'
-              className='text-gilded font-display'
-            />
-            <Muted as='span'>
-              {`${agree(lifetime, 'token')} over ${plural(report.facets.calls, 'call', 'calls')}`}
-            </Muted>
-          </div>
-          <Progress
-            size='sm'
-            value={rank.progress * PERCENT}
-            aria-label={
-              rank.next
-                ? `Progress to ${RARITY_LABEL[rank.next.rarity]}`
-                : 'Highest rank reached'
-            }
-          />
-          <Muted variant='caption'>
-            {rank.next
-              ? `${formatCompact(missing)} more ${agree(missing, 'token')} to ${RARITY_LABEL[rank.next.rarity]} at ${formatCompact(rank.next.floor)}.`
-              : 'The highest rank is reached.'}
-          </Muted>
-        </div>
-      </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant='outline' tabIndex={0}>
-              <Ruler />
-              {`Counted with ${report.tokenizer}`}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className='max-w-xs'>
-            Every call is counted on this server with the same tokenizer,
-            whatever model or provider answered it. The counts are close
-            estimates, not the provider&apos;s own figures.
-          </TooltipContent>
-        </Tooltip>
-        <Muted as='span' variant='caption'>
-          The rank counts every kept call; the filters below do not change it.
-        </Muted>
-      </div>
-    </HeroFrame>
   )
 }
 
@@ -204,14 +136,14 @@ function Headline({
       <div className='grid min-w-0 grid-cols-2 gap-3 @4xl/usage:grid-cols-4'>
         <KpiTile
           label='Total tokens'
-          value={formatCompact(total)}
+          value={formatTokens(total)}
           icon={Sigma}
           tone='gold'
-          hint={`${formatCompact(totals.input_tokens)} in and ${formatCompact(totals.output_tokens)} out`}
+          hint={`${formatTokens(totals.input_tokens)} in and ${formatTokens(totals.output_tokens)} out`}
         />
         <KpiTile
           label='Tokens in'
-          value={formatCompact(totals.input_tokens)}
+          value={formatTokens(totals.input_tokens)}
           icon={ArrowDownToLine}
           tone='info'
           meter={{
@@ -223,7 +155,7 @@ function Headline({
         />
         <KpiTile
           label='Tokens out'
-          value={formatCompact(totals.output_tokens)}
+          value={formatTokens(totals.output_tokens)}
           icon={ArrowUpFromLine}
           tone='verdigris'
           meter={{
@@ -235,7 +167,7 @@ function Headline({
         />
         <KpiTile
           label={latest ? `Latest · ${pointLabel(latest, bucket)}` : 'Latest'}
-          value={latest ? formatCompact(totalOf(latest)) : '0'}
+          value={latest ? formatTokens(totalOf(latest)) : '0'}
           icon={Flame}
           tone={change !== null && change > 0 ? 'warning' : 'success'}
           hint={
@@ -253,7 +185,7 @@ function Headline({
           tone='gold'
           hint={
             step
-              ? `${formatCompact(totalOf(step))} ${agree(totalOf(step), 'token')}, ${formatPercent(shareOf(totalOf(step), total))} of the tokens in view`
+              ? `${formatTokens(totalOf(step))} ${agree(totalOf(step), 'token')}, ${formatPercent(shareOf(totalOf(step), total))} of the tokens in view`
               : undefined
           }
         />
@@ -264,7 +196,7 @@ function Headline({
           tone='info'
           hint={
             model
-              ? `${formatCompact(totalOf(model))} ${agree(totalOf(model), 'token')} over ${plural(model.calls, 'call', 'calls')}`
+              ? `${formatTokens(totalOf(model))} ${agree(totalOf(model), 'token')} over ${plural(model.calls, 'call', 'calls')}`
               : undefined
           }
         />
@@ -282,21 +214,21 @@ function Headline({
         <MiniStat
           icon={Gauge}
           label='Median call'
-          value={formatCompact(totals.median_call)}
+          value={formatTokens(totals.median_call)}
           tone='gold'
-          hint={`Half of the calls used fewer tokens. The average is ${formatCompact(total / Math.max(1, totals.calls))}.`}
+          hint={`Half of the calls used fewer tokens. The average is ${formatTokens(total / Math.max(1, totals.calls))}.`}
         />
         <MiniStat
           icon={ChartArea}
           label='95th percentile'
-          value={formatCompact(totals.p95_call)}
+          value={formatTokens(totals.p95_call)}
           tone='info'
           hint='Nineteen calls in twenty used fewer tokens than this.'
         />
         <MiniStat
           icon={Maximize2}
           label='Largest call'
-          value={formatCompact(totals.largest_call)}
+          value={formatTokens(totals.largest_call)}
           tone='warning'
           hint='The most tokens one call used, in and out together.'
         />
@@ -454,7 +386,7 @@ export function UsageScreen() {
         <Muted>
           {`Token counts of every language model call this server has made, across every world and provider. No prices, only tokens. The page updates by itself as turns, epochs and jobs finish.${retention !== null ? ` Calls of the last ${plural(retention, 'epoch', 'epochs')} ${agree(retention, 'is', 'are')} kept.` : ''}`}
         </Muted>
-        {report && !empty && <RankHero report={report} />}
+        {report && !empty && <UsageRankHero report={report} />}
         <Section
           title='Filters'
           surface='card'

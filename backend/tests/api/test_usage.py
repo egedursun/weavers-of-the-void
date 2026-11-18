@@ -1,3 +1,6 @@
+from sqlalchemy import delete
+
+from aerona.agents.metrics import count_lifetime
 from aerona.db.telemetry.tables import LlmCallRow
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus
 from tests.api.conftest import ApiWorld
@@ -88,3 +91,26 @@ async def test_usage_export_writes_every_matching_call_as_csv(api: ApiWorld) -> 
     assert lines[0].startswith("call,time,epoch,step")
     assert [line.split(",")[3] for line in lines[1:]] == ["Naming 100%", "Fate"]
     assert "1.5" not in response.text
+
+
+async def test_lifetime_usage_outlives_pruned_calls_and_ranks_follow_the_rules(api: ApiWorld) -> None:
+    await seed_calls(api)
+    async with api.services.application.telemetry.sessions() as session, session.begin():
+        await count_lifetime(session, 2615)
+        await count_lifetime(session, 1000)
+    before = (await api.http.get("/api/usage/summary")).json()["lifetime"]
+    async with api.services.application.telemetry.sessions() as session, session.begin():
+        await session.execute(delete(LlmCallRow))
+    after = (await api.http.get("/api/usage/summary")).json()["lifetime"]
+    assert after["tokens"] == before["tokens"] >= 3615
+    assert after["calls"] == before["calls"]
+    assert before["pace_epochs"] == 2 and before["pace_tokens"] == (1540 + 1000) // 2
+    rules = api.services.rules.current.metrics
+    assert [rank["rarity"] for rank in after["ranks"]] == ["common", "uncommon", "rare", "epic", "legendary", "mythic"]
+    assert [rank["floor"] for rank in after["ranks"]][1:] == [
+        rules.rank_uncommon_tokens,
+        rules.rank_rare_tokens,
+        rules.rank_epic_tokens,
+        rules.rank_legendary_tokens,
+        rules.rank_mythic_tokens,
+    ]

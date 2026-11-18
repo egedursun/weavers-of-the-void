@@ -44,6 +44,16 @@ class LlmCallRow(TelemetryBase):
     created_at: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())
 
 
+class UsageTotalsRow(TelemetryBase):
+    __tablename__ = "usage_totals"
+    __table_args__ = (at_least("tokens", 0), at_least("calls", 0))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tokens: Mapped[int] = mapped_column(BigInteger, default=0)
+    calls: Mapped[int] = mapped_column(BigInteger, default=0)
+    since: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())
+
+
 class LiveEventRow(TelemetryBase):
     __tablename__ = "live_events"
     __table_args__ = (Index("ix_live_events_kind", "kind", "id"),)

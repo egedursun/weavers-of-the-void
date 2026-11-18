@@ -12,8 +12,9 @@ import { FeedCollector } from './FeedCollector'
 import { LiveFeedDock } from './LiveFeedDock'
 import { LiveFeedSheet } from './LiveFeedSheet'
 import { FEED_PREFERENCES_KEY, useFeed, useFeedPreferences } from './feedStore'
+import { useFeedOverlay } from './useFeedDock'
 
-const WIDE = { width: 1440, height: 900 }
+const WIDE = { width: 1900, height: 900 }
 const NARROW = { width: 800, height: 900 }
 const THROTTLE_GAP_MS = 10_000
 const ESTIMATE = {
@@ -92,6 +93,7 @@ function resetPreferences() {
     ambient: false,
     muted: [],
   })
+  useFeedOverlay.setState({ open: false })
 }
 
 beforeEach(() => {
@@ -194,7 +196,8 @@ describe('live feed dock', () => {
     await expect
       .element(screen.getByRole('dialog', { name: 'Live feed' }))
       .toBeVisible()
-    expect(useFeedPreferences.getState().open).toBe(true)
+    expect(useFeedOverlay.getState().open).toBe(true)
+    expect(useFeedPreferences.getState().open).toBeNull()
   })
 })
 

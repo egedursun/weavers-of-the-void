@@ -8,13 +8,14 @@ from aerona.constants.telemetry import TELEMETRY_DATABASE_FILENAME
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.inline_sqlite import inline_engine
 from aerona.db.record_context import UNCAPTURED
-from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow, TelemetryBase
+from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow, TelemetryBase, UsageTotalsRow
 from aerona.domain.enums.telemetry import LlmCallStatus
 
 ASYNC_DRIVER_PREFIX = "sqlite+aiosqlite:///"
 TABLE_DEFINITION_QUERY = "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = :name"
 STALE_SUFFIX = "_stale"
 WORLD_KEY_COLUMN = "world_key"
+LIFETIME_ID = 1
 
 
 def telemetry_url(data_dir: Path) -> str:
@@ -52,10 +53,21 @@ def drop_unowned_events(connection: Connection) -> None:
         connection.execute(text(f'DROP TABLE "{table}"'))
 
 
+def seed_totals(connection: Connection) -> None:
+    if connection.execute(text(f'SELECT 1 FROM "{UsageTotalsRow.__tablename__}" WHERE id = :id'), {"id": LIFETIME_ID}).first() is not None:
+        return
+    calls, tokens = connection.execute(text(f'SELECT COUNT(*), COALESCE(SUM(input_tokens + output_tokens), 0) FROM "{LlmCallRow.__tablename__}"')).one()
+    connection.execute(
+        text(f'INSERT INTO "{UsageTotalsRow.__tablename__}" (id, tokens, calls) VALUES (:id, :tokens, :calls)'),
+        {"id": LIFETIME_ID, "tokens": int(tokens), "calls": int(calls)},
+    )
+
+
 def prepare(connection: Connection) -> None:
     rebuild_stale_calls(connection)
     drop_unowned_events(connection)
     TelemetryBase.metadata.create_all(connection)
+    seed_totals(connection)
 
 
 class TelemetryDatabase:

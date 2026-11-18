@@ -5,6 +5,7 @@ import {
   formatInteger,
   formatNumber,
   formatPercent,
+  formatTokens,
 } from './format'
 
 describe('number formatting', () => {
@@ -21,6 +22,16 @@ describe('number formatting', () => {
   it('formats ratios as percentages and large numbers compactly', () => {
     expect(formatPercent(0.42)).toBe('42%')
     expect(formatCompact(1284000)).toBe('1.3M')
+  })
+
+  it('shows token counts with two decimals once they pass a thousand', () => {
+    expect(formatTokens(9_040_000)).toBe('9.04M')
+    expect(formatTokens(10_240_000)).toBe('10.24M')
+    expect(formatTokens(105_480_000)).toBe('105.48M')
+    expect(formatTokens(2_320_000_000)).toBe('2.32B')
+    expect(formatTokens(12_500)).toBe('12.50K')
+    expect(formatTokens(9_000_000)).toBe('9.00M')
+    expect(formatTokens(842)).toBe('842')
   })
 
   it('dispatches on the requested format', () => {

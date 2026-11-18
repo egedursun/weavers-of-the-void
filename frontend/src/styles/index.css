@@ -49,6 +49,23 @@
   }
 }
 
+@utility scroll-edges {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 1rem,
+    #000 calc(100% - 1rem),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 1rem,
+    #000 calc(100% - 1rem),
+    transparent
+  );
+}
+
 @utility no-scrollbar {
   &::-webkit-scrollbar {
     display: none;

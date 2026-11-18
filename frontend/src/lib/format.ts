@@ -42,6 +42,19 @@ export function formatCompact(value: number): string {
   return compactFormat.format(value)
 }
 
+const TOKEN_COMPACT_FROM = 1000
+const tokenFormat = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+export function formatTokens(value: number): string {
+  return Math.abs(value) < TOKEN_COMPACT_FROM
+    ? formatInteger(Math.round(value))
+    : tokenFormat.format(value)
+}
+
 export function formatNumber(
   value: number,
   format: NumberFormat = 'integer'

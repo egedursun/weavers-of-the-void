@@ -6,9 +6,12 @@ from typing import Any
 from sqlalchemy import ColumnElement, SQLColumnExpression, String, case, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.telemetry.tables import LlmCallRow
+from aerona.db.telemetry.setup import LIFETIME_ID
+from aerona.db.telemetry.tables import LlmCallRow, UsageTotalsRow
+from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus, UsageBucket, UsageSort
 from aerona.llm.token_count import ENCODING_NAME
+from aerona.rules.registry.metrics import MetricsRules
 from aerona.services.metrics import MORTAL_TURN_GROUP, MORTAL_TURN_PREFIX, SON_TURN_GROUP, SON_TURN_PREFIX, step_group
 
 GROUP_PREFIXES = {SON_TURN_GROUP: SON_TURN_PREFIX, MORTAL_TURN_GROUP: MORTAL_TURN_PREFIX}
@@ -121,6 +124,22 @@ class UsageStatusShare:
 
 
 @dataclass(frozen=True)
+class UsageRank:
+    rarity: Rarity
+    floor: int
+
+
+@dataclass(frozen=True)
+class UsageLifetime:
+    tokens: int
+    calls: int
+    since: datetime | None
+    pace_tokens: int
+    pace_epochs: int
+    ranks: list[UsageRank]
+
+
+@dataclass(frozen=True)
 class UsageFacets:
     calls: int
     tokens: int
@@ -142,6 +161,7 @@ class UsageReport:
     kinds: list[UsageKindShare]
     statuses: list[UsageStatusShare]
     facets: UsageFacets
+    lifetime: UsageLifetime
 
 
 @dataclass(frozen=True)
@@ -296,7 +316,43 @@ async def usage_facets(session: AsyncSession) -> UsageFacets:
     )
 
 
-async def usage_report(session: AsyncSession, chosen: UsageFilter, bucket: UsageBucket) -> UsageReport:
+def usage_ranks(rules: MetricsRules) -> list[UsageRank]:
+    floors = [
+        (Rarity.UNCOMMON, rules.rank_uncommon_tokens),
+        (Rarity.RARE, rules.rank_rare_tokens),
+        (Rarity.EPIC, rules.rank_epic_tokens),
+        (Rarity.LEGENDARY, rules.rank_legendary_tokens),
+        (Rarity.MYTHIC, rules.rank_mythic_tokens),
+    ]
+    ranks = [UsageRank(Rarity.COMMON, 0)]
+    for rarity, floor in floors:
+        ranks.append(UsageRank(rarity, max(floor, ranks[-1].floor + 1)))
+    return ranks
+
+
+async def usage_lifetime(session: AsyncSession, rules: MetricsRules) -> UsageLifetime:
+    totals = await session.get(UsageTotalsRow, LIFETIME_ID)
+    recent = list(
+        await session.execute(
+            select(LlmCallRow.epoch, func.sum(TOTAL_TOKENS))
+            .where(LlmCallRow.epoch.is_not(None))
+            .group_by(LlmCallRow.epoch)
+            .order_by(LlmCallRow.epoch.desc())
+            .limit(rules.rank_pace_epochs)
+        )
+    )
+    spent = [int(row[1] or 0) for row in recent]
+    return UsageLifetime(
+        tokens=totals.tokens if totals is not None else 0,
+        calls=totals.calls if totals is not None else 0,
+        since=totals.since if totals is not None else None,
+        pace_tokens=sum(spent) // len(spent) if spent else 0,
+        pace_epochs=len(spent),
+        ranks=usage_ranks(rules),
+    )
+
+
+async def usage_report(session: AsyncSession, chosen: UsageFilter, bucket: UsageBucket, rules: MetricsRules) -> UsageReport:
     conditions = chosen.conditions()
     return UsageReport(
         tokenizer=f"tiktoken {ENCODING_NAME}",
@@ -308,6 +364,7 @@ async def usage_report(session: AsyncSession, chosen: UsageFilter, bucket: Usage
         kinds=await usage_kinds(session, conditions),
         statuses=await usage_statuses(session, conditions),
         facets=await usage_facets(session),
+        lifetime=await usage_lifetime(session, rules),
     )
 
 

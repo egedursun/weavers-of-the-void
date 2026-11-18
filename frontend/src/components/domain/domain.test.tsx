@@ -9,6 +9,7 @@ import '@/styles/index.css'
 import { Crown, Sparkles } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { page } from 'vitest/browser'
 import { RARITIES } from '@/constants/rarity'
 import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
 import {
@@ -123,6 +124,34 @@ describe('domain components', () => {
     await expect
       .element(screen.getByRole('region', { name: 'Sons' }))
       .toBeInTheDocument()
+  })
+
+  it('keeps the page title and description readable however wide the actions are', async () => {
+    await page.viewport(1512, 900)
+    const screen = await render(
+      <div style={{ width: 700 }}>
+        <PageHeader
+          title='Cards'
+          description='Every god, mortal, beast, spirit and place as a collectible card.'
+          icon={Crown}
+          actions={
+            <>
+              <span className='whitespace-nowrap'>Open every pack</span>
+              <span className='whitespace-nowrap'>Seal every pack</span>
+              <span className='whitespace-nowrap'>Card guide</span>
+              <span className='whitespace-nowrap'>Binder and deck</span>
+            </>
+          }
+        />
+      </div>
+    )
+    await expect
+      .element(screen.getByRole('heading', { level: 1, name: 'Cards' }))
+      .toBeVisible()
+    const description = screen
+      .getByText('Every god, mortal, beast', { exact: false })
+      .element()
+    expect(description.getBoundingClientRect().width).toBeGreaterThan(500)
   })
 
   it('renders key value pairs as a description list', async () => {

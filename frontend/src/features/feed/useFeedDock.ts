@@ -3,7 +3,10 @@ import { create } from 'zustand'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useFeedPreferences } from './feedStore'
 
-const WIDE_QUERY = '(min-width: 90rem)'
+export const SIDEBAR_REM = 16
+export const FEED_DOCK_REM = 36
+export const PAGE_MIN_REM = 64
+const DOCK_QUERY = `(min-width: ${SIDEBAR_REM + FEED_DOCK_REM + PAGE_MIN_REM}rem)`
 
 type FeedOverlay = {
   open: boolean
@@ -22,14 +25,13 @@ export function useCanvasRoute(): boolean {
 }
 
 export function useFeedDock() {
-  const wide = useMediaQuery(WIDE_QUERY)
+  const wide = useMediaQuery(DOCK_QUERY)
   const canvas = useCanvasRoute()
   const preference = useFeedPreferences((state) => state.open)
   const setPreference = useFeedPreferences((state) => state.setOpen)
   const overlay = useFeedOverlay((state) => state.open)
   const setOverlay = useFeedOverlay((state) => state.setOpen)
   const docked = wide && !canvas
-  if (wide && canvas)
-    return { wide, docked, open: overlay, setOpen: setOverlay }
+  if (!docked) return { wide, docked, open: overlay, setOpen: setOverlay }
   return { wide, docked, open: preference ?? wide, setOpen: setPreference }
 }

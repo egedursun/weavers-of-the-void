@@ -90,19 +90,12 @@ export function shareOf(part: number, whole: number): number {
   return whole > 0 ? part / whole : 0
 }
 
-export const RANKS: { rarity: Rarity; floor: number }[] = [
-  { rarity: 'common', floor: 0 },
-  { rarity: 'uncommon', floor: 100_000 },
-  { rarity: 'rare', floor: 1_000_000 },
-  { rarity: 'epic', floor: 10_000_000 },
-  { rarity: 'legendary', floor: 100_000_000 },
-  { rarity: 'mythic', floor: 1_000_000_000 },
-]
+export type UsageRank = { rarity: Rarity; floor: number }
 
-export function rankOf(total: number) {
-  const reached = RANKS.filter((rank) => total >= rank.floor)
-  const current = reached[reached.length - 1] ?? RANKS[0]
-  const next = RANKS[RANKS.indexOf(current) + 1] ?? null
+export function rankOf(ranks: UsageRank[], total: number) {
+  const reached = ranks.filter((rank) => total >= rank.floor)
+  const current = reached[reached.length - 1] ?? ranks[0]
+  const next = ranks[ranks.indexOf(current) + 1] ?? null
   return {
     current,
     next,

@@ -91,7 +91,7 @@ UsageFilterDep = Annotated[UsageFilter, Depends(usage_filter)]
 @router.get("/usage/summary", response_model=UsageReport)
 async def read_usage_summary(services: ServicesDep, chosen: UsageFilterDep, bucket: UsageBucket = UsageBucket.EPOCH) -> UsageReport:
     async with services.application.telemetry.sessions() as session:
-        return await usage_report(session, chosen, bucket)
+        return await usage_report(session, chosen, bucket, services.rules.current.metrics)
 
 
 @router.get("/usage/calls", response_model=UsageCallPage)

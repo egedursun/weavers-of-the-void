@@ -69,6 +69,21 @@ const REPORT = {
     epoch_low: 1,
     epoch_high: 3,
   },
+  lifetime: {
+    tokens: 30_000_000,
+    calls: 120,
+    since: '2026-11-18T10:00:00Z',
+    pace_tokens: 9_040_000,
+    pace_epochs: 3,
+    ranks: [
+      { rarity: 'common', floor: 0 },
+      { rarity: 'uncommon', floor: 25_000_000 },
+      { rarity: 'rare', floor: 100_000_000 },
+      { rarity: 'epic', floor: 500_000_000 },
+      { rarity: 'legendary', floor: 2_000_000_000 },
+      { rarity: 'mythic', floor: 10_000_000_000 },
+    ],
+  },
 }
 
 const CALL = {
@@ -149,10 +164,25 @@ describe('usage page', () => {
   it('ranks the usage, names the tokenizer and compares the latest epoch', async () => {
     const { screen } = await renderScreen(<UsageScreen />, routes())
     await expect
-      .element(screen.getByText('Rare', { exact: true }))
+      .element(screen.getByRole('heading', { name: 'Uncommon' }))
       .toBeVisible()
     await expect
-      .element(screen.getByText('7.5M more tokens to Epic at 10M.'))
+      .element(screen.getByText('70.00M more tokens to Rare.'))
+      .toBeVisible()
+    await expect.element(screen.getByText('30.00M / 100.00M')).toBeVisible()
+    await expect
+      .element(
+        screen.getByText(
+          'At your recent pace of 9.04M tokens an epoch over the last 3 epochs, Rare is about 8 epochs away.'
+        )
+      )
+      .toBeVisible()
+    await expect
+      .element(
+        screen.getByRole('listitem', {
+          name: /Uncommon from 25.00M tokens, your rank/,
+        })
+      )
       .toBeVisible()
     await expect
       .element(screen.getByText('Counted with tiktoken o200k_base'))

@@ -54,7 +54,11 @@ export function FeedSoundSettings() {
           icon={Radio}
           tone='verdigris'
           label='Live feed open'
-          description='The event feed slides in from the right.'
+          description={
+            dock.docked
+              ? 'The event feed stays docked beside the page.'
+              : 'The event feed slides in over the page; the screen is too narrow to dock it beside the page.'
+          }
           checked={dock.open}
           onChange={dock.setOpen}
         />

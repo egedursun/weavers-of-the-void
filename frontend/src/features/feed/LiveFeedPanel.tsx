@@ -146,7 +146,7 @@ export function LiveFeedPanel({
           tabIndex={0}
           aria-label='Feed lines'
           className={cn(
-            'min-h-0 min-w-0 overflow-y-auto overscroll-contain rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+            'min-h-0 min-w-0 overflow-y-auto overscroll-contain rounded-md scroll-edges py-4 outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
             layout === 'card' ? 'h-96' : 'flex-1'
           )}
         >

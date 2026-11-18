@@ -13,7 +13,7 @@ import {
   YAxis,
 } from 'recharts'
 import { llmCallKindValues, llmCallStatusValues } from '@/api/generated/schema'
-import { formatCompact, formatInteger } from '@/lib/format'
+import { formatInteger, formatTokens } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -148,7 +148,7 @@ export function TokenTimeline({
               tickLine={false}
               axisLine={false}
               width={AXIS_WIDTH}
-              tickFormatter={(value: number) => formatCompact(value)}
+              tickFormatter={(value: number) => formatTokens(value)}
             />
             <ChartTooltip
               content={
@@ -184,7 +184,7 @@ export function TokenTimeline({
               tickLine={false}
               axisLine={false}
               width={AXIS_WIDTH}
-              tickFormatter={(value: number) => formatCompact(value)}
+              tickFormatter={(value: number) => formatTokens(value)}
             />
             <ChartTooltip
               content={
@@ -212,7 +212,7 @@ export function TokenTimeline({
         )}
       </ChartContainer>
       <Muted variant='caption'>
-        {`Busiest: ${peak.label} with ${formatCompact(peak.input + peak.output)} ${agree(peak.input + peak.output, 'token')} over ${plural(peak.calls, 'call', 'calls')}${peak.errors > 0 ? `, ${plural(peak.errors, 'failure', 'failures')}` : ''}.`}
+        {`Busiest: ${peak.label} with ${formatTokens(peak.input + peak.output)} ${agree(peak.input + peak.output, 'token')} over ${plural(peak.calls, 'call', 'calls')}${peak.errors > 0 ? `, ${plural(peak.errors, 'failure', 'failures')}` : ''}.`}
       </Muted>
     </div>
   )
@@ -287,7 +287,7 @@ export function ModelDonut({
         </ChartContainer>
         <div className='pointer-events-none absolute inset-0 flex flex-col items-center justify-center'>
           <Stat
-            value={formatCompact(whole)}
+            value={formatTokens(whole)}
             size='kpi'
             className='text-gilded font-display'
           />
@@ -325,7 +325,7 @@ export function ModelDonut({
               <Stat value={shareText(shareOf(slice.total, whole))} />
             </div>
             <Muted variant='caption'>
-              {`${formatCompact(slice.total)} ${agree(slice.total, 'token')} · ${plural(slice.calls, 'call', 'calls')}`}
+              {`${formatTokens(slice.total)} ${agree(slice.total, 'token')} · ${plural(slice.calls, 'call', 'calls')}`}
             </Muted>
           </li>
         ))}
@@ -362,7 +362,7 @@ export function StepBars({
             type='number'
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value: number) => formatCompact(value)}
+            tickFormatter={(value: number) => formatTokens(value)}
           />
           <YAxis
             type='category'
@@ -428,7 +428,7 @@ function SplitRow({
           aria-label={`${look.label}: share of tokens`}
         />
         <Muted variant='caption'>
-          {`${formatCompact(tokens)} ${agree(tokens, 'token')} · ${plural(calls, 'call', 'calls')}`}
+          {`${formatTokens(tokens)} ${agree(tokens, 'token')} · ${plural(calls, 'call', 'calls')}`}
         </Muted>
       </div>
     </li>

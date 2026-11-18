@@ -79636,6 +79636,14 @@ export interface components {
       input_tokens: number
       output_tokens: number
     }
+    UsageLifetime: {
+      tokens: number
+      calls: number
+      since: string | null
+      pace_tokens: number
+      pace_epochs: number
+      ranks: components['schemas']['UsageRank'][]
+    }
     UsagePoint: {
       epoch: number | null
       start: string | null
@@ -79643,6 +79651,10 @@ export interface components {
       input_tokens: number
       output_tokens: number
       errors: number
+    }
+    UsageRank: {
+      rarity: components['schemas']['Rarity']
+      floor: number
     }
     UsageReport: {
       tokenizer: string
@@ -79654,6 +79666,7 @@ export interface components {
       kinds: components['schemas']['UsageKindShare'][]
       statuses: components['schemas']['UsageStatusShare'][]
       facets: components['schemas']['UsageFacets']
+      lifetime: components['schemas']['UsageLifetime']
     }
     UsageShare: {
       name: string

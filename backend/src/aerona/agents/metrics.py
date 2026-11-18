@@ -2,9 +2,12 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from aerona.agents.roles import role_of
-from aerona.db.telemetry.setup import TelemetryDatabase
-from aerona.db.telemetry.tables import LlmCallRow
+from aerona.db.telemetry.setup import LIFETIME_ID, TelemetryDatabase
+from aerona.db.telemetry.tables import LlmCallRow, UsageTotalsRow
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus
 from aerona.llm.records import CallKind, CallOutcome, CallRecord
 
@@ -60,10 +63,24 @@ def call_row(record: CallRecord, epoch: int | None, actions: int | None) -> LlmC
     )
 
 
+async def count_lifetime(session: AsyncSession, tokens: int) -> None:
+    if await session.get(UsageTotalsRow, LIFETIME_ID) is None:
+        session.add(UsageTotalsRow(id=LIFETIME_ID, tokens=tokens, calls=1))
+        return
+    await session.execute(
+        update(UsageTotalsRow)
+        .where(UsageTotalsRow.id == LIFETIME_ID)
+        .values(tokens=UsageTotalsRow.tokens + tokens, calls=UsageTotalsRow.calls + 1)
+        .execution_options(synchronize_session=False)
+    )
+
+
 class TelemetrySink:
     def __init__(self, telemetry: TelemetryDatabase) -> None:
         self._telemetry = telemetry
 
     async def __call__(self, record: CallRecord) -> None:
         async with self._telemetry.sessions() as session, session.begin():
-            session.add(call_row(record, current_epoch.get(), current_actions.get()))
+            row = call_row(record, current_epoch.get(), current_actions.get())
+            session.add(row)
+            await count_lifetime(session, row.input_tokens + row.output_tokens)

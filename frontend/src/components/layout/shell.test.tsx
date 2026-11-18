@@ -19,7 +19,12 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { LiveFeedDock } from '@/features/feed/LiveFeedDock'
 import { LiveFeedSheet } from '@/features/feed/LiveFeedSheet'
 import { useFeedPreferences } from '@/features/feed/feedStore'
-import { useFeedOverlay } from '@/features/feed/useFeedDock'
+import {
+  FEED_DOCK_REM,
+  PAGE_MIN_REM,
+  SIDEBAR_REM,
+  useFeedOverlay,
+} from '@/features/feed/useFeedDock'
 import { WorldSwitcher } from './WorldSwitcher'
 import { nextCollapsed } from './useCollapseOnScroll'
 import { filteredRoute, useWorldFilter, worldSearch } from './worldFilter'
@@ -135,9 +140,12 @@ describe('collapsing top bar', () => {
   })
 })
 
+const REM_PX = 16
+const LARGE_SCREEN_PX = 1024
+
 describe('live feed dock on canvas routes', () => {
   beforeEach(async () => {
-    await page.viewport(1440, 900)
+    await page.viewport(1900, 900)
     useFeedPreferences.setState({ open: true })
     useFeedOverlay.setState({ open: false })
   })
@@ -169,5 +177,44 @@ describe('live feed dock on canvas routes', () => {
       .toBeVisible()
     expect(document.querySelector('[data-layout="feed-dock"]')).toBeNull()
     expect(useFeedPreferences.getState().open).toBe(true)
+  })
+
+  it('slides in over a screen too narrow to keep the page wide beside the dock', async () => {
+    await page.viewport(1512, 900)
+    const shell = (
+      <>
+        <LiveFeedSheet />
+        <LiveFeedDock />
+      </>
+    )
+    const pageRoute = await renderRoutes(shell, '/chronicle')
+    await expect.element(pageRoute.screen.getByText('/chronicle')).toBeVisible()
+    expect(document.querySelector('[data-layout="feed-dock"]')).toBeNull()
+    expect(
+      document.querySelector('[role="dialog"][aria-label="Live feed"]')
+    ).toBeNull()
+    await pageRoute.screen.getByRole('button', { name: 'Live feed' }).click()
+    await expect
+      .element(pageRoute.screen.getByRole('dialog', { name: 'Live feed' }))
+      .toBeVisible()
+    expect(document.querySelector('[data-layout="feed-dock"]')).toBeNull()
+  })
+
+  it('docks only where the page keeps the width of a large screen beside it', async () => {
+    const narrowest = (SIDEBAR_REM + FEED_DOCK_REM + PAGE_MIN_REM) * REM_PX
+    await page.viewport(narrowest, 900)
+    const pageRoute = await renderRoutes(<LiveFeedDock />, '/chronicle')
+    await expect
+      .element(
+        pageRoute.screen.getByRole('complementary', { name: 'Live feed dock' })
+      )
+      .toBeVisible()
+    const dock = document.querySelector(
+      '[data-layout="feed-dock"]'
+    ) as HTMLElement
+    expect(dock.getBoundingClientRect().width).toBe(FEED_DOCK_REM * REM_PX)
+    expect(
+      narrowest - SIDEBAR_REM * REM_PX - dock.getBoundingClientRect().width
+    ).toBeGreaterThanOrEqual(LARGE_SCREEN_PX)
   })
 })

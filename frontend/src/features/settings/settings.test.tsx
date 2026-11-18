@@ -4,6 +4,7 @@ import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import { useFeedPreferences } from '@/features/feed/feedStore'
+import { useFeedOverlay } from '@/features/feed/useFeedDock'
 import { useOnboarding } from '@/features/onboarding/onboardingStore'
 import { FeedSoundSettings } from './FeedSoundSettings'
 import { GameSettings } from './GameSettings'
@@ -303,11 +304,15 @@ describe('guide settings', () => {
 })
 
 describe('feed and sound settings', () => {
-  it('remembers the feed panel and reveals the per-category mute list with sounds', async () => {
+  it('remembers the docked feed panel and reveals the per-category mute list with sounds', async () => {
+    await page.viewport(1900, 900)
     const { screen } = await renderScreen(<FeedSoundSettings />)
     await expect
       .element(screen.getByText('Which events make a sound', { exact: true }))
       .not.toBeInTheDocument()
+    await expect
+      .element(screen.getByText('The event feed stays docked beside the page.'))
+      .toBeVisible()
     await screen.getByRole('switch', { name: 'Live feed open' }).click()
     expect(useFeedPreferences.getState().open).toBe(true)
     await screen.getByRole('switch', { name: 'Feed sounds' }).click()
@@ -319,6 +324,21 @@ describe('feed and sound settings', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Listen to Wars' }))
       .toBeInTheDocument()
+  })
+
+  it('slides the feed in over a screen too narrow to dock it', async () => {
+    await page.viewport(1512, 900)
+    const { screen } = await renderScreen(<FeedSoundSettings />)
+    await expect
+      .element(
+        screen.getByText(
+          'The event feed slides in over the page; the screen is too narrow to dock it beside the page.'
+        )
+      )
+      .toBeVisible()
+    await screen.getByRole('switch', { name: 'Live feed open' }).click()
+    expect(useFeedOverlay.getState().open).toBe(true)
+    useFeedOverlay.setState({ open: false })
   })
 
   it('stores the ambient hum preference', async () => {

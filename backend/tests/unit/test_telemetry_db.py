@@ -28,7 +28,7 @@ async def test_telemetry_lives_in_its_own_file(tmp_path: Path) -> None:
     try:
         async with database.engine.connect() as connection:
             names = await connection.run_sync(lambda sync: set(inspect(sync).get_table_names()))
-        assert names == {"llm_calls", "live_events"}
+        assert names == {"llm_calls", "live_events", "usage_totals"}
         async with database.sessions() as session, session.begin():
             session.add(
                 LlmCallRow(job="son turn", model="haiku", kind=LlmCallKind.AGENT, status=LlmCallStatus.OK, duration_ms=1200, input_tokens=10, output_tokens=5)
