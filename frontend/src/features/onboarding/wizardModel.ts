@@ -28,13 +28,24 @@ export const PERCENT_MAX = 100
 export const MOISTURE_MIN = -100
 export const LAND_DEFAULTS = { sea: 50, mountains: 30, moisture: 0 }
 
-export const WIZARD_STEPS = ['template', 'creator', 'world', 'review'] as const
+export const WIZARD_STEPS = [
+  'template',
+  'creator',
+  'seed',
+  'land',
+  'peoples',
+  'cosmos',
+  'review',
+] as const
 export type WizardStep = (typeof WIZARD_STEPS)[number]
 
 export const STEP_TITLE: Record<WizardStep, string> = {
   template: 'Template',
   creator: 'The Creator',
-  world: 'The world',
+  seed: 'Seed and tone',
+  land: 'The first world',
+  peoples: 'Peoples',
+  cosmos: 'Cosmos and telling',
   review: 'First sons',
 }
 
@@ -157,16 +168,16 @@ export function stepProblem(
 ): string | null {
   if (step === 'creator' && draft.creatorName.trim() === '')
     return 'Give the Creator a name.'
-  if (step === 'world') {
+  if (step === 'seed') {
     if (draft.seed.trim() === '') return 'Write a seed for the world.'
-    if (draft.peoples < 1 || draft.peoples > peoplesMax)
-      return `Between 1 and ${peoplesMax} first peoples.`
     if (
       [draft.magic, draft.danger].some(
         (value) => value < 0 || value > PERCENT_MAX
       )
     )
       return 'Magic and danger go from 0 to 100.'
+  }
+  if (step === 'land') {
     if (
       [draft.seaPct, draft.mountainsPct].some(
         (value) => value !== null && (value < 0 || value > PERCENT_MAX)
@@ -178,9 +189,11 @@ export function stepProblem(
       (draft.moisturePct < MOISTURE_MIN || draft.moisturePct > PERCENT_MAX)
     )
       return 'Moisture goes from -100 to 100.'
-    const style = imageStyleProblem(draft.imageStyle, draft.imageStyleCustom)
-    if (style) return style
   }
+  if (step === 'peoples' && (draft.peoples < 1 || draft.peoples > peoplesMax))
+    return `Between 1 and ${peoplesMax} first peoples.`
+  if (step === 'cosmos')
+    return imageStyleProblem(draft.imageStyle, draft.imageStyleCustom)
   return null
 }
 

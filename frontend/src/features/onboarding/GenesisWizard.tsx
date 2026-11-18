@@ -8,7 +8,15 @@ import { Muted, SectionTitle, Text } from '@/components/typography'
 import { useRuleValue } from '@/features/world-rules/api'
 import { GenesisPreview } from './GenesisPreview'
 import { GenesisStepper } from './GenesisStepper'
-import { CreatorStep, SonsStep, TemplateStep, WorldStep } from './WizardSteps'
+import {
+  CosmosStep,
+  CreatorStep,
+  LandStep,
+  PeoplesStep,
+  SeedStep,
+  SonsStep,
+  TemplateStep,
+} from './WizardSteps'
 import { useStartGenesis, useWizardOptions } from './api'
 import {
   STEP_TITLE,
@@ -129,7 +137,10 @@ export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
         </div>
         {step === 'template' && <TemplateStep {...props} onPick={onPick} />}
         {step === 'creator' && <CreatorStep {...props} />}
-        {step === 'world' && <WorldStep {...props} />}
+        {step === 'seed' && <SeedStep {...props} />}
+        {step === 'land' && <LandStep {...props} />}
+        {step === 'peoples' && <PeoplesStep {...props} />}
+        {step === 'cosmos' && <CosmosStep {...props} />}
         {step === 'review' && <SonsStep {...props} />}
         <div className='flex min-w-0 flex-wrap items-center justify-between gap-3 border-t pt-4'>
           <Button
@@ -142,7 +153,7 @@ export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
             Back
           </Button>
           <div className='flex min-w-0 flex-1 flex-col items-center'>
-            <Muted variant='caption'>{`Step ${stepIndex + 1} of ${WIZARD_STEPS.length}`}</Muted>
+            <Muted variant='caption'>{`Stage ${stepIndex + 1} of ${WIZARD_STEPS.length}`}</Muted>
             {problem && (
               <Text variant='caption' tone='warning' role='status' truncate>
                 {problem}

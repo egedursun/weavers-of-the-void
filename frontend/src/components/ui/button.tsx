@@ -25,7 +25,7 @@ const buttonVariants = cva(
         default: 'gilded-control font-display font-bold tracking-wide',
         destructive: 'gilded-control font-display font-bold tracking-wide',
         outline:
-          'border-gild/45 bg-plate text-plate-ink shadow-xs hover:border-gild/80 hover:bg-plate-hover',
+          'border-gild/45 bg-plate text-plate-ink shadow-xs hover:border-gild/80 hover:bg-plate-hover aria-checked:plate-chosen',
         field: 'well font-normal text-foreground',
         secondary:
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
@@ -53,6 +53,9 @@ const buttonVariants = cva(
         ],
         figure: [
           'h-auto flex-col items-center gap-1 rounded-xl p-2 font-normal',
+        ],
+        stage: [
+          'h-auto w-full flex-col items-stretch gap-2 rounded-lg px-0 py-1.5 font-normal whitespace-normal',
         ],
         card: [
           controlIcon.default,
@@ -96,6 +99,7 @@ const CONTROL_SIZE_OF: Record<ButtonSize, ControlSize> = {
   'icon-lg': 'lg',
   tile: 'lg',
   figure: 'lg',
+  stage: 'lg',
   card: 'lg',
 }
 

@@ -78,14 +78,20 @@ import { type WizardStep } from './wizardModel'
 export const STEP_ICON: Record<WizardStep, LucideIcon> = {
   template: LayoutTemplate,
   creator: Crown,
-  world: Globe,
-  review: Users,
+  seed: Sprout,
+  land: Mountain,
+  peoples: Users,
+  cosmos: Orbit,
+  review: Sparkles,
 }
 
 export const STEP_HINT: Record<WizardStep, string> = {
   template: 'Start from a myth or a blank canvas',
   creator: 'Who you are and the tongue of the lore',
-  world: 'Seed, tone, magic and the shape of the cosmos',
+  seed: 'The idea, the mood, magic and danger',
+  land: 'Its kind, land, climate and past',
+  peoples: 'How many, how far along, how they think and speak',
+  cosmos: 'The worlds beyond, the storyteller, the ages and the look',
   review: 'Your first sons and a last look',
 }
 

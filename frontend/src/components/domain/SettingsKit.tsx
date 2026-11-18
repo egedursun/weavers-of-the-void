@@ -1,10 +1,11 @@
 import { type ReactNode, useId } from 'react'
-import { Check, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Muted, Text } from '@/components/typography'
+import { ChosenMark } from './ChosenMark'
 import { type KpiTone, Medallion } from './KpiTile'
 
 export type Choice<T extends string> = {
@@ -53,7 +54,6 @@ export function ChoiceTiles<T extends string>({
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
             onClick={() => onChange(option.value)}
-            className={cn(active && 'border-primary/60 bg-primary/10')}
           >
             <Medallion
               icon={option.icon}
@@ -70,12 +70,7 @@ export function ChoiceTiles<T extends string>({
                 </Muted>
               )}
             </span>
-            {active && (
-              <Check
-                aria-hidden='true'
-                className='size-icon-sm shrink-0 text-primary'
-              />
-            )}
+            {active && <ChosenMark />}
           </Button>
         )
       })}

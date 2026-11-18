@@ -270,17 +270,22 @@ describe('genesis wizard', () => {
     )
     await screen.getByRole('radio', { name: /Drowned world/ }).click()
     await expect.element(screen.getByText('Ocean world').first()).toBeVisible()
+    await expect
+      .element(
+        screen.getByRole('radio', { name: /Drowned world/ }).getByText('Chosen')
+      )
+      .toBeVisible()
     await screen.getByRole('button', { name: /Next: The Creator/ }).click()
+    await expect
+      .element(
+        screen.getByRole('radio', { name: /English/ }).getByText('Chosen')
+      )
+      .toBeVisible()
     await screen.getByPlaceholder('A name for the Creator').fill('Aeron')
-    await screen.getByRole('button', { name: /Next: The world/ }).click()
+    await screen.getByRole('button', { name: /Next: Seed and tone/ }).click()
+    await screen.getByRole('button', { name: /Next: The first world/ }).click()
     await expect
       .element(screen.getByText(/The seed shapes the land/).first())
-      .toBeVisible()
-    await expect
-      .element(screen.getByText(/A single world has no further worlds/))
-      .toBeVisible()
-    await expect
-      .element(screen.getByText(/Only a layered cosmos has a second layer/))
       .toBeVisible()
     await screen
       .getByRole('switch', { name: 'Shape the land yourself' })
@@ -288,6 +293,16 @@ describe('genesis wizard', () => {
     await expect
       .element(screen.getByText(/The seed shapes the land/))
       .not.toBeInTheDocument()
+    await screen.getByRole('button', { name: /Next: Peoples/ }).click()
+    await screen
+      .getByRole('button', { name: /Next: Cosmos and telling/ })
+      .click()
+    await expect
+      .element(screen.getByText(/A single world has no further worlds/))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/Only a layered cosmos has a second layer/))
+      .toBeVisible()
     await screen.getByRole('radio', { name: /Small cosmos/ }).click()
     await screen.getByRole('radio', { name: /Layered/ }).click()
     await expect

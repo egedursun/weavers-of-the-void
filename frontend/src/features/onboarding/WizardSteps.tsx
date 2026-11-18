@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  ChosenMark,
   FormRow,
   Medallion,
   Paged,
@@ -103,16 +104,13 @@ function TemplateCard({
       variant='outline'
       size='card'
       onClick={onPick}
-      className={cn(chosen && 'border-primary/70 bg-primary/10 shadow-md')}
     >
       <span className='flex min-w-0 items-center gap-2.5'>
         <Medallion icon={Icon} tone={chosen ? 'gold' : 'muted'} size='sm' />
         <Text as='span' weight='semibold' truncate className='flex-1'>
           {template.name}
         </Text>
-        {chosen && (
-          <Check aria-hidden='true' className='size-icon-sm text-primary' />
-        )}
+        {chosen && <ChosenMark />}
       </span>
       <Muted as='span' variant='caption' truncate={2}>
         {template.tone}
@@ -173,10 +171,7 @@ export function TemplateStep({
           variant='outline'
           size='card'
           onClick={() => onPick(null)}
-          className={cn(
-            'border-dashed',
-            draft.template === null && 'border-primary/70 bg-primary/10'
-          )}
+          className={cn(draft.template !== null && 'border-dashed')}
         >
           <span className='flex min-w-0 items-center gap-2.5'>
             <Medallion
@@ -187,9 +182,7 @@ export function TemplateStep({
             <Text as='span' weight='semibold' truncate className='flex-1'>
               Blank canvas
             </Text>
-            {draft.template === null && (
-              <Check aria-hidden='true' className='size-icon-sm text-primary' />
-            )}
+            {draft.template === null && <ChosenMark />}
           </span>
           <Muted as='span' variant='caption' truncate={2}>
             Write your own seed and pick every setting yourself.
@@ -299,43 +292,11 @@ function toggleTone(tone: string, word: string): string {
   return next.join(', ').slice(0, TONE_MAX)
 }
 
-export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
+export function SeedStep({ draft, update }: StepProps) {
   const tones = draft.tone
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean)
-  const technology: Choice<TechnologyEra>[] = Object.entries(
-    options.technology
-  ).map(([key, label]) => ({
-    value: key as TechnologyEra,
-    label,
-    hint: TECHNOLOGY_HINT[key as TechnologyEra],
-    icon: TECHNOLOGY_ICON[key as TechnologyEra] ?? Sparkles,
-  }))
-  const language: Choice<LanguageTexture>[] = Object.entries(
-    options.language
-  ).map(([key, label]) => ({
-    value: key as LanguageTexture,
-    label,
-    hint: LANGUAGE_HINT[key as LanguageTexture],
-    icon: LANGUAGE_ICON[key as LanguageTexture] ?? Sparkles,
-  }))
-  const ageCycles: Choice<AgeCycle>[] = Object.entries(options.age_cycles).map(
-    ([key, label]) => ({
-      value: key as AgeCycle,
-      label,
-      hint: AGE_CYCLE_HINT[key as AgeCycle],
-      icon: AGE_CYCLE_ICON[key as AgeCycle] ?? Sparkles,
-    })
-  )
-  const storyteller: Choice<StorytellerProfile>[] = Object.entries(
-    options.storyteller
-  ).map(([key, label]) => ({
-    value: key as StorytellerProfile,
-    label,
-    hint: STORYTELLER_HINT[key as StorytellerProfile],
-    icon: STORYTELLER_ICON[key as StorytellerProfile] ?? Sparkles,
-  }))
   return (
     <div className='flex min-w-0 flex-col gap-5'>
       <FormRow
@@ -419,11 +380,50 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(danger) => update({ danger })}
         />
       </div>
+    </div>
+  )
+}
+
+export function LandStep({ draft, update, options, peoplesMax }: StepProps) {
+  return (
+    <div className='flex min-w-0 flex-col gap-5'>
       <FirstWorldFields
         draft={draft}
         update={update}
         options={options}
         peoplesMax={peoplesMax}
+      />
+    </div>
+  )
+}
+
+export function PeoplesStep({ draft, update, options, peoplesMax }: StepProps) {
+  const technology: Choice<TechnologyEra>[] = Object.entries(
+    options.technology
+  ).map(([key, label]) => ({
+    value: key as TechnologyEra,
+    label,
+    hint: TECHNOLOGY_HINT[key as TechnologyEra],
+    icon: TECHNOLOGY_ICON[key as TechnologyEra] ?? Sparkles,
+  }))
+  const language: Choice<LanguageTexture>[] = Object.entries(
+    options.language
+  ).map(([key, label]) => ({
+    value: key as LanguageTexture,
+    label,
+    hint: LANGUAGE_HINT[key as LanguageTexture],
+    icon: LANGUAGE_ICON[key as LanguageTexture] ?? Sparkles,
+  }))
+  return (
+    <div className='flex min-w-0 flex-col gap-5'>
+      <Counter
+        label='First peoples'
+        hint={`1 to ${peoplesMax}; the limit is a world rule (Genesis wizard).`}
+        icon={Users}
+        value={draft.peoples}
+        min={1}
+        max={peoplesMax}
+        onChange={(peoples) => update({ peoples })}
       />
       <SettingGroup
         label='Technology'
@@ -459,6 +459,29 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onChange={(value) => update({ language: value })}
         />
       </SettingGroup>
+    </div>
+  )
+}
+
+export function CosmosStep({ draft, update, options, peoplesMax }: StepProps) {
+  const ageCycles: Choice<AgeCycle>[] = Object.entries(options.age_cycles).map(
+    ([key, label]) => ({
+      value: key as AgeCycle,
+      label,
+      hint: AGE_CYCLE_HINT[key as AgeCycle],
+      icon: AGE_CYCLE_ICON[key as AgeCycle] ?? Sparkles,
+    })
+  )
+  const storyteller: Choice<StorytellerProfile>[] = Object.entries(
+    options.storyteller
+  ).map(([key, label]) => ({
+    value: key as StorytellerProfile,
+    label,
+    hint: STORYTELLER_HINT[key as StorytellerProfile],
+    icon: STORYTELLER_ICON[key as StorytellerProfile] ?? Sparkles,
+  }))
+  return (
+    <div className='flex min-w-0 flex-col gap-5'>
       <CosmosFields
         draft={draft}
         update={update}
@@ -500,15 +523,6 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           onCustomChange={(imageStyleCustom) => update({ imageStyleCustom })}
         />
       </SettingGroup>
-      <Counter
-        label='First peoples'
-        hint={`1 to ${peoplesMax}; the limit is a world rule (Genesis wizard).`}
-        icon={Users}
-        value={draft.peoples}
-        min={1}
-        max={peoplesMax}
-        onChange={(peoples) => update({ peoples })}
-      />
     </div>
   )
 }
@@ -527,15 +541,20 @@ function SonSlot({
   return (
     <li
       className={cn(
-        'flex min-w-0 flex-col items-center gap-2 rounded-xl border-2 bg-card p-4 text-center',
+        'flex min-w-0 flex-col items-center gap-3 rounded-xl border-2 surface-framed p-4 text-center transition-colors',
         RARITY_BORDER_CLASS[rarity]
       )}
     >
       <RarityIcon
         rarity={rarity}
-        className={cn('size-icon-xl', RARITY_TEXT_CLASS[rarity])}
+        className={cn('size-icon-xl drop-shadow-md', RARITY_TEXT_CLASS[rarity])}
       />
-      <Label variant='overline'>{`First son ${romanNumeral(index + 1)}`}</Label>
+      <span className='flex min-w-0 flex-col items-center gap-0.5'>
+        <Label variant='overline'>{`First son ${romanNumeral(index + 1)}`}</Label>
+        <Text as='span' weight='semibold' className={RARITY_TEXT_CLASS[rarity]}>
+          {RARITY_LABEL[rarity]}
+        </Text>
+      </span>
       <Select
         value={rarity}
         onValueChange={(value) => onChange(value as Rarity)}

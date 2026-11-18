@@ -64,8 +64,9 @@ describe('genesis wizard model', () => {
   it('checks each step and builds the request', () => {
     const draft = initialDraft(DEFAULTS)
     expect(stepProblem('creator', draft, 5)).toBe('Give the Creator a name.')
+    expect(stepProblem('seed', draft, 5)).toBe('Write a seed for the world.')
     expect(
-      stepProblem('world', { ...draft, seed: 'Salt', peoples: 9 }, 5)
+      stepProblem('peoples', { ...draft, seed: 'Salt', peoples: 9 }, 5)
     ).toMatch(/first peoples/)
     const request = toRequest(
       { ...draft, creatorName: ' Aeron ', seed: ' Salt ' },
@@ -91,7 +92,7 @@ describe('genesis wizard model', () => {
     expect(wizard?.climate_era).toBe('rain')
     expect(wizard?.world_age).toBe('old')
     expect(toRequest(draft, ['common']).wizard?.sea_pct).toBeNull()
-    expect(stepProblem('world', { ...shaped, moisturePct: -150 }, 5)).toMatch(
+    expect(stepProblem('land', { ...shaped, moisturePct: -150 }, 5)).toMatch(
       /Moisture/
     )
   })
