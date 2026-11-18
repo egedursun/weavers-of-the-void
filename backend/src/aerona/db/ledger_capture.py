@@ -12,6 +12,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session, UOWTransaction, configure_mappers, object_mapper
 from sqlalchemy.orm.base import NO_VALUE, instance_state
+from sqlalchemy.sql.elements import ClauseElement
 
 from aerona.constants.control import BOOKKEEPING_TABLES
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
@@ -527,14 +528,24 @@ def capture_new(session: Session, state: Any) -> None:
         )
 
 
-def mutable_column(plan: TablePlan, name: str) -> bool:
-    column_type = _table(plan.name).c[name].type
-    return isinstance(getattr(column_type, "impl_instance", column_type), JSON) or isinstance(column_type, JSON)
+MUTABLE_KEYS: dict[str, frozenset[str]] = {}
+
+
+def mutable_keys(plan: TablePlan) -> frozenset[str]:
+    found = MUTABLE_KEYS.get(plan.name)
+    if found is None:
+        table = _table(plan.name)
+        found = MUTABLE_KEYS[plan.name] = frozenset(
+            column.key for column in plan.columns if isinstance(getattr(table.c[column.name].type, "impl_instance", table.c[column.name].type), JSON)
+        )
+    return found
 
 
 def unloaded_columns(plan: TablePlan, state: Any) -> list[ColumnPlan]:
     committed = state.committed_state
-    return [column for column in plan.columns if column.key in committed and (committed[column.key] is NO_VALUE or mutable_column(plan, column.name))]
+    mutable = mutable_keys(plan)
+    wanted = {key for key, value in committed.items() if value is NO_VALUE or key in mutable}
+    return [column for column in plan.columns if column.key in wanted] if wanted else []
 
 
 def load_former(session: Session, _context: UOWTransaction, _instances: object) -> None:
@@ -595,8 +606,18 @@ def capture_deleted(session: Session, state: Any) -> None:
 
 def capture_order(instance: Base) -> tuple[str, str]:
     state = instance_state(instance)
-    keys = tuple(state.dict.get(state.mapper.get_property_by_column(column).key) for column in state.mapper.primary_key)
-    return (type(instance).__tablename__, repr(keys))
+    keys = state.identity if state.identity is not None else tuple(state.dict.get(key) for key in primary_keys(state.mapper))
+    return (type(instance).__tablename__, repr(tuple(keys)))
+
+
+PRIMARY_KEYS: dict[Any, tuple[str, ...]] = {}
+
+
+def primary_keys(mapper: Any) -> tuple[str, ...]:
+    found = PRIMARY_KEYS.get(mapper)
+    if found is None:
+        found = PRIMARY_KEYS[mapper] = tuple(mapper.get_property_by_column(column).key for column in mapper.primary_key)
+    return found
 
 
 def captured(instances: Iterable[object]) -> list[Base]:
@@ -801,25 +822,48 @@ def touched_rows(state: ORMExecuteState, connection: Connection, plan: TablePlan
     return [stored[key_text(key)] for key in keys if key_text(key) in stored]
 
 
-def column_changes(plan: TablePlan, key: RowValues, before: RowValues, after: RowValues, found: Stamp | None) -> list[PendingChange]:
+def column_changes(
+    plan: TablePlan, key: RowValues, before: RowValues, after: RowValues, found: Stamp | None, *, columns: Iterable[ColumnPlan] | None = None
+) -> list[PendingChange]:
     return [
         change(
             plan, key, LedgerOperation.UPDATE, found, column=column, before=before.get(column.name), after=after.get(column.name), owner=owner_of(plan, after)
         )
-        for column in plan.columns
+        for column in (plan.columns if columns is None else columns)
         if jsonable(before.get(column.name)) != jsonable(after.get(column.name))
     ]
+
+
+def given_values(state: ORMExecuteState, plan: TablePlan, target: Table) -> dict[str, dict[str, Any]] | None:
+    params = state.parameters if isinstance(state.parameters, list) else None
+    if not state.is_executemany or params is None or not all(isinstance(item, dict) for item in params):
+        return None
+    names = {column.key: column.name for column in plan.columns}
+    primary = {column.name for column in target.primary_key.columns}
+    found: dict[str, dict[str, Any]] = {}
+    for item in params:
+        values = {names[name]: value for name, value in item.items() if name in names}
+        if not primary <= set(values) or any(isinstance(value, ClauseElement) for value in values.values()):
+            return None
+        found[key_text({name: values[name] for name in sorted(primary)})] = values
+    return found
 
 
 def bulk_change(state: ORMExecuteState, connection: Connection, plan: TablePlan, target: Table, found: Stamp | None) -> Any:
     session = state.session
     before_rows = touched_rows(state, connection, plan, target)
     result = state.invoke_statement()
-    after_rows = {} if state.is_delete else rows_by_keys(connection, target, [_pk_values(target, before) for before in before_rows])
+    given = None if state.is_delete else given_values(state, plan, target)
+    after_rows = {} if state.is_delete or given is not None else rows_by_keys(connection, target, [_pk_values(target, before) for before in before_rows])
     for before in before_rows:
         key = _pk_values(target, before)
         if state.is_delete:
             pending(session).append(change(plan, key, LedgerOperation.DELETE, found, before=whole_row(before), owner=owner_of(plan, before)))
+            continue
+        if given is not None:
+            values = given.get(key_text(key), {})
+            columns = [column for column in plan.columns if column.name in values]
+            pending(session).extend(column_changes(plan, key, before, {**before, **values}, found, columns=columns))
             continue
         after = after_rows.get(key_text(key))
         if after is not None:
