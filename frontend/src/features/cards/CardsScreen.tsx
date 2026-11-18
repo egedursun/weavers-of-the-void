@@ -9,6 +9,8 @@ import { navItem } from '@/config/navigation'
 import {
   BookOpenText,
   LayoutGrid,
+  Package,
+  PackageOpen,
   RotateCcw,
   Search,
   SearchX,
@@ -59,6 +61,7 @@ import {
   deckTotal,
   filtersOf,
 } from './cardModel'
+import { everyOpen, everySealed, sealedIn, useCardSeals } from './sealStore'
 import { useCardExport } from './useCardExport'
 
 const ITEM = navItem('cards')
@@ -138,6 +141,7 @@ export function CardsScreen() {
     [search, deck, rarity, worldId, life, order]
   )
   const cards = useCharacterCards(filters)
+  const seals = useCardSeals()
   const exporter = useCardExport()
   const worlds = useMemo(() => state.data?.worlds ?? [], [state.data?.worlds])
   const worldNames = useMemo(
@@ -169,6 +173,12 @@ export function CardsScreen() {
     rarity !== null ||
     worldId !== null ||
     life !== 'all'
+  const latest = first?.latest_node_id ?? null
+  const shownSealed = visible.filter((item) =>
+    sealedIn(seals, item.node_id)
+  ).length
+  const allOpen = everyOpen(seals, latest)
+  const allSealed = everySealed(seals)
   const fetchMore = cards.fetchNextPage
   const loadMore = useCallback(() => {
     void fetchMore()
@@ -211,6 +221,30 @@ export function CardsScreen() {
         meta={<Badge variant='outline'>{plural(total, 'card', 'cards')}</Badge>}
         actions={
           <>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => latest !== null && seals.openAll(latest)}
+              disabled={allOpen}
+              disabledReason={
+                latest === null
+                  ? 'There is no card yet.'
+                  : 'Every pack is already open.'
+              }
+            >
+              <PackageOpen />
+              Open every pack
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={seals.sealAll}
+              disabled={allSealed}
+              disabledReason='Every pack is already sealed.'
+            >
+              <Package />
+              Seal every pack
+            </Button>
             <Button
               variant={guide ? 'secondary' : 'outline'}
               size='sm'
@@ -474,7 +508,7 @@ export function CardsScreen() {
                 </Button>
               )}
               <Muted variant='caption'>
-                {`${formatInteger(visible.length)} of ${formatInteger(total)} shown`}
+                {`${formatInteger(visible.length)} of ${formatInteger(total)} shown · ${plural(shownSealed, 'sealed pack', 'sealed packs')}`}
               </Muted>
             </div>
           </>

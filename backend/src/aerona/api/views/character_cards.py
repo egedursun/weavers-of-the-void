@@ -344,6 +344,12 @@ async def _attach_covers(session: AsyncSession, cards: list[CharacterCard]) -> l
     return [card.model_copy(update={"cover": covers.get(card.node_id)}) for card in cards]
 
 
+async def _latest_node_id(session: AsyncSession, gods: list[GodCard]) -> int | None:
+    newest_entity = await session.scalar(select(func.max(EntityRow.id)).where(EntityRow.entity_type.in_(CHARACTER_TYPES)))
+    found = [god.card.node_id for god in gods] + ([int(newest_entity)] if newest_entity is not None else [])
+    return max(found, default=None)
+
+
 async def character_cards(session: AsyncSession, rules: Rules, query: CardQuery) -> CharacterCardPage:
     gods = await _god_cards(session, rules)
     chosen = _god_order([god for god in gods if _god_matches(god, query, deck=True)], query.order)
@@ -364,4 +370,5 @@ async def character_cards(session: AsyncSession, rules: Rules, query: CardQuery)
         limit=query.limit,
         decks=await _deck_counts(session, gods, query, rules),
         rarities=await _rarity_counts(session, gods, query, rules),
+        latest_node_id=await _latest_node_id(session, gods),
     )

@@ -8,6 +8,8 @@ import {
   Gem,
   Globe2,
   type LucideIcon,
+  Package,
+  PackageOpen,
   Repeat2,
   ScrollText,
   Skull,
@@ -51,6 +53,7 @@ import { useRuleLookup } from '@/features/pantheon/gate'
 import { useLabels } from '@/features/pantheon/labels'
 import { xpNeeded } from '@/features/pantheon/sonFacts'
 import { LoreCard } from './LoreCard'
+import { PackOpening } from './PackOpening'
 import { type CharacterCard, type CharacterCardStat } from './api'
 import {
   type CardSide,
@@ -67,6 +70,7 @@ import {
   statText,
   tierLabel,
 } from './cardModel'
+import { sealedIn, useCardSeals } from './sealStore'
 
 const INSPECT_ART_WIDTH = 960
 const POWERS_SHOWN = 4
@@ -183,6 +187,46 @@ function HeroValue({ stat }: { stat: CharacterCardStat }) {
   )
 }
 
+function Walker({
+  index,
+  total,
+  atFirst,
+  nextReason,
+  onStep,
+}: {
+  index: number
+  total: number
+  atFirst: boolean
+  nextReason: string | null
+  onStep: (delta: number) => void
+}) {
+  return (
+    <div className='flex min-w-0 items-center gap-2'>
+      <Button
+        variant='outline'
+        size='icon'
+        aria-label='Previous card'
+        onClick={() => onStep(-1)}
+        disabled={atFirst}
+        disabledReason='This is the first card shown.'
+      >
+        <ChevronLeft />
+      </Button>
+      <Label>{`${formatInteger(index + 1)} / ${formatInteger(total)}`}</Label>
+      <Button
+        variant='outline'
+        size='icon'
+        aria-label='Next card'
+        onClick={() => onStep(1)}
+        disabled={nextReason !== null}
+        disabledReason={nextReason ?? undefined}
+      >
+        <ChevronRight />
+      </Button>
+    </div>
+  )
+}
+
 function KindBadge({
   card,
   icon: Icon,
@@ -212,6 +256,8 @@ export function CardInspector({
   worldOf,
 }: CardInspectorProps) {
   const [flipped, setFlipped] = useState(false)
+  const [unveiled, setUnveiled] = useState<number | null>(null)
+  const seals = useCardSeals()
   const drawers = useDrawerStack()
   const rule = useRuleLookup()
   const { domain, entityType } = useLabels()
@@ -232,12 +278,28 @@ export function CardInspector({
     if (next >= visible.length && hasMore && !loadingMore) onLoadMore()
     if (next < 0 || next >= visible.length) return
     setFlipped(false)
+    setUnveiled(null)
     onIndex(next)
   }
   const close = () => {
     setFlipped(false)
+    setUnveiled(null)
     onIndex(null)
   }
+  const sealed = card ? sealedIn(seals, card.node_id) : false
+  const staged = card !== undefined && (sealed || unveiled === card.node_id)
+  const nextSealed =
+    index === null
+      ? -1
+      : visible.findIndex(
+          (item, position) => position > index && sealedIn(seals, item.node_id)
+        )
+  const nextReason =
+    atLast && (!hasMore || loadingMore)
+      ? hasMore
+        ? 'The next cards are being drawn.'
+        : 'This is the last card of the deck.'
+      : null
   const flip = () => setFlipped((value) => !value)
   const worldName = card ? worldOf(card) : null
   const groups = card
@@ -265,10 +327,66 @@ export function CardInspector({
         onKeyDown={(event) => {
           if (event.key === 'ArrowRight') step(1)
           else if (event.key === 'ArrowLeft') step(-1)
-          else if (event.key.toLowerCase() === 'f') flip()
+          else if (event.key.toLowerCase() === 'f' && !staged) flip()
         }}
       >
-        {card && (
+        {card && staged && (
+          <div className='flex min-w-0 flex-col gap-4'>
+            <div className='flex min-w-0 flex-wrap items-center justify-between gap-3 pe-8'>
+              <div className='flex min-w-0 flex-col gap-1'>
+                <DialogTitle asChild>
+                  <PageTitle truncate>
+                    {unveiled === card.node_id ? card.name : 'A sealed pack'}
+                  </PageTitle>
+                </DialogTitle>
+                <DialogDescription asChild>
+                  <Muted>
+                    {unveiled === card.node_id
+                      ? 'The pack is open and the card is yours to read.'
+                      : 'Swipe across the seal or tap the pack to see whose card waits inside.'}
+                  </Muted>
+                </DialogDescription>
+              </div>
+              <Walker
+                index={index ?? 0}
+                total={total}
+                atFirst={index === 0}
+                nextReason={nextReason}
+                onStep={step}
+              />
+            </div>
+            <PackOpening
+              key={card.node_id}
+              card={card}
+              onRevealed={() => {
+                setUnveiled(card.node_id)
+                seals.open(card.node_id)
+              }}
+            >
+              {unveiled === card.node_id && (
+                <>
+                  <Button variant='outline' onClick={() => setUnveiled(null)}>
+                    <Gem />
+                    Read the whole card
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setFlipped(false)
+                      setUnveiled(null)
+                      onIndex(nextSealed)
+                    }}
+                    disabled={nextSealed < 0}
+                    disabledReason='No sealed pack is left among the cards shown.'
+                  >
+                    <PackageOpen />
+                    Open the next pack
+                  </Button>
+                </>
+              )}
+            </PackOpening>
+          </div>
+        )}
+        {card && !staged && (
           <div className='flex min-w-0 flex-col gap-6'>
             <HeroFrame>
               <div className='flex min-w-0 flex-col items-center gap-6 md:flex-row md:items-start'>
@@ -291,33 +409,13 @@ export function CardInspector({
                       flip()
                     }}
                   />
-                  <div className='flex min-w-0 items-center gap-2'>
-                    <Button
-                      variant='outline'
-                      size='icon'
-                      aria-label='Previous card'
-                      onClick={() => step(-1)}
-                      disabled={index === 0}
-                      disabledReason='This is the first card shown.'
-                    >
-                      <ChevronLeft />
-                    </Button>
-                    <Label>{`${formatInteger((index ?? 0) + 1)} / ${formatInteger(total)}`}</Label>
-                    <Button
-                      variant='outline'
-                      size='icon'
-                      aria-label='Next card'
-                      onClick={() => step(1)}
-                      disabled={atLast && (!hasMore || loadingMore)}
-                      disabledReason={
-                        hasMore
-                          ? 'The next cards are being drawn.'
-                          : 'This is the last card of the deck.'
-                      }
-                    >
-                      <ChevronRight />
-                    </Button>
-                  </div>
+                  <Walker
+                    index={index ?? 0}
+                    total={total}
+                    atFirst={index === 0}
+                    nextReason={nextReason}
+                    onStep={step}
+                  />
                 </div>
                 <div className='flex min-w-0 flex-1 flex-col gap-3'>
                   <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
@@ -452,6 +550,16 @@ export function CardInspector({
                     >
                       <Download />
                       Save the back
+                    </Button>
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        setFlipped(false)
+                        seals.seal(card.node_id)
+                      }}
+                    >
+                      <Package />
+                      Seal it back in its pack
                     </Button>
                     <GenerateImageButton
                       nodeId={card.node_id}

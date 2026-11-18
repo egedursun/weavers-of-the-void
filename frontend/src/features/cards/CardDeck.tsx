@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Hand,
   Maximize2,
   Repeat2,
   Shuffle,
@@ -18,7 +19,9 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Label, Muted } from '@/components/typography'
 import { LoreCard } from './LoreCard'
+import { SealedPack } from './SealedPack'
 import { type CharacterCard } from './api'
+import { sealedIn, useCardSeals, useSealed } from './sealStore'
 
 const DRAG_START = 8
 const SWIPE_SHARE = 0.22
@@ -39,6 +42,22 @@ type CardDeckProps = {
 }
 
 type Drag = { id: number; x: number; y: number; dx: number; moved: boolean }
+
+const SEALED_REASON = 'Open the pack first.'
+
+function DeckFace({
+  card,
+  flipped,
+  tilt,
+}: {
+  card: CharacterCard
+  flipped: boolean
+  tilt: boolean
+}) {
+  const sealed = useSealed(card.node_id)
+  if (sealed) return <SealedPack aria-label='A sealed pack' />
+  return <LoreCard card={card} flipped={flipped} tilt={tilt} />
+}
 
 function depthOf(offset: number): string {
   if (offset < 0) return 'gone'
@@ -61,6 +80,9 @@ export function CardDeck({
   const drag = useRef<Drag | null>(null)
   const top = useRef<HTMLDivElement>(null)
   const current = visible[index]
+  const sealed = useCardSeals((state) =>
+    current ? sealedIn(state, current.node_id) : false
+  )
   const last = visible.length - 1
   const atEnd = index >= last && !hasMore
 
@@ -76,10 +98,15 @@ export function CardDeck({
     onIndex(next)
   }
 
-  const flip = () =>
+  const flip = () => {
+    if (sealed) {
+      onOpen(index)
+      return
+    }
     setFlipped((value) =>
       current && value !== current.node_id ? current.node_id : null
     )
+  }
 
   const release = () => {
     const node = top.current
@@ -154,7 +181,11 @@ export function CardDeck({
         className='lore-deck-stage'
         role='region'
         aria-roledescription='card deck'
-        aria-label={`Card ${index + 1} of ${total}: ${current.name}. Swipe or press the arrow keys to move, space to turn the card over, enter to open it.`}
+        aria-label={
+          sealed
+            ? `Card ${index + 1} of ${total}: a sealed pack. Swipe or press the arrow keys to move, enter or space to open the pack.`
+            : `Card ${index + 1} of ${total}: ${current.name}. Swipe or press the arrow keys to move, space to turn the card over, enter to open it.`
+        }
         tabIndex={0}
         onKeyDown={onKeyDown}
       >
@@ -170,7 +201,7 @@ export function CardDeck({
             onPointerUp={offset === 0 ? onPointerUp : undefined}
             onPointerCancel={offset === 0 ? release : undefined}
           >
-            <LoreCard
+            <DeckFace
               card={card}
               flipped={flipped === card.node_id}
               tilt={offset === 0}
@@ -182,7 +213,11 @@ export function CardDeck({
         <div className='flex min-w-0 items-center justify-between gap-2'>
           <Label>{`Card ${formatInteger(index + 1)} of ${formatInteger(total)}`}</Label>
           <Muted variant='caption' truncate>
-            {loadingMore ? 'Drawing more cards…' : current.name}
+            {loadingMore
+              ? 'Drawing more cards…'
+              : sealed
+                ? 'A sealed pack'
+                : current.name}
           </Muted>
         </div>
         <Progress
@@ -201,19 +236,33 @@ export function CardDeck({
         >
           <ChevronLeft />
         </Button>
-        <Button variant='outline' onClick={flip}>
+        <Button
+          variant='outline'
+          onClick={flip}
+          disabled={sealed}
+          disabledReason={SEALED_REASON}
+        >
           <Repeat2 />
           {flipped === current.node_id ? 'Show the front' : 'Turn over'}
         </Button>
-        <Button variant='outline' onClick={() => onOpen(index)}>
-          <Maximize2 />
-          Inspect
-        </Button>
+        {sealed ? (
+          <Button onClick={() => onOpen(index)}>
+            <Hand />
+            Open the pack
+          </Button>
+        ) : (
+          <Button variant='outline' onClick={() => onOpen(index)}>
+            <Maximize2 />
+            Inspect
+          </Button>
+        )}
         <Button
           variant='outline'
           onClick={() => onDownload(current)}
-          disabled={downloadReason !== null}
-          disabledReason={downloadReason ?? undefined}
+          disabled={sealed || downloadReason !== null}
+          disabledReason={
+            sealed ? SEALED_REASON : (downloadReason ?? undefined)
+          }
         >
           <Download />
           Save as image
@@ -244,7 +293,9 @@ export function CardDeck({
         </Button>
       </div>
       <Muted variant='caption'>
-        Swipe the card or use the arrow keys. Tap it to turn it over.
+        {sealed
+          ? 'Swipe or use the arrow keys. Tap the pack to open it.'
+          : 'Swipe the card or use the arrow keys. Tap it to turn it over.'}
       </Muted>
     </div>
   )

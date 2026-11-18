@@ -3,10 +3,11 @@ import { type LucideIcon, ScrollText, Sparkles, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFitText } from '@/hooks/useFitText'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { Picture, RarityIcon, Sigil } from '@/components/domain'
+import { Picture, RarityIcon } from '@/components/domain'
 import { type ThumbnailWidth } from '@/features/images/media'
 import { useLabels } from '@/features/pantheon/labels'
 import { mediaUrl } from '@/features/pantheon/media'
+import { CardEmblem } from './CardEmblem'
 import { type CharacterCard, type CharacterCardStat } from './api'
 import {
   type CardSide,
@@ -316,11 +317,7 @@ export function CardFront({ card, artWidth, hidden }: FaceProps) {
           <Picture
             src={mediaUrl(card.cover, artWidth)}
             alt={`Likeness of ${card.name}`}
-            fallback={
-              <span className='lore-card-sigil'>
-                <Sigil seed={card.name} rarity={card.rarity ?? undefined} />
-              </span>
-            }
+            fallback={<CardEmblem card={card} />}
           />
           <span className='lore-card-foil' />
           <span className='lore-card-dust' />

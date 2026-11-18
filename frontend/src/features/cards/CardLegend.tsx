@@ -3,7 +3,9 @@ import {
   Clock,
   Gem,
   type LucideIcon,
+  Package,
   Skull,
+  Stamp,
   TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -60,6 +62,16 @@ const ANATOMY: { icon: LucideIcon; title: string; text: string }[] = [
     icon: Award,
     title: 'Seal at the foot',
     text: 'Its rarity; turn the card over for every value and power.',
+  },
+  {
+    icon: Package,
+    title: 'Sealed packs',
+    text: 'A card you have not opened yet waits in a sealed pack. Tear it open to see whose card it is, and seal it back from the card whenever you like.',
+  },
+  {
+    icon: Stamp,
+    title: 'Engraved emblem',
+    text: 'A soul with no likeness yet carries an engraved emblem in its metal: its initial, its kind on the crown and a jewel for each step of rarity.',
   },
 ]
 

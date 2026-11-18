@@ -76,6 +76,7 @@ class CharacterCardPage(ApiModel):
     limit: int
     decks: list[CharacterDeckCount]
     rarities: list[CharacterRarityCount]
+    latest_node_id: int | None
 
 
 class CardQuery(BaseModel):

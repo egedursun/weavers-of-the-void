@@ -115,3 +115,15 @@ def test_power_bands_hold_exactly_the_levels_of_their_rarity() -> None:
         top = TOP_POWER_LEVEL if high is None else high
         levels = {level for level in range(1, TOP_POWER_LEVEL + 1) if entity_rarity(rules, level) is rarity}
         assert levels == set(range(low, top + 1))
+
+
+async def test_cards_name_the_newest_card_whatever_the_filter(api: ApiWorld) -> None:
+    made = await add_characters(api)
+    whole = await cards(api, limit=200)
+    newest = max(item["node_id"] for item in whole["items"])
+    assert whole["latest_node_id"] == newest
+    assert newest >= max(made.values())
+    narrowed = await cards(api, q="ostrey", limit=1)
+    assert narrowed["latest_node_id"] == newest
+    empty = await cards(api, world_id=999999)
+    assert empty["latest_node_id"] == newest

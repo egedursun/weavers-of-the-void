@@ -1,7 +1,7 @@
 import { worldState } from '@/test-utils/fixtures'
 import { type MockRequest, failure } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { CardsScreen } from './CardsScreen'
 import { type CharacterCard } from './api'
@@ -17,6 +17,7 @@ import {
   statMeta,
   typeLine,
 } from './cardModel'
+import { everyOpen, everySealed, sealedIn, useCardSeals } from './sealStore'
 
 function card(overrides: Partial<CharacterCard> = {}): CharacterCard {
   return {
@@ -89,8 +90,21 @@ function page(items: CharacterCard[], total = items.length, offset = 0) {
       { rarity: 'legendary', total: 0 },
       { rarity: 'mythic', total: 1 },
     ],
+    latest_node_id: 41,
   }
 }
+
+function openEveryCard() {
+  useCardSeals.setState({ openedThrough: 41, turned: [] })
+}
+
+beforeEach(() => {
+  useCardSeals.setState({ openedThrough: 0, turned: [] })
+})
+
+afterEach(() => {
+  document.documentElement.classList.remove('reduce-motion')
+})
 
 function routes(reply: (request: MockRequest) => unknown) {
   return {
@@ -168,8 +182,119 @@ describe('card model', () => {
   })
 })
 
+describe('card seals', () => {
+  it('keeps unopened cards sealed and opens through the newest card', () => {
+    const fresh = { openedThrough: 0, turned: [] }
+    expect(sealedIn(fresh, 7)).toBe(true)
+    expect(everySealed(fresh)).toBe(true)
+    expect(everyOpen(fresh, 41)).toBe(false)
+    expect(everyOpen(fresh, null)).toBe(true)
+    useCardSeals.getState().open(7)
+    expect(sealedIn(useCardSeals.getState(), 7)).toBe(false)
+    expect(sealedIn(useCardSeals.getState(), 41)).toBe(true)
+    useCardSeals.getState().openAll(41)
+    const opened = useCardSeals.getState()
+    expect(opened.turned).toEqual([])
+    expect(sealedIn(opened, 41)).toBe(false)
+    expect(sealedIn(opened, 42)).toBe(true)
+    expect(everyOpen(opened, 41)).toBe(true)
+    expect(everyOpen(opened, 50)).toBe(false)
+    useCardSeals.getState().seal(7)
+    expect(sealedIn(useCardSeals.getState(), 7)).toBe(true)
+    expect(everyOpen(useCardSeals.getState(), 41)).toBe(false)
+    useCardSeals.getState().open(7)
+    expect(useCardSeals.getState().turned).toEqual([])
+    useCardSeals.getState().sealAll()
+    expect(everySealed(useCardSeals.getState())).toBe(true)
+  })
+})
+
 describe('CardsScreen', () => {
+  it('shows unopened cards as sealed packs and opens or seals them all', async () => {
+    const { screen } = await renderScreen(
+      <CardsScreen />,
+      routes(() => page([card(), MORTAL]))
+    )
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Open a sealed pack' }).first()
+      )
+      .toBeVisible()
+    expect(
+      screen.getByRole('button', { name: 'Open a sealed pack' }).all()
+    ).toHaveLength(2)
+    await expect.element(screen.getByText(/2 sealed packs/)).toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Seal every pack' }))
+      .toBeDisabled()
+    await screen.getByRole('button', { name: 'Open every pack' }).click()
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Inspect the card of Ilvane' })
+      )
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: 'Open every pack' }))
+      .toBeDisabled()
+    await screen
+      .getByRole('button', { name: 'Seal the card of Ilvane back in its pack' })
+      .click()
+    await expect
+      .element(screen.getByRole('button', { name: 'Open a sealed pack' }))
+      .toBeVisible()
+    await expect.element(screen.getByText(/1 sealed pack$/)).toBeVisible()
+    await screen.getByRole('button', { name: 'Seal every pack' }).click()
+    await expect
+      .poll(
+        () =>
+          screen.getByRole('button', { name: 'Open a sealed pack' }).all()
+            .length
+      )
+      .toBe(2)
+  })
+
+  it('tears a sealed pack open in the inspector and keeps it open', async () => {
+    document.documentElement.classList.add('reduce-motion')
+    const { screen } = await renderScreen(
+      <CardsScreen />,
+      routes(() => page([card(), MORTAL]))
+    )
+    await screen
+      .getByRole('button', { name: 'Open a sealed pack' })
+      .first()
+      .click()
+    const dialog = screen.getByRole('dialog')
+    await expect
+      .element(dialog.getByRole('heading', { name: 'A sealed pack' }))
+      .toBeVisible()
+    await dialog.getByRole('button', { name: 'Open the pack' }).click()
+    await expect
+      .element(dialog.getByRole('button', { name: 'Read the whole card' }))
+      .toBeVisible()
+    await expect
+      .element(dialog.getByRole('heading', { name: 'Ilvane' }))
+      .toBeVisible()
+    expect(sealedIn(useCardSeals.getState(), 7)).toBe(false)
+    await expect
+      .element(dialog.getByRole('button', { name: 'Open the next pack' }))
+      .toBeEnabled()
+    await dialog.getByRole('button', { name: 'Read the whole card' }).click()
+    await expect
+      .element(
+        dialog.getByText('Calms every river it touches.', { exact: true })
+      )
+      .toBeVisible()
+    await dialog
+      .getByRole('button', { name: 'Seal it back in its pack' })
+      .click()
+    await expect
+      .element(dialog.getByRole('heading', { name: 'A sealed pack' }))
+      .toBeVisible()
+    expect(sealedIn(useCardSeals.getState(), 7)).toBe(true)
+  })
+
   it('lays out the cards, filters the deck and searches by name', async () => {
+    openEveryCard()
     const { screen, server } = await renderScreen(
       <CardsScreen />,
       routes((request) =>
@@ -222,6 +347,7 @@ describe('CardsScreen', () => {
   })
 
   it('opens a card to read every value and walks the deck', async () => {
+    openEveryCard()
     const { screen } = await renderScreen(
       <CardsScreen />,
       routes(() => page([card(), MORTAL]))

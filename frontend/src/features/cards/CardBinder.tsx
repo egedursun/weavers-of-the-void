@@ -1,12 +1,15 @@
 import { type KeyboardEvent } from 'react'
-import { Globe2, type LucideIcon } from 'lucide-react'
+import { Globe2, type LucideIcon, Package } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { Medallion } from '@/components/domain'
 import { Label, SectionTitle } from '@/components/typography'
 import { LoreCard } from './LoreCard'
+import { SealedPack } from './SealedPack'
 import { type CharacterCard } from './api'
 import { FRAME_ICON, isDivine } from './cardModel'
+import { useCardSeals, useSealed } from './sealStore'
 
 type CardBinderProps = {
   visible: CharacterCard[]
@@ -16,6 +19,61 @@ type CardBinderProps = {
 }
 
 type Placed = { card: CharacterCard; index: number }
+
+function BinderSlot({
+  card,
+  index,
+  onOpen,
+}: {
+  card: CharacterCard
+  index: number
+  onOpen: (index: number) => void
+}) {
+  const sealed = useSealed(card.node_id)
+  const seal = useCardSeals((state) => state.seal)
+  const pressed = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onOpen(index)
+  }
+  if (sealed)
+    return (
+      <div key='sealed' className='lore-seal-swap'>
+        <SealedPack
+          role='button'
+          tabIndex={0}
+          aria-label='Open a sealed pack'
+          className='lore-binder-card'
+          onClick={() => onOpen(index)}
+          onKeyDown={pressed}
+        />
+      </div>
+    )
+  return (
+    <div key='open' className='lore-seal-swap lore-binder-slot'>
+      <LoreCard
+        card={card}
+        role='button'
+        tabIndex={0}
+        aria-label={`Inspect the card of ${card.name}`}
+        className='lore-binder-card'
+        onClick={() => onOpen(index)}
+        onKeyDown={pressed}
+      />
+      <span className='lore-binder-reseal'>
+        <Button
+          variant='outline'
+          size='icon-sm'
+          aria-label={`Seal the card of ${card.name} back in its pack`}
+          title='Seal it back in its pack'
+          onClick={() => seal(card.node_id)}
+        >
+          <Package />
+        </Button>
+      </span>
+    </div>
+  )
+}
 
 function Shelf({
   title,
@@ -32,11 +90,6 @@ function Shelf({
   wide: boolean
   onOpen: (index: number) => void
 }) {
-  const pressed = (event: KeyboardEvent<HTMLDivElement>, index: number) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return
-    event.preventDefault()
-    onOpen(index)
-  }
   return (
     <section className='flex min-w-0 flex-col gap-4' aria-label={title}>
       <div className='flex min-w-0 items-center gap-3 border-b border-gild/40 pb-2'>
@@ -60,15 +113,7 @@ function Shelf({
             role='listitem'
             className='lore-card-enter min-w-0'
           >
-            <LoreCard
-              card={card}
-              role='button'
-              tabIndex={0}
-              aria-label={`Inspect the card of ${card.name}`}
-              className='lore-binder-card'
-              onClick={() => onOpen(index)}
-              onKeyDown={(event) => pressed(event, index)}
-            />
+            <BinderSlot card={card} index={index} onOpen={onOpen} />
           </div>
         ))}
       </div>

@@ -4,6 +4,7 @@
 @import './ornate.css';
 @import './chrome.css';
 @import './cards.css';
+@import './packs.css';
 
 @custom-variant dark (&:is(.dark *):not(.dark .light *));
 

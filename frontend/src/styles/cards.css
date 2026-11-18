@@ -304,20 +304,6 @@
   );
 }
 
-.lore-card-sigil {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  place-items: center;
-  padding: 18cqw;
-  color: var(--m-hi);
-}
-
-.lore-card-sigil svg {
-  width: 100%;
-  height: 100%;
-}
-
 .lore-card-foil,
 .lore-card-dust,
 .lore-card-glare {

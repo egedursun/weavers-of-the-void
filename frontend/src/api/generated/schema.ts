@@ -46772,6 +46772,7 @@ export interface components {
       limit: number
       decks: components['schemas']['CharacterDeckCount'][]
       rarities: components['schemas']['CharacterRarityCount'][]
+      latest_node_id: number | null
     }
     CharacterCardStat: {
       key: string
