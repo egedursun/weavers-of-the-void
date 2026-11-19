@@ -28,7 +28,7 @@ from aerona.core.errors import ConflictError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.jobs.context import JobContext
 from aerona.services.books.assets import write_images, write_maps
-from aerona.services.books.model import build_book
+from aerona.services.books.cache import cached_book
 from aerona.services.books.render import PdfState, PrintLinks, render_book
 from aerona.services.container import Services
 
@@ -112,7 +112,7 @@ async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
             raise ConflictError(NO_WORLD)
         rules = rules_from_snapshot(cosmos.rules_snapshot) if cosmos.rules_snapshot else services.rules.current
         epoch = cosmos.epoch
-        model = await build_book(session, rules)
+        model = await cached_book(services.database, session, rules)
     exports = services.settings.exports_dir
     exports.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=exports) as scratch:

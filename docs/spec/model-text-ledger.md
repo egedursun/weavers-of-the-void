@@ -1121,7 +1121,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/templates/codex.md.j2` | 397 | 2026-11-18 | `14d400d595a87756` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
 | `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-18 | `7f1335c9cd560b4b` |
-| `backend/src/aerona/services/books/templates/layout.html.j2` | 331 | 2026-11-18 | `8c73edeec5cdbc30` |
+| `backend/src/aerona/services/books/templates/layout.html.j2` | 332 | 2026-11-19 | `cf4d14336831c08f` |
 | `backend/src/aerona/services/books/templates/macros.html.j2` | 123 | 2026-11-18 | `37f4b25b99608737` |
 | `backend/src/aerona/services/books/typed.py` | 9 | 2026-11-16 | `3f7d1efb192d4c08` |
 | `backend/src/aerona/services/bulk_deepen.py` | 15 | 2026-11-16 | `e6ba12e5fc751475` |

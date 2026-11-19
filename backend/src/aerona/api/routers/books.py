@@ -77,7 +77,7 @@ async def codex(request: Request, services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        path = await codex_file(session, rules, CodexLinks(base=str(request.base_url)), services.settings.exports_dir)
+        path = await codex_file(services.database, session, rules, CodexLinks(base=str(request.base_url)), services.settings.exports_dir)
     name = f"{_file_stem(cosmos.name if cosmos else None)}{CODEX_FILENAME_SUFFIX}"
     headers = {"content-disposition": f'attachment; filename="{name}"', "content-length": str(path.stat().st_size)}
     return StreamingResponse(stream_and_delete(path), media_type=MARKDOWN_MEDIA_TYPE, headers=headers)
@@ -89,7 +89,7 @@ async def codex_archive(services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        codex = await codex_file(session, rules, links, services.settings.exports_dir)
+        codex = await codex_file(services.database, session, rules, links, services.settings.exports_dir)
     stem = _file_stem(cosmos.name if cosmos else None)
     try:
         archive = await build_codex_archive(services, codex, links, stem)
@@ -109,7 +109,7 @@ async def book(services: ServicesDep, son_id: int | None = Query(default=None, g
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
         state = pdf_state(services, cosmos.epoch) if cosmos else None
-        rendered = await book_page(session, rules, son_id=son_id, entity_id=entity_id, pdf=state)
+        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state)
     return HTMLResponse(rendered.html, headers={"content-security-policy": BOOK_CSP.format(nonce=rendered.nonce), "x-content-type-options": "nosniff"})
 
 

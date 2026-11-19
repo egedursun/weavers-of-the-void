@@ -64,6 +64,7 @@ class Database:
 
     async def dispose(self) -> None:
         await self.engine.dispose()
+        self.generation += 1
 
 
 class Steps:

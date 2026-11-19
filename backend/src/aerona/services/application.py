@@ -32,6 +32,7 @@ from aerona.rules.registry import Rules
 from aerona.services.agent_ports import agent_lore_ports
 from aerona.services.backups import BackupService
 from aerona.services.bonds import BondService
+from aerona.services.books.cache import BookWarmer
 from aerona.services.bulk_deepen import BulkDeepening
 from aerona.services.chronicle import ChronicleWriter
 from aerona.services.discovery import DiscoveryService
@@ -192,6 +193,7 @@ async def build_application(
     live_log.attach()
     notification_stream = NotificationStream(bus, database, notifier, current, lambda: discovery.active)
     notification_stream.attach()
+    BookWarmer(bus, database, current, lambda: discovery.active).attach()
     search = SearchIndex()
     motifs = MotifCache()
     repair_log = RepairLog()
