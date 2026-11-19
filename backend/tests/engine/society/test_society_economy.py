@@ -5,6 +5,7 @@ from typing import Any, cast
 import pytest
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.eras import ERA_FLOORS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -12,6 +13,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
+from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import ResourceStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.control import open_route
@@ -199,3 +201,11 @@ async def test_manual_controls(realm: Realm) -> None:
     assert view.stored
     rebels = await incite_class_uprising(ctx, town.id, SocialClass.FARMER)
     assert rebels.social_class is SocialClass.FARMER
+
+
+def test_an_information_age_people_works_in_works_and_professions_more_than_in_fields() -> None:
+    floors = ERA_FLOORS[TechnologyEra.INFORMATION]
+    modern = class_targets(RULES, inputs(branches=frozenset(floors), levels=dict(floors)))
+    medieval = class_targets(RULES, inputs(branches=frozenset(ERA_FLOORS[TechnologyEra.MEDIEVAL]), levels=dict(ERA_FLOORS[TechnologyEra.MEDIEVAL])))
+    assert modern[SocialClass.FARMER] < medieval[SocialClass.FARMER]
+    assert modern[SocialClass.WORKER] + modern[SocialClass.PROFESSIONAL] > modern[SocialClass.FARMER]

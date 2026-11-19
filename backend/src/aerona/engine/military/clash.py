@@ -472,7 +472,7 @@ def log_phases(ctx: TickContext, battle_id: int, result: BattleResult) -> None:
             BattlePhaseRow(
                 battle_id=battle_id,
                 position=position,
-                phase=phase.phase.value,
+                phase=phase.phase,
                 attacker_losses=phase.attacker_losses,
                 defender_losses=phase.defender_losses,
                 summary=phase.summary,

@@ -360,6 +360,7 @@ async def language_stats(ctx: TickContext) -> int:
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.polity_profiles",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",

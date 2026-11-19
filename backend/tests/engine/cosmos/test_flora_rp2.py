@@ -154,7 +154,7 @@ async def test_farmers_gather_then_sow_a_wild_plant_and_a_master_farmer_breeds_a
     crop = await plant(ctx, cosmos, "Reach Millet", region.id, PlantYield.GRAIN)
     ctx.session.add(SpeciesRangeRow(species_entity_id=crop.id, region_entity_id=region.id, abundance=40, since_epoch=0, locked=[]))
     await ctx.session.flush()
-    eager = tick(ctx.session, tuned(rules, "flora", gather_pct=100, cultivate_pct=100, cultivar_pct=100, cultivar_epochs=0, cultivar_skill=10))
+    eager = tick(ctx.session, tuned(rules, "flora", gather_pct=100, cultivate_pct=100, cultivar_pct=100, cultivar_years=0, cultivar_skill=10))
     atlas = await RegionAtlas.load(ctx.session)
     book = await CropBook.load(ctx.session, eager.rules)
     assert (await gather_wild(eager, book, atlas))["plants_gathered"] == 1

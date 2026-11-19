@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.ENVIRONMENT
 
 
 @dataclass(frozen=True)
-class GeomorphologyRules:
+class GeomorphologyRules(Spanned):
     desert_rainfall_below: int = rule(30, 0, 100, G, "A land can turn to desert while its rainfall is below this")
     overgrazed_above: int = rule(40, 0, 100, G, "A land is overgrazed when more of it than this is grazed")
     desertify_rate: int = rule(12, 0, 100, G, "Desertification a dry, overgrazed land gains per epoch")
@@ -32,4 +32,8 @@ class GeomorphologyRules:
     eruption_durability_loss: int = rule(30, 0, 100, G, "Durability an eruption takes from structures")
     eruption_mortal_death_chance: int = rule(15, 0, 100, G, "Chance a named mortal dies in an eruption (%)")
     eruption_burn_depth_pct: int = rule(30, 0, 200, G, "Burned ground left per point of eruption severity (%)")
-    ash_weathering_epochs: int = rule(3, 1, 100, G, "Epochs before fresh ash weathers into rich volcanic soil")
+    ash_weathering_years: int = span(100, 1, 2500, G, "Years before fresh ash weathers into rich volcanic soil")
+
+    @property
+    def ash_weathering_epochs(self) -> int:
+        return self.epochs(self.ash_weathering_years)

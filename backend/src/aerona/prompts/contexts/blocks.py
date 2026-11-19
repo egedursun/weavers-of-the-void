@@ -67,7 +67,6 @@ class WorldHeaderContext(RulesContext):
     prohibitions: list[str] = Field(default_factory=list)
     desire: str | None = None
     cosmology: str
-    tone: str
     naming_rule: NamingRuleItem
     dialect_world: WorldNaming | None = None
     dialects: list[WorldNaming] = Field(default_factory=list)

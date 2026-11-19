@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.CREATURES
 
@@ -41,7 +41,7 @@ class CreatureAnatomyRules:
 
 
 @dataclass(frozen=True)
-class MonstersRules:
+class MonstersRules(Spanned):
     awaken_depth_pct: int = rule(50, 0, 100, G, "How deep a mine must be dug, as a share of its seam, to wake a creature that sleeps beneath its land (%)")
     emerge_depth_pct: int = rule(80, 0, 100, G, "How deep a mine must be dug before something of its own kind may climb out of the deep (%)")
     emerge_pct: int = rule(3, 0, 100, G, "Chance each epoch something climbs out of a mine dug that deep (%)")
@@ -49,7 +49,7 @@ class MonstersRules:
     emerge_danger: int = rule(70, 0, 100, G, "Danger and strength of a creature that climbs out of the deep")
     emerge_power: int = rule(6, 1, 10, G, "Power of a creature that climbs out of the deep")
     emerge_cap: int = rule(1, 0, 100, G, "Most creatures that climb out of the deep across the cosmos in an epoch")
-    desecration_epochs: int = rule(1, 0, 50, G, "Epochs a desecration in its land stays fresh enough to wake a creature")
+    desecration_years: int = span(5, 0, 1250, G, "Years a desecration in its land stays fresh enough to wake a creature")
     abduct_pct: int = rule(25, 0, 100, G, "Chance each epoch a waking abductor carries someone off from a town in its reach (%)")
     necro_tower_pct: int = rule(20, 0, 100, G, "Chance each epoch a mortal who knows a rite of death raises a tower (%)")
     necro_raise_pct: int = rule(25, 0, 100, G, "Chance each epoch a necromancer with a tower raises a host of the dead (%)")
@@ -59,3 +59,7 @@ class MonstersRules:
     void_roam_pct: int = rule(30, 0, 100, G, "Chance each epoch a free creature of the void crosses a road between worlds (%)")
     void_route_danger: int = rule(10, 0, 100, G, "Danger a creature of the void adds to the road between worlds it crosses")
     void_glass_trophy: int = rule(3, 0, 1000, G, "Units of void glass a slain creature of the void yields its slayer")
+
+    @property
+    def desecration_epochs(self) -> int:
+        return self.epochs(self.desecration_years)

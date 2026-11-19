@@ -6,7 +6,8 @@ from sqlalchemy.orm import aliased
 from aerona.db.session import Database
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
-from aerona.db.tables.records import IncidentStepRow
+from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
+from aerona.domain.enums.records import FactUnit
 from aerona.domain.models.moment import Moment
 from aerona.engine.pipeline import simulate
 from aerona.rules.registry import Rules
@@ -73,6 +74,19 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
     told = [f"{kind}: incident year {year} but line year {line}" for kind, year, line in years if year != line]
     async with database.read() as session:
         unborn = await ahead_of_births(session)
+        dated = (
+            await session.execute(
+                select(IncidentRow.id, IncidentRow.kind, IncidentRow.year, IncidentFactRow.number)
+                .join(IncidentFactRow, IncidentFactRow.incident_id == IncidentRow.id)
+                .where(IncidentFactRow.key == "year", IncidentFactRow.unit == FactUnit.YEARS)
+            )
+        ).all()
+    misdated = [
+        f"{kind} #{incident_id} told as of year {number} but standing in year {year}"
+        for incident_id, kind, year, number in dated
+        if number is not None and int(number) != year
+    ]
     assert early == []
     assert told == []
     assert unborn == [], f"happenings earlier than the first record of someone in them: {unborn[:20]}"
+    assert misdated == [], f"happenings that tell one year and stand in another: {misdated[:20]}"

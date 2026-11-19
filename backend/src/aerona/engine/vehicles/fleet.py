@@ -15,7 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import CivilizationTier
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.vehicles import VehicleDomain, VehicleFamily, VehicleFrame, VehicleSize, VehicleStatus
-from aerona.engine.collective.designs import draw_design
+from aerona.engine.collective.designs import draw_design, succeed_design
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.tiers import tier_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -96,17 +96,39 @@ def opened(spec: FrameSpec, knowledge: KnowledgeMap, owner: EntityRow, rules: Ru
     return SIZE_ORDER.index(spec.size) <= largest_size(rules, tier_of(owner))
 
 
+def frame_worth(spec: FrameSpec) -> int:
+    return fighting_worth(spec) + spec.cargo // 4 + spec.speed // 2
+
+
+def newer_frame(rules: Rules, owner: EntityRow, frame: VehicleFrame, knowledge: KnowledgeMap) -> VehicleFrame:
+    spec = FRAMES[frame]
+    found = [other for other in FRAMES.values() if other.domain is spec.domain and other.kind is spec.kind and opened(other, knowledge, owner, rules)]
+    best = max(found, key=lambda other: (frame_worth(other), other.frame.value), default=spec)
+    return best.frame if frame_worth(best) > frame_worth(spec) else frame
+
+
 def best_frame(knowledge: KnowledgeMap, owner: EntityRow, role: UnitKind, rules: Rules) -> VehicleFrame | None:
     found = [spec for spec in FRAMES.values() if fits(role, spec) and opened(spec, knowledge, owner, rules)]
     return max(found, key=lambda spec: (fighting_worth(spec), spec.frame.value)).frame if found else None
 
 
+def outgrown(design: DesignRow, frame: VehicleFrame | None) -> bool:
+    return (
+        design.frame is not None
+        and frame is not None
+        and "obsolete" not in design.locked
+        and fighting_worth(FRAMES[frame]) > fighting_worth(FRAMES[design.frame])
+    )
+
+
 async def role_design(ctx: TickContext, owner: EntityRow, role: UnitKind, knowledge: KnowledgeMap) -> DesignRow | None:
+    frame = best_frame(knowledge, owner, role, ctx.rules)
     statement = select(DesignRow).where(DesignRow.owner_entity_id == owner.id, DesignRow.obsolete.is_(False), DesignRow.frame.is_not(None))
     for design in await ctx.session.scalars(statement.order_by(DesignRow.epoch.desc(), DesignRow.id.desc())):
         if design.frame is not None and fits(role, FRAMES[design.frame]):
-            return design
-    frame = best_frame(knowledge, owner, role, ctx.rules)
+            if frame is None or held(owner.id) or not outgrown(design, frame):
+                return design
+            return await succeed_design(ctx, owner, design, frame, knowledge)
     if frame is None or held(owner.id):
         return None
     return await draw_design(ctx, owner, frame, knowledge=knowledge)

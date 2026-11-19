@@ -60,7 +60,7 @@ async def test_a_beloved_creature_becomes_a_totem(realm: Realm) -> None:
 
 
 async def test_ethics_follow_beliefs_witnesses_judge_by_them_and_holds_keep_them(realm: Realm) -> None:
-    rules = replace(RULES, ethics=replace(RULES.ethics, drift_epochs=1))
+    rules = replace(RULES, ethics=replace(RULES.ethics, drift_years=50))
     ctx = context(realm.session, rules)
     folk = await people(realm, "Harl")
     await ensure_mind_row(realm.session, folk, ctx.epoch)

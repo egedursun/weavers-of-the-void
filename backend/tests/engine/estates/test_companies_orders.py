@@ -81,7 +81,7 @@ async def test_a_collapsing_company_defaults_on_its_loans(realm: Realm) -> None:
 
 
 async def test_a_company_that_holds_the_far_land_rules_it_as_a_realm(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(companies={"dominion_epochs": 3}), epoch=10)
+    ctx = context(realm.session, tuned(companies={"dominion_years": 150}), epoch=10)
     company, row, _, far = await company_at(realm, wealth=40)
     assert far.location_id is not None
     realm.session.add(OccupationRow(region_entity_id=far.location_id, occupier_entity_id=company.id, since_epoch=2))

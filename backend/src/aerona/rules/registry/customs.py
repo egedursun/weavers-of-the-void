@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.RELIGION_AND_LANGUAGE
 S = RuleGroup.POPULATION_AND_GROWTH
@@ -9,11 +9,11 @@ J = RuleGroup.POLITY
 
 
 @dataclass(frozen=True)
-class RevivalRules:
+class RevivalRules(Spanned):
     pressure_from: int = rule(
         30, 0, 1000, C, "Culture drift a people suffers from rulers, conquerors and neighbours within the memory of a movement before it answers with one"
     )
-    memory_epochs: int = rule(3, 1, 50, C, "Epochs back a people counts the drift pressed on it")
+    memory_years: int = span(30, 1, 1250, C, "Years back a people counts the drift pressed on it")
     restore_from: int = rule(20, -100, 100, C, "Tradition from which a people answers pressure by restoring its old ways")
     adopt_from: int = rule(20, -100, 100, C, "Love of the foreign from which a people answers pressure by adopting the ways pressed on it")
     stage_gain: int = rule(15, 0, 100, C, "Strength a movement gains each epoch; a stage passes each time it fills")
@@ -22,6 +22,10 @@ class RevivalRules:
     expel_opinion: int = rule(5, 0, 100, C, "Opinion a movement to expel foreigners takes from its people of those who press on it")
     restore_chance: int = rule(20, 0, 100, C, "Chance each epoch that a movement to restore its old god brings its people back to that god (%)")
     suppress_chance: int = rule(10, 0, 100, C, "Chance each epoch that the realm pressing on a people puts down its movement before it settles (%)")
+
+    @property
+    def memory_epochs(self) -> int:
+        return self.epochs(self.memory_years)
 
 
 @dataclass(frozen=True)
@@ -70,19 +74,31 @@ class TimeBudgetRules:
 
 
 @dataclass(frozen=True)
-class NamingCustomRules:
+class NamingCustomRules(Spanned):
     secret_chance: int = rule(40, 0, 100, C, "Chance a people that names is one that also gives a secret name (%)")
-    taboo_epochs: int = rule(2, 0, 50, C, "Epochs the names of the dead go unspoken where a people keeps such a taboo")
+    taboo_years: int = span(20, 0, 1250, C, "Years the names of the dead go unspoken where a people keeps such a taboo")
     rename_chance: int = rule(30, 0, 100, C, "Chance a people renames its folk at each turn of life it marks (%)")
+
+    @property
+    def taboo_epochs(self) -> int:
+        return self.epochs(self.taboo_years)
 
 
 @dataclass(frozen=True)
-class AgeSetRules:
+class AgeSetRules(Spanned):
     from_tradition: int = rule(30, -100, 100, S, "Tradition from which a people binds its folk in age-sets")
-    span_epochs: int = rule(2, 1, 50, S, "Epochs of initiation one age-set gathers before the next opens")
-    grade_epochs: int = rule(3, 1, 50, S, "Epochs an age-set spends in a grade before it is promoted")
+    span_years: int = span(7, 1, 1250, S, "Years of initiation one age-set gathers before the next opens")
+    grade_years: int = span(15, 1, 1250, S, "Years an age-set spends in a grade before it is promoted")
     warrior_levy_pct: int = rule(20, 0, 100, S, "Share added to a town's mobilisation by an age-set in the warrior grade (%)")
     mates_bond: int = rule(5, 0, 100, S, "Friendship age-mates gain with one another when their set is promoted")
+
+    @property
+    def span_epochs(self) -> int:
+        return self.epochs(self.span_years)
+
+    @property
+    def grade_epochs(self) -> int:
+        return self.epochs(self.grade_years)
 
 
 @dataclass(frozen=True)
@@ -138,21 +154,29 @@ class EvidenceRules:
 
 
 @dataclass(frozen=True)
-class CitizenshipRules:
-    residence_epochs: int = rule(5, 1, 100, J, "Epochs a foreigner lives in a realm before they may be naturalised")
+class CitizenshipRules(Spanned):
+    residence_years: int = span(10, 1, 2500, J, "Years a foreigner lives in a realm before they may be naturalised")
     naturalise_chance: int = rule(20, 0, 100, J, "Chance each epoch a foreigner who has lived long enough is naturalised (%)")
     purchase_cost: int = rule(20, 0, 100000, J, "Coin a foreigner pays to buy citizenship")
     rightless_court_bias: int = rule(15, 0, 100, J, "Weight a judge's verdict leans against one without the right to the courts")
     rightless_office: int = rule(1, 0, 1, J, "Whether a realm keeps those without the right of office out of office")
 
+    @property
+    def residence_epochs(self) -> int:
+        return self.epochs(self.residence_years)
+
 
 @dataclass(frozen=True)
-class BorderRules:
+class BorderRules(Spanned):
     delay_pct: int = rule(10, 0, 100, J, "Trade a route into a realm loses for each epoch of delay at its border at full enforcement (%)")
     fee_per_100: int = rule(5, 0, 1000, J, "Coin a realm takes at its border for each hundred goods carried in at full fee, in hundredths of the fee")
     forged_pass_pct: int = rule(50, 0, 100, J, "Share of corruption at a border by which forged passes slip past its fees (%)")
     war_enforcement: int = rule(60, 0, 100, J, "Enforcement a realm at war sets at its border when it first closes it")
-    war_delay: int = rule(1, 0, 20, J, "Epochs of delay a realm at war sets at its border when it first closes it")
+    war_delay_years: int = span(1, 0, 500, J, "Years of delay a realm at war sets at its border when it first closes it")
+
+    @property
+    def war_delay(self) -> int:
+        return self.epochs(self.war_delay_years)
 
 
 @dataclass(frozen=True)

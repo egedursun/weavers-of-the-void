@@ -14,6 +14,7 @@ import {
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { CRIMES } from '@/features/entity/justice/crimes'
+import { PUNISHMENTS } from '@/features/entity/mortal/labels'
 import { COURTS } from '@/features/lawDepth/labels'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -1091,7 +1092,11 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
         <Muted variant='caption'>
           {'The truth: '}
           <Ref node={row.culprit} empty='no true culprit' />
-          {row.penalty ? `; sentence: ${row.penalty.replace('_', ' ')}` : ''}
+          {row.penalty
+            ? `; sentence: ${PUNISHMENTS[row.penalty].label}`
+            : row.immune
+              ? '; the accused stood above the law'
+              : ''}
           {`; ${plural(row.witnesses.length, 'witness', 'witnesses')}`}
         </Muted>
         <Button

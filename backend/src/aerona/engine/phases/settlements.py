@@ -106,7 +106,7 @@ async def settlement_laws(ctx: TickContext) -> None:
         )
 
 
-@reads("settlement.defense", "table.bonds", "table.entities", "table.holder_levels", "table.nodes")
+@reads("settlement.defense", "table.bonds", "table.entities", "table.holder_levels", "table.nodes", "table.polity_profiles")
 @writes("settlement.defense", "table.entities")
 async def architecture(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

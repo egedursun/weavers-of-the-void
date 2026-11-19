@@ -100,3 +100,21 @@ def test_a_stored_text_column_never_holds_an_enum_value() -> None:
     texts = row_text_columns()
     found = [line for path in sorted(SOURCE.rglob("*.py")) if "alembic" not in path.parts for line in rows_fed_by_enums(path, texts)]
     assert found == [], f"keep the enum in a typed column and tell it as a line, never store its raw value as text: {found}"
+
+
+PASSED_TEXT = SHOWN_TEXT - {"label", "title"}
+
+
+def calls_fed_by_enums(path: Path) -> list[str]:
+    return [
+        f"{path.relative_to(SOURCE)}:{node.lineno} {keyword.arg}"
+        for node in ast.walk(ast.parse(path.read_text()))
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+        if keyword.arg in PASSED_TEXT and enum_text(keyword.value)
+    ]
+
+
+def test_no_call_hands_on_an_enum_value_as_shown_text() -> None:
+    found = [line for path in sorted(SOURCE.rglob("*.py")) if "alembic" not in path.parts for line in calls_fed_by_enums(path)]
+    assert found == [], f"pass the enum through spoken() or its label, never its raw value as a note, reason or line: {found}"

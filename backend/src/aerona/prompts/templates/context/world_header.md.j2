@@ -19,7 +19,6 @@ THE GOD'S PROHIBITIONS: {{ prohibitions | join(" · ") }}
 THE GOD'S DESIRE (the god's children sense it): {{ desire }}
 {% endif %}
 COSMOLOGY: {{ cosmology | cut_at_word(rules.context.short_cosmology_chars) if short else cosmology }}
-TONE: {{ tone }}
 {% if dialect_world %}
 NAMING LANGUAGE ({{ dialect_world.name }} dialect; the main world's rule does not apply here): {{ naming_rule_text(dialect_world.naming) }}
 {% elif dialects %}

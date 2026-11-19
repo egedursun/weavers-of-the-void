@@ -1,19 +1,19 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.FATE_AND_CHRONICLE
 
 
 @dataclass(frozen=True)
-class EventsRules:
+class EventsRules(Spanned):
     event_power: int = rule(3, 1, 10, G, "Power of an event that rises from the life of the world")
     emergent_cap: int = rule(12, 0, 200, G, "Most events of one kind that rise from the world's life in one epoch")
     season_match_weight: int = rule(3, 1, 20, G, "How much likelier an event falls in a season that suits it (wet floods, dry fires) (times)")
     severity_neutral: int = rule(50, 1, 100, G, "Event severity at which per-phase harm is applied as written")
-    peak_max_epochs: int = rule(3, 1, 50, G, "Most epochs a famine, plague or siege can stay at its height before it turns")
-    aftermath_epochs: int = rule(1, 0, 20, G, "Epochs an event spends in its aftermath before it is over")
+    peak_max_years: int = span(3, 1, 1250, G, "Most years a famine, plague or siege can stay at its height before it turns")
+    aftermath_years: int = span(1, 0, 500, G, "Years an event spends in its aftermath before it is over")
     memory_pct: int = rule(50, 0, 100, G, "Share of an event's severity that each community it struck keeps as a memory of it once it passes into memory (%)")
     famine_peak_below_harvest: int = rule(70, 0, 200, G, "A famine deepens to its height while the land's harvest stays below this (% of normal)")
     famine_recover_harvest: int = rule(90, 0, 200, G, "A famine passes its height once the harvest is back to this (% of normal)")
@@ -39,10 +39,22 @@ class EventsRules:
     sack_burn_depth: int = rule(15, 0, 100, G, "Burned ground a sack leaves on its land")
     fire_burn_depth: int = rule(5, 0, 100, G, "Burned ground a great fire leaves on its land")
     riot_unrest: int = rule(75, 0, 100, G, "Unrest at which a town breaks into riot")
-    riot_cooldown_epochs: int = rule(3, 0, 50, G, "Epochs before the same town can riot again")
+    riot_cooldown_years: int = span(2, 0, 1250, G, "Years before the same town can riot again")
     riot_death_pct: int = rule(1, 0, 100, G, "Share of a rioting town who die in the riot (%)")
     riot_prosperity: int = rule(4, 0, 100, G, "Prosperity a riot burns away")
     riot_unrest_vent: int = rule(20, 0, 100, G, "Unrest a riot vents")
     schism_council_zeal: int = rule(5, 0, 100, G, "Zeal the breakaway sect gains from the council that split it")
     schism_council_influence: int = rule(3, 0, 100, G, "Influence the old faith loses to the council that split it")
     eclipse_piety: int = rule(2, 0, 100, G, "Piety the communities of a world gain while they watch an eclipse")
+
+    @property
+    def peak_max_epochs(self) -> int:
+        return self.epochs(self.peak_max_years)
+
+    @property
+    def aftermath_epochs(self) -> int:
+        return self.epochs(self.aftermath_years)
+
+    @property
+    def riot_cooldown_epochs(self) -> int:
+        return self.epochs(self.riot_cooldown_years)

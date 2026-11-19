@@ -51,6 +51,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.CULTURE,
     ),
     IncidentKindSpec(
+        "lifecycle.affairs_closed",
+        G.PEOPLES,
+        "With the end of {subject}, {affairs:affair|affairs} and {ties:tie|ties} still open came to an end.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("affairs", FactValue.NUMBER, FactUnit.COUNT), FactSpec("ties", FactValue.NUMBER, FactUnit.COUNT)),
+    ),
+    IncidentKindSpec(
         "arcs.ended",
         G.PEOPLES,
         "The tale of {template} of {subject} ended in {outcome}.",

@@ -9,6 +9,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DefenderAction, OutcomeClass, SackChoice, SiegeAction, StarvationStage, Tactic
 from aerona.domain.enums.quests import QuestAim, QuestObstacle, QuestReward, QuestScale, QuestTargetKind
+from aerona.domain.enums.settlement import BuildMaterial
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
@@ -134,7 +135,7 @@ class SiegeRow(Base):
     starvation: Mapped[StarvationStage] = mapped_column(enum_type(StarvationStage, "starvation"), default=StarvationStage.NONE)
     last_action: Mapped[SiegeAction | None] = mapped_column(enum_type(SiegeAction, "last_action"))
     last_defence: Mapped[DefenderAction | None] = mapped_column(enum_type(DefenderAction, "last_defence"))
-    wall_material: Mapped[str | None] = mapped_column(String(NAME_MAX_LENGTH))
+    wall_material: Mapped[BuildMaterial | None] = mapped_column(enum_type(BuildMaterial, "wall_material"))
     relief_army_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     choice: Mapped[SackChoice | None] = mapped_column(enum_type(SackChoice, "choice"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

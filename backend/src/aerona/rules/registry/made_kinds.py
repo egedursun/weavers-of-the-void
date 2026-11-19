@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 M = RuleGroup.MATERIALS
@@ -103,12 +103,12 @@ class UnitTypeRules:
 
 
 @dataclass(frozen=True)
-class CuisineRules:
+class CuisineRules(Spanned):
     invent_pct: int = rule(8, 0, 100, S, "Chance each epoch a people comes to cook a new dish from its stores (%)")
     starting_dishes: int = rule(
         3, 0, 8, S, "Dishes of its own a people cooks from its stores before new ones come only by chance: a staple, a drink, a feast dish and on"
     )
-    ration_keeping: int = rule(3, 0, 20, S, "Epochs a dish must keep for a people to take it as a ration")
+    ration_keeping_years: int = span(1, 0, 500, S, "Years a dish must keep for a people to take it as a ration")
     portion: int = rule(10, 0, 10000, S, "Ingredients a community spends to cook one of its dishes at full popularity")
     delight_pct: int = rule(10, 0, 100, S, "Share of a dish's delight that calms its community's unrest when cooked (%)")
     prestige_pct: int = rule(5, 0, 100, S, "Share of a feast dish's or delicacy's prestige added to its town each epoch it is cooked (%)")
@@ -122,7 +122,7 @@ class CuisineRules:
     founding_dishes: int = rule(3, 1, 20, S, "Dishes a people must cook before its way of eating is known as a cuisine")
     fusion_strength: int = rule(60, 1, 100, S, "Strength at which a cuisine taken from another people fuses with a people's own")
     fusion_pct: int = rule(20, 0, 100, S, "Chance each epoch such a fusion happens (%)")
-    shortage_epochs: int = rule(2, 1, 20, S, "Epochs a dish must go uncooked for want of a good before its cooks make a dish without it")
+    shortage_years: int = span(2, 1, 500, S, "Years a dish must go uncooked for want of a good before its cooks make a dish without it")
     etiquette_prestige_pct: int = rule(
         5, 0, 100, S, "Prestige a town gains each epoch from strict table manners at its feasts, per point of etiquette (hundredths)"
     )
@@ -131,6 +131,14 @@ class CuisineRules:
     skill_pct: int = rule(50, 0, 100, S, "Share of a dish's delight a kitchen without the skill to make it still gives (%)")
     step_prestige_pct: int = rule(15, 0, 100, S, "Prestige a feast dish or delicacy gains for each step beyond its first (%)")
     signature_pct: int = rule(50, 0, 100, S, "Chance a people cooks a new dish by the signature method of its cuisine when it knows it (%)")
+
+    @property
+    def ration_keeping(self) -> int:
+        return self.epochs(self.ration_keeping_years)
+
+    @property
+    def shortage_epochs(self) -> int:
+        return self.epochs(self.shortage_years)
 
 
 @dataclass(frozen=True)

@@ -290,7 +290,7 @@ async def test_an_obsessing_idea_turns_faster_and_weighs_on_its_holder(session: 
         )
     )
     await session.flush()
-    ctx = await at(session, 3, ideas={"reject_pct": 0, "encounter_pct": 0, "obsession_stress": 10})
+    ctx = await at(session, 3, ideas={"reject_pct": 0, "encounter_pct": 0, "obsession_stress": 10, "incubation_years": 200})
     await turn_over(ctx, thinker, KnowledgeMap({}))
     row = await session.scalar(select(IdeaRow).where(IdeaRow.holder_node_id == thinker.id))
     held = await session.get(MortalProfileRow, thinker.id)

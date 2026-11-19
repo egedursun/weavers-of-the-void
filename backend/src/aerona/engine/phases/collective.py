@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import partial
 
 from aerona.catalog.collective import ACT_COLLECTION, FAITH_ACTS
 from aerona.db.tables.entities import EntityRow
@@ -37,6 +38,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.vehicles.fleet import newer_frame
 
 
 @dataclass
@@ -55,6 +57,7 @@ class ArmedTally:
     "table.districts",
     "table.entities",
     "table.faction_profiles",
+    "table.held_identities",
     "table.incident_participants",
     "table.incidents",
     "table.indentures",
@@ -269,9 +272,34 @@ async def founding_myths(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.collection_members", "table.commemorations", "table.incident_collections", "table.mortal_profiles", "table.polity_members", "table.polity_profiles"
+    "table.collection_members",
+    "table.commemorations",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.incident_collections",
+    "table.mortal_profiles",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
-@writes("table.commemorations", "table.settlement_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.commemorations",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_terms",
+    "table.incidents",
+    "table.settlement_profiles",
+)
 async def commemorations(ctx: TickContext) -> None:
     tally = HistoryTally()
     await mark_anniversaries(ctx, tally)
@@ -350,17 +378,37 @@ async def social_learning(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "table.collection_members",
     "table.collection_places",
     "table.community_cohorts",
     "table.community_societies",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.generations",
     "table.incident_collections",
+    "table.node_births",
     "table.nodes",
     "table.settlement_profiles",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
-@writes("table.culture_values", "table.generations", "table.settlement_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.culture_values",
+    "table.generations",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.settlement_profiles",
+)
 async def generations(ctx: TickContext) -> None:
     tally = GenerationTally()
     await keep_generations(ctx, tally)
@@ -405,23 +453,33 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.armies",
     "table.arms",
     "table.company_profiles",
+    "table.creator",
     "table.culture_values",
+    "table.dimensions",
     "table.entities",
     "table.faction_profiles",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.marriages",
+    "table.node_births",
     "table.nodes",
     "table.polity_profiles",
+    "table.sons",
+    "table.stars",
     "table.title_profiles",
+    "table.worlds",
 )
 @writes(
     "table.arms",
     "table.chronicle",
     "table.chronicle_entities",
     "table.house_profiles",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.polity_profiles",
@@ -445,10 +503,14 @@ async def heraldry(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
+    "table.language_profiles",
+    "table.lexemes",
     "table.name_registry",
     "table.node_births",
     "table.nodes",
+    "table.polity_profiles",
     "table.vessel_profiles",
+    "table.world_materials",
 )
 @writes(
     "table.chronicle",
@@ -456,8 +518,10 @@ async def heraldry(ctx: TickContext) -> None:
     "table.design_components",
     "table.design_mounts",
     "table.design_sections",
+    "table.design_techniques",
     "table.designs",
     "table.entities",
+    "table.equipment_models",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
@@ -467,7 +531,7 @@ async def heraldry(ctx: TickContext) -> None:
 )
 async def designs(ctx: TickContext) -> None:
     tally = DesignTally()
-    await refit(ctx, tally)
+    await refit(ctx, tally, partial(newer_frame, ctx.rules))
     count(ctx, "design", tally)
 
 

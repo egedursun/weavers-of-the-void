@@ -80,6 +80,6 @@ def test_a_wreck_harms_its_captain_by_crash_or_lost_air_only_where_it_can() -> N
 def test_peoples_reach_modern_doctrines_through_their_knowledge() -> None:
     assert martial_of(None, {KnowledgeBranch.VOID_LIVING: 9}, {}) is MartialStyle.ORBITAL
     assert martial_of(None, {KnowledgeBranch.SKY_NAVIGATION: 4}, {}) is MartialStyle.AIR_MOBILE
-    assert martial_of(None, {KnowledgeBranch.METALLURGY: 5, KnowledgeBranch.SKY_NAVIGATION: 4}, {}) is MartialStyle.COMBINED_ARMS
-    assert martial_of(None, {KnowledgeBranch.METALLURGY: 5}, {}) is MartialStyle.MECHANISED
+    assert martial_of(None, {KnowledgeBranch.METALLURGY: 8, KnowledgeBranch.SKY_NAVIGATION: 4}, {}) is MartialStyle.COMBINED_ARMS
+    assert martial_of(None, {KnowledgeBranch.METALLURGY: 8}, {}) is MartialStyle.MECHANISED
     assert martial_of(None, {}, {}) is MartialStyle.SHIELDWALL

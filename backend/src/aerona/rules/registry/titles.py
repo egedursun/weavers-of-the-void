@@ -1,15 +1,15 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 H = RuleGroup.HOUSES
 
 
 @dataclass(frozen=True)
-class TitleRules:
+class TitleRules(Spanned):
     creation_share_pct: int = rule(51, 1, 100, H, "Share of a title's de jure lands a realm must hold to create or usurp it (%)")
-    drift_epochs: int = rule(8, 1, 100, H, "Epochs a land held under another title takes to drift into that title's de jure lands")
+    drift_years: int = span(100, 1, 2500, H, "Years a land held under another title takes to drift into that title's de jure lands")
     creation_prestige: int = rule(20, 0, 100, H, "Prestige a title's creation costs its holder")
     rank_prestige: int = rule(15, 0, 100, H, "Prestige each tier above a local title lends a title at its creation")
     usurp_legitimacy: int = rule(10, 0, 100, H, "Legitimacy a realm loses when its ruler usurps a title")
@@ -23,3 +23,7 @@ class TitleRules:
     seat_prestige: int = rule(
         2, 0, 50, H, "Prestige the holder of a seat of a faith, a military command or the head of a guild gains each epoch for each step of its tier"
     )
+
+    @property
+    def drift_epochs(self) -> int:
+        return self.epochs(self.drift_years)

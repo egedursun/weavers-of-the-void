@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MARKETS_AND_MONEY
 
@@ -34,13 +34,13 @@ class TradePolicyRules:
 
 
 @dataclass(frozen=True)
-class CreditRules:
+class CreditRules(Spanned):
     base_interest: int = rule(6, 0, 100, G, "Interest a borrower of perfect credit pays (%)")
     spread_pct: int = rule(25, 0, 200, G, "Interest each point of credit below perfect adds, in hundredths (%)")
     supply_pct: int = rule(10, 0, 100, G, "Interest a scarce money supply adds at most (%)")
     supply_per_1000: int = rule(40, 1, 10000, G, "Coin a thousand people's money supply needs before it counts as plentiful")
     strained_debt_pct: int = rule(150, 0, 1000, G, "Debt against treasury past which a borrower is strained (%)")
-    restructure_epochs: int = rule(3, 1, 50, G, "Epochs a borrower spends restructuring after a default")
+    restructure_years: int = span(5, 1, 1250, G, "Years a borrower spends restructuring after a default")
     default_loss: int = rule(30, 0, 100, G, "Credit a default costs")
     repay_gain: int = rule(4, 0, 100, G, "Credit each repaid loan earns")
     treasury_per_point: int = rule(40, 1, 10000, G, "Treasury that earns one point of credit")
@@ -48,20 +48,28 @@ class CreditRules:
     reserve_per_1000: int = rule(20, 1, 1000, G, "Gold and silver a thousand people's coin needs as full backing")
     reserve_trust: int = rule(4, 0, 50, G, "Trust a coin gains or loses each epoch by its backing in reserves")
 
+    @property
+    def restructure_epochs(self) -> int:
+        return self.epochs(self.restructure_years)
+
 
 @dataclass(frozen=True)
-class SpeculationRules:
+class SpeculationRules(Spanned):
     greed_at: int = rule(25, -50, 50, G, "Greed facet from which a merchant speculates")
     chance_pct: int = rule(20, 0, 100, G, "Chance each epoch a greedy merchant buys up a rising good (%)")
     rise_pct: int = rule(10, 0, 400, G, "Rise in price over an epoch that tempts speculators (%)")
     hoard_share_pct: int = rule(20, 0, 100, G, "Share of a market's stock of a good a speculator buys up (%)")
     sell_rise_pct: int = rule(25, 0, 400, G, "Rise over the buying price at which a speculator sells (%)")
     bust_fall_pct: int = rule(15, 0, 100, G, "Fall under the buying price at which a speculation busts (%)")
-    hold_epochs: int = rule(4, 1, 50, G, "Epochs a speculator holds a hoard before selling at any price")
+    hold_years: int = span(3, 1, 1250, G, "Years a speculator holds a hoard before selling at any price")
     famine_hunger: int = rule(40, 0, 100, G, "Hunger at which speculators hoard food")
     unrest_per_hoard: int = rule(5, 0, 50, G, "Unrest a hoard of food raises in a hungry market")
     spike_unrest_pct: int = rule(40, 0, 400, G, "How much of that unrest any other hoard raises as prices spike (%)")
     wealth_per_value: int = rule(60, 1, 1000, G, "Value that moves a speculator's wealth by one point")
+
+    @property
+    def hold_epochs(self) -> int:
+        return self.epochs(self.hold_years)
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 R = RuleGroup.RELIGION_AND_LANGUAGE
 C = RuleGroup.CIVILIZATION
@@ -9,7 +9,7 @@ H = RuleGroup.HEROES_AND_MORTALS
 
 
 @dataclass(frozen=True)
-class InterpretersRules:
+class InterpretersRules(Spanned):
     barrier_floor_pct: int = rule(40, 0, 100, R, "Effect left of an exchange between peoples who share no words (%)")
     interpreter_skill: int = rule(40, 0, 100, R, "Language skill of a mortal who interprets between tongues")
     misread_chance: int = rule(10, 0, 100, R, "A treaty clause is misread between strangers to each other's tongue (%)")
@@ -18,7 +18,11 @@ class InterpretersRules:
     shared_lexicon_pct: int = rule(60, 0, 100, R, "Weight of a shared lexicon in intelligibility (%)")
     phonology_pct: int = rule(20, 0, 100, R, "Intelligibility a shared sound system adds to tongues that already share words")
     misread_breach_chance: int = rule(25, 0, 100, R, "Chance each epoch that the party wronged by a misread treaty clause counts it a breach (%)")
-    remeasure_epochs: int = rule(5, 0, 100, R, "Epochs between new measures of how well two tongues understand each other (0 never)")
+    remeasure_years: int = span(25, 0, 2500, R, "Years between new measures of how well two tongues understand each other (0 never)")
+
+    @property
+    def remeasure_epochs(self) -> int:
+        return self.epochs(self.remeasure_years)
 
 
 @dataclass(frozen=True)

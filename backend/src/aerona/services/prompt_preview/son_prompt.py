@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.scope import load_scope
 from aerona.agents.context.son_turn import son_system_context, son_user_context
 from aerona.agents.context.world_summary import world_summary_context
+from aerona.agents.grounding import grounded, world_ground
 from aerona.agents.son import turn_points
 from aerona.agents.turns.state import turn_row
 from aerona.db.tables.sons import SonPowerRow
@@ -36,7 +37,7 @@ async def preview_son_prompt(session: AsyncSession, rules: Rules, son_id: int, c
     powers = list(await session.scalars(select(SonPowerRow).where(SonPowerRow.son_id == son.id)))
     resumed = row is not None and row.epoch == scope.epoch and not row.finished
     points = row.action_points_left if resumed and row is not None and row.action_points_left is not None else turn_points(rules, son, powers)
-    system = render(PromptId.SON_TURN_SYSTEM, await son_system_context(scope, son, points, catalogue))
+    system = grounded(await world_ground(session), render(PromptId.SON_TURN_SYSTEM, await son_system_context(scope, son, points, catalogue)))
     user_context = await son_user_context(scope, son, points, catalogue, resumed=resumed)
     user = render(PromptId.SON_TURN_USER, user_context)
     summary = await world_summary_context(scope, son)

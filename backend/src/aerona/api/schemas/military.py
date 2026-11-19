@@ -3,9 +3,11 @@ from pydantic import Field
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wars import WarSummary
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import (
     ArmourType,
+    BattlePhase,
     CaptiveFate,
     CommandArea,
     CommanderTrait,
@@ -109,7 +111,7 @@ class ArmyCard(ApiModel):
     target: NodeRef | None
     blockade: NodeRef | None
     stance: Stance
-    doctrine: str
+    doctrine: MartialStyle
     supply_days: int
     supply_line: list[NodeRef]
     cohesion: int
@@ -131,7 +133,7 @@ class ArmyCard(ApiModel):
 
 class BattlePhaseView(ApiModel):
     position: int
-    phase: str
+    phase: BattlePhase
     attacker_losses: int
     defender_losses: int
     summary: str | None

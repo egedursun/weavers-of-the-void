@@ -12,6 +12,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.unions import UnionCustomRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import AgeBand, CohortCondition, FuneralCustom, InheritanceCustom, MartialStyle, MotifSource, NaturalTrait
@@ -238,9 +239,9 @@ async def edit_people(ctx: TickContext, people_id: int, values: Mapping[str, Val
     for key in release:
         if key not in EDITABLE and key not in RECORD_KEYS:
             raise ValidationFailedError(f"Unknown field: {key}.")
-        held = RECORD_LOCK if key in RECORD_KEYS else key
-        biology.locked = [item for item in biology.locked if item != held]
-        culture.locked = [item for item in culture.locked if item != held]
+        freed = RECORD_LOCK if key in RECORD_KEYS else key
+        biology.locked = [item for item in biology.locked if item != freed]
+        culture.locked = [item for item in culture.locked if item != freed]
     await ctx.session.flush()
     return biology, culture
 
@@ -322,6 +323,47 @@ async def move_cohort(
             moved += part
     await resync_society(ctx, community, rows)
     await ctx.session.flush()
+    return moved
+
+
+async def follow_shares(ctx: TickContext, community: EntityRow, shares: Mapping[SocialClass, float]) -> int:
+    rows = await cohorts_of(ctx.session, community.id)
+    total = sum(row.count for row in rows.values())
+    if total <= 0 or held(community.id):
+        return 0
+    have = {item: sum(row.count for key, row in rows.items() if key[2] is item) for item in SocialClass}
+    want = {item: int(total * shares.get(item, 0.0) / PERCENT) for item in SocialClass}
+    free = [item for item in SocialClass if item is not SocialClass.SERF_OR_SLAVE]
+    needs = {item: want[item] - have[item] for item in free if want[item] > have[item]}
+    moved = 0
+    for source in free:
+        extra = have[source] - want[source]
+        for target in sorted(needs):
+            if extra <= 0:
+                break
+            count = min(extra, needs[target])
+            if count <= 0:
+                continue
+            done = shift_class(ctx, community.id, rows, source=source, target=target, count=count)
+            extra -= done
+            needs[target] -= done
+            moved += done
+    if moved:
+        await resync_society(ctx, community, rows)
+    return moved
+
+
+def shift_class(ctx: TickContext, community_id: int, rows: dict[CohortKey, CohortRow], *, source: SocialClass, target: SocialClass, count: int) -> int:
+    moved = 0
+    for key in sorted(rows, key=lambda item: (-rows[item].count, tuple(part.value for part in item))):
+        if moved >= count:
+            break
+        age, sex, social_class, state = key
+        if social_class is not source or rows[key].count <= 0 or state is CohortCondition.ENSLAVED:
+            continue
+        part = min(rows[key].count, count - moved)
+        if move_amount(rows[key], row_for(ctx.session, rows, community_id, (age, sex, target, state), ctx.epoch), "count", part):
+            moved += part
     return moved
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.GALAXIES
 D = RuleGroup.DIMENSIONS
@@ -339,7 +339,7 @@ class CelestialBodyRules:
 
 
 @dataclass(frozen=True)
-class JourneyRules:
+class JourneyRules(Spanned):
     sick_spread_chance: int = rule(30, 0, 100, T, "Chance sick passengers bring their sickness to the world they reach (%)")
     escort_loss_pct: int = rule(15, 0, 100, T, "Losses each escort spares a convoy (%)")
     escort_cap_pct: int = rule(75, 0, 100, T, "Most losses escorts can spare a convoy (%)")
@@ -353,9 +353,13 @@ class JourneyRules:
     short_condition: int = rule(20, 0, 100, T, "Condition travellers lose when they set out short of food")
     supply_use: int = rule(20, 0, 100, T, "Supplies a journey uses up each epoch on the way")
     starve_pct: int = rule(10, 0, 100, T, "Share of the travellers who die each epoch a journey goes on with no supplies left (%)")
-    birth_after: int = rule(2, 1, 100, T, "Epochs on the way after which children are born to a journey's travellers")
+    birth_after_years: int = span(1, 1, 2500, T, "Years on the way after which children are born to a journey's travellers")
     birth_pct: int = rule(3, 0, 100, T, "Share of the travellers born on the way each epoch of a long journey (%)")
     find_supplies: int = rule(20, 0, 100, T, "Supplies a journey gains from a find on the way")
     toll_supplies: int = rule(10, 0, 100, T, "Supplies a journey gives up to a toll on the way")
     refugee_share: int = rule(50, 0, 100, T, "Share of a journey's travellers lost on the way above which those who arrive come as refugees (%)")
     refugee_unrest: int = rule(5, 0, 100, T, "Unrest a town gains when refugees arrive")
+
+    @property
+    def birth_after(self) -> int:
+        return self.epochs(self.birth_after_years)

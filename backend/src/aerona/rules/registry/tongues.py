@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 L = RuleGroup.LANGUAGE_AND_NAMES
 
@@ -60,10 +60,14 @@ class DecipherRules:
 
 
 @dataclass(frozen=True)
-class PidginRules:
+class PidginRules(Spanned):
     contact_pct: int = rule(20, 0, 100, L, "Chance each epoch traders who share no tongue make a pidgin (%)")
-    creole_after: int = rule(2, 0, 100, L, "Epochs after which children raised in a pidgin make it a creole")
+    creole_after_years: int = span(25, 0, 2500, L, "Years after which children raised in a pidgin make it a creole")
     native_share: int = rule(30, 0, 100, L, "Share of a community that must speak a pidgin before its children take it as their own (%)")
+
+    @property
+    def creole_after(self) -> int:
+        return self.epochs(self.creole_after_years)
 
 
 @dataclass(frozen=True)

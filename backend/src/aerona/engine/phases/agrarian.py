@@ -117,6 +117,7 @@ async def agrarian_cycles(ctx: TickContext) -> None:
 
 
 @reads(
+    "house.wealth",
     "settlement.population",
     "settlement.prosperity",
     "table.bonds",
@@ -171,12 +172,14 @@ async def agrarian_cycles(ctx: TickContext) -> None:
     "table.vassalages",
 )
 @writes(
+    "house.wealth",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
     "table.community_stocks",
     "table.districts",
     "table.divine_standing",
+    "table.entities",
     "table.favours",
     "table.gifts",
     "table.goods_flows",
@@ -238,6 +241,8 @@ async def resilience(ctx: TickContext) -> None:
     "table.tradition_profiles",
     "table.traits",
     "table.vassalages",
+    "table.war_sides",
+    "table.wars",
     "table.workshops",
     "table.worlds",
 )

@@ -78,7 +78,7 @@ ERAS_MECHANICS = (
             Coupling(S.KNOWLEDGE, "scientists, engineers and computers speed the work", E.MODIFIER, "programmes.specialist_progress"),
             Coupling(S.WAR, "a rival's spies set the programme back", E.TRIGGER, "programmes.sabotage_chance"),
             Coupling(S.SOCIAL, "each new stage is heard abroad", E.TRIGGER, "programmes.rumour_magnitude"),
-            Coupling(S.COSMOS, "rocketry opens a route to another world", E.TRIGGER, "programmes.base_progress"),
+            Coupling(S.COSMOS, "rocketry opens a route to another world", E.TRIGGER, "programmes.base_years"),
         ),
     ),
 )

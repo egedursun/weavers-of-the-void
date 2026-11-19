@@ -222,7 +222,7 @@ MYTHIC_MECHANICS = (
         targets=("mortal", "son"),
         couplings=(
             Coupling(S.FAITH, "a kept geas wins its layer favour, awe and dominion", EdgeKind.FLOW, "geasa.favour"),
-            Coupling(S.BODY, "a broken geas brings its doom", EdgeKind.TRIGGER, "geasa.duty_epochs"),
+            Coupling(S.BODY, "a broken geas brings its doom", EdgeKind.TRIGGER, "geasa.duty_years"),
             Coupling(S.INTRIGUE, "a geas trap forces its target to break a geas", EdgeKind.TRIGGER, "geasa.trap_pct"),
             Coupling(S.MAGIC, "a binding rite cast on a mortal lays a geas witnessed by the caster's god", EdgeKind.TRIGGER, "geasa.bind_pct"),
         ),

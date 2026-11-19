@@ -97,7 +97,6 @@ async def world_header_context(scope: Scope, world_id: int | None = None, short:
         prohibitions=list(depth.taboos) if depth is not None else [],
         desire=depth.desire or None if depth is not None else None,
         cosmology=cosmos.cosmology,
-        tone=cosmos.tone,
         naming_rule=naming_item(fallback),
         dialect_world=dialect,
         dialects=dialects,

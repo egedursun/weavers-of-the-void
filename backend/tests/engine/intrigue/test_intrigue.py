@@ -97,7 +97,7 @@ async def test_a_false_identity_wears_thin_and_falls(realm: Realm) -> None:
 
 
 async def test_a_scheme_recruits_prepares_and_strikes(realm: Realm) -> None:
-    rules = tuned(intrigue={"recruit_epochs": 0, "discovery_pct": 0, "owner_power": 100})
+    rules = tuned(intrigue={"recruit_years": 0, "discovery_pct": 0, "owner_power": 100})
     ctx = context(realm.session, rules)
     town = await settlement(realm, "Hollin")
     plotter = await mortal(realm, "Sela", location_id=town.id)

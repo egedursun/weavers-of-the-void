@@ -7,8 +7,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | Axis | Count |
 |---|---|
 | table | 866 |
-| enum | 1260 |
-| step | 451 |
+| enum | 1261 |
+| step | 452 |
 | incident | 2 |
 | tool | 556 |
 | lever | 2255 |
@@ -1474,6 +1474,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.law_grammar.LawExceptionKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawOperator | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.law_grammar.LawTarget | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.lifecycle_affairs.AffairKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.DisbandReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.ForgettingCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.lifecycle_end.LifecycleCause | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2147,6 +2148,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | admiralty | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | advance_epoch | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | affairs | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | affairs_of_the_ended | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | ages | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | agrarian_cycles | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | appeals | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |

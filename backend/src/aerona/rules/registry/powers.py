@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.PHENOMENA
 H = RuleGroup.HEROES_AND_MORTALS
@@ -103,7 +103,7 @@ class PoweredSocietyRules:
 
 
 @dataclass(frozen=True)
-class ConcealmentRules:
+class ConcealmentRules(Spanned):
     overt_breach: int = rule(30, 0, 100, K, "Chance an overt use of power before witnesses breaches a truth about it")
     subtle_breach: int = rule(8, 0, 100, K, "Chance a subtle use breaches a truth about it")
     witness_breach: int = rule(5, 0, 100, K, "Chance each epoch a truth of presence is breached by its people living among others")
@@ -121,9 +121,13 @@ class ConcealmentRules:
     reveal_know: int = rule(60, 0, 100, K, "Knowledge at which a truth is revealed in a population")
     reveal_believe: int = rule(50, 0, 100, K, "Belief at which a truth is revealed in a population")
     fade_pct: int = rule(5, 0, 100, K, "Knowledge a truth no one speaks of loses each epoch")
-    legend_after: int = rule(10, 1, 1000, K, "Epochs without a breach after which a revealed truth turns to legend")
+    legend_after_years: int = span(100, 1, 25000, K, "Years without a breach after which a revealed truth turns to legend")
     sanity_harm: int = rule(5, 0, 100, K, "Stress a truth of full sanity cost gives each who learns it")
     strength_decay: int = rule(1, 0, 100, K, "Strength a truth loses each epoch its keepers do not tend it")
     tend_gain: int = rule(2, 0, 100, K, "Strength a truth gains each epoch its keepers tend it")
     hide_chance: int = rule(10, 0, 100, K, "Chance each epoch a persecuted gifted folk hides itself as a hidden truth")
     black_market_gain: int = rule(2, 0, 100, K, "Black market each town where hidden folk pass among the rest gains each epoch")
+
+    @property
+    def legend_after(self) -> int:
+        return self.epochs(self.legend_after_years)

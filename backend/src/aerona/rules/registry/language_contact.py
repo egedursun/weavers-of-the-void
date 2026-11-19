@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class LanguageContactRules:
+class LanguageContactRules(Spanned):
     event_cap: int = rule(6, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Most language contact events (bilingualism, shift, creole) per epoch")
     conquest_bilingual_chance: int = rule(
         20, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance per epoch a ruled community also starts speaking its ruler's language (%)"
@@ -16,7 +16,7 @@ class LanguageContactRules:
     migration_bilingual_chance: int = rule(
         30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance newly settled migrants also start speaking their neighbours' language (%)"
     )
-    migration_window: int = rule(2, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Migrants count as new for this many epochs after the migration")
+    migration_window_years: int = span(25, 0, 2500, RuleGroup.RELIGION_AND_LANGUAGE, "Migrants count as new for this many years after the migration")
     trade_loan_chance: int = rule(
         15, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance per epoch one trading partner of another tongue borrows words from the other (%)"
     )
@@ -48,3 +48,7 @@ class LanguageContactRules:
     sacredness_cult: int = rule(15, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Sacredness each cult speaking the language adds")
     sacredness_cult_cap: int = rule(40, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Most cults add to sacredness")
     default_piety: int = rule(40, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Piety counted for a speaker whose piety is unrecorded")
+
+    @property
+    def migration_window(self) -> int:
+        return self.epochs(self.migration_window_years)

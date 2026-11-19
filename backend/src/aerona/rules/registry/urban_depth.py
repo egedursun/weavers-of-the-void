@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 S = RuleGroup.SETTLEMENTS
 P = RuleGroup.POLITY
@@ -236,11 +236,15 @@ class PortRules:
 
 
 @dataclass(frozen=True)
-class ManipulationRules:
+class ManipulationRules(Spanned):
     corner_stock: int = rule(100, 0, 100000, M, "Stock of a good a merchant house needs to corner its market")
     corner_pct: int = rule(40, 0, 400, M, "Price rise a full corner causes (%)")
     dump_pct: int = rule(30, 0, 100, M, "Price fall a full dumping causes (%)")
     play_pct: int = rule(10, 0, 100, M, "Chance each epoch a rich merchant house plays a market (%)")
-    length: int = rule(3, 1, 100, M, "Epochs a corner or dumping lasts")
+    length_years: int = span(2, 1, 2500, M, "Years a corner or dumping lasts")
     law_counter_pct: int = rule(60, 0, 100, M, "Share of a play a fair-market law, or a realm's mandate on the good, undoes (%)")
     guild_counter_pct: int = rule(40, 0, 100, M, "Share of a play a guild holding the good's monopoly undoes (%)")
+
+    @property
+    def length(self) -> int:
+        return self.epochs(self.length_years)

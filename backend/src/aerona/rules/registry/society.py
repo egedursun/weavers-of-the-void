@@ -22,14 +22,18 @@ class SocietyRules:
     class_citizen_pct: int = rule(0, 0, 100, RuleGroup.ECONOMY, "Base share of free citizens with a vote before civics raises it (%)")
     class_unemployed_pct: int = rule(0, 0, 100, RuleGroup.ECONOMY, "Base share of the unemployed before hard times raise it (%)")
     target_worker_level: int = rule(5, 0, 20, RuleGroup.ECONOMY, "Metallurgy level at which works hire wage workers")
-    target_worker: int = rule(14, 0, 100, RuleGroup.ECONOMY, "Worker-share bonus where works hire wage workers")
-    target_worker_farmer: int = rule(10, 0, 100, RuleGroup.ECONOMY, "Farmer share that moves to the works once wage work opens")
+    target_worker: int = rule(14, 0, 100, RuleGroup.ECONOMY, "Worker-share bonus for each metallurgy level from the one at which works hire wage workers")
+    target_worker_farmer: int = rule(
+        10, 0, 100, RuleGroup.ECONOMY, "Farmer share that moves to the works for each metallurgy level from the one at which wage work opens"
+    )
     target_professional_level: int = rule(4, 0, 20, RuleGroup.ECONOMY, "Medicine or writing level at which trained professionals appear")
-    target_professional: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Professional-share bonus where professions are taught")
+    target_professional: int = rule(
+        6, 0, 100, RuleGroup.ECONOMY, "Professional-share bonus for each medicine or writing level from the one at which professions are taught"
+    )
     target_official_level: int = rule(3, 0, 20, RuleGroup.ECONOMY, "Civics level at which salaried officials run the state")
-    target_official: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Official-share bonus where civics runs the state")
+    target_official: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Official-share bonus for each civics level from the one at which officials run the state")
     target_citizen_level: int = rule(5, 0, 20, RuleGroup.ECONOMY, "Civics level at which commoners become citizens with a vote")
-    target_citizen: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Citizen-share bonus where commoners hold a vote")
+    target_citizen: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Citizen-share bonus for each civics level from the one at which commoners hold a vote")
     target_unemployed_prosperity: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Prosperity below which wage workers lose their work")
     target_unemployed: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Unemployed-share bonus in hard times where wage work exists")
     class_initial_satisfaction: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Initial satisfaction of classes")

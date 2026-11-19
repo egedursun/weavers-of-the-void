@@ -291,7 +291,7 @@ async def trials(ctx: TickContext) -> list[Occasion]:
         host = await living(ctx, case.judge_entity_id or case.polity_entity_id or case.settlement_entity_id)
         if host is None:
             continue
-        kind = G.EXECUTION if case.penalty == PunishmentKind.DEATH.value else G.TRIAL
+        kind = G.EXECUTION if case.penalty is PunishmentKind.DEATH else G.TRIAL
         accused = case.accused_entity_id
         guests = [Guest(accused, GuestRole.ACCUSED, AttendanceReason.SUMMONED)] if accused is not None and kind is G.TRIAL else []
         found.append(Occasion(kind, host.id, host.world_id, case.settlement_entity_id or host.location_id, accused, guests=guests))

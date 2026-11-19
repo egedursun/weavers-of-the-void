@@ -208,7 +208,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 3,
                 ArmourType.BALLISTIC,
                 branch=KnowledgeBranch.METALLURGY,
-                level=5,
+                level=8,
                 terrain={T.PLAIN: 1.2, T.STEPPE: 1.2, T.FOREST: 0.8, T.MARSH: 0.6},
             ),
             UnitSpec(
@@ -243,7 +243,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
             UnitSpec(K.PEACEKEEPERS, F.INFANTRY, "Peacekeepers", 35, 25, 55, 40, 25, 3, 2, ArmourType.BALLISTIC, ShieldType.RIOT, KnowledgeBranch.CIVICS, 3),
             UnitSpec(K.MEDICS, F.SPECIAL, "Medics", 5, 5, 25, 45, 10, 3, 2, branch=KnowledgeBranch.MEDICINE, level=2),
             UnitSpec(K.DRONE_OPERATORS, F.ELECTRONIC, "Drone operators", 0, 75, 25, 40, 5, 9, 4, branch=KnowledgeBranch.SKY_NAVIGATION, level=6),
-            UnitSpec(K.SIGNALS_TROOPS, F.ELECTRONIC, "Signals troops", 10, 15, 30, 45, 10, 6, 3, branch=KnowledgeBranch.WARFARE, level=5),
+            UnitSpec(K.SIGNALS_TROOPS, F.ELECTRONIC, "Signals troops", 10, 15, 30, 45, 10, 6, 3, branch=KnowledgeBranch.WARFARE, level=8),
             UnitSpec(
                 K.POWERED_TROOPERS,
                 F.SPECIAL,
@@ -257,7 +257,7 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = total(
                 6,
                 ArmourType.POWERED,
                 branch=KnowledgeBranch.METALLURGY,
-                level=7,
+                level=10,
                 terror=15,
                 counters_charge=True,
             ),
@@ -432,6 +432,26 @@ TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyT
         Tactic.GUERRILLA: AMBUSH_TERRAIN | frozenset({T.URBAN, T.MOUNTAINS, T.HILLS}),
         Tactic.BLOCKADE: frozenset({T.COAST, T.RIVER_VALLEY}),
         Tactic.INFILTRATION: frozenset({T.URBAN, T.FOREST, T.JUNGLE}),
+    }
+)
+SUCCESSORS: MappingProxyType[UnitKind, UnitKind] = MappingProxyType(
+    {
+        K.LEVY: K.GUNNERS,
+        K.SLINGERS: K.ARCHERS,
+        K.ARCHERS: K.GUNNERS,
+        K.CROSSBOW_INFANTRY: K.GUNNERS,
+        K.JAVELINEERS: K.GRENADIERS,
+        K.SHIELD_INFANTRY: K.LINE_INFANTRY,
+        K.PIKE_INFANTRY: K.LINE_INFANTRY,
+        K.SHOCK_INFANTRY: K.GRENADIERS,
+        K.LINE_INFANTRY: K.MECHANISED_INFANTRY,
+        K.HEAVY_INFANTRY: K.POWERED_TROOPERS,
+        K.MOUNTED_ARCHERS: K.MOUNTED_GUNNERS,
+        K.LIGHT_CAVALRY: K.PILOTS,
+        K.HEAVY_CAVALRY: K.VEHICLE_CREW,
+        K.CHARIOTS: K.VEHICLE_CREW,
+        K.SIEGE_CREW: K.ARTILLERY_CREW,
+        K.MARINES: K.DROP_TROOPS,
     }
 )
 STYLE_UNITS = MappingProxyType(

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.BODY
 
@@ -238,7 +238,7 @@ class CapacityRules:
 
 
 @dataclass(frozen=True)
-class HealingRules:
+class HealingRules(Spanned):
     hp_regen_base: int = rule(20, 0, 500, G, "Health a mortal regains each epoch")
     endurance_hp_pct: int = rule(100, 0, 500, G, "Most health a mortal can hold per point of endurance (%)")
     vital_infection_pct: int = rule(100, 0, 400, G, "How much weakened vital organs raise the chance a wound festers (%)")
@@ -264,7 +264,7 @@ class HealingRules:
     infection_clear_medicine_pct: int = rule(25, 0, 300, G, "Extra chance to clear festering per medicine tier (%)")
     lethal_infected_vital: int = rule(30, 0, 100, G, "Chance a festering vital wound kills each epoch (%)")
     lethal_infected_limb: int = rule(12, 0, 100, G, "Chance a festering limb wound kills each epoch (%)")
-    lethal_after_epochs: int = rule(3, 1, 20, G, "Epochs of festering after which a wound turns deadly")
+    lethal_after_years: int = span(1, 1, 500, G, "Years of festering after which a wound turns deadly")
     lethal_medicine_cut_pct: int = rule(20, 0, 100, G, "Death from festering each medicine tier prevents (%)")
     amputation_chance: int = rule(80, 0, 100, G, "Chance surgery takes a festering limb instead of a life (%)")
     heal_severity_1: int = rule(95, 0, 100, G, "Chance a severity 1 wound heals each epoch (%)")
@@ -327,6 +327,10 @@ class HealingRules:
     saved_severity: int = rule(3, 1, 5, G, "Severity of a healed wound for which the patient feels saved by the healer")
     healer_renown_heal: int = rule(1, 0, 100, G, "Importance a healer gains per patient healed")
     healer_renown_loss: int = rule(2, 0, 100, G, "Importance a healer loses per patient who dies in their care")
+
+    @property
+    def lethal_after_epochs(self) -> int:
+        return self.epochs(self.lethal_after_years)
 
 
 @dataclass(frozen=True)

@@ -14,7 +14,7 @@ def reverted(prosperity: int, target: int, share_pct: int, roll: float | None = 
     return max(0, min(PERCENT, prosperity + stochastic_round((target - prosperity) * share_pct / PERCENT, roll)))
 
 
-@reads("people.prosperity", "settlement.prosperity")
+@reads("people.prosperity", "settlement.prosperity", "table.entities", "table.nodes")
 @writes("people.prosperity", "settlement.prosperity", "table.entities")
 async def prosperity_reversion(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

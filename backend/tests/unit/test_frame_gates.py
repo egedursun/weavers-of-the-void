@@ -41,6 +41,6 @@ def test_knowledge_opens_a_frame_and_the_size_of_a_power_only_caps_its_hull() ->
 
 def test_no_frame_waits_on_a_single_world_empire() -> None:
     rules = Rules()
-    skilled = known({branch: 9 for branch in KnowledgeBranch})
+    skilled = known({branch: 10 for branch in KnowledgeBranch})
     kingdom = owner(CivilizationTier.KINGDOM)
     assert all(opened(spec, skilled, kingdom, rules) for spec in FRAMES.values())

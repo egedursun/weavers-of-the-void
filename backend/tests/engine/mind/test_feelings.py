@@ -94,7 +94,7 @@ async def test_remembered_deeds_and_weddings_become_thoughts(realm: Realm) -> No
 
 
 async def test_a_spouse_mourns_and_a_grief_that_will_not_heal_leaves_melancholy(realm: Realm) -> None:
-    hard = replace(RULES, grief=replace(RULES.grief, complicated_pct=100, shock_epochs=1, mourning_epochs=1))
+    hard = replace(RULES, grief=replace(RULES.grief, complicated_pct=100, shock_years=50, mourning_years=50))
     ctx = context(realm.session, hard)
     widow = await mortal(realm, "Ula")
     lost = await mortal(realm, "Ren")
@@ -111,7 +111,10 @@ async def test_a_spouse_mourns_and_a_grief_that_will_not_heal_leaves_melancholy(
 
 
 async def test_nightmares_recur_into_a_condition_and_god_messages_become_visitations(realm: Realm) -> None:
-    rules = replace(RULES, dreams=replace(RULES.dreams, dream_pct=100, recurring_after=2, reading_pct=0, longing_weight=0, shared_weight=0))
+    rules = replace(
+        RULES,
+        dreams=replace(RULES.dreams, dream_pct=100, recurring_after_years=100, recurring_window_years=200, reading_pct=0, longing_weight=0, shared_weight=0),
+    )
     haunted = await mortal(realm, "Kas")
     foe = await mortal(realm, "Mor")
     ctx = context(realm.session, rules)

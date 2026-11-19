@@ -60,6 +60,7 @@ async def ensure_profiles(ctx: TickContext) -> int:
     "table.outbreaks",
     "table.place_environment",
     "table.plague_responses",
+    "table.polity_profiles",
     "table.quarantines",
     "table.region_environment",
     "table.settlement_profiles",

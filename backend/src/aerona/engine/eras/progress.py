@@ -1,8 +1,9 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER
+from aerona.catalog.eras import ERA_FLOORS, ERA_MARKERS, POWDER, TECHNIQUE_ERAS
 from aerona.catalog.techniques import BRANCH_GRAPH, PROGRAMMES, TECHNIQUES, TechniqueSpec
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -19,13 +20,13 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel, ProgrammeStage
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteSpec, can_reach, open_route
 from aerona.engine.economy.purse import coin_of, take_coin
-from aerona.engine.eras.effects import channel_value, era_techniques, held_by, world_start
+from aerona.engine.eras.effects import channel_value, era_order, era_techniques, held_by, world_start
 from aerona.engine.lore.research import gate_open
 from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.naming import seed_of
@@ -62,27 +63,50 @@ async def powder_barred(ctx: TickContext, holder_id: int, technique: Technique) 
     return holder is not None and (await ctx.laws()).has(NaturalLaw.NO_GUNPOWDER, holder.world_id)
 
 
+def begun_by(start: TechnologyEra, floors: Mapping[KnowledgeBranch, int]) -> frozenset[Technique]:
+    reached = {marker for era, marker in ERA_MARKERS if era_order(era) <= era_order(start)}
+    levels = dict(floors)
+    grew = True
+    while grew:
+        grew = False
+        for technique, spec in TECHNIQUES.items():
+            era = TECHNIQUE_ERAS.get(technique)
+            if technique in reached or (era is not None and era_order(era) > era_order(start)) or (spec.programme and era is None):
+                continue
+            if levels.get(spec.branch, 0) >= spec.level and gate_open(spec.gate, levels) and requirements_met(spec, reached):
+                reached.add(technique)
+                grew = True
+    return frozenset(reached)
+
+
 async def keep_floors(ctx: TickContext, tally: EraTally) -> None:
     start = await world_start(ctx.session)
     floors = ERA_FLOORS[start]
-    order = list(TechnologyEra)
-    markers = [marker for era, marker in ERA_MARKERS if order.index(era) <= order.index(start)]
-    if not floors and not markers:
+    begun = begun_by(start, floors)
+    if not floors and not begun:
         return
-    seasoned = set(await ctx.session.scalars(select(HolderLevelRow.holder_entity_id)))
-    fresh = await ctx.session.scalars(
+    communities = await ctx.session.scalars(
         select(EntityRow.id).where(EntityRow.entity_type.in_(list(COMMUNITIES)), EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
-    for holder in list(fresh):
-        if holder in seasoned or held(holder):
+    for holder in list(communities):
+        if held(holder):
             continue
+        rows = {row.branch: row for row in await ctx.session.scalars(select(HolderLevelRow).where(HolderLevelRow.holder_entity_id == holder))}
+        raised = False
         for branch, level in floors.items():
-            ctx.session.add(HolderLevelRow(holder_entity_id=holder, branch=branch, level=level, practitioners=0, progress=0))
+            row = rows.get(branch)
+            if row is None:
+                ctx.session.add(HolderLevelRow(holder_entity_id=holder, branch=branch, level=level, practitioners=0, progress=0))
+                raised = True
+            elif row.level < level and "level" not in row.locked:
+                row.level = level
+                raised = True
         known = await held_by(ctx.session, holder)
-        for marker in markers:
-            if marker not in known:
-                ctx.session.add(HolderTechniqueRow(holder_entity_id=holder, technique=marker, since_epoch=ctx.epoch, secret=False))
-        tally.floored += 1
+        for technique in sorted(begun - known):
+            if not await powder_barred(ctx, holder, technique):
+                ctx.session.add(HolderTechniqueRow(holder_entity_id=holder, technique=technique, since_epoch=0, secret=False))
+                raised = True
+        tally.floored += 1 if raised else 0
     await ctx.session.flush()
 
 

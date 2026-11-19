@@ -17,6 +17,7 @@ from aerona.catalog.units import (
     weapon_of,
 )
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
@@ -1183,7 +1184,9 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     ranged = MISSILE_FAMILIES - {F.MAGIC}
     to_d, to_a = missiles(rules, streams, attacker, defender, ground, families=ranged), missiles(rules, streams, defender, attacker, ground, families=ranged)
     pinned: dict[str, int | str] = {"fog": ", ".join(fog), "pinned": sum(1 for stack in (*attacker.stacks, *defender.stacks) if stack.suppressed)}
-    phases.append(traced(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "volleys" + (" into a called fog" if fog else ""), pinned), attacker, defender))
+    phases.append(
+        traced(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the two sides struck at range" + (" into a called fog" if fog else ""), pinned), attacker, defender)
+    )
     attacker.surprise = defender.surprise = 1.0
     for striker, target in ((attacker, defender), (defender, attacker)):
         if striker.tactic in STRIKE_TACTICS:
@@ -1360,7 +1363,7 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "captured": sum(stack.captured for stack in (*attacker.stacks, *defender.stacks)),
     }
     phases.append(traced(PhaseLog(BattlePhase.SALVAGE, 0, 0, f"{winner.entity.name} stripped the field", {"arms": winner.salvaged}), attacker, defender))
-    phases.append(traced(PhaseLog(BattlePhase.AFTERMATH, attacker.lost, defender.lost, outcome.value, dict(summary)), attacker, defender))
+    phases.append(traced(PhaseLog(BattlePhase.AFTERMATH, attacker.lost, defender.lost, f"the outcome: {spoken(outcome)}", dict(summary)), attacker, defender))
     for stack in (*attacker.stacks, *defender.stacks):
         settle(rules, stack)
     factors = {

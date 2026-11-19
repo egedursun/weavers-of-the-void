@@ -75,6 +75,7 @@ def case_view(row: CrimeCaseRow, witnesses: list[CaseWitnessRow], refs: Mapping[
         verdict=row.verdict,
         wrongful=row.wrongful,
         penalty=row.penalty,
+        immune=row.immune,
         opened_epoch=row.opened_epoch,
         closed_epoch=row.closed_epoch,
         locked=list(row.locked or []),

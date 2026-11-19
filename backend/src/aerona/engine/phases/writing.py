@@ -39,6 +39,7 @@ async def adopt_script(ctx: TickContext, language: EntityRow, writer: EntityRow,
     "table.language_profiles",
     "table.node_births",
     "table.nodes",
+    "table.polity_profiles",
 )
 @writes(
     "language.complexity",

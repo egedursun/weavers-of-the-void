@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 F = RuleGroup.CIVILIZATION
 
@@ -37,7 +37,7 @@ class MovementRules:
 
 
 @dataclass(frozen=True)
-class CompanyRules:
+class CompanyRules(Spanned):
     found_pct: int = rule(10, 0, 100, F, "Chance each epoch a rich merchant guild with routes abroad charters a company (%)")
     found_wealth: int = rule(50, 0, 100, F, "Wealth a merchant guild needs to charter a company")
     route_profit: int = rule(4, 0, 100, F, "Wealth a company draws each epoch from the route it holds a monopoly over")
@@ -48,7 +48,11 @@ class CompanyRules:
     guard_wealth: int = rule(30, 0, 100, F, "Wealth from which a company keeps hired guards on its route")
     guard_wage: int = rule(3, 0, 100, F, "Wealth a company pays its hired guards each epoch")
     guard_strength: int = rule(5, 0, 100, F, "Strength a company's hired guards add each epoch")
-    dominion_epochs: int = rule(5, 1, 100, F, "Epochs a company must hold the land at its route's far end before it rules that land as a realm")
+    dominion_years: int = span(30, 1, 2500, F, "Years a company must hold the land at its route's far end before it rules that land as a realm")
+
+    @property
+    def dominion_epochs(self) -> int:
+        return self.epochs(self.dominion_years)
 
 
 @dataclass(frozen=True)

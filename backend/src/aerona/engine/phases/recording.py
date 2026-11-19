@@ -188,6 +188,7 @@ from aerona.engine.recording.checkpoints import due, take_checkpoint
     "table.data_stores",
     "table.dating_systems",
     "table.de_jure_links",
+    "table.death_work",
     "table.decipher_works",
     "table.deed_claims",
     "table.deeds",

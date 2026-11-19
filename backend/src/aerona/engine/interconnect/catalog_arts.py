@@ -74,7 +74,7 @@ ARTS_MECHANICS = (
         tools=("canonise_work",),
         targets=("artwork", "people"),
         couplings=(
-            Coupling(S.KNOWLEDGE, "schools and academies teach works into the canon", E.TRIGGER, "canon.age_epochs"),
+            Coupling(S.KNOWLEDGE, "schools and academies teach works into the canon", E.TRIGGER, "canon.age_years"),
             Coupling(S.ECONOMY, "a work in the canon fetches a higher price", E.MODIFIER, "art_markets.canon_pct"),
             Coupling(S.CULTURE, "rival movements contest the canon and wear works out of it", E.FLOW, "canon.contest_loss"),
             Coupling(S.MIND, "the values a canon carries pull the values of its people across generations", E.FLOW, "canon.value_pull"),

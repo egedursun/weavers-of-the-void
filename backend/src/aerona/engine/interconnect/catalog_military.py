@@ -1039,7 +1039,7 @@ RAW: tuple[Raw, ...] = (
         ("aim_humiliate", "aim_revenge"),
         (S.SOCIAL, "peace.hostage_score", "a hostage"),
     ),
-    ("peace_term", "S5.8", "Peace binds for some epochs", UPKEEP, PEACE, (W, "treaty"), ("until_epoch",), (S.POLITY, "peace.treaty_epochs", "a peace treaty")),
+    ("peace_term", "S5.8", "Peace binds for some epochs", UPKEEP, PEACE, (W, "treaty"), ("until_epoch",), (S.POLITY, "peace.treaty_years", "a peace treaty")),
     (
         "claims_pressed",
         "S5.8",

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class CivilizationRules:
+class CivilizationRules(Spanned):
     independence_war_chance: int = rule(60, 0, 100, RuleGroup.CIVILIZATION, "Independence turns into war (%)")
     federation_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "An inter-world federation is founded (%)")
     previous_creation_relic_chance: int = rule(35, 0, 100, RuleGroup.CIVILIZATION, "A remnant of a previous creation is found (%)")
@@ -85,7 +85,7 @@ class CivilizationRules:
     loan_lender_min: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Minimum wealth or prosperity of a community able to lend")
     loan_borrower_max: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Maximum wealth or prosperity of a community asking for a loan")
     loan_amount: int = rule(10, 1, 100, RuleGroup.ECONOMY, "Amount of a spontaneous loan")
-    loan_term: int = rule(3, 1, 50, RuleGroup.ECONOMY, "Term of a spontaneous loan (epochs)")
+    loan_term_years: int = span(5, 1, 1250, RuleGroup.ECONOMY, "Term of a spontaneous loan (years)")
     loan_distance: int = rule(3, 0, 99, RuleGroup.ECONOMY, "Farthest distance between borrowing communities (steps)")
     loan_repay_chance: int = rule(40, 0, 100, RuleGroup.ECONOMY, "A debtor able to pay repays on its own (% per epoch)")
     loan_repay_reserve: int = rule(10, 0, 100, RuleGroup.ECONOMY, "Wealth or prosperity the debtor must keep after paying")
@@ -119,3 +119,7 @@ class CivilizationRules:
     unlock_loan_tier: int = rule(0, 0, 5, RuleGroup.CIVILIZATION, "Civilization tier that unlocks lending to other communities")
     unlock_exploration_tier: int = rule(0, 0, 5, RuleGroup.CIVILIZATION, "Civilization tier that unlocks exploring unknown lands")
     unlock_deposit_claim_tier: int = rule(0, 0, 5, RuleGroup.CIVILIZATION, "Civilization tier that unlocks claiming a deposit of the cosmic travel resource")
+
+    @property
+    def loan_term(self) -> int:
+        return self.epochs(self.loan_term_years)

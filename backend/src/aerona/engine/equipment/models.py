@@ -14,6 +14,7 @@ from aerona.db.tables.equipment import EquipmentModelRow
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.vehicles import MountKind
 from aerona.engine.collective.embodied import embody
 from aerona.engine.context import TickContext
@@ -59,6 +60,7 @@ SLOT_MATERIALS = MappingProxyType(
     }
 )
 NEAR_PCT = 80
+OUTDATED_LEVELS = 2
 GUARD_SLOTS = frozenset({ArmamentSlot.ARMOUR, ArmamentSlot.SHIELD, ArmamentSlot.HELMET, ArmamentSlot.BARDING})
 GEAR_SLOTS = frozenset({ArmamentSlot.SENSOR, ArmamentSlot.IMPLANT, ArmamentSlot.SUPPORT})
 
@@ -77,9 +79,17 @@ def taste(holder_id: int, slot: ArmamentSlot, family: EquipmentFamily) -> int:
     return crc32(f"{holder_id}.{slot.value}.{family.value}".encode())
 
 
+def current_gear(found: list[FamilySpec]) -> list[FamilySpec]:
+    newest: dict[KnowledgeBranch, int] = {}
+    for spec in found:
+        if spec.branch is not None:
+            newest[spec.branch] = max(newest.get(spec.branch, 0), spec.level)
+    return [spec for spec in found if spec.branch is None or spec.level >= newest[spec.branch] - OUTDATED_LEVELS]
+
+
 def best_family(knowledge: KnowledgeMap, holder_id: int, slot: ArmamentSlot, allowed: tuple[EquipmentFamily, ...] | None = None) -> EquipmentFamily | None:
     pool = [FAMILIES[family] for family in (allowed or SLOT_FAMILIES[slot])]
-    found = [spec for spec in pool if spec.slot is slot and known(spec, knowledge, holder_id)]
+    found = current_gear([spec for spec in pool if spec.slot is slot and known(spec, knowledge, holder_id)])
     if not found:
         return None
     if allowed is None:

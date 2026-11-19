@@ -55,7 +55,7 @@ async def test_every_realm_founds_a_title_that_follows_its_throne(realm: Realm) 
 
 
 async def test_held_lands_drift_and_foreign_lands_bring_claims(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(titles={"drift_epochs": 1}))
+    ctx = context(realm.session, tuned(titles={"drift_years": 50}))
     first_ruler = await mortal(realm, "Cael")
     second_ruler = await mortal(realm, "Dov")
     first = await kingdom(realm, "Ostra", first_ruler, 1, realm.region.id)

@@ -4,26 +4,29 @@ from typing import Any
 from pydantic import computed_field, field_serializer
 
 from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.job import JobKind, JobStatus
+from aerona.domain.enums.node import NodeKind
 from aerona.jobs.context import JOB_LABEL_KEY
 from aerona.jobs.manager import ITEMS_KEY
 
 
 class JobItem(ApiModel):
     node_id: int
-    node_kind: str
+    node_kind: NodeKind
     name: str
-    entity_type: str | None = None
+    entity_type: EntityType | None = None
     action: str
     note: str | None = None
     other_id: int | None = None
-    other_kind: str | None = None
+    other_kind: NodeKind | None = None
     other_name: str | None = None
 
 
 class JobResponse(ApiModel):
     id: str
-    kind: str
-    status: str
+    kind: JobKind
+    status: JobStatus
     progress: float
     stage: str | None
     params: dict[str, Any]

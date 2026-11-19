@@ -184,6 +184,20 @@ async def test_cascades_are_reproducible_and_deterrence_raises_thresholds(sessio
     assert first > ctx.rules.collective_behaviour.mob_share > guarded
 
 
+async def test_with_the_default_rules_a_furious_town_can_riot_and_a_calm_one_does_not(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await town_of(session, world)
+    mood = await mood_of(ctx, town.id)
+    mood.deterrence = 0
+    mood.anger = 0
+    calm = [cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng(f"calm.{seed}")) for seed in range(20)]
+    mood.anger = 95
+    furious = [cascade(ctx, crowd_for(ctx, mood, CollectiveActKind.RIOT, 0.2), ctx.rng(f"furious.{seed}")) for seed in range(20)]
+    mob = ctx.rules.collective_behaviour.mob_share
+    assert max(calm) < mob
+    assert sum(1 for share in furious if share >= mob) > len(furious) // 2
+
+
 async def test_a_hungry_town_riots_storms_its_granary_and_is_broken_by_force(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await context(session, collective_behaviour={"base_threshold": 0, "movement_share": 101, "mob_share": 1, "force_pct": 100})
     town = await town_of(session, world, militia=50000)
@@ -382,7 +396,7 @@ async def test_social_learning_copies_the_renowned_and_records_the_lesson(sessio
 async def test_a_generation_is_shaped_by_its_youth_and_passes(session: AsyncSession, world: CoreWorld) -> None:
     world.cosmos.epoch = 6
     await session.flush()
-    ctx = await context(session, generations={"youth_epochs": 1, "lifespan_epochs": 1, "turnover_unrest": 10})
+    ctx = await context(session, generations={"youth_years": 50, "lifespan_years": 50, "turnover_unrest": 10})
     town = await town_of(session, world)
     war = CollectionRow(kind=CollectionKind.WAR, name="The war", world_id=world.world.id, start_epoch=ctx.epoch, locked=[])
     session.add(war)

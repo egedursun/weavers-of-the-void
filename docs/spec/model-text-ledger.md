@@ -81,6 +81,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/agents/fate/judge.py` | 10 | 2026-11-16 | `df49228b566561b6` |
 | `backend/src/aerona/agents/fate/naming.py` | 4 | 2026-11-16 | `adeb0ff046638bb4` |
 | `backend/src/aerona/agents/genesis.py` | 3 | 2026-11-17 | `275d0c4174ed6126` |
+| `backend/src/aerona/agents/grounding.py` | 3 | 2026-11-19 | `5c6f6dee55b4a75a` |
 | `backend/src/aerona/agents/image_prompter.py` | 4 | 2026-11-16 | `eadaa015d844c476` |
 | `backend/src/aerona/agents/mortal.py` | 4 | 2026-11-16 | `3cbd4bc82cfe8451` |
 | `backend/src/aerona/agents/network_repair.py` | 9 | 2026-11-16 | `dff8c0db095bcb57` |
@@ -119,7 +120,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/domain_effects.py` | 58 | 2026-11-16 | `69cc61cfe621566b` |
 | `backend/src/aerona/catalog/effect_packages.py` | 26 | 2026-11-16 | `f07f548d813c7aa3` |
 | `backend/src/aerona/catalog/entity_types.py` | 5 | 2026-11-16 | `5a64164db10e8bec` |
-| `backend/src/aerona/catalog/enum_layers.py` | 1011 | 2026-11-18 | `7206268dd2bec739` |
+| `backend/src/aerona/catalog/enum_layers.py` | 1012 | 2026-11-19 | `9fb6b6f7a8d1eb6b` |
 | `backend/src/aerona/catalog/estates.py` | 6 | 2026-11-16 | `be6d59511264554e` |
 | `backend/src/aerona/catalog/ethics.py` | 27 | 2026-11-17 | `2b6922edcbe27187` |
 | `backend/src/aerona/catalog/flora.py` | 2 | 2026-11-16 | `8ed66674168cce87` |
@@ -134,7 +135,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/body_lines.py` | 42 | 2026-11-17 | `9f40fac2dc695be6` |
 | `backend/src/aerona/catalog/incident_kinds/cosmos_kinds.py` | 114 | 2026-11-17 | `c1204d5ddcbbaae6` |
 | `backend/src/aerona/catalog/incident_kinds/g01_single_combat.py` | 88 | 2026-11-18 | `c2d10234acfa9606` |
-| `backend/src/aerona/catalog/incident_kinds/g02_battles.py` | 97 | 2026-11-17 | `f3109aacb7ad5b60` |
+| `backend/src/aerona/catalog/incident_kinds/g02_battles.py` | 98 | 2026-11-19 | `79bd07ef3518c467` |
 | `backend/src/aerona/catalog/incident_kinds/g03_vessels.py` | 14 | 2026-11-17 | `52dbb454693fc582` |
 | `backend/src/aerona/catalog/incident_kinds/g04_body.py` | 118 | 2026-11-17 | `3bae589e6952831e` |
 | `backend/src/aerona/catalog/incident_kinds/g05_making.py` | 84 | 2026-11-17 | `9441e4d690b7fccf` |
@@ -146,7 +147,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/g11_social.py` | 133 | 2026-11-17 | `cc6693059d8ff2a3` |
 | `backend/src/aerona/catalog/incident_kinds/g12_knowledge.py` | 158 | 2026-11-18 | `3a3fba7fc4d63e98` |
 | `backend/src/aerona/catalog/incident_kinds/g15_gods.py` | 504 | 2026-11-17 | `1ac0a3df1e05ad30` |
-| `backend/src/aerona/catalog/incident_kinds/g16_peoples.py` | 95 | 2026-11-18 | `8a3fe4ed012a85cb` |
+| `backend/src/aerona/catalog/incident_kinds/g16_peoples.py` | 96 | 2026-11-19 | `e5c8eba40d412b1b` |
 | `backend/src/aerona/catalog/incident_kinds/nature_kinds.py` | 125 | 2026-11-17 | `b69469a567babab1` |
 | `backend/src/aerona/catalog/incident_kinds/registry.py` | 2 | 2026-11-17 | `5eafe1acaacca61a` |
 | `backend/src/aerona/catalog/incident_kinds/tellings.py` | 5 | 2026-11-17 | `6319f7aed2dddd67` |
@@ -551,6 +552,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/law/prisons.py` | 2 | 2026-11-17 | `48448f603e995075` |
 | `backend/src/aerona/engine/law/registries.py` | 1 | 2026-11-17 | `70ae5fc63953a3af` |
 | `backend/src/aerona/engine/law/sentences.py` | 1 | 2026-11-16 | `338f7eadc518a68c` |
+| `backend/src/aerona/engine/lifecycle/affairs.py` | 1 | 2026-11-19 | `15592501bc42dbc0` |
 | `backend/src/aerona/engine/lifecycle/end_control.py` | 7 | 2026-11-16 | `84d65bd0dea60f99` |
 | `backend/src/aerona/engine/lifecycle/mortal_death.py` | 15 | 2026-11-17 | `7f62f3db5ae0ebf8` |
 | `backend/src/aerona/engine/lifecycle/ruler_roles.py` | 5 | 2026-11-17 | `f29058cfbec1ef23` |
@@ -613,11 +615,11 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/military/aftermath.py` | 1 | 2026-11-16 | `fc0bac638c89e4da` |
 | `backend/src/aerona/engine/military/aims.py` | 15 | 2026-11-16 | `4904ee254c114631` |
 | `backend/src/aerona/engine/military/alliance.py` | 2 | 2026-11-17 | `d84916647eb014ac` |
-| `backend/src/aerona/engine/military/battle.py` | 7 | 2026-11-17 | `7d6c0eff6c423f56` |
+| `backend/src/aerona/engine/military/battle.py` | 8 | 2026-11-19 | `8fbe909072aaf56b` |
 | `backend/src/aerona/engine/military/campaign.py` | 1 | 2026-11-17 | `f2b42a4337e88ef3` |
 | `backend/src/aerona/engine/military/causes.py` | 3 | 2026-11-16 | `6b730f447dcf6e87` |
 | `backend/src/aerona/engine/military/clash.py` | 1 | 2026-11-16 | `5cd1a8308ebf2939` |
-| `backend/src/aerona/engine/military/control.py` | 29 | 2026-11-16 | `cf02e093b893ef04` |
+| `backend/src/aerona/engine/military/control.py` | 28 | 2026-11-19 | `9b8dcd31f7530d9e` |
 | `backend/src/aerona/engine/military/duels.py` | 2 | 2026-11-17 | `bf60f63614f75a76` |
 | `backend/src/aerona/engine/military/feud_acts.py` | 3 | 2026-11-17 | `9aa3a30e42c80767` |
 | `backend/src/aerona/engine/military/mole_hunts.py` | 1 | 2026-11-17 | `3adba64e27bc76ed` |
@@ -777,7 +779,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/primitives/subtypes.py` | 1 | 2026-11-16 | `344468f6dbdf8532` |
 | `backend/src/aerona/engine/primitives/tired_motifs.py` | 1 | 2026-11-16 | `e4dc289070b2ae95` |
 | `backend/src/aerona/engine/recording/accounts.py` | 2 | 2026-11-17 | `a0a19eef298c0d22` |
-| `backend/src/aerona/engine/recording/record.py` | 23 | 2026-11-17 | `9a120e159c9739db` |
+| `backend/src/aerona/engine/recording/record.py` | 27 | 2026-11-19 | `2cc5c00672a2cd57` |
 | `backend/src/aerona/engine/recording/render.py` | 1 | 2026-11-17 | `d56d2818f7774a3e` |
 | `backend/src/aerona/engine/recording/scope.py` | 1 | 2026-11-17 | `db3e5bb061a5510f` |
 | `backend/src/aerona/engine/recording/then.py` | 3 | 2026-11-17 | `50f6bb62e9150dc2` |

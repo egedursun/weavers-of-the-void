@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 E = RuleGroup.ECONOMY
 M = RuleGroup.MARKETS_AND_MONEY
@@ -130,10 +130,14 @@ class SympathyRules:
 
 
 @dataclass(frozen=True)
-class EmotionSpiritRules:
+class EmotionSpiritRules(Spanned):
     spawn_density: int = rule(60, 0, 100, P, "Magic of a region from which strong shared feeling takes the shape of spirits")
     spawn_from: int = rule(300, 0, 100000, P, "Shared feeling of one kind a region must hold in an epoch before a spirit takes shape")
-    lifetime: int = rule(3, 1, 50, P, "Epochs an emotion spirit lasts unless bound")
+    lifetime_years: int = span(30, 1, 1250, P, "Years an emotion spirit lasts unless bound")
     amplify: int = rule(10, 0, 100, P, "Intensity a spirit adds to the matching feeling of the mortals of its region each epoch")
     feed_pct: int = rule(50, 0, 400, P, "Share of a spirit's strength fed to the gods whose faithful live in its region (%)")
     reagent_yield: int = rule(2, 0, 100, P, "Magical reagents a bound spirit yields its binder each epoch")
+
+    @property
+    def lifetime(self) -> int:
+        return self.epochs(self.lifetime_years)

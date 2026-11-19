@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.INTERCONNECTION
 
 
 @dataclass(frozen=True)
-class NetworkRules:
+class NetworkRules(Spanned):
     days_per_epoch: int = rule(360, 1, 10000, C, "Days in an epoch, against which a network's delay is counted")
     relay_days: int = rule(20, 0, 1000, C, "Days a message takes across a relay network")
     wired_days: int = rule(1, 0, 1000, C, "Days a message takes across a wired network")
@@ -18,7 +18,7 @@ class NetworkRules:
     grown_link_days: int = rule(5, 0, 1000, C, "Days a message takes across a living connection")
     interworld_days: int = rule(360, 0, 100000, C, "Days a message takes through a gateway to another world")
     outage_base: int = rule(5, 0, 100, C, "Chance of an outage each epoch for a network of no reliability")
-    outage_epochs: int = rule(1, 1, 100, C, "Epochs an outage lasts")
+    outage_years: int = span(1, 1, 2500, C, "Years an outage lasts")
     war_outage: int = rule(25, 0, 100, C, "Chance a network with a member under siege goes down")
     decay_outage: int = rule(20, 0, 100, C, "Chance a network whose making no member can repair goes down")
     dependency_gain: int = rule(4, 0, 100, C, "Dependency a member gains each epoch the network runs")
@@ -37,3 +37,7 @@ class NetworkRules:
     shortage_pct: int = rule(50, 0, 100, C, "Share of a member town's energy left unmet at which a network or a mind it keeps goes short (%)")
     command_pct: int = rule(10, 0, 100, C, "Coordination a running network that carries control gives an army in battle (%)")
     confusion_pct: int = rule(15, 0, 100, C, "Coordination an army loses in battle while every network that carries its control is down (%)")
+
+    @property
+    def outage_epochs(self) -> int:
+        return self.epochs(self.outage_years)

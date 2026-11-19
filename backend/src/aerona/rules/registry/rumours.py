@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.CIVILIZATION
 
 
 @dataclass(frozen=True)
-class RumoursRules:
+class RumoursRules(Spanned):
     min_magnitude: int = rule(30, 0, 100, C, "Weight a happening needs before word of it travels")
     hop_loss: int = rule(8, 0, 100, C, "Fidelity a rumour loses at each telling")
     distance_loss: int = rule(3, 0, 100, C, "Fidelity a rumour loses for each region it crosses")
@@ -27,10 +27,14 @@ class RumoursRules:
     alarm_defense: int = rule(5, 0, 100, C, "Defence a frightened town raises on hearing that an enemy army is near")
     ally_call: int = rule(10, 0, 100, C, "Goodwill and hostility allies show when a community calls on them against a coming army")
     legend_fidelity: int = rule(40, 0, 100, C, "Fidelity below which a lingering rumour hardens into legend")
-    legend_epochs: int = rule(3, 0, 100, C, "Epochs a garbled rumour must linger before it becomes a legend")
+    legend_years: int = span(50, 0, 2500, C, "Years a garbled rumour must linger before it becomes a legend")
     legend_tellers: int = rule(2, 1, 100, C, "Communities that must carry a rumour before it becomes a legend")
     context_lines: int = rule(8, 0, 100, C, "Rumours a mortal keeps in mind when it thinks and acts")
     backfill_epochs: int = rule(3, 0, 100, C, "Epochs of past happenings an old world remembers as rumour when the rumour mill first turns")
     cap: int = rule(600, 0, 100000, C, "Most rumours passed on in one epoch")
     renown_spread_pct: int = rule(20, 0, 100, C, "Extra chance, at the full renown of the doer, that word of a deed is passed on (%)")
     contradiction_trust_loss: int = rule(3, 0, 100, C, "Trust in what is told that a community loses on hearing a happening told otherwise than it knew it")
+
+    @property
+    def legend_epochs(self) -> int:
+        return self.epochs(self.legend_years)

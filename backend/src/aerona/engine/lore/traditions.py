@@ -30,7 +30,7 @@ from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.economy.stocks import holding
+from aerona.engine.economy.stocks import holding, holdings
 from aerona.engine.environment.dangers import ease_danger
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -157,6 +157,12 @@ async def apply_custom_kind(ctx: TickContext, row: TraditionProfileRow) -> None:
         row.cost = {Commodity(key).value: value for key, value in params.cost.items()}
 
 
+async def taboo_good(ctx: TickContext, tradition: EntityRow) -> str | None:
+    held = await holdings(ctx.session, tradition.location_id) if tradition.location_id is not None else {}
+    goods = sorted(commodity.value for commodity, amount in held.items() if amount > 0)
+    return ctx.rng(f"taboo.{tradition.id}").pick(goods) if goods else None
+
+
 async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunction = K.FESTIVAL) -> TraditionProfileRow:
     row = await ctx.session.get(TraditionProfileRow, tradition.id)
     if row is not None:
@@ -168,7 +174,7 @@ async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunc
         calendar_slot=None,
         cost={**cost_for(ctx, kind), **spec.cost},
         effects=dict(spec.effects),
-        taboo_target=CommodityKind.LIVESTOCK.value if kind is K.TABOO else None,
+        taboo_target=await taboo_good(ctx, tradition) if kind is K.TABOO else None,
         updated_epoch=ctx.epoch,
         locked=[],
     )

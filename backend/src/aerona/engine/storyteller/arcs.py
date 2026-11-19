@@ -19,7 +19,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.mortal import LifeStage, PunishmentKind
 from aerona.domain.enums.polity import OathStatus, OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
@@ -139,7 +139,7 @@ async def forbidden_love(ctx: TickContext) -> list[Candidate]:
 
 async def exile(ctx: TickContext) -> list[Candidate]:
     rows = await ctx.session.scalars(
-        select(SentenceRow).where(SentenceRow.penalty == "exile", SentenceRow.epoch >= ctx.epoch - RECENT).order_by(SentenceRow.id)
+        select(SentenceRow).where(SentenceRow.penalty == PunishmentKind.EXILE, SentenceRow.epoch >= ctx.epoch - RECENT).order_by(SentenceRow.id)
     )
     return [Candidate(row.mortal_entity_id, ArcTemplate.EXILE_AND_RETURN) for row in rows if await living(ctx, row.mortal_entity_id)]
 

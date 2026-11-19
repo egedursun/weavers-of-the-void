@@ -1094,6 +1094,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.place_profiles",
     "table.polity_map_knowledge",
     "table.polity_members",
+    "table.polity_profiles",
     "table.pressures",
     "table.region_dangers",
     "table.region_environment",

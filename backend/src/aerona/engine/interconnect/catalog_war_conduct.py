@@ -25,7 +25,7 @@ WAR_CONDUCT_MECHANICS = (
         targets=("polity", "community"),
         couplings=(
             Coupling(S.INTRIGUE, "a fabricated claim becomes a casus belli like any other", E.TRIGGER, "war_conduct.claim_strength"),
-            Coupling(S.LAW, "a broken treaty gives every other party a casus belli", E.TRIGGER, "war_conduct.casus_belli_epochs"),
+            Coupling(S.LAW, "a broken treaty gives every other party a casus belli", E.TRIGGER, "war_conduct.casus_belli_years"),
             Coupling(S.ECONOMY, "a defaulted debt, an embargo or steep tolls give a casus belli", E.TRIGGER, "war_conduct.toll_dispute_pct"),
             Coupling(S.FAITH, "a holy war tenet turns neighbours of another god into a casus belli", E.TRIGGER),
         ),

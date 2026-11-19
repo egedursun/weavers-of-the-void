@@ -2,6 +2,7 @@ import math
 from typing import Any
 
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -63,9 +64,9 @@ async def _union(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll
             BondDraft(call.me.id, target.id, BondKind.ALLY, call.epoch, lines.UNION_BOND.format(kind=args.kind.value, terms=args.terms))
         )
         gain = tools.diplomacy_marriage_relation if args.kind is DiplomacyKind.MARRIAGE else tools.diplomacy_alliance_relation
-        await change_relation(call.tick, call.me.id, target.id, gain, DIPLOMACY_MEMORIES.get(args.kind, MemoryKind.GOODWILL), note=args.kind.value)
+        await change_relation(call.tick, call.me.id, target.id, gain, DIPLOMACY_MEMORIES.get(args.kind, MemoryKind.GOODWILL), note=spoken(args.kind))
         return DiplomacyOutcome.MARRIAGE_ACCEPTED if args.kind is DiplomacyKind.MARRIAGE else DiplomacyOutcome.ALLIANCE_ACCEPTED
-    await change_relation(call.tick, call.me.id, target.id, -tools.diplomacy_reject_relation, MemoryKind.HUMILIATED_ME, note=args.kind.value)
+    await change_relation(call.tick, call.me.id, target.id, -tools.diplomacy_reject_relation, MemoryKind.HUMILIATED_ME, note=spoken(args.kind))
     return DiplomacyOutcome.UNION_REFUSED
 
 
@@ -73,7 +74,7 @@ async def _peace(call: MortalCall, target: EntityRow, args: DiplomacyInput, roll
     tools = call.rules.mortal_tools
     if roll <= tools.diplomacy_peace_threshold:
         await settle_peace(call.tick, call.me.id, target.id, WarEnding.PEACE, args.terms[:KEY_MAX_LENGTH], apply_relation=False)
-        await change_relation(call.tick, call.me.id, target.id, tools.diplomacy_peace_relation, MemoryKind.MADE_PEACE, note=args.kind.value)
+        await change_relation(call.tick, call.me.id, target.id, tools.diplomacy_peace_relation, MemoryKind.MADE_PEACE, note=spoken(args.kind))
         return DiplomacyOutcome.PEACE_MADE
     return DiplomacyOutcome.PEACE_REFUSED
 
@@ -95,7 +96,7 @@ async def _tribute(call: MortalCall, target: EntityRow, args: DiplomacyInput) ->
         if wealth is not None:
             set_stats(call.me, wealth=min(PERCENT, wealth + tools.tribute_taker_gain))
     await impose_tribute(call.tick, target, call.me, None, args.terms)
-    await change_relation(call.tick, call.me.id, target.id, -tools.tribute_relation, MemoryKind.DEMANDED_TRIBUTE, note=args.kind.value)
+    await change_relation(call.tick, call.me.id, target.id, -tools.tribute_relation, MemoryKind.DEMANDED_TRIBUTE, note=spoken(args.kind))
     return DiplomacyOutcome.TRIBUTE_AGREED
 
 

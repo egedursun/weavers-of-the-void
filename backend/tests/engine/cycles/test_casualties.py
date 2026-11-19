@@ -56,7 +56,7 @@ async def test_new_army_inherits_veterans(session: AsyncSession, world: CoreWorl
     new = await entity(session, "New Host", EntityType.ARMY, ArmyStats(size=100, morale=50, equipment=40, experience=10), world_id=world.world.id)
     session.add_all(
         [
-            ArmyRow(entity_id=old.id, owner_entity_id=world.people.id, raised_epoch=3, disbanded_epoch=8),
+            ArmyRow(entity_id=old.id, owner_entity_id=world.people.id, raised_epoch=3, disbanded_epoch=9),
             ArmyRow(entity_id=new.id, owner_entity_id=world.people.id, raised_epoch=10),
         ]
     )

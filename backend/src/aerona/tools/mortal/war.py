@@ -1,6 +1,7 @@
 from typing import Any
 
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.entities import EntityRow
@@ -64,7 +65,7 @@ async def declare(call: MortalCall, args: DeclareWarInput) -> str:
             template = WAR_BLOCK_TEXTS.get(block)
             if template is not None:
                 fail(template)
-            fail(MortalResult.WAR_BLOCKED, reason=block.value.replace("_", " "))
+            fail(MortalResult.WAR_BLOCKED, reason=spoken(block))
         await declare_war(call.tick, call.me.id, target.id, args.reason, cause=WarCause.DECLARED)
         await change_relation(call.tick, call.me.id, target.id, -tools.war_declare_relation, MemoryKind.FOUGHT_US, note=args.reason[:KEY_MAX_LENGTH])
         await _sour_patrons(call, target)

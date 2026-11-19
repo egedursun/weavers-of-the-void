@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 M = RuleGroup.MIND
 
 
 @dataclass(frozen=True)
-class MindRules:
+class MindRules(Spanned):
     baseline_capacity: int = rule(50, 0, 100, M, "Capacity of an ordinary born mind, against which every other mind is measured")
     speed_min: int = rule(10, 1, 100, M, "Slowest a mind can think, as a share of world time (%)")
     speed_max: int = rule(1000, 100, 1000, M, "Fastest a mind can think, as a share of world time (%)")
@@ -21,9 +21,13 @@ class MindRules:
     storage_upkeep: int = rule(1, 0, 100, M, "Wealth a held saved state costs its owner each epoch")
     copy_cap_per_mind: int = rule(3, 0, 100, M, "Most running copies one mind may have; more exist only as saved states")
     copy_cap_per_world: int = rule(40, 0, 10000, M, "Most running copies on one world")
-    archive_unpaid_limit: int = rule(3, 1, 100, M, "Epochs an archive may go unpaid before it loses a state")
+    archive_unpaid_limit_years: int = span(3, 1, 2500, M, "Years an archive may go unpaid before it loses a state")
     gap_memory_weight: int = rule(30, 0, 100, M, "Weight of the memory of the gap a restored or woken mind carries")
     soul_grant_cost: int = rule(20, 0, 200, M, "Essence a god spends to grant a made mind a soul")
+
+    @property
+    def archive_unpaid_limit(self) -> int:
+        return self.epochs(self.archive_unpaid_limit_years)
 
 
 @dataclass(frozen=True)

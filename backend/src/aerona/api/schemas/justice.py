@@ -2,7 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.justice import CaseStage, Deposition, ProposalEvent, ProposalStance, ProposalState, TrialKind, Verdict
 from aerona.domain.enums.law_depth import CourtLevel
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 
 
@@ -64,7 +64,8 @@ class CrimeCaseView(ApiModel):
     forged: bool
     verdict: Verdict | None
     wrongful: bool
-    penalty: str | None
+    penalty: PunishmentKind | None
+    immune: bool
     opened_epoch: int
     closed_epoch: int | None
     locked: list[str]

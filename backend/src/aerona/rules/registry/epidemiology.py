@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.DISEASE
 
 
 @dataclass(frozen=True)
-class EpidemiologyRules:
+class EpidemiologyRules(Spanned):
     neutral_lethality: int = rule(30, 1, 100, G, "Lethality at which a disease kills as many as the old plague did")
     neutral_virulence: int = rule(40, 1, 100, G, "Virulence at which a disease spreads as readily as the old plague did")
     reuse_disease_chance: int = rule(70, 0, 100, G, "A new plague is an old disease of the region or its neighbours rather than a new one (%)")
@@ -15,7 +15,7 @@ class EpidemiologyRules:
     survivor_immunity_pct: int = rule(60, 0, 100, G, "Share of the struck who are immune after an outbreak (%)")
     child_immunity_loss_pct: int = rule(50, 0, 100, G, "Share of children's immunity lost each epoch as the immune grow up and the newborn arrive (%)")
     herd_floor_pct: int = rule(30, 0, 100, G, "Lowest herd-immunity threshold of the mildest disease (%)")
-    outbreak_epochs: int = rule(2, 1, 50, G, "Epochs an outbreak lingers before it wanes")
+    outbreak_years: int = span(2, 1, 1250, G, "Years an outbreak lingers before it wanes")
     waning_death_pct: int = rule(30, 0, 100, G, "Deaths of a lingering outbreak compared with its first epoch (%)")
     infected_pct: int = rule(25, 0, 100, G, "Share of a struck community infected at the outbreak's start, at neutral virulence (%)")
     crowd_population: int = rule(30000, 1, 100000000, G, "Community size at which a disease spreads as in the most crowded land")
@@ -41,7 +41,7 @@ class EpidemiologyRules:
     hospital_lethality_pct: int = rule(70, 0, 100, G, "Lethality kept in a land with a hospital (%)")
     hospital_healer_pct: int = rule(150, 100, 500, G, "Healing practice gained in a community with a hospital (%)")
     cure_lethality_pct: int = rule(25, 0, 100, G, "Lethality kept where the cure is known (%)")
-    quarantine_epochs: int = rule(2, 1, 50, G, "Epochs a quarantine holds")
+    quarantine_years: int = span(1, 1, 1250, G, "Years a quarantine holds")
     quarantine_unrest: int = rule(6, 0, 100, G, "Unrest a quarantine causes")
     essence_per_outbreak: int = rule(3, 0, 1000, G, "Essence a plague-domain son gains per outbreak in its world")
     creator_essence_per_outbreak: int = rule(6, 0, 1000, G, "Essence the son who loosed a disease gains per outbreak of it")
@@ -88,3 +88,11 @@ class EpidemiologyRules:
     sick_levy_pct: int = rule(40, 0, 100, G, "Share of sick adults who can still be levied when their disease spares breath, body and sight (%)")
     chronic_function_loss_pct: int = rule(15, 0, 100, G, "Body function lost to a disease's lasting illness per point of its severity (%)")
     backfill_immunity_pct: int = rule(40, 0, 100, G, "Immunity a past plague leaves in the communities it struck, before fading (%)")
+
+    @property
+    def outbreak_epochs(self) -> int:
+        return self.epochs(self.outbreak_years)
+
+    @property
+    def quarantine_epochs(self) -> int:
+        return self.epochs(self.quarantine_years)

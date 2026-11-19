@@ -222,7 +222,7 @@ async def from_purges(ctx: TickContext, tally: CollectionTally) -> None:
     condemned: dict[int, list[int]] = defaultdict(list)
     for case in await ctx.session.scalars(
         select(CrimeCaseRow).where(
-            CrimeCaseRow.closed_epoch == ctx.epoch, CrimeCaseRow.penalty == PunishmentKind.DEATH.value, CrimeCaseRow.polity_entity_id.is_not(None)
+            CrimeCaseRow.closed_epoch == ctx.epoch, CrimeCaseRow.penalty == PunishmentKind.DEATH, CrimeCaseRow.polity_entity_id.is_not(None)
         )
     ):
         realm = case.polity_entity_id or 0

@@ -221,7 +221,7 @@ async def test_scholars_decipher_a_dead_script_and_misreadings_become_a_false_th
 
 
 async def test_traders_with_no_shared_tongue_make_a_pidgin_and_children_make_it_a_creole(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await tuned(session, pidgins={"creole_after": 0, "native_share": 10})
+    ctx = await tuned(session, pidgins={"creole_after_years": 0, "native_share": 10})
     first, second = await settlement(session, "Aport", world, world.regions[0]), await settlement(session, "Bport", world, world.regions[1])
     one, other = await tongue(session, world, "Aish"), await tongue(session, world, "Bish")
     await bond(session, first.id, one.id, BondKind.SPEAKS)

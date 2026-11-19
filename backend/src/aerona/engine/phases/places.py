@@ -240,6 +240,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.entities",
     "table.entity_flags",
     "table.item_profiles",
+    "table.lifecycle_states",
     "table.name_registry",
     "table.node_births",
     "table.node_materials",

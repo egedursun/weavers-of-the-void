@@ -108,6 +108,7 @@ async def credit_ratings(ctx: TickContext) -> None:
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_profiles",
     "table.pressures",
     "table.region_crops",
     "table.region_environment",

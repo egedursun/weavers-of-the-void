@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.CREATURES
 P = RuleGroup.POPULATION_AND_GROWTH
@@ -53,15 +53,19 @@ class LivingMethodRules:
 
 
 @dataclass(frozen=True)
-class GenomeDesignRules:
+class GenomeDesignRules(Spanned):
     traits_per_level: int = rule(1, 0, 20, C, "Designed traits a method allows for each step of its makers' craft")
     trait_cap: int = rule(6, 1, 50, C, "Most traits any one line can carry by design")
     instability_per_trait: int = rule(8, 0, 100, C, "Stability a line loses for each designed trait")
     side_effect_chance: int = rule(20, 0, 100, C, "Chance each designed trait brings a side effect from its source")
     bank_upkeep: int = rule(2, 0, 100, C, "Wealth points a gene bank costs its holder each epoch")
-    bank_unpaid_limit: int = rule(3, 1, 100, C, "Epochs a bank goes unpaid before it loses a sample")
+    bank_unpaid_limit_years: int = span(3, 1, 2500, C, "Years a bank goes unpaid before it loses a sample")
     raise_fidelity_pct: int = rule(80, 0, 100, C, "Share of a sample's quality a line raised from it keeps as stability (%)")
     sapience_at: int = rule(60, 0, 100, C, "Strength of a designed nervous system at which a line's species rises to a people")
+
+    @property
+    def bank_unpaid_limit(self) -> int:
+        return self.epochs(self.bank_unpaid_limit_years)
 
 
 @dataclass(frozen=True)

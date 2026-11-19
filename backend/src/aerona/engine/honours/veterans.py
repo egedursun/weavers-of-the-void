@@ -149,7 +149,7 @@ async def grant_after_wars(ctx: TickContext, tally: VeteranTally) -> None:
 
 async def pay_pensions(ctx: TickContext, tally: VeteranTally) -> None:
     table = ctx.rules.veterans
-    live = select(VeteranGrantRow).where(VeteranGrantRow.kind == VeteranGrant.PENSION, VeteranGrantRow.epoch > ctx.epoch - table.pension_years)
+    live = select(VeteranGrantRow).where(VeteranGrantRow.kind == VeteranGrant.PENSION, VeteranGrantRow.epoch >= ctx.epoch - table.pension_years)
     for row in list(await ctx.session.scalars(live.order_by(VeteranGrantRow.id))):
         realm = await ctx.session.get(EntityRow, row.polity_entity_id)
         if realm is None or held(realm.id) or row.veterans <= 0:
@@ -196,7 +196,7 @@ async def band_veterans(ctx: TickContext, tally: VeteranTally) -> None:
 
 async def bitter_veterans(ctx: TickContext, tally: VeteranTally) -> None:
     table = ctx.rules.veterans
-    unpaid = select(VeteranGrantRow).where(VeteranGrantRow.kind == VeteranGrant.NONE, VeteranGrantRow.epoch > ctx.epoch - table.pension_years)
+    unpaid = select(VeteranGrantRow).where(VeteranGrantRow.kind == VeteranGrant.NONE, VeteranGrantRow.epoch >= ctx.epoch - table.pension_years)
     for row in list(await ctx.session.scalars(unpaid.order_by(VeteranGrantRow.id))):
         for town_id in await members_of(ctx, row.polity_entity_id):
             town = await ctx.session.get(SettlementProfileRow, town_id)

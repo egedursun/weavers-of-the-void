@@ -56,7 +56,7 @@ async def test_a_backed_proposal_moves_each_epoch_and_passes_into_law(realm: Rea
 
 
 async def test_a_stalled_proposal_fails_and_shames_its_champion(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(enactment={**QUICK, "stall_epochs": 1, "champion_cost": 10}))
+    ctx = context(realm.session, tuned(enactment={**QUICK, "stall_years": 50, "champion_cost": 10}))
     town = await settlement(realm, "Greyhithe")
     ruler = await mortal(realm, "Brann", location_id=town.id)
     rival = await mortal(realm, "Cass", location_id=town.id)

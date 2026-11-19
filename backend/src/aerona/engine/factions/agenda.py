@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
@@ -380,7 +381,7 @@ async def petition(move: Move) -> bool:
         log(ctx, profile.faction_entity_id, A.PETITION, goal=goal, success=False, note="nothing to ask")
         return False
     proposal = await consider(ctx, realm, laws, kind, params, sponsor_id=profile.faction_entity_id, sway=sway)
-    log(ctx, profile.faction_entity_id, A.PETITION, target=realm.entity.id, goal=goal, success=proposal is not None, note=kind.value)
+    log(ctx, profile.faction_entity_id, A.PETITION, target=realm.entity.id, goal=goal, success=proposal is not None, note=f"asked for {spoken(kind)}")
     return proposal is not None
 
 

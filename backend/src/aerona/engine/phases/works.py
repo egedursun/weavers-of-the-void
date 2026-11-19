@@ -264,6 +264,7 @@ async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:
     "table.entities",
     "table.holder_levels",
     "table.nodes",
+    "table.polity_profiles",
     "table.structure_profiles",
 )
 @writes("structure.splendor", "table.entities")

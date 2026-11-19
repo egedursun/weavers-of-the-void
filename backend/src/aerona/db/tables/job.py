@@ -6,15 +6,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import JOB_ID_LENGTH
 from aerona.db.base import Base, TimestampMixin
+from aerona.db.columns import enum_type
 from aerona.db.types import UtcDateTime
+from aerona.domain.enums.job import JobKind, JobStatus
 
 
 class JobRow(TimestampMixin, Base):
     __tablename__ = "jobs"
 
     id: Mapped[str] = mapped_column(String(JOB_ID_LENGTH), primary_key=True)
-    kind: Mapped[str] = mapped_column(String(32), index=True)
-    status: Mapped[str] = mapped_column(String(16), index=True)
+    kind: Mapped[JobKind] = mapped_column(enum_type(JobKind, "kind"), index=True)
+    status: Mapped[JobStatus] = mapped_column(enum_type(JobStatus, "status"), index=True)
     exclusive_group: Mapped[str | None] = mapped_column(String(32))
     progress: Mapped[float] = mapped_column(Float, default=0.0)
     stage: Mapped[str | None] = mapped_column(String(200))

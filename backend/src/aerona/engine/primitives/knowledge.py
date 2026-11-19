@@ -12,6 +12,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -81,9 +82,7 @@ async def known_levels(session: AsyncSession, entity_ids: Iterable[int] | None =
     if entity_ids is not None:
         held = held.where(HolderLevelRow.holder_entity_id.in_(list(entity_ids)))
     for holder, branch, level in await session.execute(held):
-        frontier = known.get(holder, {}).get(branch)
-        if frontier is not None:
-            known[holder][branch] = min(frontier, level)
+        known[holder][branch] = level
     return known
 
 
@@ -99,6 +98,23 @@ async def branch_level(session: AsyncSession, entity_id: int, branch: KnowledgeB
     return (await known_levels(session, [entity_id])).get(entity_id, {}).get(branch, 0)
 
 
+BORROWING = (EntityType.POLITY, EntityType.FACTION, EntityType.ARMY, EntityType.HOUSE)
+
+
+async def borrowed_sources(session: AsyncSession) -> list[tuple[int, int]]:
+    capitals = await session.execute(
+        select(PolityProfileRow.polity_entity_id, PolityProfileRow.capital_entity_id)
+        .where(PolityProfileRow.capital_entity_id.is_not(None))
+        .order_by(PolityProfileRow.polity_entity_id)
+    )
+    placed = await session.execute(
+        select(EntityRow.id, EntityRow.location_id)
+        .where(EntityRow.entity_type.in_(BORROWING), EntityRow.status == EntityStatus.CANON, EntityRow.location_id.is_not(None))
+        .order_by(EntityRow.id)
+    )
+    return [(holder, source) for holder, source in [*capitals, *placed] if source is not None]
+
+
 class KnowledgeMap:
     def __init__(self, known: dict[int, set[KnowledgeBranch]], levels: dict[int, BranchLevels] | None = None) -> None:
         self._known = known
@@ -107,6 +123,9 @@ class KnowledgeMap:
     @classmethod
     async def load(cls, session: AsyncSession) -> "KnowledgeMap":
         levels = await known_levels(session)
+        for holder, source in await borrowed_sources(session):
+            if holder not in levels and source in levels:
+                levels[holder] = dict(levels[source])
         return cls({source: set(branches) for source, branches in levels.items()}, levels)
 
     def knows(self, entity_id: int, branch: KnowledgeBranch) -> bool:

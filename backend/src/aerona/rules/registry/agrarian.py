@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from math import ceil
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import FULL_PROGRESS, Spanned, rule, span
 
 E = RuleGroup.ENVIRONMENT
 C = RuleGroup.CIVILIZATION
@@ -79,13 +80,13 @@ class NutrientRules:
 
 
 @dataclass(frozen=True)
-class PerennialRules:
-    orchard_epochs: int = rule(2, 1, 100, E, "Epochs an orchard takes to bear fully")
-    plantation_epochs: int = rule(3, 1, 100, E, "Epochs a plantation takes to bear")
-    forest_garden_epochs: int = rule(5, 1, 100, E, "Epochs a forest garden takes to bear")
-    vineyard_epochs: int = rule(2, 1, 100, E, "Epochs a vineyard takes to bear fully")
-    grove_epochs: int = rule(5, 1, 100, E, "Epochs a grove takes to bear fully")
-    timber_epochs: int = rule(6, 1, 100, E, "Epochs a timber plantation takes to be felled")
+class PerennialRules(Spanned):
+    orchard_years: int = span(5, 1, 2500, E, "Years an orchard takes to bear fully")
+    plantation_years: int = span(7, 1, 2500, E, "Years a plantation takes to bear")
+    forest_garden_years: int = span(15, 1, 2500, E, "Years a forest garden takes to bear")
+    vineyard_years: int = span(4, 1, 2500, E, "Years a vineyard takes to bear fully")
+    grove_years: int = span(20, 1, 2500, E, "Years a grove takes to bear fully")
+    timber_years: int = span(30, 1, 2500, E, "Years a timber plantation takes to be felled")
     plant_pct: int = rule(25, 0, 100, E, "Chance each epoch a settled land with a long-lived crop plants it (%)")
     area: int = rule(5, 1, 100, E, "Share of a land a new planting covers")
     coin_per_area: int = rule(20, 0, 100000, E, "Coin a fully grown planting yields its owner each epoch for each point of area")
@@ -95,6 +96,30 @@ class PerennialRules:
     raid_felling_pct: int = rule(15, 0, 100, E, "Share of the growth of a land's plantings raiders and invaders cut down as they plunder (%)")
     life_pct: int = rule(600, 100, 10000, E, "Epochs a grown planting bears before it ages, against the epochs it took to grow (%)")
     ageing: int = rule(10, 0, 100, E, "Condition an old planting loses each epoch until it is replanted")
+
+    @property
+    def orchard_epochs(self) -> int:
+        return self.epochs(self.orchard_years)
+
+    @property
+    def plantation_epochs(self) -> int:
+        return self.epochs(self.plantation_years)
+
+    @property
+    def forest_garden_epochs(self) -> int:
+        return self.epochs(self.forest_garden_years)
+
+    @property
+    def vineyard_epochs(self) -> int:
+        return self.epochs(self.vineyard_years)
+
+    @property
+    def grove_epochs(self) -> int:
+        return self.epochs(self.grove_years)
+
+    @property
+    def timber_epochs(self) -> int:
+        return self.epochs(self.timber_years)
 
 
 @dataclass(frozen=True)
@@ -143,9 +168,9 @@ class GameLawRules:
 
 
 @dataclass(frozen=True)
-class FamineFoodRules:
+class FamineFoodRules(Spanned):
     per_famine: int = rule(25, 0, 100, E, "Famine memory each remembered hungry year adds to a people")
-    memory_epochs: int = rule(6, 1, 1000, E, "Epochs a people counts its hungry years")
+    memory_years: int = span(60, 1, 25000, E, "Years a people counts its hungry years")
     per_generation: int = rule(20, 0, 100, E, "Famine memory each living generation formed by a famine adds to its people")
     fade_pct: int = rule(10, 0, 100, E, "Share of its famine memory a people forgets each epoch as generations pass (%)")
     foods_at: int = rule(40, 0, 100, E, "Famine memory at which a people learns its famine foods")
@@ -156,17 +181,25 @@ class FamineFoodRules:
     storage_fill: int = rule(40, 0, 100, E, "Share of a failed harvest a full storage tradition makes good (%)")
     health_cost: int = rule(6, 0, 100, E, "Sickness a land gains in a year its people live on famine foods")
 
+    @property
+    def memory_epochs(self) -> int:
+        return self.epochs(self.memory_years)
+
 
 @dataclass(frozen=True)
-class ResilienceRules:
+class ResilienceRules(Spanned):
     cost: int = rule(150, 0, 1000000, C, "Investment a town pays for each level of a disaster work")
     per_level_pct: int = rule(12, 0, 100, C, "Disaster losses each level of a fitting work prevents (%)")
     watch_pct: int = rule(4, 0, 100, C, "Disaster losses each level of watchtowers prevents of any kind (%)")
     cap_pct: int = rule(70, 0, 100, C, "Most disaster losses works can prevent (%)")
     noted_pct: int = rule(20, 0, 100, C, "Losses prevented at which the works that held are recorded")
     decay: int = rule(3, 0, 100, C, "Condition a disaster work loses each epoch")
-    memory_epochs: int = rule(5, 1, 1000, C, "Epochs a town remembers the disasters that struck it when it chooses what to build")
+    memory_years: int = span(50, 1, 25000, C, "Years a town remembers the disasters that struck it when it chooses what to build")
     fire_risk_at: int = rule(40, 0, 100, C, "Fire risk at which a town wants firebreaks")
+
+    @property
+    def memory_epochs(self) -> int:
+        return self.epochs(self.memory_years)
 
 
 @dataclass(frozen=True)
@@ -190,19 +223,27 @@ class ReliefRules:
 
 
 @dataclass(frozen=True)
-class ReconstructionRules:
+class ReconstructionRules(Spanned):
     cost: int = rule(300, 0, 10000000, C, "Coin a rebuilding costs for each tier of the town")
     planned_pct: int = rule(180, 100, 1000, C, "Cost of a planned rebuilding against a hasty one (%)")
     architecture_level: int = rule(2, 0, 10, C, "Architecture a town needs to plan its rebuilding")
     pay_pct: int = rule(25, 0, 100, C, "Share of its treasury a town pays toward its rebuilding each epoch (%)")
-    planned_step: int = rule(25, 0, 100, C, "Progress a planned rebuilding makes each epoch while it is paid")
-    hasty_step: int = rule(50, 0, 100, C, "Progress a hasty rebuilding makes each epoch")
+    planned_years: int = span(10, 1, 2000, C, "Years a planned rebuilding takes while it is paid")
+    hasty_years: int = span(3, 1, 2000, C, "Years a hasty rebuilding takes")
     restore: int = rule(30, 0, 100, C, "Condition a finished rebuilding restores to every district")
     fire_cut: int = rule(15, 0, 100, C, "Fire risk a planned rebuilding takes away")
     seize_pct: int = rule(25, 0, 100, C, "Chance an elite seizes the burned land of a town it holds (%)")
     seize_share: int = rule(5, 0, 100, C, "Share of a town's people put out of their homes when an elite seizes the burned land (%)")
     seize_coin: int = rule(200, 0, 10000000, C, "Coin the land an elite seizes is worth to it")
     seize_unrest: int = rule(8, 0, 100, C, "Unrest a town gains when an elite seizes its burned land")
+
+    @property
+    def planned_step(self) -> int:
+        return ceil(FULL_PROGRESS / max(1, self.epochs(self.planned_years)))
+
+    @property
+    def hasty_step(self) -> int:
+        return ceil(FULL_PROGRESS / max(1, self.epochs(self.hasty_years)))
 
 
 @dataclass(frozen=True)

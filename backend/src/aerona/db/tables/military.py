@@ -12,6 +12,7 @@ from aerona.domain.enums.military import (
     AgentStatus,
     ArmourType,
     ArmyRole,
+    BattlePhase,
     CaptiveFate,
     CasualtyFate,
     CommanderTrait,
@@ -151,7 +152,7 @@ class ArmyProfileRow(Base):
     region_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     target_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     stance: Mapped[Stance] = mapped_column(enum_type(Stance, "stance"), default=Stance.MARCH)
-    doctrine: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), default="shieldwall")
+    doctrine: Mapped[MartialStyle] = mapped_column(enum_type(MartialStyle, "doctrine"), default=MartialStyle.SHIELDWALL)
     supply_days: Mapped[int] = mapped_column(default=90)
     supply_line: Mapped[list[int]] = mapped_column(JSON, default=list)
     cohesion: Mapped[int] = mapped_column(default=70)
@@ -347,7 +348,7 @@ class BattlePhaseRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     battle_id: Mapped[int] = mapped_column(ForeignKey("battles.id", ondelete="CASCADE"))
     position: Mapped[int]
-    phase: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    phase: Mapped[BattlePhase] = mapped_column(enum_type(BattlePhase, "phase"))
     attacker_losses: Mapped[int] = mapped_column(default=0)
     defender_losses: Mapped[int] = mapped_column(default=0)
     summary: Mapped[str | None] = mapped_column(Text)

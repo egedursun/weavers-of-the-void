@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.SETTLEMENTS
 
 
 @dataclass(frozen=True)
-class ConstructionRules:
+class ConstructionRules(Spanned):
     active_per_site: int = rule(2, 1, 50, G, "Most works a settlement keeps under construction at once")
     slots_base: int = rule(3, 0, 100, G, "Structure slots of a hamlet")
     slots_per_tier: int = rule(3, 0, 100, G, "Structure slots gained per size tier above hamlet")
@@ -24,9 +24,9 @@ class ConstructionRules:
     materials_per_100_work: int = rule(15, 0, 10000, G, "Building materials one hundred work consumes")
     funds_per_100_work: int = rule(8, 0, 10000, G, "Treasury one hundred work consumes")
     funds_buy_materials: int = rule(2, 0, 1000, G, "Treasury that buys one missing unit of building material")
-    stall_epochs: int = rule(6, 1, 1000, G, "Epochs without progress before a work is abandoned")
-    wonder_stall_epochs: int = rule(15, 1, 1000, G, "Epochs without progress before a wonder is abandoned")
-    generation_epochs: int = rule(25, 1, 1000, G, "Epochs that make a generation of builders")
+    stall_years: int = span(10, 1, 25000, G, "Years without progress before a work is abandoned")
+    wonder_stall_years: int = span(50, 1, 25000, G, "Years without progress before a wonder is abandoned")
+    generation_years: int = span(25, 1, 25000, G, "Years that make a generation of builders")
     legend_scale: int = rule(1, 0, 3, G, "Smallest scale whose abandoned shell leaves a legend (0 minor, 1 major, 2 grand, 3 wonder)")
     commission_essence: int = rule(15, 0, 100000, G, "Essence a son spends to set mortals building a work in their name")
     finish_cost: int = rule(30, 0, 100000, G, "Essence the Creator spends to finish a work at once")
@@ -56,9 +56,21 @@ class ConstructionRules:
     need_class_pct: int = rule(8, 0, 100, G, "Share of a class that calls for the works it staffs (%)")
     need_sanitation: int = rule(35, 0, 100, G, "Sanitation below which a town digs aqueducts and sewers")
 
+    @property
+    def generation_epochs(self) -> int:
+        return self.epochs(self.generation_years)
+
+    @property
+    def stall_epochs(self) -> int:
+        return self.epochs(self.stall_years)
+
+    @property
+    def wonder_stall_epochs(self) -> int:
+        return self.epochs(self.wonder_stall_years)
+
 
 @dataclass(frozen=True)
-class UpkeepRules:
+class UpkeepRules(Spanned):
     coin_minor: int = rule(3, 0, 100000, G, "Treasury a minor structure costs per level each epoch")
     coin_major: int = rule(8, 0, 100000, G, "Treasury a major structure costs per level each epoch")
     coin_grand: int = rule(20, 0, 100000, G, "Treasury a grand structure costs per level each epoch")
@@ -71,13 +83,17 @@ class UpkeepRules:
     repair_step: int = rule(5, 0, 100, G, "Condition a paid-for structure regains each epoch, up to its durability")
     wear_decay_pct: int = rule(50, 0, 500, G, "Share of its material's decay lost as condition each epoch (%)")
     damaged_below: int = rule(50, 0, 100, G, "Condition below which a structure counts as damaged")
-    ruin_neglect_epochs: int = rule(12, 1, 1000, G, "Unpaid epochs after which an ownerless structure falls to ruin")
+    ruin_neglect_years: int = span(30, 1, 25000, G, "Unpaid years after which an ownerless structure falls to ruin")
     staff_few: int = rule(4, 0, 100000, G, "Staff a lightly manned structure needs per level")
     staff_some: int = rule(15, 0, 100000, G, "Staff a manned structure needs per level")
     staff_many: int = rule(45, 0, 100000, G, "Staff a heavily manned structure needs per level")
     staff_share_pct: int = rule(50, 0, 100, G, "Share of a class's adults that can be drawn into structures (%)")
     quake_toughness_pct: int = rule(60, 0, 100, G, "Earthquake harm a fully tough material turns aside (%)")
     fire_damage: int = rule(35, 0, 100, G, "Condition a great fire takes from a structure with no fire resistance")
+
+    @property
+    def ruin_neglect_epochs(self) -> int:
+        return self.epochs(self.ruin_neglect_years)
 
 
 @dataclass(frozen=True)
@@ -172,9 +188,13 @@ class StructureFunctionsRules:
 
 
 @dataclass(frozen=True)
-class StructureEffectRules:
+class StructureEffectRules(Spanned):
     step_pct: int = rule(100, 0, 1000, G, "How strongly each level of a building moves what its own effects touch each epoch (%)")
     cap: int = rule(10, 0, 100, G, "Most a town's buildings together move any one thing they touch in an epoch")
     boom_pct: int = rule(55, 0, 100, G, "Chance an epoch of speculation in a town's exchanges and banks ends in gain rather than loss (%)")
-    quarantine_memory: int = rule(8, 1, 200, G, "Epochs a land remembers its last epidemic and keeps its quarantine houses tended")
+    quarantine_memory_years: int = span(50, 1, 5000, G, "Years a land remembers its last epidemic and keeps its quarantine houses tended")
     quarantine_decay: int = rule(10, 0, 100, G, "Condition a quarantine house loses each epoch once its land has forgotten epidemics")
+
+    @property
+    def quarantine_memory(self) -> int:
+        return self.epochs(self.quarantine_memory_years)

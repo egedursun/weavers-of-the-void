@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 
 
 @dataclass(frozen=True)
-class WarConductRules:
+class WarConductRules(Spanned):
     justify_gain: int = rule(15, 0, 100, W, "Justification a casus belli gains each epoch it is held")
     justified_at: int = rule(50, 0, 100, W, "Justification a casus belli needs before a war on it counts as justified")
-    casus_belli_epochs: int = rule(12, 1, 500, W, "Epochs an unused casus belli lasts before it lapses")
+    casus_belli_years: int = span(50, 1, 12500, W, "Years an unused casus belli lasts before it lapses")
     claim_strength: int = rule(30, 0, 100, W, "Strength a claim needs to give its backers a casus belli")
     vendetta_magnitude: int = rule(20, 0, 100, W, "Weight a memory of killed kin needs to give a casus belli")
     liberation_share: int = rule(1, 0, 100, W, "Communities of one's own people ruled by another realm that give a casus belli of liberation")
@@ -56,3 +56,7 @@ class WarConductRules:
     efficiency_gain: int = rule(10, 0, 100, W, "Efficiency a war production line gains each epoch it keeps making the same thing (%)")
     efficiency_cap: int = rule(50, 0, 300, W, "Highest efficiency a war production line reaches (%)")
     civilian_cut_pct: int = rule(25, 0, 100, W, "Civilian goods a community at war production fails to make (%)")
+
+    @property
+    def casus_belli_epochs(self) -> int:
+        return self.epochs(self.casus_belli_years)

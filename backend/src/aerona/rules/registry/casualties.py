@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 H = RuleGroup.HEROES_AND_MORTALS
 
 
 @dataclass(frozen=True)
-class CasualtiesRules:
+class CasualtiesRules(Spanned):
     commander_loser_death: int = rule(35, 0, 100, W, "Chance that the commander of the losing army falls in a clash (%)")
     commander_victor_death: int = rule(10, 0, 100, W, "Chance that the commander of the winning army falls in a clash (%)")
     warrior_loser_death: int = rule(25, 0, 100, W, "Chance that each named warrior of the losing side falls in a clash (%)")
@@ -28,7 +28,7 @@ class CasualtiesRules:
     disaster_event_cap: int = rule(4, 0, 100, H, "Most named dead of one disaster beyond its own roll")
     fate_cost: int = rule(10, 0, 1000, RuleGroup.INTERVENTION, "Essence cost of the god writing a mortal's fate")
     veteran_share_pct: int = rule(50, 0, 100, W, "Share of the best experience of a community's disbanded armies a new army inherits (%)")
-    veteran_epochs: int = rule(6, 0, 1000, W, "Epochs the veterans of a disbanded army carry its experience")
+    veteran_years: int = span(30, 0, 25000, W, "Years the veterans of a disbanded army carry its experience")
     commander_min_intellect: int = rule(60, 0, 100, W, "Least intellect of a commander who adds experience to the army")
     commander_experience: int = rule(4, 0, 100, W, "Experience a clever commander adds to the army in every clash")
     rust: int = rule(2, 0, 100, W, "Experience lost by an army at war that did not fight this epoch")
@@ -43,3 +43,7 @@ class CasualtiesRules:
     commander_age_pct: int = rule(35, 0, 100, W, "Age of a commander risen from the ranks (% of lifespan)")
     ruler_class_chance: int = rule(40, 0, 100, H, "Chance that a ruler takes the role of the ruled community's dominant class (%)")
     ruler_class_min_share: int = rule(30, 0, 100, H, "Least share of the dominant class for the ruler's role to come from it (%)")
+
+    @property
+    def veteran_epochs(self) -> int:
+        return self.epochs(self.veteran_years)

@@ -295,7 +295,7 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
     if added <= 0:
         construction.stalled_epochs += 1
         limit = table.wonder_stall_epochs if resolve(construction.kind).scale is BuildScale.WONDER else table.stall_epochs
-        if construction.stalled_epochs >= limit and "status" not in construction.locked:
+        if construction.stalled_epochs >= limit and "status" not in construction.locked and not held(construction.site_entity_id, work.id):
             await abandon(ctx, construction, AbandonCause.STOOD_STILL)
         return 0
     construction.stalled_epochs = 0

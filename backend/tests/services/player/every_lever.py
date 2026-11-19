@@ -1172,7 +1172,7 @@ LEVERS: dict[str, Lever] = {
     "engine:run_phase": given(phase="flora_cycles"),
     "entity:move": given(entity_id=Pick(MORTAL), location_id=Pick(TOWN)),
     "entity:stat": given(stat="strength", value=60.0),
-    "entity:tags": given(add_flags=["cursed"]),
+    "entity:tags": given(add_flags=["oathbreaker"]),
     "environment:mineral": given(material="iron", richness=40),
     "environment:set": given(region_id=Pick(EntityType.REGION), field="moisture", value=50),
     "environment:unlock": after(
@@ -1481,6 +1481,17 @@ LEVERS: dict[str, Lever] = {
     "star:edit": given(brightness=60, patron_son_id=Pick("son")),
     "strip_power": after(("son:power", {"son_id": Pick("son"), "slot": 1, "name": "Long Stride", "effect": "tireless"}), slot=1),
     "structure:commission": given(site_id=Pick(TOWN), kind="temple"),
+    "structure:fund": after(TEMPLE, structure_id=Newest(EntityType.STRUCTURE), amount=50),
+    "structure:abandon": after(TEMPLE, structure_id=Newest(EntityType.STRUCTURE)),
+    "structure:finish": after(TEMPLE, structure_id=Newest(EntityType.STRUCTURE)),
+    "proposal:pass": after(("proposal:create", {"polity_id": Pick(REALM), "kind": "succession_rule"}), proposal_id=Newest("law_proposal")),
+    **{
+        name: after(
+            ("research:boost", {"holder_id": Pick(TOWN), "technique": "railways", "trigger": "survived_siege", "progress": 10}),
+            boost_id=Newest("research_boost"),
+        )
+        for name in ("research:boost_edit", "research:boost_remove")
+    },
     "structure:undedicate": after(
         ("structure:dedicate", {"structure_id": Pick(EntityType.STRUCTURE), "son_id": Pick("son")}), structure_id=Pick(EntityType.STRUCTURE)
     ),

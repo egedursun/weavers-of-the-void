@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from math import ceil
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MIND
+IDEA_FULL = 100
 
 
 @dataclass(frozen=True)
@@ -77,7 +79,7 @@ class TraitsRules:
 
 
 @dataclass(frozen=True)
-class SkillsRules:
+class SkillsRules(Spanned):
     adult_age: int = rule(16, 1, 200, G, "Age at which skills reach their full starting level")
     seed_stat_pct: int = rule(40, 0, 200, G, "How much a governing stat above or below the middle moves a starting skill (%)")
     seed_age_gain: int = rule(60, 0, 400, G, "Skill a mortal gained per year of adult life before records began (% of a level)")
@@ -85,7 +87,7 @@ class SkillsRules:
     seed_jitter: int = rule(8, 0, 50, G, "Random spread of a starting skill")
     xp_per_level: int = rule(20, 1, 1000, G, "Experience the first level of a skill costs")
     level_cost_growth_pct: int = rule(3, 0, 50, G, "How much each level makes the next one dearer (%)")
-    rust_epochs: int = rule(2, 1, 50, G, "Epochs without use after which a skill rusts")
+    rust_years: int = span(10, 1, 1250, G, "Years without use after which a skill rusts")
     rust_rate_pct: int = rule(8, 0, 100, G, "Share of a rusting skill lost each epoch (%)")
     rust_floor_pct: int = rule(60, 0, 100, G, "Share of its best level a skill never rusts below (%)")
     decline_start_pct: int = rule(70, 0, 100, G, "Share of the lifespan after which bodily skills decline (%)")
@@ -122,6 +124,10 @@ class SkillsRules:
     commander_tactics_pct: int = rule(40, 0, 200, G, "How much a commander's tactics raise an army's strength (%)")
     tool_min_craft: int = rule(10, 0, 100, G, "Craft skill a mortal needs to forge or build with a tool")
     tool_min_lore: int = rule(10, 0, 100, G, "Learned skill a mortal needs to research or record with a tool")
+
+    @property
+    def rust_epochs(self) -> int:
+        return self.epochs(self.rust_years)
 
 
 @dataclass(frozen=True)
@@ -183,7 +189,7 @@ class OpinionRules:
 
 
 @dataclass(frozen=True)
-class NeedsRules:
+class NeedsRules(Spanned):
     status_ruler: int = rule(95, 0, 100, G, "Standing a ruler feels they hold")
     unemployment_pct: int = rule(200, 0, 1000, G, "Pressure of unemployment per share of the jobless (%)")
     oppression_pct: int = rule(60, 0, 300, G, "Pressure of oppression per point a realm falls short of full legitimacy (%)")
@@ -243,7 +249,7 @@ class NeedsRules:
     purpose_base: int = rule(25, 0, 100, G, "Purpose every mortal feels")
     purpose_skill_pct: int = rule(80, 0, 200, G, "How much skill in their calling adds to purpose (%)")
     career_loss_purpose: int = rule(40, 0, 100, G, "Purpose a mortal loses when a wound ends their calling")
-    career_loss_epochs: int = rule(3, 0, 50, G, "Epochs the loss of a calling weighs on purpose")
+    career_loss_years: int = span(3, 0, 1250, G, "Years the loss of a calling weighs on purpose")
     faith_worship: int = rule(60, 0, 100, G, "Faith a worshipper feels")
     despair_level: int = rule(10, 0, 100, G, "Need under which the chronicle notes that a notable has lost all hope of it")
     migration_hunger: int = rule(50, 0, 100, G, "Hunger at which a community may migrate")
@@ -258,6 +264,10 @@ class NeedsRules:
     expedition_pressure_pct: int = rule(400, 0, 1000, G, "How much crowding, hunger and poverty raise the chance of an expedition (%)")
     faction_pressure_pct: int = rule(60, 0, 400, G, "How much pressure raises the chance a faction forms (%)")
     agent_pressure_weight: int = rule(20, 0, 400, G, "Agent selection weight of a mortal's or community's strongest pressure")
+
+    @property
+    def career_loss_epochs(self) -> int:
+        return self.epochs(self.career_loss_years)
 
 
 @dataclass(frozen=True)
@@ -285,10 +295,10 @@ class MindSplitRules:
 
 
 @dataclass(frozen=True)
-class IdeasRules:
+class IdeasRules(Spanned):
     encounter_pct: int = rule(20, 0, 100, G, "Chance each epoch a mortal takes up an idea they meet (%)")
     curiosity_pct: int = rule(100, 0, 400, G, "How much curiosity scales taking up and turning over ideas (%)")
-    incubation_rate: int = rule(25, 1, 100, G, "Progress an idea makes each epoch while it incubates")
+    incubation_years: int = span(4, 1, 2000, G, "Years an idea of middling fit takes to incubate in a mind until it is taken to heart")
     fit_pct: int = rule(50, 0, 200, G, "How much an idea's fit with present beliefs speeds or slows its incubation (%)")
     reject_below: int = rule(-30, -100, 100, G, "Fit with present beliefs below which a mortal may cast an idea out")
     reject_pct: int = rule(25, 0, 100, G, "Chance each epoch a poorly fitting idea is cast out (%)")
@@ -301,6 +311,10 @@ class IdeasRules:
     )
     obsession_stress: int = rule(4, 0, 100, G, "Stress an idea that obsesses its holder adds each epoch it incubates")
     obsession_speed_pct: int = rule(50, 0, 400, G, "Speed an obsession adds to an idea's incubation (%)")
+
+    @property
+    def incubation_rate(self) -> int:
+        return ceil(IDEA_FULL / max(1, self.epochs(self.incubation_years)))
 
 
 @dataclass(frozen=True)
@@ -343,14 +357,14 @@ class NeedsDepthRules:
 
 
 @dataclass(frozen=True)
-class ThoughtsRules:
+class ThoughtsRules(Spanned):
     decay_pct: int = rule(30, 0, 100, G, "Share of a thought's strength that fades each epoch (%)")
     forget_below: int = rule(5, 0, 100, G, "Strength under which a thought is forgotten")
     facet_amplify_pct: int = rule(100, 0, 400, G, "How strongly a matching facet sharpens or dulls a feeling (%)")
     long_term_threshold: int = rule(70, 1, 100, G, "Intensity at which a thought becomes a formative memory")
     formative_shift_pct: int = rule(100, 0, 400, G, "Scale of the belief and facet shifts a formative memory brings (%)")
     relive_pct: int = rule(25, 0, 100, G, "Chance each epoch a formative memory is relived when its anniversary comes or its subject is near (%)")
-    anniversary_epochs: int = rule(4, 1, 100, G, "Epochs between the anniversaries of a formative memory")
+    anniversary_years: int = span(10, 1, 2500, G, "Years between the anniversaries of a formative memory")
     relive_pct_of_original: int = rule(60, 0, 100, G, "Strength of a relived feeling against the original (%)")
     need_met_above: int = rule(80, 0, 100, G, "Satisfaction above which a need gives a good thought")
     need_unmet_below: int = rule(30, 0, 100, G, "Satisfaction below which a need gives a bad thought")
@@ -370,15 +384,23 @@ class ThoughtsRules:
     great_work_pct: int = rule(25, 0, 100, G, "Chance each epoch a mortal admires a renowned work kept at home (%)")
     great_work_renown: int = rule(40, 0, 100, G, "Renown a work needs before mortals at home admire it")
     music_pct: int = rule(20, 0, 100, G, "Chance each epoch a mortal hears a song or other spoken art of their home (%)")
-    prayer_wait_epochs: int = rule(2, 1, 50, G, "Epochs after which an unanswered prayer leaves a mortal feeling ignored")
+    prayer_wait_years: int = span(2, 1, 1250, G, "Years after which an unanswered prayer leaves a mortal feeling ignored")
     renown_thought: int = rule(10, 1, 100, G, "Renown gained at once that a mortal feels proud of")
     infamy_thought: int = rule(10, 1, 100, G, "Infamy gained at once that a mortal feels ashamed of")
 
+    @property
+    def prayer_wait_epochs(self) -> int:
+        return self.epochs(self.prayer_wait_years)
+
+    @property
+    def anniversary_epochs(self) -> int:
+        return self.epochs(self.anniversary_years)
+
 
 @dataclass(frozen=True)
-class GriefRules:
-    shock_epochs: int = rule(1, 1, 20, G, "Epochs a fresh loss leaves a mortal in shock")
-    mourning_epochs: int = rule(3, 1, 50, G, "Epochs a loss of full strength is mourned")
+class GriefRules(Spanned):
+    shock_years: int = span(1, 1, 500, G, "Years a fresh loss leaves a mortal in shock")
+    mourning_years: int = span(2, 1, 1250, G, "Years a loss of full strength is mourned")
     min_strength: int = rule(25, 0, 100, G, "Strength of a bond below which a death is not grieved")
     spouse_strength: int = rule(90, 0, 100, G, "Strength of the grief for a spouse")
     child_strength: int = rule(95, 0, 100, G, "Strength of the grief for a child")
@@ -390,21 +412,37 @@ class GriefRules:
     willpower_pct: int = rule(100, 0, 400, G, "How much willpower helps a mourner reach acceptance (%)")
     vengeance_magnitude: int = rule(40, 0, 100, G, "Strength of the grudge complicated grief lays on a killer")
 
+    @property
+    def shock_epochs(self) -> int:
+        return self.epochs(self.shock_years)
+
+    @property
+    def mourning_epochs(self) -> int:
+        return self.epochs(self.mourning_years)
+
 
 @dataclass(frozen=True)
-class DreamRules:
+class DreamRules(Spanned):
     dream_pct: int = rule(40, 0, 100, G, "Chance each epoch a named mortal has a dream worth recording (%)")
     nightmare_weight: int = rule(3, 0, 50, G, "Weight of a nightmare for each fearful or formative wound in the mind")
     longing_weight: int = rule(2, 0, 50, G, "Weight of a longing dream for each badly unmet need")
     prophetic_weight: int = rule(4, 0, 50, G, "Weight of a prophetic dream for a seer, a god's chosen or a dreamer near a dream world")
     shared_weight: int = rule(1, 0, 50, G, "Weight of a shared dream for a mortal who loves another")
     nightmare_stress: int = rule(8, 0, 100, G, "Stress a nightmare adds")
-    recurring_after: int = rule(3, 1, 20, G, "Nightmares within a few epochs after which they recur as a condition")
-    recurring_window: int = rule(4, 1, 50, G, "Epochs over which nightmares are counted toward recurring")
+    recurring_after_years: int = span(1, 1, 500, G, "Nightmares within a few years after which they recur as a condition")
+    recurring_window_years: int = span(2, 1, 1250, G, "Years over which nightmares are counted toward recurring")
     visitation_renown: int = rule(3, 0, 100, G, "Renown a mortal gains when a god is known to have visited their dreams")
     reading_pct: int = rule(70, 0, 100, G, "Chance a dream is read when the dreamer's people keep dream readers (%)")
     reading_skill_pct: int = rule(100, 0, 400, G, "How much a reader's prophecy skill makes a reading true (%)")
     prophecy_reader_level: int = rule(20, 0, 100, G, "Prophecy skill a mortal needs to read dreams")
+
+    @property
+    def recurring_after(self) -> int:
+        return self.epochs(self.recurring_after_years)
+
+    @property
+    def recurring_window(self) -> int:
+        return self.epochs(self.recurring_window_years)
 
 
 @dataclass(frozen=True)
@@ -429,13 +467,13 @@ class PreferencesRules:
 
 
 @dataclass(frozen=True)
-class EthicsRules:
+class EthicsRules(Spanned):
     admirable_above: int = rule(35, -100, 100, G, "Value reading above which a culture finds an act admirable")
     required_above: int = rule(65, -100, 100, G, "Value reading above which a culture requires an act")
     frowned_below: int = rule(-15, -100, 100, G, "Value reading below which a culture frowns on an act")
     shameful_below: int = rule(-40, -100, 100, G, "Value reading below which a culture finds an act shameful")
     unthinkable_below: int = rule(-70, -100, 100, G, "Value reading below which an act is unthinkable")
-    drift_epochs: int = rule(3, 1, 50, G, "Epochs between the steps by which a culture's ethics follow its beliefs")
+    drift_years: int = span(30, 1, 1250, G, "Years between the steps by which a culture's ethics follow its beliefs")
     cult_pull_pct: int = rule(50, 0, 100, G, "How strongly its cult's ethics pull a people's toward them (%)")
     war_pct: int = rule(150, 0, 400, G, "How much war makes killing and taking captives easier to accept (%)")
     famine_pct: int = rule(150, 0, 400, G, "How much famine makes theft and hoarding harder to forgive (%)")
@@ -452,9 +490,13 @@ class EthicsRules:
     law_cruelty: int = rule(60, 0, 100, G, "Harshness of punishment below which an act a people finds unthinkable raises the call for a harsher law")
     law_chance: int = rule(30, 0, 100, G, "Chance each epoch a realm answers that call by hardening its code of punishments (%)")
 
+    @property
+    def drift_epochs(self) -> int:
+        return self.epochs(self.drift_years)
+
 
 @dataclass(frozen=True)
-class AspirationsRules:
+class AspirationsRules(Spanned):
     dream_pct: int = rule(50, 0, 100, G, "Chance each epoch an adult without a life's dream takes one up (%)")
     belief_weight_pct: int = rule(100, 0, 400, G, "How strongly beliefs choose a life's dream (%)")
     facet_weight_pct: int = rule(100, 0, 400, G, "How strongly facets choose a life's dream (%)")
@@ -463,10 +505,10 @@ class AspirationsRules:
     renown_full: int = rule(90, 1, 100, G, "Renown that fulfils a dream of legend")
     children_full: int = rule(5, 1, 50, G, "Children that fulfil a dream of a large family")
     skill_full: int = rule(80, 1, 100, G, "Skill that fulfils a dream of mastery or truth")
-    peace_epochs: int = rule(4, 1, 50, G, "Epochs without war at home that fulfil a dream of peace")
+    peace_years: int = span(20, 1, 1250, G, "Years without war at home that fulfil a dream of peace")
     redream_pct: int = rule(50, 0, 100, G, "Chance a mortal whose dream is shattered takes up another, scaled by cheer and perseverance (%)")
     want_count: int = rule(2, 0, 3, G, "Wants a mortal holds at once")
-    want_epochs: int = rule(3, 1, 50, G, "Epochs a want lasts before it fades unmet")
+    want_years: int = span(10, 1, 1250, G, "Years a want lasts before it fades unmet")
     want_need_below: int = rule(45, 0, 100, G, "Satisfaction below which a need that matters gives a want")
     want_career_pct: int = rule(60, 0, 400, G, "How strongly wants steer the calling a mortal chooses (%)")
     want_travel_pct: int = rule(40, 0, 100, G, "Chance each epoch a mortal who wants to travel sets out for a neighbouring community (%)")
@@ -480,7 +522,7 @@ class AspirationsRules:
     leisure_need: int = rule(60, 0, 100, G, "Need for pleasure at which a mortal with no strong skill takes up a life of leisure")
     focus_learning_pct: int = rule(25, 0, 200, G, "How much faster a mortal learns the skills of their focus (%)")
     inspiration_pct: int = rule(15, 0, 100, G, "Chance each epoch an elated mortal is seized by inspiration (%)")
-    inspiration_epochs: int = rule(2, 1, 20, G, "Epochs an inspiration burns before it fades")
+    inspiration_years: int = span(3, 1, 500, G, "Years an inspiration burns before it fades")
     inspiration_skill: int = rule(40, 0, 100, G, "Skill a mortal needs for a masterwork fever or an insight")
     masterwork_quality: int = rule(95, 1, 100, G, "Quality of a masterwork made in a fever")
     insight_progress: int = rule(30, 0, 500, G, "Research a flash of insight gives a mortal's people")
@@ -495,3 +537,15 @@ class AspirationsRules:
     conviction_drift_pct: int = rule(50, 0, 100, G, "How much conviction slows the drift of a mortal's beliefs (%)")
     conviction_spend: int = rule(20, 0, 100, G, "Conviction a mortal spends for a heroic effort in a duel")
     conviction_spend_pct: int = rule(25, 0, 200, G, "How much a heroic effort strengthens a duellist (%)")
+
+    @property
+    def want_epochs(self) -> int:
+        return self.epochs(self.want_years)
+
+    @property
+    def inspiration_epochs(self) -> int:
+        return self.epochs(self.inspiration_years)
+
+    @property
+    def peace_epochs(self) -> int:
+        return self.epochs(self.peace_years)

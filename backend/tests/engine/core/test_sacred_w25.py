@@ -210,7 +210,7 @@ async def test_petitions_are_read_appealed_granted_and_an_unwatched_office_goes_
     session.add(SpiritOfficeRow(spirit_entity_id=upper.id, rank=BureauRank.CITY, overseer_node_id=world.son.id, jurisdiction_entity_id=town.id, locked=[]))
     session.add(SpiritOfficeRow(spirit_entity_id=lower.id, rank=BureauRank.LOCAL, superior_spirit_id=upper.id, jurisdiction_entity_id=town.id, locked=[]))
     await session.flush()
-    ctx = await at(session, 2, celestial_bureaucracy={"petition_chance": 0, "grant_base": 0, "merit_grant_pct": 0, "appeal_chance": 100, "delay": 0})
+    ctx = await at(session, 2, celestial_bureaucracy={"petition_chance": 0, "grant_base": 0, "merit_grant_pct": 0, "appeal_chance": 100, "delay_years": 0})
     lowered = await session.get(SpiritOfficeRow, lower.id)
     assert lowered is not None
     petition = await control.lodge_petition(ctx, asker.id, lower.id, PetitionKind.HEALING, defendant_id=None, bribe=0)
@@ -249,7 +249,7 @@ async def test_an_omen_stirs_a_town_to_await_the_end_and_a_passed_date_is_read_a
     await church(session, world, town)
     session.add(SkyEventRow(kind=next(iter(SkyEventKind)), epoch=1, world_id=world.world.id, text="a sign"))
     await session.flush()
-    rules = {"stir_chance": 100, "horizon": 2, "vigil_epochs": 1, "march_at": 0, "redate_chance": 100, "redate_decay": 100, "sect_chance": 100}
+    rules = {"stir_chance": 100, "horizon_years": 100, "vigil_years": 50, "march_at": 0, "redate_chance": 100, "redate_decay": 100, "sect_chance": 100}
     await keep_millenarians(await at(session, 1, millenarianism=rules), MysteryTally())
     row = await session.scalar(select(MillenarianRow).where(MillenarianRow.settlement_entity_id == town.id))
     assert row is not None and row.movement_id is not None and row.end_epoch == 3
@@ -270,7 +270,7 @@ async def test_unanswered_suffering_tests_a_doctrine_and_yields_a_teaching_of_tr
         OutbreakRow(disease_entity_id=disease.id, region_entity_id=world.regions[1].id, path=next(iter(SpreadPath)), severity=60, started_epoch=1, locked=[])
     )
     await session.flush()
-    rules = {"argue_base": 0, "doctrine_chance": 100, "window": 1}
+    rules = {"argue_base": 0, "doctrine_chance": 100, "window_years": 50}
     await keep_theodicy(await at(session, 1, theodicy=rules), MysteryTally())
     crisis = await session.scalar(select(TheodicyCrisisRow).where(TheodicyCrisisRow.community_entity_id == town.id))
     assert crisis is not None and crisis.cause is TheodicyCause.PLAGUE and crisis.god_node_id == world.son.id

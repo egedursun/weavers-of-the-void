@@ -116,7 +116,7 @@ EVOLUTION_MECHANICS = (
         targets=("species", *COMMUNITIES),
         couplings=(
             Coupling(S.ECOLOGY, "a loosed herd joins the wild numbers of its land", EdgeKind.FLOW, "feral.release_abundance"),
-            Coupling(S.ECOLOGY, "a kept kind steps back toward the wild", EdgeKind.TRIGGER, "feral.revert_epochs"),
+            Coupling(S.ECOLOGY, "a kept kind steps back toward the wild", EdgeKind.TRIGGER, "feral.revert_years"),
         ),
     ),
     Mechanic(

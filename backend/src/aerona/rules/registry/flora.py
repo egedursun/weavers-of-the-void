@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.CREATURES
 
 
 @dataclass(frozen=True)
-class FloraRules:
+class FloraRules(Spanned):
     annual_seasons: int = rule(1, 1, 12, G, "Growing seasons an annual plant needs in a year")
     perennial_seasons: int = rule(2, 1, 12, G, "Growing seasons a perennial plant needs in a year")
     tree_seasons: int = rule(2, 1, 12, G, "Growing seasons a tree needs in a year")
@@ -31,7 +31,7 @@ class FloraRules:
     cultivate_pct: int = rule(10, 0, 100, G, "Chance each epoch a gathered plant is first sown in fields (%)")
     cultivate_level: int = rule(1, 0, 10, G, "Agriculture level a people needs before it sows a gathered plant")
     cultivar_pct: int = rule(5, 0, 100, G, "Chance each epoch a master farmer breeds a cultivar from a long-sown crop (%)")
-    cultivar_epochs: int = rule(6, 0, 200, G, "Epochs a crop must be sown in a land before a cultivar can be bred from it")
+    cultivar_years: int = span(30, 0, 5000, G, "Years a crop must be sown in a land before a cultivar can be bred from it")
     cultivar_skill: int = rule(40, 0, 100, G, "Farming skill a master farmer needs to breed a cultivar")
     cultivar_yield_pct: int = rule(25, 0, 200, G, "Rate a cultivar gains over the plant it was bred from (%)")
     cultivar_hardiness: int = rule(3, 0, 50, G, "Degrees a cultivar's temperature band widens on each side")
@@ -46,3 +46,7 @@ class FloraRules:
     sow_cost: int = rule(8, 0, 1000, G, "Essence a son spends to have a plant sown in a land's fields")
     sow_share: int = rule(25, 1, 100, G, "Share of a land's fields a crop a son has sown takes at first (%)")
     poison_well_pct: int = rule(5, 0, 100, G, "Further share of a people a poisoned well kills when the schemer brings poison from stores (%)")
+
+    @property
+    def cultivar_epochs(self) -> int:
+        return self.epochs(self.cultivar_years)

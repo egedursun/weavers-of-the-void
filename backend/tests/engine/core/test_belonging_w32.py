@@ -236,7 +236,7 @@ async def test_a_besieged_fugitive_gives_up_and_the_realm_takes_its_share_of_fee
     session.add(row)
     await session.flush()
     tally = SanctuaryTally()
-    await keep_sanctuaries(await at(session, 3, sanctuary={"seek_chance": 0, "surrender_epochs": 3}), tally)
+    await keep_sanctuaries(await at(session, 3, sanctuary={"seek_chance": 0, "surrender_years": 150}), tally)
     assert row.state is SanctuaryState.ENDED and tally.surrendered == 1 and tally.paid == 1
 
 

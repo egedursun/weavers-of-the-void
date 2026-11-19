@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 H = RuleGroup.HEROES_AND_MORTALS
 D = RuleGroup.THE_DIVINE
@@ -80,13 +80,17 @@ class ServitorRules:
 
 
 @dataclass(frozen=True)
-class GeasRules:
+class GeasRules(Spanned):
     birth_pct: int = rule(4, 0, 100, H, "Chance a newborn among a faithful people has a geas laid on it (%)")
     favour: int = rule(2, 0, 100, H, "Favour and awe a kept geas wins its layer each epoch")
     favour_dominion: int = rule(1, 0, 100, H, "Dominion a kept geas wins its god in the bearer's land each epoch")
-    duty_epochs: int = rule(5, 1, 100, H, "Epochs within which a duty geas must be done again")
+    duty_years: int = span(5, 1, 2500, H, "Years within which a duty geas must be done again")
     trap_pct: int = rule(40, 0, 100, H, "Chance a geas trap forces its target to break the geas (%)")
     bind_pct: int = rule(50, 0, 100, H, "Chance a binding rite cast on a mortal lays a geas on it, witnessed by the caster's god (%)")
+
+    @property
+    def duty_epochs(self) -> int:
+        return self.epochs(self.duty_years)
 
 
 @dataclass(frozen=True)

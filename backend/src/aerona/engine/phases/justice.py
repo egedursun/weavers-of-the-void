@@ -41,6 +41,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.hooks",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
@@ -58,11 +59,20 @@ async def legislature(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
     "mortal.intellect",
+    "table.appeals",
     "table.bonds",
     "table.case_witnesses",
+    "table.creator",
     "table.crime_cases",
+    "table.dimensions",
     "table.entities",
+    "table.estate_privileges",
+    "table.estate_profiles",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.jurisdictions",
@@ -71,15 +81,22 @@ async def legislature(ctx: TickContext) -> None:
     "table.memberships",
     "table.node_births",
     "table.nodes",
+    "table.offices",
     "table.polity_members",
     "table.relationships",
+    "table.sanctuaries",
     "table.skills",
+    "table.sons",
+    "table.stars",
     "table.traits",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
     "table.chronicle_entities",
     "table.crime_cases",
+    "table.entities",
+    "table.entity_flags",
     "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
@@ -90,6 +107,7 @@ async def legislature(ctx: TickContext) -> None:
     "table.sentences",
     "table.settlement_profiles",
     "table.settlement_treasury",
+    "table.thoughts",
 )
 async def trials(ctx: TickContext) -> None:
     tally = TrialTally()

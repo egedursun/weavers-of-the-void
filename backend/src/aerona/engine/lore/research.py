@@ -29,7 +29,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.agrarian.book import farming_boost
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import notation_boost
-from aerona.engine.eras.effects import tech_bonus
+from aerona.engine.eras.effects import era_floors, tech_bonus
 from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
@@ -106,20 +106,21 @@ async def known_bonds(session: AsyncSession) -> list[tuple[int, int, KnowledgeBr
 
 async def ensure_holders(ctx: TickContext) -> int:
     made = 0
+    floors = await era_floors(ctx.session)
     for holder, _knowledge, branch, frontier, learned in await known_bonds(ctx.session):
         if held(holder):
             continue
         row = await ctx.session.get(HolderLevelRow, (holder, branch))
         if row is None:
-            start = 1 if learned >= ctx.epoch else frontier
+            start = max(1 if learned >= ctx.epoch else frontier, floors.get(branch, 0))
             ctx.session.add(
                 HolderLevelRow(
                     holder_entity_id=holder, branch=branch, level=start, practitioners=0, progress=0, secret=False, updated_epoch=ctx.epoch, locked=[]
                 )
             )
             made += 1
-        elif row.level > frontier and "level" not in row.locked:
-            row.level = frontier
+        elif row.level > max(frontier, floors.get(branch, 0)) and "level" not in row.locked:
+            row.level = max(frontier, floors.get(branch, 0))
     await ctx.session.flush()
     return made
 
@@ -230,6 +231,7 @@ async def practise(ctx: TickContext) -> dict[str, int]:
     table = ctx.rules.research
     counts = {"levels_lost": 0, "forgotten": 0}
     rows = list(await ctx.session.scalars(select(HolderLevelRow).order_by(HolderLevelRow.holder_entity_id, HolderLevelRow.branch)))
+    floors = await era_floors(ctx.session)
     knowledge_by: dict[tuple[int, KnowledgeBranch], int] = {(holder, branch): knowledge for holder, knowledge, branch, _, _ in await known_bonds(ctx.session)}
     for row in rows:
         holder = await ctx.session.get(EntityRow, row.holder_entity_id)
@@ -239,7 +241,7 @@ async def practise(ctx: TickContext) -> dict[str, int]:
         before = row.practitioners
         row.practitioners = round_half_up(people * table.practitioners_per_level * max(1, row.level) / THOUSAND) if people else 1
         dying = before and row.practitioners < before // 2
-        if not dying or "level" in row.locked:
+        if not dying or "level" in row.locked or row.level <= floors.get(row.branch, 0):
             continue
         knowledge = knowledge_by.get((row.holder_entity_id, row.branch))
         if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, ctx.rules, holder.id, row.branch):

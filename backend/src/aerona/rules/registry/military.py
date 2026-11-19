@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 
@@ -20,6 +20,9 @@ class MilitaryUnitsRules:
     naval_share_pct: int = rule(15, 0, 100, W, "Share of a coastal seafaring people's army that serves on ships (%)")
     engineer_share_pct: int = rule(4, 0, 100, W, "Share of an army that is sappers and engines where building is known (%)")
     successor_share_pct: int = rule(60, 0, 100, W, "Share of an older missile role a realm moves to its newer successor once it can field it (%)")
+    successor_settled_eras: int = rule(
+        2, 0, 12, W, "Eras after a newer role first comes into reach when a realm has moved every soldier of the older role to it (eras)"
+    )
     medic_share_pct: int = rule(3, 0, 100, W, "Share of an army that is medics where medicine is known (%)")
     electronic_share_pct: int = rule(5, 0, 100, W, "Share of an army that is signals troops and drone operators once it can field them (%)")
     air_share_pct: int = rule(6, 0, 100, W, "Share of an army that flies as pilots once it can field them (%)")
@@ -246,17 +249,21 @@ class WarWearinessRules:
 
 
 @dataclass(frozen=True)
-class PeaceRules:
+class PeaceRules(Spanned):
     cession_score: int = rule(50, 0, 100, W, "Score at which a winner takes the land it occupies")
     vassal_score: int = rule(80, 0, 100, W, "Score at which a winner makes the loser its vassal")
     tribute_score: int = rule(30, 0, 100, W, "Score at which a winner demands tribute")
     hostage_score: int = rule(40, 0, 100, W, "Score at which a winner takes a hostage")
     reparations: int = rule(20, 0, 100000, W, "Wealth a loser pays in reparations")
-    treaty_epochs: int = rule(4, 1, 100, W, "Epochs a peace treaty binds")
+    treaty_years: int = span(20, 1, 2500, W, "Years a peace treaty binds")
+
+    @property
+    def treaty_epochs(self) -> int:
+        return self.epochs(self.treaty_years)
 
 
 @dataclass(frozen=True)
-class VendettaRules:
+class VendettaRules(Spanned):
     grievance: int = rule(35, 0, 100, W, "Grief for slain kin at which a house or people acts on a feud")
     raid_chance: int = rule(30, 0, 100, W, "An aggrieved side raids in an epoch (%)")
     assassinate_chance: int = rule(10, 0, 100, W, "An aggrieved side sends an assassin (%)")
@@ -269,7 +276,7 @@ class VendettaRules:
     marriage_brake_pct: int = rule(40, 0, 100, W, "Intensity a marriage between the feuding sides takes away (%)")
     common_enemy_brake_pct: int = rule(30, 0, 100, W, "Intensity a shared enemy takes away (%)")
     fade_per_epoch: int = rule(3, 0, 100, W, "Grievance and intensity a feud loses in an epoch")
-    generation_epochs: int = rule(3, 1, 100, W, "Epochs that count as a generation of a feud")
+    generation_years: int = span(25, 1, 2500, W, "Years that count as a generation of a feud")
     generation_fade: int = rule(10, 0, 100, W, "Intensity a feud loses with each new generation")
     ambush_chance: int = rule(10, 0, 100, W, "An aggrieved side lies in wait for its foe's people on the road (%)")
     abduct_chance: int = rule(5, 0, 100, W, "An aggrieved side carries off one of its foe's people (%)")
@@ -281,3 +288,7 @@ class VendettaRules:
     insult_below: int = rule(30, 0, 100, W, "Intensity below which a feud stands at insults alone")
     fade_floor: int = rule(10, 0, 100, W, "Intensity at which a feud fades away")
     peace_tenet_mediation: int = rule(30, 0, 100, W, "A faith of peace mediates a burning feud (%)")
+
+    @property
+    def generation_epochs(self) -> int:
+        return self.epochs(self.generation_years)

@@ -43930,7 +43930,7 @@ export interface components {
       target: components['schemas']['NodeRef'] | null
       blockade: components['schemas']['NodeRef'] | null
       stance: components['schemas']['Stance']
-      doctrine: string
+      doctrine: components['schemas']['MartialStyle']
       supply_days: number
       supply_line: components['schemas']['NodeRef'][]
       cohesion: number
@@ -44698,9 +44698,21 @@ export interface components {
       | 'siege_breached'
       | 'siege_starvation'
       | 'refused'
+    BattlePhase:
+      | 'scouting'
+      | 'plan'
+      | 'command'
+      | 'missile'
+      | 'charge'
+      | 'melee'
+      | 'reserves'
+      | 'rites'
+      | 'pursuit'
+      | 'salvage'
+      | 'aftermath'
     BattlePhaseView: {
       position: number
-      phase: string
+      phase: components['schemas']['BattlePhase']
       attacker_losses: number
       defender_losses: number
       summary: string | null
@@ -49528,7 +49540,8 @@ export interface components {
       forged: boolean
       verdict: components['schemas']['Verdict'] | null
       wrongful: boolean
-      penalty: string | null
+      penalty: components['schemas']['PunishmentKind'] | null
+      immune: boolean
       opened_epoch: number
       closed_epoch: number | null
       locked: string[]
@@ -58023,7 +58036,7 @@ export interface components {
       facets: components['schemas']['FacetShiftView'][]
       distraction: number
     }
-    IdeaState: 'incubating' | 'internalised' | 'rejected'
+    IdeaState: 'incubating' | 'internalised' | 'rejected' | 'lapsed'
     IdeaStrain: 'none' | 'distraction' | 'focus_loss' | 'obsession'
     IdeaView: {
       id: number
@@ -59364,13 +59377,13 @@ export interface components {
     }
     JobItem: {
       node_id: number
-      node_kind: string
+      node_kind: components['schemas']['NodeKind']
       name: string
-      entity_type?: string | null
+      entity_type?: components['schemas']['EntityType'] | null
       action: string
       note?: string | null
       other_id?: number | null
-      other_kind?: string | null
+      other_kind?: components['schemas']['NodeKind'] | null
       other_name?: string | null
     }
     JobKind:
@@ -59424,8 +59437,8 @@ export interface components {
     }
     JobResponse: {
       id: string
-      kind: string
-      status: string
+      kind: components['schemas']['JobKind']
+      status: components['schemas']['JobStatus']
       progress: number
       stage: string | null
       params: {
@@ -72600,7 +72613,7 @@ export interface components {
       mortal: string
       settlement_id: number | null
       crime: components['schemas']['CrimeKind']
-      penalty: string
+      penalty: components['schemas']['PunishmentKind']
       epoch: number
     }
     ServiceShare: {
@@ -164871,6 +164884,21 @@ export const battleOutcomeValues: ReadonlyArray<
   'siege_starvation',
   'refused',
 ]
+export const battlePhaseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BattlePhase']
+> = [
+  'scouting',
+  'plan',
+  'command',
+  'missile',
+  'charge',
+  'melee',
+  'reserves',
+  'rites',
+  'pursuit',
+  'salvage',
+  'aftermath',
+]
 export const battlefieldFeatureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BattlefieldFeature']
 > = ['mass_grave', 'salvage_field', 'earthworks']
@@ -169141,7 +169169,7 @@ export const ideaSourceValues: ReadonlyArray<
 ]
 export const ideaStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaState']
-> = ['incubating', 'internalised', 'rejected']
+> = ['incubating', 'internalised', 'rejected', 'lapsed']
 export const ideaStrainValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaStrain']
 > = ['none', 'distraction', 'focus_loss', 'obsession']

@@ -33,6 +33,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.language_profiles",
     "table.language_standing",
     "table.lexemes",
+    "table.minds",
     "table.name_registry",
     "table.network_nodes",
     "table.network_profiles",

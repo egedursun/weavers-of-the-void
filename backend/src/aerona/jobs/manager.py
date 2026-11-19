@@ -60,8 +60,8 @@ class JobManager:
         async with self._database.write() as session:
             statement = (
                 update(JobRow)
-                .where(JobRow.status.in_([JobStatus.QUEUED.value, JobStatus.RUNNING.value]))
-                .values(status=JobStatus.INTERRUPTED.value, finished_at=datetime.now(UTC))
+                .where(JobRow.status.in_([JobStatus.QUEUED, JobStatus.RUNNING]))
+                .values(status=JobStatus.INTERRUPTED, finished_at=datetime.now(UTC))
             )
             result = cast(CursorResult[tuple[()]], await session.execute(statement))
         return int(result.rowcount or 0)
@@ -97,7 +97,7 @@ class JobManager:
         job_id = str(uuid.uuid4())
         job_params = params or {}
         async with self._database.write() as session:
-            session.add(JobRow(id=job_id, kind=kind.value, status=JobStatus.QUEUED.value, exclusive_group=exclusive_group, params=job_params))
+            session.add(JobRow(id=job_id, kind=kind, status=JobStatus.QUEUED, exclusive_group=exclusive_group, params=job_params))
         if exclusive_group:
             self._groups[exclusive_group] = job_id
         if dedupe_key is not None:
@@ -175,7 +175,7 @@ class JobManager:
         job_params = params or {}
         now = datetime.now(UTC)
         async with self._database.write() as session:
-            session.add(JobRow(id=job_id, kind=kind.value, status=JobStatus.RUNNING.value, params=job_params, started_at=now))
+            session.add(JobRow(id=job_id, kind=kind, status=JobStatus.RUNNING, params=job_params, started_at=now))
         context = JobContext(job_id=job_id, kind=kind, params=job_params, bus=self._bus)
         self._contexts[job_id] = context
         self._bus.publish(EventKind.JOB_STARTED, {"job_id": job_id, "kind": kind.value})
@@ -189,7 +189,7 @@ class JobManager:
     ) -> None:
         stored = await self._with_items(log, result)
         progress = 1.0 if status is JobStatus.SUCCEEDED else context.progress
-        await self._set(context.job_id, status=status.value, progress=progress, stage=context.stage, result=stored, error=error, finished_at=datetime.now(UTC))
+        await self._set(context.job_id, status=status, progress=progress, stage=context.stage, result=stored, error=error, finished_at=datetime.now(UTC))
         self._contexts.pop(context.job_id, None)
         base = {"job_id": context.job_id, "kind": context.kind.value, "label": context.params.get(JOB_LABEL_KEY)}
         if status is JobStatus.SUCCEEDED:
@@ -211,7 +211,7 @@ class JobManager:
         try:
             await self._acquire()
             acquired = True
-            await self._set(job_id, status=JobStatus.RUNNING.value, started_at=datetime.now(UTC))
+            await self._set(job_id, status=JobStatus.RUNNING, started_at=datetime.now(UTC))
             self._bus.publish(EventKind.JOB_STARTED, base)
             if context.kind in UNTRACKED_KINDS:
                 result = await handler(context)
@@ -220,20 +220,18 @@ class JobManager:
                     result = await handler(context)
             stored = await self._with_items(log, result)
             finished = datetime.now(UTC)
-            await self._set(job_id, status=JobStatus.SUCCEEDED.value, progress=1.0, result=stored, stage=context.stage, finished_at=finished)
+            await self._set(job_id, status=JobStatus.SUCCEEDED, progress=1.0, result=stored, stage=context.stage, finished_at=finished)
             self._bus.publish(EventKind.JOB_FINISHED, {**base, "result": stored})
         except asyncio.CancelledError:
             partial = await self._with_items(log, None)
-            await self._set(
-                job_id, status=JobStatus.CANCELLED.value, progress=context.progress, stage=context.stage, result=partial, finished_at=datetime.now(UTC)
-            )
+            await self._set(job_id, status=JobStatus.CANCELLED, progress=context.progress, stage=context.stage, result=partial, finished_at=datetime.now(UTC))
             self._bus.publish(EventKind.JOB_CANCELLED, base)
         except Exception as error:
             logger.exception("job %s failed", job_id)
             failed = datetime.now(UTC)
             partial = await self._with_items(log, None)
             await self._set(
-                job_id, status=JobStatus.FAILED.value, error=str(error), progress=context.progress, stage=context.stage, result=partial, finished_at=failed
+                job_id, status=JobStatus.FAILED, error=str(error), progress=context.progress, stage=context.stage, result=partial, finished_at=failed
             )
             self._bus.publish(EventKind.JOB_FAILED, {**base, "error": str(error)})
         finally:

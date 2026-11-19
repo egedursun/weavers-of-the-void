@@ -23,6 +23,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.art_prices",
     "table.artwork_profiles",
     "table.bonds",
+    "table.brands",
     "table.canon_works",
     "table.collectors",
     "table.courts",
@@ -99,7 +100,7 @@ async def pastimes(ctx: TickContext) -> None:
     count(ctx, "pastimes", tally)
 
 
-@reads("table.army_units", "table.bonds", "table.constructs", "table.entities", "table.holder_levels", "table.nodes", "table.skills")
+@reads("table.army_units", "table.bonds", "table.constructs", "table.entities", "table.holder_levels", "table.nodes", "table.polity_profiles", "table.skills")
 async def constructs(ctx: TickContext) -> None:
     making, orders, seals = MakingTally(), OrderTally(), SealTally()
     await make_constructs(ctx, making)

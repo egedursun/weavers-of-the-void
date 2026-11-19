@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MORTALS
 
@@ -44,12 +44,12 @@ class PunishmentRules:
 
 
 @dataclass(frozen=True)
-class SentenceRules:
+class SentenceRules(Spanned):
     severity_infamy_pct: int = rule(10, 0, 100, G, "Infamy a conviction marks per point of the crime's severity (%)")
     restitution_wealth: int = rule(15, 0, 100, G, "Wealth a sentence of restitution makes the culprit restore")
     compensation_wealth: int = rule(30, 0, 100, G, "Wealth a culprit pays the wronged and their kin")
-    labour_term: int = rule(3, 1, 50, G, "Epochs a sentence of penal labour lasts")
-    reeducation_term: int = rule(2, 1, 50, G, "Epochs a sentence of reeducation keeps a culprit")
+    labour_term_years: int = span(5, 1, 1250, G, "Years a sentence of penal labour lasts")
+    reeducation_term_years: int = span(2, 1, 1250, G, "Years a sentence of reeducation keeps a culprit")
     reeducation_loyalty: int = rule(10, 0, 100, G, "Loyalty a reeducation instils")
     outlawry_infamy: int = rule(20, 0, 100, G, "Infamy outlawry marks a culprit with")
     excommunication_piety: int = rule(15, 0, 100, G, "Piety lost by one cast out of the faith")
@@ -61,6 +61,14 @@ class SentenceRules:
     deterrence_pct: int = rule(5, 0, 100, G, "Crime a sentence takes from its town per point of deterrence above recidivism (%)")
     cost_coin: int = rule(1, 0, 100, G, "Treasury each point of a sentence's cost takes from the polity")
     legitimacy_step: int = rule(5, 0, 100, G, "Legitimacy a sentence gains or loses where local values favour or oppose it")
+
+    @property
+    def labour_term(self) -> int:
+        return self.epochs(self.labour_term_years)
+
+    @property
+    def reeducation_term(self) -> int:
+        return self.epochs(self.reeducation_term_years)
 
 
 @dataclass(frozen=True)

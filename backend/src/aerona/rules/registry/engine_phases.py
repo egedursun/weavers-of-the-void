@@ -103,6 +103,13 @@ class EnginePhasesRules:
     rebel_theft: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rebel theft")
     doom_clock: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: doom clock")
     creator_essence: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: creator essence")
+    affairs_of_the_ended: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: what the dead and the destroyed still held open ends with them, and the ties that end at a death close",
+    )
     epoch_statistics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: epoch statistics")
     record_checkpoints: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: checkpoints of the recorded state")
     creator_mood: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: creator mood")

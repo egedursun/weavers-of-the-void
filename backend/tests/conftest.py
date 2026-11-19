@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 from collections.abc import AsyncIterator, Callable, Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,7 @@ from aerona.db.write_guard import BOND_DOWNGRADES
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.pipeline import simulate
 from aerona.main import create_app
+from aerona.rules.registry import Rules
 from aerona.settings import Settings
 from tests.engine.integration import factories
 from tests.services.player import every_lever
@@ -130,6 +132,7 @@ async def client(settings: Settings) -> AsyncIterator[AsyncClient]:
 
 
 LEVER_CACHE = Path(tempfile.gettempdir()) / "aerona-levers"
+LEVER_RULES = replace(Rules(), healing=replace(Rules().healing, lethal_after_years=150))
 ENGINE_SOURCE = Path(__file__).resolve().parents[1] / "src" / "aerona"
 
 
@@ -147,7 +150,7 @@ async def seed(path: Path) -> None:
     try:
         async with database.write() as session:
             await factories.seed_rich_cosmos(session)
-        await simulate(database, 2)
+        await simulate(database, 2, rules=LEVER_RULES)
     finally:
         await database.dispose()
 

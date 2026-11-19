@@ -28,19 +28,22 @@ async def collections(ctx: TickContext) -> None:
 @reads(
     "settlement.prosperity",
     "settlement.wealth",
+    "table.bonds",
     "table.divine_standing",
     "table.entities",
+    "table.foreign_gods",
     "table.game_reserves",
     "table.gardens",
     "table.nodes",
     "table.place_profiles",
     "table.polity_members",
     "table.polity_profiles",
+    "table.sons",
     "table.species_profiles",
     "table.species_ranges",
     "table.structure_profiles",
 )
-@writes("table.divine_standing", "table.gardens", "table.polity_profiles")
+@writes("settlement.wealth", "table.divine_standing", "table.entities", "table.gardens", "table.polity_profiles")
 async def gardens(ctx: TickContext) -> None:
     tally = GardenTally()
     await keep_gardens(ctx, tally)

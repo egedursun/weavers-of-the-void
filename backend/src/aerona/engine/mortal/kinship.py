@@ -1,6 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -73,7 +74,7 @@ async def end_marriage(session: AsyncSession, row: MarriageRow, epoch: int, caus
         return
     row.end_epoch = max(row.start_epoch, epoch)
     row.cause_end = cause
-    await close_between(session, row.first_id, row.second_id, (BondKind.SPOUSE_OF,), epoch=epoch, reason=cause.value)
+    await close_between(session, row.first_id, row.second_id, (BondKind.SPOUSE_OF,), epoch=epoch, reason=spoken(cause))
 
 
 async def widow(session: AsyncSession, dead_id: int, epoch: int) -> list[int]:

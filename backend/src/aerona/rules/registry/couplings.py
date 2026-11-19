@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 L = RuleGroup.LANGUAGE_AND_NAMES
 B = RuleGroup.THE_BEYOND
@@ -75,16 +75,20 @@ class OfficeMakingRules:
 
 
 @dataclass(frozen=True)
-class FieldDiplomacyRules:
+class FieldDiplomacyRules(Spanned):
     parley_chance: int = rule(30, 0, 100, W, "Chance commanders parley before a battle")
     parley_margin: int = rule(10, 0, 100, W, "Gap in charisma within which a parley ends in a truce instead of battle")
-    truce_epochs: int = rule(1, 0, 100, W, "Epochs a truce agreed in the field lasts")
+    truce_years: int = span(1, 0, 2500, W, "Years a truce agreed in the field lasts")
     surrender_honour: int = rule(30, -100, 100, W, "Honour the victor pledges with surrender terms")
     broken_memory: int = rule(40, 0, 100, W, "Memory of betrayal a broken field agreement leaves")
     exchange_chance: int = rule(25, 0, 100, W, "Chance two sides holding each other's captives exchange them and their dead")
     fraternise_rounds: int = rule(4, 1, 100, W, "Rounds of a siege after which the lines fraternise")
     fraternise_weariness: int = rule(5, 0, 100, W, "War weariness fraternising lines add to each side")
     terms_supplies: int = rule(60, 0, 100000, W, "Supplies left in a besieged town at or below which it takes the terms a commander offers")
+
+    @property
+    def truce_epochs(self) -> int:
+        return self.epochs(self.truce_years)
 
 
 @dataclass(frozen=True)

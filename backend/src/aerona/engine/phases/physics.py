@@ -292,6 +292,7 @@ async def terraforming(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.journeys",
     "table.nodes",
+    "table.polity_profiles",
     "table.routes",
     "table.stars",
     "table.world_surveys",

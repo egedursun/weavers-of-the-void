@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
     ClauseKind,
@@ -336,6 +336,6 @@ class SentenceRow(Base):
     settlement_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     law_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     crime: Mapped[CrimeKind] = mapped_column(enum_type(CrimeKind, "crime"))
-    penalty: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    penalty: Mapped[PunishmentKind] = mapped_column(enum_type(PunishmentKind, "penalty"))
     epoch: Mapped[int]
     case_id: Mapped[int | None] = mapped_column(ForeignKey("crime_cases.id", ondelete="SET NULL"), index=True)

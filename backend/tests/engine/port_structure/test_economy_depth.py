@@ -210,7 +210,7 @@ async def test_extraction_is_gated_by_the_required_knowledge(session: AsyncSessi
 
 async def debt(session: AsyncSession, debtor: EntityRow, creditor: EntityRow) -> BondRow:
     bond_row = await BondRepository(session).connect(
-        BondDraft(debtor.id, creditor.id, BondKind.OWES, 0, "old loan", debt_amount=8, debt_what="silver", debt_due_epoch=-6)
+        BondDraft(debtor.id, creditor.id, BondKind.OWES, 0, "old loan", debt_amount=8, debt_what="silver", debt_due_epoch=0)
     )
     bond_row.debt_status = DebtStatus.OPEN
     return bond_row
@@ -275,7 +275,7 @@ async def test_the_debtors_prison_takes_a_notable_captive(session: AsyncSession,
 
 
 async def test_banks_lend_to_realms_and_realms_default_into_debt(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(banking={"polity_lend_chance": 100, "term_epochs": 1, "polity_repay_pct": 0})
+    rules = tuned_rules(banking={"polity_lend_chance": 100, "term_years": 50, "polity_repay_pct": 0})
     ctx = await manual_context(session, "realm", rules)
     capital = await settlement(session, "Crownmere", world, world.regions[0])
     guild = await entity(session, "Ledger Guild", EntityType.FACTION, FactionStats(wealth=90, sway=50), world_id=world.world.id, location_id=capital.id)

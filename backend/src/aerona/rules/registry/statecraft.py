@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 
 
 @dataclass(frozen=True)
-class StatecraftRules:
+class StatecraftRules(Spanned):
     conquest_threat: int = rule(25, 0, 100, W, "Threat a conquest of land stirs in the realms that hear of it")
     associated_distance: int = rule(10, 0, 200, W, "Distance of values below which a subject realm is freely associated with its overlord")
     war_threat: int = rule(12, 0, 100, W, "Threat a war declared without a claim stirs in the realms that hear of it")
@@ -41,7 +41,7 @@ class StatecraftRules:
     sphere_growth: int = rule(5, 0, 100, W, "Strength a sphere gains each epoch")
     sphere_contest: int = rule(10, 0, 100, W, "Strength a weaker sphere loses each epoch to a contested client")
     sphere_regard: int = rule(3, 0, 100, W, "Regard a client and its power gain each epoch")
-    summit_epochs: int = rule(5, 1, 50, W, "Epochs between summits of the great powers of a world")
+    summit_years: int = span(10, 1, 1250, W, "Years between summits of the great powers of a world")
     summit_trust: int = rule(10, 0, 100, W, "Trust the great powers gain at a summit")
     liberty_drift_pct: int = rule(30, 0, 100, W, "How fast a subject's wish for liberty moves toward what it feels (%)")
     liberty_strength_pct: int = rule(50, 0, 200, W, "How much a subject's strength against its overlord feeds its wish for liberty (%)")
@@ -49,3 +49,7 @@ class StatecraftRules:
     liberty_revolt: int = rule(80, 0, 100, W, "Wish for liberty at which a subject rises")
     renegotiate_at: int = rule(60, 0, 100, W, "Wish for liberty at which a subject demands better terms")
     renegotiate_loyalty: int = rule(10, 0, 100, W, "Loyalty a subject loses when its overlord rewrites its terms or refuses its demand")
+
+    @property
+    def summit_epochs(self) -> int:
+        return self.epochs(self.summit_years)

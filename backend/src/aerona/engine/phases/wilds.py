@@ -141,6 +141,7 @@ async def beast_cycles(ctx: TickContext) -> None:
     "table.plant_profiles",
     "table.region_crops",
     "table.region_environment",
+    "table.skills",
     "table.species_hosts",
     "table.species_products",
     "table.species_profiles",

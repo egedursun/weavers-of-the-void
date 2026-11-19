@@ -165,7 +165,7 @@ async def test_keystones_serve_their_land_and_their_loss_is_felt(session: AsyncS
 
 
 async def test_the_herds_of_a_fallen_town_run_wild_and_step_back(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await surveyed(session, feral={"revert_epochs": 1})
+    ctx = await surveyed(session, feral={"revert_years": 50})
     town = await settlement(session, "Ashby", world, world.regions[0])
     goat = await beast_kind(session, world, "Hill Goat", world.regions[1].id)
     profile = await profile_of(ctx, goat)

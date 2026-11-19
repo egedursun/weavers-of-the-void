@@ -23,6 +23,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseEnd, HouseTrait, LawKind, OathBreach, OathKind, OfficeKind, OfficePower
 from aerona.domain.enums.quests import QuestAim, QuestTargetKind
 from aerona.domain.enums.society import SocialClass
@@ -381,7 +382,7 @@ async def deeds(ctx: TickContext, realms: RealmBook, profile: HouseProfileRow, a
         gain += int(wonders or 0) * table.prestige_wonder
         executed = await ctx.session.scalar(
             select(func.count(SentenceRow.id)).where(
-                SentenceRow.epoch == ctx.epoch, SentenceRow.penalty == "death", SentenceRow.settlement_entity_id.in_(members or [-1])
+                SentenceRow.epoch == ctx.epoch, SentenceRow.penalty == PunishmentKind.DEATH, SentenceRow.settlement_entity_id.in_(members or [-1])
             )
         )
         gain -= int(executed or 0) * table.prestige_execution

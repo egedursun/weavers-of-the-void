@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POLITY
 S = RuleGroup.SETTLEMENTS
@@ -112,8 +112,8 @@ class LongPlanRules:
 
 
 @dataclass(frozen=True)
-class ReciprocityRules:
-    return_epochs: int = rule(2, 1, 50, M, "Epochs a receiver has to return a gift where the norm of gifts is neutral")
+class ReciprocityRules(Spanned):
+    return_years: int = span(5, 1, 1250, M, "Years a receiver has to return a gift where the norm of gifts is neutral")
     norm_weight: int = rule(60, 0, 200, M, "How much the norm of gifts in hospitality strengthens or loosens the obligations of a gift (%)")
     preference_weight: int = rule(50, 0, 200, M, "How much the receiver's liking for a gift's material raises its value (%)")
     give_prestige: int = rule(10, 0, 100, M, "Standing a giver gains for each hundred of a gift's value (%)")
@@ -125,6 +125,10 @@ class ReciprocityRules:
     lapse_prestige: int = rule(20, 0, 200, M, "Standing a receiver loses and a giver gains for each hundred of an unreturned gift's value (%)")
     courtesy_pct: int = rule(10, 0, 100, M, "Chance each epoch an ally sends a gift to its ally (%)")
     courtesy_value: int = rule(10, 0, 100000, M, "Coin a gift between allies is worth")
+
+    @property
+    def return_epochs(self) -> int:
+        return self.epochs(self.return_years)
 
 
 @dataclass(frozen=True)
@@ -218,13 +222,17 @@ class KinshipSystemRules:
 
 
 @dataclass(frozen=True)
-class MarriageAllianceRules:
+class MarriageAllianceRules(Spanned):
     cross_cousin_bonus: int = rule(20, 0, 200, H, "Weight a cross-cousin gets in a match where that marriage is preferred")
     exogamy_bonus: int = rule(10, 0, 200, H, "Weight a spouse of another line gets in a match where exogamy is the rule")
     alliance_regard: int = rule(6, 0, 100, H, "Regard each marriage between two lines builds")
     giver_rank: int = rule(2, -20, 20, H, "Standing the line that gives more spouses than it takes gains for each marriage of the gap")
     pact_at: int = rule(3, 1, 100, H, "Marriages between two lines of different realms from which the realms sign a marriage pact")
-    pact_epochs: int = rule(10, 1, 1000, H, "Epochs a marriage pact between the realms holds")
+    pact_years: int = span(30, 1, 25000, H, "Years a marriage pact between the realms holds")
+
+    @property
+    def pact_epochs(self) -> int:
+        return self.epochs(self.pact_years)
 
 
 @dataclass(frozen=True)
@@ -287,11 +295,11 @@ class CorveeRules:
 
 
 @dataclass(frozen=True)
-class IndentureRules:
+class IndentureRules(Spanned):
     misery_at: int = rule(35, 0, 100, S, "Mean satisfaction of farmers and outcasts below which the poor fall into bondage")
     form_pct: int = rule(10, 0, 100, S, "Chance each epoch the poor of a miserable town are bound (%)")
     bound_pct: int = rule(3, 0, 100, S, "Share of a town bound in one contract (%)")
-    term_epochs: int = rule(3, 1, 100, S, "Epochs an indenture lasts")
+    term_years: int = span(7, 1, 2500, S, "Years an indenture lasts")
     debt_per_head: int = rule(5, 0, 10000, S, "Debt each bound labourer starts with")
     repay_per_head: int = rule(2, 0, 10000, S, "Debt each bound labourer works off each epoch without exploitation")
     exploitation_base: int = rule(30, 0, 100, S, "Exploitation of a new contract before the employer's greed")
@@ -302,6 +310,10 @@ class IndentureRules:
     migrant_pct: int = rule(15, 0, 100, S, "Chance each epoch newcomers living among a town's hosts sign contracts of labour (%)")
     migrant_share_pct: int = rule(20, 0, 100, S, "Share of the newcomers who sign a contract of labour (%)")
     foreign_weight: int = rule(30, 0, 200, S, "How much the distance between the values of hosts and newcomers raises the exploitation of their contract (%)")
+
+    @property
+    def term_epochs(self) -> int:
+        return self.epochs(self.term_years)
 
 
 @dataclass(frozen=True)
@@ -319,12 +331,12 @@ class SlaveMarketRules:
 
 
 @dataclass(frozen=True)
-class ManumissionRules:
+class ManumissionRules(Spanned):
     service_pct: int = rule(40, 0, 100, S, "Chance the bound freed in wartime are freed for service (%)")
     purchase_prosperity: int = rule(60, 0, 100, S, "Prosperity from which the bound buy their freedom")
     revolt_strength: int = rule(10, 1, 1000, S, "Militia each point of a slave rising's strength overcomes")
     revolt_share_pct: int = rule(30, 0, 100, S, "Share of the bound a successful rising frees (%)")
-    revolt_memory_epochs: int = rule(5, 0, 100, S, "Epochs a slave rising feeds the abolition movement")
+    revolt_memory_years: int = span(30, 0, 2500, S, "Years a slave rising feeds the abolition movement")
     revolt_pressure: int = rule(30, 0, 200, S, "Abolition pressure each hundred freed by risings adds (%)")
     indenture_pressure: int = rule(30, 0, 200, S, "Abolition pressure a full share of bound labourers adds (%)")
     egalitarian_pct: int = rule(25, 0, 100, S, "How much a disregard for hierarchy feeds the abolition movement (%)")
@@ -334,3 +346,7 @@ class ManumissionRules:
     office_at: int = rule(70, 0, 100, S, "Standing from which the freed take office and the priesthood beside the freeborn")
     stigma: int = rule(20, 0, 100, S, "Satisfaction the freed lose where all of a town's people are freed folk of the lowest standing")
     origin_share_pct: int = rule(50, 0, 100, S, "Share of freed captives who stay a community of their own origin in the town (%)")
+
+    @property
+    def revolt_memory_epochs(self) -> int:
+        return self.epochs(self.revolt_memory_years)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 
@@ -13,7 +13,7 @@ RENAMED_RULES = {
 
 
 @dataclass(frozen=True)
-class BattleMagicRules:
+class BattleMagicRules(Spanned):
     fog_chance: int = rule(45, 0, 100, W, "War mages call fog over a field where the enemy leans on missiles (%)")
     fog_missile_pct: int = rule(40, 0, 100, W, "Missile strength under a called fog (%)")
     heal_per_priest: int = rule(3, 0, 100, W, "Wounded soldiers each battle priest saves from death after a battle")
@@ -39,7 +39,11 @@ class BattleMagicRules:
     wear_per_season: int = rule(2, 0, 100, W, "Condition a stack's arms and armour lose in a season on campaign")
     condition_floor_pct: int = rule(50, 0, 100, W, "Fighting strength of a stack with worn-out arms (%)")
     rearm_per_season: int = rule(10, 0, 100, W, "Condition restored in a season from the owner's stocks of arms")
-    recovery_epochs: int = rule(1, 0, 20, W, "Epochs the wounded take to recover in their cohorts")
+    recovery_years: int = span(1, 0, 500, W, "Years the wounded take to recover in their cohorts")
+
+    @property
+    def recovery_epochs(self) -> int:
+        return self.epochs(self.recovery_years)
 
 
 @dataclass(frozen=True)

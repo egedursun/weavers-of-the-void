@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from statistics import fmean
 from types import MappingProxyType
@@ -489,7 +490,28 @@ async def design_power(session: AsyncSession, row: VesselProfileRow) -> float:
     return (1 + design.armament / PERCENT) * (1 - fatigue / 2)
 
 
-async def refit(ctx: TickContext, tally: DesignTally) -> None:
+FrameChoice = Callable[[EntityRow, VehicleFrame, KnowledgeMap], VehicleFrame]
+
+
+async def succeed_design(ctx: TickContext, owner: EntityRow, design: DesignRow, frame: VehicleFrame, knowledge: KnowledgeMap) -> DesignRow:
+    newer = await draw_design(ctx, owner, frame, parent=design, designer_id=design.designer_entity_id, knowledge=knowledge)
+    design.obsolete = True
+    await settle(ctx.session, design)
+    await record(
+        ctx,
+        "designs.refit",
+        roles={
+            IncidentRole.OWNER: owner.id,
+            IncidentRole.MAKER: design.designer_entity_id,
+            IncidentRole.PRODUCT: newer.entity_id,
+            IncidentRole.PREDECESSOR: design.entity_id,
+        },
+        facts={"frame": frame},
+    )
+    return newer
+
+
+async def refit(ctx: TickContext, tally: DesignTally, frame_for: FrameChoice | None = None) -> None:
     table = ctx.rules.designs
     knowledge = await KnowledgeMap.load(ctx.session)
     for design in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.obsolete.is_(False)).order_by(DesignRow.id))):
@@ -498,21 +520,11 @@ async def refit(ctx: TickContext, tally: DesignTally) -> None:
             continue
         if not ctx.rng(f"refit.{design.id}.{ctx.epoch}").chance(table.refit_pct):
             continue
-        newer = await draw_design(ctx, owner, design.frame, parent=design, designer_id=design.designer_entity_id, knowledge=knowledge)
-        design.obsolete = True
-        await settle(ctx.session, design)
+        frame = frame_for(owner, design.frame, knowledge) if frame_for is not None else design.frame
+        newer = await succeed_design(ctx, owner, design, frame, knowledge)
         tally.refits += 1
-        await record(
-            ctx,
-            "designs.refit",
-            roles={
-                IncidentRole.OWNER: owner.id,
-                IncidentRole.MAKER: design.designer_entity_id,
-                IncidentRole.PRODUCT: newer.entity_id,
-                IncidentRole.PREDECESSOR: design.entity_id,
-            },
-            facts={"frame": design.frame},
-        )
+        if frame is not design.frame:
+            continue
         for vessel in await ctx.session.scalars(
             select(VesselProfileRow).where(VesselProfileRow.design_id == design.id, VesselProfileRow.status == VesselStatus.DOCKED)
         ):

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class DeepWorldRules:
+class DeepWorldRules(Spanned):
     notable_min_population: int = rule(800, 0, 1000000, RuleGroup.HEROES_AND_MORTALS, "Minimum population of a community producing a notable mortal")
     notable_chance: int = rule(45, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A notable mortal arises from a populous community (base %)")
     notable_cap: int = rule(8, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Maximum notable mortals born per epoch")
@@ -26,7 +26,7 @@ class DeepWorldRules:
     )
     people_per_village: int = rule(15000, 1000, 1000000, RuleGroup.POPULATION_AND_GROWTH, "One village per this many people in the region")
     ruin_population_threshold: int = rule(60, 0, 10000, RuleGroup.POPULATION_AND_GROWTH, "A settlement below this population is abandoned")
-    ruin_grace_epochs: int = rule(2, 0, 20, RuleGroup.POPULATION_AND_GROWTH, "Epochs a new settlement takes root without being abandoned")
+    ruin_grace_years: int = span(10, 0, 500, RuleGroup.POPULATION_AND_GROWTH, "Years a new settlement takes root without being abandoned")
     structure_cap: int = rule(2, 0, 20, RuleGroup.CIVILIZATION, "Maximum structures the engine builds per epoch (base; grows with the community count)")
     structure_cap_community_divisor: int = rule(60, 0, 100000, RuleGroup.CIVILIZATION, "Structure cap grows by 1 for every this many communities (0: fixed)")
     structure_min_prosperity: int = rule(50, 0, 100, RuleGroup.CIVILIZATION, "Prosperity required to build a structure")
@@ -54,3 +54,7 @@ class DeepWorldRules:
     spirit_rest_chance: int = rule(30, 0, 100, RuleGroup.THE_BEYOND, "A calm spirit comes to rest (%)")
     spirit_passage_chance: int = rule(12, 0, 100, RuleGroup.THE_BEYOND, "A spirit passes to the land of the dead (%)")
     structure_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "A prosperous city builds a structure (%)")
+
+    @property
+    def ruin_grace_epochs(self) -> int:
+        return self.epochs(self.ruin_grace_years)

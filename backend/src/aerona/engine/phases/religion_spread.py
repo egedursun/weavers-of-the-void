@@ -219,7 +219,7 @@ async def godlessness(ctx: TickContext) -> None:
     repository = EntityRepository(ctx.session)
     turned = 0
     for entity in await canon(ctx.session, GODLESS_TYPES):
-        if entity.id in blocked or faith.patron(entity.id) is not None or faith.worships_anything(entity.id):
+        if held(entity.id) or entity.id in blocked or faith.patron(entity.id) is not None or faith.worships_anything(entity.id):
             continue
         if stat_or(entity, "piety", ctx.rules.world_effects.unknown_piety) >= settings.godlessness_piety:
             continue

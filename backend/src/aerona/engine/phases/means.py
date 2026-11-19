@@ -41,14 +41,23 @@ async def vaults(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.holder_techniques",
     "table.node_births",
     "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
     "table.region_environment",
     "table.resource_profiles",
+    "table.sons",
+    "table.stars",
     "table.water_lifts",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.water_lifts")
 async def water_lifting(ctx: TickContext) -> None:
@@ -57,15 +66,39 @@ async def water_lifting(ctx: TickContext) -> None:
     count(ctx, "water_lifting", tally)
 
 
-@reads("table.entities", "table.navigation_kits", "table.nodes", "table.skills", "table.trade_route_profiles", "table.worlds")
-@writes("table.navigation_kits")
+@reads(
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.navigation_kits",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_members",
+    "table.skills",
+    "table.sons",
+    "table.stars",
+    "table.trade_route_profiles",
+    "table.worlds",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.navigation_kits",
+)
 async def pilots(ctx: TickContext) -> None:
     tally = NavigationTally()
     await keep_navigation(ctx, tally)
     count(ctx, "pilots", tally)
 
 
-@reads("table.community_stocks", "table.container_stocks", "table.entities", "table.nodes", "table.skills")
+@reads("table.community_stocks", "table.container_stocks", "table.entities", "table.goods_flows", "table.nodes", "table.skills")
 @writes("table.community_stocks", "table.container_stocks", "table.goods_flows")
 async def vessels_of_trade(ctx: TickContext) -> None:
     tally = ContainerTally()

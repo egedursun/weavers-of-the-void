@@ -104,7 +104,7 @@ async def test_learned_scholars_found_a_theory_and_the_god_controls_it(session: 
 
 
 async def test_an_art_form_spreads_loses_mastery_across_tongues_lends_artworks_quality_and_is_lost(session: AsyncSession, realm: Realm) -> None:
-    rules = tuned("art_forms", spread_pct=100, decline_epochs=1)
+    rules = tuned("art_forms", spread_pct=100, decline_years=50)
     ctx = make_ctx(session, rules)
     home = await town(session, realm, "Song Town")
     partner = await town(session, realm, "Dune Town")

@@ -29,6 +29,7 @@ from aerona.db.tables.operations import (
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import PlotKind
@@ -110,7 +111,7 @@ def unit(kind: UnitKind, count: int, *, ident: int) -> ArmyUnitRow:
 
 def side(name: str, rows: list[ArmyUnitRow], ident: int) -> Side:
     body = EntityRow(id=ident, name=name, entity_type=EntityType.PEOPLE)
-    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine="shieldwall", entrenchment=0, baggage=100, loot=50, locked=[])
+    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine=MartialStyle.SHIELDWALL, entrenchment=0, baggage=100, loot=50, locked=[])
     return Side(entity=body, army=body, profile=profile, stacks=make_stacks(rows), edge=1.0, defending=False, skill=0, traits=set())
 
 

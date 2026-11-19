@@ -1006,7 +1006,7 @@ BASE_BEHAVIOURS = (
         (T, "mortal"),
         ("clause_hostage",),
         Subsystem.SOCIAL,
-        "treaties.hostage_epochs",
+        "treaties.hostage_years",
         "hostages",
     ),
     (
@@ -1126,7 +1126,7 @@ BASE_BEHAVIOURS = (
         ("mortal",),
         ("deadline",),
         Subsystem.MIND,
-        "oaths.deadline_epochs",
+        "oaths.deadline_years",
         "broken oaths",
     ),
     (
@@ -1259,7 +1259,7 @@ BASE_BEHAVIOURS = (
         (H, T, P),
         ("marriage_pact",),
         Subsystem.POLITY,
-        "treaties.marriage_treaty_epochs",
+        "treaties.marriage_treaty_years",
         "alliances by marriage",
     ),
     (
@@ -1343,7 +1343,7 @@ BASE_BEHAVIOURS = (
         (T, *COMMUNITIES),
         ("truce",),
         Subsystem.WAR,
-        "treaties.truce_epochs",
+        "treaties.truce_years",
         "truces",
     ),
     ("extinct_claims", "S4.7", "Claims die with their house", ("house_cycles",), HOUSE_SECTION, (H, P), ("claims",), Subsystem.POLITY, None, "ended claims"),

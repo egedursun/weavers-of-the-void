@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class EspionageRules:
+class EspionageRules(Spanned):
     spy_net_enemy_bonus_pct: int = rule(
         20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Bonus to setting up a spy network against an enemy or a tribute counterpart (%)"
     )
@@ -17,7 +17,7 @@ class EspionageRules:
         RuleGroup.WAR_AND_DIPLOMACY,
         "Chance a sabotage strikes networks, crossings, fields, stores, guards, rites, sources or machines where the target has them (%)",
     )
-    sabotage_outage_epochs: int = rule(2, 1, 20, RuleGroup.WAR_AND_DIPLOMACY, "Epochs a network attack keeps a network dark")
+    sabotage_outage_years: int = span(1, 1, 500, RuleGroup.WAR_AND_DIPLOMACY, "Years a network attack keeps a network dark")
     sabotage_outage_severity: int = rule(60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Severity of the outage a network attack causes")
     haul_damage: int = rule(20, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Hauling capacity a destroyed bridge takes from a town")
     blight_pct: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of a town's food a loosed blight destroys (%)")
@@ -41,7 +41,7 @@ class EspionageRules:
     intel_gain: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Intelligence a network at full depth gathers in an epoch")
     exposure_per_operation: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure an operation leaves behind")
     exposure_decay: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure that fades in a quiet epoch")
-    agent_service_epochs: int = rule(8, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Epochs a spy serves before retiring from the network")
+    agent_service_years: int = span(20, 1, 25000, RuleGroup.WAR_AND_DIPLOMACY, "Years a spy serves before retiring from the network")
     counter_intel_pct: int = rule(100, 0, 300, RuleGroup.WAR_AND_DIPLOMACY, "Weight of the target's spymaster in catching spies (%)")
     assassinate_depth: int = rule(60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Depth a network needs to reach a ruler")
     incite_unrest: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Unrest agents stir up in a city")
@@ -61,3 +61,11 @@ class EspionageRules:
     poison_severity: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Severity of the sickness from poisoned wells")
     privacy_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of the intel spies gather that a privacy law at full strictness denies them (%)")
     spy_role_skill: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Skill a trained spy brings to a network that recruits them")
+
+    @property
+    def sabotage_outage_epochs(self) -> int:
+        return self.epochs(self.sabotage_outage_years)
+
+    @property
+    def agent_service_epochs(self) -> int:
+        return self.epochs(self.agent_service_years)

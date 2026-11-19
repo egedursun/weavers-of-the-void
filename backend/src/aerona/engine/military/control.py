@@ -3,12 +3,13 @@ from typing import Any
 
 from sqlalchemy import select
 
-from aerona.catalog.units import STYLE_UNITS, UNITS
+from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohortRow, CommanderTraitRow, OccupationRow, SpyNetworkRow, WarAimRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow, WarSideRow
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import (
     ArmourType,
@@ -99,9 +100,7 @@ async def edit_army(ctx: TickContext, army_id: int, values: Values, *, release: 
         elif key == "stance":
             profile.stance = choice(key, Stance, value)
         elif key == "doctrine":
-            if str(value) not in STYLE_UNITS:
-                raise ValidationFailedError(f"{value} is not a known way of war.")
-            profile.doctrine = str(value)
+            profile.doctrine = choice(key, MartialStyle, value)
         elif key == "forced_march":
             profile.forced_march = bool(value)
         else:

@@ -97,7 +97,7 @@ async def test_a_crisis_that_no_one_yields_becomes_war(realm: Realm) -> None:
 
 
 async def test_spheres_are_contested_and_the_great_powers_meet_in_summits(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(statecraft={"summit_epochs": 1, "sphere_contest": 40}))
+    ctx = context(realm.session, tuned(statecraft={"summit_years": 50, "sphere_contest": 40}))
     strong, _ = await polity(realm, "Sun Crown", standing=RegionalStanding.GREAT_POWER)
     weak, _ = await polity(realm, "Moon Crown", standing=RegionalStanding.GREAT_POWER)
     client, _ = await polity(realm, "Star Crown")

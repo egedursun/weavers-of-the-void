@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POPULATION_AND_GROWTH
 M = RuleGroup.MIND
@@ -10,7 +10,7 @@ J = RuleGroup.POLITY
 
 
 @dataclass(frozen=True)
-class NutritionRules:
+class NutritionRules(Spanned):
     need_weight: int = rule(50, 0, 100, P, "Weight a people's biology gives each nutrient it needs when its needs are first read")
     protein_share: int = rule(15, 1, 100, P, "Share of a diet that protein must make up to meet the need in full (%)")
     fat_share: int = rule(10, 1, 100, P, "Share of a diet that fats must make up to meet the need in full (%)")
@@ -31,7 +31,7 @@ class NutritionRules:
     deficiency_health: int = rule(3, 0, 100, P, "Health a mortal loses each epoch to a deficient diet")
     malnutrition_chance: int = rule(25, 0, 100, P, "Chance each epoch that a deficient diet wastes a body into malnutrition (%)")
     cognition_pct: int = rule(15, 0, 100, P, "Reckoning and memory an adult gains or loses for each point of childhood nutrition above or below the mean (%)")
-    voyage_epochs: int = rule(3, 1, 100, P, "Epochs of a journey from which food without fresh or preserved stores leaves its travellers deficient")
+    voyage_years: int = span(1, 1, 2500, P, "Years of a journey from which food without fresh or preserved stores leaves its travellers deficient")
     voyage_deficiency: int = rule(15, 0, 100, P, "Condition travellers lose to a long journey without fresh or preserved food")
     stores_pct: int = rule(50, 0, 100, P, "Share of a people's food stores against hunger that counts as preserved food in its towns' diets (%)")
     fertility_pct: int = rule(
@@ -42,6 +42,10 @@ class NutritionRules:
     )
     fortify_per_level: int = rule(2, 0, 20, P, "Minerals a diet gains for each level of a people's medicine, from foods fortified with what bodies lack")
     fast_energy: int = rule(10, 0, 100, P, "Energy a community that keeps a fast gives up from its diet")
+
+    @property
+    def voyage_epochs(self) -> int:
+        return self.epochs(self.voyage_years)
 
 
 @dataclass(frozen=True)
@@ -58,14 +62,14 @@ class BiasRules:
 
 
 @dataclass(frozen=True)
-class PurityRules:
+class PurityRules(Spanned):
     culture_from: int = rule(30, -100, 100, R, "Purity a culture must value before it keeps rules of pure and impure")
     castes_from: int = rule(40, -100, 100, R, "Hierarchy a culture that keeps purity must value before it ranks its folk in hereditary castes")
     sources_per_culture: int = rule(4, 1, 13, R, "Sources of impurity a culture that keeps purity holds when first read")
     methods_per_culture: int = rule(2, 1, 8, R, "Ways of purification a culture that keeps purity holds when first read")
     weight_low: int = rule(20, 0, 100, R, "Least chance that a touch of an impurity a culture holds makes a mortal impure (%)")
     weight_high: int = rule(80, 0, 100, R, "Greatest chance that a touch of an impurity a culture holds makes a mortal impure (%)")
-    longest_lasts: int = rule(3, 1, 50, R, "Most epochs an impurity lasts or a purification takes when a culture is first read")
+    longest_lasts_years: int = span(1, 1, 1250, R, "Most years an impurity lasts or a purification takes when a culture is first read")
     highest_cost: int = rule(40, 0, 10000, R, "Most coin a purification costs when a culture is first read")
     success_low: int = rule(50, 0, 100, R, "Least chance a purification succeeds when a culture is first read (%)")
     defiled_from: int = rule(70, 0, 100, R, "Weight of an impurity from which a mortal is defiled and only a rite, not waiting, cleanses them")
@@ -94,6 +98,10 @@ class PurityRules:
     quarter_pct: int = rule(30, 0, 100, R, "Desirability a district gains or loses for each point of standing its caste holds above or below the middle (%)")
     contact_pct: int = rule(20, 0, 100, R, "Chance that a newly impure being passes its impurity to each of its close kin who are pure (%)")
 
+    @property
+    def longest_lasts(self) -> int:
+        return self.epochs(self.longest_lasts_years)
+
 
 @dataclass(frozen=True)
 class MishapRules:
@@ -119,7 +127,7 @@ class MishapRules:
 
 
 @dataclass(frozen=True)
-class WitchcraftRules:
+class WitchcraftRules(Spanned):
     belief_from: int = rule(20, -100, 100, J, "Superstition a culture must value before it reads misfortune as witchcraft")
     accuse_chance: int = rule(50, 0, 100, J, "Chance a mishap read as witchcraft brings an accusation (%)")
     envy_weight: int = rule(30, 0, 100, J, "Weight the accuser's envy of a richer neighbour adds to suspicion")
@@ -130,7 +138,7 @@ class WitchcraftRules:
     caster_weight: int = rule(40, 0, 100, J, "Weight the true casting of a curse on the victim adds to suspicion")
     rumour_weight: int = rule(30, 0, 100, J, "Weight a rumour about a mortal that the town carries adds to suspicion")
     hunt_from: int = rule(3, 1, 100, J, "Accusations in one town within the memory of a hunt that start a witch hunt")
-    hunt_memory: int = rule(3, 1, 50, J, "Epochs back a town counts its accusations toward a witch hunt")
+    hunt_memory_years: int = span(5, 1, 1250, J, "Years back a town counts its accusations toward a witch hunt")
     hunt_stress: int = rule(40, 0, 100, J, "Hunger, insecurity, plague, war or political stress in a town from which its accusations become a witch hunt")
     plague_stress: int = rule(50, 0, 100, J, "Stress an epidemic in a town's region lays on it toward a witch hunt")
     war_stress: int = rule(40, 0, 100, J, "Stress a war of a town's realm lays on it toward a witch hunt")
@@ -139,6 +147,10 @@ class WitchcraftRules:
     hunt_fade: int = rule(15, 0, 100, J, "Fervour a witch hunt loses each epoch")
     hunt_accusations: int = rule(2, 0, 50, J, "Accusations a witch hunt brings each epoch at full fervour")
     wrongful_unrest: int = rule(30, 0, 100, J, "Unrest the spirit of one killed for a witchcraft they did not do carries")
+
+    @property
+    def hunt_memory(self) -> int:
+        return self.epochs(self.hunt_memory_years)
 
 
 @dataclass(frozen=True)

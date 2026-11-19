@@ -7,7 +7,7 @@ from aerona.domain.enums.entity import EntityType as T
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.honours import VeteranGrant
 from aerona.domain.enums.law_depth import KillMethod, MoleHuntOutcome
-from aerona.domain.enums.military import DefenderAction, MutinyOutcome, OutcomeClass, SabotageKind, SackChoice, SiegeAction, StarvationStage, Tactic
+from aerona.domain.enums.military import DefenderAction, MutinyOutcome, OutcomeClass, SabotageKind, SackChoice, SiegeAction, StarvationStage, Tactic, UnitKind
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.operations import CrewStation, EchelonOrder
 from aerona.domain.enums.records import FactUnit as U
@@ -747,4 +747,12 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         feed=None,
     ),
     kind("tools.mortal.war", "{actor} declared war on {target}.", (role(R.ACTOR), role(R.TARGET)), (enum("cause", WarCause),), magnitude=60),
+    kind(
+        "military.stack_modernised",
+        "{owner} retrained {soldiers:soldier|soldiers} of {subject} from {from_kind} to {to_kind}.",
+        (role(R.SUBJECT, accepts=ARMY), role(R.OWNER)),
+        (enum("from_kind", UnitKind), enum("to_kind", UnitKind), number("soldiers", U.PEOPLE)),
+        place=PlaceRule.NONE,
+        clock=ProcessClock.SEASON,
+    ),
 )

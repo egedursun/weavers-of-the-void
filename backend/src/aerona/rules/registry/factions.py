@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
@@ -85,7 +85,7 @@ class FactionsRules:
 
 
 @dataclass(frozen=True)
-class IntrigueRules:
+class IntrigueRules(Spanned):
     assassinate_chance: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "An assassination attempt kills its mark (%)")
     assassinate_hp: int = rule(60, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Wounds an assassin deals")
     exposure_pct: int = rule(60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance a plot is exposed at no secrecy (%)")
@@ -127,7 +127,7 @@ class IntrigueRules:
     identity_investigation: int = rule(40, 0, 100, RuleGroup.REPUTATION, "Exposure a false identity gains when an investigation names its wearer (%)")
     scheme_cap: int = rule(4, 0, 50, RuleGroup.REPUTATION, "Most new schemes the world's mortals and factions begin each epoch")
     scheme_ambition_pct: int = rule(8, 0, 100, RuleGroup.REPUTATION, "Chance each epoch an ambitious or cruel mortal with a rival begins a scheme (%)")
-    recruit_epochs: int = rule(1, 0, 10, RuleGroup.REPUTATION, "Epochs a scheme spends recruiting before it prepares")
+    recruit_years: int = span(1, 0, 250, RuleGroup.REPUTATION, "Years a scheme spends recruiting before it prepares")
     agent_power: int = rule(10, 0, 100, RuleGroup.REPUTATION, "Power each agent adds to a scheme for every ten points of intrigue skill")
     owner_power: int = rule(15, 0, 100, RuleGroup.REPUTATION, "Power the scheme's owner adds for every ten points of intrigue skill")
     defence_spymaster: int = rule(20, 0, 100, RuleGroup.REPUTATION, "Defence a target's spymaster adds for every ten points of intrigue skill")
@@ -160,16 +160,24 @@ class IntrigueRules:
         3, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a mortal confides their true name to a spouse, lover or intimate friend (%)"
     )
 
+    @property
+    def recruit_epochs(self) -> int:
+        return self.epochs(self.recruit_years)
+
 
 @dataclass(frozen=True)
-class MercenariesRules:
+class MercenariesRules(Spanned):
     pay: int = rule(20, 0, 100000, RuleGroup.WAR_AND_DIPLOMACY, "Pay a mercenary company asks per epoch")
     hire_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A realm at war hires an idle company in an epoch (%)")
-    contract_epochs: int = rule(3, 1, 100, RuleGroup.WAR_AND_DIPLOMACY, "Epochs a condotta runs")
+    contract_years: int = span(3, 1, 2500, RuleGroup.WAR_AND_DIPLOMACY, "Years a condotta runs")
     loyalty_paid: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Loyalty a paid company gains each epoch")
     loyalty_unpaid: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Loyalty an unpaid company loses each epoch")
     defect_loyalty: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Loyalty below which an unpaid company defects")
     banditry_chance: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A defecting company turns bandit rather than changing sides (%)")
+
+    @property
+    def contract_epochs(self) -> int:
+        return self.epochs(self.contract_years)
 
 
 @dataclass(frozen=True)

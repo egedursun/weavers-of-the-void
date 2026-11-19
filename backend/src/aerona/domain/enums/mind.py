@@ -129,6 +129,7 @@ class IdeaState(StrEnum):
     INCUBATING = "incubating"
     INTERNALISED = "internalised"
     REJECTED = "rejected"
+    LAPSED = "lapsed"
 
 
 class ValueHolder(StrEnum):

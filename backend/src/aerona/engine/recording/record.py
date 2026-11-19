@@ -85,6 +85,7 @@ def kind_of(key: str) -> IncidentKindSpec:
 
 
 KNOWERS = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+DATED_FACT = "year"
 
 
 def nodes_of(value: RoleValue) -> list[int]:
@@ -210,6 +211,14 @@ def tier_of(text: str | None, steps: Sequence[StepDraft]) -> IncidentTier:
     return IncidentTier.LINE if text is not None else IncidentTier.ACCOUNT
 
 
+def dated_year(spec: IncidentKindSpec, facts: Mapping[str, FactInput]) -> int | None:
+    declared = spec.fact(DATED_FACT)
+    value = facts.get(DATED_FACT)
+    if declared is None or declared.unit is not FactUnit.YEARS or not isinstance(value, (int, float)) or isinstance(value, bool):
+        return None
+    return int(value)
+
+
 async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[int], cause: int | None, world_id: int | None) -> Moment:
     scope = current_scope()
     if scope is not None and scope.key == spec.key and scope.incident_id is not None and scope.moment is not None:
@@ -279,10 +288,15 @@ async def record(
     filling = scope.incident_id if scope is not None and scope.key == key and scope.incident_id is not None else None
     cause_id = cause if cause is not None else scope.cause_incident_id if filling is not None and scope is not None else scoped_cause()
     linked = [node for node, _ in participants if isinstance(known.get(node), EntityRow)] if participants else list(ids)
+    dated = dated_year(spec, given_facts)
+    if at_moment is None and dated is not None:
+        at_moment = Moment(dated)
+    if at_moment is not None and dated is not None and at_moment.year != dated:
+        raise ValidationFailedError(f"A happening of kind {key} told as of year {dated} cannot stand in year {at_moment.year}.")
     moment = at_moment if at_moment is not None else await moment_of(ctx, spec, [node for node, _ in participants] or list(ids), cause_id, world_id)
     cause_moment = await incident_moment(ctx.session, cause_id)
     if at_moment is not None and cause_moment is not None and at_moment.before(cause_moment):
-        raise ValidationFailedError("A happening cannot come before what caused it.")
+        raise ValidationFailedError(f"A happening of kind {key} cannot come before what caused it.")
     draft = ChronicleDraft(
         epoch=epoch,
         kind=kind or spec.chronicle_kind,

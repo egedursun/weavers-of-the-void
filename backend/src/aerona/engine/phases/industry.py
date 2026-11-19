@@ -57,6 +57,7 @@ from aerona.engine.recording.record import StepDraft, record
     "table.plague_responses",
     "table.plant_profiles",
     "table.polity_members",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",

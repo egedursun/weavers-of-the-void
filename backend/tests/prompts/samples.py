@@ -97,7 +97,6 @@ def world_header() -> blocks.WorldHeaderContext:
         prohibitions=["no burning of bone"],
         desire="To be remembered",
         cosmology="The world rests on a salt lake.",
-        tone="Grim and bright",
         naming_rule=NAMING,
         dialects=[blocks.WorldNaming(id=1, name="Aerona", naming=NAMING), blocks.WorldNaming(id=2, name="Vel", naming=NAMING)],
         doom=60,

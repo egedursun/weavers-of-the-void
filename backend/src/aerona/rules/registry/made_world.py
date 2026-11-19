@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.INTERCONNECTION
 P = RuleGroup.POLITY
@@ -11,7 +11,7 @@ K = RuleGroup.CIVILIZATION
 
 
 @dataclass(frozen=True)
-class MadeRealmRules:
+class MadeRealmRules(Spanned):
     time_ratio_min: int = rule(10, 1, 100, M, "Slowest a made realm may run against world time (%)")
     time_ratio_max: int = rule(1000, 100, 10000, M, "Fastest a made realm may run against world time (%)")
     labour_yield: int = rule(1, 0, 100, M, "Wealth each mind working in a labour realm yields its keeper per epoch at world time")
@@ -19,9 +19,13 @@ class MadeRealmRules:
     rest_relief: int = rule(5, 0, 100, M, "Stress a mind sheds each epoch in a realm of leisure")
     worship_gain: int = rule(1, 0, 20, M, "Piety a realm of worship gives its keeper each epoch it holds minds")
     entry_skill: int = rule(30, 0, 100, M, "Skill in its craft a mind needs to enter a realm by interface or by rite")
-    freeze_epochs: int = rule(1, 1, 100, M, "Epochs a made realm stands frozen when its host goes down")
+    freeze_years: int = span(1, 1, 2500, M, "Years a made realm stands frozen when its host goes down")
     upkeep_wealth: int = rule(10, 0, 100, M, "Wealth a keeper needs to keep its realm's host running")
     escape_pct: int = rule(5, 0, 100, M, "Chance each epoch a mind confined in a realm gets out")
+
+    @property
+    def freeze_epochs(self) -> int:
+        return self.epochs(self.freeze_years)
 
 
 @dataclass(frozen=True)

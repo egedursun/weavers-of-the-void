@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.REPUTATION
 
@@ -20,7 +20,7 @@ class LocalRenownRules:
 
 
 @dataclass(frozen=True)
-class CurrencyRules:
+class CurrencyRules(Spanned):
     prestige_pct: int = rule(100, 0, 400, G, "How strongly renown among one's own realm sets prestige (%)")
     piety_pct: int = rule(100, 0, 400, G, "How strongly standing with the realm's faith sets piety (%)")
     dread_execution: int = rule(8, 0, 100, G, "Dread an execution, maiming or torture by a ruler adds")
@@ -39,8 +39,12 @@ class CurrencyRules:
     clergy_loyalty: int = rule(15, 0, 100, G, "Loyalty a priesthood gains when its ruler spends piety")
     clergy_below: int = rule(40, 0, 100, G, "Loyalty under which a ruler spends piety on the clergy")
     silence_cost: int = rule(25, 0, 100, G, "Dread a ruler spends to silence dissent")
-    silence_epochs: int = rule(3, 1, 20, G, "Epochs spent dread silences dissent")
+    silence_years: int = span(3, 1, 500, G, "Years spent dread silences dissent")
     silence_pressure: int = rule(2, 1, 20, G, "Hostile factions in a realm at which its ruler spends dread to silence them")
+
+    @property
+    def silence_epochs(self) -> int:
+        return self.epochs(self.silence_years)
 
 
 @dataclass(frozen=True)

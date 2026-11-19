@@ -4918,7 +4918,7 @@ Every section follows the ground rules of 0.4 and 0.5: concepts by function, val
 | `economic_orders.redistribution_storage_loss_pct` | 10 | 0–100 |
 | `economic_orders.command_efficiency_floor` | 30 | 0–100 |
 | `economic_orders.planning_per_official` | 2 | 0–20 |
-| `economic_orders.transition_stage_epochs` | 1 | 1–20 |
+| `economic_orders.transition_stage_years` | 1 | 1–20 |
 | `economic_orders.uncompensated_grievance` | 40 | 0–100 |
 | `economic_orders.flight_per_grievance_pct` | 10 | 0–100 |
 | `economic_orders.centre_collapse_spread_pct` | 60 | 0–100 |

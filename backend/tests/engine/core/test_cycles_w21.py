@@ -324,7 +324,7 @@ async def test_the_gift_ledger_balances_returns_and_costs_face_when_unanswered(s
     other = await town_of(session, world, "Farside", region=1)
     first = await realm_of(session, world, town, treasury=1000)
     second = await realm_of(session, world, other, treasury=1000)
-    ctx = await context(session, reciprocity={"return_epochs": 1, "refuse_below": -100, "outgive_pct": 0})
+    ctx = await context(session, reciprocity={"return_years": 50, "refuse_below": -100, "outgive_pct": 0})
     gift = await give(ctx, first.id, second.id, 100, GiftOccasion.COURTESY)
     assert gift is not None and gift.state is GiftState.OPEN
     assert balance([gift], first.id) == 100 and balance([gift], second.id) == -100
@@ -341,7 +341,7 @@ async def test_the_gift_ledger_balances_returns_and_costs_face_when_unanswered(s
     assert unanswered is not None
     receiver.treasury = 0
     standing = receiver.legitimacy
-    ctx = await at_epoch(session, ctx.epoch + 5, reciprocity={"return_epochs": 1, "refuse_below": -100, "lapse_prestige": 50})
+    ctx = await at_epoch(session, ctx.epoch + 5, reciprocity={"return_years": 50, "refuse_below": -100, "lapse_prestige": 50})
     await settle_due(ctx, GiftTally())
     assert unanswered.state is GiftState.LAPSED
     assert receiver.legitimacy < standing
@@ -352,7 +352,7 @@ async def test_competitive_gifts_escalate_until_one_side_is_ruined(session: Asyn
     other = await town_of(session, world, "Farside", region=1)
     first = await realm_of(session, world, town, treasury=5000)
     second = await realm_of(session, world, other, treasury=600)
-    namespaces = {"reciprocity": {"return_epochs": 1, "refuse_below": -100, "outgive_pct": 50}}
+    namespaces = {"reciprocity": {"return_years": 50, "refuse_below": -100, "outgive_pct": 50}}
     ctx = await context(session, **namespaces)
     claim = await give(ctx, first.id, second.id, 200, GiftOccasion.FEAST)
     assert claim is not None

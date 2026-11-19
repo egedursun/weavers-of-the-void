@@ -33,7 +33,7 @@ TITLE_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.WAR, "a realm holding lands of another title presses a claim on it", E.TRIGGER, "titles.claim_strength"),
             Coupling(S.LAW, "an equal inheritance divides a late ruler's lesser titles and their lands among the heirs", E.TRIGGER),
             Coupling(S.POLITY, "usurping a title costs the usurper's realm legitimacy", E.MODIFIER, "titles.usurp_legitimacy"),
-            Coupling(S.ENVIRONMENT, "lands held long under another title drift into it", E.FLOW, "titles.drift_epochs"),
+            Coupling(S.ENVIRONMENT, "lands held long under another title drift into it", E.FLOW, "titles.drift_years"),
         ),
     ),
     Mechanic(

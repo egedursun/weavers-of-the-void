@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 M = RuleGroup.MIND
 D = RuleGroup.DIMENSIONS
@@ -9,7 +9,7 @@ F = RuleGroup.FATE_AND_CHRONICLE
 
 
 @dataclass(frozen=True)
-class NeedsWiderRules:
+class NeedsWiderRules(Spanned):
     captive_autonomy: int = rule(60, 0, 100, M, "Autonomy a captive loses")
     serf_autonomy: int = rule(40, 0, 100, M, "Autonomy a serf or slave loses")
     oppression_autonomy_pct: int = rule(50, 0, 200, M, "How much the oppression of a community takes from its members' autonomy (%)")
@@ -17,13 +17,17 @@ class NeedsWiderRules:
     network_knowledge: int = rule(25, 0, 100, M, "Knowledge a member of a network gains")
     stimulation_base: int = rule(30, 0, 100, M, "Stimulation everyone has before what they do and attend")
     stimulation_per_gathering: int = rule(15, 0, 100, M, "Stimulation each gathering attended lately gives")
-    stimulation_epochs: int = rule(3, 1, 50, M, "Epochs over which gatherings attended count toward stimulation")
+    stimulation_years: int = span(3, 1, 1250, M, "Years over which gatherings attended count toward stimulation")
     upkeep_wealth_pct: int = rule(100, 0, 500, M, "How much the wealth of a made being feeds its upkeep (%)")
     fear_of_ending_at: int = rule(30, 0, 100, M, "How far a mortal's values turn from death before old age makes them fear their ending")
     fear_of_ending: int = rule(40, 0, 100, M, "Continuity an old mortal who fears ending lacks")
     activity_need_pct: int = rule(40, 0, 200, M, "How much each share of the day spent on an activity feeds the needs it serves (%)")
     renown_status_at: int = rule(50, 0, 100, M, "Renown at which achievement feeds the need for status")
     renown_status: int = rule(10, 0, 100, M, "Status renown gives")
+
+    @property
+    def stimulation_epochs(self) -> int:
+        return self.epochs(self.stimulation_years)
 
 
 @dataclass(frozen=True)

@@ -1,7 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
     ClauseKind,
@@ -86,7 +86,7 @@ class SentenceView(ApiModel):
     mortal: str
     settlement_id: int | None
     crime: CrimeKind
-    penalty: str
+    penalty: PunishmentKind
     epoch: int
 
 

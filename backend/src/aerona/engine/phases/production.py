@@ -11,7 +11,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind, MaterialOrigin
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
@@ -181,6 +181,7 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
@@ -406,6 +407,7 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
@@ -542,10 +544,12 @@ async def species_products(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.holder_techniques",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
@@ -570,6 +574,7 @@ async def species_products(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -586,10 +591,12 @@ async def deposit_finding(ctx: TickContext) -> None:
         (resource, book.profiles[resource.id]) for resource in book.resources() if resource.id in book.profiles and not book.profiles[resource.id].revealed
     ]
     for resource, profile in hidden:
+        if held(resource.id):
+            continue
         region = book.ground.atlas.top_region(resource.id)
         finders = [community for community in book.communities if book.ground.atlas.top_region(community.id) == region]
         for community in finders:
-            if book.level(community.id, KnowledgeBranch.METALLURGY) < table.deposit_reveal_level:
+            if held(community.id) or book.level(community.id, KnowledgeBranch.METALLURGY) < table.deposit_reveal_level:
                 continue
             if ctx.rng(f"reveal.{resource.id}.{community.id}.{ctx.epoch}").chance(table.deposit_reveal_chance):
                 profile.revealed = True
@@ -634,6 +641,7 @@ async def deposit_finding(ctx: TickContext) -> None:
     "table.place_environment",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_profiles",
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",

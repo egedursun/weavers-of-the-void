@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 M = RuleGroup.MARKETS_AND_MONEY
 C = RuleGroup.CIVILIZATION
@@ -42,15 +42,19 @@ class ForgeryRules:
 
 
 @dataclass(frozen=True)
-class CanonRules:
+class CanonRules(Spanned):
     renown_quality: int = rule(80, 0, 100, C, "Quality from which a work enters its people's canon by renown")
-    age_epochs: int = rule(3, 0, 100, C, "Epochs a work must last before it enters the canon by renown")
+    age_years: int = span(50, 0, 2500, C, "Years a work must last before it enters the canon by renown")
     copies: int = rule(5, 0, 10000, C, "Copies from which a work enters the canon by copying")
     canon_size: int = rule(12, 1, 1000, C, "Works a people's canon holds")
     contest_chance: int = rule(20, 0, 100, C, "Chance each epoch that a rival movement contests a work of the canon (%)")
     contest_loss: int = rule(15, 0, 100, C, "Weight a contested work loses each epoch")
     value_pull: int = rule(5, 0, 100, C, "Share of the gap a people's values close each epoch toward the values its canon carries (%)")
     form_prestige: int = rule(10, 0, 100, C, "Prestige an art form holds at least for every work of it in a canon")
+
+    @property
+    def age_epochs(self) -> int:
+        return self.epochs(self.age_years)
 
 
 @dataclass(frozen=True)
@@ -64,7 +68,7 @@ class ArtMovementRules:
 
 
 @dataclass(frozen=True)
-class SportRules:
+class SportRules(Spanned):
     club_population: int = rule(1500, 0, 1000000, C, "People a town with an arena or stadium needs before a club forms in it")
     club_chance: int = rule(15, 0, 100, C, "Chance each epoch that such a town gains a club (%)")
     clubs_per_epoch: int = rule(4, 0, 1000, C, "Clubs that may form across the cosmos in one epoch")
@@ -72,7 +76,7 @@ class SportRules:
     rating_step: int = rule(5, 0, 100, C, "Rating a club gains for a win or loses for a defeat")
     fandom_step: int = rule(3, 0, 100, C, "Fandom a club gains for a win or loses for a defeat")
     stake_pct: int = rule(2, 0, 100, C, "Share of a town's coin its fans wager on a match, at full fandom (%)")
-    season_epochs: int = rule(2, 1, 100, C, "Epochs a league season runs before a champion is named")
+    season_years: int = span(1, 1, 2500, C, "Years a league season runs before a champion is named")
     athletes: int = rule(5, 0, 100, C, "Athletes a new club signs from the strongest and swiftest mortals of its town")
     field_following: int = rule(
         40,
@@ -82,6 +86,10 @@ class SportRules:
         "Strength a field game (ball, team, racing, combat sport or athletics) needs among a town's people before a club forms there without an arena",
     )
     friendly_chance: int = rule(50, 0, 100, C, "Chance each epoch that the clubs of a world outside any league meet in friendly matches (%)")
+
+    @property
+    def season_epochs(self) -> int:
+        return self.epochs(self.season_years)
 
 
 @dataclass(frozen=True)

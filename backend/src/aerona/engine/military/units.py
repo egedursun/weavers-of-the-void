@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.battle_depth import BASE_DISCIPLINE, WeaponProfile, formation_for
 from aerona.catalog.eras import POWDER
 from aerona.catalog.techniques import UNIT_TECHNIQUES
-from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, UNITS, UnitSpec
+from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, SUCCESSORS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.demography import PeopleCultureRow
@@ -16,13 +17,17 @@ from aerona.db.tables.equipment import ArmyUnitEquipmentRow, UnitDesignTechnique
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, UnitDesignRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.military import ArmourType, MoraleState, ShieldType, Stance, UnitKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
+from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.makers import makers_of
 from aerona.engine.context import TickContext
@@ -32,6 +37,7 @@ from aerona.engine.ecology.domestication import herd_uses, trained_effect, train
 from aerona.engine.economy.materials import node_material
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.equipment.field import equip_stack
+from aerona.engine.eras.effects import era_of, era_order, technique_era, world_start
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import techniques_of
 from aerona.engine.military.templates import blend, realm_template, weights_of
@@ -39,6 +45,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import apportion, clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_base_stats, set_stats, stat, stat_or
+from aerona.engine.recording.record import record as record_incident
 from aerona.engine.regime.book import morale_factor
 from aerona.engine.vehicles.fleet import outfit_army
 from aerona.rules.registry import Rules
@@ -46,6 +53,7 @@ from aerona.rules.registry import Rules
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
 METAL_WEAPONS = frozenset({"crossbow", "blade", "pike", "firearm", "launcher", "beam"})
 FALLBACK = UnitKind.LEVY
+KNOWING = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 MOUNT_NEEDS = {
     UnitKind.LIGHT_CAVALRY: "mount",
     UnitKind.HEAVY_CAVALRY: "mount",
@@ -55,16 +63,6 @@ MOUNT_NEEDS = {
     UnitKind.WAR_BEASTS: "war",
     UnitKind.SKY_RIDERS: "sky_mount",
     UnitKind.BOUND_BEASTS: "bound_beast",
-}
-SUCCESSORS = {
-    UnitKind.ARCHERS: UnitKind.GUNNERS,
-    UnitKind.CROSSBOW_INFANTRY: UnitKind.GUNNERS,
-    UnitKind.JAVELINEERS: UnitKind.GRENADIERS,
-    UnitKind.MOUNTED_ARCHERS: UnitKind.MOUNTED_GUNNERS,
-    UnitKind.LINE_INFANTRY: UnitKind.MECHANISED_INFANTRY,
-    UnitKind.HEAVY_INFANTRY: UnitKind.POWERED_TROOPERS,
-    UnitKind.LIGHT_CAVALRY: UnitKind.PILOTS,
-    UnitKind.MARINES: UnitKind.DROP_TROOPS,
 }
 
 
@@ -82,10 +80,80 @@ def allowed(spec: UnitSpec, community_id: int, knowledge: KnowledgeMap, techniqu
     return not techniques or needed is None or needed in techniques
 
 
-async def doctrine_of(session: AsyncSession, community: EntityRow) -> str:
+@dataclass(frozen=True)
+class EraReach:
+    now: TechnologyEra
+    began: TechnologyEra
+
+
+def settled(rules: Rules, era: EraReach, kind: UnitKind) -> bool:
+    needed = UNIT_TECHNIQUES.get(kind)
+    if needed is None:
+        return True
+    first = technique_era(needed)
+    since = era_order(first) if first is not None else 0
+    return since < era_order(era.began) or era_order(era.now) - since >= rules.military_units.successor_settled_eras
+
+
+def settled_successor(rules: Rules, kind: UnitKind, *, community_id: int, knowledge: KnowledgeMap, techniques: set[Technique], era: EraReach) -> UnitKind:
+    current = kind
+    seen = {kind}
+    while (newer := SUCCESSORS.get(current)) is not None and newer not in seen:
+        if not allowed(UNITS[newer], community_id, knowledge, techniques) or not settled(rules, era, newer):
+            break
+        current = newer
+        seen.add(newer)
+    return current
+
+
+async def knower(session: AsyncSession, owner: EntityRow) -> EntityRow:
+    if owner.entity_type in KNOWING:
+        return owner
+    return await people_of(session, owner) or owner
+
+
+async def era_here(ctx: TickContext, techniques: set[Technique]) -> EraReach:
+    began = await world_start(ctx.session)
+    return EraReach(era_of(techniques, began), began)
+
+
+async def modernise(ctx: TickContext, army: EntityRow, owner: EntityRow, rows: Sequence[ArmyUnitRow], knowledge: KnowledgeMap) -> int:
+    if held(army.id) or held(owner.id):
+        return 0
+    profile = await ctx.session.get(ArmyProfileRow, army.id)
+    if profile is not None and "doctrine" not in profile.locked:
+        profile.doctrine = await doctrine_of(ctx.session, owner)
+    knowing = await knower(ctx.session, owner)
+    techniques = await fieldable(ctx, knowing)
+    era = await era_here(ctx, techniques)
+    metallurgy = knowledge.level(knowing.id, KnowledgeBranch.METALLURGY)
+    equipment = stat(army, "equipment") or 0
+    moved = 0
+    for row in rows:
+        newer = settled_successor(ctx.rules, row.kind, community_id=knowing.id, knowledge=knowledge, techniques=techniques, era=era)
+        if newer is row.kind or "kind" in (row.locked or []):
+            continue
+        older = row.kind
+        spec = UNITS[newer]
+        row.kind, row.design_id = newer, None
+        row.armour, row.shield, row.helmet = outfit(spec, metallurgy, equipment)
+        row.weapons = weapon_mix(spec, metallurgy)
+        row.social_class = spec.social_class
+        await equip_stack(ctx, row, spec, owner, None)
+        await record_incident(
+            ctx,
+            "military.stack_modernised",
+            roles={IncidentRole.SUBJECT: army.id, IncidentRole.OWNER: owner.id},
+            facts={"from_kind": older, "to_kind": newer, "soldiers": row.count},
+        )
+        moved += 1
+    return moved
+
+
+async def doctrine_of(session: AsyncSession, community: EntityRow) -> MartialStyle:
     people = await people_of(session, community)
     culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.martial_style.value if culture is not None else "shieldwall"
+    return culture.martial_style if culture is not None else MartialStyle.SHIELDWALL
 
 
 def best(kinds: tuple[UnitKind, ...], community_id: int, knowledge: KnowledgeMap, techniques: set[Technique] | None = None) -> UnitKind | None:
@@ -178,13 +246,21 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
             moved = plan[kind] * table.successor_share_pct / PERCENT
             plan[kind] -= moved
             add(plan, successor, moved)
+    knowing = await knower(ctx.session, community)
+    known = techniques if knowing is community else await fieldable(ctx, knowing)
+    era = await era_here(ctx, known)
+    for kind in sorted(plan):
+        newer = settled_successor(ctx.rules, kind, community_id=knowing.id, knowledge=knowledge, techniques=known, era=era)
+        if newer is not kind:
+            add(plan, newer, plan.pop(kind))
+    fallback = settled_successor(ctx.rules, FALLBACK, community_id=knowing.id, knowledge=knowledge, techniques=known, era=era)
     rest = max(0.0, 1 - sum(plan.values()))
-    plan[FALLBACK] = plan.get(FALLBACK, 0.0) + rest
+    plan[fallback] = plan.get(fallback, 0.0) + rest
     total = sum(plan.values()) or 1.0
     counts = {kind: round_half_up(size * share / total) for kind, share in plan.items()}
-    counts = {kind: count for kind, count in counts.items() if count >= table.min_stack or kind is FALLBACK}
+    counts = {kind: count for kind, count in counts.items() if count >= table.min_stack or kind is fallback}
     gap = size - sum(counts.values())
-    counts[FALLBACK] = max(0, counts.get(FALLBACK, 0) + gap)
+    counts[fallback] = max(0, counts.get(fallback, 0) + gap)
     return {kind: count for kind, count in counts.items() if count > 0}
 
 
@@ -240,7 +316,7 @@ async def profile_of(ctx: TickContext, army: EntityRow, owner: EntityRow | None)
     if profile is not None:
         return profile
     atlas = await RegionAtlas.load(ctx.session)
-    doctrine = await doctrine_of(ctx.session, owner) if owner is not None else "shieldwall"
+    doctrine = await doctrine_of(ctx.session, owner) if owner is not None else MartialStyle.SHIELDWALL
     profile = ArmyProfileRow(
         army_entity_id=army.id,
         region_entity_id=atlas.top_region(army.id) or (atlas.top_region(owner.id) if owner is not None else None),
@@ -347,6 +423,8 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     size = stat(army, "size") or 0
     await profile_of(ctx, army, owner)
     if rows:
+        if owner is not None:
+            await modernise(ctx, army, owner, rows, knowledge)
         align(army, rows)
         return rows
     if size <= 0 or owner is None:
@@ -469,7 +547,7 @@ async def retire_stacks(session: AsyncSession, army_id: int) -> int:
 
 
 async def reconcile_sizes(ctx: TickContext) -> dict[str, int]:
-    found = {"aligned": 0, "mustered": 0, "retired": 0}
+    found = {"aligned": 0, "mustered": 0, "retired": 0, "modernised": 0}
     knowledge: KnowledgeMap | None = None
     for row in list(await ctx.session.scalars(select(ArmyRow).order_by(ArmyRow.entity_id))):
         army = await ctx.session.get(EntityRow, row.entity_id)
@@ -490,6 +568,10 @@ async def reconcile_sizes(ctx: TickContext) -> dict[str, int]:
                 await muster(ctx, army, await ctx.session.get(EntityRow, row.owner_entity_id), knowledge)
                 found["mustered"] += 1
             continue
+        owner = await ctx.session.get(EntityRow, row.owner_entity_id) if row.owner_entity_id is not None else None
+        if owner is not None:
+            knowledge = knowledge or await KnowledgeMap.load(ctx.session)
+            found["modernised"] += await modernise(ctx, army, owner, stacks, knowledge)
         if sum(stack.count for stack in stacks) != size:
             align(army, stacks)
             found["aligned"] += 1

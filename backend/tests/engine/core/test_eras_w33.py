@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.eras import ERA_FLOORS
+from aerona.catalog.units import SUCCESSORS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
@@ -11,18 +13,23 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.eras import EraChannel, ProgrammeStage
+from aerona.domain.enums.eras import EraChannel, ProgrammeStage, TechFamily
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.world import TechnologyEra
-from aerona.domain.models.entity_stats import NaturalLawStats, PolityStats
+from aerona.domain.models.entity_stats import KnowledgeStats, NaturalLawStats, PolityStats
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_of, era_techniques, tech_bonus, tech_factor, tech_relief
 from aerona.engine.eras.progress import EraTally, era_doom, keep_floors, keep_programmes
+from aerona.engine.lore.research import ensure_holders
+from aerona.engine.military.units import era_here, fieldable, settled_successor
 from aerona.engine.phases.factions import eligible_kinds
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.technology.profiles import family_level
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
@@ -129,7 +136,7 @@ async def test_a_realm_without_coin_abandons_and_a_spying_rival_sets_a_programme
     rival = await realm(session, world, rival_town)
     session.add(SpyNetworkRow(owner_entity_id=rival.id, target_entity_id=rich.id, agent_ids=[], since_epoch=0, revealed_aims=[], locked=[]))
     await session.flush()
-    ctx = await at(session, 3, programmes={"start_chance": 0, "sabotage_chance": 100, "abandon_below": 100})
+    ctx = await at(session, 3, programmes={"start_chance": 0, "sabotage_chance": 100, "abandon_below": 100, "base_years": 400})
     tally = EraTally()
     await keep_programmes(ctx, tally)
     assert starved.stage is ProgrammeStage.ABANDONED and tally.abandoned == 1
@@ -181,3 +188,29 @@ async def test_industry_raises_unions_of_workers_societies_of_engineers_and_exch
     await knows(session, town, Technique.FACTORY_PRODUCTION, Technique.STEAM_POWER, Technique.BANKING)
     found = set(await eligible_kinds(await at(session, 3), town))
     assert {FactionKind.WORKERS_UNION, FactionKind.ENGINEERS_SOCIETY, FactionKind.FINANCIERS} <= found
+
+
+async def test_a_people_of_an_information_age_world_keeps_its_era_whatever_old_lore_it_knows(session: AsyncSession, world: CoreWorld) -> None:
+    cosmos = await CosmosRepository(session).require_cosmos()
+    cosmos.genesis_settings = GenesisSettings(magic=50, danger=50, peoples=1, technology=TechnologyEra.INFORMATION)
+    smithing = await entity(session, "First smithing", EntityType.KNOWLEDGE, KnowledgeStats(level=1), world_id=world.world.id)
+    smithing.knowledge_branch = KnowledgeBranch.METALLURGY
+    await bond(session, world.people.id, smithing.id, BondKind.KNOWS)
+    ctx = await at(session, 1)
+    await keep_floors(ctx, EraTally())
+    await ensure_holders(ctx)
+    await keep_floors(ctx, EraTally())
+    levels = {row.branch: row.level for row in await session.scalars(select(HolderLevelRow).where(HolderLevelRow.holder_entity_id == world.people.id))}
+    floors = ERA_FLOORS[TechnologyEra.INFORMATION]
+    assert all(levels.get(branch, 0) >= level for branch, level in floors.items()), levels
+    known = await era_techniques(session, world.people.id)
+    assert {Technique.FIREARMS, Technique.RAILWAYS, Technique.ELECTRICITY, Technique.TELEPHONE, Technique.COMPUTATION, Technique.RADIO} <= known
+    assert Technique.NUCLEAR_POWER not in known
+    assert era_of(known) is TechnologyEra.INFORMATION
+    assert await family_level(session, world.people.id, TechFamily.TRANSPORT) >= floors[KnowledgeBranch.SHIPBUILDING]
+    knowledge = await KnowledgeMap.load(session)
+    fielded = await fieldable(ctx, world.people)
+    reach = await era_here(ctx, fielded)
+    newest = {kind: settled_successor(ctx.rules, kind, community_id=world.people.id, knowledge=knowledge, techniques=fielded, era=reach) for kind in SUCCESSORS}
+    assert newest[UnitKind.ARCHERS] is UnitKind.GUNNERS and newest[UnitKind.LEVY] is UnitKind.GUNNERS
+    assert newest[UnitKind.SHIELD_INFANTRY] is UnitKind.MECHANISED_INFANTRY and newest[UnitKind.CHARIOTS] is UnitKind.VEHICLE_CREW

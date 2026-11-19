@@ -445,6 +445,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
 
 
 @reads(
+    "army.equipment",
     "army.experience",
     "army.morale",
     "army.size",
@@ -1733,7 +1734,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.deeds",
     "table.demographic_transitions",
     "table.depots",
+    "table.design_components",
+    "table.design_mounts",
+    "table.design_sections",
     "table.designated_heirs",
+    "table.designs",
     "table.dimensional_events",
     "table.dimensions",
     "table.disease_profiles",
@@ -1920,6 +1925,11 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.deed_claims",
     "table.deeds",
     "table.depots",
+    "table.design_components",
+    "table.design_mounts",
+    "table.design_sections",
+    "table.design_techniques",
+    "table.designs",
     "table.districts",
     "table.divine_standing",
     "table.echelons",

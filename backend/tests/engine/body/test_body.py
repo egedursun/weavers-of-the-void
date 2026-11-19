@@ -103,7 +103,7 @@ async def test_surgery_takes_a_festering_limb_instead_of_a_life(realm: Realm) ->
     soldier = await mortal(realm, "Dovan", location_id=town.id, role=MortalRole.WARRIOR)
     lore = await knowledge_at(realm, KnowledgeBranch.MEDICINE, level=2)
     await link(realm.session, town.id, lore.id, BondKind.KNOWS)
-    rules = tuned(healing={"lethal_after_epochs": 1, "amputation_chance": 100}, conditions={})
+    rules = tuned(healing={"lethal_after_years": 50, "amputation_chance": 100}, conditions={})
     ctx = context(realm.session, rules)
     wounding = await apply_hits(ctx, soldier, Harm(20, HarmCause.BATTLE, "fell", part="left_leg", kind=InjuryKind.DEEP_CUT, severity=3), lethal=False)
     wounding.injuries[0].state = InjuryState.INFECTED

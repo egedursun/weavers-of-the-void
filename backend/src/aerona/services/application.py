@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, UOWTransaction
 from sqlalchemy.orm.attributes import instance_state
 
+from aerona.agents.grounding import GroundedModel
 from aerona.agents.metrics import TelemetrySink
 from aerona.agents.ports import LanguageModel, bus_publisher
 from aerona.agents.runtime import AgentRuntime
@@ -179,7 +180,9 @@ async def build_application(
     exchange = ExchangeService(settings, backups, discovery, world_changed, WorldMerger(database), store=store)
     telemetry = await setup_telemetry(telemetry_url(settings.data_dir))
     metrics = MetricsService(telemetry, current)
-    language_model = model or LlmClient(rules, settings.llm_enabled, metrics.sink(TelemetrySink(telemetry)), publish=bus_publisher(bus))
+    language_model = GroundedModel(
+        model or LlmClient(rules, settings.llm_enabled, metrics.sink(TelemetrySink(telemetry)), publish=bus_publisher(bus)), database
+    )
     agents = attach_toolkits(AgentRuntime(database=database, model=language_model, publish=bus_publisher(bus)))
     errors = ErrorRing()
     install_error_ring(errors)

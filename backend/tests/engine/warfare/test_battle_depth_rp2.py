@@ -4,6 +4,7 @@ from dataclasses import replace
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import PlaceCover, TerrainKind
 from aerona.domain.enums.military import ArmourType, Formation, MoraleState, ShieldType, Stance, Tactic, TargetClass, UnitKind
@@ -80,7 +81,7 @@ def unit(
 
 def side(name: str, rows: list[ArmyUnitRow], *, ident: int = 1, defending: bool = False, skill: int = 50) -> Side:
     entity = EntityRow(id=ident, name=name, entity_type=EntityType.PEOPLE)
-    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine="shieldwall", entrenchment=0, baggage=100, loot=0, locked=[])
+    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine=MartialStyle.SHIELDWALL, entrenchment=0, baggage=100, loot=0, locked=[])
     return Side(entity=entity, army=entity, profile=profile, stacks=make_stacks(rows), edge=1.0, defending=defending, skill=skill, traits=set())
 
 

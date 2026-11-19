@@ -46,7 +46,7 @@ from aerona.engine.sacred.places import realm_of_town, region_of
 from aerona.engine.services.war import ongoing_war_count
 
 GRIEVANCES = frozenset({MemoryKind.BETRAYED_ME, MemoryKind.ILL_WILL, MemoryKind.KILLED_KIN})
-PENALTY_OUTCOMES = {PunishmentKind.DEATH.value: AccusationOutcome.KILLED, PunishmentKind.EXILE.value: AccusationOutcome.EXILED}
+PENALTY_OUTCOMES = {PunishmentKind.DEATH: AccusationOutcome.KILLED, PunishmentKind.EXILE: AccusationOutcome.EXILED}
 
 ECCENTRIC = frozenset({TraitKind.RECLUSIVE, TraitKind.SCATTERBRAINED, TraitKind.LITERAL_MINDED, TraitKind.AWKWARD, TraitKind.BLUNT})
 HOSTILE = "hostile"
@@ -340,7 +340,7 @@ async def settle(ctx: TickContext, tally: WitchTally) -> None:
         if held(row.accused_node_id) or "outcome" in row.locked or case is None or case.verdict is None:
             continue
         if case.verdict is Verdict.GUILTY:
-            row.outcome = PENALTY_OUTCOMES.get(case.penalty or "", AccusationOutcome.PUNISHED)
+            row.outcome = PENALTY_OUTCOMES.get(case.penalty, AccusationOutcome.PUNISHED) if case.penalty is not None else AccusationOutcome.PUNISHED
         else:
             row.outcome = AccusationOutcome.EXILED if case.verdict is Verdict.FLED else AccusationOutcome.CLEARED
         row.closed_epoch = ctx.epoch

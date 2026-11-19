@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 S = RuleGroup.SETTLEMENTS
 M = RuleGroup.MIND
@@ -41,14 +41,14 @@ class CollectiveBehaviourRules:
     mood_decay: int = rule(10, 0, 100, S, "Anger, anxiety and fervour a town loses each epoch")
     heat: int = rule(20, 0, 100, S, "Mood a trigger at full force adds to a town's anger, anxiety or fervour")
     deterrence_full: int = rule(8, 1, 100, S, "Soldiers and watch per hundred dwellers that give a town full deterrence")
-    spread_pct: int = rule(12, 0, 100, S, "Spread of thresholds around a town's mean, as a share of the scale (%)")
+    spread_pct: int = rule(20, 0, 100, S, "Spread of thresholds around a town's mean, as a share of the scale (%)")
     sample: int = rule(200, 10, 5000, S, "Dwellers a cascade samples to find who joins")
     famine_food: int = rule(30, 0, 1000, S, "Food stock per hundred dwellers below which a town feels famine")
     price_spike: int = rule(160, 100, 1000, S, "Food price, against the usual hundred, past which a town feels a price spike")
 
 
 @dataclass(frozen=True)
-class HistoriographyRules:
+class HistoriographyRules(Spanned):
     official_fidelity: int = rule(60, 0, 100, C, "Fidelity of an official chronicle to what happened (%)")
     folk_fidelity: int = rule(45, 0, 100, C, "Fidelity of folk memory to what happened (%)")
     foreign_fidelity: int = rule(50, 0, 100, C, "Fidelity of a foreign account to what happened (%)")
@@ -60,12 +60,16 @@ class HistoriographyRules:
     myth_cohesion: int = rule(10, 0, 100, C, "Cohesion a fully credited founding myth lends its people")
     myth_legitimacy: int = rule(8, 0, 100, C, "Legitimacy a fully credited founding myth lends its realm")
     debunk_cost: int = rule(15, 0, 100, C, "Cohesion and legitimacy a debunked founding myth costs")
-    commemorate_every: int = rule(10, 1, 1000, C, "Epochs between the anniversaries a people relives")
+    commemorate_every_years: int = span(100, 1, 25000, C, "Years between the anniversaries a people relives")
     commemoration_fade: int = rule(5, 0, 100, C, "Strength a commemoration loses each anniversary nobody keeps")
     grievance_unrest: int = rule(4, 0, 100, C, "Unrest a kept anniversary of a massacre or defeat stirs")
     pride_order: int = rule(3, 0, 100, C, "Order a kept anniversary of a victory or founding lends")
     irredentist_claim_at: int = rule(60, 0, 100, W, "Memory strength of a lost land past which its old holder presses a claim")
     lost_land_fade: int = rule(2, 0, 100, W, "Memory strength a lost land loses each epoch")
+
+    @property
+    def commemorate_every(self) -> int:
+        return self.epochs(self.commemorate_every_years)
 
 
 @dataclass(frozen=True)
@@ -103,12 +107,20 @@ class SocialLearningRules:
 
 
 @dataclass(frozen=True)
-class GenerationRules:
-    youth_epochs: int = rule(2, 1, 100, P, "Epochs of a generation's youth, when the great incidents shape it")
+class GenerationRules(Spanned):
+    youth_years: int = span(20, 1, 2500, P, "Years of a generation's youth, when the great incidents shape it")
     shift: int = rule(10, 0, 100, M, "Value points a formative incident shifts the generation it shaped")
     inherited_pct: int = rule(50, 0, 100, M, "Share of a generation's shift its children inherit (%)")
     turnover_unrest: int = rule(5, 0, 100, M, "Unrest a generation's passing stirs as suppressed movements rise")
-    lifespan_epochs: int = rule(8, 1, 1000, P, "Epochs a generation lives on after its youth before it has passed")
+    lifespan_years: int = span(60, 1, 25000, P, "Years a generation lives on after its youth before it has passed")
+
+    @property
+    def youth_epochs(self) -> int:
+        return self.epochs(self.youth_years)
+
+    @property
+    def lifespan_epochs(self) -> int:
+        return self.epochs(self.lifespan_years)
 
 
 @dataclass(frozen=True)

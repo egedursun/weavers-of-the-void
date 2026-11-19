@@ -7,6 +7,7 @@ PHASE_NAMES: tuple[str, ...] = (
     "admiralty",
     "advance_epoch",
     "affairs",
+    "affairs_of_the_ended",
     "ages",
     "agrarian_cycles",
     "appeals",

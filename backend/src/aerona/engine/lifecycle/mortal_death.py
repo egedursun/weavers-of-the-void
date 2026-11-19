@@ -15,6 +15,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.crafts import InsuranceCover
@@ -25,9 +26,10 @@ from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.node import NodeKind
-from aerona.domain.enums.records import StepAction, StepOutcome
+from aerona.domain.enums.records import ProcessClock, StepAction, StepOutcome
 from aerona.domain.enums.transform import TransformKind
 from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
+from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
 from aerona.engine.crafts.heirs import pass_rights
@@ -53,6 +55,7 @@ from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.moments import incident_moment, moment_for
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft
 from aerona.engine.recording.record import record as record_happening
 from aerona.engine.relations.passions import bereaved
@@ -73,6 +76,29 @@ class DeathResult:
     entity: EntityRow
     heir: EntityRow | None
     text: str
+
+
+HEARSAY_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+
+
+async def last_deed(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
+    deeds = select(IncidentParticipantRow.incident_id).where(
+        IncidentParticipantRow.node_id == mortal_id, IncidentParticipantRow.role.not_in(sorted(HEARSAY_ROLES))
+    )
+    rows = await session.execute(
+        select(IncidentRow.year, IncidentRow.season, IncidentRow.day, IncidentRow.hour).where(
+            IncidentRow.id.in_(deeds), IncidentRow.epoch == epoch, IncidentRow.year.is_not(None)
+        )
+    )
+    return latest(*(Moment(year, season, day, hour) for year, season, day, hour in rows if year is not None))
+
+
+async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | None, cause_id: int | None, year: int | None) -> Moment:
+    participants = [node for node in (mortal.id, killer_id) if node is not None]
+    cause = await incident_moment(ctx.session, cause_id if cause_id is not None else CAUSE_SCOPE.get())
+    chosen = await moment_for(ctx, ProcessClock.INSTANT, key=f"death.{mortal.id}", participants=participants, cause_moment=cause)
+    chosen = chosen.at_least(await last_deed(ctx.session, mortal.id, ctx.epoch))
+    return chosen if year is None or chosen.year >= year else Moment(year)
 
 
 async def world_year(session: AsyncSession) -> int:
@@ -100,8 +126,9 @@ async def die(
     flags = await entities.flags(mortal.id)
     if not forced and immortal(flags):
         return None
-    rng = ctx.rng(seed_of("death", mortal.id))
-    death_year = year if year is not None else await world_year(session) + rng.die(ctx.rules.time.years_per_epoch) - 1
+    cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
+    moment = await death_moment(ctx, mortal, killer_id, cause_id, year)
+    death_year = moment.year
     set_stats(mortal, death_year=death_year)
     age = stat(mortal, "age")
     age_text = str(age) if age is not None else "unknown"
@@ -136,7 +163,6 @@ async def die(
     roles: dict[IncidentRole, RoleValue] = {IncidentRole.VICTIM: mortal.id, IncidentRole.HEIR: heir.id if heir is not None else None}
     if killer_id is not None and killer_kind is not None:
         roles[IncidentRole.ACTOR] = killer_id
-    cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
     key = "mortal.death.natural" if natural else "mortal.death.slain" if IncidentRole.ACTOR in roles else "mortal.death.cause"
     facts: dict[str, FactInput] = {"manner": manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN), "age": age or 0, "year": death_year}
     steps = (
@@ -147,7 +173,7 @@ async def die(
             outcome=StepOutcome.KILLED,
         ),
     )
-    written = await record_happening(ctx, key, roles=roles, facts=facts, steps=steps, son_id=son_id, cause=cause_id, place=mortal.location_id)
+    written = await record_happening(ctx, key, roles=roles, facts=facts, steps=steps, son_id=son_id, cause=cause_id, place=mortal.location_id, at_moment=moment)
     text = written.text
     await after_death(ctx, mortal)
     await fallen_body_died(ctx, mortal)

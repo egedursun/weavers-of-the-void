@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class MarketRules:
+class MarketRules(Spanned):
     flow_price_gap_pct: int = rule(
         150, 100, 10000, RuleGroup.ECONOMY, "Trade flow: goods move when the buyer's price is at least this share of the seller's (%)"
     )
@@ -16,15 +16,15 @@ class MarketRules:
     flow_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Trade flow: prosperity a seller gains for selling a good")
     credit_threshold: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Trade flow: a buyer below this wealth or prosperity buys on credit (a debt is born)")
     credit_chance: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Trade flow: chance a buyer who could pay still buys a large load on credit (%)")
-    credit_term: int = rule(3, 1, 50, RuleGroup.ECONOMY, "Term of a credit debt (epochs)")
+    credit_term_years: int = span(3, 1, 1250, RuleGroup.ECONOMY, "Term of a credit debt (years)")
     credit_divisor: int = rule(3, 1, 1000, RuleGroup.ECONOMY, "Size of a credit debt: the moved amount divided by this")
-    debt_patience: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Debt: epochs the creditor waits after the term before acting")
+    debt_patience_years: int = span(1, 0, 2500, RuleGroup.ECONOMY, "Debt: years the creditor waits after the term before acting")
     debt_ending_cap: int = rule(3, 0, 100, RuleGroup.ECONOMY, "Debt: most overdue debts closed per epoch")
     debt_forgive_relation: int = rule(30, -100, 100, RuleGroup.ECONOMY, "Debt: a creditor whose relation to the debtor is at least this forgives the debt")
     debt_tribute_chance: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Debt: chance a stronger creditor turns an overdue debt into tribute (%)")
     debt_seize_chance: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Debt: chance the creditor seizes one of the debtor's resources (%)")
     debt_war_chance: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Debt: chance the creditor declares the debtor its enemy over an overdue debt (%)")
-    debt_expiry: int = rule(8, 1, 1000, RuleGroup.ECONOMY, "Debt: an unclosed debt lapses this many epochs after its term")
+    debt_expiry_years: int = span(100, 1, 25000, RuleGroup.ECONOMY, "Debt: an unclosed debt lapses this many years after its term")
     debt_forgive_gain: int = rule(10, 0, 100, RuleGroup.ECONOMY, "Relation gained when a debt is forgiven or written off")
     debt_grudge: int = rule(15, 0, 100, RuleGroup.ECONOMY, "Relation lost when a debt turns into tribute, seizure or war")
     price_scarce_abundance: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Resource price: a resource below this abundance rises in value")
@@ -48,3 +48,15 @@ class MarketRules:
         5, 0, 100, RuleGroup.ECONOMY, "Debt law of jubilee: relation the debtor gains toward the creditor when the jubilee wipes the debt"
     )
     currency_trust_pct: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Share of a debt's weight lost when the coin it is counted in has lost all trust (%)")
+
+    @property
+    def credit_term(self) -> int:
+        return self.epochs(self.credit_term_years)
+
+    @property
+    def debt_patience(self) -> int:
+        return self.epochs(self.debt_patience_years)
+
+    @property
+    def debt_expiry(self) -> int:
+        return self.epochs(self.debt_expiry_years)

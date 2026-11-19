@@ -75,6 +75,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.mind_attributes",
     "table.mortal_equipment",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.prostheses",
 )
@@ -87,7 +88,12 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "settlement.wealth",
     "table.bodies",
     "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.mortal_profiles",
 )
@@ -126,6 +132,7 @@ async def curse_decay(ctx: TickContext) -> None:
     "table.incidents",
     "table.node_births",
     "table.nodes",
+    "table.polity_profiles",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:

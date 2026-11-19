@@ -196,7 +196,7 @@ AGRARIAN_MECHANICS = (
         couplings=(
             Coupling(S.ENVIRONMENT, "fitting works lower disaster losses", E.MODIFIER, "resilience.per_level_pct"),
             Coupling(S.ECONOMY, "towns pay for works from their investment", E.FLOW, "resilience.cost"),
-            Coupling(S.POLITY, "a realm orders an unready town to prepare by mandate", E.TRIGGER, "resilience.memory_epochs"),
+            Coupling(S.POLITY, "a realm orders an unready town to prepare by mandate", E.TRIGGER, "resilience.memory_years"),
             Coupling(S.ENVIRONMENT, "stockpiles cushion failed harvests", E.MODIFIER, "famine_foods.storage_fill"),
         ),
     ),

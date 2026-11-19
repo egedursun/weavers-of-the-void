@@ -87,7 +87,7 @@ ESTATE_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.WAR, "a strong company seizes the land at its route's far end", E.TRIGGER, "companies.conquest_strength"),
             Coupling(S.ECONOMY, "a collapsing company costs every shareholder", E.FLOW, "companies.collapse_loss"),
             Coupling(S.WAR, "a company pays hired guards from its coffers and grows stronger", E.FLOW, "companies.guard_wage"),
-            Coupling(S.POLITY, "a company that holds the far land long enough rules it as a realm", E.TRIGGER, "companies.dominion_epochs"),
+            Coupling(S.POLITY, "a company that holds the far land long enough rules it as a realm", E.TRIGGER, "companies.dominion_years"),
             Coupling(S.ECONOMY, "a collapsing company defaults on its loans and its lenders lose by it", E.FLOW, "banking.default_bank_loss"),
         ),
     ),

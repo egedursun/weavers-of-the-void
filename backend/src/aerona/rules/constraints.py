@@ -26,6 +26,7 @@ ASCENDING_CHAINS: list[AscendingChain] = [
     AscendingChain(("campaigns.breach_min_pct", "campaigns.breach_max_pct")),
     AscendingChain(("society.food_rate_min_pct", "society.food_rate_max_pct")),
     AscendingChain(("markets.price_floor_pct", "markets.price_cap_pct")),
+    AscendingChain(("market.debt_patience_years", "market.debt_expiry_years"), strict=True),
     AscendingChain(("economy.supply_index_epoch", "economy.storage_base_index")),
     AscendingChain(("society.poverty_revolt_min_population", "society.poverty_revolt_always_population")),
     AscendingChain(("heroes.quest_success_min_pct", "heroes.quest_success_max_pct")),

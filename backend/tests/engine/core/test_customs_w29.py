@@ -209,7 +209,7 @@ async def test_youths_form_an_age_set_that_may_not_wed_and_rises_to_warriors(ses
     await keep_age_sets(await at(session, 3), tally)
     member = await session.get(AgeSetMemberRow, first.id)
     assert member is not None and tally.initiated == 2 and await too_young_to_wed(session, first, second)
-    await keep_age_sets(await at(session, 6, age_sets={"span_epochs": 1, "grade_epochs": 1}), tally)
+    await keep_age_sets(await at(session, 6, age_sets={"span_years": 50, "grade_years": 50}), tally)
     found = await session.get(AgeSetRow, member.age_set_id)
     assert found is not None and found.grade is AgeGrade.WARRIORS and await warriors_ready(session, folk.id)
     ceremony = await session.scalar(select(GatheringRow).where(GatheringRow.host_node_id == folk.id, GatheringRow.kind == GatheringKind.MILESTONE))

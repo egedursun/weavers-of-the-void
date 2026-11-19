@@ -1948,7 +1948,7 @@ Value drift (F5) is the aggregate of these individual copy events, so a single c
 #### F6 reference pass: learning, rust and teaching
 
 - **Learning rate** per skill = base × the governing attributes (F13; for example blade uses agility and kinaesthetic sense, oratory uses linguistic ability and social awareness) × the teacher's skill gap × the practice volume.
-- **Rust:** skills unused for `skills.rust_epochs` [2] lose `skills.rust_rate` [8%] per epoch down to a floor of the highest level ever reached × `skills.rust_floor_pct` [60]. Retained skill memory makes re-learning fast.
+- **Rust:** skills unused for `skills.rust_years` [2] lose `skills.rust_rate` [8%] per epoch down to a floor of the highest level ever reached × `skills.rust_floor_pct` [60]. Retained skill memory makes re-learning fast.
 - **Ways to learn:**
   - doing (job, battle, duel);
   - demonstration (watching a master in the same workplace);

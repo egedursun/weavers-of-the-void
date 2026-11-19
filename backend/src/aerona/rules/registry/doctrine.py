@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 R = RuleGroup.RELIGION_AND_LANGUAGE
 D = RuleGroup.DEATH_AND_RESURRECTION
@@ -40,7 +40,7 @@ class DoctrineRules:
 
 
 @dataclass(frozen=True)
-class ZealRules:
+class ZealRules(Spanned):
     decay: int = rule(3, 0, 100, R, "Zeal lost each epoch with nothing to stir it")
     persecution: int = rule(10, 0, 100, R, "Zeal persecution stirs")
     martyrdom: int = rule(8, 0, 100, R, "Zeal each martyr stirs, more where martyrdom is glory")
@@ -51,7 +51,7 @@ class ZealRules:
     prosperity_pct: int = rule(10, 0, 100, R, "Zeal comfort erodes at full prosperity (%)")
     scandal: int = rule(10, 0, 100, R, "Zeal a clergy scandal costs")
     doom_omen: int = rule(6, 0, 100, R, "Zeal each doom omen in the sky stirs")
-    persecution_memory_epochs: int = rule(3, 0, 50, R, "Epochs a persecution or desecration stays fresh in a people's memory")
+    persecution_memory_years: int = span(30, 0, 1250, R, "Years a persecution or desecration stays fresh in a people's memory")
     persecution_grievance: int = rule(10, 0, 100, R, "Grievance a persecuted people holds against the realm persecuting it")
     scandal_chance: int = rule(4, 0, 100, R, "A vicious cleric's vice comes to light in an epoch (%)")
     failed_prophecy: int = rule(10, 0, 100, R, "Zeal a mocked prophecy costs")
@@ -69,6 +69,10 @@ class ZealRules:
     persecution_prosperity: int = rule(5, 0, 100, R, "Prosperity a town loses while fanatics persecute its unbelievers")
     persecution_unrest: int = rule(10, 0, 100, R, "Unrest a town gains while fanatics persecute its unbelievers")
     flight_prosperity: int = rule(8, 0, 100, R, "Prosperity a town loses when its followers leave their work to await the end")
+
+    @property
+    def persecution_memory_epochs(self) -> int:
+        return self.epochs(self.persecution_memory_years)
 
 
 @dataclass(frozen=True)
@@ -94,14 +98,18 @@ class TithesRules:
 
 
 @dataclass(frozen=True)
-class MissionsRules:
+class MissionsRules(Spanned):
     base_pct: int = rule(3, 0, 100, R, "Conversion a mission along a trade route brings (%)")
     skill_pct: int = rule(100, 0, 300, R, "Weight of the missionary's skill (%)")
     miracle_pct: int = rule(50, 0, 300, R, "Weight of the god's recent miracles (%)")
     rival_clergy_pct: int = rule(50, 0, 300, R, "Weight of the rival clergy's quality against a mission (%)")
     cap: int = rule(3, 0, 100, R, "Most missions in an epoch")
     journey_pct: int = rule(2, 0, 100, R, "Conversion a missionary arriving on a journey brings (%)")
-    journey_epochs: int = rule(2, 0, 50, R, "Epochs a journey's preachers keep preaching where they arrived")
+    journey_years: int = span(3, 0, 1250, R, "Years a journey's preachers keep preaching where they arrived")
+
+    @property
+    def journey_epochs(self) -> int:
+        return self.epochs(self.journey_years)
 
 
 @dataclass(frozen=True)

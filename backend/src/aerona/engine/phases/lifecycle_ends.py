@@ -1,6 +1,7 @@
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_ends import EndingTally, keep_world_ends
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lifecycle.affairs import AffairTally, close_affairs
 from aerona.engine.lifecycle.ends import EndTally, keep_ends
 from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
@@ -46,4 +47,43 @@ async def world_ends(ctx: TickContext) -> None:
     count(ctx, "world_ends", tally)
 
 
-PHASES = (Phase("lifecycle_ends", lifecycle_ends), Phase("world_ends", world_ends))
+@reads(
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.gatherings",
+    "table.gifts",
+    "table.hero_quests",
+    "table.incidents",
+    "table.incubating_ideas",
+    "table.mandates",
+    "table.messages",
+    "table.node_births",
+    "table.nodes",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
+)
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.gifts",
+    "table.hero_quests",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.incubating_ideas",
+)
+async def affairs_of_the_ended(ctx: TickContext) -> None:
+    closed = AffairTally()
+    await close_affairs(ctx, closed)
+    ctx.count("affairs_closed", closed.affairs)
+    ctx.count("ties_closed", closed.ties)
+
+
+PHASES = (Phase("lifecycle_ends", lifecycle_ends), Phase("world_ends", world_ends), Phase("affairs_of_the_ended", affairs_of_the_ended))

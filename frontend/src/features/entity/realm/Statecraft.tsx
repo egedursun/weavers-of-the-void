@@ -45,6 +45,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { PUNISHMENTS } from '@/features/entity/mortal/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { FoundHouse, SealTreaty } from './Covenants'
 import { GOVERNMENTS, OFFICES, type Named, named, plain } from './labels'
@@ -1030,7 +1031,7 @@ function Sentences({ realm }: { realm: Realm }) {
                 size='sm'
                 variant={item.penalty === 'death' ? 'destructive' : 'warning'}
               >
-                {plain({}, item.penalty)}
+                {PUNISHMENTS[item.penalty].label}
               </Badge>
             </li>
           )}

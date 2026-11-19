@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POLITY
 W = RuleGroup.WAR_AND_DIPLOMACY
@@ -30,14 +30,18 @@ class PrecedentRules:
 
 
 @dataclass(frozen=True)
-class AppealRules:
+class AppealRules(Spanned):
     fee: int = rule(20, 0, 100000, P, "Coin an appeal to the next court costs")
     fee_step: int = rule(20, 0, 100000, P, "Coin each further court adds to the fee")
-    delay: int = rule(1, 0, 100, P, "Epochs an appeal waits before it is heard")
+    delay_years: int = span(1, 0, 2500, P, "Years an appeal waits before it is heard")
     reversal_pct: int = rule(20, 0, 100, P, "Chance an appeal is upheld at no evidence (%)")
     evidence_pct: int = rule(50, 0, 200, P, "Share of the evidence that weighs against an appeal (%)")
     advocate_pct: int = rule(40, 0, 200, P, "Share of an advocate's skill in law and oratory taken off the evidence (%)")
     advocate_fee: int = rule(10, 0, 100000, P, "Coin an advocate charges for a trial")
+
+    @property
+    def delay(self) -> int:
+        return self.epochs(self.delay_years)
 
 
 @dataclass(frozen=True)
@@ -64,14 +68,18 @@ class JurisdictionRules:
 
 
 @dataclass(frozen=True)
-class PardonRules:
+class PardonRules(Spanned):
     friend_pct: int = rule(25, 0, 100, P, "Chance each epoch a ruler pardons a friend held for a crime (%)")
     friend_at: int = rule(40, 0, 100, P, "Friendship past which a ruler pardons")
     corruption_infamy: int = rule(8, 0, 100, P, "Infamy a ruler earns pardoning a friend")
     mercy_renown: int = rule(5, 0, 100, P, "Renown a ruler earns pardoning one wrongly condemned, or any pardon where mercy is honoured")
     tyranny_infamy: int = rule(5, 0, 100, P, "Infamy a ruler earns pardoning where mercy is scorned")
-    amnesty_epochs: int = rule(1, 0, 100, P, "Epochs after a new ruler takes the throne, or a civil war ends, in which an amnesty may be declared")
+    amnesty_years: int = span(2, 0, 2500, P, "Years after a new ruler takes the throne, or a civil war ends, in which an amnesty may be declared")
     amnesty_pct: int = rule(40, 0, 100, P, "Chance a new ruler declares an amnesty (%)")
+
+    @property
+    def amnesty_epochs(self) -> int:
+        return self.epochs(self.amnesty_years)
 
 
 @dataclass(frozen=True)
@@ -86,8 +94,8 @@ class OutlawRules:
 
 
 @dataclass(frozen=True)
-class PrisonRules:
-    term: int = rule(3, 1, 100, P, "Epochs of a prison sentence")
+class PrisonRules(Spanned):
+    term_years: int = span(5, 1, 2500, P, "Years of a prison sentence")
     capacity: int = rule(10, 1, 10000, P, "Prisoners each level of a prison holds before it is crowded")
     hunger_hp: int = rule(4, 0, 100, P, "Hit points a prisoner loses each epoch when food runs short")
     food_at: int = rule(30, 0, 100, P, "Food below which prisoners go hungry")
@@ -97,6 +105,10 @@ class PrisonRules:
     escape_pct: int = rule(10, 0, 100, P, "Chance each epoch a prisoner escapes, at full crowding and gang strength (%)")
     stigma: int = rule(6, 0, 100, P, "Infamy a released prisoner carries")
     intrigue_gain: int = rule(8, 0, 100, P, "Skill in intrigue a prisoner learns inside each epoch")
+
+    @property
+    def term(self) -> int:
+        return self.epochs(self.term_years)
 
 
 @dataclass(frozen=True)

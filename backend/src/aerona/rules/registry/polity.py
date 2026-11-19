@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POLITY
 H = RuleGroup.HOUSES
 
 
 @dataclass(frozen=True)
-class GovernmentRules:
+class GovernmentRules(Spanned):
     theocracy_piety: int = rule(50, -100, 100, P, "Piety value at which a realm ruled by a priest becomes a theocracy")
     republic_hierarchy: int = rule(-25, -100, 100, P, "Hierarchy value below which a merchant realm becomes a republic")
     oligarchy_merchant_pct: int = rule(20, 0, 100, P, "Merchant share at which a realm is ruled by its merchants (%)")
@@ -17,7 +17,9 @@ class GovernmentRules:
     chiefdom_tier: int = rule(1, 0, 10, P, "Realm tier at or below which a monarchy is still a chiefdom")
     occupation_loyalty: int = rule(15, 0, 100, P, "Loyalty to its overlord at or below which a subject realm is ruled as occupied land")
     junta_warrior_pct: int = rule(20, 0, 100, P, "Warrior share at which a realm ruled by an officer becomes a military government (%)")
-    technocracy_professional_pct: int = rule(12, 0, 100, P, "Professional share at which a learned realm is ruled by its experts (%)")
+    technocracy_professional_pct: int = rule(20, 0, 100, P, "Professional share at which a learned realm is ruled by its experts (%)")
+    republic_citizen_pct: int = rule(8, 0, 100, P, "Citizen share at which a realm whose commoners hold a vote elects its government (%)")
+    citizen_hierarchy: int = rule(25, -100, 100, P, "Hierarchy value at or below which a realm of voting citizens elects its government")
     technocracy_civics_level: int = rule(4, 0, 20, P, "Civics level a realm needs to be ruled by its experts")
     machine_professional_pct: int = rule(25, 0, 100, P, "Professional share at which a realm hands its rule to machines (%)")
     machine_civics_level: int = rule(9, 0, 20, P, "Civics level a realm needs to hand its rule to machines")
@@ -50,11 +52,15 @@ class GovernmentRules:
     build_chance: int = rule(30, 0, 100, P, "A realm with a full treasury funds public works in an epoch (%)")
     build_cost: int = rule(150, 0, 1000000, P, "Treasury a public work costs the realm")
     loan_interest_pct: int = rule(10, 0, 100, P, "Interest a lender charges an indebted realm per epoch (%)")
-    loan_epochs: int = rule(5, 1, 100, P, "Epochs a realm has to repay a loan")
+    loan_years: int = span(10, 1, 2500, P, "Years a realm has to repay a loan")
     default_relation: int = rule(25, 0, 100, P, "Relation a lender loses with a realm that defaults")
     default_war_chance: int = rule(30, 0, 100, P, "A defaulted lending realm goes to war over the debt (%)")
     coup_legitimacy: int = rule(30, 0, 100, P, "Legitimacy below which an ambitious marshal may seize the throne")
     coup_chance: int = rule(10, 0, 100, P, "An ambitious marshal of a weak ruler seizes the throne in an epoch (%)")
+
+    @property
+    def loan_epochs(self) -> int:
+        return self.epochs(self.loan_years)
 
 
 @dataclass(frozen=True)
@@ -75,7 +81,7 @@ class SuccessionRules:
 
 
 @dataclass(frozen=True)
-class LegitimacyRules:
+class LegitimacyRules(Spanned):
     base: int = rule(50, 0, 100, P, "Legitimacy of a ruler with nothing for or against them")
     rightful: int = rule(15, 0, 100, P, "Legitimacy from taking the throne by the law of succession")
     usurper: int = rule(25, 0, 100, P, "Legitimacy lost by a usurper")
@@ -97,7 +103,7 @@ class LegitimacyRules:
     body_reading_pct: int = rule(30, 0, 200, P, "Weight of the people's reading of the ruler's body (%)")
     honour_pct: int = rule(20, 0, 100, P, "Legitimacy from the ruler's honour at its fullest")
     infamy_pct: int = rule(30, 0, 100, P, "Legitimacy lost to the ruler's infamy at its worst")
-    usurper_fade_epochs: int = rule(5, 1, 100, P, "Epochs after which a usurper's mark fades")
+    usurper_fade_years: int = span(30, 1, 2500, P, "Years after which a usurper's mark fades")
     usurper_infamy: int = rule(20, 0, 100, P, "Infamy a usurper gains")
     presence_pct: int = rule(20, 0, 100, P, "Legitimacy a ruler loses at no presence at all (%)")
     martial_melee_pct: int = rule(15, 0, 100, P, "Legitimacy a ruler of a warlike people loses at no strength of arms (%)")
@@ -105,6 +111,10 @@ class LegitimacyRules:
     acts_pct: int = rule(25, 0, 200, P, "How much the realm's judgement of the ruler's deeds moves legitimacy (%)")
     acts_cap: int = rule(20, 0, 100, P, "Most legitimacy the ruler's deeds can win or lose")
     relic_legitimacy: int = rule(8, 0, 100, P, "Legitimacy from holding an heirloom relic of the line, such as a legendary prosthesis")
+
+    @property
+    def usurper_fade_epochs(self) -> int:
+        return self.epochs(self.usurper_fade_years)
 
 
 @dataclass(frozen=True)
@@ -232,14 +242,14 @@ class HousesRules:
 
 
 @dataclass(frozen=True)
-class OathsRules:
+class OathsRules(Spanned):
     fealty_on_office: int = rule(1, 0, 1, H, "Office holders swear fealty to the ruler (1 yes)")
     vengeance_chance: int = rule(30, 0, 100, H, "A mortal whose kin was slain swears vengeance (%)")
     protection_chance: int = rule(20, 0, 100, H, "Chance a sworn warrior swears to protect the one they serve (%)")
     vow_chance: int = rule(15, 0, 100, H, "A mortal whose life calls for a vow of service, poverty, peace, fidelity or secrecy swears it in an epoch (%)")
     poverty_wealth: int = rule(30, 0, 100, H, "Wealth above which a vow of poverty is broken")
     kinship_chance: int = rule(10, 0, 100, H, "Companions in arms swear sworn kinship (%)")
-    deadline_epochs: int = rule(3, 1, 100, H, "Epochs a vengeance or pilgrimage oath gives the swearer")
+    deadline_years: int = span(3, 1, 2500, H, "Years a vengeance or pilgrimage oath gives the swearer")
     witness_chance: int = rule(40, 0, 100, H, "A god of oaths witnesses a sworn oath (%)")
     essence_per_kept: int = rule(2, 0, 1000, H, "Essence an oath god gains per oath kept in its sight")
     honour_loss: int = rule(20, 0, 100, H, "Importance an oathbreaker loses")
@@ -257,12 +267,16 @@ class OathsRules:
     release_friendship: int = rule(60, 0, 100, H, "Friendship toward the swearer at which the one an oath was sworn to may release it")
     release_chance: int = rule(10, 0, 100, H, "A recipient that close releases the oath in an epoch (%)")
 
+    @property
+    def deadline_epochs(self) -> int:
+        return self.epochs(self.deadline_years)
+
 
 @dataclass(frozen=True)
-class TreatiesRules:
-    truce_epochs: int = rule(2, 1, 100, P, "Epochs a truce holds")
-    alliance_epochs: int = rule(5, 1, 100, P, "Epochs an alliance holds before it must be renewed")
-    trade_epochs: int = rule(4, 1, 100, P, "Epochs a trade pact holds")
+class TreatiesRules(Spanned):
+    truce_years: int = span(2, 1, 2500, P, "Years a truce holds")
+    alliance_years: int = span(20, 1, 2500, P, "Years an alliance holds before it must be renewed")
+    trade_years: int = span(10, 1, 2500, P, "Years a trade pact holds")
     renew_relation: int = rule(30, -100, 100, P, "Relation at which parties renew an expiring treaty")
     call_to_arms_chance: int = rule(80, 0, 100, P, "An ally answers a call to arms (%)")
     refuse_relation_loss: int = rule(20, 0, 100, P, "Relation lost by an ally who refuses the call")
@@ -271,7 +285,7 @@ class TreatiesRules:
     breach_honour: int = rule(15, 0, 100, P, "Honour a treaty breaker's ruler loses")
     breach_relation: int = rule(15, 0, 100, P, "Relation the betrayed parties lose with a treaty breaker")
     kept_memory: int = rule(5, 0, 100, P, "Good memory per epoch a kept treaty leaves between its parties")
-    unpaid_grace: int = rule(1, 0, 100, P, "Epochs a tribute may go unpaid before the treaty is broken")
+    unpaid_grace_years: int = span(1, 0, 2500, P, "Years a tribute may go unpaid before the treaty is broken")
     realm_tribute_scale: int = rule(10, 0, 1000, P, "Treasury moved per point of tribute between two realms")
     interworld_relation: int = rule(2, 0, 100, P, "Relation a treaty of the worlds adds between its parties each epoch")
     interworld_prosperity: int = rule(1, 0, 100, P, "Prosperity a treaty of the worlds adds to its parties each epoch")
@@ -287,10 +301,38 @@ class TreatiesRules:
     balance_alliance_pct: int = rule(150, 0, 500, P, "Alliance appetite of realms that live beside a hegemon (%)")
     outer_pact_cap: int = rule(5, 0, 1000, P, "Most pacts with cults, beasts or foreign gods of each kind sealed in an epoch")
     accept_relation: int = rule(20, -100, 100, P, "Relation toward the proposer at which a party accepts an offered treaty")
-    proposal_epochs: int = rule(2, 1, 100, P, "Epochs an offered treaty waits before it is turned down")
-    hostage_epochs: int = rule(2, 1, 100, P, "Epochs a hostage stays with the other party")
+    proposal_years: int = span(1, 1, 2500, P, "Years an offered treaty waits before it is turned down")
+    hostage_years: int = span(5, 1, 2500, P, "Years a hostage stays with the other party")
     wergild_value: int = rule(30, 0, 100000, P, "Wealth a wergild clause transfers")
-    marriage_treaty_epochs: int = rule(10, 1, 1000, P, "Epochs a marriage pact holds")
+    marriage_treaty_years: int = span(30, 1, 25000, P, "Years a marriage pact holds")
+
+    @property
+    def truce_epochs(self) -> int:
+        return self.epochs(self.truce_years)
+
+    @property
+    def alliance_epochs(self) -> int:
+        return self.epochs(self.alliance_years)
+
+    @property
+    def trade_epochs(self) -> int:
+        return self.epochs(self.trade_years)
+
+    @property
+    def unpaid_grace(self) -> int:
+        return self.epochs(self.unpaid_grace_years)
+
+    @property
+    def proposal_epochs(self) -> int:
+        return self.epochs(self.proposal_years)
+
+    @property
+    def hostage_epochs(self) -> int:
+        return self.epochs(self.hostage_years)
+
+    @property
+    def marriage_treaty_epochs(self) -> int:
+        return self.epochs(self.marriage_treaty_years)
 
 
 @dataclass(frozen=True)

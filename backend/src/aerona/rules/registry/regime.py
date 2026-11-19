@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POLITY
 H = RuleGroup.HOUSES
@@ -36,9 +36,9 @@ class SelectorateRules:
 
 
 @dataclass(frozen=True)
-class LegitimacyTypeRules:
+class LegitimacyTypeRules(Spanned):
     drift_pct: int = rule(20, 0, 100, P, "Share of the gap to its target each kind of legitimacy closes each epoch (%)")
-    tenure_epochs: int = rule(10, 1, 1000, P, "Epochs of unbroken rule by one house at which traditional legitimacy is full")
+    tenure_years: int = span(100, 1, 25000, P, "Years of unbroken rule by one house at which traditional legitimacy is full")
     heir_tradition: int = rule(15, 0, 100, P, "Traditional legitimacy a named heir adds")
     usurper_tradition: int = rule(40, 0, 100, P, "Traditional legitimacy a usurper loses")
     chosen_charisma: int = rule(30, 0, 100, P, "Charismatic legitimacy a ruler chosen by the gods gains")
@@ -48,20 +48,32 @@ class LegitimacyTypeRules:
     law_rational: int = rule(10, 0, 100, P, "Legal-rational legitimacy each written or codified body of law adds")
     corruption_rational: int = rule(50, 0, 200, P, "How much corruption wears legal-rational legitimacy away (%)")
     miracle_charisma: int = rule(10, 0, 100, P, "Charismatic legitimacy each recent miracle credited to the ruler adds")
-    miracle_epochs: int = rule(3, 1, 100, P, "Epochs a miracle credited to the ruler lends charisma")
+    miracle_years: int = span(20, 1, 2500, P, "Years a miracle credited to the ruler lends charisma")
     prophecy_charisma: int = rule(15, 0, 100, P, "Charismatic legitimacy a ruler who fits a believed prophecy of return gains")
     legitimacy_weight: int = rule(10, 0, 100, P, "How much each kind of legitimacy above or below the middle moves a ruler's legitimacy (%)")
 
+    @property
+    def tenure_epochs(self) -> int:
+        return self.epochs(self.tenure_years)
+
+    @property
+    def miracle_epochs(self) -> int:
+        return self.epochs(self.miracle_years)
+
 
 @dataclass(frozen=True)
-class RoutinisationRules:
+class RoutinisationRules(Spanned):
     founder_charisma: int = rule(60, 0, 100, P, "Charismatic legitimacy at which a ruler counts as a charismatic founder")
-    founder_epochs: int = rule(3, 0, 100, P, "Epochs after a realm's founding in which its ruler counts as its founder")
+    founder_years: int = span(30, 0, 2500, P, "Years after a realm's founding in which its ruler counts as its founder")
     convert_pct: int = rule(60, 0, 100, P, "Share of a dead founder's charisma turned into tradition or rules (%)")
     schism_pct: int = rule(30, 0, 100, P, "Chance a charismatic founder's death breaks the realm into schism (%)")
     schism_stability: int = rule(25, 0, 100, P, "Stability a realm loses in a schism")
     fragment_pct: int = rule(50, 0, 100, P, "Share of its member towns a big-man's following loses at the big-man's death (%)")
     schism_claim: int = rule(40, 0, 100, P, "Strength of the claim a schism gives the founder's kin against the heir")
+
+    @property
+    def founder_epochs(self) -> int:
+        return self.epochs(self.founder_years)
 
 
 @dataclass(frozen=True)
@@ -144,24 +156,32 @@ class SegmentaryRules:
 
 
 @dataclass(frozen=True)
-class BreedingPlanRules:
+class BreedingPlanRules(Spanned):
     love_pct: int = rule(20, 0, 100, H, "Chance a member chosen for a planned match marries for love instead (%)")
-    barren_epochs: int = rule(3, 1, 100, H, "Epochs a planned couple may stay childless before the match counts as barren")
+    barren_years: int = span(7, 1, 2500, H, "Years a planned couple may stay childless before the match counts as barren")
     conceal_pct: int = rule(15, 0, 100, H, "Chance a planned match is hidden behind a concealed parentage (%)")
     conceal_secrecy: int = rule(5, 0, 100, H, "Secrecy a concealed parentage adds to the plan")
     secret_severity: int = rule(40, 0, 100, H, "Severity of the secret of a concealed parentage")
 
+    @property
+    def barren_epochs(self) -> int:
+        return self.epochs(self.barren_years)
+
 
 @dataclass(frozen=True)
-class ExaminationRules:
+class ExaminationRules(Spanned):
     candidate_pct: int = rule(5, 0, 100, K, "Share of a realm's scribes and nobles who sit an examination (%)")
     pass_rate: int = rule(30, 0, 100, K, "Share of the candidates who reach the pass mark (%)")
     notable_passes: int = rule(3, 0, 100, K, "Most notable mortals an examination grants credentials")
     skill_mark: int = rule(30, 0, 100, K, "Skill in law, letters or lore a notable candidate needs to pass")
     quota_growth: int = rule(50, 0, 400, K, "How much elite overproduction raises the quota of an examination (%)")
     credential_bonus: int = rule(60, 0, 1000, K, "Weight a credentialed candidate gains in an appointment")
-    credential_epochs: int = rule(5, 1, 100, K, "Epochs graduates of an examination keep pressing for posts")
+    credential_years: int = span(10, 1, 2500, K, "Years graduates of an examination keep pressing for posts")
     graduate_weight: int = rule(100, 0, 1000, K, "Aspirants to elite posts each graduate of an examination counts as (%)")
+
+    @property
+    def credential_epochs(self) -> int:
+        return self.epochs(self.credential_years)
 
 
 @dataclass(frozen=True)

@@ -29,7 +29,7 @@ from tests.engine.core.factories import CoreWorld, bond, entity, settlement, tun
 CERTAIN = tuned_rules(
     kinds={"spread_pct": 100, "adoption_strength": 80},
     drink={"derive_pct": 100, "derive_strength": 50},
-    cuisine={"fusion_pct": 100, "fusion_strength": 50, "founding_dishes": 2, "shortage_epochs": 1},
+    cuisine={"fusion_pct": 100, "fusion_strength": 50, "founding_dishes": 2, "shortage_years": 50},
 )
 
 

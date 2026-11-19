@@ -1,8 +1,12 @@
 from dataclasses import Field, dataclass, field, fields
-from typing import Any
+from math import ceil
+from typing import Any, ClassVar
 
 Number = int | float
 RULE_METADATA_KEY = "rule"
+EPOCH_YEARS = 50
+YEARS_UNIT = "years"
+FULL_PROGRESS = 100
 
 
 @dataclass(frozen=True)
@@ -12,10 +16,26 @@ class RuleMeta:
     maximum: Number
     group: str
     label: str
+    unit: str = ""
 
 
 def rule(default: Number, minimum: Number, maximum: Number, group: str, label: str) -> Any:
     return field(default=default, metadata={RULE_METADATA_KEY: RuleMeta(default, minimum, maximum, group, label)})
+
+
+def span(default: int, minimum: int, maximum: int, group: str, label: str) -> Any:
+    return field(default=default, metadata={RULE_METADATA_KEY: RuleMeta(default, minimum, maximum, group, label, YEARS_UNIT)})
+
+
+def epochs_in(years: int, years_per_epoch: int) -> int:
+    return ceil(years / max(1, years_per_epoch)) if years > 0 else 0
+
+
+class Spanned:
+    years_per_epoch: ClassVar[int] = EPOCH_YEARS
+
+    def epochs(self, years: int) -> int:
+        return epochs_in(years, self.years_per_epoch)
 
 
 def rule_meta(definition: Field[Any]) -> RuleMeta:

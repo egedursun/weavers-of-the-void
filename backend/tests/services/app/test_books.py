@@ -29,6 +29,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
 from aerona.domain.enums.cosmography import DimensionKind, WorldAge
 from aerona.domain.enums.divine import CouncilMotion
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.job import JobKind, JobStatus
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.mind import Attribute, Facet
 from aerona.domain.enums.node import ActorKind
@@ -257,7 +258,9 @@ async def test_records_and_the_ledger_never_dump_raw_rows(session: AsyncSession,
     )
     session.add(entry)
     session.add(EpochRunRow(epoch=1, engine_since_chronicle_id=hero.id, engine_notes=[]))
-    session.add(JobRow(id="job-1", kind="completion", status="succeeded", params={}, result={"failed": [], "items": [{"node": hero.id, "note": None}]}))
+    session.add(
+        JobRow(id="job-1", kind=JobKind.COMPLETION, status=JobStatus.SUCCEEDED, params={}, result={"failed": [], "items": [{"node": hero.id, "note": None}]})
+    )
     await session.flush()
     session.add_all(
         [

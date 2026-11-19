@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MARKETS_AND_MONEY
 
@@ -50,9 +50,9 @@ class MoneyRules:
 
 
 @dataclass(frozen=True)
-class TradeRoutesRules:
-    formation_epochs: int = rule(2, 1, 100, G, "Epochs of steady traffic between two markets before the way becomes a named route")
-    decay_epochs: int = rule(3, 1, 100, G, "Epochs without traffic after which a route falls out of use")
+class TradeRoutesRules(Spanned):
+    formation_years: int = span(10, 1, 2500, G, "Years of steady traffic between two markets before the way becomes a named route")
+    decay_years: int = span(10, 1, 2500, G, "Years without traffic after which a route falls out of use")
     contact_hops: int = rule(1, 0, 100, G, "Regions merchants will cross to reach a market they have no road to and no trade bond with")
     found_cap: int = rule(6, 0, 1000, G, "Most new ways merchants open between markets in an epoch")
     market_route_cap: int = rule(5, 1, 100, G, "Most routes that meet at one market")
@@ -84,16 +84,24 @@ class TradeRoutesRules:
     blockade_peace_push: int = rule(8, 0, 100, G, "Peace chance a merchant guild adds when a war blockades its routes (%)")
     route_war_chance: int = rule(6, 0, 100, G, "A strong merchant power goes to war over a blockaded or overtaxed route (% per epoch)")
 
+    @property
+    def formation_epochs(self) -> int:
+        return self.epochs(self.formation_years)
+
+    @property
+    def decay_epochs(self) -> int:
+        return self.epochs(self.decay_years)
+
 
 @dataclass(frozen=True)
-class BankingRules:
+class BankingRules(Spanned):
     bank_wealth: int = rule(55, 0, 100, G, "Wealth a merchant guild needs to lend")
     lend_chance: int = rule(25, 0, 100, G, "A rich guild lends to a poor community at war (% per epoch)")
     borrower_wealth_below: int = rule(40, 0, 100, G, "Wealth or prosperity below which a community at war borrows")
     principal: int = rule(15, 1, 100, G, "Wealth a war loan brings the borrower")
     interest_pct: int = rule(20, 0, 100, G, "Interest on a war loan")
     risk_interest_pct: int = rule(15, 0, 100, G, "Extra interest charged to a borrower that has defaulted before")
-    term_epochs: int = rule(3, 1, 100, G, "Epochs before a war loan falls due")
+    term_years: int = span(5, 1, 2500, G, "Years before a war loan falls due")
     repay_pct: int = rule(40, 0, 100, G, "Share of what is owed a borrower pays each epoch while it can (%)")
     repay_wealth_floor: int = rule(20, 0, 100, G, "Wealth a borrower keeps before it pays its lender")
     default_relation_loss: int = rule(25, 0, 100, G, "Relation a lender loses with a borrower that defaults")
@@ -106,7 +114,15 @@ class BankingRules:
     polity_repay_pct: int = rule(35, 0, 100, G, "Share of what a realm owes that it pays its bank each epoch while its treasury allows (%)")
     polity_default_debt_pct: int = rule(100, 0, 500, G, "Share of an unpaid realm loan that becomes the realm's standing debt on default (%)")
     polity_bank_wealth_per_silver: int = rule(4, 0, 100, G, "Wealth a bank gains or loses per hundred silver lent to or repaid by a realm")
-    credit_shy_epochs: int = rule(5, 0, 100, G, "Epochs a bank refuses a borrower after it defaulted, unless the bank is its own")
+    credit_shy_years: int = span(10, 0, 2500, G, "Years a bank refuses a borrower after it defaulted, unless the bank is its own")
+
+    @property
+    def term_epochs(self) -> int:
+        return self.epochs(self.term_years)
+
+    @property
+    def credit_shy_epochs(self) -> int:
+        return self.epochs(self.credit_shy_years)
 
 
 @dataclass(frozen=True)

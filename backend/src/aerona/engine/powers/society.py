@@ -466,6 +466,8 @@ async def broken_vows(ctx: TickContext) -> int:
     "table.power_registry",
     "table.power_restrictions",
     "table.powers",
+    "table.purity",
+    "table.purity_ranks",
     "table.secrets",
 )
 @writes(

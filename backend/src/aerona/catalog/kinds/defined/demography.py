@@ -59,6 +59,7 @@ COHORT_CONDITION = total(
             checked_by=(
                 "engine.demography.bound.move_people",
                 "engine.demography.control.move_cohort",
+                "engine.demography.control.shift_class",
                 "engine.demography.labour.CONDITION_WORK",
                 "engine.demography.labour.allocate",
             ),
@@ -90,9 +91,12 @@ MARTIAL_STYLE = total(
             checked_by=(),
             used_by=(
                 "catalog.units.ROLE_STYLES",
+                "db.tables.military.ArmyProfileRow",
                 "db.tables.military.ArmyTemplateRow",
                 "engine.demography.peoples.martial_of",
                 "engine.military.marshal.draw_template",
+                "engine.military.units.doctrine_of",
+                "engine.military.units.profile_of",
             ),
         ),
         MartialStyle.HORSE_ARCHER: Defined("Horse archer", checked_by=(), used_by=("catalog.units.ROLE_STYLES", "engine.demography.peoples.martial_of")),

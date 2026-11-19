@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from math import ceil
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import FULL_PROGRESS, Spanned, rule, span
 
 C = RuleGroup.CIVILIZATION
 W = RuleGroup.WAR_AND_DIPLOMACY
@@ -59,10 +60,10 @@ class EraRules:
 
 
 @dataclass(frozen=True)
-class ProgrammeRules:
+class ProgrammeRules(Spanned):
     start_chance: int = rule(20, 0, 100, C, "Chance a realm able to begin a dangerous programme begins it in an epoch (%)")
     treasury_cost: int = rule(50, 0, 100000, C, "Treasury a programme spends each epoch")
-    base_progress: int = rule(8, 0, 100, C, "Progress a programme makes each epoch")
+    base_years: int = span(15, 1, 5000, C, "Years a programme takes without skilled specialists")
     specialist_progress: int = rule(4, 0, 100, C, "Progress each skilled specialist of the realm adds each epoch")
     specialist_skill: int = rule(4, 0, 20, C, "Level of science, engineering or computing that makes a mortal a specialist")
     building_at: int = rule(30, 0, 100, C, "Progress at which a programme turns from planning to building")
@@ -72,3 +73,7 @@ class ProgrammeRules:
     sabotage_chance: int = rule(15, 0, 100, W, "Chance a rival realm that spies on the programme's realm sabotages it in an epoch (%)")
     sabotage_loss: int = rule(20, 0, 100, W, "Progress a sabotage destroys")
     abandon_below: int = rule(0, 0, 100000, C, "Treasury below which a realm abandons its programme")
+
+    @property
+    def base_progress(self) -> int:
+        return ceil(FULL_PROGRESS / max(1, self.epochs(self.base_years)))

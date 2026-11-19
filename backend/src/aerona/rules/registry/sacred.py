@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 R = RuleGroup.RELIGION_AND_LANGUAGE
 D = RuleGroup.THE_DIVINE
 
 
 @dataclass(frozen=True)
-class GeniusLociRules:
+class GeniusLociRules(Spanned):
     bind_chance: int = rule(20, 0, 100, R, "Chance each epoch that a notable place, town or house without a spirit of its own gains one (%)")
     binds_per_epoch: int = rule(12, 0, 1000, R, "Place spirits that may arise across the cosmos in one epoch")
     city_population: int = rule(800, 0, 1000000, R, "People a town needs before a spirit of the town arises in it")
@@ -17,7 +17,7 @@ class GeniusLociRules:
     offering_piety: int = rule(30, 0, 100, R, "Piety a community needs before it brings offerings to its place spirits")
     offering_per_thousand: int = rule(5, 0, 100, R, "Offerings a pious community brings each epoch for every thousand of its people")
     offering_food: int = rule(2, 0, 1000, R, "Food a community gives up for each offering it brings")
-    unpaid_epochs: int = rule(2, 1, 50, R, "Epochs a place spirit goes short before it takes offence")
+    unpaid_years: int = span(5, 1, 1250, R, "Years a place spirit goes short before it takes offence")
     pollution_offence: int = rule(45, 0, 100, R, "Pollution of a land that offends the spirits of its places")
     clearing_offence: int = rule(30, 0, 100, R, "Forest cover below which the spirits of groves and forests take offence at the clearing")
     content_at: int = rule(60, 0, 100, R, "Contentment from which a place spirit grants favour")
@@ -28,12 +28,16 @@ class GeniusLociRules:
     misfortune_per_mille: int = rule(4, 0, 1000, R, "People in a thousand an offended place spirit's floods and illness take each epoch")
     misfortune_health: int = rule(5, 0, 100, R, "Health the mortals of a community lose each epoch to an offended place spirit")
 
+    @property
+    def unpaid_epochs(self) -> int:
+        return self.epochs(self.unpaid_years)
+
 
 @dataclass(frozen=True)
-class CelestialBureaucracyRules:
+class CelestialBureaucracyRules(Spanned):
     petition_chance: int = rule(30, 0, 100, R, "Chance each epoch that a community petitions the spirit office over it (%)")
     petitions_per_epoch: int = rule(40, 0, 10000, R, "Petitions that may be filed across the cosmos in one epoch")
-    delay: int = rule(1, 0, 20, R, "Epochs an office takes to read a petition")
+    delay_years: int = span(1, 0, 500, R, "Years an office takes to read a petition")
     bribe_per_epoch: int = rule(3, 1, 100, R, "Offerings slipped with a petition that save an epoch of waiting")
     bribe_share: int = rule(2, 0, 100, R, "Offerings a petitioner slips to the office for every ten points of its corruption")
     grant_base: int = rule(55, 0, 100, R, "Chance a petition is granted before merit, corruption and gifts (%)")
@@ -41,7 +45,7 @@ class CelestialBureaucracyRules:
     corruption_deny_pct: int = rule(5, 0, 100, R, "Chance a petition loses for every ten points of the office's corruption (%)")
     bribe_grant: int = rule(2, 0, 100, R, "Chance a petition gains for every offering slipped with it (%)")
     appeal_chance: int = rule(50, 0, 100, R, "Chance a denied petitioner appeals to the office above (%)")
-    neglect_epochs: int = rule(3, 1, 50, R, "Epochs past its due a petition may lie unread before the office is marked for neglect")
+    neglect_years: int = span(3, 1, 1250, R, "Years past its due a petition may lie unread before the office is marked for neglect")
     merit_per_grant: int = rule(3, 0, 100, R, "Merit an office earns for each petition it settles")
     promote_merit: int = rule(30, 1, 1000, R, "Merit at which a spirit office is promoted one rank")
     demote_neglect: int = rule(3, 1, 100, R, "Neglected petitions after which a spirit office is demoted one rank, or dismissed from the lowest")
@@ -58,9 +62,17 @@ class CelestialBureaucracyRules:
     suit_merit: int = rule(10, 0, 1000, R, "Merit a spirit loses when a suit against it is granted")
     work_standing: int = rule(3, 0, 100, D, "Love a god earns in a community when it judges a petition or appoints a spirit there")
 
+    @property
+    def delay(self) -> int:
+        return self.epochs(self.delay_years)
+
+    @property
+    def neglect_epochs(self) -> int:
+        return self.epochs(self.neglect_years)
+
 
 @dataclass(frozen=True)
-class MysticismRules:
+class MysticismRules(Spanned):
     vision_chance: int = rule(4, 0, 100, R, "Chance each epoch that a mortal open to the divine has a first direct experience (%)")
     contemplative_pct: int = rule(100, 0, 500, R, "More often a mortal of a contemplative tradition has a first direct experience (%)")
     mystics_per_epoch: int = rule(6, 0, 1000, R, "New mystics that may arise across the cosmos in one epoch")
@@ -77,20 +89,24 @@ class MysticismRules:
     revered_at: int = rule(50, 0, 100, R, "Reverence at which a mystic is revered")
     persecution_stress: int = rule(10, 0, 200, R, "Stress a persecuted mystic gains each epoch")
     found_at: int = rule(120, 1, 100000, R, "Followers at which a mystic founds an order or a heresy")
-    lapse_epochs: int = rule(6, 1, 100, R, "Epochs without a vision after which a mystic lapses")
+    lapse_years: int = span(10, 1, 2500, R, "Years without a vision after which a mystic lapses")
+
+    @property
+    def lapse_epochs(self) -> int:
+        return self.epochs(self.lapse_years)
 
 
 @dataclass(frozen=True)
-class MillenarianRules:
+class MillenarianRules(Spanned):
     stir_chance: int = rule(10, 0, 100, R, "Chance each epoch that a town under an end-time sign stirs into a millenarian movement (%)")
     doom_at: int = rule(50, 0, 100000, R, "Doom on the clock from which the end feels near and stirs the faithful to await it")
     tension_at: int = rule(70, 0, 100, R, "Tension of a world from which its faithful are stirred to await the end")
     movements_per_epoch: int = rule(3, 0, 1000, R, "Millenarian movements that may begin across the cosmos in one epoch")
     psi_floor: int = rule(55, 0, 100, R, "Political stress of a realm from which immiseration alone stirs its towns")
-    horizon: int = rule(3, 1, 50, R, "Epochs from a movement's start to the end it awaits")
+    horizon_years: int = span(10, 1, 1250, R, "Years from a movement's start to the end it awaits")
     gather_pct: int = rule(8, 0, 100, R, "Share of a town that first joins a millenarian movement (%)")
     recruit_pct: int = rule(25, 0, 500, R, "Growth of a gathering movement each epoch (%)")
-    vigil_epochs: int = rule(1, 0, 50, R, "Epochs before the awaited end at which the faithful stop working and give up their goods")
+    vigil_years: int = span(1, 0, 1250, R, "Years before the awaited end at which the faithful stop working and give up their goods")
     give_up_pct: int = rule(15, 0, 100, R, "Wealth of its town a movement in vigil gives away each epoch (%)")
     idle_pct: int = rule(40, 0, 100, R, "Share of a movement that stops working in vigil (%)")
     idle_food: int = rule(10, 0, 1000, R, "Food a town loses each epoch for every ten points of its idle share")
@@ -101,24 +117,40 @@ class MillenarianRules:
     sect_chance: int = rule(45, 0, 100, R, "Chance a disappointed movement that does not set a new date becomes a sect (%)")
     conviction_loss: int = rule(20, 0, 100, R, "Conviction a movement loses when its date passes")
 
+    @property
+    def vigil_epochs(self) -> int:
+        return self.epochs(self.vigil_years)
+
+    @property
+    def horizon(self) -> int:
+        return self.epochs(self.horizon_years)
+
 
 @dataclass(frozen=True)
-class TheodicyRules:
+class TheodicyRules(Spanned):
     suffering_at: int = rule(40, 0, 100, R, "Suffering of a faithful community that tests its doctrine")
-    silent_hidden: int = rule(
-        5, 0, 100, R, "Epochs of divine silence after which a faith in crisis comes to hold its god hidden rather than its suffering a trial"
+    silent_hidden_years: int = span(
+        30, 0, 2500, R, "Years of divine silence after which a faith in crisis comes to hold its god hidden rather than its suffering a trial"
     )
     plague_suffering: int = rule(60, 0, 100, R, "Suffering a plague in a town brings")
     famine_suffering: int = rule(55, 0, 100, R, "Suffering hunger in a town brings")
     defeat_suffering: int = rule(45, 0, 100, R, "Suffering a lost battle brings the towns of the losing realm")
     disaster_suffering: int = rule(50, 0, 100, R, "Suffering a disaster in a land brings its towns")
-    window: int = rule(2, 1, 50, R, "Epochs a crisis waits for the patron god to answer visibly before the faithful seek another way")
+    window_years: int = span(5, 1, 1250, R, "Years a crisis waits for the patron god to answer visibly before the faithful seek another way")
     argue_base: int = rule(25, 0, 100, R, "Chance theologians' arguments settle the crisis before their intellect (%)")
     doctrine_chance: int = rule(30, 0, 100, R, "Chance the crisis yields a new doctrine of suffering as a trial (%)")
     conversion_chance: int = rule(40, 0, 100, R, "Chance the faithful turn away from the silent god (%)")
     conversion_neglect: int = rule(20, 0, 100, D, "Neglect a crisis that ends in conversion leaves toward the silent god")
     drift_piety: int = rule(8, 0, 100, R, "Piety a crisis that ends in secular drift costs its community")
     answer_love: int = rule(10, 0, 100, D, "Love a god earns when it answers a crisis visibly")
+
+    @property
+    def silent_hidden(self) -> int:
+        return self.epochs(self.silent_hidden_years)
+
+    @property
+    def window(self) -> int:
+        return self.epochs(self.window_years)
 
 
 @dataclass(frozen=True)

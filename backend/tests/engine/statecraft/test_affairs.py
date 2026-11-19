@@ -116,7 +116,7 @@ async def test_farmed_taxes_and_greed_breed_corruption_and_a_poll_tax_fills_the_
 
 
 async def test_mandates_calm_ban_and_fail_at_a_cost(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(affairs={"mandate_epochs": 1}), epoch=3)
+    ctx = context(realm.session, tuned(affairs={"mandate_years": 50}), epoch=3)
     polity, town, _ = await realm_of(realm, "Harrowmere")
     book = await RealmBook.load(realm.session)
     target = book.realms[polity.id]
@@ -153,7 +153,7 @@ async def test_laws_move_class_approval_and_a_revolution_rewrites_the_fundamenta
 
 
 async def test_an_assembly_binds_its_members_to_an_embargo_until_it_lapses(realm: Realm) -> None:
-    ctx = context(realm.session, tuned(affairs={"resolution_pct": 100, "resolution_epochs": 1}), epoch=3)
+    ctx = context(realm.session, tuned(affairs={"resolution_pct": 100, "resolution_years": 50}), epoch=3)
     first, first_town, _ = await realm_of(realm, "Aster")
     second, second_town, _ = await realm_of(realm, "Brume")
     foe, foe_town, _ = await realm_of(realm, "Cinder")

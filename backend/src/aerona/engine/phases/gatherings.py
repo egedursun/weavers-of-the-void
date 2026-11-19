@@ -73,6 +73,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.title_holders",
     "table.tradition_participation",
     "table.tradition_profiles",
+    "table.traits",
     "table.world_seasons",
 )
 @writes(

@@ -162,7 +162,7 @@ async def test_the_oracle_speaks_the_answer_its_god_gave(session: AsyncSession, 
 
 
 async def test_an_appeal_climbs_a_court_for_its_fee_and_frees_the_reversed(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, appeals={"reversal_pct": 100, "evidence_pct": 0, "delay": 0})
+    ctx = await context(session, appeals={"reversal_pct": 100, "evidence_pct": 0, "delay_years": 0})
     town = await settlement(session, "Ashby", world, world.regions[0])
     polity = await realm_of(session, world, town)
     accused = await mortal(session, "Ilse", world, town.id)
@@ -295,7 +295,7 @@ async def prison_in(session: AsyncSession, world: CoreWorld, town: EntityRow) ->
 
 
 async def test_a_prison_sentence_is_served_learning_intrigue_and_leaves_a_stigma(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await context(session, prisons={"term": 1, "escape_pct": 0, "intrigue_gain": 10})
+    ctx = await context(session, prisons={"term_years": 50, "escape_pct": 0, "intrigue_gain": 10})
     town = await settlement(session, "Ashby", world, world.regions[0])
     await prison_in(session, world, town)
     convict = await mortal(session, "Ilse", world, town.id)

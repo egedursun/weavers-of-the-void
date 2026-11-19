@@ -1,5 +1,7 @@
-from dataclasses import dataclass, field
+from copy import copy
+from dataclasses import dataclass, field, fields
 
+from aerona.rules.model import Spanned
 from aerona.rules.registry.achievements import AchievementRules
 from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
@@ -1380,3 +1382,12 @@ class Rules:
     structure_functions: StructureFunctionsRules = field(default_factory=StructureFunctionsRules)
     structure_effects: StructureEffectRules = field(default_factory=StructureEffectRules)
     upkeep: UpkeepRules = field(default_factory=UpkeepRules)
+
+    def __post_init__(self) -> None:
+        years = self.time.years_per_epoch
+        for definition in fields(self):
+            part = getattr(self, definition.name)
+            if isinstance(part, Spanned) and part.years_per_epoch != years:
+                timed = copy(part)
+                object.__setattr__(timed, "years_per_epoch", years)
+                object.__setattr__(self, definition.name, timed)

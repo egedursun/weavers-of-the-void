@@ -65,7 +65,9 @@ GATHERING_MECHANICS = (
         exposure=Exposure.CONTEXT,
         targets=("mortal", "people", "settlement", "polity", "place", "region"),
         couplings=(
-            Coupling(S.CORE, "the chronicler tells the incidents of an age as parts of the histories they belong to", EdgeKind.FLOW, "collections.join_window"),
+            Coupling(
+                S.CORE, "the chronicler tells the incidents of an age as parts of the histories they belong to", EdgeKind.FLOW, "collections.join_window_years"
+            ),
             Coupling(S.LAW, "many executions in one realm in one epoch make a purge", EdgeKind.TRIGGER, "collections.purge_at"),
         ),
     ),

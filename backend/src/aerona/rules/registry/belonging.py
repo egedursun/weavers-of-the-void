@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 M = RuleGroup.MIND
 P = RuleGroup.POLITY
@@ -54,7 +54,7 @@ class PeerRules:
 
 
 @dataclass(frozen=True)
-class SanctuaryRules:
+class SanctuaryRules(Spanned):
     seek_chance: int = rule(40, 0, 100, R, "Chance a hunted mortal seeks sanctuary in an epoch (%)")
     fee: int = rule(2, 0, 1000, R, "Coin a sheltered fugitive pays its host each epoch")
     cult_influence: int = rule(1, 0, 20, R, "Influence a cult gains each epoch a temple it holds is paid for sanctuary")
@@ -62,16 +62,20 @@ class SanctuaryRules:
     besiege_chance: int = rule(25, 0, 100, P, "Chance a pursuer surrounds the refuge in an epoch (%)")
     violate_chance: int = rule(10, 0, 100, P, "Chance a pursuer breaks the sanctuary in an epoch (%)")
     ransom: int = rule(10, 0, 1000, P, "Coin a pursuer pays the host to settle a negotiated surrender")
-    surrender_epochs: int = rule(3, 1, 50, P, "Epochs of siege after which a fugitive gives itself up")
+    surrender_years: int = span(1, 1, 1250, P, "Years of siege after which a fugitive gives itself up")
     infamy: int = rule(15, 0, 100, P, "Infamy a pursuer earns for breaking a sanctuary")
     asylum_relation: int = rule(10, 0, 100, P, "Relation two realms lose when one gives asylum to the other's fugitive")
     law_chance: int = rule(30, 0, 100, P, "Chance each epoch that a realm whose own refuges shelter those it hunts lays down a law of sanctuary (%)")
     restrict_from: int = rule(60, 0, 100, P, "Regard for law of a ruler from which its realm bars sanctuary rather than taxing it")
     levy_pct: int = rule(30, 0, 100, P, "Share of a refuge's fees a realm takes once it taxes sanctuary (%)")
 
+    @property
+    def surrender_epochs(self) -> int:
+        return self.epochs(self.surrender_years)
+
 
 @dataclass(frozen=True)
-class SatireRules:
+class SatireRules(Spanned):
     jest_chance: int = rule(40, 0, 100, P, "Chance a court jester mocks the ruler in an epoch (%)")
     artwork_quality: int = rule(50, 0, 100, M, "Quality from which a work about a ruler its maker dislikes is read as satire")
     bite: int = rule(20, 0, 100, M, "Bite of a satire when nothing sets it")
@@ -80,4 +84,8 @@ class SatireRules:
     vent: int = rule(10, 0, 100, M, "Riot threshold a community's crowd gains from a tolerated satire at full bite")
     suppression: int = rule(6, 0, 100, P, "Loyalty a realm member loses for each satire the realm punishes")
     groupthink_relief: int = rule(10, 0, 100, M, "Groupthink a ruler sheds each epoch a jester speaks freely at court")
-    punish_term: int = rule(1, 0, 20, P, "Epochs of prison a satirist serves where satire is not tolerated")
+    punish_term_years: int = span(2, 0, 500, P, "Years of prison a satirist serves where satire is not tolerated")
+
+    @property
+    def punish_term(self) -> int:
+        return self.epochs(self.punish_term_years)

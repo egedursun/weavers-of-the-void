@@ -4,6 +4,7 @@ from aerona.agents.context.scope import Scope
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, existence_band, max_hp
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -61,9 +62,9 @@ def sibling_line(scope: Scope, son: SonRow, viewer: SonRow | None, relations: di
         max_hp=max_hp(rules, son.endurance),
         faith=son.faith,
         fame=son.fame,
-        status_label=None if son.status is SonStatus.ACTIVE else son.status.value,
+        status_label=None if son.status is SonStatus.ACTIVE else spoken(son.status),
         sleep_left=son.sleep_epochs_left or None if son.status is SonStatus.ASLEEP else None,
-        relation=RelationToViewer(label=relation_label(rules, value).value, value=value) if value is not None and viewer is not None else None,
+        relation=RelationToViewer(label=spoken(relation_label(rules, value)), value=value) if value is not None and viewer is not None else None,
         covenant=son.id in covenants,
         rebel=son.rebel,
     )

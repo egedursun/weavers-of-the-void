@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 P = RuleGroup.POLITY
 
 
 @dataclass(frozen=True)
-class EnactmentRules:
+class EnactmentRules(Spanned):
     progress_pct: int = rule(60, 0, 300, P, "How far a proposal moves toward passage per point of support over opposition (%)")
     ruler_weight: int = rule(60, 0, 100, P, "Weight of the ruler's stance in an autocracy")
     council_weight: int = rule(30, 0, 100, P, "Weight of each council member's stance under a council")
@@ -16,7 +16,7 @@ class EnactmentRules:
     faction_weight_pct: int = rule(50, 0, 200, P, "How much a faction's influence over the realm counts in a stance (%)")
     estate_obstruct_pct: int = rule(80, 0, 200, P, "How much an estate with a council seat blocks a law it opposes (%)")
     stance_threshold: int = rule(15, 0, 100, P, "Distance from a law's values at which a member stands against it")
-    stall_epochs: int = rule(3, 1, 20, P, "Epochs a proposal may stall before it fails")
+    stall_years: int = span(5, 1, 500, P, "Years a proposal may stall before it fails")
     champion_cost: int = rule(8, 0, 100, P, "Reputation a champion loses when their proposal fails")
     event_pct: int = rule(30, 0, 100, P, "Chance each epoch a debated proposal stirs a debate, riot or compromise (%)")
     riot_unrest: int = rule(8, 0, 100, P, "Unrest a riot over a proposal adds to the capital")
@@ -25,9 +25,13 @@ class EnactmentRules:
     favour_magnitude: int = rule(20, 0, 100, P, "Size of the favour a champion owes each council member who carried the law")
     open_cap: int = rule(3, 1, 20, P, "Proposals a realm may debate at once")
 
+    @property
+    def stall_epochs(self) -> int:
+        return self.epochs(self.stall_years)
+
 
 @dataclass(frozen=True)
-class TrialRules:
+class TrialRules(Spanned):
     witnesses: int = rule(3, 0, 20, P, "Witnesses an investigation hears for each crime")
     arbitration_ease: int = rule(5, 0, 100, P, "Evidence an arbiter needs less than a judge to settle against the accused")
     renown_sway_pct: int = rule(30, 0, 100, P, "Share of the accused's renown that sways an assembly to acquit (%)")
@@ -56,5 +60,9 @@ class TrialRules:
     grievance_grudge: int = rule(30, 0, 100, P, "Enmity the kin of the wrongly convicted feel toward the judge")
     martyr_renown: int = rule(12, 0, 100, P, "Renown the wrongly executed win as martyrs")
     wrongful_unrest: int = rule(6, 0, 100, P, "Unrest a wrongful conviction stirs in its city")
-    injustice_epochs: int = rule(4, 1, 50, P, "Epochs a city remembers a wrongful conviction")
+    injustice_years: int = span(30, 1, 1250, P, "Years a city remembers a wrongful conviction")
     injustice_grievance: int = rule(5, 0, 100, P, "Grievance toward the realm each remembered wrongful conviction causes")
+
+    @property
+    def injustice_epochs(self) -> int:
+        return self.epochs(self.injustice_years)

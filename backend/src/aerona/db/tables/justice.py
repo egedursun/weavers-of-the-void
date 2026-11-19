@@ -1,13 +1,12 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.justice import CaseStage, Deposition, ProposalEvent, ProposalStance, ProposalState, TrialKind, Verdict
 from aerona.domain.enums.law_depth import CourtLevel
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 
 
@@ -78,7 +77,8 @@ class CrimeCaseRow(Base):
     forged: Mapped[bool] = mapped_column(default=False)
     verdict: Mapped[Verdict | None] = mapped_column(enum_type(Verdict, "verdict"))
     wrongful: Mapped[bool] = mapped_column(default=False)
-    penalty: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    penalty: Mapped[PunishmentKind | None] = mapped_column(enum_type(PunishmentKind, "penalty"))
+    immune: Mapped[bool] = mapped_column(default=False, server_default="0")
     opened_epoch: Mapped[int] = mapped_column(default=0)
     closed_epoch: Mapped[int | None]
     advocate_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

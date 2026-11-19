@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import HELD_SCOPE, HeldScope
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.divine import DivineWoundKind, GodGoalKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
@@ -61,7 +62,7 @@ def soldiers(army: int, count: int) -> ArmyUnitRow:
 
 
 def side_for(entity: EntityRow, count: int = 400) -> Side:
-    profile = ArmyProfileRow(army_entity_id=entity.id, stance=Stance.MARCH, doctrine="shieldwall", entrenchment=0, baggage=100, loot=50, locked=[])
+    profile = ArmyProfileRow(army_entity_id=entity.id, stance=Stance.MARCH, doctrine=MartialStyle.SHIELDWALL, entrenchment=0, baggage=100, loot=50, locked=[])
     return Side(entity=entity, army=entity, profile=profile, stacks=make_stacks([soldiers(entity.id, count)]), edge=1.0, defending=False, skill=0, traits=set())
 
 

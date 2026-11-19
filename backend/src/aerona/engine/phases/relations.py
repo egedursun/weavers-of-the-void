@@ -162,6 +162,7 @@ async def relations_social(ctx: TickContext) -> None:
     "table.incidents",
     "table.minds",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.personality_values",
     "table.preferences",
@@ -176,9 +177,12 @@ async def relations_social(ctx: TickContext) -> None:
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.relationships",
     "table.social_circles",
 )
@@ -204,6 +208,7 @@ async def relations_circles(ctx: TickContext) -> None:
     "table.passions",
     "table.personality_values",
     "table.relationships",
+    "table.traits",
 )
 @writes("table.passions")
 async def relations_passions(ctx: TickContext) -> None:
@@ -223,8 +228,11 @@ async def relations_passions(ctx: TickContext) -> None:
     "mortal.lifespan",
     "mortal.strength",
     "mortal.willpower",
+    "table.augment_effects",
+    "table.augments",
     "table.bodies",
     "table.bonds",
+    "table.charms",
     "table.collection_places",
     "table.conditions",
     "table.cult_tenets",
@@ -304,6 +312,7 @@ async def relations_pecking(ctx: TickContext) -> None:
     "table.augments",
     "table.bonds",
     "table.captives",
+    "table.charms",
     "table.deed_claims",
     "table.deeds",
     "table.entities",

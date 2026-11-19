@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 E = RuleGroup.CREATURES
 D = RuleGroup.DISEASE
@@ -29,12 +29,16 @@ class TraitEvolutionRules:
 
 
 @dataclass(frozen=True)
-class NicheRules:
+class NicheRules(Spanned):
     exclusion_loss: int = rule(6, 0, 100, E, "Abundance the less fit of two species in one niche and land loses each epoch")
     excluded_at: int = rule(3, 0, 100, E, "Abundance below which the losing species is excluded from the land")
     displacement_pct: int = rule(20, 0, 100, E, "Chance each epoch the losing species shifts its niche instead (%)")
     radiation_pct: int = rule(10, 0, 100, E, "Chance each epoch a surviving lineage spreads into a niche emptied by extinction (%)")
-    vacated_window: int = rule(4, 1, 100, E, "Epochs a niche stays open after its species is lost")
+    vacated_window_years: int = span(50, 1, 2500, E, "Years a niche stays open after its species is lost")
+
+    @property
+    def vacated_window(self) -> int:
+        return self.epochs(self.vacated_window_years)
 
 
 @dataclass(frozen=True)
@@ -53,10 +57,18 @@ class KeystoneRules:
 
 
 @dataclass(frozen=True)
-class FeralRules:
-    revert_epochs: int = rule(3, 1, 100, E, "Epochs after which a released herd steps one stage back toward the wild")
+class FeralRules(Spanned):
+    revert_years: int = span(20, 1, 2500, E, "Years after which a released herd steps one stage back toward the wild")
     release_abundance: int = rule(20, 0, 100, E, "Abundance a released herd brings to the land it is loosed in")
-    breed_after: int = rule(6, 1, 100, E, "Epochs feral after which a domestic species becomes a new wild breed")
+    breed_after_years: int = span(100, 1, 2500, E, "Years feral after which a domestic species becomes a new wild breed")
+
+    @property
+    def revert_epochs(self) -> int:
+        return self.epochs(self.revert_years)
+
+    @property
+    def breed_after(self) -> int:
+        return self.epochs(self.breed_after_years)
 
 
 @dataclass(frozen=True)
@@ -110,9 +122,9 @@ class SpilloverRules:
 
 
 @dataclass(frozen=True)
-class PlagueResponseRules:
+class PlagueResponseRules(Spanned):
     choose_pct: int = rule(40, 0, 100, D, "Chance each epoch a community struck by an outbreak takes up a response (%)")
-    length: int = rule(2, 1, 100, D, "Epochs a response lasts unless renewed")
+    length_years: int = span(3, 1, 2500, D, "Years a response lasts unless renewed")
     border_trade_pct: int = rule(40, 0, 100, D, "Trade a community loses while its borders are closed (%)")
     border_unrest: int = rule(4, 0, 100, D, "Unrest closed borders raise each epoch")
     quarantine_spread_pct: int = rule(40, 0, 100, D, "Spread a quarantine stops (%)")
@@ -125,6 +137,10 @@ class PlagueResponseRules:
     prayer_morale: int = rule(5, 0, 100, D, "Satisfaction prayer gatherings bring")
     prayer_spread_pct: int = rule(20, 0, 100, D, "Extra spread at prayer gatherings (%)")
     cure_points: int = rule(5, 0, 1000, D, "Extra research the community's institutions give a cure it seeks")
+
+    @property
+    def length(self) -> int:
+        return self.epochs(self.length_years)
 
 
 @dataclass(frozen=True)

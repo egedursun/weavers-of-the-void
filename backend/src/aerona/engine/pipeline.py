@@ -802,7 +802,7 @@ GODS_STAGE = stage(
     "god_goals",
     "creator_attention",
 )
-CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "record_checkpoints", "advance_epoch")
+CLOSING_STAGE = stage("doom_clock", "creator_essence", "affairs_of_the_ended", "epoch_statistics", "record_checkpoints", "advance_epoch")
 
 TRANSITION_ORDER: tuple[Phase, ...] = GROWTH_STAGE + GODS_STAGE + CLOSING_STAGE
 POST_TRANSITION_ORDER: tuple[Phase, ...] = stage("creator_mood", "god_power", "reputation", "goals")

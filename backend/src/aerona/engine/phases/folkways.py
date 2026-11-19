@@ -101,7 +101,7 @@ async def biases(ctx: TickContext) -> None:
 
 
 @reads("table.culture_values", "table.districts", "table.entities", "table.impurity_sources", "table.nodes", "table.purity_ranks")
-@writes("table.impurity_sources", "table.purity", "table.purity_ranks")
+@writes("table.districts", "table.impurity_sources", "table.purity", "table.purity_ranks")
 async def purity(ctx: TickContext) -> None:
     tally = PurityTally()
     await keep_purity(ctx, tally)
@@ -169,6 +169,7 @@ async def purity(ctx: TickContext) -> None:
     "table.routes",
     "table.sons",
     "table.tradition_profiles",
+    "table.traits",
     "table.war_sides",
     "table.world_domain_hooks",
 )
@@ -204,8 +205,13 @@ async def mishaps(ctx: TickContext) -> None:
     "table.beliefs",
     "table.castings",
     "table.chronicle_entities",
+    "table.creator",
+    "table.dimensions",
     "table.divination_systems",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.law_jurisdictions",
@@ -218,8 +224,11 @@ async def mishaps(ctx: TickContext) -> None:
     "table.polity_members",
     "table.relationships",
     "table.rumours",
+    "table.sons",
+    "table.stars",
     "table.traits",
     "table.witch_hunts",
+    "table.worlds",
 )
 @writes(
     "table.accusations",

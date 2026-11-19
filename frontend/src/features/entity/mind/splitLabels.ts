@@ -135,4 +135,5 @@ export const IDEA_STATES: Record<string, Named> = {
   incubating: { label: 'Turning it over', icon: Hourglass, tone: 'warning' },
   internalised: { label: 'Taken to heart', icon: Handshake, tone: 'success' },
   rejected: { label: 'Let go', icon: Drama, tone: 'muted' },
+  lapsed: { label: 'Ended with its holder', icon: Hourglass, tone: 'muted' },
 }

@@ -161,6 +161,7 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
     workers = society.share(SocialClass.WORKER) if society is not None else 0.0
     professionals = society.share(SocialClass.PROFESSIONAL) if society is not None else 0.0
     soldiers = society.share(SocialClass.WARRIOR) if society is not None else 0.0
+    citizens = society.share(SocialClass.CITIZEN) if society is not None else 0.0
     ladder = (
         (priestly, GovernmentKind.THEOCRACY),
         (ruler is not None and ruler.mortal_role is MortalRole.OFFICER and soldiers >= table.junta_warrior_pct, GovernmentKind.JUNTA),
@@ -170,6 +171,7 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
             and await law_param(ctx.session, core.id, LawKind.MACHINE_LAW, "level") != "banned",
             GovernmentKind.MACHINE_RULE,
         ),
+        (citizens >= table.republic_citizen_pct and hierarchy <= table.citizen_hierarchy, GovernmentKind.REPUBLIC),
         (professionals >= table.technocracy_professional_pct and civics >= table.technocracy_civics_level, GovernmentKind.TECHNOCRACY),
         (workers >= table.commune_worker_pct and hierarchy <= table.republic_hierarchy, GovernmentKind.COMMUNE),
         (merchants >= table.oligarchy_merchant_pct and workers >= table.corporate_worker_pct, GovernmentKind.CORPORATE_STATE),

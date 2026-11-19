@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class EconomyRules:
+class EconomyRules(Spanned):
     depletion_apocalypse: int = rule(6, 0, 100, RuleGroup.APOCALYPSE, "Contribution of a depleted costly resource to the apocalypse")
     cosmic_deposit_chance: int = rule(6, 0, 100, RuleGroup.ECONOMY, "A people finds a cosmic resource deposit (% per epoch)")
     sentient_resource_choose_chance: int = rule(35, 0, 100, RuleGroup.ECONOMY, "A sentient resource chooses its owner (%)")
@@ -18,9 +18,9 @@ class EconomyRules:
     pirate_chance: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Pirates spawn on a busy route (%)")
     decay_loss: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Per-epoch abundance loss of a decaying resource")
     fixed_regen_clawback: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Per-epoch regeneration clawed back from a fixed-quantity resource")
-    addiction_epochs: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Epochs of owning the resource needed to become addicted")
-    addiction_immunity_epochs: int = rule(
-        6, 0, 1000, RuleGroup.ECONOMY, "Epochs during which a community that recovered from addiction cannot become addicted to the same resource again"
+    addiction_years: int = span(1, 0, 2500, RuleGroup.ECONOMY, "Years of owning the resource needed to become addicted")
+    addiction_immunity_years: int = span(
+        20, 0, 25000, RuleGroup.ECONOMY, "Years during which a community that recovered from addiction cannot become addicted to the same resource again"
     )
     sentient_owner_prosperity: int = rule(45, 0, 100, RuleGroup.ECONOMY, "Prosperity of an owner able to meet a sentient resource's demand")
     sentient_owner_default: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Prosperity assumed for an owner with unknown prosperity and wealth")
@@ -78,3 +78,11 @@ class EconomyRules:
     commons_stone_per_1000_farmers: int = rule(
         120, 0, 100000, RuleGroup.ECONOMY, "Stone a thousand farmers gather from their own land in an epoch on the roughest ground"
     )
+
+    @property
+    def addiction_epochs(self) -> int:
+        return self.epochs(self.addiction_years)
+
+    @property
+    def addiction_immunity_epochs(self) -> int:
+        return self.epochs(self.addiction_immunity_years)

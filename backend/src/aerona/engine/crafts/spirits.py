@@ -96,7 +96,7 @@ async def keep_spirits(ctx: TickContext, tally: SpiritTally) -> None:
         if row.bound_by_node_id is not None:
             await yield_reagents(ctx, row, tally)
             continue
-        if "lifetime" in row.locked:
+        if "lifetime" in row.locked or row.born_epoch == ctx.epoch:
             continue
         row.lifetime -= 1
         if row.lifetime <= 0:

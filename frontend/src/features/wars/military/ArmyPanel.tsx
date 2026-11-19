@@ -652,7 +652,7 @@ function ArmyOrders({
             value={doctrine}
             table={DOCTRINE}
             blocked={busy}
-            onPick={setDoctrine}
+            onPick={(next) => setDoctrine(next as typeof doctrine)}
           />
           <EntityPicker
             label='March on'

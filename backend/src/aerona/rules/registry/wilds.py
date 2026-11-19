@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.CREATURES
 
@@ -65,9 +65,9 @@ class PestsRules:
 
 
 @dataclass(frozen=True)
-class DomesticationRules:
-    herd_epochs: int = rule(2, 0, 100, G, "Epochs a community must keep a tamed beast fed before it becomes a herd")
-    domesticate_epochs: int = rule(4, 0, 100, G, "Epochs a herd must be kept before its kind is domesticated")
+class DomesticationRules(Spanned):
+    herd_years: int = span(5, 0, 2500, G, "Years a community must keep a tamed beast fed before it becomes a herd")
+    domesticate_years: int = span(100, 0, 2500, G, "Years a herd must be kept before its kind is domesticated")
     domesticate_chance: int = rule(30, 0, 100, G, "A herd of a tameable kind becomes domesticated, per 100 tameability (%)")
     breed_skill: int = rule(60, 0, 100, G, "Beast handling a herder needs to raise a named breed")
     breed_chance: int = rule(10, 0, 100, G, "A skilled herder raises a named breed in an epoch (%)")
@@ -96,6 +96,14 @@ class DomesticationRules:
     sensing_pct: int = rule(20, 0, 100, G, "Share of a raid that beasts kept to sense danger warn of in time (%)")
     size_drift_chance: int = rule(30, 0, 100, G, "A domesticated kind bred for no particular task drifts a size up or down (%)")
 
+    @property
+    def herd_epochs(self) -> int:
+        return self.epochs(self.herd_years)
+
+    @property
+    def domesticate_epochs(self) -> int:
+        return self.epochs(self.domesticate_years)
+
 
 @dataclass(frozen=True)
 class TotemsRules:
@@ -111,7 +119,7 @@ class ExtinctionRules:
 
 
 @dataclass(frozen=True)
-class BeastsRules:
+class BeastsRules(Spanned):
     promotion_danger: int = rule(70, 0, 100, G, "Danger a huge kind needs before one of it rises as a named beast")
     promotion_chance: int = rule(5, 0, 100, G, "A fitting kind brings forth a named beast in an epoch (%)")
     promotion_cap: int = rule(2, 0, 100, G, "Most named beasts rising in an epoch")
@@ -140,7 +148,7 @@ class BeastsRules:
     deify_terror: int = rule(60, 0, 100, G, "Terror at which the peoples near a beast begin to worship it")
     deify_chance: int = rule(10, 0, 100, G, "A feared and famous beast is raised as a local god in an epoch (%)")
     cowed_terror: int = rule(60, 0, 100, G, "Terror at which the weak towns near a beast sign a tribute treaty with it")
-    tribute_epochs: int = rule(10, 1, 1000, G, "Epochs a beast tribute treaty runs before it must be sworn again")
+    tribute_years: int = span(20, 1, 25000, G, "Years a beast tribute treaty runs before it must be sworn again")
     endurance_reach: int = rule(40, 1, 100, G, "Endurance for each region further a beast ranges on its raids")
     endurance_harm_pct: int = rule(50, 0, 100, G, "Harm a beast of full endurance shrugs off (%)")
     perception_wake_pct: int = rule(50, 0, 200, G, "Extra chance of waking when disturbed at full perception (%)")
@@ -155,6 +163,10 @@ class BeastsRules:
     recovery_abundance: int = rule(10, 0, 100, G, "Abundance the wild kinds of a slain beast's land regain")
     recovery_danger: int = rule(10, 0, 100, G, "Danger a land sheds when the beast that haunted it is slain")
     hoard_item_chance: int = rule(30, 0, 100, G, "A raid carries off a treasured item of the town to the hoard (%)")
+
+    @property
+    def tribute_epochs(self) -> int:
+        return self.epochs(self.tribute_years)
 
 
 @dataclass(frozen=True)

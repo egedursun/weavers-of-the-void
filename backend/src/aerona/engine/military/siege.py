@@ -127,7 +127,7 @@ async def open_siege(ctx: TickContext, war: WarRow, besieged: EntityRow, besiege
         works={},
         sallies=0,
         starvation=StarvationStage.NONE,
-        wall_material=walls.walls_material.value if walls is not None else None,
+        wall_material=walls.walls_material if walls is not None else None,
         locked=[],
     )
     ctx.session.add(row)

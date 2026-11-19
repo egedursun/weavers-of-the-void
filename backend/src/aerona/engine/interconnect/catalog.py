@@ -1339,7 +1339,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         (R,),
         ("sealed_until_epoch",),
         Subsystem.DEMOGRAPHY,
-        "mining_hazards.seal_epochs",
+        "mining_hazards.seal_years",
         "a sealed mine stops its workers",
     ),
     (
@@ -1423,7 +1423,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         (R, *COMMUNITIES),
         ("epochs",),
         Subsystem.MIND,
-        "economy.addiction_epochs",
+        "economy.addiction_years",
         "the addicted suffer withdrawal",
     ),
     (
@@ -1519,7 +1519,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         (TR, *COMMUNITIES),
         ("status", "traffic_epochs", "founded_epoch"),
         Subsystem.CULTURE,
-        "trade_routes.formation_epochs",
+        "trade_routes.formation_years",
         "a way becomes a road people know by name",
     ),
     (
@@ -1531,7 +1531,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         (TR,),
         ("status", "last_traffic_epoch"),
         Subsystem.ECONOMY,
-        "trade_routes.decay_epochs",
+        "trade_routes.decay_years",
         "an unused road falls out of use",
     ),
     (

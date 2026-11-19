@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.MATERIALS
 
@@ -31,7 +31,7 @@ class ExtractionRules:
 
 
 @dataclass(frozen=True)
-class RefiningRules:
+class RefiningRules(Spanned):
     batches_per_level: int = rule(200, 0, 100000, G, "Batches a workshop can run per level each epoch")
     workers_per_batch: int = rule(5, 1, 10000, G, "Artisans a batch needs for an epoch")
     skill_quality_per_level: int = rule(4, 0, 100, G, "Quality gained per level of the smith's or maker's skill")
@@ -39,7 +39,7 @@ class RefiningRules:
     build_chance: int = rule(20, 0, 100, G, "A community short of a workshop it needs builds one (% per epoch)")
     build_timber: int = rule(8, 0, 10000, G, "Timber a new workshop costs")
     build_stone: int = rule(6, 0, 10000, G, "Stone a new workshop costs")
-    upgrade_idle_limit: int = rule(3, 0, 100, G, "Epochs a workshop may stand idle before it falls down a level")
+    upgrade_idle_limit_years: int = span(5, 0, 2500, G, "Years a workshop may stand idle before it falls down a level")
     max_level: int = rule(5, 1, 20, G, "Highest workshop level")
     ship_chance: int = rule(30, 0, 100, G, "A shipyard with timber and cloth launches a ship (% per epoch)")
     fleet_cap: int = rule(12, 0, 1000, G, "Most ships a community keeps afloat")
@@ -48,9 +48,13 @@ class RefiningRules:
     household_batches_pct: int = rule(30, 0, 100, G, "Share of the artisans' batches a community can run at home without a workshop (%)")
     upgrade_chance: int = rule(15, 0, 100, G, "A workshop that ran at full stretch is enlarged (% per epoch)")
 
+    @property
+    def upgrade_idle_limit(self) -> int:
+        return self.epochs(self.upgrade_idle_limit_years)
+
 
 @dataclass(frozen=True)
-class MiningHazardsRules:
+class MiningHazardsRules(Spanned):
     cave_in_pct: int = rule(4, 0, 100, G, "Chance per sampled year of a cave-in at a mine of full difficulty (%)")
     felling_pct: int = rule(3, 0, 100, G, "Chance per sampled year of a felling accident at the hardest forest (%)")
     drowning_pct: int = rule(2, 0, 100, G, "Chance per sampled year that fishers drown in rough water (%)")
@@ -68,6 +72,10 @@ class MiningHazardsRules:
     workers_lost_pct: int = rule(3, 0, 100, G, "Share of the workers killed by a hazard (%)")
     maimed_pct: int = rule(40, 0, 100, G, "Share of the survivors of a hazard who are maimed for life (%)")
     named_hurt: int = rule(2, 0, 20, G, "Named mortals of the community hurt in a hazard")
-    seal_epochs: int = rule(2, 0, 100, G, "Epochs a mine stays sealed after a cave-in")
+    seal_years: int = span(2, 0, 2500, G, "Years a mine stays sealed after a cave-in")
     cavern_chance: int = rule(15, 0, 100, G, "A cave-in breaks into a cavern and lets something out (%)")
     flood_rainfall: int = rule(75, 0, 100, G, "Rainfall from which a mine's hazard is a flooded shaft rather than a cave-in")
+
+    @property
+    def seal_epochs(self) -> int:
+        return self.epochs(self.seal_years)

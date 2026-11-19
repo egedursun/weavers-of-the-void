@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 E = RuleGroup.ECONOMY
 P = RuleGroup.POLITY
@@ -33,12 +33,12 @@ class ExchangeRules:
 
 
 @dataclass(frozen=True)
-class EconomicOrderRules:
+class EconomicOrderRules(Spanned):
     redistribution_upkeep: int = rule(2, 0, 1000, E, "Treasury the clerks and stores of a redistributing centre cost each epoch for every town it serves")
     redistribution_storage_loss_pct: int = rule(10, 0, 100, E, "Share of the goods sent to a centre that its storage loses before they are given out (%)")
     command_efficiency_floor: int = rule(30, 0, 100, E, "Output a commanded economy keeps at no planning capacity (%)")
     planning_per_official: int = rule(2, 0, 20, E, "Planning capacity each official of a realm adds")
-    transition_stage_epochs: int = rule(1, 1, 20, P, "Epochs each stage of a change of economic order takes")
+    transition_stage_years: int = span(10, 1, 500, P, "Years each stage of a change of economic order takes")
     uncompensated_grievance: int = rule(40, 0, 100, P, "Grievance the losers of an uncompensated change of order gather")
     flight_per_grievance_pct: int = rule(10, 0, 100, P, "Chance a loser flees a change of order for each tenth of grievance (%)")
     centre_collapse_spread_pct: int = rule(60, 0, 100, E, "Share of a redistributing realm's prosperity its towns lose when the centre falls (%)")
@@ -52,6 +52,10 @@ class EconomicOrderRules:
     redistribution_share: int = rule(20, 0, 100, E, "Share of its goods a town sends to its centre each epoch under redistribution (%)")
     dues_share: int = rule(10, 0, 100, E, "Share of its goods a town owes in dues each epoch under obligation (%)")
     class_shift: int = rule(5, 0, 100, E, "Satisfaction a class gains or loses each epoch as the order's distribution favours or spares it")
+
+    @property
+    def transition_stage_epochs(self) -> int:
+        return self.epochs(self.transition_stage_years)
 
 
 @dataclass(frozen=True)

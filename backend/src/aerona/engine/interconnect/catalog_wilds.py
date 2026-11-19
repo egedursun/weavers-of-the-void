@@ -144,7 +144,7 @@ WILDS_MECHANICS = (
         targets=("beast", "region", "resource"),
         couplings=(
             Coupling(S.ECONOMY, "deep mining wakes what sleeps below", EdgeKind.TRIGGER, "monsters.awaken_depth_pct"),
-            Coupling(S.FAITH, "desecration wakes what sleeps nearby", EdgeKind.TRIGGER, "monsters.desecration_epochs"),
+            Coupling(S.FAITH, "desecration wakes what sleeps nearby", EdgeKind.TRIGGER, "monsters.desecration_years"),
             Coupling(S.ECONOMY, "the deepest mines let monsters climb out", EdgeKind.TRIGGER, "monsters.emerge_pct"),
         ),
     ),
@@ -472,7 +472,7 @@ def socialities() -> tuple[Raw, ...]:
 STAGE_RULES = {
     DomesticationStage.WILD: None,
     DomesticationStage.TAMED: "domestication.starting_head",
-    DomesticationStage.HERDED: "domestication.herd_epochs",
+    DomesticationStage.HERDED: "domestication.herd_years",
     DomesticationStage.DOMESTICATED: "domestication.domesticate_chance",
     DomesticationStage.BREED: "domestication.breed_chance",
 }
@@ -1269,7 +1269,7 @@ TYPED: tuple[Raw, ...] = (
         HERDS,
         (SP, "settlement"),
         ("stage",),
-        (S.ECONOMY, "domestication.herd_epochs", "herds"),
+        (S.ECONOMY, "domestication.herd_years", "herds"),
     ),
     (
         "keeping_kinds",

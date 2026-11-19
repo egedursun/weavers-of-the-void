@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 M = RuleGroup.MORTALS
 S = RuleGroup.SETTLEMENTS
@@ -9,7 +9,7 @@ H = RuleGroup.RECORDS
 
 
 @dataclass(frozen=True)
-class GatheringRules:
+class GatheringRules(Spanned):
     per_world_max: int = rule(40, 0, 1000, M, "Gatherings the engine holds on one world each epoch")
     funeral_renown: int = rule(30, 0, 100, M, "Renown of the dead above which a funeral is held rather than a wake")
     anniversary_pct: int = rule(10, 0, 100, M, "Chance each epoch a married couple keeps an anniversary with their kin (%)")
@@ -70,7 +70,7 @@ class GatheringRules:
     coronation_legitimacy: int = rule(6, 0, 100, M, "Legitimacy a realm gains when its ruler is crowned before many guests")
     summit_friendship: int = rule(10, 0, 100, M, "Friendship each pair of realms at a summit gains")
     summit_treaty_friendship: int = rule(20, -100, 100, M, "Friendship two realms at a summit need before they sign a peace there")
-    summit_treaty_epochs: int = rule(3, 1, 100, M, "Epochs a peace signed at a summit runs")
+    summit_treaty_years: int = span(20, 1, 2500, M, "Years a peace signed at a summit runs")
     festival_cohesion: int = rule(3, 0, 100, S, "Cohesion a community gains from a festival held as a gathering")
     fair_wealth: int = rule(3, 0, 100, S, "Wealth the merchants of a settlement gain from a fair")
     pilgrim_sacredness: int = rule(2, 0, 100, M, "Sacredness a place gains from an organised pilgrimage")
@@ -96,9 +96,21 @@ class GatheringRules:
     broadcast_pct: int = rule(40, 0, 100, S, "Chance each epoch a settlement with a broadcast tower holds a broadcast (%)")
     broadcast_cohesion: int = rule(2, 0, 100, S, "Cohesion a broadcast gives the community that sends it")
 
+    @property
+    def summit_treaty_epochs(self) -> int:
+        return self.epochs(self.summit_treaty_years)
+
 
 @dataclass(frozen=True)
-class CollectionRules:
-    join_window: int = rule(2, 0, 100, H, "Epochs within which a new incident joins an open history of its kind")
-    close_after: int = rule(2, 1, 100, H, "Epochs without a new incident after which a history is closed")
+class CollectionRules(Spanned):
+    join_window_years: int = span(5, 0, 2500, H, "Years within which a new incident joins an open history of its kind")
+    close_after_years: int = span(10, 1, 2500, H, "Years without a new incident after which a history is closed")
     purge_at: int = rule(4, 1, 1000, H, "Executions in one realm in one epoch that make a purge")
+
+    @property
+    def join_window(self) -> int:
+        return self.epochs(self.join_window_years)
+
+    @property
+    def close_after(self) -> int:
+        return self.epochs(self.close_after_years)

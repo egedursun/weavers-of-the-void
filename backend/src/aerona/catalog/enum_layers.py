@@ -585,6 +585,7 @@ ENUM_LAYERS: dict[str, EnumLayer] = {
     "law_grammar.LawExceptionKind": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "law_grammar.LawOperator": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
     "law_grammar.LawTarget": EnumLayer("closed", "closed: the engine's own distinctions; instances are named through the kinds that use them"),
+    "lifecycle_affairs.AffairKind": EnumLayer("process", "process: a state, outcome, source, role or rule the engine keeps"),
     "lifecycle_end.DisbandReason": EnumLayer("process", "process: the typed outcome, cause or measure a record of events keeps (49.2)"),
     "lifecycle_end.ForgettingCause": EnumLayer("process", "process: the typed outcome, cause or measure a record of events keeps (49.2)"),
     "lifecycle_end.LifecycleCause": EnumLayer("process", "process: a state, outcome, source, role or rule the engine keeps"),

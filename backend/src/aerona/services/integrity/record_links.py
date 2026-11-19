@@ -318,6 +318,7 @@ async def participants_by_incident(session: AsyncSession) -> dict[int, list[tupl
 async def ahead_of_births(session: AsyncSession) -> list[int]:
     nodes = await participants_by_incident(session)
     born: dict[int, tuple[int, int, int, int]] = {}
+    seen: set[int] = set()
     found: list[int] = []
     for incident in await session.scalars(select(IncidentRow).where(IncidentRow.year.is_not(None)).order_by(IncidentRow.id)):
         own = moment_key(incident)
@@ -328,8 +329,9 @@ async def ahead_of_births(session: AsyncSession) -> list[int]:
             found.append(incident.id)
             own = floor
         for node, role in nodes.get(incident.id, []):
-            if role in CREATION_ROLES:
+            if role in CREATION_ROLES and node not in seen:
                 born.setdefault(node, own)
+            seen.add(node)
     return found
 
 

@@ -4,6 +4,7 @@ from aerona.catalog.units import DEFENDER_TERRAIN, TERRAIN_EFFECTS, UNITS, WEATH
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
+from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, OutcomeClass, ShieldType, Stance, Tactic, UnitFamily, UnitKind
@@ -61,7 +62,7 @@ def unit(kind: UnitKind, count: int, *, ident: int, army: int = 1, armour: Armou
 
 def side(name: str, rows: list[ArmyUnitRow], *, defending: bool = False, ident: int = 1) -> Side:
     entity = EntityRow(id=ident, name=name, entity_type=EntityType.PEOPLE)
-    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine="shieldwall", entrenchment=0, baggage=100, loot=50, locked=[])
+    profile = ArmyProfileRow(army_entity_id=ident, stance=Stance.MARCH, doctrine=MartialStyle.SHIELDWALL, entrenchment=0, baggage=100, loot=50, locked=[])
     return Side(entity=entity, army=entity, profile=profile, stacks=make_stacks(rows), edge=1.0, defending=defending, skill=0, traits=set())
 
 

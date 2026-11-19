@@ -45,6 +45,7 @@ from aerona.engine.demography.basket import (
     standing_of,
     staples_of,
 )
+from aerona.engine.demography.control import follow_shares
 from aerona.engine.demography.prices import local_prices
 from aerona.engine.demography.wealth import settle_wealth
 from aerona.engine.economy.book import EconomyBook
@@ -207,19 +208,22 @@ async def seed_stocks(ctx: TickContext, entity: EntityRow) -> None:
         await goods_of(ctx.session, ctx.epoch).shift_aggregate(ctx.rules, entity, aggregate, row.stock(aggregate), flow=GoodsFlow.SEED)
 
 
+def steps_past(level: int, threshold: int) -> int:
+    return max(0, level - threshold + 1)
+
+
 def modern_targets(settings: SocietyRules, inputs: EconomyInputs, target: dict[SocialClass, float]) -> None:
     level = inputs.levels.get
-    if level(KnowledgeBranch.METALLURGY, 0) >= settings.target_worker_level:
-        target[SocialClass.WORKER] += settings.target_worker
-        target[SocialClass.FARMER] = max(0.0, target[SocialClass.FARMER] - settings.target_worker_farmer)
+    works = steps_past(level(KnowledgeBranch.METALLURGY, 0), settings.target_worker_level)
+    if works:
+        target[SocialClass.WORKER] += settings.target_worker * works
+        target[SocialClass.FARMER] = max(0.0, target[SocialClass.FARMER] - settings.target_worker_farmer * works)
         if inputs.prosperity < settings.target_unemployed_prosperity:
             target[SocialClass.UNEMPLOYED] += settings.target_unemployed
-    if max(level(KnowledgeBranch.MEDICINE, 0), level(KnowledgeBranch.WRITING, 0)) >= settings.target_professional_level:
-        target[SocialClass.PROFESSIONAL] += settings.target_professional
-    if level(KnowledgeBranch.CIVICS, 0) >= settings.target_official_level:
-        target[SocialClass.OFFICIAL] += settings.target_official
-    if level(KnowledgeBranch.CIVICS, 0) >= settings.target_citizen_level:
-        target[SocialClass.CITIZEN] += settings.target_citizen
+    taught = steps_past(max(level(KnowledgeBranch.MEDICINE, 0), level(KnowledgeBranch.WRITING, 0)), settings.target_professional_level)
+    target[SocialClass.PROFESSIONAL] += settings.target_professional * taught
+    target[SocialClass.OFFICIAL] += settings.target_official * steps_past(level(KnowledgeBranch.CIVICS, 0), settings.target_official_level)
+    target[SocialClass.CITIZEN] += settings.target_citizen * steps_past(level(KnowledgeBranch.CIVICS, 0), settings.target_citizen_level)
 
 
 def class_targets(rules: Rules, inputs: EconomyInputs) -> dict[SocialClass, float]:
@@ -568,12 +572,18 @@ async def ground_share(ctx: TickContext, entity: EntityRow) -> float:
     return light_pct(ctx.rules, view.light) / PERCENT * soil / PERCENT
 
 
+async def drifted_shares(ctx: TickContext, entity: EntityRow, society: Society, inputs: EconomyInputs) -> dict[SocialClass, float]:
+    shares = drift_shares(ctx.rules, society.shares, class_targets(ctx.rules, inputs))
+    settled = await ctx.session.get(CommunitySocietyRow, entity.id) if await follow_shares(ctx, entity, shares) else None
+    return dict(society_from_row(settled).shares) if settled is not None else shares
+
+
 async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInputs, world: EconomyWorld, counters: EconomyCounters) -> Society:
     rules = ctx.rules
     settings = rules.society
     society = await society_of(ctx.session, rules, entity.id)
     rng = ctx.rng(f"community.{entity.id}")
-    society.shares = drift_shares(rules, society.shares, class_targets(rules, inputs))
+    society.shares = await drifted_shares(ctx, entity, society, inputs)
     labour = await labour_factor(ctx, entity)
     rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge) * labour
     rate *= await ground_share(ctx, entity)
@@ -702,6 +712,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.galaxies",
     "table.galaxy_clusters",
     "table.genomes",
+    "table.good_kinds",
     "table.goods_flows",
     "table.herds",
     "table.holder_levels",
