@@ -29,6 +29,7 @@ from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mythic import CosmicOfficeRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
@@ -102,7 +103,7 @@ async def prompts(path: Path) -> int:
     database = opened(path)
     runtime = attach_toolkits(AgentRuntime(database=database, model=FakeModel(), publish=lambda *_: None))
     async with database.read() as session:
-        sons = list(await session.scalars(select(SonRow.id).order_by(SonRow.id)))
+        sons = list(await session.scalars(select(SonRow.id).where(SonRow.status == SonStatus.ACTIVE, SonRow.chained.is_(False)).order_by(SonRow.id)))
         mortals = list(
             await session.scalars(
                 select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
@@ -239,7 +240,9 @@ async def tools(path: Path) -> int:
 
 async def case(path: Path, kind: str, name: str) -> int:
     async def lived_cosmos(session: Any) -> Any:
-        world = await factories.add_world(session, "Orvael")
+        taken = set(await session.scalars(select(NodeRow.name)))
+        name = next(candidate for candidate in ("Orvael", *(f"Orvael {number}" for number in range(2, len(taken) + 3))) if candidate not in taken)
+        world = await factories.add_world(session, name)
         galaxy = await session.scalar(select(GalaxyRow.id).order_by(GalaxyRow.id).limit(1))
         star = await session.get(StarRow, world.star_id) if world.star_id is not None else None
         if star is not None and galaxy is not None:

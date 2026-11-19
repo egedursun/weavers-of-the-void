@@ -35,3 +35,5 @@ class BalanceLoop(StrEnum):
     KIND_SUBSTITUTION = "kind_substitution"
     POLICY_GRIEVANCE = "policy_grievance"
     HOUSEWORK_BURDEN = "housework_burden"
+    CURE_RESISTANCE = "cure_resistance"
+    WEATHER_GRIEVANCE = "weather_grievance"

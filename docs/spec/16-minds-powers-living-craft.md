@@ -4815,6 +4815,29 @@ What is specific to each section follows.
 - AS62 **The Silted Port.** A river's sediment silts a trading port; the realm cannot pay for dredging; trade moves to a delta town; the old port's guilds decline.
 - AS63 **The Wrong Cure.** A people treats a bacterial sickness with rites, as its theory of disease holds; the sickness spreads; a neighbour's antimicrobial cures it; the theory falls and the faith's healers lose standing.
 
+**Cross-cutting layers (6.6) for W50.**
+
+| Layer | What W50 gives it |
+|---|---|
+| Record of what happened | incident kinds for every family of 50.1–50.13 and 50.22–50.29, among them land, sky, disease, body, weather, standing, `media.market_alarmed` and `daily.help_taken` |
+| What changed | every write of the W50 phases is captured at flush; numbers move inside `explaining()` with their rule key as term |
+| When | rows keep the epoch they began, were seen or were reviewed; spans of years read through `epochs()` |
+| Where | land happenings name their region, town happenings their town, sky happenings their world |
+| Why | every number a rule key in its family's namespace; the balancing loops L114, L116, L118 and L120 carry their delays |
+| Who knows | professed values keep who knows the gap; forecasts tell who foresaw; omens are read per people |
+| How it is told | lines told from typed fields and read in full against rule 2 |
+| What it was | append-only events (space weather, speeches, recognitions) keep their history |
+| What is kept | nothing folded; records are kept until deleted by a god |
+| Names | outlets, works, kin groups and endowments are named by their founders or the god |
+| Look | no medium fixed; plant forms, coasts and sediments are typed |
+| Model-facing wording | every W50 tool text, result, context line and template read in full and recorded in the text ledger |
+| Control | a lever family for every W50 table, reached from its section in `ThingSections` |
+| Reach | every W50 section renders in `ThingSections` for every kind of node, with a stated reason where it applies to some kinds only |
+| Books | W50 records render through `services/books/typed.py` and the records appendix |
+| Search | W50 records are found by their typed fields through the record index |
+| Integrity and legacy | invariants for practices, policies, instruments, works, leases, speeches, media and classes; `TABLE_BACKFILLS` rows; migrations `c728db1bc3e7` and `bb0bf64f29b3` |
+| Speed | new rows of a table are numbered before a flush so they insert at once; the reference tick stays inside its statement budget |
+
 ## Part 11. W51 — Orders of the economy, institutions of states, and the gaps found by search
 
 ### 51.0 Scope and the search behind it

@@ -42,3 +42,5 @@ class LoopRules:
     delay_kind_substitution: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a good that stays dear moves its people to a substitute")
     delay_policy_grievance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the grievance of the towns under a harsh population policy weakens it")
     delay_housework_burden: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a household weighed down by its housework takes on help")
+    delay_cure_resistance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a cure no longer overused lets the resistance against it fade")
+    delay_weather_grievance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the grievance of a land harmed by a weather work makes it stop the worker")

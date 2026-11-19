@@ -15,6 +15,8 @@ KIND_LOOPS = {
     "L110": BalanceLoop.KIND_SUBSTITUTION,
     "L114": BalanceLoop.POLICY_GRIEVANCE,
     "L116": BalanceLoop.HOUSEWORK_BURDEN,
+    "L118": BalanceLoop.CURE_RESISTANCE,
+    "L120": BalanceLoop.WEATHER_GRIEVANCE,
 }
 
 

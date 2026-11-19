@@ -14,11 +14,13 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.forecasting.reading import sky_marks
+from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
@@ -168,7 +170,8 @@ async def work(ctx: TickContext, row: WeatherWorkRow, atlas: RegionAtlas, tally:
         if harmed == worker or held(harmed):
             continue
         standing = await change_relation(ctx, harmed, worker, -table.grievance, MemoryKind.HARMED_ME, note="a weather work turned the sky against us")
-        if standing < table.ban_relation and "epochs_left" not in row.locked:
+        felt = await lagged(ctx, BalanceLoop.WEATHER_GRIEVANCE, harmed, standing, subject=row.id)
+        if felt < table.ban_relation and "epochs_left" not in row.locked:
             row.epochs_left = 0
             tally.banned += 1
             await record(

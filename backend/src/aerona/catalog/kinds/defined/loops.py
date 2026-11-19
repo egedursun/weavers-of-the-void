@@ -38,5 +38,7 @@ BALANCE_LOOP = total(
         BalanceLoop.KIND_SUBSTITUTION: Defined("Kind substitution", checked_by=(), used_by=("engine.kinds.derive.substitute",)),
         BalanceLoop.POLICY_GRIEVANCE: Defined("Policy grievance", checked_by=(), used_by=("engine.numbers.policies.aggrieve",)),
         BalanceLoop.HOUSEWORK_BURDEN: Defined("Housework burden", checked_by=(), used_by=("engine.daily.life.take_help",)),
+        BalanceLoop.CURE_RESISTANCE: Defined("Cure resistance", checked_by=(), used_by=("engine.disease.agents.keep_agents",)),
+        BalanceLoop.WEATHER_GRIEVANCE: Defined("Weather grievance", checked_by=(), used_by=("engine.forecasting.works.work",)),
     },
 )

@@ -56,7 +56,7 @@ def model_bounds(entity: EntityRow, key: str) -> tuple[int, int | None]:
 def clamp_to_field(entity: EntityRow, key: str, value: float) -> int:
     live = LIVE_MODIFIERS.get()
     field = ENTITY_TYPES[entity.entity_type].stat(key)
-    low, high = field.bounds(live.rules) if field is not None and live is not None else model_bounds(entity, key)
+    low, high = within_model(entity, key, field.bounds(live.rules) if field is not None and live is not None else model_bounds(entity, key))
     bounded = max(low, round_half_up(value))
     return bounded if high is None else min(high, bounded)
 
@@ -146,11 +146,15 @@ def move_stat(payer: EntityRow, payee: EntityRow, key: str, amount: float) -> in
     return moved
 
 
+def within_model(entity: EntityRow, key: str, bounds: tuple[int, int | None]) -> tuple[int, int | None]:
+    floor, ceiling = model_bounds(entity, key)
+    low, high = bounds
+    return max(low, floor), ceiling if high is None else high if ceiling is None else min(high, ceiling)
+
+
 def stat_bounds(rules: Rules, entity: EntityRow, key: str) -> tuple[int, int]:
     spec = ENTITY_TYPES[entity.entity_type].stat(key)
-    if spec is None:
-        return 0, UNBOUNDED_STAT
-    low, high = spec.bounds(rules)
+    low, high = within_model(entity, key, spec.bounds(rules) if spec is not None else model_bounds(entity, key))
     return low, UNBOUNDED_STAT if high is None else high
 
 

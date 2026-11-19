@@ -1,10 +1,12 @@
 import asyncio
+import fcntl
 import hashlib
 import logging
 import os
 import shutil
 import tempfile
 from collections.abc import AsyncIterator, Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 
@@ -20,6 +22,7 @@ from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import BOND_DOWNGRADES
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.cosmos import maps
 from aerona.engine.pipeline import simulate
 from aerona.main import create_app
 from aerona.rules.registry import Rules
@@ -51,6 +54,13 @@ def towns_hold_no_affiliation(session: Session, flush: UOWTransaction, instances
     for row in [*session.new, *session.dirty]:
         if isinstance(row, EntityRow) and row.entity_type is EntityType.SETTLEMENT and row.affiliated_entity_id is not None:
             raise AssertionError(f"{row.name} is a settlement holding an affiliation; a town holds its people by a homeland bond")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def maps_drawn_in_the_test_worker() -> Iterator[None]:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(maps, "workers_for", lambda _rules: 1)
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -85,6 +95,17 @@ def no_engine_bond_downgrades(request: pytest.FixtureRequest) -> Iterator[None]:
         pytest.fail(f"engine code asked for a bond its ends cannot hold and it fell back to a plain relation: {', '.join(sorted(set(downgrades)))}")
 
 
+@contextmanager
+def built_once(cached: Path) -> Iterator[bool]:
+    cached.parent.mkdir(parents=True, exist_ok=True)
+    with (cached.parent / f"{cached.stem}.lock").open("w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            yield not cached.exists()
+        finally:
+            fcntl.flock(lock, fcntl.LOCK_UN)
+
+
 def schema_digest() -> str:
     digest = hashlib.sha256()
     for script in sorted(SCRIPT_LOCATION.rglob("*.py")):
@@ -95,11 +116,11 @@ def schema_digest() -> str:
 @pytest.fixture(scope="session")
 def schema_template() -> Path:
     cached = SCHEMA_CACHE / f"{schema_digest()}.db"
-    if not cached.exists():
-        SCHEMA_CACHE.mkdir(parents=True, exist_ok=True)
-        building = SCHEMA_CACHE / f"{cached.stem}.{os.getpid()}.building"
-        upgrade_to_head_sync(f"sqlite+aiosqlite:///{building}")
-        os.replace(building, cached)
+    with built_once(cached) as missing:
+        if missing:
+            building = SCHEMA_CACHE / f"{cached.stem}.{os.getpid()}.building"
+            upgrade_to_head_sync(f"sqlite+aiosqlite:///{building}")
+            os.replace(building, cached)
     return cached
 
 
@@ -158,10 +179,10 @@ async def seed(path: Path) -> None:
 @pytest.fixture(scope="session")
 def lever_template(schema_template: Path) -> Path:
     cached = LEVER_CACHE / f"{template_digest(schema_template)}.db"
-    if not cached.exists():
-        LEVER_CACHE.mkdir(parents=True, exist_ok=True)
-        building = LEVER_CACHE / f"{cached.stem}.{os.getpid()}.building"
-        shutil.copyfile(schema_template, building)
-        asyncio.run(seed(building))
-        os.replace(building, cached)
+    with built_once(cached) as missing:
+        if missing:
+            building = LEVER_CACHE / f"{cached.stem}.{os.getpid()}.building"
+            shutil.copyfile(schema_template, building)
+            asyncio.run(seed(building))
+            os.replace(building, cached)
     return cached

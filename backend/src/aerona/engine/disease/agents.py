@@ -15,9 +15,11 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.disease_agents import CureClass, DiseaseAgent
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass
+from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat, stat_or
@@ -193,7 +195,8 @@ async def keep_agents(ctx: TickContext, tally: AgentTally) -> None:
         if outbreak is None:
             if "overuse" not in row.locked:
                 row.overuse = clamp_int(row.overuse - ctx.rules.disease.overuse_fade, 0, PERCENT)
-            if row.overuse == 0 and profile.resistance > 0 and "resistance" not in profile.locked:
+            quiet = await lagged(ctx, BalanceLoop.CURE_RESISTANCE, profile.disease_entity_id, row.overuse)
+            if quiet == 0 and profile.resistance > 0 and "resistance" not in profile.locked:
                 with explaining_alone():
                     term("disease.unused", -ctx.rules.disease.resistance_fade, source_node_id=profile.disease_entity_id)
                     profile.resistance = clamp_int(profile.resistance - ctx.rules.disease.resistance_fade, 0, PERCENT)
