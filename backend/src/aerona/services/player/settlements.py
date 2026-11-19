@@ -123,7 +123,7 @@ async def raise_notable(scope: PlayerScope, command: Notable) -> Effect:
 @player_action("community:crown", ActionKind.CROWN_RULER)
 async def crown(scope: PlayerScope, command: CommunityTarget) -> Effect:
     ruler = await crown_ruler(await scope.context("crown_ruler"), command.community_id)
-    return Effect(f"{ruler.name} was crowned.", ruler.id, created_ids=(ruler.id,))
+    return Effect(f"{ruler.name} came to rule.", ruler.id, created_ids=(ruler.id,))
 
 
 @player_action("people:village", ActionKind.FOUND_SETTLEMENT)

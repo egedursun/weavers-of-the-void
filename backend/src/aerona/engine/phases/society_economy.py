@@ -50,7 +50,7 @@ from aerona.engine.demography.control import follow_shares
 from aerona.engine.demography.prices import local_prices
 from aerona.engine.demography.wealth import settle_wealth
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, wear
+from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, warmed, wear
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
 from aerona.engine.economy.refining import RefiningTally, kitchen
 from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
@@ -456,7 +456,7 @@ async def forge_weapons(ctx: TickContext, entity: EntityRow, society: Society) -
                 might=min(enchantment_cap(ctx.rules, props), rng.die(max(1, props.conductivity // 4))),
                 curse=clamp_int(curse_bonus(ctx.rules, props), 0, PERCENT),
             ),
-            body=f"The smiths of {entity.name} forged a batch of {props.label.lower()} weapons.",
+            body=f"The metalworkers of {entity.name} made a batch of {props.label.lower()} weapons.",
             power=settings.weapon_power,
             world_id=entity.world_id,
             location_id=location,
@@ -551,6 +551,7 @@ async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: 
     worn = await wear(ctx, entity)
     if entity.entity_type is EntityType.SETTLEMENT:
         worn = without_shops(worn, await retail_short(ctx.session, ctx.rules.commerce.no_shop_basket_pct, entity.id))
+    worn = warmed(ctx.rules, world.economy, entity.id, worn)
     standing = await standing_of(ctx.session, entity.id)
     found = await needs_of(ctx.session, entity.id)
     basket = build_basket(

@@ -52,7 +52,7 @@ STRUCTURE_MECHANICS = (
         spec_item="S7.2",
         title="Construction over ages: builders, engineering and materials; wonders across generations; abandoned shells become legends",
         subsystem=Subsystem.ECONOMY,
-        phases=("engine_works",),
+        phases=("works_in_age", "engine_works"),
         surface=Surface(drawer=STRUCTURES_SECTION),
         backfill="none: works begin from the next epoch",
         templates=("structures.begun", "structures.finished", "structures.abandoned", "structures.generation"),

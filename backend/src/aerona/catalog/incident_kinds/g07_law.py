@@ -51,7 +51,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "affairs.court_talent",
         G.LAW,
-        "{subject} was drawn to the court of {host}.",
+        "{subject} was drawn to the inner circle of {host}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.HOST)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
@@ -209,7 +209,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "houses.dispute_split",
         G.LAW,
-        "The dispute over the throne of {realm} split {predecessor}: {actor} founded {product} against the crowned kin {opponent}.",
+        "The dispute over rule of {realm} split {predecessor}: {actor} founded {product} against the kin in power {opponent}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PREDECESSOR), RoleSpec(R.PRODUCT), RoleSpec(R.OPPONENT, required=False)),
         facts=(
             FactSpec("realm", FactValue.NODE),
@@ -447,7 +447,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "orders.holy_war",
         G.LAW,
-        "{subject} rode out from {origin} to {war} as {product}.",
+        "{subject} set out from {origin} to {war} as {product}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PRODUCT), RoleSpec(R.ORIGIN)),
         facts=(
             FactSpec("war", FactValue.NODE),
@@ -471,7 +471,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.coup",
         G.LAW,
-        "{actor} seized the throne of {target} from {predecessor}: {cause}.",
+        "{actor} seized rule of {target} from {predecessor}: {cause}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET), RoleSpec(R.PREDECESSOR), RoleSpec(R.ALLY, required=False)),
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=CoupCause),
@@ -585,7 +585,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.secession",
         G.LAW,
-        "{actor}, far from the throne and long left to itself, broke away from {predecessor}.",
+        "{actor}, far from the seat of rule and long left to itself, broke away from {predecessor}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PREDECESSOR), RoleSpec(R.LEADER, required=False)),
         facts=(FactSpec("autonomy", FactValue.NUMBER, unit=FactUnit.PERCENT, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -637,7 +637,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.usurper_accepted",
         G.LAW,
-        "Folk stopped calling {leader} a usurper; after {epochs:epoch|epochs} the throne of {subject} was held by right of years.",
+        "Folk stopped calling {leader} a usurper; after {epochs:epoch|epochs} rule of {subject} was held by right of years.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("epochs", FactValue.NUMBER, unit=FactUnit.COUNT),),
         place=PlaceRule.WHEN_KNOWN,
@@ -675,7 +675,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "power_bases.married",
         G.LAW,
-        "{authority} bound {target} to the throne by the marriage of {spouse[0]} and {spouse[1]}.",
+        "{authority} bound {target} to its rule by the marriage of {spouse[0]} and {spouse[1]}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.TARGET), RoleSpec(R.SPOUSE, many=True)),
         facts=(
             FactSpec("threat_cut", FactValue.NUMBER, unit=FactUnit.PERCENT),
@@ -699,7 +699,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "power_bases.split",
         G.LAW,
-        "{authority} took {hosts:host|hosts} from the command of {target}.",
+        "{authority} took {hosts:army|armies} from the command of {target}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.TARGET), RoleSpec(R.INSTRUMENT, many=True)),
         facts=(FactSpec("hosts", FactValue.NUMBER, unit=FactUnit.COUNT),),
         place=PlaceRule.WHEN_KNOWN,
@@ -802,7 +802,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "regime.proofed",
         G.LAW,
-        "{subject} guarded its throne against the army by {measure}.",
+        "{subject} guarded its rule against the army by {measure}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.LEADER, required=False)),
         facts=(
             FactSpec("measure", FactValue.ENUM, enum=CoupProofing),
@@ -1171,7 +1171,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.guard_throne",
         G.LAW,
-        "{actor} took new measures to guard the throne of {authority}: {measures}.",
+        "{actor} took new measures to guard the rule of {authority}: {measures}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY)),
         facts=(
             FactSpec("measures", FactValue.ENUM, enum=CoupProofing, required=False, many=True),
@@ -1678,7 +1678,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.coup_empty_throne",
         G.LAW,
-        "{actor} seized the empty throne of {target}: {cause}.",
+        "{actor} seized rule of {target} while the seat of rule stood empty: {cause}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET), RoleSpec(R.PREDECESSOR, required=False), RoleSpec(R.ALLY, required=False)),
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=CoupCause),

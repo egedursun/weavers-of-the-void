@@ -289,7 +289,7 @@ function RealmSeat({ realm }: { realm: Realm }) {
                 {realm.ruler.name}
               </EntityLink>
             ) : (
-              <Muted>The throne is empty</Muted>
+              <Muted>No one rules</Muted>
             )}
           </Fact>
           <Fact icon={Castle} label='Capital'>
@@ -344,7 +344,7 @@ function RealmSeat({ realm }: { realm: Realm }) {
         </div>
       </Panel>
       <Panel
-        title='Why the throne holds'
+        title='Why the rule holds'
         icon={Scale}
         hint='What raises and lowers legitimacy and stability'
       >
@@ -467,10 +467,10 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
                 {ruler.holder ?? ''}
               </EntityLink>
             ) : (
-              <Muted>The throne is empty</Muted>
+              <Muted>No one rules</Muted>
             )}
             {ruler && (
-              <Muted variant='caption'>{`On the throne since epoch ${ruler.since_epoch}`}</Muted>
+              <Muted variant='caption'>{`Ruling since epoch ${ruler.since_epoch}`}</Muted>
             )}
           </div>
           <Medallion icon={Crown} tone='gold' />
@@ -544,7 +544,7 @@ function Succession({ realm }: { realm: Realm }) {
     <Panel
       title='Line of succession'
       icon={ListOrdered}
-      hint='Who takes the throne if the ruler dies now'
+      hint='Who comes to rule if the ruler dies now'
     >
       <div
         data-surface='SuccessionPreview'
@@ -555,7 +555,7 @@ function Succession({ realm }: { realm: Realm }) {
             <Medallion icon={TriangleAlert} tone='warning' size='sm' />
             <Muted>
               No heir stands in line; the succession would be disputed or a
-              stranger would take the throne.
+              stranger would come to rule.
             </Muted>
           </div>
         ) : (
@@ -594,7 +594,7 @@ function Succession({ realm }: { realm: Realm }) {
         )}
         {realm.claims.length > 0 && (
           <div className='flex min-w-0 flex-col gap-2'>
-            <Label variant='overline'>Claims on the throne</Label>
+            <Label variant='overline'>Claims to rule</Label>
             <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/realm:grid-cols-2'>
               <Paged items={realm.claims} as='li'>
                 {(claim) => (
@@ -646,7 +646,7 @@ function Succession({ realm }: { realm: Realm }) {
                         label='Void claim'
                         fixed={{ claim_id: claim.id }}
                         destructive
-                        confirm={`${claim.claimant}'s claim on the throne will be voided.`}
+                        confirm={`${claim.claimant}'s claim to rule will be voided.`}
                       />
                     </div>
                   </li>

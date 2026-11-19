@@ -201,7 +201,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(role(R.SUBJECT), role(R.ORIGIN)),
         facts=(chosen("social_class", SocialClass), chosen("role", MortalRole)),
     ),
-    kind("births.ruler", "{successor} took the throne of {subject}.", roles=(role(R.SUCCESSOR), role(R.SUBJECT)), facts=(chosen("role", MortalRole),)),
+    kind("births.ruler", "{successor} came to lead {subject}.", roles=(role(R.SUCCESSOR), role(R.SUBJECT)), facts=(chosen("role", MortalRole),)),
     kind(
         "births.village_ruin",
         "{actor} grew crowded; {migrants:settler|settlers} settled the ruin of {destination} and rebuilt it.",
@@ -237,7 +237,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "body.ruler_set_aside",
-        "{predecessor} was set aside, for the law asks for a ruler whole in body; {successor} took the throne.",
+        "{predecessor} was set aside, for the law asks for a ruler whole in body; {successor} came to rule.",
         roles=(role(R.PREDECESSOR), role(R.SUCCESSOR), role(R.AUTHORITY, required=False)),
         facts=(number("injuries", U.COUNT),),
     ),

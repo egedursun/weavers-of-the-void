@@ -56,7 +56,7 @@ CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
 SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
 TABOO_ACTS = ", ".join(item.value for item in ActKind)
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}"
-COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore goes to smithing and coin, grain, livestock and fish to food, timber to fuel and building"
+COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore goes to metalworking and coin, grain, livestock and fish to food, timber to fuel and building"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
@@ -573,7 +573,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"mortal_id": "The id of the dead mortal", "alignment": "What the spirit leans toward", "reason": "Why you call it up"},
     ),
     T.CROWN_RULER: ToolText(
-        "You crown a ruler over a people, settlement, faction or cult you reach that has none. {{ rules.son_tools.crown_ruler_essence }} essence, 1 action.",
+        "You set a ruler in power over a people, settlement, faction or cult you reach that has none. {{ rules.son_tools.crown_ruler_essence }} essence, 1 action.",
         {"community_id": "The id of the community", "reason": "Why it needs a ruler"},
     ),
     T.FOUND_HOUSE: ToolText(
@@ -858,7 +858,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.FORGE_MATERIAL: ToolText(
         "You forge a new material into a world, a substance of its own with every property you name; you may set a vein of it into a land. "
-        "Smiths can work it once they know its branch to its level. {{ rules.son_tools.forge_material_essence }} essence, 1 action.",
+        "Its makers can work it once they know its branch to its level. {{ rules.son_tools.forge_material_essence }} essence, 1 action.",
         {
             "world_id": "The world it belongs to",
             "name": "Its proper name",
@@ -905,7 +905,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You make a servitor, a spirit in your service, for the work you choose. Messengers carry your dreams further, guards turn back those who "
         "would raze your holy places and thrones, judges raise your standing in the afterlife, the host fights for you in divine battles, spies watch "
         "a place, agents work your will in their post, avengers bring fear to those who scorn you, guides of souls take your faithful's souls to your afterlife, "
-        "worshippers deepen the awe of your faithful, wardens keep order at their post and scribes spread your teachings among your peoples. "
+        "worshippers deepen the awe of your faithful, wardens keep order at their post and keepers of accounts spread your teachings among your peoples. "
         "Its loyalty follows how your peoples regard you and how you treat it: each new command and each defeat of its host wears on it, and a disloyal "
         "servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
         {
@@ -970,7 +970,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.STIR_CROWD: ToolText(
         "You stir the folk of a town in your reach with a grievance ({{ collective_triggers }}); their anger, fear or fervour rises and the "
-        "town may rise in a riot, a panic, a mass conversion or a lasting movement. The watch and garrison hold them back. 1 action.",
+        "town may rise in a riot, a panic, a mass conversion or a lasting movement. Its guards and garrison hold them back. 1 action.",
         {"town_id": "The town", "grievance": "The grievance you stir", "reason": "Why you stir them"},
     ),
     T.REVEAL_TRUE_HISTORY: ToolText(
@@ -1322,7 +1322,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"route_id": "The trade route to close", "reason": "Why you close it"},
     ),
     T.COMMISSION_STRUCTURE: ToolText(
-        "You set a settlement or people to raise a work in your name: its builders, stone and coin raise it over the coming ages, and when it stands it is "
+        "You set a settlement or people to raise a work in your name: its builders, materials and coin raise it over the coming ages, and when it stands it is "
         "dedicated to you (fame, faith, and it can anchor your existence). The kind decides what it does. "
         "{{ rules.construction.commission_essence }} essence, 1 action.",
         {
@@ -1368,7 +1368,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"war_id": "The war", "army_id": "The besieging army", "settlement_id": "The settlement to besiege"},
     ),
     T.OFFER_PEACE: ToolText(
-        "You end a war on terms you set: name the victor and what the beaten must give (land, tribute, hostages, a throne), or no victor for a white peace. "
+        "You end a war on terms you set: name the victor and what the beaten must give (land, tribute, hostages, the right to rule), or no victor for a white peace. "
         "{{ rules.son_military.peace_cost }} essence, 1 action.",
         {
             "war_id": "The war to end",
@@ -1546,7 +1546,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SHAPE_EQUIPMENT: ToolText(
         "You give a community an equipment model of its own: a named weapon, armour, shield or piece of materiel entered in the atlas, made "
-        "of the material you choose or of the community's own, which its smiths then forge for its soldiers and vehicles. "
+        "of the material you choose or of the community's own, which its makers then produce for its soldiers and vehicles. "
         "{{ rules.armament.son_model_essence }} essence, 1 action.",
         {
             "owner_id": "The community that will make it",
@@ -1715,7 +1715,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SET_BEAST_BOUNTY: ToolText(
         "You move a town in your reach to post a bounty on a beast; hunters of its world take the contract, study their quarry and hunt it "
-        "for the coin. 1 action.",
+        "for the reward. 1 action.",
         {"town_id": "The town that pays", "beast_id": "The beast", "reason": "Why you set it"},
     ),
     T.MARK_BIRTH: ToolText(

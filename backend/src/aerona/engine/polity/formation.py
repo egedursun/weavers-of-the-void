@@ -64,11 +64,11 @@ TITLES = total(
     GovernmentKind,
     {
         GovernmentKind.CHIEFDOM: "Chiefdom",
-        GovernmentKind.MONARCHY: "Kingdom",
+        GovernmentKind.MONARCHY: "Realm",
         GovernmentKind.EMPIRE: "Empire",
         GovernmentKind.OCCUPATION: "Occupied Lands",
         GovernmentKind.THEOCRACY: "Holy Realm",
-        GovernmentKind.GOD_REALM: "Divine Kingdom",
+        GovernmentKind.GOD_REALM: "Divine Realm",
         GovernmentKind.OLIGARCHY: "Merchant League",
         GovernmentKind.TRIBAL_CONFEDERATION: "Confederation",
         GovernmentKind.REPUBLIC: "Republic",
@@ -334,7 +334,7 @@ async def refresh_realms(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         for member_id in wanted:
             book.entities[member_id] = communities[member_id]
         ruler_id = mortal_rules.get(core_id) or next((mortal_rules[item] for item in member_ids if item in mortal_rules), None)
-        set_ruler(ctx, realm, ruler_id, "the throne passed")
+        set_ruler(ctx, realm, ruler_id, "rule passed on")
         await shape(ctx, book, realm)
     counts["dissolved"] = await dissolve(ctx, book, live)
     await ctx.session.flush()

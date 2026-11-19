@@ -630,7 +630,7 @@ export const BEARERS: Record<Schema['HeraldryHolderKind'], Named> = {
   polity: { label: 'A realm', icon: Crown, tone: 'gold' },
   title: { label: 'A title', icon: Landmark, tone: 'info' },
   army: { label: 'An army', icon: Swords, tone: 'danger' },
-  guild: { label: 'A guild or order', icon: Hammer, tone: 'verdigris' },
+  guild: { label: 'An association or order', icon: Hammer, tone: 'verdigris' },
   company: { label: 'A company', icon: Coins, tone: 'gold' },
   order: { label: 'An order', icon: Shield, tone: 'verdigris' },
   people: { label: 'A people', icon: Users, tone: 'info' },

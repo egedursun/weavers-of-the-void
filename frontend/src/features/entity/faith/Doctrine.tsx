@@ -1133,7 +1133,7 @@ function DoctrineBody({
           }}
           hint={
             doctrine.god_king
-              ? 'Crown and altar are one'
+              ? 'Rule and faith are one'
               : doctrine.state_realm
                 ? `Clergy weight in ${doctrine.state_realm.name}`
                 : 'No realm keeps this faith'

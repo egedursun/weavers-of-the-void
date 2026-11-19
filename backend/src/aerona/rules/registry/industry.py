@@ -41,7 +41,16 @@ class EnergyRules:
     divine_per_100_clergy: int = rule(8, 0, 100, G, "Divine energy a hundred clergy give")
     magic_heat_pct: int = rule(50, 0, 400, G, "Heat each unit of spare magic gives when fuel runs short (%)")
     fuel_engine: int = rule(3, 0, 50, G, "Energy one unit of fuel gives an engine")
-    electric_per_level: int = rule(15, 0, 400, G, "Electric energy each level of a power plant, dam or star collector of a place gives")
+    electric_per_level: int = rule(5000, 0, 1000000, G, "Electric energy each level of a power plant, dam or star collector of a place gives each epoch")
+    electric_per_1000: int = rule(
+        250,
+        0,
+        100000,
+        G,
+        "Electric energy a thousand people of a place with power are expected to draw each epoch for work and warmth, to which it sizes its plants",
+    )
+    power_heat_pct: int = rule(100, 0, 400, G, "Heat each unit of electric or stored power gives when fuel runs short (%)")
+    heat_per_cloth: int = rule(4, 0, 40, G, "Heat a home warmed by power needs to stand in for one unit of warm cloth it lacks")
     stored_pct: int = rule(30, 0, 100, G, "Share of a place's electric energy it can keep in stores (%)")
     solar_base: int = rule(6, 0, 200, G, "Solar energy an open place under its star gives")
     geothermal_volcanic: int = rule(25, 0, 400, G, "Geothermal energy volcanic ground gives")

@@ -96,19 +96,23 @@ const TARGETS = [
 ] as const
 
 const FACTION_KINDS: Record<string, Named> = {
-  merchant_guild: { label: 'Merchant guild', icon: Store, tone: 'gold' },
-  craft_guild: { label: 'Craft guild', icon: Hammer, tone: 'gold' },
+  merchant_guild: { label: 'Trade association', icon: Store, tone: 'gold' },
+  craft_guild: { label: 'Craft association', icon: Hammer, tone: 'gold' },
   priesthood: { label: 'Priesthood', icon: Sparkles, tone: 'verdigris' },
   warrior_order: { label: 'Warrior order', icon: Shield, tone: 'danger' },
-  noble_council: { label: 'Council of lords', icon: Crown, tone: 'gold' },
-  peasant_league: { label: 'Peasant league', icon: Users, tone: 'success' },
+  noble_council: { label: 'Noble council', icon: Crown, tone: 'gold' },
+  peasant_league: { label: "Farmers' league", icon: Users, tone: 'success' },
   rebels: { label: 'Rebels', icon: Flag, tone: 'danger' },
   bandits: { label: 'Bandits', icon: Skull, tone: 'danger' },
   pirates: { label: 'Pirates', icon: Ship, tone: 'danger' },
   assassins: { label: 'Assassins', icon: Sword, tone: 'danger' },
   scholars_academy: { label: 'Academy', icon: ScrollText, tone: 'info' },
   secret_society: { label: 'Secret society', icon: BookLock, tone: 'muted' },
-  mercenary_company: { label: 'Free company', icon: Swords, tone: 'warning' },
+  mercenary_company: {
+    label: 'Mercenary company',
+    icon: Swords,
+    tone: 'warning',
+  },
   interworld_federation: {
     label: 'Interworld federation',
     icon: Handshake,
@@ -128,7 +132,7 @@ const FACTION_KINDS: Record<string, Named> = {
   },
   holy_order: { label: 'Holy order', icon: Church, tone: 'verdigris' },
   crime_family: { label: 'Crime family', icon: HandCoins, tone: 'danger' },
-  thieves_guild: { label: "Thieves' guild", icon: KeyRound, tone: 'warning' },
+  thieves_guild: { label: "Thieves' ring", icon: KeyRound, tone: 'warning' },
   smuggling_ring: {
     label: 'Smuggling ring',
     icon: PackageOpen,
@@ -680,7 +684,7 @@ function Levers({
       <AdjustPanel
         trigger='Charter or hire'
         title='Charter the faction or seal a condotta'
-        note='A charter makes pirates privateers or grants a guild its monopoly; a condotta puts a free company in a realm’s pay.'
+        note='A charter makes pirates privateers or grants an association its monopoly; a condotta puts a free company in a realm’s pay.'
       >
         <RecordField
           label='Realm'

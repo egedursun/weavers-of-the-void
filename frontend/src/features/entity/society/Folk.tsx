@@ -837,7 +837,7 @@ export function FolkControls({
           />
           <ChoiceEditor
             label='Inheritance'
-            hint='Who takes the throne and the estate'
+            hint='Who comes to rule and who takes the estate'
             value={culture.inheritance}
             table={INHERITANCE_SPEC}
             held={held('inheritance')}

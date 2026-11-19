@@ -108,7 +108,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "arts.lured",
         G.SOCIAL,
-        "{subject} was drawn to the court of {patron}.",
+        "{subject} was drawn to the inner circle of {patron}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PATRON), RoleSpec(R.DESTINATION)),
         steps=frozenset({A.ARRIVE}),
         place=PlaceRule.REQUIRED,
@@ -1107,7 +1107,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.commission_account",
         G.SOCIAL,
-        "{patron} had the scribes of {authority} write its account of {event}.",
+        "{patron} had the clerks of {authority} write its account of {event}.",
         roles=(RoleSpec(R.PATRON), RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("event", FactValue.NAME), FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT)),
         chronicle_kind=K.WORLD,

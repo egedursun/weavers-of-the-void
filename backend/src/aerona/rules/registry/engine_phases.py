@@ -69,6 +69,7 @@ class EnginePhasesRules:
     spontaneous_births: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: spontaneous births")
     factions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: factions")
     engine_works: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: engine works")
+    works_in_age: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: works of the age a world began in")
     splendor_growth: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: splendor growth")
     structure_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: structure survey")
     structure_upkeep: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: structure upkeep")

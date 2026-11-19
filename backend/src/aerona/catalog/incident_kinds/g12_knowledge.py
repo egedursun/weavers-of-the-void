@@ -280,7 +280,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "history.true_line",
         G.KNOWLEDGE,
-        "{actor} claims the throne of {target} as heir of the true line.",
+        "{actor} claims rule of {target} as heir of the true line.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(
             FactSpec("claim_strength", FactValue.NUMBER, FactUnit.STRENGTH),
@@ -1504,7 +1504,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "writing.script",
         G.KNOWLEDGE,
-        "The scribes of {maker} developed {system:an} for the {subject} language; its words are now kept in writing.",
+        "The scholars of {maker} developed {system:an} for the {subject} language; its words are now kept in writing.",
         roles=(RoleSpec(R.MAKER), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("system", FactValue.ENUM, enum=WritingSystem),),
         clock=ProcessClock.YEAR,

@@ -60,7 +60,7 @@ const ALL_SKILLS: Record<string, string> = {
   etiquette: 'Etiquette',
   deception: 'Deception',
   teaching: 'Teaching',
-  smithing: 'Smithing',
+  smithing: 'Metalworking',
   carpentry: 'Carpentry',
   masonry: 'Masonry',
   weaving: 'Weaving',

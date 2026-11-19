@@ -86,7 +86,7 @@ export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
 
 export const CLAIMS: Record<Schema['JurisdictionClaim'], Named> = {
   clergy: { label: 'Courts of the clergy', icon: Church, tone: 'gold' },
-  guild: { label: 'Courts of the guild', icon: Building2, tone: 'info' },
+  guild: { label: 'Courts of an association', icon: Building2, tone: 'info' },
   foreign: { label: 'Courts of a foreign realm', icon: Globe, tone: 'warning' },
 }
 

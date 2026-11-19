@@ -391,7 +391,7 @@ export const STEP_ACTION: Record<components['schemas']['StepAction'], Named> = {
   foster: { label: 'Foster', icon: Heart },
   inherit: { label: 'Inherit', icon: PartyPopper },
   succeed: { label: 'Succeed', icon: Trophy },
-  crown: { label: 'Crown', icon: Utensils },
+  crown: { label: 'Raise to rule', icon: Utensils },
   depose: { label: 'Depose', icon: Music },
   betray: { label: 'Betray', icon: Users },
   reconcile: { label: 'Reconcile', icon: Heart },

@@ -462,7 +462,7 @@ export function CoinForge({
       <PartHeader
         icon={Coins}
         title='Strike a new coin'
-        note='A people, settlement, guild or realm begins to mint. Its markets count in the new coin from the next epoch.'
+        note='A people, settlement, association or realm begins to mint. Its markets count in the new coin from the next epoch.'
       />
       <div className={cn(FIELD_GRID, '@md/form:grid-cols-3')}>
         <EntityChoice
@@ -866,7 +866,7 @@ export function LoanForge({ onDone }: { onDone?: () => void }) {
       <PartHeader
         icon={Landmark}
         title='Make a loan'
-        note='A guild, people, settlement or realm lends to another. Interest runs each epoch; an unpaid loan defaults when it falls due.'
+        note='An association, people, settlement or realm lends to another. Interest runs each epoch; an unpaid loan defaults when it falls due.'
       />
       <div className={cn(FIELD_GRID, '@md/form:grid-cols-2')}>
         <EntityChoice

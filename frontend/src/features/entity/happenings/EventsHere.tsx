@@ -218,7 +218,7 @@ function CreateEvent({
               kind === 'wedding'
                 ? 'The other house'
                 : kind === 'coronation'
-                  ? 'Who is crowned'
+                  ? 'Who comes to rule'
                   : 'The breakaway sect'
             }
           >

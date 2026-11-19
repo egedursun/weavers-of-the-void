@@ -154,7 +154,7 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
             MortalRole.ARTISAN,
             {"intellect": lambda r: r.deep_life.role_artisan_master_intellect, "agility": lambda r: r.deep_life.role_artisan_master_agility},
         ),
-        NotableRole("smith", "Smith", "smith", MortalRole.ARTISAN, {"strength": lambda r: r.deep_life.role_artisan_smith_strength}),
+        NotableRole("smith", "Metalworker", "metalworker", MortalRole.ARTISAN, {"strength": lambda r: r.deep_life.role_artisan_smith_strength}),
         NotableRole("architect", "Architect", "architect", MortalRole.ARTISAN, {"intellect": lambda r: r.deep_life.role_artisan_architect_intellect}),
     ),
     SocialClass.MERCHANT: (
@@ -167,14 +167,12 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
         ),
         NotableRole(
             "caravaneer",
-            "Caravaneer",
-            "caravaneer",
+            "Carrier",
+            "carrier",
             MortalRole.MERCHANT,
             {"agility": lambda r: r.deep_life.role_merchant_caravaneer_agility, "strength": lambda r: r.deep_life.role_merchant_caravaneer_strength},
         ),
-        NotableRole(
-            "moneychanger", "Money-changer", "money-changer", MortalRole.MERCHANT, {"intellect": lambda r: r.deep_life.role_merchant_moneychanger_intellect}
-        ),
+        NotableRole("moneychanger", "Banker", "banker", MortalRole.MERCHANT, {"intellect": lambda r: r.deep_life.role_merchant_moneychanger_intellect}),
     ),
     SocialClass.PRIEST: (
         NotableRole(
@@ -191,7 +189,7 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
             MortalRole.HEALER,
             {"intellect": lambda r: r.deep_life.role_priest_healer_intellect, "charisma": lambda r: r.deep_life.role_priest_healer_charisma},
         ),
-        NotableRole("bard", "Bard", "bard", MortalRole.SCRIBE, {"charisma": lambda r: r.deep_life.role_priest_bard_charisma}),
+        NotableRole("bard", "Performer", "performer", MortalRole.SCRIBE, {"charisma": lambda r: r.deep_life.role_priest_bard_charisma}),
     ),
     SocialClass.WARRIOR: (
         NotableRole(
@@ -449,12 +447,12 @@ async def crown(ctx: TickContext, community: EntityRow, namer: Namer | None = No
         name=f"{community.name} {suffix}",
         subtype=subtype,
         role=MortalRole.RULER,
-        body=f"Took the throne of {community.name} as {subtype}.",
+        body=f"Came to lead {community.name} as {subtype}.",
         biases={"charisma": life.ruler_charisma_bias, "intellect": life.ruler_intellect_bias},
         extra_lifespan=life.ruler_lifespan_bonus,
     )
     ruler = await born_mortal(ctx, community, plan, namer)
-    await connect(ctx.session, ruler.id, community.id, BondKind.RULES, ctx.epoch, description="took the throne")
+    await connect(ctx.session, ruler.id, community.id, BondKind.RULES, ctx.epoch, description="came to lead")
     await record(ctx, "births.ruler", roles={IncidentRole.SUCCESSOR: ruler.id, IncidentRole.SUBJECT: community.id}, facts={"role": MortalRole.RULER})
     return ruler
 

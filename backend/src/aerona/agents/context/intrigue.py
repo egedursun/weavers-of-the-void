@@ -155,7 +155,7 @@ async def estate_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         .limit(1)
     )
     if member is not None:
-        found.append(f"guild rank: {GUILD_RANK_WORDS[member.rank]} of {await name_of(session, member.faction_entity_id)}")
+        found.append(f"your rank: {GUILD_RANK_WORDS[member.rank]} of {await name_of(session, member.faction_entity_id)}")
     for share in await session.scalars(select(CompanyShareRow).where(CompanyShareRow.holder_node_id == me.id)):
         found.append(f"you hold {share.share}% of {await name_of(session, share.company_entity_id)}")
     return found

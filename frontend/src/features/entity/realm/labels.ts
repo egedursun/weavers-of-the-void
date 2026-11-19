@@ -192,7 +192,7 @@ export const LAW_AREAS: Record<string, Named> = {
 }
 
 export const LAW_KINDS: Record<string, string> = {
-  succession_rule: 'Law of the throne',
+  succession_rule: 'Law of succession',
   inheritance_split: 'Inheritance',
   land_tenure: 'Land tenure',
   slavery: 'Slavery',
@@ -209,7 +209,7 @@ export const LAW_KINDS: Record<string, string> = {
   ransom_custom: 'Ransom custom',
   marriage_law: 'Marriage',
   sumptuary: 'Sumptuary law',
-  guild_charter: 'Guild charter',
+  guild_charter: 'Association charter',
   foreigner_rights: 'Rights of foreigners',
   religious_tolerance: 'Religious tolerance',
   worship_ban: 'Worship ban',
@@ -343,7 +343,7 @@ export const LAW_PARAMS: Record<string, string> = {
   divorce: 'Divorce',
   noble_luxury: 'Noble luxury',
   merchant_luxury: 'Merchant luxury',
-  guild_id: 'Guild',
+  guild_id: 'Association',
   monopoly: 'Monopoly',
   level: 'Level',
   mind_powers: 'Powers over minds',

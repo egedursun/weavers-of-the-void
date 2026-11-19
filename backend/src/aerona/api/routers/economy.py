@@ -43,6 +43,7 @@ from aerona.db.kind_concepts.nature import ORIGIN_SOURCE
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.economy import (
     CommunityStockRow,
     CurrencyRow,
@@ -230,6 +231,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
             )
         )
         workshops = {row.kind: row for row in await session.scalars(select(WorkshopRow).where(WorkshopRow.community_entity_id == community_id))}
+        known = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == community_id)))
         last = await session.scalar(select(func.max(ProductionRunRow.epoch)).where(ProductionRunRow.community_entity_id == community_id))
         runs = (
             list(await session.scalars(select(ProductionRunRow).where(ProductionRunRow.community_entity_id == community_id, ProductionRunRow.epoch == last)))
@@ -251,7 +253,7 @@ async def community_economy(services: ServicesDep, community_id: int = Path(ge=1
                 quality=max((run.quality for run in by_step.get(step.key, []) if run.quantity), default=0),
                 material=next((run.material for run in by_step.get(step.key, []) if run.material is not None), None),
                 bottleneck=next((run.bottleneck for run in by_step.get(step.key, []) if run.bottleneck is not None), None),
-                runs=step.workshop is None or step.workshop in workshops,
+                runs=(step.workshop is None or step.workshop in workshops) and (step.technique is None or step.technique in known),
             )
             for step in CHAIN_STEPS
         ]

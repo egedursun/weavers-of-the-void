@@ -103,7 +103,7 @@ async def bind_client(ctx: TickContext, patron_id: int, client_id: int, role: Cl
 async def seat_of(ctx: TickContext, office_id: int) -> tuple[OfficeRow, Realm]:
     office = await found(ctx, OfficeRow, office_id, "office")
     if office.kind.value in KEPT_SEATS:
-        raise ValidationFailedError("The throne, its heir and its regent are not for sale.")
+        raise ValidationFailedError("The office of ruler, its heir and its regent are not for sale.")
     _, realm = await realm_for(ctx, office.polity_entity_id)
     return office, realm
 

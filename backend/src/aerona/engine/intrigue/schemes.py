@@ -364,11 +364,11 @@ async def sway(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: En
 async def fabricate_claim(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id)
     if realm is None:
-        return "there was no throne to claim"
+        return "there was no rule to claim"
     ctx.session.add(ClaimRow(claimant_entity_id=owner.id, polity_entity_id=realm, basis=ClaimBasis.FABRICATED, since_epoch=ctx.epoch, locked=[]))
     if owner.entity_type is EntityType.MORTAL:
         await assume(ctx, owner, IdentityReason.IMPOSTOR, owner.name, cover_role="lost heir", community_id=realm)
-    return f"{owner.name} gained a forged claim on the throne of {target.name}"
+    return f"{owner.name} gained a forged claim to rule over {target.name}"
 
 
 async def fabricate_hook(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
@@ -397,9 +397,9 @@ async def coup(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: En
         await ctx.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == OfficeKind.RULER).limit(1)) if realm else None
     )
     if office is None or "holder_entity_id" in (office.locked or []):
-        return "the throne could not be seized"
+        return "rule could not be seized"
     office.holder_entity_id, office.since_epoch = owner.id, ctx.epoch
-    return f"{owner.name} seized the throne from {target.name}"
+    return f"{owner.name} seized rule from {target.name}"
 
 
 async def poison_well(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:

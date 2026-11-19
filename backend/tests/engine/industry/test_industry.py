@@ -8,9 +8,10 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
-from aerona.db.tables.industry import RegionPollutionRow
+from aerona.db.tables.industry import CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
@@ -21,18 +22,35 @@ from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import FactionStats, IdeologyStats
+from aerona.engine.commerce.trade import without_shops
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import shaft_factor
-from aerona.engine.economy.household import burn_substitutes, field_shares
+from aerona.engine.economy.household import Wear, burn_substitutes, field_shares, warmed
+from aerona.engine.economy.refining import RefiningTally, refine_community
 from aerona.engine.economy.refining import lit as lit_factor
+from aerona.engine.economy.stocks import holding
 from aerona.engine.industry.energy import draw, gauge, industry_row, survival_heat, unmet_pct
 from aerona.engine.industry.fuels import lay_coal_seams
-from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, feed, outdated, owner_reveres, profit, reveres_nature
+from aerona.engine.industry.methods import (
+    MethodTally,
+    adopt,
+    allowed,
+    choose_methods,
+    feed,
+    newest_tier,
+    outdated,
+    owner_reveres,
+    profit,
+    reveres_nature,
+    step_method,
+)
 from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution, void_scar
 from aerona.engine.industry.quality import premium, tier_of
 from aerona.engine.industry.stores import StoreTally, kindle, preserve, spoil, wear_tools
+from aerona.engine.pipeline import TICK_ORDER
 from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, settlement
@@ -357,3 +375,92 @@ async def test_a_place_never_chooses_a_method_it_cannot_run_for_want_of_power_or
     await realm.session.flush()
     await choose_methods(ctx, book, town, MethodTally())
     assert book.methods[town.id][ProcessKind.FARMING].method is MethodKind.DIVINE_HARVEST
+
+
+async def modern_town(realm: Realm, name: str, techniques: tuple[Technique, ...]) -> EntityRow:
+    town = await settlement(realm, name)
+    for kind in (WorkshopKind.CHARCOAL_KILN, WorkshopKind.WEAVERY):
+        realm.session.add(WorkshopRow(community_entity_id=town.id, kind=kind, level=2, built_epoch=1))
+    for technique in techniques:
+        realm.session.add(HolderTechniqueRow(holder_entity_id=town.id, technique=technique))
+    realm.session.add(LabourRow(community_entity_id=town.id, job=Job.CRAFTING, workers=600, output_pct=100, epoch=1))
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.COAL, quantity=400, quality=50))
+    realm.session.add(
+        CommunityMethodRow(community_node_id=town.id, process=ProcessKind.CHARCOAL, method=MethodKind.OIL_REFINING, adopted_epoch=1, displaced=0, locked=[])
+    )
+    await realm.session.flush()
+    return town
+
+
+async def test_a_modern_place_makes_fuel_without_timber_and_cloth_without_livestock(realm: Realm) -> None:
+    ctx = context(realm.session)
+    modern = await modern_town(realm, "Gridhaven", (Technique.COKE_SMELTING, Technique.INDUSTRIAL_CHEMISTRY, Technique.ELECTRICITY))
+    old = await modern_town(realm, "Oldhaven", (Technique.IRON,))
+    book = await loaded(realm)
+    for town in (modern, old):
+        row = industry_row(ctx, book, town.id)
+        row.heat, row.electric = 500, 500
+    assert step_method(book, old.id, "charcoal") is None
+    oil = step_method(book, modern.id, "coal_fuel")
+    assert oil is not None and oil.kind is MethodKind.OIL_REFINING
+    tally = RefiningTally()
+    await refine_community(ctx, book, modern, tally)
+    await refine_community(ctx, book, old, tally)
+    await realm.session.flush()
+    runs = list(await realm.session.scalars(select(ProductionRunRow).order_by(ProductionRunRow.id)))
+    made = {run.step for run in runs if run.community_entity_id == modern.id and run.quantity > 0}
+    assert made & {"coke_fuel", "coal_fuel"} and "synthetic_cloth" in made
+    fuel_runs = [run for run in runs if run.community_entity_id == modern.id and run.output is CommodityKind.FUEL and run.quantity > 0]
+    assert fuel_runs and all(run.method is MethodKind.OIL_REFINING for run in fuel_runs)
+    assert not [run for run in runs if run.step == "synthetic_cloth" and run.method is MethodKind.HAND_LOOM]
+    assert not {"charcoal", "gather_fuel", "weave", "spin", "tan_hides"} & made
+    assert not [run for run in runs if run.community_entity_id == modern.id and run.bottleneck is not None]
+    assert await holding(realm.session, modern.id, CommodityKind.CLOTH) > 0
+    assert book.industry[modern.id].spent.get("electric", 0) > 0
+    assert all(shop.idle_epochs == 0 for shop in book.workshops[modern.id].values())
+    old_short = {run.bottleneck for run in runs if run.community_entity_id == old.id and run.bottleneck is not None}
+    assert CommodityKind.TIMBER in old_short
+    assert not [run for run in runs if run.community_entity_id == old.id and run.quantity > 0 and run.step in {"coke_fuel", "coal_fuel", "synthetic_cloth"}]
+
+
+def test_a_world_begun_in_an_age_chooses_only_among_the_methods_of_its_newest_tier() -> None:
+    farming = [METHODS[kind] for kind in (MethodKind.HAND_SICKLE, MethodKind.CULTURED_CROPS, MethodKind.HYDROPONICS, MethodKind.MOTOR_TRACTORS)]
+    assert {spec.kind for spec in newest_tier(farming, TechnologyEra.INFORMATION)} == {MethodKind.HYDROPONICS, MethodKind.MOTOR_TRACTORS}
+    assert newest_tier(farming[:2], TechnologyEra.INFORMATION) == farming[:2]
+    keeping = [METHODS[MethodKind.MAGIC_KEEPING], METHODS[MethodKind.REFRIGERATION_HALLS]]
+    assert newest_tier(keeping, TechnologyEra.INFORMATION) == [METHODS[MethodKind.REFRIGERATION_HALLS]]
+    assert newest_tier(keeping, TechnologyEra.IRON) == keeping
+
+
+def test_works_of_the_starting_age_stand_before_the_first_economy() -> None:
+    order = [phase.name for phase in TICK_ORDER]
+    assert order.index("works_in_age") < order.index("industry_methods") < order.index("society_economy") < order.index("refining")
+
+
+async def test_a_home_warmed_by_power_lacks_neither_heat_nor_cloth_even_without_shops(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Wirehollow")
+    book = await loaded(realm)
+    industry_row(ctx, book, town.id).electric = 100000
+    bare = Wear({CommodityKind.FUEL: 100, CommodityKind.CLOTH: 80}, {CommodityKind.FUEL: 100, CommodityKind.CLOTH: 0})
+    worn = warmed(ctx.rules, book, town.id, without_shops(bare, 15))
+    assert worn.got[CommodityKind.FUEL] >= 100 and worn.got[CommodityKind.CLOTH] >= 80
+    assert book.industry[town.id].spent.get("electric", 0) > 0
+    unlit = await settlement(realm, "Darkhollow")
+    assert warmed(ctx.rules, book, unlit.id, bare).got[CommodityKind.CLOTH] == 0
+
+
+async def test_scarce_hands_meet_every_need_before_any_good_is_stockpiled(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Narrowhands")
+    for kind in (WorkshopKind.CHARCOAL_KILN, WorkshopKind.WEAVERY):
+        realm.session.add(WorkshopRow(community_entity_id=town.id, kind=kind, level=2, built_epoch=1))
+    realm.session.add(LabourRow(community_entity_id=town.id, job=Job.CRAFTING, workers=60, output_pct=100, epoch=1))
+    for commodity in (CommodityKind.TIMBER, CommodityKind.FIBRE):
+        realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=commodity, quantity=5000, quality=50))
+    await realm.session.flush()
+    book = await loaded(realm)
+    await refine_community(ctx, book, town, RefiningTally())
+    await realm.session.flush()
+    assert await holding(realm.session, town.id, CommodityKind.FUEL) > 0
+    assert await holding(realm.session, town.id, CommodityKind.CLOTH) > 0

@@ -106,5 +106,49 @@ def ordinal_word(number: int) -> str:
     return f"{number}{ORDINAL_SUFFIXES.get(number % TEN, 'th')}"
 
 
+AGE_NEUTRAL: dict[tuple[str, str], str] = {
+    ("MortalRole", "scribe"): "clerk",
+    ("SocialClass", "scribe"): "clerk",
+    ("SocialClass", "serf_or_slave"): "bonded",
+    ("OrderLabour", "serf"): "tied to the land",
+    ("ClergyFunction", "scribe"): "clerk",
+    ("ServitorRole", "scribe"): "keeper of accounts",
+    ("Profession", "smith"): "metalworker",
+    ("SkillKind", "smithing"): "metalworking",
+    ("FactionKind", "craft_guild"): "craft association",
+    ("FactionKind", "merchant_guild"): "trade association",
+    ("FactionKind", "thieves_guild"): "thieves' ring",
+    ("FactionKind", "peasant_league"): "farmers' league",
+    ("OwnerClass", "guild"): "craft association",
+    ("HeraldryHolderKind", "guild"): "association",
+    ("SociolectKind", "guild"): "trade",
+    ("TitleTier", "guild"): "association",
+    ("JurisdictionClaim", "guild"): "association",
+    ("LawKind", "guild_charter"): "association charter",
+    ("StructureKind", "guildhall"): "trade hall",
+    ("StructureKind", "alchemist_lab"): "reagent laboratory",
+    ("PeaceTermKind", "throne"): "rule",
+    ("StepAction", "crown"): "raise to rule",
+    ("WorkshopKind", "alchemist"): "chemical works",
+    ("Technique", "guilds"): "craft associations",
+    ("OathBreach", "the_throne_was_seized"): "rule was seized",
+    ("CoupCause", "a_subject_turned_their_power_base_on_the_throne"): "a subject turned their power base on the ruler",
+    ("CoupCause", "the_marshal_turned_the_army_on_the_throne"): "the marshal turned the army on the ruler",
+    ("CoupCause", "the_regent_took_the_crown"): "the regent took power",
+    ("GodGoalKind", "hold_thrones"): "hold thrones of power",
+    ("GatheringKind", "coronation"): "accession",
+    ("CollectionKind", "coronation"): "accession",
+    ("DivinationQuestion", "coronation"): "accession",
+    ("EngineKind", "coronation"): "accession",
+    ("ItemDeed", "coronation"): "accession",
+    ("GuestRole", "crowned"): "new ruler",
+}
+
+
+def fact_word(enum_name: str | None, value: str) -> str:
+    return AGE_NEUTRAL.get((enum_name or "", value), value.replace("_", " "))
+
+
 def spoken(value: object) -> str:
-    return str(getattr(value, "value", value)).replace("_", " ")
+    raw = str(getattr(value, "value", value))
+    return fact_word(type(value).__name__, raw) if hasattr(value, "value") else raw.replace("_", " ")

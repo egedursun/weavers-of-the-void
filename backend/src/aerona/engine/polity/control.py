@@ -160,7 +160,7 @@ async def set_heir(ctx: TickContext, found: Realm, heir_id: int | None) -> None:
 async def appoint_office(ctx: TickContext, polity_id: int, kind: OfficeKind, mortal_id: int | None, *, region_id: int | None) -> OfficeRow:
     _, found = await realm(ctx, polity_id)
     if kind is OfficeKind.RULER:
-        raise ValidationFailedError("A ruler is crowned or deposed, not appointed.")
+        raise ValidationFailedError("A ruler is raised to rule or deposed, not appointed.")
     holder = await living_entity(ctx.session, mortal_id) if mortal_id is not None else None
     if mortal_id is not None and (holder is None or holder.entity_type is not EntityType.MORTAL):
         raise NotFoundError("No such living mortal.")
@@ -712,7 +712,7 @@ async def create_office(
 ) -> OfficeRow:
     _, found = await realm(ctx, polity_id)
     if kind is OfficeKind.RULER:
-        raise ValidationFailedError("A realm has one throne; crown or depose its ruler instead.")
+        raise ValidationFailedError("A realm has one ruler; raise or depose its ruler instead.")
     office = OfficeRow(
         polity_entity_id=polity_id,
         kind=kind,
@@ -766,7 +766,7 @@ async def edit_office(
         office.locked = lock(office.locked, "target")
     if vacate or holder_id is not None:
         if office.kind is OfficeKind.RULER:
-            raise ValidationFailedError("A ruler is crowned or deposed, not appointed.")
+            raise ValidationFailedError("A ruler is raised to rule or deposed, not appointed.")
         holder = await living_entity(ctx.session, holder_id) if holder_id is not None else None
         if holder_id is not None and (holder is None or holder.entity_type is not EntityType.MORTAL):
             raise NotFoundError("No such living mortal.")
@@ -782,7 +782,7 @@ async def abolish_office(ctx: TickContext, office_id: int) -> OfficeRow:
     if office is None:
         raise NotFoundError("No such office.")
     if office.kind is OfficeKind.RULER:
-        raise ValidationFailedError("The throne itself cannot be abolished.")
+        raise ValidationFailedError("The office of ruler itself cannot be abolished.")
     _, found = await realm(ctx, office.polity_entity_id)
     if office.holder_entity_id is not None:
         await appoint(ctx, found, office, None, by_id=None, reason="the office was abolished")

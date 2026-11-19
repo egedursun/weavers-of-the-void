@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 
+from aerona.catalog.eras import TECHNIQUE_ERAS
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
-from aerona.catalog.production import CHAIN_STEPS, SHIP_INPUTS, ChainStep
+from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
+from aerona.catalog.production import CHAIN_STEPS, RECIPES, SHIP_HULLS, ChainStep
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -18,10 +20,10 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
-from aerona.engine.eras.effects import tech_factor
+from aerona.engine.eras.effects import era_order, tech_factor
 from aerona.engine.factions.guilds import guild_standard
-from aerona.engine.industry.energy import scale_by_energy
-from aerona.engine.industry.methods import feed, method_for, process_of_step
+from aerona.engine.industry.energy import POWER_HEAT, available, scale_by_energy
+from aerona.engine.industry.methods import feed, step_method
 from aerona.engine.military.war_lines import war_output
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -48,6 +50,15 @@ class RefiningTally:
     built: int = 0
     ships: int = 0
     noted: int = 0
+    worked: set[int] = field(default_factory=set)
+    spent: dict[tuple[int, str], int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class StepRun:
+    workers: int = 0
+    made: int = 0
+    short: CommodityKind | None = None
 
 
 def artisan_pool(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
@@ -65,9 +76,73 @@ def target_units(ctx: TickContext, community: EntityRow, commodity: CommodityKin
     return round_half_up(max(1, need) * ctx.rules.refining.target_index / ctx.rules.economy.supply_index_epoch)
 
 
+def unwarmed_fuel(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
+    population = headcount(community)
+    heat = sum(epoch_need(ctx.rules, population, kind) * int(getattr(ctx.rules.energy, FUEL_HEAT[kind])) for kind in FUEL_FAMILY)
+    row = book.industry.get(community.id)
+    power = sum(int(getattr(row, kind.value)) for kind in POWER_HEAT) * ctx.rules.energy.power_heat_pct // PERCENT if row is not None else 0
+    return -(-max(0, heat - power) // max(1, ctx.rules.energy.heat_per_fuel))
+
+
+def need_now(ctx: TickContext, book: EconomyBook, community: EntityRow, commodity: CommodityKind) -> int:
+    need = epoch_need(ctx.rules, headcount(community), commodity)
+    return min(need, unwarmed_fuel(ctx, book, community)) if commodity is CommodityKind.FUEL else need
+
+
+async def needs_with_inputs(ctx: TickContext, book: EconomyBook, community: EntityRow) -> dict[CommodityKind, int]:
+    needs = {output: need_now(ctx, book, community, output) for output in RECIPES}
+    for output, steps in reversed(list(RECIPES.items())):
+        gap = needs[output] - await holding(ctx.session, community.id, output)
+        best = next((step for step in ranked(book, community.id, steps) if step.key not in KITCHEN_STEPS), None)
+        if gap <= 0 or best is None:
+            continue
+        batches = -(-gap // best.output_qty)
+        for commodity, per_batch in best.inputs:
+            if commodity in needs and commodity is not output:
+                needs[commodity] += batches * per_batch
+    return needs
+
+
 def lit(ctx: TickContext, book: EconomyBook, community_id: int) -> float:
     row = book.industry.get(community_id)
     return 1 + (row.light if row is not None else 0) * ctx.rules.energy.light_work_pct / PERCENT / PERCENT
+
+
+def knows(book: EconomyBook, community_id: int, step: ChainStep) -> bool:
+    if step.technique is not None and step.technique not in book.techniques.get(community_id, set()):
+        return False
+    return step.branch is None or book.level(community_id, step.branch) >= step.level
+
+
+def powered(book: EconomyBook, community_id: int, step: ChainStep) -> bool:
+    return step.energy is None or available(book.industry.get(community_id), step.energy) >= step.energy_need
+
+
+def can_run(book: EconomyBook, community_id: int, step: ChainStep) -> bool:
+    return knows(book, community_id, step) and powered(book, community_id, step)
+
+
+def recipe_age(step: ChainStep) -> int:
+    era = TECHNIQUE_ERAS.get(step.technique) if step.technique is not None else None
+    return era_order(era) if era is not None else -1
+
+
+def preferred(steps: list[ChainStep]) -> list[ChainStep]:
+    return sorted(steps, key=lambda step: (-step.yield_per_input, -recipe_age(step), CHAIN_STEPS.index(step)))
+
+
+def ranked(book: EconomyBook, community_id: int, steps: tuple[ChainStep, ...]) -> list[ChainStep]:
+    return preferred([step for step in steps if can_run(book, community_id, step)])
+
+
+def lead_recipe(book: EconomyBook, community_id: int, steps: tuple[ChainStep, ...]) -> ChainStep | None:
+    known = preferred([step for step in steps if step.key not in KITCHEN_STEPS and knows(book, community_id, step)])
+    return known[0] if known else None
+
+
+def crew_of(ctx: TickContext, book: EconomyBook, community_id: int, step: ChainStep) -> int:
+    method = step_method(book, community_id, step.key)
+    return max(1, round_half_up(ctx.rules.refining.workers_per_batch * (method.labour_pct if method is not None else PERCENT) / PERCENT))
 
 
 def capacity(ctx: TickContext, step: ChainStep, workshop: WorkshopRow | None, design: WorkshopDesignRow | None = None) -> int:
@@ -178,6 +253,20 @@ async def consume_inputs(
 async def note_bottleneck(ctx: TickContext, community: EntityRow, step: ChainStep, missing: CommodityKind, tally: RefiningTally) -> None:
     tally.bottlenecks[missing.value] = tally.bottlenecks.get(missing.value, 0) + 1
     tally.noted += 1
+    ctx.session.add(
+        ProductionRunRow(
+            epoch=ctx.epoch,
+            community_entity_id=community.id,
+            step=step.key,
+            workshop=step.workshop,
+            output=step.output,
+            quantity=0,
+            quality=0,
+            inputs={},
+            workers=0,
+            bottleneck=missing,
+        )
+    )
     await record(
         ctx,
         "refining.bottleneck",
@@ -187,50 +276,40 @@ async def note_bottleneck(ctx: TickContext, community: EntityRow, step: ChainSte
     )
 
 
-async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep, *, artisans: int, tally: RefiningTally) -> int:
+async def run_step(
+    ctx: TickContext, book: EconomyBook, community: EntityRow, step: ChainStep, *, artisans: int, tally: RefiningTally, need: int | None = None
+) -> StepRun:
     table = ctx.rules.refining
     workshop = book.workshop(community.id, step.workshop) if step.workshop is not None else None
     design = book.design_of(workshop)
     room = round_half_up(capacity(ctx, step, workshop, design) * await workshop_output(ctx.session, ctx.rules, workshop) * lit(ctx, book, community.id))
     room = round_half_up(room * await tech_factor(ctx.session, ctx.rules, community.id, EraChannel.INDUSTRY))
-    if room <= 0 or (step.branch is not None and book.level(community.id, step.branch) < step.level):
-        return 0
-    wanted = target_units(ctx, community, step.output) - await holding(ctx.session, community.id, step.output)
+    done = tally.spent.get((community.id, step.key), 0)
+    if room - done <= 0 or not knows(book, community.id, step):
+        return StepRun()
+    aim = need if need is not None else target_units(ctx, community, step.output)
+    wanted = aim - await holding(ctx.session, community.id, step.output)
     if wanted <= 0:
-        return 0
+        return StepRun()
     material, world_material = await best_input(ctx, book, community, step)
     if material is MaterialKind.IRON and (await ctx.laws()).has(NaturalLaw.NO_IRON, community.world_id):
-        return 0
+        return StepRun()
     held = await inputs_for(ctx, community, step, material, world_material)
     short = [commodity for commodity, per_batch in step.inputs if held.get(commodity, 0) < per_batch]
-    process = process_of_step(step.key)
-    method = method_for(book, community.id, process) if process is not None else None
-    crew = max(1, round_half_up(table.workers_per_batch * (method.labour_pct if method is not None else PERCENT) / PERCENT))
+    method = step_method(book, community.id, step.key)
+    crew = crew_of(ctx, book, community.id, step)
     hands = artisans // crew
-    batches = min(room, hands, -(-wanted // step.output_qty), *(held.get(commodity, 0) // per_batch for commodity, per_batch in step.inputs))
+    batches = min(room - done, hands, -(-wanted // step.output_qty), *(held.get(commodity, 0) // per_batch for commodity, per_batch in step.inputs))
     if method is not None and batches > 0:
         batches = int(batches * scale_by_energy(book, community.id, method.energy, method.energy_need * batches))
         batches = int(batches * await feed(ctx, community.id, method, batches))
-    if short and step.workshop is not None and workshop is not None:
-        await note_bottleneck(ctx, community, step, short[0], tally)
-        ctx.session.add(
-            ProductionRunRow(
-                epoch=ctx.epoch,
-                community_entity_id=community.id,
-                step=step.key,
-                workshop=step.workshop,
-                output=step.output,
-                quantity=0,
-                quality=0,
-                inputs={},
-                workers=0,
-                bottleneck=short[0],
-            )
-        )
+    if method is None and step.energy is not None and batches > 0:
+        batches = int(batches * scale_by_energy(book, community.id, step.energy, step.energy_need * batches))
+    blocked = short[0] if short and step.workshop is not None and workshop is not None else None
     if batches <= 0:
-        if workshop is not None and not workshop.held:
+        if workshop is not None and not workshop.held and need is None and workshop.id not in tally.worked:
             workshop.idle_epochs += 1
-        return 0
+        return StepRun(short=blocked)
     used, input_quality = await consume_inputs(ctx, community, step, batches, material=material, world_material=world_material)
     skill = book.skill(community.id, step.skill)
     quality = clamp_int(
@@ -265,12 +344,15 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             method=method.kind if method is not None else None,
         )
     )
+    tally.spent[(community.id, step.key)] = done + batches
     if workshop is not None and not workshop.held:
+        tally.worked.add(workshop.id)
         workshop.idle_epochs = 0
-        if batches >= room and workshop.level < level_cap(ctx.rules, headcount(community)) and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
+        full = done + batches >= room and workshop.level < level_cap(ctx.rules, headcount(community))
+        if full and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
             workshop.level += 1
     tally.batches += batches
-    return batches * crew
+    return StepRun(workers=batches * crew, made=made)
 
 
 def level_cap(rules: Rules, population: int) -> int:
@@ -288,7 +370,7 @@ def needed_workshops(ctx: TickContext, book: EconomyBook, community: EntityRow) 
     for step in CHAIN_STEPS:
         if step.workshop is None or book.workshop(community.id, step.workshop) is not None or step.workshop in wanted:
             continue
-        if step.branch is not None and book.level(community.id, step.branch) < step.level:
+        if not knows(book, community.id, step):
             continue
         wanted.append(step.workshop)
     return wanted
@@ -298,7 +380,7 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
     table = ctx.rules.refining
     rng = ctx.rng(f"workshop.{community.id}")
     for kind in needed_workshops(ctx, book, community):
-        inputs = [step for step in CHAIN_STEPS if step.workshop is kind]
+        inputs = [step for step in CHAIN_STEPS if step.workshop is kind and knows(book, community.id, step)]
         has_inputs = False
         for step in inputs:
             if all([await holding(ctx.session, community.id, commodity) >= per_batch for commodity, per_batch in step.inputs]):
@@ -326,6 +408,16 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
         return
 
 
+async def hull_for(ctx: TickContext, book: EconomyBook, community: EntityRow) -> tuple[tuple[CommodityKind, int], ...] | None:
+    known = book.techniques.get(community.id, set())
+    for technique, needs in SHIP_HULLS:
+        if technique is not None and technique not in known:
+            continue
+        if all([await holding(ctx.session, community.id, commodity) >= amount for commodity, amount in needs]):
+            return needs
+    return None
+
+
 async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     table = ctx.rules.refining
     yard = book.workshop(community.id, WorkshopKind.SHIPYARD)
@@ -336,10 +428,10 @@ async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow
         or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance * await workshop_output(ctx.session, ctx.rules, yard))
     ):
         return
-    for commodity, amount in SHIP_INPUTS:
-        if await holding(ctx.session, community.id, commodity) < amount:
-            return
-    for commodity, amount in SHIP_INPUTS:
+    needs = await hull_for(ctx, book, community)
+    if needs is None:
+        return
+    for commodity, amount in needs:
         await goods_of(ctx.session, ctx.epoch).take(community.id, commodity, amount, GoodsFlow.INPUT)
     yard.fleet += 1
     tally.ships += 1
@@ -359,7 +451,7 @@ async def kitchen(ctx: TickContext, book: EconomyBook, community: EntityRow, tal
     for step in CHAIN_STEPS:
         if step.key not in KITCHEN_STEPS or artisans < ctx.rules.refining.workers_per_batch:
             continue
-        used = await run_step(ctx, book, community, step, artisans=artisans, tally=tally)
+        used = (await run_step(ctx, book, community, step, artisans=artisans, tally=tally)).workers
         artisans -= used
         worked += used
     return worked
@@ -367,12 +459,31 @@ async def kitchen(ctx: TickContext, book: EconomyBook, community: EntityRow, tal
 
 async def refine_community(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     artisans = artisan_pool(ctx, book, community)
-    for step in CHAIN_STEPS:
-        if step.key in KITCHEN_STEPS:
-            continue
-        if artisans < ctx.rules.refining.workers_per_batch:
-            break
-        artisans -= await run_step(ctx, book, community, step, artisans=artisans, tally=tally)
+    made: dict[CommodityKind, int] = {}
+    missing: dict[CommodityKind, CommodityKind | None] = {}
+    groups = list(RECIPES.items())
+    needs = await needs_with_inputs(ctx, book, community)
+    for needs_first in (True, False):
+        for index, (output, steps) in enumerate(groups):
+            if artisans < ctx.rules.refining.workers_per_batch:
+                break
+            share = artisans // (len(groups) - index) if needs_first else artisans
+            lead = lead_recipe(book, community.id, steps)
+            for step in ranked(book, community.id, steps):
+                hands = min(artisans, max(share, crew_of(ctx, book, community.id, step)))
+                if step.key in KITCHEN_STEPS or hands < ctx.rules.refining.workers_per_batch:
+                    continue
+                run = await run_step(ctx, book, community, step, artisans=hands, tally=tally, need=needs[output] if needs_first else None)
+                share = max(0, share - run.workers)
+                artisans -= run.workers
+                made[output] = made.get(output, 0) + run.made
+                if step is lead:
+                    missing[output] = run.short
+    for output, steps in RECIPES.items():
+        lead = lead_recipe(book, community.id, steps)
+        short = missing.get(output)
+        if made.get(output, 0) == 0 and lead is not None and short is not None:
+            await note_bottleneck(ctx, community, lead, short, tally)
     await launch_ships(ctx, book, community, tally)
     await build_workshops(ctx, book, community, tally)
     await tend_workshops(ctx, book, community)

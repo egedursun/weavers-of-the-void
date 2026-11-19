@@ -96,7 +96,7 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
             spec((K.SHIPYARD, G.PRODUCTION, "Shipyard"), (S.ARTISAN, W.SOME), U.BERTHS, (B.MAJOR, C.TIMBER, T.VILLAGE), workshop=WorkshopKind.SHIPYARD),
             spec((K.WORKSHOP, G.PRODUCTION, "Workshop"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.TOOLS, T.HAMLET), workshop=WorkshopKind.WEAVERY),
             spec(
-                (K.ALCHEMIST_LAB, G.PRODUCTION, "Alchemist's laboratory"),
+                (K.ALCHEMIST_LAB, G.PRODUCTION, "Reagent laboratory"),
                 (S.SCRIBE, W.FEW),
                 U.HANDS,
                 (B.MAJOR, C.MAGICAL_REAGENTS, T.VILLAGE),
@@ -138,7 +138,7 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
             spec((K.MINT, G.COMMERCE, "Mint"), (S.ARTISAN, W.FEW), U.HANDS, (B.MAJOR, C.ORE, T.TOWN), workshop=WorkshopKind.MINT),
             spec((K.TAVERN, G.COMMERCE, "Tavern"), (S.MERCHANT, W.FEW), U.TRAVELLERS, (B.MINOR, C.BREW_BASE, T.HAMLET)),
             spec((K.TOWN_HALL, G.CIVIC, "Town hall"), (S.SCRIBE, W.FEW), U.SEATS, (B.MAJOR, C.CLOTH, T.TOWN)),
-            spec((K.GUILDHALL, G.COMMERCE, "Guildhall"), (S.ARTISAN, W.FEW), U.SEATS, (B.MAJOR, C.TOOLS, T.TOWN)),
+            spec((K.GUILDHALL, G.COMMERCE, "Trade hall"), (S.ARTISAN, W.FEW), U.SEATS, (B.MAJOR, C.TOOLS, T.TOWN)),
             spec((K.BARRACKS, G.DEFENCE, "Barracks"), (S.WARRIOR, W.MANY), U.GARRISON, (B.MAJOR, C.WEAPONS, T.VILLAGE)),
             spec((K.ORPHANAGE, G.CIVIC, "Orphanage"), (S.PRIEST, W.FEW), U.BEDS, (B.MINOR, C.BREAD, T.TOWN)),
             spec((K.APOTHECARY, G.KNOWLEDGE, "Apothecary"), (S.SCRIBE, W.FEW), U.BEDS, (B.MINOR, C.HERBS, T.HAMLET), branch=KnowledgeBranch.MEDICINE),

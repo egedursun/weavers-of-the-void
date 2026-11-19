@@ -649,7 +649,7 @@ function ServitorForm({
       icon={Ghost}
       tone='verdigris'
       title='Make a servitor'
-      note='Each servitor does one work: messengers carry dreams, guards turn back desecrators, judges win veneration among the dead, the host fights divine battles, spies watch, agents work at their post, avengers bring fear to the scornful, guides lead the dead to their place, worshippers deepen awe, wardens keep order and scribes keep accounts alive.'
+      note='Each servitor does one work: messengers carry dreams, guards turn back desecrators, judges win veneration among the dead, the host fights divine battles, spies watch, agents work at their post, avengers bring fear to the scornful, guides lead the dead to their place, worshippers deepen awe, wardens keep order and keepers of accounts keep records alive.'
       columns={3}
       action={
         <Button

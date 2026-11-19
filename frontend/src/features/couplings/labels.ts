@@ -64,7 +64,7 @@ export const RESTRAINTS: Record<Schema['RestraintKind'], Named> = {
 export const SOCIOLECT_KINDS: Record<Schema['SociolectKind'], Named> = {
   class: { label: 'Speech of a class', icon: Users, tone: 'info' },
   caste: { label: 'Speech of a caste', icon: Shield, tone: 'muted' },
-  guild: { label: 'Speech of a guild', icon: Hammer, tone: 'gold' },
+  guild: { label: 'Speech of a trade', icon: Hammer, tone: 'gold' },
   court: { label: 'Speech of the court', icon: Crown, tone: 'gold' },
   cant: { label: 'Secret cant', icon: EyeOff, tone: 'danger' },
   sailors: { label: 'Speech of sailors', icon: Anchor, tone: 'verdigris' },

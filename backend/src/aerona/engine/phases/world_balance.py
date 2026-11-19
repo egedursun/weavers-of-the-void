@@ -36,13 +36,13 @@ from aerona.engine.storyteller.pace import quiet_world
 from aerona.rules.registry import Rules
 
 FACTION_KINDS: dict[SocialClass, tuple[str, str]] = {
-    SocialClass.MERCHANT: ("merchant guild", "Guild"),
-    SocialClass.ARTISAN: ("craft guild", "Guild"),
+    SocialClass.MERCHANT: ("trade association", "Traders"),
+    SocialClass.ARTISAN: ("craft association", "Makers"),
     SocialClass.PRIEST: ("council of priests", "Council"),
-    SocialClass.SCRIBE: ("council of scribes", "Council"),
+    SocialClass.SCRIBE: ("council of clerks", "Council"),
     SocialClass.WARRIOR: ("warrior band", "Band"),
     SocialClass.FARMER: ("farmers' union", "Union"),
-    SocialClass.NOBLE: ("council of lords", "Council"),
+    SocialClass.NOBLE: ("noble council", "Council"),
     SocialClass.SERF_OR_SLAVE: ("fellowship of the bound", "Fellowship"),
     SocialClass.OUTCAST: ("beggars' fellowship", "Fellowship"),
     SocialClass.MONASTIC: ("monastic order", "Order"),
@@ -59,7 +59,7 @@ TRADITIONS: dict[SocialClass, str] = {
     SocialClass.PRIEST: "offering rite",
     SocialClass.WARRIOR: "trial of age",
     SocialClass.SCRIBE: "day of remembrance",
-    SocialClass.NOBLE: "tourney",
+    SocialClass.NOBLE: "games of skill",
     SocialClass.SERF_OR_SLAVE: "day of release",
     SocialClass.OUTCAST: "feast of alms",
     SocialClass.MONASTIC: "vigil",

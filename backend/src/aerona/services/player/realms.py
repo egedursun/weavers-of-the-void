@@ -162,7 +162,7 @@ async def appoint(scope: PlayerScope, command: Appoint) -> Effect:
 @player_action("polity:depose", ActionKind.OTHER)
 async def depose(scope: PlayerScope, command: PolityTarget) -> Effect:
     heir = await control.depose(await scope.context("polity_depose"), command.polity_id)
-    return Effect(f"The ruler was cast down; {heir.name} takes the throne." if heir is not None else "The ruler was cast down.", command.polity_id)
+    return Effect(f"The ruler was cast down; {heir.name} comes to rule." if heir is not None else "The ruler was cast down.", command.polity_id)
 
 
 @player_action("polity:split", ActionKind.OTHER)
@@ -251,7 +251,7 @@ async def grant_claim(scope: PlayerScope, command: GrantClaim) -> Effect:
     await control.grant_claim(
         await scope.context("claim_grant"), command.mortal_id, command.polity_id, strength=command.strength, basis=command.basis, office=command.office
     )
-    return Effect("A claim to the throne is granted.", command.mortal_id)
+    return Effect("A claim to rule is granted.", command.mortal_id)
 
 
 @player_action("treaty:sign", ActionKind.CREATE_ENTITY)

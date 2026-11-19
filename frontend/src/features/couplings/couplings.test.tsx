@@ -124,7 +124,7 @@ describe('couplings', () => {
       onApi('POST', `/api/actions/${name}`, ACCEPTED_ACTION)
     const { screen } = await renderApp(<CouplingsSection nodeId={20} />)
     await expect
-      .element(screen.getByText('Speech of a guild: Orvel').first())
+      .element(screen.getByText('Speech of a trade: Orvel').first())
       .toBeVisible()
     await expect.element(screen.getByText('A vow of silence')).toBeVisible()
     await expect

@@ -209,7 +209,7 @@ export const TERM: Record<string, Named> = {
   reparations: { label: 'Reparations', icon: Coins, tone: 'gold' },
   tribute: { label: 'Tribute', icon: Banknote, tone: 'gold' },
   liberty: { label: 'Liberty', icon: Unlock, tone: 'success' },
-  throne: { label: 'The throne', icon: Crown, tone: 'gold' },
+  throne: { label: 'The right to rule', icon: Crown, tone: 'gold' },
   break_cult: { label: 'Break the cult', icon: Skull, tone: 'danger' },
   open_temples: {
     label: 'Open the temples',
@@ -426,7 +426,7 @@ export function aimParamText(
         : 'Turn them to our god'
     case 'press_claim':
       return typeof params.claim === 'number'
-        ? 'Seat our claimant on their throne'
+        ? 'Put our claimant in power over them'
         : 'Press our claim'
     case 'revenge':
       return typeof params.memory === 'number'

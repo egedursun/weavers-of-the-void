@@ -29,7 +29,7 @@ from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.folk_knowledge.factor import folk_factor
-from aerona.engine.industry.energy import worked_by_hand
+from aerona.engine.industry.energy import warm_from_power, worked_by_hand
 from aerona.engine.industry.methods import feed, method_for, outdated
 from aerona.engine.industry.pollution import fish_factor, region_id_of
 from aerona.engine.mind.preferences import demand_factor, market_fit
@@ -279,6 +279,16 @@ async def wear(ctx: TickContext, community: EntityRow) -> Wear:
     if CommodityKind.FUEL in wanted and got.get(CommodityKind.FUEL, 0) < wanted[CommodityKind.FUEL]:
         got[CommodityKind.FUEL] += await burn_substitutes(ctx, community, wanted[CommodityKind.FUEL] - got[CommodityKind.FUEL])
     return Wear(wanted, got)
+
+
+def warmed(rules: Rules, book: EconomyBook, community_id: int, worn: Wear) -> Wear:
+    got = dict(worn.got)
+    heat_of = {kind: int(getattr(rules.energy, FUEL_HEAT[kind])) for kind in FUEL_FAMILY} | {CommodityKind.CLOTH: rules.energy.heat_per_cloth}
+    for kind, heat in heat_of.items():
+        short = worn.wanted.get(kind, 0) - got.get(kind, 0)
+        if short > 0 and heat > 0:
+            got[kind] = got.get(kind, 0) + warm_from_power(rules, book, community_id, short * heat) // heat
+    return Wear(dict(worn.wanted), got)
 
 
 async def burn_substitutes(ctx: TickContext, community: EntityRow, short: int) -> int:

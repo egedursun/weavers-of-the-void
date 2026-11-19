@@ -7,6 +7,7 @@ from aerona.catalog.methods import COLD, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.read_memo import memoized
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
@@ -14,6 +15,7 @@ from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
@@ -29,7 +31,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import holdings
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import headcount
 from aerona.rules.registry import Rules
 
@@ -136,10 +138,10 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     wind *= 1 + weather_wind(ctx, book, community) * table.weather_wind_pct / PERCENT / PERCENT
     shrine = book.workshop(community.id, WorkshopKind.SHRINE_WORKSHOP)
     divine = (shrine.level if shrine is not None else 0) * table.divine_per_shrine + clergy_of(book, community) * table.divine_per_100_clergy / PERCENT
-    plants = await power_levels(ctx, community, POWER_PLANTS)
+    plants = await power_levels(ctx, community, POWER_PLANTS - DAMS if book.lacks(community.id, Technique.ELECTRICITY) else POWER_PLANTS)
     collectors = await world_collectors(ctx, community)
     world = await ctx.session.get(WorldRow, community.world_id) if community.world_id is not None else None
-    electric = plants * table.electric_per_level
+    electric, stored = heated_by_power(ctx.rules, max(0, need - burnable), round_half_up(plants * table.electric_per_level))
     supply = total(
         EnergyKind,
         {
@@ -151,7 +153,7 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
             EnergyKind.DIVINE: round_half_up(divine),
             EnergyKind.FUEL: held.get(CommodityKind.FUEL, 0) * table.fuel_engine,
             EnergyKind.ELECTRIC: electric,
-            EnergyKind.STORED: electric * table.stored_pct // PERCENT,
+            EnergyKind.STORED: stored,
             EnergyKind.SOLAR: table.solar_base if region is not None and region.dominant_terrain is not TerrainKind.UNDERGROUND else 0,
             EnergyKind.GEOTHERMAL: table.geothermal_volcanic if region is not None and region.dominant_terrain is TerrainKind.VOLCANIC else 0,
             EnergyKind.TIDAL: table.tidal_coast if region is not None and region.coast_kind is not CoastKind.NONE else 0,
@@ -168,6 +170,34 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
 
 
 POWER_PLANTS = frozenset({StructureKind.POWER_PLANT, StructureKind.DAM, StructureKind.STAR_COLLECTOR})
+POWER_HEAT = (EnergyKind.ELECTRIC, EnergyKind.STORED)
+DAMS = frozenset({StructureKind.DAM})
+
+
+def power_for_heat(rules: Rules, heat: int) -> int:
+    rate = rules.energy.power_heat_pct
+    return -(-heat * PERCENT // rate) if heat > 0 and rate > 0 else 0
+
+
+def heated_by_power(rules: Rules, unwarmed: int, made: int) -> tuple[int, int]:
+    wanted = power_for_heat(rules, unwarmed)
+    stored = made * rules.energy.stored_pct // PERCENT
+    from_electric = min(made, wanted)
+    return made - from_electric, stored - min(stored, wanted - from_electric)
+
+
+def warm_from_power(rules: Rules, book: EconomyBook, community_id: int, heat: int) -> int:
+    row = book.industry.get(community_id)
+    if row is None:
+        return 0
+    given = 0
+    for kind in POWER_HEAT:
+        units = min(available(row, kind), power_for_heat(rules, heat - given))
+        if units <= 0:
+            continue
+        row.spent = {**row.spent, kind.value: row.spent.get(kind.value, 0) + units}
+        given = min(heat, given + units * rules.energy.power_heat_pct // PERCENT)
+    return given
 
 
 @memoized(StructureProfileRow)
@@ -182,15 +212,47 @@ async def levels_by_host(session: AsyncSession, kinds: frozenset[StructureKind])
     return found
 
 
-async def people_towns(ctx: TickContext, people: EntityRow) -> list[int]:
-    ruled = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[people.id])]
-    return sorted({*await towns_of_people(ctx.session, people.id), *ruled})
+async def people_towns(session: AsyncSession, people_id: int) -> list[int]:
+    ruled = [bond.target_node_id for bond in await active_bonds(session, [BondKind.RULES], sources=[people_id])]
+    return sorted({*await towns_of_people(session, people_id), *ruled})
 
 
-async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> int:
+@memoized(EntityRow, BondRow)
+async def peoples_drawing(session: AsyncSession) -> dict[int, tuple[tuple[int, int], ...]]:
+    drawing: dict[int, list[tuple[int, int]]] = {}
+    for people in await canon(session, [EntityType.PEOPLE]):
+        towns = await people_towns(session, people.id)
+        for town in towns:
+            drawing.setdefault(town, []).append((people.id, len(towns)))
+    return {town: tuple(found) for town, found in drawing.items()}
+
+
+async def drawers_at(session: AsyncSession, town_id: int) -> dict[int, float]:
+    weights = {town_id: 1.0}
+    for people_id, towns in (await peoples_drawing(session)).get(town_id, ()):
+        weights[people_id] = 1 / towns
+    return weights
+
+
+async def drawing_folk(session: AsyncSession, town_id: int) -> dict[int, float]:
+    found: dict[int, float] = {}
+    for drawer, weight in (await drawers_at(session, town_id)).items():
+        entity = await session.get(EntityRow, drawer)
+        found[drawer] = headcount(entity) * weight if entity is not None else 0.0
+    return found
+
+
+async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> float:
     levels = await levels_by_host(ctx.session, kinds)
-    hosts = await people_towns(ctx, community) if community.entity_type is EntityType.PEOPLE else [community.id]
-    return sum(levels.get(host, 0) for host in hosts)
+    hosts = await people_towns(ctx.session, community.id) if community.entity_type is EntityType.PEOPLE else [community.id]
+    share = 0.0
+    for host in hosts:
+        if not levels.get(host):
+            continue
+        folk = await drawing_folk(ctx.session, host)
+        whole = sum(folk.values())
+        share += levels[host] * (folk.get(community.id, 0.0) / whole if whole > 0 else float(community.id == host))
+    return share
 
 
 @memoized(StructureProfileRow, EntityRow)

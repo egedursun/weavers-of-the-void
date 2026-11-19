@@ -907,7 +907,7 @@ function SitesCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Works and their owners'
       icon={OWNER_ICON}
-      hint='Guilds, merchants, cults, the realm, landed houses or the community own each workshop and take its profit; you may hand any of them to anyone.'
+      hint='Associations, merchants, cults, the realm, landed houses or the community own each workshop and take its profit; you may hand any of them to anyone.'
       wide
     >
       {view.sites.length === 0 ? (

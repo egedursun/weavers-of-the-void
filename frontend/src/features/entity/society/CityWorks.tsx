@@ -120,7 +120,7 @@ export function CityWorkings({ plan }: { plan: Plan }) {
           rows={[
             { icon: Landmark, label: 'Custom', value: `${admin.base}%` },
             { icon: BookOpen, label: 'Literacy', value: `+${admin.literacy}%` },
-            { icon: Pencil, label: 'Scribes', value: `+${admin.scribes}%` },
+            { icon: Pencil, label: 'Clerks', value: `+${admin.scribes}%` },
             { icon: ScrollText, label: 'Writing', value: `+${admin.writing}%` },
             { icon: Castle, label: 'Palace', value: `+${admin.palace}%` },
             {

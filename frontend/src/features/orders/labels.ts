@@ -80,7 +80,7 @@ export const LABOUR: Record<Schema['OrderLabour'], Named> = {
   free: { label: 'Free', icon: Flag, tone: 'success' },
   kin: { label: 'Kin', icon: Users, tone: 'verdigris' },
   corvee: { label: 'Corvée', icon: Shovel, tone: 'warning' },
-  serf: { label: 'Serf', icon: Wheat, tone: 'warning' },
+  serf: { label: 'Tied to the land', icon: Wheat, tone: 'warning' },
   bound: { label: 'Bound', icon: Lock, tone: 'danger' },
   enslaved: { label: 'Enslaved', icon: Lock, tone: 'danger' },
   conscripted: { label: 'Conscripted', icon: Swords, tone: 'warning' },

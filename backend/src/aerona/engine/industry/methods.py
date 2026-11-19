@@ -9,6 +9,7 @@ from aerona.catalog.methods import (
     ALWAYS_PRACTISED,
     EXTRACTION_PROCESS,
     HERD_PROCESSES,
+    METHOD_RECIPES,
     METHODS,
     PROCESS_JOB,
     PROCESS_METHODS,
@@ -18,6 +19,7 @@ from aerona.catalog.methods import (
     MethodSpec,
     default_method,
 )
+from aerona.catalog.production import STEPS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
@@ -122,6 +124,23 @@ def method_for(book: EconomyBook, community_id: int, process: ProcessKind) -> Me
     return METHODS[row.method] if row is not None else default_method(process)
 
 
+def fits(spec: MethodSpec, step_key: str) -> bool:
+    return step_key in METHOD_RECIPES[spec.kind]
+
+
+def step_method(book: EconomyBook, community_id: int, step_key: str) -> MethodSpec | None:
+    process = process_of_step(step_key)
+    if process is None:
+        return None
+    spec = method_for(book, community_id, process)
+    return spec if fits(spec, step_key) else None
+
+
+def fits_known(spec: MethodSpec, techniques: set[Technique]) -> bool:
+    recipes = METHOD_RECIPES[spec.kind]
+    return not recipes or any(STEPS[key].technique is None or STEPS[key].technique in techniques for key in sorted(recipes))
+
+
 def local_price(book: EconomyBook, community_id: int, commodity: CommodityKind) -> float:
     spec = COMMODITIES[commodity]
     row = book.societies.get(community_id)
@@ -156,6 +175,7 @@ def blocked_by(
     checks = (
         (banned and spec.energy is EnergyKind.MAGIC, "the law forbids magic here"),
         (spec.technique is not None and spec.technique not in techniques, f"needs the technique of {(spec.technique or '').replace('_', ' ')}"),
+        (not fits_known(spec, techniques), "works on none of the recipes this place knows"),
         (spec.branch is not None and levels.get(spec.branch, 0) < spec.level, f"needs {(spec.branch or '').replace('_', ' ')} at level {spec.level}"),
         (spec.climate is not None and band not in spec.climate and not (cellar and spec.kind in CELLAR_METHODS), "the climate does not allow it"),
         (spec.coast and not coastal, "needs a coast"),
@@ -338,6 +358,12 @@ def method_era(spec: MethodSpec) -> TechnologyEra:
     return era or TechnologyEra.STONE
 
 
+def newest_tier(options: list[MethodSpec], start: TechnologyEra) -> list[MethodSpec]:
+    reached = [era_order(method_era(spec)) for spec in options if era_order(method_era(spec)) <= era_order(start)]
+    floor = max(reached, default=0)
+    return [spec for spec in options if era_order(method_era(spec)) >= floor]
+
+
 def founded_past(current: MethodSpec, best: MethodSpec, start: TechnologyEra) -> bool:
     return era_order(method_era(current)) < era_order(start) and era_order(method_era(best)) <= era_order(start) and method_era(best) is not method_era(current)
 
@@ -354,7 +380,8 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         row = book.methods.get(community.id, {}).get(process)
         if row is not None and "method" in row.locked:
             continue
-        options = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec, banned=banned) is None] or [default_method(process)]
+        runnable = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec, banned=banned) is None]
+        options = newest_tier(runnable or [default_method(process)], start)
         current = METHODS[row.method] if row is not None else None
         candidates = dict.fromkeys([*options, *([current] if current else [])])
         worth = {spec.kind: await expected_profit(ctx, book, community, spec, nature=nature) for spec in candidates}

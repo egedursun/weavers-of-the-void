@@ -61,14 +61,14 @@ async def test_thrones_are_claimed_and_seized(realm: Realm) -> None:
     ctx, _, plotter, rival = await pair(realm)
     assert (
         await STRIKES[PlotKind.FABRICATE_CLAIM](ctx, await plot(ctx, plotter, PlotKind.FABRICATE_CLAIM, rival), plotter, rival)
-        == "there was no throne to claim"
+        == "there was no rule to claim"
     )
-    assert await STRIKES[PlotKind.COUP](ctx, await plot(ctx, plotter, PlotKind.COUP, rival), plotter, rival) == "the throne could not be seized"
+    assert await STRIKES[PlotKind.COUP](ctx, await plot(ctx, plotter, PlotKind.COUP, rival), plotter, rival) == "rule could not be seized"
     polity = await throne(realm, rival)
     assert await realm_of(ctx, rival.id) == polity.id
     assert "forged claim" in await STRIKES[PlotKind.FABRICATE_CLAIM](ctx, await plot(ctx, plotter, PlotKind.FABRICATE_CLAIM, rival), plotter, rival)
     assert await realm.session.scalar(select(ClaimRow).where(ClaimRow.claimant_entity_id == plotter.id)) is not None
-    assert "seized the throne" in await STRIKES[PlotKind.COUP](ctx, await plot(ctx, plotter, PlotKind.COUP, rival), plotter, rival)
+    assert "seized rule" in await STRIKES[PlotKind.COUP](ctx, await plot(ctx, plotter, PlotKind.COUP, rival), plotter, rival)
     office = await realm.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == polity.id))
     assert office is not None and office.holder_entity_id == plotter.id
 

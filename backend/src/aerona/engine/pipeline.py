@@ -509,6 +509,7 @@ ECONOMY_STAGE = stage(
     "world_materials",
     "species_products",
     "deposit_finding",
+    "works_in_age",
     "industry_methods",
     "resource_economy",
     "prosperity_reversion",

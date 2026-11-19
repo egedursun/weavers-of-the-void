@@ -199,13 +199,18 @@ async def claim_relic(ctx: TickContext, delver: EntityRow, relic: EntityRow, roo
 
 
 async def wake_mind(ctx: TickContext, delver: EntityRow, mind: EntityRow, room: SiteRoomRow) -> None:
-    await connect(ctx.session, delver.id, mind.id, BondKind.KNOWS, ctx.epoch, description="woke it in the depths")
+    await connect(ctx.session, delver.id, mind.id, BondKind.DISCOVERED, ctx.epoch, description="woke it in the depths")
     mind.location_id = delver.location_id
-    await record_incident(ctx, "site.mind_woken", roles={IncidentRole.ACTOR: delver.id, IncidentRole.TARGET: mind.id, IncidentRole.PLACE: room.site_entity_id})
+    await record_incident(
+        ctx,
+        "site.mind_woken",
+        roles={IncidentRole.ACTOR: delver.id, IncidentRole.TARGET: mind.id, IncidentRole.PLACE: room.site_entity_id},
+        place=room.site_entity_id,
+    )
 
 
 async def find_gate(ctx: TickContext, delver: EntityRow, realm: EntityRow, room: SiteRoomRow) -> None:
-    await connect(ctx.session, delver.id, realm.id, BondKind.KNOWS, ctx.epoch, description="found the way into it")
+    await connect(ctx.session, delver.id, realm.id, BondKind.DISCOVERED, ctx.epoch, description="found the way into it")
     await record_incident(
         ctx,
         "site.realm_gate",

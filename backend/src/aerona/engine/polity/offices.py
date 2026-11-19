@@ -560,7 +560,7 @@ async def usurp(ctx: TickContext, realm: Realm, usurper: EntityRow, ruler: Entit
     await seize_throne(ctx, realm, usurper, CoupCause.REGENT)
     office = next((row for row in realm.offices if row.kind is OfficeKind.REGENT), None)
     if office is not None and office.holder_entity_id is not None:
-        await appoint(ctx, realm, office, None, by_id=usurper.id, reason="the regent took the crown")
+        await appoint(ctx, realm, office, None, by_id=usurper.id, reason="the regent took power")
 
 
 async def house_of(ctx: TickContext, mortal_id: int | None) -> HouseProfileRow | None:
@@ -660,7 +660,7 @@ async def press_claims(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
             RecordSpec(
                 entity_type=EntityType.FACTION,
                 name=f"the party of {claimant.name}",
-                body=f"Those who hold that {claimant.name}, not the crowned one, is the rightful ruler of {realm.entity.name}.",
+                body=f"Those who hold that {claimant.name}, not the ruler in power, is the rightful ruler of {realm.entity.name}.",
                 stats=FactionStats(strength=round_half_up(claim.strength / 2), wealth=20, sway=claim.strength),
                 power=max(1, claimant.power_level),
                 location_id=core.id,

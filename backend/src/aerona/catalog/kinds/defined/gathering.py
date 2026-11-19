@@ -150,7 +150,7 @@ COLLECTION_KIND = total(
             used_by=("catalog.gatherings.GATHERING_COLLECTIONS", "catalog.gatherings.KEY_COLLECTIONS", "catalog.incident_kinds.g04_body.KINDS"),
         ),
         CollectionKind.CORONATION: Defined(
-            "Coronation",
+            "Accession",
             checked_by=("catalog.gatherings.NEST_PARENTS", "catalog.norms.GATHERING_SITUATIONS"),
             used_by=(
                 "catalog.gatherings.GATHERING_COLLECTIONS",

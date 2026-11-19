@@ -4,16 +4,16 @@ TIER_RANKS: tuple[TitleTier, ...] = (TitleTier.LOCAL, TitleTier.DISTRICT, TitleT
 FAITH_RANKS: tuple[TitleTier, ...] = (TitleTier.FAITH_LOCAL, TitleTier.FAITH_HIGH, TitleTier.FAITH_SUPREME)
 SEAT_RANKS = frozenset({*FAITH_RANKS, TitleTier.MILITARY, TitleTier.GUILD})
 RANK_WORDS: dict[TitleTier, str] = {
-    TitleTier.LOCAL: "Lordship",
-    TitleTier.DISTRICT: "County",
-    TitleTier.REGIONAL: "Duchy",
-    TitleTier.REALM: "Kingdom",
-    TitleTier.IMPERIAL: "Empire",
-    TitleTier.FAITH_LOCAL: "See",
-    TitleTier.FAITH_HIGH: "Archsee",
-    TitleTier.FAITH_SUPREME: "High Seat",
-    TitleTier.MILITARY: "Captaincy",
-    TitleTier.GUILD: "Guildmastership",
+    TitleTier.LOCAL: "Local title",
+    TitleTier.DISTRICT: "District title",
+    TitleTier.REGIONAL: "Regional title",
+    TitleTier.REALM: "Realm title",
+    TitleTier.IMPERIAL: "Imperial title",
+    TitleTier.FAITH_LOCAL: "Local seat of a faith",
+    TitleTier.FAITH_HIGH: "High seat of a faith",
+    TitleTier.FAITH_SUPREME: "Foremost seat of a faith",
+    TitleTier.MILITARY: "Military command",
+    TitleTier.GUILD: "Headship of an association",
 }
 TENURE_LABELS: dict[TitleTenure, str] = {
     TitleTenure.FOUNDED: "Founded",

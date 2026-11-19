@@ -85,7 +85,7 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   feast: { label: 'Feast', icon: Utensils, tone: 'gold' },
   wedding: { label: 'Wedding', icon: Heart, tone: 'success' },
   funeral: { label: 'Funeral', icon: Skull, tone: 'muted' },
-  coronation: { label: 'Coronation', icon: Crown, tone: 'gold' },
+  coronation: { label: 'Accession', icon: Crown, tone: 'gold' },
   tournament: { label: 'Tournament', icon: Trophy, tone: 'warning' },
   hunt: { label: 'Hunt', icon: Footprints, tone: 'verdigris' },
   pilgrimage: { label: 'Pilgrimage', icon: Route, tone: 'info' },
@@ -167,7 +167,7 @@ export const GUEST_ROLES: Record<Schema['GuestRole'], Named> = {
   accused: { label: 'Accused', icon: Gavel, tone: 'danger' },
   mourned: { label: 'Mourned', icon: Hourglass, tone: 'muted' },
   wedded: { label: 'Wedded', icon: Heart, tone: 'success' },
-  crowned: { label: 'Crowned', icon: Crown, tone: 'gold' },
+  crowned: { label: 'New ruler', icon: Crown, tone: 'gold' },
   envoy: { label: 'Envoy', icon: Handshake, tone: 'verdigris' },
 }
 
@@ -197,7 +197,7 @@ export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
   ceremony: { label: 'Ceremony', icon: Sparkles, tone: 'gold' },
   wedding: { label: 'Wedding', icon: Heart, tone: 'success' },
   funeral: { label: 'Funeral', icon: Skull, tone: 'muted' },
-  coronation: { label: 'Coronation', icon: Crown, tone: 'gold' },
+  coronation: { label: 'Accession', icon: Crown, tone: 'gold' },
   feast: { label: 'Feast', icon: Utensils, tone: 'gold' },
   tournament: { label: 'Tournament', icon: Trophy, tone: 'warning' },
   hunt: { label: 'Hunt', icon: Footprints, tone: 'verdigris' },

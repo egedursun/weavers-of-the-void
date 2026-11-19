@@ -395,7 +395,7 @@ export function OrderPanel({
         }))}
         max={SPAN}
         noun={['order', 'orders']}
-        empty='This realm holds no economic order yet; each realm reads its order from its laws, stores and guilds.'
+        empty='This realm holds no economic order yet; each realm reads its order from its laws, stores and associations.'
       />
       <Listed
         title='Economic orders'

@@ -6,7 +6,7 @@ export const THE_DEAD: RecordFamily = {
   section: 'section-the-dead',
   title: 'The dead',
   description:
-    'The roles a people keeps in the work of the dead: each role, whether it is honoured, plain or avoided, its purity, the fee it asks, how many do the work and the guild that holds it. What the people does with its remains is set with its funeral rite among its customs.',
+    'The roles a people keeps in the work of the dead: each role, whether it is honoured, plain or avoided, its purity, the fee it asks, how many do the work and the association that holds it. What the people does with its remains is set with its funeral rite among its customs.',
   icon: Hourglass,
   tone: 'muted',
   empty:

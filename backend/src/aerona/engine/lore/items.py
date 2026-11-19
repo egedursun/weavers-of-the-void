@@ -906,7 +906,7 @@ async def repair(ctx: TickContext, book: MaterialBook, item: EntityRow, row: Ite
         return False
     was_broken = row.condition < ctx.rules.item_wear.broken
     row.condition = clamp_int(row.condition + ctx.rules.item_wear.repair_gain, 0, PERCENT)
-    deed = record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a smith with {taken} {spoken(commodity)}")
+    deed = record(ctx, item.id, ItemDeed.REPAIRED, owner, f"mended by a metalworker with {taken} {spoken(commodity)}")
     if was_broken and row.condition >= ctx.rules.item_wear.broken:
         told = await record_incident(
             ctx,

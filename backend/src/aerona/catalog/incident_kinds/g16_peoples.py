@@ -111,7 +111,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "bonds.shared_throne_ended",
         G.PEOPLES,
-        "The shared throne over {place} has ended: {predecessor} withdrew from rule, {successor} reigns alone.",
+        "The shared rule over {place} has ended: {predecessor} withdrew from power, {successor} rules alone.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.SUCCESSOR), RoleSpec(R.PREDECESSOR, many=True)),
         facts=(),
         place=PlaceRule.REQUIRED,
@@ -853,7 +853,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "society.bankruptcy",
         G.PEOPLES,
-        "The merchant guilds of {subject} went bankrupt.",
+        "The trade associations of {subject} went bankrupt.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("satisfaction_lost", FactValue.NUMBER, FactUnit.PERCENT),

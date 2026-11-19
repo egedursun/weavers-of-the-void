@@ -424,7 +424,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"route_id": "The trade route"},
     ),
     T.CORNER_MARKET: ToolText(
-        "As leader of a merchant house you buy up a good in your home market to raise its price; a fair-market law or a guild holding the "
+        "As leader of a merchant house you buy up a good in your home market to raise its price; a fair-market law or an association holding the "
         "good's monopoly undoes part of it. 1 action.",
         {"commodity": "The good"},
     ),
@@ -463,7 +463,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.ROUSE_CROWD: ToolText(
         "You speak to the folk of your town about a grievance ({{ collective_triggers }}); your sway makes it easier for each to join once "
-        "others have, and the town may rise in a riot, a panic or a lasting movement. The watch and garrison hold them back. 1 action.",
+        "others have, and the town may rise in a riot, a panic or a lasting movement. Its guards and garrison hold them back. 1 action.",
         {"grievance": "What you speak about"},
     ),
     T.COMMISSION_ACCOUNT: ToolText(
@@ -1098,7 +1098,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"mortal_id": "The member you purge"},
     ),
     T.GUARD_THRONE: ToolText(
-        "As ruler you choose how you guard the throne against your own army: rotating commanders lowers their power and the army's morale, "
+        "As ruler you choose how you guard your rule against your own army: rotating commanders lowers their power and the army's morale, "
         "a parallel guard costs upkeep, promotion by loyalty favours your clients, hostages hold the ambitious back. Each measure lowers "
         "the chance of a coup. 1 action.",
         {
@@ -1168,7 +1168,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.FORGE_MODEL: ToolText(
         "You make a new equipment model for your realm or town: a named weapon, armour, shield or piece of materiel, as good as your "
-        "smithing or engineering and your craft allow, made of your town's own material; its smiths forge it from then on. 1 action.",
+        "smithing or engineering and your craft allow, made of your town's own material; its metalworkers make it from then on. 1 action.",
         {
             "family": "What kind of piece it is; one of: {{ equipment_families }}",
             "name": "What the model is called; left empty, your people names it in its own tongue",

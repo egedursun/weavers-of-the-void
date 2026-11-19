@@ -593,7 +593,7 @@ async def party(ctx: TickContext, node_id: int, allowed: frozenset[EntityType], 
 
 
 async def grant_loan(ctx: TickContext, terms: NewLoan) -> LoanRow:
-    lender = await party(ctx, terms.lender_id, LENDERS, "A loan is made by a guild, a people, a settlement or a realm.")
+    lender = await party(ctx, terms.lender_id, LENDERS, "A loan is made by an association, a people, a settlement or a realm.")
     borrower = await party(ctx, terms.borrower_id, BORROWERS, "A loan is owed by a people, a settlement, a faction or a realm.")
     if lender.id == borrower.id:
         raise ValidationFailedError("No one lends to itself.")

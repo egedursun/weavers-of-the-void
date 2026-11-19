@@ -84,11 +84,11 @@ MORTAL_WORD = "mortal"
 RULER_TITLES: dict[EntityType, str] = {
     EntityType.LAW: "Keeper",
     EntityType.NATURAL_LAW: "Keeper",
-    EntityType.SETTLEMENT: "Lord",
+    EntityType.SETTLEMENT: "Sovereign",
     EntityType.PEOPLE: "Chieftain",
     EntityType.REGION: "Warden",
     EntityType.PLACE: "Warden",
-    EntityType.FACTION: "Master",
+    EntityType.FACTION: "Leader",
     EntityType.CULT: "High Priest",
     EntityType.ARMY: "Commander",
     EntityType.TRADITION: "Guardian",

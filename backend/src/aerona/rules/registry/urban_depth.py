@@ -246,7 +246,7 @@ class ManipulationRules(Spanned):
     play_pct: int = rule(10, 0, 100, M, "Chance each epoch a rich merchant house plays a market (%)")
     length_years: int = span(2, 1, 2500, M, "Years a corner or dumping lasts")
     law_counter_pct: int = rule(60, 0, 100, M, "Share of a play a fair-market law, or a realm's mandate on the good, undoes (%)")
-    guild_counter_pct: int = rule(40, 0, 100, M, "Share of a play a guild holding the good's monopoly undoes (%)")
+    guild_counter_pct: int = rule(40, 0, 100, M, "Share of a play an association holding the good's monopoly undoes (%)")
 
     @property
     def length(self) -> int:

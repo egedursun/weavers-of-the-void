@@ -28,4 +28,4 @@ async def change_level(scope: PlayerScope, command: KnowledgeLevel) -> Effect:
 @player_action("knowledge:run", ActionKind.OTHER)
 async def run_now(scope: PlayerScope, command: Empty) -> Effect:
     await run_knowledge_levels(scope.session, scope.rules)
-    return Effect("The masters and scribes of the world worked on their knowledge.")
+    return Effect("The scholars and clerks of the world worked on their knowledge.")

@@ -71,7 +71,7 @@ class FactionsRules:
     band_members: int = rule(8, 1, 1000, RuleGroup.CIVILIZATION, "Members at which a band becomes a company")
     company_members: int = rule(20, 1, 1000, RuleGroup.CIVILIZATION, "Members at which a company becomes an organisation")
     network_influence: int = rule(3, 1, 100, RuleGroup.CIVILIZATION, "Realms influenced at which an organisation becomes a network")
-    monopoly_price_pct: int = rule(140, 100, 500, RuleGroup.CIVILIZATION, "Price of a commodity under a guild monopoly (%)")
+    monopoly_price_pct: int = rule(140, 100, 500, RuleGroup.CIVILIZATION, "Price of a commodity under an association's monopoly (%)")
     monopoly_crime: int = rule(4, 0, 100, RuleGroup.CIVILIZATION, "Crime smuggling around a monopoly adds to its city")
     goal_cap: int = rule(3, 1, 20, RuleGroup.CIVILIZATION, "Most goals a faction pursues at once")
     craft_min_artisan_pct: int = rule(12, 0, 100, RuleGroup.CIVILIZATION, "Artisan share of a community that founds a craft guild (%)")

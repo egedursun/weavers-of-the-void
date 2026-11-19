@@ -44,7 +44,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "beyond.archive_read",
         G.MOVEMENT,
-        "Scribes of {learner} took the knowledge of {product} from {place}.",
+        "Scholars of {learner} took the knowledge of {product} from {place}.",
         roles=(RoleSpec(R.LEARNER), RoleSpec(R.PRODUCT), RoleSpec(R.PLACE)),
         facts=(FactSpec("spread_gain", FactValue.NUMBER, FactUnit.KNOWLEDGE),),
         steps=frozenset({A.READ, A.LEARN}),
@@ -491,7 +491,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "nomads.raid",
         G.MOVEMENT,
-        "Riders of {actor} raided {victim} and rode off with {taken:coin|coins}.",
+        "Raiders of {actor} struck {victim} and made off with {taken:coin|coins}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
         facts=(
             FactSpec("taken", FactValue.NUMBER, FactUnit.COIN),

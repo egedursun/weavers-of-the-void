@@ -1052,6 +1052,12 @@ async def unruled_community(session: AsyncSession) -> int | None:
     return await session.scalar(statement.order_by(EntityRow.id).limit(1))
 
 
+async def mortal_without_apprentice(session: AsyncSession) -> int | None:
+    taught = select(BondRow.target_node_id).where(BondRow.kind == BondKind.APPRENTICE_OF, BondRow.state == BondState.ACTIVE)
+    statement = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(taught))
+    return await session.scalar(statement.order_by(EntityRow.id).limit(1))
+
+
 LOANED = ("civilization:loan", {"lender_id": Pick(TOWN), "borrower_id": Pick(TOWN, 1), "amount": 10})
 
 GOAL = ("god_goal:set", {"god_id": Pick("son"), "kind": "be_worshipped", "amount": 3})
@@ -1653,6 +1659,7 @@ LEVERS: dict[str, Lever] = {
         art_form_id=Newest(EntityType.ART_FORM),
     ),
     "community:crown": given(community_id=Computed(unruled_community)),
+    "hero:apprentice": given(hero_id=Computed(mortal_without_apprentice)),
     "company:edit": after(*COMPANY, company_id=Newest(EntityType.FACTION), dividend_pct=10),
     **{
         name: after(

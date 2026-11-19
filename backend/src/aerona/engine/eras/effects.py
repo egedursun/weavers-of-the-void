@@ -153,6 +153,10 @@ def era_of(known: Iterable[Technique], floor: TechnologyEra = TechnologyEra.STON
     return reached
 
 
+async def era_at(session: AsyncSession, node_id: int | None) -> TechnologyEra:
+    return era_of(await era_techniques(session, node_id), await world_start(session))
+
+
 async def programme_pressure(session: AsyncSession, rules: Rules) -> dict[int, int]:
     pressure: dict[int, int] = defaultdict(int)
     rows = await session.execute(

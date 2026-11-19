@@ -20,7 +20,7 @@ async def mortal_dead_lines(scope: Scope, me: EntityRow) -> list[str]:
     if culture is not None:
         found.append(f"{await named(scope, people.id)} keep their dead by {spoken(culture.remains_treatment)} under the rite of {spoken(culture.funeral_rite)}")
     for row in await scope.session.scalars(select(DeathWorkRow).where(DeathWorkRow.people_entity_id == people.id).order_by(DeathWorkRow.id)):
-        guild = f", guild {await named(scope, row.guild_node_id)}" if row.guild_node_id is not None else ""
+        guild = f", kept by {await named(scope, row.guild_node_id)}" if row.guild_node_id is not None else ""
         found.append(
             f"the {spoken(row.role)} is {spoken(row.standing)}: purity {row.purity}, fee {row.fee}, {several(row.workers, 'worker', 'workers')}{guild}"
         )

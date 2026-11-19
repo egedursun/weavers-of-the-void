@@ -22,11 +22,12 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.demography.recruitment import founding_factor, recruit
-from aerona.engine.eras.effects import era_techniques
+from aerona.engine.eras.effects import era_at, era_order, era_techniques
 from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
 from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
 from aerona.engine.factions.outlaws import hire, pay_companies, privateers, suppress
@@ -54,18 +55,23 @@ class FactionBlueprint:
     subtype: str
     suffix: str
     members: str
+    modern: str | None = None
+
+    def noun(self, era: TechnologyEra) -> str:
+        return self.modern if self.modern is not None and era_order(era) >= era_order(MODERN_FROM) else self.suffix
 
 
+MODERN_FROM = TechnologyEra.STEAM
 ENGINEERING = frozenset({Technique.STEAM_POWER, Technique.MACHINE_TOOLS, Technique.RAILWAYS})
 FINANCE = frozenset({Technique.BANKING, Technique.JOINT_STOCK})
 
 BLUEPRINTS = (
-    FactionBlueprint(K.MERCHANT_GUILD, "merchant guild", "Guild", "merchants"),
-    FactionBlueprint(K.CRAFT_GUILD, "craft guild", "Craft Guild", "artisans"),
+    FactionBlueprint(K.MERCHANT_GUILD, "trade association", "Guild", "merchants", "Trade Association"),
+    FactionBlueprint(K.CRAFT_GUILD, "craft association", "Craft Guild", "artisans", "Craft Association"),
     FactionBlueprint(K.PRIESTHOOD, "priests' council", "Priests' Council", "priests"),
     FactionBlueprint(K.WARRIOR_ORDER, "warrior order", "Warrior Order", "warriors"),
-    FactionBlueprint(K.NOBLE_COUNCIL, "noble council", "Council of Lords", "nobles"),
-    FactionBlueprint(K.PEASANT_LEAGUE, "peasant league", "League", "farmers"),
+    FactionBlueprint(K.NOBLE_COUNCIL, "noble council", "Noble Council", "nobles"),
+    FactionBlueprint(K.PEASANT_LEAGUE, "farmers' league", "League", "farmers"),
     FactionBlueprint(K.WORKERS_UNION, "workers' union", "Union", "industrial workers"),
     FactionBlueprint(K.ENGINEERS_SOCIETY, "engineers' society", "Society of Engineers", "engineers"),
     FactionBlueprint(K.FINANCIERS, "financiers' exchange", "Exchange", "financiers"),
@@ -73,16 +79,16 @@ BLUEPRINTS = (
     FactionBlueprint(K.REBELS, "rebel band", "Rebels", "malcontents"),
     FactionBlueprint(K.BANDITS, "bandit band", "Brigands", "outlaws"),
     FactionBlueprint(K.PIRATES, "pirate crew", "Corsairs", "sea-robbers"),
-    FactionBlueprint(K.ASSASSINS, "assassins' guild", "Knives", "killers"),
+    FactionBlueprint(K.ASSASSINS, "assassins' band", "Knives", "killers"),
     FactionBlueprint(K.SCHOLARS_ACADEMY, "academy", "Academy", "scholars"),
     FactionBlueprint(K.SECRET_SOCIETY, "secret society", "Hidden Circle", "initiates"),
-    FactionBlueprint(K.MERCENARY_COMPANY, "free company", "Free Company", "sellswords"),
+    FactionBlueprint(K.MERCENARY_COMPANY, "mercenary company", "Free Company", "mercenaries", "Mercenary Company"),
     FactionBlueprint(K.INTERWORLD_FEDERATION, "interworld federation", "Federation", "envoys"),
     FactionBlueprint(K.WANDERING_MARKET, "wandering market", "Caravan", "traders"),
     FactionBlueprint(K.ROUTE_RAIDERS, "route raiders", "Raiders", "raiders"),
     FactionBlueprint(K.SOCIAL_CIRCLE, "social circle", "Circle", "companions"),
     FactionBlueprint(K.CRIME_FAMILY, "crime family", "Family", "members"),
-    FactionBlueprint(K.THIEVES_GUILD, "thieves' guild", "Thieves' Guild", "thieves"),
+    FactionBlueprint(K.THIEVES_GUILD, "thieves' ring", "Thieves' Guild", "thieves", "Thieves' Ring"),
     FactionBlueprint(K.SMUGGLING_RING, "smuggling ring", "Ring", "smugglers"),
     FactionBlueprint(K.PIRATE_CONFEDERACY, "pirate confederacy", "Confederacy", "pirates"),
     FactionBlueprint(K.MAGE_ORDER, "mage order", "Mage Order", "mages"),
@@ -242,7 +248,7 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
         ctx,
         RecordSpec(
             entity_type=EntityType.FACTION,
-            name=FACTION_NAME_TEMPLATE.format(root=community.name, suffix=plan.suffix),
+            name=FACTION_NAME_TEMPLATE.format(root=community.name, suffix=plan.noun(await era_at(ctx.session, community.id))),
             body=f"The {plan.members} of {community.name} organised among themselves.",
             stats=FactionStats(strength=strength, wealth=wealth, sway=sway),
             power=power,

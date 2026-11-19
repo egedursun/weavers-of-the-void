@@ -39,5 +39,5 @@ async def settle_trial(ctx: TickContext, claimant: EntityRow, ruler: EntityRow, 
         claim.ended_epoch = ctx.epoch
         claim.pressed = won
     if won and realm is not None and claimant.status is EntityStatus.CANON:
-        return set_ruler(ctx, realm, claimant.id, "won the throne by trial of combat")
+        return set_ruler(ctx, realm, claimant.id, "won rule by trial of combat")
     return False

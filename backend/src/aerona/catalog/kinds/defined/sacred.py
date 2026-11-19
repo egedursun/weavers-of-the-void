@@ -37,7 +37,7 @@ DIVINATION_QUESTION = total(
             "Wedding", checked_by=("engine.sacred.foresight.heed", "engine.sacred.foresight.true_omen"), used_by=("engine.sacred.foresight.question_for",)
         ),
         DivinationQuestion.CORONATION: Defined(
-            "Coronation", checked_by=("engine.sacred.foresight.heed", "engine.sacred.foresight.true_omen"), used_by=("engine.sacred.foresight.question_for",)
+            "Accession", checked_by=("engine.sacred.foresight.heed", "engine.sacred.foresight.true_omen"), used_by=("engine.sacred.foresight.question_for",)
         ),
         DivinationQuestion.HARVEST: Defined(
             "Harvest", checked_by=("engine.sacred.foresight.heed",), used_by=("engine.sacred.foresight.question_for", "services.player.sacred.ReadingDraft")

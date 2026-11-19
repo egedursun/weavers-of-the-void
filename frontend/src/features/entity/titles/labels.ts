@@ -34,7 +34,7 @@ export const RANKS: Record<string, Named> = {
     tone: 'gold',
   },
   military: { label: 'Military command', icon: Swords, tone: 'danger' },
-  guild: { label: 'Head of a guild', icon: Hammer, tone: 'warning' },
+  guild: { label: 'Head of an association', icon: Hammer, tone: 'warning' },
 }
 
 export const TENURE_ICON = Anchor

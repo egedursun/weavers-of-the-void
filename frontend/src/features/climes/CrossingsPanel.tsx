@@ -528,7 +528,7 @@ export function CrossingsPanel({
           icon={Users}
           tone='success'
           title='Bring a community into a culture'
-          note='A town, people, guild or cult takes up a share of the ways of a culture of a road.'
+          note='A town, people, association or cult takes up a share of the ways of a culture of a road.'
           columns={2}
           action={
             <Button

@@ -9,9 +9,11 @@ from aerona.api.schemas.polity_economy import MemberOutputView, PactView, Polity
 from aerona.catalog.production import CHAIN_STEPS
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, TreatyClauseRow, TreatyProfileRow
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.polity import ClauseKind
@@ -82,6 +84,11 @@ async def polity_production(services: ServicesDep, polity_id: Id) -> PolityProdu
         for shop in await session.scalars(select(WorkshopRow).where(WorkshopRow.community_entity_id.in_(ids))):
             workshops[shop.community_entity_id].add(shop.kind)
             levels[shop.kind.value] += shop.level
+        known: dict[int, set[Technique]] = defaultdict(set)
+        for holder, technique in await session.execute(
+            select(HolderTechniqueRow.holder_entity_id, HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id.in_(ids))
+        ):
+            known[holder].add(technique)
         latest = {
             community: epoch
             for community, epoch in await session.execute(
@@ -118,7 +125,11 @@ async def polity_production(services: ServicesDep, polity_id: Id) -> PolityProdu
                     bottleneck=max(blocked, key=lambda kind: (blocked[kind], kind.value)) if blocked else None,
                     starved_ids=sorted({run.community_entity_id for run in done if run.bottleneck is not None}),
                     running_ids=sorted({run.community_entity_id for run in done if run.quantity > 0}),
-                    able_ids=[member for member in ids if step.workshop is None or step.workshop in workshops[member]],
+                    able_ids=[
+                        member
+                        for member in ids
+                        if (step.workshop is None or step.workshop in workshops[member]) and (step.technique is None or step.technique in known[member])
+                    ],
                 )
             )
         totals: Counter[CommodityKind] = Counter()

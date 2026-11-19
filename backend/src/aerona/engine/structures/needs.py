@@ -2,7 +2,7 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.structures import BRANCH_LEVELS, STRUCTURES, WORKSHOP_STRUCTURES
 from aerona.constants.units import PERCENT
@@ -11,6 +11,7 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -21,13 +22,15 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.settlement import TIER_ORDER, SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.domain.enums.structure import ConstructionState, StructureKind
+from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.industry.energy import POWER_HEAT, POWER_PLANTS, drawers_at, drawing_folk
 from aerona.engine.lore.research import lacks, techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat, stat_or
@@ -35,6 +38,8 @@ from aerona.rules.registry import Rules
 
 K = StructureKind
 B = KnowledgeBranch
+THOUSAND = 1000
+GROWING = frozenset({K.POWER_PLANT})
 
 
 @dataclass
@@ -55,6 +60,9 @@ class SiteFacts:
     barred: set[StructureKind]
     techniques: frozenset[Technique] = frozenset()
     harvest: int = PERCENT
+    power_drawn: int = 0
+    power_levels: int = 0
+    power_folk: int = 0
 
     def tier(self) -> int:
         return TIER_ORDER.index(self.town.size_tier) if self.town is not None else 0
@@ -73,6 +81,12 @@ class SiteFacts:
 
     def civic(self, key: str) -> int:
         return int(getattr(self.town, key)) if self.town is not None else 0
+
+    def power_lacking(self, rules: Rules) -> int:
+        table = rules.energy
+        demand = max(self.power_drawn, (self.value("population") + self.power_folk) * table.electric_per_1000 // THOUSAND)
+        wanted = max(1, -(-demand // table.electric_per_level)) if table.electric_per_level > 0 else 1
+        return wanted - self.power_levels
 
     def reaches(self, kind: StructureKind) -> bool:
         branch = STRUCTURES[kind].branch
@@ -95,7 +109,7 @@ def share(facts: SiteFacts, social_class: SocialClass, rules: Rules) -> bool:
 NEEDS: tuple[Need, ...] = (
     (K.WALL, lambda rules, f: f.at_war),
     (K.HOSPITAL, lambda rules, f: f.outbreak and f.knows(B.MEDICINE)),
-    (K.POWER_PLANT, lambda rules, f: f.reaches(K.POWER_PLANT)),
+    (K.POWER_PLANT, lambda rules, f: f.reaches(K.POWER_PLANT) and (not f.has(K.POWER_PLANT) or f.power_lacking(rules) > 0)),
     (K.REFINERY, lambda rules, f: f.reaches(K.REFINERY) and f.at_least(SizeTier.TOWN)),
     (K.GRANARY, lambda rules, f: f.knows(B.AGRICULTURE)),
     (K.MARKET, lambda rules, f: share(f, SocialClass.MERCHANT, rules) or f.knows(B.TRADE)),
@@ -213,6 +227,34 @@ async def present_at(ctx: TickContext, host_id: int) -> Counter[StructureKind]:
     return Counter(rows)
 
 
+async def power_levels_at(ctx: TickContext, host_id: int) -> int:
+    found = await ctx.session.scalar(
+        select(func.coalesce(func.sum(StructureProfileRow.level), 0)).where(
+            StructureProfileRow.host_entity_id == host_id,
+            StructureProfileRow.kind.in_(sorted(POWER_PLANTS, key=lambda kind: kind.value)),
+            StructureProfileRow.construction_state.in_(list(COUNTED_STATES)),
+        )
+    )
+    return int(found or 0)
+
+
+async def power_drawn_at(ctx: TickContext, host_id: int) -> int:
+    drawn = 0.0
+    for drawer, weight in (await drawers_at(ctx.session, host_id)).items():
+        row = await ctx.session.get(CommunityIndustryRow, drawer)
+        if row is not None:
+            drawn += weight * sum(row.spent.get(kind.value, 0) + row.short.get(kind.value, 0) for kind in POWER_HEAT)
+    return round_half_up(drawn)
+
+
+async def power_folk_at(ctx: TickContext, host_id: int) -> int:
+    return round_half_up(sum(count for drawer, count in (await drawing_folk(ctx.session, host_id)).items() if drawer != host_id))
+
+
+def commission_level(rules: Rules, facts: SiteFacts, kind: StructureKind) -> int:
+    return clamp_int(facts.power_lacking(rules), 1, STRUCTURE_LEVEL_MAX) if kind in GROWING else 1
+
+
 async def facts_for(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> SiteFacts:
     session = ctx.session
     region_id = atlas.top_region(site.id)
@@ -249,6 +291,9 @@ async def facts_for(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
         barred=barred,
         techniques=frozenset(await techniques_of(session, site.id)),
         harvest=ground.harvest_pct if ground is not None else PERCENT,
+        power_drawn=await power_drawn_at(ctx, site.id),
+        power_levels=await power_levels_at(ctx, site.id),
+        power_folk=await power_folk_at(ctx, site.id),
     )
 
 
@@ -259,7 +304,12 @@ def founding_order(kinds: list[StructureKind]) -> list[StructureKind]:
 def wanted(rules: Rules, facts: SiteFacts) -> list[StructureKind]:
     found: list[StructureKind] = []
     for kind, test in NEEDS:
-        if kind in found or facts.has(kind) or kind in facts.barred or (kind in KIND_TECHNIQUES and KIND_TECHNIQUES[kind] not in facts.techniques):
+        if (
+            kind in found
+            or (facts.has(kind) and kind not in GROWING)
+            or kind in facts.barred
+            or (kind in KIND_TECHNIQUES and KIND_TECHNIQUES[kind] not in facts.techniques)
+        ):
             continue
         if test(rules, facts):
             found.append(kind)

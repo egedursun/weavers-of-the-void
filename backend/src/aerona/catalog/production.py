@@ -2,7 +2,9 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, HazardKind, WorkshopKind
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -11,6 +13,8 @@ C = CommodityKind
 W = WorkshopKind
 B = KnowledgeBranch
 S = SkillKind
+T = Technique
+E = EnergyKind
 
 
 @dataclass(frozen=True)
@@ -27,6 +31,13 @@ class ChainStep:
     keeps_material: CommodityKind | None = None
     material: MaterialKind | None = None
     quality_gain: int = 0
+    technique: Technique | None = None
+    energy: EnergyKind | None = None
+    energy_need: int = 0
+
+    @property
+    def yield_per_input(self) -> float:
+        return self.output_qty / max(1, sum(amount for _, amount in self.inputs))
 
 
 CHAIN_STEPS: tuple[ChainStep, ...] = (
@@ -59,9 +70,264 @@ CHAIN_STEPS: tuple[ChainStep, ...] = (
     ChainStep("dye_cloth", "Dyeing cloth", W.WEAVERY, ((C.CLOTH, 1), (C.DYE, 1)), C.LUXURIES, 1, S.WEAVING, B.AGRICULTURE, 1, quality_gain=20),
     ChainStep("brew_base", "Brewing from a brew base", W.BREWERY, ((C.BREW_BASE, 2),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 1),
     ChainStep("herbal_remedies", "Making remedies from herbs", None, ((C.HERBS, 2),), C.MEDICINE, 1, S.ALCHEMY, B.MEDICINE, 1),
+    ChainStep("coke_fuel", "Baking coal into coke", W.CHARCOAL_KILN, ((C.COAL, 1),), C.FUEL, 2, S.ENGINEERING, technique=T.COKE_SMELTING),
+    ChainStep(
+        "coal_fuel",
+        "Refining coal into gas and liquid fuel",
+        W.CHARCOAL_KILN,
+        ((C.COAL, 1),),
+        C.FUEL,
+        3,
+        S.ALCHEMY,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.HEAT,
+        energy_need=2,
+    ),
+    ChainStep(
+        "crop_fuel",
+        "Distilling fuel from crops",
+        W.CHARCOAL_KILN,
+        ((C.FODDER, 2),),
+        C.FUEL,
+        2,
+        S.ALCHEMY,
+        technique=T.COMBUSTION_ENGINE,
+        energy=E.ELECTRIC,
+        energy_need=2,
+    ),
+    ChainStep(
+        "factory_wool",
+        "Spinning and weaving wool in mills",
+        W.WEAVERY,
+        ((C.WOOL, 1),),
+        C.CLOTH,
+        2,
+        S.WEAVING,
+        material=MaterialKind.CLOTH,
+        quality_gain=10,
+        technique=T.STEAM_POWER,
+        energy=E.HEAT,
+        energy_need=1,
+    ),
+    ChainStep(
+        "factory_fibre",
+        "Spinning and weaving plant fibre in mills",
+        W.WEAVERY,
+        ((C.FIBRE, 1),),
+        C.CLOTH,
+        2,
+        S.WEAVING,
+        material=MaterialKind.CLOTH,
+        technique=T.STEAM_POWER,
+        energy=E.HEAT,
+        energy_need=1,
+    ),
+    ChainStep(
+        "synthetic_cloth",
+        "Making synthetic fibre and cloth",
+        W.WEAVERY,
+        ((C.FUEL, 1),),
+        C.CLOTH,
+        3,
+        S.WEAVING,
+        material=MaterialKind.CLOTH,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.ELECTRIC,
+        energy_need=2,
+    ),
+    ChainStep(
+        "electric_tools",
+        "Making tools in electric furnaces and machine shops",
+        W.FORGE,
+        ((C.ORE, 1),),
+        C.TOOLS,
+        3,
+        S.ENGINEERING,
+        B.METALLURGY,
+        1,
+        keeps_material=C.ORE,
+        technique=T.ELECTRICITY,
+        energy=E.ELECTRIC,
+        energy_need=3,
+    ),
+    ChainStep(
+        "electric_weapons",
+        "Making weapons in electric furnaces and factories",
+        W.FORGE,
+        ((C.ORE, 1),),
+        C.WEAPONS,
+        2,
+        S.ENGINEERING,
+        B.METALLURGY,
+        1,
+        keeps_material=C.ORE,
+        technique=T.ELECTRICITY,
+        energy=E.ELECTRIC,
+        energy_need=3,
+    ),
+    ChainStep(
+        "electric_armour",
+        "Rolling armour plate in electric works",
+        W.FORGE,
+        ((C.ORE, 2),),
+        C.ARMOUR,
+        2,
+        S.ENGINEERING,
+        B.METALLURGY,
+        2,
+        keeps_material=C.ORE,
+        technique=T.ELECTRICITY,
+        energy=E.ELECTRIC,
+        energy_need=3,
+    ),
+    ChainStep(
+        "factory_goods",
+        "Making goods in factories",
+        W.FORGE,
+        ((C.ORE, 1), (C.FUEL, 1)),
+        C.LUXURIES,
+        3,
+        S.ENGINEERING,
+        technique=T.FACTORY_PRODUCTION,
+        energy=E.HEAT,
+        energy_need=2,
+    ),
+    ChainStep(
+        "electronics", "Making electronics", W.FORGE, ((C.ORE, 1),), C.LUXURIES, 3, S.ENGINEERING, technique=T.COMPUTATION, energy=E.ELECTRIC, energy_need=4
+    ),
+    ChainStep(
+        "factory_bread",
+        "Milling and baking in factories",
+        W.MILL,
+        ((C.GRAIN, 2),),
+        C.BREAD,
+        3,
+        S.ENGINEERING,
+        B.AGRICULTURE,
+        1,
+        technique=T.FACTORY_PRODUCTION,
+        energy=E.HEAT,
+        energy_need=2,
+    ),
+    ChainStep(
+        "concrete",
+        "Making concrete",
+        W.MASON_YARD,
+        ((C.STONE, 1), (C.FUEL, 1)),
+        C.STONE,
+        3,
+        S.MASONRY,
+        B.ARCHITECTURE,
+        1,
+        material=MaterialKind.HYDRAULIC_CONCRETE,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.HEAT,
+        energy_need=2,
+    ),
+    ChainStep("artillery", "Casting artillery", W.SIEGE_YARD, ((C.ORE, 2), (C.FUEL, 1)), C.SIEGE_MATERIEL, 2, S.ENGINEERING, B.WARFARE, 1, technique=T.CANNON),
+    ChainStep(
+        "rocket_ordnance",
+        "Building rockets and guided ordnance",
+        W.SIEGE_YARD,
+        ((C.ORE, 2), (C.FUEL, 2)),
+        C.SIEGE_MATERIEL,
+        3,
+        S.ENGINEERING,
+        B.WARFARE,
+        1,
+        technique=T.ROCKETRY,
+        energy=E.ELECTRIC,
+        energy_need=4,
+    ),
+    ChainStep(
+        "aroma_incense",
+        "Making incense from chemical aromatics",
+        W.SHRINE_WORKSHOP,
+        ((C.FUEL, 1),),
+        C.INCENSE,
+        2,
+        S.RITUAL,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.HEAT,
+        energy_need=1,
+    ),
+    ChainStep(
+        "factory_sacred_goods",
+        "Making sacred goods in factories",
+        W.SHRINE_WORKSHOP,
+        ((C.LUXURIES, 1),),
+        C.SACRED_GOODS,
+        1,
+        S.RITUAL,
+        technique=T.FACTORY_PRODUCTION,
+        energy=E.HEAT,
+        energy_need=1,
+    ),
+    ChainStep(
+        "pharmacy",
+        "Making medicine in chemical works",
+        W.ALCHEMIST,
+        ((C.HERBS, 1),),
+        C.MEDICINE,
+        3,
+        S.MEDICINE,
+        B.MEDICINE,
+        1,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.HEAT,
+        energy_need=1,
+    ),
+    ChainStep(
+        "synthetic_medicine",
+        "Making medicine from chemical stock",
+        W.ALCHEMIST,
+        ((C.FUEL, 1),),
+        C.MEDICINE,
+        2,
+        S.MEDICINE,
+        B.MEDICINE,
+        2,
+        technique=T.INDUSTRIAL_CHEMISTRY,
+        energy=E.ELECTRIC,
+        energy_need=2,
+    ),
+    ChainStep(
+        "antibiotics",
+        "Growing antibiotics",
+        W.ALCHEMIST,
+        ((C.GRAIN, 1),),
+        C.MEDICINE,
+        4,
+        S.MEDICINE,
+        B.MEDICINE,
+        2,
+        technique=T.ANTIBIOTICS,
+        energy=E.ELECTRIC,
+        energy_need=2,
+    ),
 )
 STEPS: MappingProxyType[str, ChainStep] = MappingProxyType({step.key: step for step in CHAIN_STEPS})
-SHIP_INPUTS: tuple[tuple[CommodityKind, int], ...] = ((C.TIMBER, 4), (C.CLOTH, 1))
+SHIP_HULLS: tuple[tuple[Technique | None, tuple[tuple[CommodityKind, int], ...]], ...] = (
+    (T.STEAMSHIPS, ((C.ORE, 4), (C.FUEL, 2))),
+    (None, ((C.TIMBER, 4), (C.CLOTH, 1))),
+)
+
+
+def chain_depth(output: CommodityKind, seen: frozenset[CommodityKind] = frozenset()) -> int:
+    made = {step.output for step in CHAIN_STEPS}
+    feeds = {commodity for step in CHAIN_STEPS if step.output is output for commodity, _ in step.inputs if commodity is not output and commodity in made}
+    return 1 + max((chain_depth(commodity, seen | {output}) for commodity in sorted(feeds) if commodity not in seen), default=0)
+
+
+RECIPES: MappingProxyType[CommodityKind, tuple[ChainStep, ...]] = MappingProxyType(
+    {
+        output: tuple(step for step in CHAIN_STEPS if step.output is output)
+        for output in sorted(
+            dict.fromkeys(step.output for step in CHAIN_STEPS),
+            key=lambda output: (chain_depth(output), next(index for index, step in enumerate(CHAIN_STEPS) if step.output is output)),
+        )
+    }
+)
 
 
 @dataclass(frozen=True)

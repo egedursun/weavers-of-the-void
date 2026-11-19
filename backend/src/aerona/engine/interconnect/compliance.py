@@ -5311,7 +5311,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
     ComplianceRow(
         "S7.2",
         (StructureProfileRow.__tablename__, StructureStaffRow.__tablename__, ConstructionRow.__tablename__, StructureDesignRow.__tablename__),
-        ("structure_survey", "structure_upkeep", "engine_works", "structure_functions", "splendor_growth"),
+        ("structure_survey", "structure_upkeep", "works_in_age", "engine_works", "structure_functions", "splendor_growth"),
         (
             "structure:commission",
             "structure:fund",

@@ -366,12 +366,12 @@ async def remove_order(scope: PlayerScope, command: OrderTarget) -> Effect:
 async def secret(scope: PlayerScope, command: SetSecret) -> Effect:
     guild = await row_of(scope, FactionProfileRow, command.guild_id, "guild")
     if guild.kind not in {FactionKind.CRAFT_GUILD, FactionKind.MERCHANT_GUILD} or guild.home_entity_id is None:
-        raise ValidationFailedError("Only a guild with a home town keeps craft secrets.")
+        raise ValidationFailedError("Only a craft or trade association with a home town keeps craft secrets.")
     known = await scope.session.get(HolderTechniqueRow, (guild.home_entity_id, command.technique))
     row = await scope.session.get(GuildSecretRow, (command.guild_id, command.technique))
     if command.keep:
         if known is None:
-            raise ValidationFailedError("The guild's town does not know that technique.")
+            raise ValidationFailedError("The association's town does not know that technique.")
         known.secret = True
         if row is None:
             scope.session.add(GuildSecretRow(guild_entity_id=command.guild_id, technique=command.technique, since_epoch=await scope.epoch(), locked=True))
@@ -381,4 +381,4 @@ async def secret(scope: PlayerScope, command: SetSecret) -> Effect:
         if row is not None:
             await scope.session.delete(row)
     await scope.session.flush()
-    return Effect("The guild keeps it secret." if command.keep else "The guild's secret is out.", target_node_id=command.guild_id)
+    return Effect("The association keeps it secret." if command.keep else "The association's secret is out.", target_node_id=command.guild_id)

@@ -77,7 +77,7 @@ const OFFICE_POWERS: Record<string, Named & { hint: string }> = {
     label: 'Rule',
     icon: Crown,
     tone: 'gold',
-    hint: 'Sits on the throne or rules for it',
+    hint: 'Rules, or rules in the ruler’s stead',
   },
   succeed: {
     label: 'Succeed',

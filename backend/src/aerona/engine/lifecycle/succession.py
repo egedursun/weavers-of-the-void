@@ -110,7 +110,7 @@ async def pass_rule(ctx: TickContext, dead: EntityRow) -> EntityRow | None:
     ruled: list[BondRow] = []
     for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[dead.id]):
         if await _shared_throne(ctx, bond, dead.id):
-            await close(ctx.session, bond, ctx.epoch, "shared throne")
+            await close(ctx.session, bond, ctx.epoch, "shared rule")
         else:
             ruled.append(bond)
     if not ruled:

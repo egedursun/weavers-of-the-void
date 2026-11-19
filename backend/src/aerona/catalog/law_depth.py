@@ -33,7 +33,7 @@ CLAIM_TEXT = total(
     JurisdictionClaim,
     {
         JurisdictionClaim.CLERGY: "the clergy's own courts over clergy and faith",
-        JurisdictionClaim.GUILD: "the guild's own courts over guild matters",
+        JurisdictionClaim.GUILD: "a craft or trade association's own courts over the matters of its trade",
         JurisdictionClaim.FOREIGN: "the right of its folk to be judged by their own realm",
     },
 )

@@ -434,7 +434,7 @@ export function ArmsForge({
   )
   const wrong =
     bearer === undefined
-      ? 'Only houses, realms, titles, armies and guilds bear arms'
+      ? 'Only houses, realms, titles, armies and associations bear arms'
       : null
   const busy = why(
     wrong ?? blocked,

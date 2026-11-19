@@ -261,7 +261,7 @@ export function MoneyPanel({
   const insurerBusy = why(
     blocked ??
       (!faction
-        ? 'Only a guild or company insures'
+        ? 'Only an association or company insures'
         : data.insurer
           ? 'It insures already; adjust it above'
           : null),
@@ -323,7 +323,7 @@ export function MoneyPanel({
         icon={Coins}
         tone='gold'
         title='Insure'
-        note='Let a guild or company insure, or insure this with an insurer.'
+        note='Let an association or company insure, or insure this with an insurer.'
         columns={2}
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>

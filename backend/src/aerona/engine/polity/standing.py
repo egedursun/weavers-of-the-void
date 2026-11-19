@@ -122,7 +122,7 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     if lost:
         parts["regalia in other hands"] = -ctx.rules.regalia.lost_legitimacy
     palace = await palace_legitimacy(ctx.session, ctx.rules, [realm.profile.capital_entity_id, *realm.members])
-    parts.update({label: value for label, value in (("a palace worthy of the crown", palace),) if value})
+    parts.update({label: value for label, value in (("a palace worthy of the ruler", palace),) if value})
     pacifist = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.PACIFISM)) is not None
     if pacifist and (await war_record(ctx, realm))[2]:
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
@@ -262,7 +262,7 @@ async def fortunes(ctx: TickContext, book: RealmBook, realm: Realm, ruler: Entit
     lifespan = stat(ruler, "lifespan") or 0
     failing = await decline_severity(ctx.session, ruler.id)
     if age < ctx.rules.succession.regency_age:
-        parts["a child on the throne"] = -table.child
+        parts["a child as ruler"] = -table.child
     elif failing:
         parts["a ruler whose mind is failing"] = failing_part(failing, table.senile)
     elif lifespan and age * PERCENT >= lifespan * ctx.rules.succession.senile_age_pct:

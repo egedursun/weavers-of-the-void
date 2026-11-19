@@ -484,7 +484,7 @@ function Registers({ view, blocked }: Props) {
     <Section
       id='section-registers'
       title='Ways of speaking'
-      description='The speech of classes, castes, guilds, courts, crews and cants, and the signed languages of those who do not speak aloud.'
+      description='The speech of classes, castes, trades, courts, crews and cants, and the signed languages of those who do not speak aloud.'
       icon={SOCIOLECT_KINDS.class.icon}
       tone='info'
     >

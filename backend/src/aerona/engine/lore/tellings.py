@@ -10,7 +10,7 @@ from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.incident_kinds.tellings import CONTRADICTED, CORRECTED
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import spoken
+from aerona.core.grammar import fact_word
 from aerona.core.random import SeededRandom
 from aerona.db.tables.culture import RumourRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -278,6 +278,7 @@ class ToldFact:
     position: int
     node_id: int | None
     number: float | None
+    enum_name: str | None
     enum_value: str | None
     name: str | None
 
@@ -315,7 +316,7 @@ def as_told(telling: Telling) -> Told:
         year=incident.year,
         cause_incident_id=incident.cause_incident_id,
         parts=tuple(ToldPart(row.node_id, row.role, row.position) for row in telling.roles if row.role not in {IncidentRole.WITNESS, IncidentRole.TELLER}),
-        facts=tuple(ToldFact(row.key, row.position, row.node_id, row.number, row.enum_value, row.name) for row in telling.facts),
+        facts=tuple(ToldFact(row.key, row.position, row.node_id, row.number, row.enum_name, row.enum_value, row.name) for row in telling.facts),
         steps=tuple(
             ToldStep(
                 step.id, step.position, step.action.value, step.actor_node_id, step.target_node_id, step.instrument_key, step.instrument_node_id, step.outcome
@@ -461,7 +462,7 @@ def told_facts(spec: IncidentKindSpec, told: Told, names: Mapping[int, str]) -> 
         elif fact.number is not None:
             values[fact.key].append(fact.number)
         elif fact.enum_value is not None:
-            values[fact.key].append(spoken(fact.enum_value))
+            values[fact.key].append(fact_word(fact.enum_name, fact.enum_value))
         elif fact.name is not None:
             values[fact.key].append(fact.name)
     found: dict[str, object] = {}

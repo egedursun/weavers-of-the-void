@@ -967,7 +967,7 @@ SKILLS: MappingProxyType[SkillKind, SkillSpec] = total(
         S.ETIQUETTE: _skill(SO, Capacity.PRESENCE, "Etiquette"),
         S.DECEPTION: _skill(SO, Capacity.PRESENCE, "Deception"),
         S.TEACHING: _skill(SO, Capacity.PRESENCE, "Teaching"),
-        S.SMITHING: _skill(CR, Capacity.CRAFT, "Smithing", physical=True),
+        S.SMITHING: _skill(CR, Capacity.CRAFT, "Metalworking", physical=True),
         S.CARPENTRY: _skill(CR, Capacity.CRAFT, "Carpentry", physical=True),
         S.MASONRY: _skill(CR, Capacity.CRAFT, "Masonry", physical=True),
         S.WEAVING: _skill(CR, Capacity.CRAFT, "Weaving"),
@@ -1370,7 +1370,7 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = total(
     {
         Profession.SOLDIER: ProfessionSpec("Soldier", (S.SPEAR, S.SHIELD, S.BLADE, S.AXE, S.BOW), MortalRole.WARRIOR),
         Profession.RIDER: ProfessionSpec("Rider", (S.RIDING, S.MOUNTED_COMBAT, S.BEAST_HANDLING), MortalRole.SWORN_WARRIOR),
-        Profession.SMITH: ProfessionSpec("Smith", (S.SMITHING, S.JEWELLING, S.ENGINEERING), MortalRole.ARTISAN),
+        Profession.SMITH: ProfessionSpec("Metalworker", (S.SMITHING, S.JEWELLING, S.ENGINEERING), MortalRole.ARTISAN),
         Profession.BUILDER: ProfessionSpec("Builder", (S.MASONRY, S.CARPENTRY, S.ENGINEERING), MortalRole.ARTISAN),
         Profession.WEAVER: ProfessionSpec("Weaver", (S.WEAVING, S.POTTERY), MortalRole.ARTISAN),
         Profession.HEALER: ProfessionSpec("Healer", (S.MEDICINE, S.SURGERY, S.FORAGING), MortalRole.HEALER),

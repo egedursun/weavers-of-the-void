@@ -42,7 +42,7 @@ REVOLTS: Mapping[RevoltKind, RevoltSpec] = total(
         R.MINORITY: RevoltSpec((A.LIBERATE, A.HUMILIATE), None, W.LIBERATION, "a people ruled by another"),
         R.COLONIAL: RevoltSpec((A.LIBERATE,), None, W.INDEPENDENCE, "rule from a distant seat"),
         R.TAX: RevoltSpec((A.HUMILIATE, A.LOOT), C.FARMER, W.TRIBUTE_REVOLT, "the weight of taxes"),
-        R.SUCCESSION: RevoltSpec((A.PRESS_CLAIM, A.CHANGE_GOVERNMENT), C.NOBLE, W.SUCCESSION, "a pressed claim to the throne"),
+        R.SUCCESSION: RevoltSpec((A.PRESS_CLAIM, A.CHANGE_GOVERNMENT), C.NOBLE, W.SUCCESSION, "a pressed claim to rule"),
         R.SCHOLAR: RevoltSpec((A.CHANGE_GOVERNMENT,), C.SCRIBE, W.IDEOLOGY, "the discontent of the learned"),
         R.MADE_MINDS: RevoltSpec((A.LIBERATE, A.CHANGE_GOVERNMENT), None, W.LIBERATION, "made minds that want their own will"),
         R.GIFTED: RevoltSpec((A.LIBERATE, A.CHANGE_GOVERNMENT), None, W.LIBERATION, "the binding of the gifted"),

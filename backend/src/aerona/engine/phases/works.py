@@ -28,7 +28,7 @@ from aerona.engine.primitives.queries import active_bonds, canon, living_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.structures.construction import Commission, active_at, advance, begin, finish
-from aerona.engine.structures.needs import facts_for, founding_order, wanted
+from aerona.engine.structures.needs import GROWING, commission_level, facts_for, founding_order, wanted
 from aerona.engine.structures.spec import resolve, slots_for, tier_allows, works_at_once
 from aerona.rules.registry import Rules
 
@@ -87,7 +87,7 @@ async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
     for kind in wanted(ctx.rules, facts):
         if tier is not None and not tier_allows(tier, resolve(kind)):
             continue
-        work, _ = await begin(ctx, Commission(site=site, kind=kind))
+        work, _ = await begin(ctx, Commission(site=site, kind=kind, level=commission_level(ctx.rules, facts, kind)))
         if kind is StructureKind.TEMPLE:
             await judged(ctx, site.id, site.id, ActKind.BUILDING_TEMPLES, note=work.name)
         return work
@@ -109,13 +109,31 @@ async def stand_in_age(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMa
     for _slot in range(max(0, await free_slots(ctx, site) - works_at_once(ctx.rules, stat_or(site, "population", 0)))):
         facts = await facts_for(ctx, site, knowledge, atlas)
         tier = facts.town.size_tier if facts.town is not None else None
-        kinds = [kind for kind in founding_order(wanted(ctx.rules, facts)) if kind not in raised and (tier is None or tier_allows(tier, resolve(kind)))]
+        kinds = [
+            kind
+            for kind in founding_order(wanted(ctx.rules, facts))
+            if (kind not in raised or kind in GROWING) and (tier is None or tier_allows(tier, resolve(kind)))
+        ]
         if not kinds:
             break
-        _work, construction = await begin(ctx, Commission(site=site, kind=kinds[0], standing=True))
+        level = commission_level(ctx.rules, facts, kinds[0])
+        _work, construction = await begin(ctx, Commission(site=site, kind=kinds[0], standing=True, level=level))
         await finish(ctx, construction)
         raised.append(kinds[0])
     return len(raised)
+
+
+async def stand_power(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> int:
+    raised = 0
+    for _slot in range(max(0, await free_slots(ctx, site))):
+        facts = await facts_for(ctx, site, knowledge, atlas)
+        if StructureKind.POWER_PLANT not in wanted(ctx.rules, facts):
+            break
+        level = commission_level(ctx.rules, facts, StructureKind.POWER_PLANT)
+        _work, construction = await begin(ctx, Commission(site=site, kind=StructureKind.POWER_PLANT, standing=True, level=level))
+        await finish(ctx, construction)
+        raised += 1
+    return raised
 
 
 async def found_in_age(ctx: TickContext, knowledge: KnowledgeMap, atlas: RegionAtlas) -> int:
@@ -124,14 +142,20 @@ async def found_in_age(ctx: TickContext, knowledge: KnowledgeMap, atlas: RegionA
         return 0
     row = await ctx.session.get(AppliedFixupRow, FOUNDED_FIXUP)
     founded = {int(item) for item in (row.result or {}).get("founded", [])} if row is not None else set()
+    powered = {int(item) for item in (row.result or {}).get("powered", [])} if row is not None else set()
     raised = 0
     for builder in await canon(ctx.session, BUILDER_TYPES):
         site = await site_of(ctx, builder)
-        if site is None or site.id in founded or held(builder.id, site.id) or not set(floors) <= knowledge.branches(site.id):
+        if site is None or held(builder.id, site.id) or not set(floors) <= knowledge.branches(site.id):
             continue
-        founded.add(site.id)
-        raised += await stand_in_age(ctx, site, knowledge, atlas)
-    result = {"founded": sorted(founded)}
+        if site.id not in founded:
+            founded.add(site.id)
+            powered.add(site.id)
+            raised += await stand_in_age(ctx, site, knowledge, atlas)
+        elif site.id not in powered:
+            powered.add(site.id)
+            raised += await stand_power(ctx, site, knowledge, atlas)
+    result = {"founded": sorted(founded), "powered": sorted(powered)}
     if row is None:
         ctx.session.add(AppliedFixupRow(key=FOUNDED_FIXUP, result=result))
     else:
@@ -150,7 +174,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     return advanced
 
 
-@reads(
+WORKS_READS = (
     "people.craft",
     "people.piety",
     "people.population",
@@ -168,6 +192,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.bonds",
     "table.camps",
     "table.community_cohorts",
+    "table.community_industry",
     "table.community_labour",
     "table.community_societies",
     "table.community_stocks",
@@ -237,7 +262,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.world_materials",
     "table.worlds",
 )
-@writes(
+WORKS_WRITES = (
     "people.piety",
     "people.prosperity",
     "settlement.defense",
@@ -274,6 +299,18 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.structure_staff",
     "table.workshops",
 )
+
+
+@reads(*WORKS_READS)
+@writes(*WORKS_WRITES)
+async def works_in_age(ctx: TickContext) -> None:
+    knowledge = await KnowledgeMap.load(ctx.session)
+    atlas = await RegionAtlas.load(ctx.session)
+    ctx.count("founded", await found_in_age(ctx, knowledge, atlas))
+
+
+@reads(*WORKS_READS)
+@writes(*WORKS_WRITES)
 async def engine_works(ctx: TickContext) -> None:
     rules = ctx.rules
     knowledge = await KnowledgeMap.load(ctx.session)
@@ -351,6 +388,7 @@ async def commission_work(ctx: TickContext, community_id: int, kind: EngineKind 
     return planned
 
 
+AGE_PHASES = (Phase("works_in_age", works_in_age),)
 BUILD_PHASES = (Phase("engine_works", engine_works),)
 SPLENDOR_PHASES = (Phase("splendor_growth", splendor_growth),)
-PHASES = BUILD_PHASES + SPLENDOR_PHASES
+PHASES = AGE_PHASES + BUILD_PHASES + SPLENDOR_PHASES

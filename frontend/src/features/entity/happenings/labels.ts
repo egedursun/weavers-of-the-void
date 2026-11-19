@@ -66,10 +66,10 @@ export const KIND_SPEC: Record<string, Spec> = {
     hint: 'Calms the town and brings it prosperity',
   },
   coronation: {
-    label: 'Coronation',
+    label: 'Accession',
     icon: Crown,
     tone: 'gold',
-    hint: 'A new ruler is crowned; the realm takes heart',
+    hint: 'A new ruler takes office; the realm takes heart',
   },
   wedding: {
     label: 'Wedding',

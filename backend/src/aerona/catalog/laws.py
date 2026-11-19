@@ -226,7 +226,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.RANSOM_CUSTOM: "Captives {allowed} be ransomed.",
         LawKind.MARRIAGE_LAW: "Unions take the form {form}, the side that may take several partners is {plural_side}; divorce is {divorce}.",
         LawKind.SUMPTUARY: "Nobles may show {noble_luxury} luxury, merchants {merchant_luxury}.",
-        LawKind.GUILD_CHARTER: "A guild holds a charter; monopoly: {monopoly}.",
+        LawKind.GUILD_CHARTER: "A craft or trade association holds a charter; monopoly: {monopoly}.",
         LawKind.FOREIGNER_RIGHTS: "Foreigners have {level}; citizenship pulls migrants.",
         LawKind.RELIGIOUS_TOLERANCE: "Foreign faiths are under {level}; conversions follow.",
         LawKind.WORSHIP_BAN: "The worship of a god is banned.",

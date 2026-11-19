@@ -223,7 +223,7 @@ async def vassal_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Side
     if aim.achieved < ctx.rules.peace.vassal_score:
         return None
     await sign(ctx, TreatyKind.VASSALAGE, [(victor.id, PartyRole.OVERLORD), (loser.id, PartyRole.VASSAL)])
-    return f"{loser.name} bent the knee to {victor.name}", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id)
+    return f"{loser.name} submitted to {victor.name}", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id)
 
 
 async def hostage_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
@@ -336,7 +336,7 @@ async def press(ctx: TickContext, victor: EntityRow, loser: EntityRow, book: Rea
     if claim is None or not set_ruler(ctx, realm, claim.claimant_entity_id, "claim won by war"):
         return None
     claim.pressed, claim.ended_epoch = True, ctx.epoch
-    return f"{victor.name} took the throne it claimed", Clause(ClauseKind.CESSION, loser.id, victor.id, {"throne": realm.entity.id})
+    return f"{victor.name} took the rule it claimed", Clause(ClauseKind.CESSION, loser.id, victor.id, {"throne": realm.entity.id})
 
 
 async def peace_terms(

@@ -2417,6 +2417,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | step | economy_survey | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | endowments | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | engine_works | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
+| step | works_in_age | test_god_control.py; test_eager_epochs.py; test_age_coherence_lived.py | each write recorded with its happening: F58.5 |
 | step | environment_derive | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | environment_modifiers | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |
 | step | environment_survey | test_god_control.py; test_eager_epochs.py | each write recorded with its happening: F58.5 |

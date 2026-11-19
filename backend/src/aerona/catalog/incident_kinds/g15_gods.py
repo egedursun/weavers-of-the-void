@@ -122,7 +122,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "divine.ascended",
         G.GODS,
-        "{god} ascended to a higher divine rank by the thrones it holds.",
+        "{god} ascended to a higher divine rank by the thrones of power it holds.",
         roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
         facts=(FactSpec("god", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -2849,7 +2849,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.crown_ruler",
         G.GODS,
-        "{actor} crowned {ruler} over {subject[0]}: {reason}",
+        "{actor} raised {ruler} to rule over {subject[0]}: {reason}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("ruler", FactValue.NAME, required=False), FactSpec("reason", FactValue.NAME, required=False)),
         place=PlaceRule.WHEN_KNOWN,

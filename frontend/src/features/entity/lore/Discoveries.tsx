@@ -543,7 +543,7 @@ function BlueprintsCard({
           <Muted>
             They hold no designs. Finished buildings, ships, siege engines and
             fine crafted things leave a design behind; designs are sold,
-            licensed by guilds and stolen by spies.
+            licensed by associations and stolen by spies.
           </Muted>
         ) : (
           <ul className={GRID}>

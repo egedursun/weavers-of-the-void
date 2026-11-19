@@ -246,7 +246,7 @@ function CommissionPanel({
       title='Commission a structure'
       icon={Construction}
       tone='gold'
-      hint='Choose what to raise; its builders, stone and coin raise it over the coming ages'
+      hint='Choose what to raise; its builders, materials and coin raise it over the coming ages'
       wide
     >
       <div

@@ -735,9 +735,9 @@ function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
   const open = guild.known.filter((item) => !guild.secrets.includes(item))
   return (
     <MindCard
-      title='Guild'
+      title='Craft or trade association'
       icon={GUILD_ICON}
-      hint='Guild members rise from apprentice to grandmaster by their craft; the guild keeps craft secrets from other towns, takes apprentices in and its standards raise the quality of its town’s works.'
+      hint='Members rise from apprentice to grandmaster by their craft; the association keeps craft secrets from other towns, takes apprentices in and its standards raise the quality of its town’s works.'
     >
       <Text weight='semibold'>
         <Ref node={guild.guild} />
@@ -970,7 +970,7 @@ export function EstatesSection({ nodeId }: { nodeId: number }) {
     <Section
       id='section-estates'
       title='Estates and movements'
-      description='Estates of the realm with their loyalty and privileges, movements and parties with their support, chartered companies and their shareholders, holy orders, and guilds with their ranks and craft secrets.'
+      description='Estates of the realm with their loyalty and privileges, movements and parties with their support, chartered companies and their shareholders, holy orders, and craft and trade associations with their ranks and craft secrets.'
       icon={ESTATES_ICON}
     >
       <div className='@container/mind flex min-w-0 flex-col gap-4'>
@@ -1006,7 +1006,7 @@ export function EstatesSection({ nodeId }: { nodeId: number }) {
             title='Nothing here'
             description={
               view.reason ??
-              'It holds no estate, movement, company, order or guild.'
+              'It holds no estate, movement, company, order or association.'
             }
           />
         ) : (
@@ -1050,7 +1050,7 @@ export function EstatesSection({ nodeId }: { nodeId: number }) {
             {(view.holdings.length > 0 || view.guild_rank) && (
               <MindCard title='Stakes and standing' icon={SHARE_ICON}>
                 {view.guild_rank && (
-                  <Text>{`A ${view.guild_rank.toLowerCase()} of a guild.`}</Text>
+                  <Text>{`A ${view.guild_rank.toLowerCase()} of an association.`}</Text>
                 )}
                 {view.holdings.map((item) => (
                   <div

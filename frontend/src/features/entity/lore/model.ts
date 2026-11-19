@@ -626,7 +626,7 @@ export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
   owned: { label: 'Changed hands', icon: Hand, tone: 'info' },
   kill: { label: 'Took a life', icon: Skull, tone: 'danger' },
   battle: { label: 'Went to battle', icon: Swords, tone: 'warning' },
-  coronation: { label: 'Crowned a ruler', icon: Crown, tone: 'gold' },
+  coronation: { label: 'Worn at an accession', icon: Crown, tone: 'gold' },
   lost: { label: 'Was lost', icon: CircleX, tone: 'danger' },
   theft: { label: 'Was stolen', icon: VenetianMask, tone: 'danger' },
   burial: { label: 'Was buried', icon: Flower2, tone: 'muted' },

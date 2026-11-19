@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.core.grammar import spoken
+from aerona.core.grammar import fact_word
 from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow
 from aerona.db.tables.culture import RumourRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -289,7 +289,7 @@ def fact_value(fact: AccountFact) -> object:
     if fact.number is not None:
         return fact.number
     if fact.enum_value is not None:
-        return spoken(fact.enum_value)
+        return fact_word(fact.enum_name, fact.enum_value)
     return fact.name
 
 

@@ -194,7 +194,7 @@ export const CLERGY: Record<string, Named> = {
   },
   missionary: { label: 'Missionary', icon: BookOpen, tone: 'warning' },
   judge: { label: 'Judge', icon: Crown, tone: 'info' },
-  scribe: { label: 'Scribe', icon: BookOpen, tone: 'muted' },
+  scribe: { label: 'Clerk', icon: BookOpen, tone: 'muted' },
 }
 
 export const HOLDINGS: Record<string, Named> = {

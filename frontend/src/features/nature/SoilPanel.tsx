@@ -267,7 +267,7 @@ export function SoilPanel({
         icon={Leaf}
         tone='gold'
         title='Give a ferment culture'
-        note='A town, guild, house or hall keeps a culture that improves its dishes.'
+        note='A town, association, house or hall keeps a culture that improves its dishes.'
         columns={2}
         action={
           <Button

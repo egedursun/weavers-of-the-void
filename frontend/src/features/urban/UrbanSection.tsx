@@ -957,7 +957,7 @@ function PlayCard({
       }
       removeLabel='End'
       editTitle='Set the play'
-      note='A fair-market law or a guild monopoly undoes part of it.'
+      note='A fair-market law or an association’s monopoly undoes part of it.'
       fields={[
         {
           key: 'strength',

@@ -851,7 +851,63 @@ STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
         "dye_cloth": P.WEAVING,
         "brew_base": P.BREWING,
         "herbal_remedies": P.DISTILLING,
+        "coke_fuel": P.CHARCOAL,
+        "coal_fuel": P.CHARCOAL,
+        "crop_fuel": P.CHARCOAL,
+        "factory_wool": P.WEAVING,
+        "factory_fibre": P.WEAVING,
+        "synthetic_cloth": P.WEAVING,
+        "electric_tools": P.SMELTING,
+        "electric_weapons": P.SMELTING,
+        "electric_armour": P.SMELTING,
+        "factory_bread": P.MILLING,
+        "pharmacy": P.DISTILLING,
+        "synthetic_medicine": P.DISTILLING,
+        "antibiotics": P.DISTILLING,
     }
+)
+
+
+def recipes_of(process: ProcessKind) -> frozenset[str]:
+    return frozenset(key for key, owner in STEP_PROCESS.items() if owner is process)
+
+
+TIMBER_FUEL = frozenset({"charcoal"})
+COAL_FUEL = frozenset({"coke_fuel", "coal_fuel"})
+HAND_CLOTH = frozenset({"weave", "weave_wool", "weave_fibre", "dye_cloth"})
+MILL_CLOTH = frozenset({"factory_wool", "factory_fibre"})
+FORGED = frozenset({"forge_tools", "forge_weapons", "forge_armour", "jewellery"})
+ELECTRIC_WORKS = frozenset({"electric_tools", "electric_weapons", "electric_armour"})
+OLD_REMEDIES = frozenset({"potions", "herbal_remedies"})
+FITTED_RECIPES: MappingProxyType[MethodKind, frozenset[str]] = MappingProxyType(
+    {
+        M.CLAMP_KILN: TIMBER_FUEL,
+        M.RETORT_KILN: TIMBER_FUEL,
+        M.GAS_RETORT: COAL_FUEL,
+        M.OIL_REFINING: COAL_FUEL | {"crop_fuel"},
+        M.HAND_LOOM: HAND_CLOTH | {"spin"},
+        M.WATER_FRAME: HAND_CLOTH,
+        M.POWER_LOOM: MILL_CLOTH,
+        M.ELECTRIC_LOOM: MILL_CLOTH | {"synthetic_cloth"},
+        M.FIBRE_FROM_LIFE: frozenset({"factory_fibre", "synthetic_cloth"}),
+        M.BLOOMERY: FORGED,
+        M.BLAST_FURNACE: FORGED,
+        M.ELECTRIC_ARC: ELECTRIC_WORKS,
+        M.GEOTHERMAL_FURNACE: ELECTRIC_WORKS,
+        M.STAR_FORGE: ELECTRIC_WORKS,
+        M.FUSION_FOUNDRY: ELECTRIC_WORKS,
+        M.HAND_QUERN: frozenset({"mill"}),
+        M.WATERMILL: frozenset({"mill"}),
+        M.WINDMILL: frozenset({"mill"}),
+        M.ROLLER_MILL: frozenset({"factory_bread"}),
+        M.TIDAL_MILL: frozenset({"factory_bread"}),
+        M.HERBAL_STILL: OLD_REMEDIES,
+        M.COLUMN_STILL: frozenset({"pharmacy", "synthetic_medicine"}),
+        M.BIOREACTOR: frozenset({"pharmacy", "antibiotics"}),
+    }
+)
+METHOD_RECIPES: MappingProxyType[MethodKind, frozenset[str]] = MappingProxyType(
+    {kind: FITTED_RECIPES.get(kind, recipes_of(spec.process)) for kind, spec in METHODS.items()}
 )
 EXTRACTION_PROCESS: MappingProxyType[ExtractionKind, ProcessKind] = MappingProxyType(
     {

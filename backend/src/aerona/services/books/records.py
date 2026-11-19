@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
-from aerona.core.grammar import an, several, spoken
+from aerona.core.grammar import an, fact_word, several, spoken
 from aerona.db.tables.ages import AgeRow
 from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow, StateCheckpointRow
 from aerona.db.tables.culture import RumourRow
@@ -280,7 +280,7 @@ class Ledger:
             unit = "" if fact.unit is None or fact.unit in NO_UNIT else f" {spoken(fact.unit)}"
             value = f"{number_text(fact.number)}{unit}"
         elif fact.enum_value is not None:
-            value = spoken(fact.enum_value)
+            value = fact_word(fact.enum_name, fact.enum_value)
         else:
             value = fact.name or ""
         return f"{words(fact.key).lower()} {value}".strip()

@@ -18,7 +18,7 @@ HERALDRY_HOLDER_KIND = total(
         HeraldryHolderKind.TITLE: Defined("A title", checked_by=("engine.collective.heraldry.sync_emblem",), used_by=("engine.collective.heraldry.holders",)),
         HeraldryHolderKind.ARMY: Defined("An army", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),
         HeraldryHolderKind.GUILD: Defined(
-            "A guild or order", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)
+            "An association or order", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)
         ),
         HeraldryHolderKind.COMPANY: Defined("A company", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),
         HeraldryHolderKind.ORDER: Defined("An order", checked_by=("engine.collective.control.ARMS_TYPES",), used_by=("engine.collective.heraldry.holders",)),

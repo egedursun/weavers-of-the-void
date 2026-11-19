@@ -405,7 +405,7 @@ export const HELD_LABELS: Record<string, string> = {
 export const PROFESSIONS: Record<string, Named> = {
   soldier: { label: 'Soldier', icon: Swords, tone: 'danger' },
   rider: { label: 'Rider', icon: Footprints, tone: 'info' },
-  smith: { label: 'Smith', icon: Flame, tone: 'warning' },
+  smith: { label: 'Metalworker', icon: Flame, tone: 'warning' },
   builder: { label: 'Builder', icon: Mountain, tone: 'muted' },
   weaver: { label: 'Weaver', icon: Feather, tone: 'verdigris' },
   healer: { label: 'Healer', icon: HeartPulse, tone: 'success' },

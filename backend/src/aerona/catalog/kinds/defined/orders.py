@@ -23,7 +23,7 @@ ORDER_LABOUR = total(
             "Corvée", checked_by=(), used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order")
         ),
         OrderLabour.SERF: Defined(
-            "Serf",
+            "Tied to the land",
             checked_by=("engine.orders.economy.read_order",),
             used_by=("engine.orders.economy.BOUND_LABOUR", "engine.orders.economy.BUILT_IN", "engine.orders.economy.read_order"),
         ),

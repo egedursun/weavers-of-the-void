@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import an, spoken
+from aerona.core.grammar import an, fact_word, spoken
 from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import InstrumentKind, RumourDistortion, StepLocus
@@ -25,7 +25,7 @@ def fact_text(fact: AccountFact) -> str:
         unit = f" {spoken(fact.unit)}" if fact.unit is not None and spoken(fact.unit) not in {"none", "count"} else ""
         return f"{number_text(fact.number)}{unit}"
     if fact.enum_value is not None:
-        return spoken(fact.enum_value)
+        return fact_word(fact.enum_name, fact.enum_value)
     return fact.name or ""
 
 

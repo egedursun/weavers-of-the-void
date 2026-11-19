@@ -116,7 +116,7 @@ describe('faction section', () => {
     onApi('POST', '/api/actions/faction:outlaw', ACCEPTED_ACTION)
     const { screen } = await renderApp(<FactionSection factionId={12} />)
     await expect
-      .element(screen.getByText('Merchant guild').first())
+      .element(screen.getByText('Trade association').first())
       .toBeVisible()
     await expect.element(screen.getByText('Lower taxes')).toBeVisible()
     await expect.element(screen.getByText('Lobbied')).toBeVisible()

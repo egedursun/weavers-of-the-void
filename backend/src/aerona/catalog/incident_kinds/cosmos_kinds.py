@@ -1141,7 +1141,7 @@ AGES: tuple[IncidentKindSpec, ...] = (
     happening(
         "dark_ages.rediscovered",
         S,
-        "The scribes of {actor} deciphered the forgotten knowledge of {subject} in the ruins of {place}.",
+        "The scholars of {actor} deciphered the forgotten knowledge of {subject} in the ruins of {place}.",
         roles=(one(R.ACTOR), one(R.SUBJECT), one(R.PLACE)),
         facts=(amount("scribes", U.PERCENT), amount("chance", U.PERCENT)),
         steps=(A.DISCOVER,),

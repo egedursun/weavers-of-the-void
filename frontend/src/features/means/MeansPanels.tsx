@@ -370,7 +370,7 @@ function VaultCard({
       caption={`${lock.label}${row.sealed ? ', sealed' : ''}${row.traps ? ', trapped' : ''}, ${row.guards} ${row.guards === 1 ? 'guard' : 'guards'} since epoch ${row.since_epoch}`}
       removeLabel='Lay it open'
       editTitle='Set the vault'
-      note='A master smith of the town improves its lock; a seal names a thief; a trap harms one.'
+      note='A master metalworker of the town improves its lock; a seal names a thief; a trap harms one.'
       fields={[
         { key: 'lock', label: 'Lock', kind: 'pick', table: LOCK_CHOICES },
         {

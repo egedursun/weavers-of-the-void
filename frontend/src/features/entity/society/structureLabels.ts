@@ -318,10 +318,10 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     hint: 'Craft and wealth',
   },
   alchemist_lab: {
-    label: "Alchemist's laboratory",
+    label: 'Reagent laboratory',
     icon: FlaskConical,
     tone: 'verdigris',
-    hint: 'Runs the alchemy chains',
+    hint: 'Runs the reagent chains',
   },
   road: {
     label: 'Road',
@@ -505,7 +505,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     hint: 'Seat of the town’s own council; keeps order',
   },
   guildhall: {
-    label: 'Guildhall',
+    label: 'Trade hall',
     icon: Store,
     tone: 'gold',
     hint: 'Meeting house of the crafts; adds to the town’s investment each epoch',
@@ -598,7 +598,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     label: 'Laboratory',
     icon: FlaskConical,
     tone: 'info',
-    hint: "Tests and studies; works as an alchemist's lab",
+    hint: 'Tests and studies; works as a reagent laboratory',
   },
   foundry: {
     label: 'Foundry',

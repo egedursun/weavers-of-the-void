@@ -32,8 +32,8 @@ OWNER_CLASS: MappingProxyType[WorkshopKind, OwnerClass] = MappingProxyType(
 )
 OWNER_LABELS: MappingProxyType[OwnerClass, str] = MappingProxyType(
     {
-        OC.GUILD: "A craft guild",
-        OC.MERCHANTS: "A merchant guild",
+        OC.GUILD: "A craft association",
+        OC.MERCHANTS: "A trade association",
         OC.CULT: "A cult",
         OC.REALM: "The realm",
         OC.HOUSE: "A landed house",

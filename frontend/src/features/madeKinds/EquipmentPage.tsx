@@ -158,7 +158,7 @@ export function EquipmentPage({
           caption='Every value of the model, held as you set it'
           removeLabel='Forget the model'
           editTitle='Set the model'
-          note='Its family and material set what it does; its smiths forge it for the soldiers and vehicles of its makers.'
+          note='Its family and material set what it does; its makers produce it for its soldiers and vehicles.'
           fields={[
             { key: 'name', label: 'Name of the model', kind: 'text' },
             {

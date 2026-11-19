@@ -224,7 +224,7 @@ export const QUESTIONS: Record<Schema['DivinationQuestion'], Named> = {
   battle: { label: 'Battle', icon: Swords, tone: 'danger' },
   war: { label: 'War', icon: Shield, tone: 'danger' },
   wedding: { label: 'Wedding', icon: Heart, tone: 'success' },
-  coronation: { label: 'Coronation', icon: Crown, tone: 'gold' },
+  coronation: { label: 'Accession', icon: Crown, tone: 'gold' },
   harvest: { label: 'Harvest', icon: Wheat, tone: 'gold' },
 }
 
