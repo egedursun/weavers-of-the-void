@@ -296,7 +296,7 @@ async def press_incursions(ctx: TickContext) -> int:
             row.ended_epoch = ctx.epoch
             await tell(ctx, being, "outer.incursion_ended")
             continue
-        depth = STAGE_ORDER.index(row.stage) + 1
+        depth = STAGE_ORDER.index(row.stage) + 1 if row.stage in STAGE_ORDER else len(STAGE_ORDER)
         land = await ctx.session.get(EntityRow, row.region_entity_id) if row.region_entity_id is not None else None
         if land is not None and not held(land.id):
             shift_sanity(ctx.rules, land, -table.incursion_sanity * depth)

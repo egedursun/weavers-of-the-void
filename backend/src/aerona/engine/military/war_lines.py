@@ -29,7 +29,7 @@ async def warring_communities(ctx: TickContext) -> set[int]:
 
 async def wanted_good(ctx: TickContext, community_id: int, current: CommodityKind | None) -> CommodityKind:
     stocks = {good: await holding(ctx.session, community_id, good) for good in WAR_GOODS}
-    least = min(WAR_GOODS, key=lambda good: (stocks[good], WAR_GOODS.index(good)))
+    _rank, least = min(enumerate(WAR_GOODS), key=lambda pair: (stocks[pair[1]], pair[0]))
     if current in stocks and stocks[current] <= stocks[least] * SWITCH_MARGIN + PERCENT // 10:
         return current
     return least

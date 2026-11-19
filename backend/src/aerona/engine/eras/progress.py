@@ -266,7 +266,7 @@ async def advance(ctx: TickContext, row: TechProgrammeRow, tally: EraTally) -> N
         await finish(ctx, row, realm, profile)
         tally.completed += 1
         return
-    if LIVE.index(stage) > LIVE.index(row.stage):
+    if stage in LIVE and row.stage in LIVE and LIVE.index(stage) > LIVE.index(row.stage):
         await tell(ctx, row, realm, stage)
     row.stage = stage
 

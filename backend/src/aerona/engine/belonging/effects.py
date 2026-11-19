@@ -50,7 +50,7 @@ def fault_layer(rules: Rules, members: list[dict[IdentityLayer, HeldIdentityRow]
     if not members:
         return None
     means = {layer: sum(salience_of(rows, layer) for rows in members) / len(members) for layer in FAULT_LAYERS}
-    layer = max(FAULT_LAYERS, key=lambda item: (means[item], -FAULT_LAYERS.index(item)))
+    _rank, layer = max(enumerate(FAULT_LAYERS), key=lambda pair: (means[pair[1]], -pair[0]))
     return layer if means[layer] >= rules.identities.fault_at else None
 
 

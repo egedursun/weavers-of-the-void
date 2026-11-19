@@ -85,7 +85,7 @@ async def coin_metal(ctx: TickContext, community_id: int) -> CommunityStockRow |
         CommunityStockRow.quantity > 0,
     )
     lots = list(await ctx.session.scalars(statement))
-    return min(lots, key=lambda lot: (COIN_MATERIALS.index(lot.material) if lot.material is not None else len(COIN_MATERIALS), lot.id), default=None)
+    return min(lots, key=lambda lot: (COIN_MATERIALS.index(lot.material) if lot.material in COIN_MATERIALS else len(COIN_MATERIALS), lot.id), default=None)
 
 
 async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKind) -> CurrencyRow:

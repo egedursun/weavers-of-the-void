@@ -308,7 +308,7 @@ class Field:
     earthworks: int = 0
 
 
-MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.BEAST, F.MOUNTED, F.VEHICLE, F.ENGINEER, F.MAGIC, F.MISSILE)
+MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.SPECIAL, F.BEAST, F.MOUNTED, F.VEHICLE, F.ENGINEER, F.MAGIC, F.MISSILE, F.AIR, F.SPACE, F.ELECTRONIC)
 
 
 def target_class(rules: Rules, stack: Stack) -> TargetClass:

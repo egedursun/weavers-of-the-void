@@ -158,3 +158,23 @@ def test_stack_specs_follow_the_unit_catalog() -> None:
     stacks = make_stacks([unit(UnitKind.SKY_RIDERS, 10, ident=1)])
     assert isinstance(stacks[0], Stack) and stacks[0].flying and stacks[0].spec is UNITS[UnitKind.SKY_RIDERS]
     assert stacks[0].spec.family is UnitFamily.MOUNTED
+
+
+def test_every_kind_of_unit_fights_on_every_ground_in_every_weather() -> None:
+    kinds = sorted(UnitKind, key=lambda kind: kind.value)
+    assert {UNITS[kind].family for kind in kinds} == set(UnitFamily)
+    for kind in kinds:
+        alone = resolve(
+            RULES,
+            stream,
+            side("Host", [unit(kind, 200, ident=1)]),
+            side("Town", [unit(UnitKind.LEVY, 200, ident=2, army=2)], defending=True, ident=2),
+            Field(TerrainKind.PLAIN, WeatherKind.CLEAR, night=False),
+        )
+        assert alone.outcome is not None, kind
+    for terrain in TerrainKind:
+        for weather in WeatherKind:
+            host = side("Host", [unit(kind, 100, ident=index + 1) for index, kind in enumerate(kinds)])
+            town = side("Town", [unit(kind, 100, ident=len(kinds) + index + 1, army=2) for index, kind in enumerate(kinds)], defending=True, ident=2)
+            mixed = resolve(RULES, stream, host, town, Field(terrain, weather, night=terrain is TerrainKind.UNDERGROUND))
+            assert mixed.outcome is not None, (terrain, weather)

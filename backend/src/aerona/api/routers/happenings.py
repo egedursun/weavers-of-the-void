@@ -31,7 +31,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["happenings"])
-PHASE_ORDER = (EventPhase.ONSET, EventPhase.PEAK, EventPhase.AFTERMATH)
+PHASE_ORDER = (EventPhase.ONSET, EventPhase.PEAK, EventPhase.AFTERMATH, EventPhase.MEMORY)
 KINDS = sorted(EVENT_KINDS, key=lambda kind: kind.value)
 
 
