@@ -104,6 +104,7 @@ const ALPHA: Record<LayerMode, number> = {
   nutrients: 0.45,
   networks: 0.45,
   hidden: 0.45,
+  works: 0.45,
   cuisines: 0.42,
   dress: 0.42,
   organisations: 0.42,
@@ -144,6 +145,9 @@ const BAND_LABEL: Record<string, string> = {
   hid_one: 'One thing hidden here',
   hid_few: 'A few things hidden here',
   hid_many: 'Much hidden here',
+  works_one: 'One work under way',
+  works_few: 'A few works under way',
+  works_many: 'Many works under way',
   frontier_soft: 'A frontier gone soft',
   frontier_steady: 'A frontier holding together',
   frontier_forged: 'A frontier forged as one',
@@ -235,6 +239,17 @@ export const HIDDEN_BANDS = [
   { key: 'hid_few', below: 4 },
   { key: 'hid_many', below: Number.POSITIVE_INFINITY },
 ] as const
+
+export const WORKS_BANDS = [
+  { key: 'works_one', below: 2 },
+  { key: 'works_few', below: 4 },
+  { key: 'works_many', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function worksBand(value: number): string | null {
+  if (value <= 0) return null
+  return WORKS_BANDS.find((band) => value < band.below)?.key ?? null
+}
 
 export function hiddenBand(value: number): string | null {
   if (value <= 0) return null
@@ -421,6 +436,11 @@ function regionKey(
       const band = stocks ? hiddenBand(stocks.hidden ?? 0) : null
       return band ? { key: `hidden:${band}`, alpha } : null
     }
+    case 'works': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? worksBand(stocks.works ?? 0) : null
+      return band ? { key: `works:${band}`, alpha } : null
+    }
     case 'niches': {
       const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
       const band = stocks ? nicheBand(stocks.niches ?? 0) : null
@@ -530,6 +550,7 @@ function labelFor(
     kind === 'niches' ||
     kind === 'networks' ||
     kind === 'hidden' ||
+    kind === 'works' ||
     kind === 'solidarity' ||
     kind === 'rings' ||
     kind === 'centrality' ||

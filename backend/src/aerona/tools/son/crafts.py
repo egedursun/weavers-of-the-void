@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -61,7 +62,7 @@ async def wake_spirit(call: SonCall, args: WakeSpiritInput) -> str:
         place=region.id,
         kind=ChronicleKind.MIRACLE,
     )
-    return result(SonResult.SPIRIT_WOKEN, region=region.name, emotion=args.emotion.value)
+    return result(SonResult.SPIRIT_WOKEN, region=region.name, emotion=spoken(args.emotion))
 
 
 async def lay_affinity(call: SonCall, args: LayAffinityInput) -> str:
@@ -78,14 +79,14 @@ async def lay_affinity(call: SonCall, args: LayAffinityInput) -> str:
         call.tick, "material_affinity", {"material_id": profile.world_material_id, "school": args.school}, {"mode": args.mode, "power": 50}
     )
     call.target(resource.id)
-    told = args.school.value.replace("_", " ")
+    told = spoken(args.school)
     await call.record(
         "tools.son.lay_affinity",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: resource.id},
         facts={"school": str(told), "reason": args.reason},
         kind=ChronicleKind.RESOURCE,
     )
-    return result(SonResult.AFFINITY_LAID, resource=resource.name, school=told, mode=args.mode.value)
+    return result(SonResult.AFFINITY_LAID, resource=resource.name, school=told, mode=spoken(args.mode))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

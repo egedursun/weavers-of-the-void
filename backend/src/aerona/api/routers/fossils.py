@@ -51,6 +51,8 @@ async def node_fossils(services: ServicesDep, node_id: NodeId) -> FossilNodeView
                     found_epoch=row.found_epoch,
                     finder=refs.get(row.finder_entity_id) if row.finder_entity_id else None,
                     reading=row.reading,
+                    layer=row.layer,
+                    preservation=row.preservation,
                     locked=list(row.locked),
                 )
                 for row in rows

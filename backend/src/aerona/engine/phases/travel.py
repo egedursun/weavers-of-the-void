@@ -39,6 +39,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
+from aerona.engine.body.tolerance import world_excess
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.encounters import draw, meet, seed_encounters
@@ -71,6 +72,7 @@ from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, ri
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.dangers import harm_of
 from aerona.engine.environment.knowledge import polity_of, well_charted
+from aerona.engine.forecasting.reading import sky_marks
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import wayfinder
 from aerona.engine.mind.book import pressures_of
@@ -543,6 +545,9 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     if await well_charted(ctx.session, ctx.rules, realm, region):
         home = round(home * (PERCENT - ctx.rules.discovery.charted_journey_pct) / PERCENT)
     risk = road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)
+    folk = await people_of(ctx.session, traveller)
+    if folk is not None:
+        risk *= (PERCENT - await sky_marks(ctx.session, ctx.rules, folk.id) * ctx.rules.forecasting.navigation_share_pct // PERCENT) / PERCENT
     if not scene.rng.probability(risk * await ctx.hook_easing(traveller.id, DomainHook.ROAD_SAFETY)):
         return True
     kind = MEDIUM_EVENTS.get(medium_of(route.method)) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else None)
@@ -800,7 +805,8 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
     biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
     with explaining():
         fit = await habitability(ctx.session, ctx.rules, biology, arrival.target.id)
-        unfit = fit < ctx.rules.life_classes.settle_floor
+        strain = await world_excess(ctx.session, people.id, arrival.target) if people is not None else 0
+        unfit = fit < ctx.rules.life_classes.settle_floor or strain >= ctx.rules.body_systems.system_loss_capacity_pct
         if unfit:
             await record(
                 ctx,
@@ -1052,22 +1058,28 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "settlement.population",
     "species.danger",
     "table.beast_profiles",
+    "table.body_systems",
     "table.bonds",
     "table.calendars",
     "table.community_relations",
     "table.community_stocks",
     "table.cosmos",
+    "table.creator",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
     "table.dimensional_events",
+    "table.dimensions",
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
     "table.forced_weather",
+    "table.foreign_gods",
     "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.geasa",
     "table.held_identities",
     "table.holder_levels",

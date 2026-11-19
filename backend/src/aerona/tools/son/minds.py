@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.made import MadeRealmRow, ReplicatorLineRow
@@ -116,7 +117,7 @@ async def awaken_mind(call: SonCall, args: AwakenMindInput) -> str:
         facts={"name": str(node.name), "reason": str(args.reason)},
         kind=ChronicleKind.FATE,
     )
-    return result(SonResult.MIND_AWAKENED, name=node.name, will=args.will.value.replace("_", " "))
+    return result(SonResult.MIND_AWAKENED, name=node.name, will=spoken(args.will))
 
 
 async def still_mind(call: SonCall, args: MindNodeInput) -> str:

@@ -11,6 +11,7 @@ import {
   Hexagon,
   Hourglass,
   type LucideIcon,
+  Moon,
   Mountain,
   Repeat,
   Shield,
@@ -58,5 +59,6 @@ export const SHARES = [
 export const FLAGS = [
   { key: 'breathes', label: 'Breathes', icon: Wind },
   { key: 'drinks', label: 'Drinks', icon: Droplets },
+  { key: 'sleeps', label: 'Sleeps', icon: Moon },
   { key: 'ages', label: 'Ages', icon: HeartPulse },
 ] as const

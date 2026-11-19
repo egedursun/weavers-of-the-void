@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.operations import EchelonRow, ExpeditionMemberRow, ExpeditionRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
@@ -96,7 +97,7 @@ async def order_formation(call: MortalCall, args: OrderFormationInput) -> str:
     call.target(row.army_entity_id or row.owner_entity_id)
     roles = {IncidentRole.ACTOR: call.me.id, **({IncidentRole.SUBJECT: row.army_entity_id} if row.army_entity_id is not None else {})}
     await call.record("tools.mortal.order_formation", roles=roles, facts={"formation": row.name, "order": args.order})
-    return result(MortalResult.FORMATION_ORDERED, formation=row.name, order=args.order.value)
+    return result(MortalResult.FORMATION_ORDERED, formation=row.name, order=spoken(args.order))
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

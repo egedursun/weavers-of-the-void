@@ -100,7 +100,9 @@ class ExtraJudgmentOutput(OutputModel):
     verdicts: list[VerdictOutput]
 
 
-SUMMARY = "One but full sentence (at least {{ rules.fate.summary_min_chars }} characters): who, what, where, and its concrete consequence"
+SUMMARY = (
+    "One but full sentence (at least {{ rules.fate.summary_min_chars | several('character', 'characters') }}): who, what, where, and its concrete consequence"
+)
 
 
 class WorldSectionOutput(OutputModel):

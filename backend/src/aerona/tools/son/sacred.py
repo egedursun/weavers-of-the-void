@@ -122,7 +122,7 @@ async def bind_genius_locus(call: SonCall, args: BindGeniusLocusInput) -> str:
         facts={"place_detail": str(place.name), "reason": args.reason},
         kind=ChronicleKind.WORSHIP,
     )
-    return result(SonResult.GENIUS_BOUND, place=place.name, kind=row.kind.value)
+    return result(SonResult.GENIUS_BOUND, place=place.name, kind=spoken(row.kind))
 
 
 async def judge_petition(call: SonCall, args: JudgePetitionInput) -> str:
@@ -213,7 +213,7 @@ async def teach_sacrament(call: SonCall, args: TeachSacramentInput) -> str:
         facts={"cult": str(cult.name), "sacrament": args.kind, "reason": args.reason},
         kind=ChronicleKind.WORSHIP,
     )
-    return result(SonResult.SACRAMENT_TAUGHT, cult=cult.name, sacrament=args.kind.value, protection=row.protection.value)
+    return result(SonResult.SACRAMENT_TAUGHT, cult=cult.name, sacrament=spoken(args.kind), protection=spoken(row.protection))
 
 
 async def align_afterlife(call: SonCall, args: AlignAfterlifeInput) -> str:
@@ -225,7 +225,7 @@ async def align_afterlife(call: SonCall, args: AlignAfterlifeInput) -> str:
     except ValidationFailedError as error:
         fail(SonResult.AFTERLIFE_REFUSED, why=reason_of(error))
     call.target(cult.id)
-    model = row.model.value.replace("_", " ")
+    model = spoken(row.model)
     await call.record(
         "tools.son.align_afterlife",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: cult.id},
@@ -248,7 +248,7 @@ async def sway_diviner(call: SonCall, args: SwayDivinerInput) -> str:
         facts={"realm": str(realm.name), "verdict": args.verdict, "reason": args.reason},
         kind=ChronicleKind.FATE,
     )
-    return result(SonResult.DIVINER_SWAYED, realm=realm.name, verdict=args.verdict.value, heeded="heeded it" if row.heeded else "paid it little mind")
+    return result(SonResult.DIVINER_SWAYED, realm=realm.name, verdict=spoken(args.verdict), heeded="heeded it" if row.heeded else "paid it little mind")
 
 
 async def grant_foresight(call: SonCall, args: GrantForesightInput) -> str:
@@ -281,7 +281,7 @@ async def feed_on(call: SonCall, args: FeedOnInput) -> str:
     await call.record(
         "tools.son.feed_on", roles={IncidentRole.ACTOR: call.son.id}, facts={"emotion": args.emotion, "reason": args.reason}, kind=ChronicleKind.WORSHIP
     )
-    return result(SonResult.FEEDING_SET, emotion=args.emotion.value, weight=args.weight)
+    return result(SonResult.FEEDING_SET, emotion=spoken(args.emotion), weight=args.weight)
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

@@ -266,6 +266,7 @@ async def culture_view(session: AsyncSession, culture: PeopleCultureRow) -> Cult
         liturgical_language=await linked_record(session, culture.liturgical_language_id),
         trade_language=await linked_record(session, culture.trade_language_id),
         funeral_rite=culture.funeral_rite,
+        remains_treatment=culture.remains_treatment,
         funeral_tradition=await linked_record(session, culture.funeral_rite_id),
         martial_record=record,
         martial_net=wins - losses,

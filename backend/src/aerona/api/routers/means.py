@@ -61,6 +61,7 @@ from aerona.db.tables.orders import (
     TouristFlowRow,
 )
 from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.space_weather import WorldFieldRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.economy import MaterialSlot
@@ -71,6 +72,7 @@ from aerona.engine.body.customs import people_id_of
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.means.navigation import aid_works
 from aerona.engine.sacred.places import town_of
+from aerona.engine.space_weather.reading import compass_error_of
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["means"])
@@ -162,8 +164,9 @@ async def node_means(services: ServicesDep, node_id: NodeId) -> MeansNodeView:
         kits = list(await session.scalars(select(NavigationKitRow).where(NavigationKitRow.holder_entity_id == town_id).order_by(NavigationKitRow.aid)))
         stocks = list(await session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town_id).order_by(ContainerStockRow.kind)))
         world = await session.get(WorldRow, town.world_id) if town is not None else None
+        error = compass_error_of(await session.get(WorldFieldRow, world.id)) if world is not None else 0
         table = rules.navigation_instruments
-        accuracy = min(PERCENT, sum(row.quality * table.aid_pct // PERCENT for row in kits if aid_works(rules, row, world)))
+        accuracy = min(PERCENT, sum(row.quality * table.aid_pct // PERCENT for row in kits if aid_works(rules, row, world, error)))
         building = await building_of(session, rules, entity) if entity is not None and entity.entity_type is EntityType.STRUCTURE else None
         named = {
             node_id,
@@ -210,7 +213,7 @@ async def node_means(services: ServicesDep, node_id: NodeId) -> MeansNodeView:
             for row in lifts
         ],
         kits=[
-            NavigationKitView(aid=row.aid, quality=row.quality, works=aid_works(rules, row, world), since_epoch=row.since_epoch, locked=row.locked)
+            NavigationKitView(aid=row.aid, quality=row.quality, works=aid_works(rules, row, world, error), since_epoch=row.since_epoch, locked=row.locked)
             for row in kits
         ],
         accuracy=accuracy,

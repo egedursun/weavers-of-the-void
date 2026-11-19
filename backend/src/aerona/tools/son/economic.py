@@ -3,6 +3,7 @@ from typing import Annotated, Any, Literal
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -51,7 +52,7 @@ async def move_economic_order(call: SonCall, args: MoveEconomicOrderInput) -> st
         facts={"reason": args.reason},
         kind=ChronicleKind.CIVILIZATION,
     )
-    return result(SonResult.ORDER_MOVED, realm=realm.name, axis=args.axis, value=args.value.replace("_", " "))
+    return result(SonResult.ORDER_MOVED, realm=realm.name, axis=args.axis, value=spoken(args))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

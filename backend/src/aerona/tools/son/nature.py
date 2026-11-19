@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.nature import SenseProfileRow, SpeciesRelationRow
 from aerona.db.write_guard import held
@@ -65,7 +66,7 @@ async def bind_species(call: SonCall, args: BindSpeciesInput) -> str:
     call.session.add(row)
     await call.session.flush()
     call.target(first.id)
-    kind = args.kind.value
+    kind = spoken(args.kind)
     await call.record(
         "tools.son.bind_species",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},
@@ -93,7 +94,7 @@ async def sharpen_sense(call: SonCall, args: SharpenSenseInput) -> str:
     row.acuity = clamp_int(row.acuity + call.tick.rules.senses.sharpened, 0, PERCENT)
     await call.session.flush()
     call.target(holder.id)
-    sense = args.sense.value.replace("_", " ")
+    sense = spoken(args.sense)
     await call.record(
         "tools.son.sharpen_sense",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: holder.id},

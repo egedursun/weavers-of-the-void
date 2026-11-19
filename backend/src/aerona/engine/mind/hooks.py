@@ -30,6 +30,7 @@ from aerona.engine.mythic.geas_acts import geas_acted
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.renown.currencies import on_act
 from aerona.engine.renown.deeds import deed_seen
+from aerona.engine.standing.hypocrisy import professed_act
 
 LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
 FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT, MortalRole.OFFICER, MortalRole.PILOT})
@@ -257,6 +258,7 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     if act in ATROCITIES:
         moved += len(await horrified(ctx, actor_id, victim_id))
     await conscience(ctx, actor_id, act, victim_id)
+    await professed_act(ctx, actor_id, act, len(seen))
     incident = incident_for(ctx.session, actor_id, ctx.epoch) or incident_for(ctx.session, victim_id, ctx.epoch)
     if incident is not None and seen:
         await ChronicleRepository(ctx.session).witness(incident, seen)

@@ -1,6 +1,7 @@
 from typing import Any
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.contracts import MonsterContractRow
 from aerona.db.write_guard import held
@@ -64,7 +65,7 @@ async def forge_work(call: MortalCall, args: ForgeWorkInput) -> str:
         roles={IncidentRole.MAKER: call.me.id, IncidentRole.SUBJECT: original.id, IncidentRole.PRODUCT: row.item_entity_id},
         facts={"forgery": row.kind, "skill": row.skill},
     )
-    return result(MortalResult.FORGERY_MADE, original=original.name, kind=row.kind.value, skill=row.skill)
+    return result(MortalResult.FORGERY_MADE, original=original.name, kind=spoken(row.kind), skill=row.skill)
 
 
 async def buy_work(call: MortalCall, args: BuyWorkInput) -> str:
@@ -95,7 +96,7 @@ async def found_club(call: MortalCall, args: FoundClubInput) -> str:
         facts={"game": row.kind},
         place=town.id,
     )
-    return result(MortalResult.CLUB_FOUNDED, town=town.name, kind=row.kind.value.replace("_", " "))
+    return result(MortalResult.CLUB_FOUNDED, town=town.name, kind=spoken(row.kind))
 
 
 async def take_contract(call: MortalCall, args: TakeContractInput) -> str:
@@ -135,9 +136,7 @@ async def command_construct(call: MortalCall, args: CommandConstructInput) -> st
         roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: body.id, IncidentRole.TARGET: target.id if target is not None else None},
         facts={"order": args.kind},
     )
-    return result(
-        MortalResult.CONSTRUCT_COMMANDED, name=body.name, order=args.kind.value.replace("_", " "), target=target.name if target else "no one in particular"
-    )
+    return result(MortalResult.CONSTRUCT_COMMANDED, name=body.name, order=spoken(args.kind), target=target.name if target else "no one in particular")
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

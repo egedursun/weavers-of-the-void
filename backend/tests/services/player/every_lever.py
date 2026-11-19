@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
@@ -19,41 +19,63 @@ from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.ages import EcoTransformationRow
 from aerona.db.tables.agrarian import BrandRow, CommonsRow
 from aerona.db.tables.arts import ArtMovementRow, ClubRow, LeagueRow
+from aerona.db.tables.body_systems import BodySystemRow, SensitivityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.childhood import PedagogyRow
 from aerona.db.tables.collective import LearningEventRow
+from aerona.db.tables.commerce import LeaseRow, PromotionRow, ShopRow, SupplyTierRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.couplings import SociolectRow
 from aerona.db.tables.culture import ArtworkProfileRow, BookContentRow
 from aerona.db.tables.cycles import ManumissionRow
+from aerona.db.tables.daily_life import HouseworkRow, LeisurePursuitRow
+from aerona.db.tables.death_work import DeathWorkRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, WorkshopRow
+from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.estates import CompanyProfileRow
+from aerona.db.tables.facets import FacetPracticeRow
 from aerona.db.tables.faith import CultDoctrineRow
+from aerona.db.tables.flora import PlantProfileRow
+from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
+from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.honours import NamedUnitRow
 from aerona.db.tables.households import HouseholdRow
+from aerona.db.tables.intimacy import RestraintCustomRow
 from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.kin import KinGroupRow
 from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
+from aerona.db.tables.media import MediaItemRow, MediaOutletRow, RecordMediumRow
 from aerona.db.tables.military import ArmyUnitRow, OccupationRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumPieceRow
 from aerona.db.tables.operations import SupplyFlowRow
 from aerona.db.tables.orders import BillOfExchangeRow
+from aerona.db.tables.plants import PlantPartRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.population import PopulationPolicyRow
 from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.space_weather import SpaceWeatherEventRow
+from aerona.db.tables.speech import SpeechRow
+from aerona.db.tables.standing import ProfessionOfValueRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.tables.water import SedimentFlowRow
+from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow, StateEnterpriseRow
+from aerona.db.tables.youth import YouthGroupRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.agrarian import CommonsKind
@@ -71,10 +93,12 @@ from aerona.domain.enums.cosmography import (
     RiftCause,
 )
 from aerona.domain.enums.cycles import ManumissionPath
+from aerona.domain.enums.death_work import DeathRole
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepStatus
+from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
@@ -109,6 +133,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.sacred.places import town_of
 from aerona.engine.services.war import sides_of
+from aerona.engine.water.ice import COAST_OF_KIND
 from aerona.rules.registry import Rules
 
 Setup = Callable[[AsyncSession], Awaitable[None]]
@@ -1136,6 +1161,7 @@ LEVERS: dict[str, Lever] = {
     "deed:remove": after(DEED, deed_id=Newest("deed")),
     "item:deed_remove": after(ITEM_DEED, deed_id=Newest("item_history")),
     "art:canonise": after(ARTWORK, artwork_id=Newest(EntityType.ARTWORK)),
+    "discovery:ban": after(ARTWORK, polity_id=Pick(REALM), work_id=Newest(EntityType.ARTWORK)),
     "renown:remove": after(REPUTATION, reputation_id=Newest("reputation")),
     "contest:edit": after(CONTEST, contest_id=Newest("contest"), famous=True),
     "contest:remove": after(CONTEST, contest_id=Newest("contest")),
@@ -3971,6 +3997,7 @@ LEVERS.update(
         **{name: after(CLOCK_UP, settlement_id=Pick(TOWN)) for name in ("public_clock:edit", "public_clock:delete")},
         "number_system:set": given(**NUMBERS_UP[1]),
         **{name: after(NUMBERS_UP, people_id=Pick(PEOPLE)) for name in ("number_system:edit", "number_system:delete")},
+        "number_system:read": after(NUMBERS_UP, people_id=Pick(PEOPLE), number=7, reading="sacred"),
         "material_affinity:set": after(MATERIAL_UP, **AFFINITY_UP[1]),
         **{
             name: after(MATERIAL_UP, AFFINITY_UP, material_id=Newest("world_material"), school="earth")
@@ -4991,5 +5018,611 @@ LEVERS.update(
         ),
         "authored_kind:retire": after(KIND_UP, concept="good", kind_id=Newest("good_kinds"), retired=True),
         "authored_kind:delete": after(KIND_UP, concept="good", kind_id=Newest("good_kinds")),
+    }
+)
+
+
+def newest_row(table: type[Any], key: str) -> Computed:
+    column = getattr(table, key)
+    return Computed(lambda session: session.scalar(select(column).order_by(column.desc()).limit(1)))
+
+
+def row_levers(prefix: str, table: str, values: Mapping[str, Any], key: Mapping[str, Any], edits: Mapping[str, Any]) -> dict[str, Lever]:
+    made = (f"{prefix}:create", {"table": table, "values": dict(values)})
+    return {
+        f"{prefix}:create": given(table=table, values=dict(values)),
+        f"{prefix}:edit": after(made, table=table, key=dict(key), values=dict(edits)),
+        f"{prefix}:delete": after(made, table=table, key=dict(key)),
+    }
+
+
+def seeded_levers(prefix: str, table: str, values: Mapping[str, Any], key: Mapping[str, Any], edits: Mapping[str, Any]) -> dict[str, Lever]:
+    unmade = (f"{prefix}:delete", {"table": table, "key": dict(key)})
+    return {
+        f"{prefix}:create": after(unmade, table=table, values=dict(values)),
+        f"{prefix}:edit": given(table=table, key=dict(key), values=dict(edits)),
+        f"{prefix}:delete": given(table=table, key=dict(key)),
+    }
+
+
+DAILY_FOLK = Pick(FOLK, 2)
+STAFFED_FOLK = Computed(lambda session: session.scalar(select(func.max(DeathWorkRow.people_entity_id))))
+STAFFED_WASHERS = Computed(
+    lambda session: session.scalar(
+        select(DeathWorkRow.id).where(
+            DeathWorkRow.role == DeathRole.WASHER, DeathWorkRow.people_entity_id == select(func.max(DeathWorkRow.people_entity_id)).scalar_subquery()
+        )
+    )
+)
+LEVERS.update(
+    {
+        **seeded_levers(
+            "care_custom",
+            "care_customs",
+            {"people_entity_id": DAILY_FOLK, "wash_frequency": "daily", "wash_place": "bath_house", "cleanliness": 60},
+            {"people_entity_id": DAILY_FOLK},
+            {"cleanliness": 70, "waste_handling": "sewers"},
+        ),
+        **row_levers(
+            "housework",
+            "housework",
+            {"household_id": HOUSEHOLD, "duty": "water", "doer_node_id": Pick(MORTAL, 1), "load": 25},
+            {"id": newest_row(HouseworkRow, "id")},
+            {"load": 40},
+        ),
+        **row_levers(
+            "domestic_service",
+            "domestic_service",
+            {"servant_node_id": Pick(MORTAL, 4), "household_id": HOUSEHOLD, "terms": "wage", "wage": 3},
+            {"servant_node_id": Pick(MORTAL, 4)},
+            {"wage": 5, "terms": "board"},
+        ),
+        **row_levers(
+            "leisure_pursuit",
+            "leisure_pursuits",
+            {"holder_node_id": Pick(MORTAL, 1), "kind": "games", "share": 30},
+            {"id": newest_row(LeisurePursuitRow, "id")},
+            {"share": 45},
+        ),
+        **seeded_levers(
+            "space_norm",
+            "space_norms",
+            {"people_entity_id": DAILY_FOLK, "distance": "wide", "touch": "open", "posture": "kneel"},
+            {"people_entity_id": DAILY_FOLK},
+            {"touch": "kin_only"},
+        ),
+    }
+)
+
+
+KIN_MEMBER_UP = (
+    "kin_group_member:create",
+    {"table": "kin_group_members", "values": {"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}},
+)
+KIN_GROUP_UP = ("kin_group:create", {"table": "kin_groups", "values": {"people_entity_id": DAILY_FOLK, "name": "Kin of the Ford", "form": "clan"}})
+LEVERS.update(
+    {
+        **seeded_levers(
+            "kin_role_duty",
+            "kin_role_duties",
+            {"people_entity_id": DAILY_FOLK, "role": "parent", "duty": "raise", "strength": 70},
+            {"people_entity_id": DAILY_FOLK, "role": "parent", "duty": "raise"},
+            {"strength": 85},
+        ),
+        **row_levers(
+            "kin_group",
+            "kin_groups",
+            {"people_entity_id": DAILY_FOLK, "name": "Kin of the Ford", "form": "clan", "exogamy": 80},
+            {"id": newest_row(KinGroupRow, "id")},
+            {"exogamy": 60, "council_size": 5},
+        ),
+        "kin_group_member:create": after(
+            KIN_GROUP_UP, table="kin_group_members", values={"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}
+        ),
+        "kin_group_member:edit": after(
+            KIN_GROUP_UP,
+            (
+                "kin_group_member:create",
+                {"table": "kin_group_members", "values": {"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}},
+            ),
+            table="kin_group_members",
+            key={"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)},
+            values={"adopted": True},
+        ),
+        "kin_group_member:delete": after(
+            KIN_GROUP_UP,
+            (
+                "kin_group_member:create",
+                {"table": "kin_group_members", "values": {"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}},
+            ),
+            table="kin_group_members",
+            key={"group_id": newest_row(KinGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **seeded_levers(
+            "infant_care",
+            "infant_care",
+            {"people_entity_id": DAILY_FOLK, "feeding": "by_other_nurse", "weaning_age": 3, "carer": "community"},
+            {"people_entity_id": DAILY_FOLK},
+            {"weaning_age": 4, "carry": "cradled"},
+        ),
+        **seeded_levers(
+            "child_standing",
+            "child_standing",
+            {"people_entity_id": DAILY_FOLK, "work_age": 10, "marriage_age": 18, "labour_share": 10},
+            {"people_entity_id": DAILY_FOLK},
+            {"labour_share": 5, "protected": True},
+        ),
+        **seeded_levers(
+            "socialization",
+            "socialization",
+            {"people_entity_id": DAILY_FOLK, "play": 25, "example": 10},
+            {"people_entity_id": DAILY_FOLK},
+            {"aim_piety": 70},
+        ),
+        **row_levers(
+            "pedagogy",
+            "pedagogy",
+            {"holder_node_id": DAILY_FOLK, "theory": "dialectic", "depth": 70},
+            {"id": newest_row(PedagogyRow, "id")},
+            {"theory": "discovery"},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **seeded_levers(
+            "intimacy_norm",
+            "intimacy_norms",
+            {"people_entity_id": DAILY_FOLK, "context": "with_kin", "stance": "forbidden", "enforcer": "kin", "sanction": "shaming", "kin_scope": "extended"},
+            {"people_entity_id": DAILY_FOLK, "context": "with_kin"},
+            {"stance": "discouraged", "sanction": "fine"},
+        ),
+        **row_levers(
+            "restraint_custom",
+            "restraint_customs",
+            {"people_entity_id": DAILY_FOLK, "role": "clergy", "occasion": "always", "strength": 70},
+            {"id": newest_row(RestraintCustomRow, "id")},
+            {"strength": 40, "occasion": "rite"},
+        ),
+        **seeded_levers(
+            "reproductive_course",
+            "reproductive_courses",
+            {"people_entity_id": DAILY_FOLK, "gestation_months": 11, "attendant": "specialist", "postnatal": "rest_period", "rest_months": 2},
+            {"people_entity_id": DAILY_FOLK},
+            {"risk": 40, "birth_place": "birth_house"},
+        ),
+        **seeded_levers(
+            "legitimacy_rule",
+            "legitimacy_rules",
+            {"people_entity_id": DAILY_FOLK, "parent_union": "unwed", "standing": "partial", "path": "rite", "cost": 5},
+            {"people_entity_id": DAILY_FOLK, "parent_union": "unwed"},
+            {"standing": "none", "path": "payment"},
+        ),
+        **row_levers(
+            "child_recognition",
+            "child_recognitions",
+            {"child_node_id": Pick(MORTAL, 2), "path": "rite"},
+            {"child_node_id": Pick(MORTAL, 2)},
+            {"path": "adoption"},
+        ),
+    }
+)
+
+
+YOUTH_GROUP_UP = (
+    "youth_group:create",
+    {"table": "youth_groups", "values": {"settlement_entity_id": Pick(TOWN, 1), "name": "the youth of the ford", "purpose": "sport"}},
+)
+YOUTH_MEMBER_UP = (
+    "youth_group_member:create",
+    {"table": "youth_group_members", "values": {"group_id": newest_row(YouthGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}},
+)
+LEVERS.update(
+    {
+        **seeded_levers(
+            "youth_standing",
+            "youth_standing",
+            {"people_entity_id": DAILY_FOLK, "youth_from": 13, "youth_to": 21, "place": "youth_house", "freedom": 60},
+            {"people_entity_id": DAILY_FOLK},
+            {"duty": 70, "place": "service"},
+        ),
+        **row_levers(
+            "youth_group",
+            "youth_groups",
+            {"settlement_entity_id": Pick(TOWN, 1), "name": "the youth of the ford", "purpose": "defence", "standing": 60},
+            {"id": newest_row(YouthGroupRow, "id")},
+            {"purpose": "faith", "standing": 40},
+        ),
+        "youth_group_member:create": after(
+            YOUTH_GROUP_UP, table="youth_group_members", values={"group_id": newest_row(YouthGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)}
+        ),
+        "youth_group_member:edit": after(
+            YOUTH_GROUP_UP,
+            YOUTH_MEMBER_UP,
+            table="youth_group_members",
+            key={"group_id": newest_row(YouthGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)},
+            values={"joined_epoch": 1},
+        ),
+        "youth_group_member:delete": after(
+            YOUTH_GROUP_UP,
+            YOUTH_MEMBER_UP,
+            table="youth_group_members",
+            key={"group_id": newest_row(YouthGroupRow, "id"), "member_node_id": Pick(MORTAL, 3)},
+        ),
+    }
+)
+
+
+POLICY_UP = ("population_policy:create", {"table": "population_policies", "values": {"holder_node_id": DAILY_FOLK, "aim": "grow"}})
+LEVERS.update(
+    {
+        **row_levers(
+            "population_policy",
+            "population_policies",
+            {"holder_node_id": DAILY_FOLK, "aim": "settle_land", "strength": 60, "enforcement": 40},
+            {"id": newest_row(PopulationPolicyRow, "id")},
+            {"aim": "hold", "enforcement": 70},
+        ),
+        "population_instrument:create": after(
+            POLICY_UP,
+            table="population_instruments",
+            values={"policy_id": newest_row(PopulationPolicyRow, "id"), "holder_node_id": DAILY_FOLK, "instrument": "health_campaign", "strength": 50},
+        ),
+        "population_instrument:edit": after(
+            POLICY_UP,
+            (
+                "population_instrument:create",
+                {
+                    "table": "population_instruments",
+                    "values": {"policy_id": newest_row(PopulationPolicyRow, "id"), "holder_node_id": DAILY_FOLK, "instrument": "birth_reward"},
+                },
+            ),
+            table="population_instruments",
+            key={"policy_id": newest_row(PopulationPolicyRow, "id"), "instrument": "birth_reward"},
+            values={"strength": 80},
+        ),
+        "population_instrument:delete": after(
+            POLICY_UP,
+            (
+                "population_instrument:create",
+                {
+                    "table": "population_instruments",
+                    "values": {"policy_id": newest_row(PopulationPolicyRow, "id"), "holder_node_id": DAILY_FOLK, "instrument": "birth_reward"},
+                },
+            ),
+            table="population_instruments",
+            key={"policy_id": newest_row(PopulationPolicyRow, "id"), "instrument": "birth_reward"},
+        ),
+    }
+)
+
+
+SHOP_UP = ("shop:create", {"table": "shops", "values": {"settlement_entity_id": Pick(TOWN, 1), "keeper_node_id": Pick(MORTAL, 1), "form": "stall"}})
+SHOP_GOOD_UP = (
+    "shop_good:create",
+    {"table": "shop_goods", "values": {"shop_id": newest_row(ShopRow, "id"), "commodity": "bread", "keeper_node_id": Pick(MORTAL, 1)}},
+)
+LEVERS.update(
+    {
+        **row_levers(
+            "shop",
+            "shops",
+            {"settlement_entity_id": Pick(TOWN, 1), "keeper_node_id": Pick(MORTAL, 1), "form": "market_hall", "margin": 25, "stock": 20},
+            {"id": newest_row(ShopRow, "id")},
+            {"margin": 30, "credit": 10},
+        ),
+        "shop_good:create": after(
+            SHOP_UP, table="shop_goods", values={"shop_id": newest_row(ShopRow, "id"), "commodity": "tools", "keeper_node_id": Pick(MORTAL, 1)}
+        ),
+        "shop_good:edit": after(
+            SHOP_UP,
+            SHOP_GOOD_UP,
+            table="shop_goods",
+            key={"shop_id": newest_row(ShopRow, "id"), "commodity": "bread"},
+            values={"keeper_node_id": Pick(MORTAL, 2)},
+        ),
+        "shop_good:delete": after(SHOP_UP, SHOP_GOOD_UP, table="shop_goods", key={"shop_id": newest_row(ShopRow, "id"), "commodity": "bread"}),
+        **row_levers(
+            "supply_tier",
+            "supply_tiers",
+            {"market_entity_id": Pick(TOWN, 1), "commodity": "grain", "tier": "wholesale", "holder_node_id": Pick(MORTAL, 1), "share": 60},
+            {"id": newest_row(SupplyTierRow, "id")},
+            {"margin": 15, "share": 90},
+        ),
+        **row_levers(
+            "promotion",
+            "promotions",
+            {"holder_node_id": Pick(MORTAL, 1), "medium": "sign", "reach": 40, "accuracy": 70},
+            {"id": newest_row(PromotionRow, "id")},
+            {"reach": 60, "medium": "display"},
+        ),
+        **row_levers(
+            "lease",
+            "leases",
+            {"owner_node_id": Pick(MORTAL, 1), "lessee_node_id": Pick(MORTAL, 2), "thing_node_id": Pick(TOWN, 1), "thing": "land", "rent": 4},
+            {"id": newest_row(LeaseRow, "id")},
+            {"rent": 6, "on_default": "debt"},
+        ),
+    }
+)
+
+
+WORKS_UP = (
+    "public_works:create",
+    {"table": "public_works", "values": {"polity_entity_id": DAILY_FOLK, "place_node_id": Pick(TOWN, 1), "kind": "road", "labour": "paid", "budget": 50}},
+)
+STAGE_VALUES = {"works_id": newest_row(PublicWorksRow, "id"), "polity_entity_id": DAILY_FOLK, "stage": 1, "spent": 5, "labour": "corvee"}
+LEVERS.update(
+    {
+        **row_levers(
+            "public_works",
+            "public_works",
+            {"polity_entity_id": DAILY_FOLK, "place_node_id": Pick(TOWN, 1), "kind": "aqueduct", "labour": "paid", "budget": 50},
+            {"id": newest_row(PublicWorksRow, "id")},
+            {"quality": 80, "stage": 1},
+        ),
+        "public_works:advance": after(WORKS_UP, works_id=newest_row(PublicWorksRow, "id")),
+        "public_work_stage:create": after(WORKS_UP, table="public_work_stages", values=STAGE_VALUES),
+        "public_work_stage:edit": after(
+            WORKS_UP,
+            ("public_work_stage:create", {"table": "public_work_stages", "values": STAGE_VALUES}),
+            table="public_work_stages",
+            key={"id": newest_row(PublicWorkStageRow, "id")},
+            values={"spent": 9, "quality": 75},
+        ),
+        "public_work_stage:delete": after(
+            WORKS_UP,
+            ("public_work_stage:create", {"table": "public_work_stages", "values": STAGE_VALUES}),
+            table="public_work_stages",
+            key={"id": newest_row(PublicWorkStageRow, "id")},
+        ),
+        **row_levers(
+            "state_enterprise",
+            "state_enterprises",
+            {"polity_entity_id": DAILY_FOLK, "sector": "tools", "form": "monopoly", "output": 20},
+            {"id": newest_row(StateEnterpriseRow, "id")},
+            {"corruption": 40, "form": "arsenal"},
+        ),
+    }
+)
+
+
+OUTLET_UP = (
+    "media_outlet:create",
+    {"table": "media_outlets", "values": {"owner_node_id": Pick(MORTAL, 1), "seat_entity_id": Pick(TOWN, 1), "name": "The Vale Crier"}},
+)
+LEVERS.update(
+    {
+        **row_levers(
+            "record_medium",
+            "record_media",
+            {"holder_node_id": DAILY_FOLK, "name": "written word", "form": "written", "fidelity": 60},
+            {"id": newest_row(RecordMediumRow, "id")},
+            {"durability": 80, "form": "printed"},
+        ),
+        **row_levers(
+            "media_outlet",
+            "media_outlets",
+            {"owner_node_id": Pick(MORTAL, 1), "seat_entity_id": Pick(TOWN, 1), "name": "The Vale Crier", "funding": "patronage"},
+            {"id": newest_row(MediaOutletRow, "id")},
+            {"trust": 70, "lean": 20},
+        ),
+        "media_item:create": after(
+            OUTLET_UP, table="media_items", values={"outlet_id": newest_row(MediaOutletRow, "id"), "owner_node_id": Pick(MORTAL, 1), "kind": "opinion"}
+        ),
+        "media_item:edit": after(
+            OUTLET_UP,
+            ("media_item:create", {"table": "media_items", "values": {"outlet_id": newest_row(MediaOutletRow, "id"), "owner_node_id": Pick(MORTAL, 1)}}),
+            table="media_items",
+            key={"id": newest_row(MediaItemRow, "id")},
+            values={"slant": 30, "kind": "devotion"},
+        ),
+        "media_item:delete": after(
+            OUTLET_UP,
+            ("media_item:create", {"table": "media_items", "values": {"outlet_id": newest_row(MediaOutletRow, "id"), "owner_node_id": Pick(MORTAL, 1)}}),
+            table="media_items",
+            key={"id": newest_row(MediaItemRow, "id")},
+        ),
+    }
+)
+
+
+LEVERS.update(
+    {
+        **seeded_levers(
+            "humour_style",
+            "humour_styles",
+            {"people_entity_id": DAILY_FOLK, "form": "satire", "mock_rulers": True, "offence_threshold": 40},
+            {"people_entity_id": DAILY_FOLK},
+            {"form": "irony", "directness": 70},
+        ),
+        **row_levers(
+            "speech",
+            "speeches",
+            {"speaker_node_id": Pick(MORTAL, 1), "place_entity_id": Pick(TOWN, 1), "venue": "assembly", "aim": "persuade", "skill": 60},
+            {"id": newest_row(SpeechRow, "id")},
+            {"aim": "rally", "reach": 50},
+        ),
+        **seeded_levers(
+            "folk_knowledge",
+            "folk_knowledge",
+            {"people_entity_id": newest_row(FolkKnowledgeRow, "people_entity_id"), "domain": "time", "depth": 40, "accuracy": 55, "transmission": "rite"},
+            {"id": newest_row(FolkKnowledgeRow, "id")},
+            {"accuracy": 70, "holders": "specialists", "transmission": "written"},
+        ),
+        **seeded_levers(
+            "death_work",
+            "death_work",
+            {"people_entity_id": STAFFED_FOLK, "role": "washer", "standing": "honoured", "purity": 60, "fee": 2, "workers": 3},
+            {"id": STAFFED_WASHERS},
+            {"standing": "avoided", "purity": 20, "workers": 1},
+        ),
+        **row_levers(
+            "endowment",
+            "endowments",
+            {"founder_node_id": Pick(MORTAL, 1), "beneficiary_node_id": Pick(TOWN, 1), "purpose": "health", "capital": 200, "terms": "perpetual"},
+            {"id": newest_row(EndowmentRow, "id")},
+            {"purpose": "learning", "capital": 300, "sheltered": True},
+        ),
+        **row_levers(
+            "folk_class",
+            "folk_classes",
+            {"people_entity_id": DAILY_FOLK, "domain": "society", "name": "Elders of the hearth", "taken_as": "sacred"},
+            {"id": newest_row(FolkClassRow, "id")},
+            {"name": "Keepers of the count", "taken_as": "omen"},
+        ),
+    }
+)
+
+
+async def first_town(session: AsyncSession) -> int | None:
+    found: int | None = await session.scalar(select(func.min(EntityRow.id)).where(EntityRow.entity_type == EntityType.SETTLEMENT))
+    return found
+
+
+async def free_facet(session: AsyncSession) -> str:
+    town = await first_town(session)
+    kept = set(await session.scalars(select(FacetPracticeRow.facet).where(FacetPracticeRow.community_entity_id == town)))
+    return next(facet.value for facet in FacetKind if facet not in kept)
+
+
+FIRST_TOWN = Computed(first_town)
+FREE_FACET = Computed(free_facet)
+FIRST_LAND = Computed(lambda session: session.scalar(select(func.min(RegionEnvironmentRow.entity_id))))
+FIRST_SHORE = Computed(
+    lambda session: session.scalar(select(func.min(RegionEnvironmentRow.entity_id)).where(RegionEnvironmentRow.coast_kind.in_(list(COAST_OF_KIND))))
+)
+FIRST_PLANT = Computed(lambda session: session.scalar(select(func.min(PlantProfileRow.species_entity_id))))
+LEVERS.update(
+    {
+        **row_levers(
+            "facet_practice",
+            "facet_practices",
+            {"community_entity_id": FIRST_TOWN, "facet": FREE_FACET, "level": 40},
+            {"id": newest_row(FacetPracticeRow, "id")},
+            {"level": 70},
+        ),
+        **seeded_levers(
+            "world_field",
+            "world_fields",
+            {"world_id": Pick("world"), "shielding": 40, "aurora_reach": 20},
+            {"world_id": Pick("world")},
+            {"shielding": 70, "compass_error": 10},
+        ),
+        **seeded_levers(
+            "star_activity",
+            "star_activity",
+            {"star_id": Pick("star"), "cycle_years": 22, "flare_rate": 40},
+            {"star_id": Pick("star")},
+            {"phase": 50, "storm_rate": 30},
+        ),
+        **row_levers(
+            "space_weather_event",
+            "space_weather_events",
+            {"world_id": Pick("world"), "kind": "flare", "strength": 40, "dose": 10},
+            {"id": newest_row(SpaceWeatherEventRow, "id")},
+            {"kind": "wind_surge", "strength": 60},
+        ),
+        **seeded_levers(
+            "region_cryosphere",
+            "region_cryosphere",
+            {"region_entity_id": FIRST_LAND, "ice_months": 4, "snowpack": 30},
+            {"region_entity_id": FIRST_LAND},
+            {"ice_months": 6, "glacier_extent": 20},
+        ),
+        **row_levers(
+            "sediment_flow",
+            "sediment_flows",
+            {"source_region_id": Pick(EntityType.REGION), "sink_region_id": Pick(EntityType.REGION, 1), "carrier": "river", "kind": "silt", "load": 30},
+            {"id": newest_row(SedimentFlowRow, "id")},
+            {"carrier": "wind", "kind": "sand", "load": 10},
+        ),
+        **seeded_levers(
+            "coast",
+            "coasts",
+            {"region_entity_id": FIRST_SHORE, "form": "beach", "harbour_silting": 20},
+            {"region_entity_id": FIRST_SHORE},
+            {"form": "delta", "rate": 5},
+        ),
+        **seeded_levers(
+            "local_climate",
+            "local_climates",
+            {"place_entity_id": Pick(TOWN), "cause": "built", "heat_shift": 5},
+            {"place_entity_id": Pick(TOWN)},
+            {"cause": "valley", "humidity_shift": 10},
+        ),
+        "disease_agent:create": after(
+            DISEASE, table="disease_agents", values={"disease_entity_id": Newest(EntityType.DISEASE), "agent": "bacterium", "survival_water": 60}
+        ),
+        "disease_agent:edit": after(
+            DISEASE,
+            ("disease_agent:create", {"table": "disease_agents", "values": {"disease_entity_id": Newest(EntityType.DISEASE), "agent": "bacterium"}}),
+            table="disease_agents",
+            key={"disease_entity_id": Newest(EntityType.DISEASE)},
+            values={"agent": "fungus", "survival_soil": 70},
+        ),
+        "disease_agent:delete": after(
+            DISEASE,
+            ("disease_agent:create", {"table": "disease_agents", "values": {"disease_entity_id": Newest(EntityType.DISEASE), "agent": "bacterium"}}),
+            table="disease_agents",
+            key={"disease_entity_id": Newest(EntityType.DISEASE)},
+        ),
+        **row_levers(
+            "body_system",
+            "body_systems",
+            {"holder_entity_id": Pick(MORTAL, 1), "system": "breath", "air_need": 20},
+            {"id": newest_row(BodySystemRow, "id")},
+            {"gravity_max": 60, "heat_max": 70},
+        ),
+        **row_levers(
+            "sensitivity",
+            "sensitivities",
+            {"holder_entity_id": Pick(MORTAL, 1), "kind": "to_food", "trigger_commodity": "grain", "severity": 30},
+            {"id": newest_row(SensitivityRow, "id")},
+            {"kind": "to_plant", "severity": 50},
+        ),
+        **seeded_levers(
+            "plant_anatomy",
+            "plant_anatomy",
+            {"species_entity_id": FIRST_PLANT, "form": "tree", "reproduction": "animal_seed", "lifespan_years": 100},
+            {"species_entity_id": FIRST_PLANT},
+            {"form": "shrub", "growth_months": 8},
+        ),
+        **row_levers(
+            "plant_part",
+            "plant_parts",
+            {"species_entity_id": FIRST_PLANT, "part": "tuber", "commodity": "tubers", "share": 30},
+            {"id": newest_row(PlantPartRow, "id")},
+            {"share": 50, "commodity": "fodder"},
+        ),
+        **row_levers(
+            "observation_method",
+            "observation_methods",
+            {"people_entity_id": DAILY_FOLK, "domain": "sky", "method": "model", "accuracy": 70},
+            {"id": newest_row(ObservationMethodRow, "id")},
+            {"accuracy": 80, "reach": 40},
+        ),
+        **row_levers(
+            "weather_work",
+            "weather_works",
+            {"holder_node_id": Pick(MORTAL, 1), "region_entity_id": Pick(EntityType.REGION), "method": "rite", "aim": "rain", "strength": 20},
+            {"id": newest_row(WeatherWorkRow, "id")},
+            {"aim": "calm", "epochs_left": 2},
+        ),
+        **row_levers(
+            "profession_of_value",
+            "professions_of_value",
+            {"holder_node_id": Pick("son"), "axis": "honour", "strength": 60},
+            {"id": newest_row(ProfessionOfValueRow, "id")},
+            {"gap": 40, "knowers": 2},
+        ),
     }
 )

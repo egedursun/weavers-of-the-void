@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -73,7 +74,7 @@ async def designate_keystone(call: SonCall, args: DesignateKeystoneInput) -> str
         facts={"name": definite(row.name), "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.KEYSTONE_DESIGNATED, name=definite(row.name), land=land.name, use=row.use.value)
+    return result(SonResult.KEYSTONE_DESIGNATED, name=definite(row.name), land=land.name, use=spoken(row.use))
 
 
 async def inspire_relief(call: SonCall, args: InspireReliefInput) -> str:
@@ -90,7 +91,7 @@ async def inspire_relief(call: SonCall, args: InspireReliefInput) -> str:
         facts={"giver_detail": str(giver.name), "town": str(town.name), "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.RELIEF_TURNED_AWAY if row.refused else SonResult.RELIEF_INSPIRED, giver=giver.name, town=town.name, kind=args.kind.value)
+    return result(SonResult.RELIEF_TURNED_AWAY if row.refused else SonResult.RELIEF_INSPIRED, giver=giver.name, town=town.name, kind=spoken(args.kind))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

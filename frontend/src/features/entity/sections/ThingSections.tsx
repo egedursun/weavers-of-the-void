@@ -5,23 +5,32 @@ import { MythicSection } from '@/features/arcana/MythicSection'
 import { SourceTrustSection } from '@/features/beliefTrust/SourceTrustSection'
 import { BelongingSection } from '@/features/belonging/BelongingSection'
 import { BiologySection } from '@/features/biology/BiologySection'
+import { BodySystemsSection } from '@/features/bodySystems/BodySystemsSection'
+import { ChildhoodSection } from '@/features/childhood/ChildhoodSection'
 import { ClimesSection } from '@/features/climes/ClimesSection'
 import { CollectiveSection } from '@/features/collective/CollectiveSection'
+import { CommerceSection } from '@/features/commerce/CommerceSection'
 import { CouplingsSection } from '@/features/couplings/CouplingsSection'
 import { CraftsSection } from '@/features/crafts/CraftsSection'
 import { CreatorBondsSection } from '@/features/creatorBonds/CreatorBondsSection'
 import { CustomsSection } from '@/features/customs/CustomsSection'
 import { CyclesSection } from '@/features/cycles/CyclesSection'
+import { DailyLifeSection } from '@/features/daily/DailyLifeSection'
+import { DiseaseAgentsSection } from '@/features/diseaseAgents/DiseaseAgentsSection'
 import { GodCouncilSection } from '@/features/divine/CouncilOrderPanel'
 import { DivinePowersSection } from '@/features/divinePowers/DivinePowersSection'
 import { DominionSection } from '@/features/dominion/DominionSection'
+import { EndowmentsSection } from '@/features/endowments/EndowmentsSection'
 import { TechErasSection } from '@/features/eras/TechErasSection'
 import { EvolutionSection } from '@/features/evolution/EvolutionSection'
+import { FolkKnowledgeSection } from '@/features/folkKnowledge/FolkKnowledgeSection'
 import { FolkwaysSection } from '@/features/folkways/FolkwaysSection'
+import { ForecastingSection } from '@/features/forecasting/ForecastingSection'
 import { FortuneSection } from '@/features/fortune/FortuneSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { HonoursSection } from '@/features/honours/HonoursSection'
+import { KinSection } from '@/features/kin/KinSection'
 import { WaysOfLifeSection } from '@/features/kinds/WaysOfLifeSection'
 import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
 import { FossilSection } from '@/features/lifecycle/FossilSection'
@@ -31,30 +40,42 @@ import { WorldEndSection } from '@/features/lifecycle/WorldEndSection'
 import { LivingSection } from '@/features/living/LivingSection'
 import { MadeKindsSection } from '@/features/madeKinds/MadeKindsSection'
 import { MeansSection } from '@/features/means/MeansSection'
+import { MediaSection } from '@/features/media/MediaSection'
 import { AugmentsSection } from '@/features/minds/AugmentsSection'
 import { MadeWorldSection } from '@/features/minds/MadeWorldSection'
 import { MindSeatSection } from '@/features/minds/MindSeatSection'
 import { NetworkSection } from '@/features/minds/NetworkSection'
 import { NatureSection } from '@/features/nature/NatureSection'
+import { NumbersSection } from '@/features/numbers/NumbersSection'
 import { OperationsSection } from '@/features/operations/OperationsSection'
 import { OrdersSection } from '@/features/orders/OrdersSection'
 import { PantheonSection } from '@/features/pantheonLife/PantheonSection'
+import { PlantBodiesSection } from '@/features/plantBodies/PlantBodiesSection'
 import { HiddenTruthsSection } from '@/features/powers/HiddenTruthsSection'
 import { MagicSystemsSection } from '@/features/powers/MagicSystemsSection'
 import { PowersSection } from '@/features/powers/PowersSection'
 import { SourcesSection } from '@/features/powers/SourcesSection'
+import { PracticesSection } from '@/features/practices/PracticesSection'
 import { PrehistorySection } from '@/features/prehistory/PrehistorySection'
+import { ProfessionsSection } from '@/features/professions/ProfessionsSection'
+import { PublicWorksSection } from '@/features/publicWorks/PublicWorksSection'
 import { PursuitsSection } from '@/features/pursuits/PursuitsSection'
 import { HistorySection } from '@/features/records/HistorySection'
 import { RegimeSection } from '@/features/regime/RegimeSection'
 import { SacredSection } from '@/features/sacred/SacredSection'
+import { SpaceWeatherSection } from '@/features/spaceWeather/SpaceWeatherSection'
+import { SpeechSection } from '@/features/speech/SpeechSection'
 import { TalesSection } from '@/features/tales/TalesSection'
 import { TechnologySection } from '@/features/technology/TechnologySection'
+import { TheDeadSection } from '@/features/the-dead/TheDeadSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { TransformSection } from '@/features/transform/TransformSection'
 import { TypedModelsSection } from '@/features/typedModels/TypedModelsSection'
+import { UnionsSection } from '@/features/unions/UnionsSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
+import { WaterIceSection } from '@/features/waterIce/WaterIceSection'
 import { WorldViewSection } from '@/features/worldview/WorldViewSection'
+import { YouthSection } from '@/features/youth/YouthSection'
 import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
@@ -179,6 +200,27 @@ export function ThingSections({
       <TalesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <FolkwaysSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <CustomsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <DailyLifeSection nodeId={nodeId} />
+      <KinSection nodeId={nodeId} />
+      <ChildhoodSection nodeId={nodeId} />
+      <UnionsSection nodeId={nodeId} />
+      <YouthSection nodeId={nodeId} />
+      <NumbersSection nodeId={nodeId} />
+      <CommerceSection nodeId={nodeId} />
+      <PublicWorksSection nodeId={nodeId} />
+      <MediaSection nodeId={nodeId} />
+      <SpeechSection nodeId={nodeId} />
+      <FolkKnowledgeSection nodeId={nodeId} />
+      <EndowmentsSection nodeId={nodeId} />
+      <TheDeadSection nodeId={nodeId} />
+      <PracticesSection nodeId={nodeId} />
+      <ProfessionsSection nodeId={nodeId} />
+      <ForecastingSection nodeId={nodeId} />
+      <PlantBodiesSection nodeId={nodeId} />
+      <BodySystemsSection nodeId={nodeId} />
+      <DiseaseAgentsSection nodeId={nodeId} />
+      <WaterIceSection nodeId={nodeId} />
+      <SpaceWeatherSection nodeId={nodeId} />
       <CraftsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <ClimesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <BelongingSection nodeId={nodeId} readOnlyReason={readOnlyReason} />

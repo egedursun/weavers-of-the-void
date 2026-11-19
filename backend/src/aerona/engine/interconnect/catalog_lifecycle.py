@@ -159,7 +159,7 @@ LIFECYCLE_MECHANICS = (
         surface=Surface(drawer=FOSSILS, chart="chart-fossils"),
         backfill="none: fossil beds are laid from what died out from the next epoch",
         tables=(FossilBedRow.__tablename__,),
-        tools=("lay_bare_fossils",),
+        tools=("lay_bare_fossils", "study_fossils"),
         targets=("region", "settlement", "people"),
         couplings=(
             Coupling(S.ECOLOGY, "a bed of what died out is laid with this richness", E.MODIFIER, "fossils.richness"),

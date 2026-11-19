@@ -9,6 +9,7 @@ from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.means import NavigationKitRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.space_weather import WorldFieldRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -17,9 +18,11 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import InstrumentKind, StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
+from aerona.engine.forecasting.reading import observation_bonus
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.space_weather.reading import compass_error_of
 from aerona.rules.registry import Rules
 
 
@@ -86,8 +89,10 @@ async def refine(ctx: TickContext, tally: NavigationTally) -> None:
             tally.refined += 1
 
 
-def aid_works(rules: Rules, kit: NavigationKitRow, world: WorldRow | None) -> bool:
-    return not AIDS[kit.aid].magnetic or (world is not None and world.magnetism >= rules.navigation_instruments.magnetism_from)
+def aid_works(rules: Rules, kit: NavigationKitRow, world: WorldRow | None, error: int = 0) -> bool:
+    if not AIDS[kit.aid].magnetic:
+        return True
+    return world is not None and world.magnetism >= rules.navigation_instruments.magnetism_from and error < rules.space_weather.compass_error_threshold
 
 
 async def accuracy_of(ctx: TickContext, town_id: int) -> int:
@@ -97,8 +102,9 @@ async def accuracy_of(ctx: TickContext, town_id: int) -> int:
         return 0
     world = await ctx.session.get(WorldRow, town.world_id)
     kits = await ctx.session.scalars(select(NavigationKitRow).where(NavigationKitRow.holder_entity_id == town_id))
-    instruments = sum(kit.quality * table.aid_pct // PERCENT for kit in kits if aid_works(ctx.rules, kit, world))
-    return clamp_int(instruments + await best_navigator(ctx, town) * table.skill_pct, 0, PERCENT)
+    error = compass_error_of(await ctx.session.get(WorldFieldRow, town.world_id)) if town.world_id is not None else 0
+    instruments = sum(kit.quality * table.aid_pct // PERCENT for kit in kits if aid_works(ctx.rules, kit, world, error))
+    return clamp_int(instruments + await best_navigator(ctx, town) * table.skill_pct + await observation_bonus(ctx.session, ctx.rules, town), 0, PERCENT)
 
 
 async def instrument_navigation(ctx: TickContext, ends: tuple[int, int], hops: int) -> float:

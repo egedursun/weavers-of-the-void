@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.action import ActionKind
@@ -49,7 +50,7 @@ async def issue_mandate(call: MortalCall, args: MandateInput) -> str:
     )
     if row is None:
         fail(MortalResult.MANDATE_REFUSED, why="such a mandate already stands, or a god holds the realm")
-    kind = args.kind.value.replace("_", " ")
+    kind = spoken(args.kind)
     call.target(place.id if place is not None else realm.entity.id)
     await call.record(
         "tools.mortal.mandate",
@@ -69,14 +70,14 @@ async def assign_task(call: MortalCall, args: TaskInput) -> str:
     office.task = args.task
     office.task_target_node_id = args.target_id
     await call.session.flush()
-    task = args.task.value.replace("_", " ")
+    task = spoken(args.task)
     call.target(realm.entity.id)
     await call.record(
         "tools.mortal.task",
         roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: args.target_id},
         facts={"office": office.kind, "task": args.task},
     )
-    return result(MortalResult.TASK_SET, office=office.kind.value.replace("_", " "), task=task)
+    return result(MortalResult.TASK_SET, office=spoken(office.kind), task=task)
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

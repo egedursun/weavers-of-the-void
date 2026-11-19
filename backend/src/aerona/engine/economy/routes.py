@@ -259,7 +259,7 @@ def route_locked(route: Route, key: str) -> bool:
     return key in (route.profile.locked or [])
 
 
-def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs) -> Dangers:
+def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs, ice_open: int = PERCENT) -> Dangers:
     profile = route.profile
     found = dangers_of(ctx, book, profile.mode, route.path, lairs, route_id=route.entity.id, world_id=route.entity.world_id)
     for cause, key in DANGER_KEYS.items():
@@ -270,7 +270,7 @@ def assess(ctx: TickContext, book: EconomyBook, route: Route, lairs: Lairs) -> D
     if not route_locked(route, "danger"):
         set_stats(route.entity, danger=found.total)
     if not route_locked(route, "season_pct"):
-        profile.season_pct = season_pct_of(ctx.rules, book, profile.mode, route.path, route.entity.world_id)
+        profile.season_pct = min(season_pct_of(ctx.rules, book, profile.mode, route.path, route.entity.world_id), ice_open)
     return found
 
 

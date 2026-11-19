@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.urban import MERCHANT_HOUSES
+from aerona.core.grammar import spoken
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -75,7 +76,7 @@ async def claim_turf(call: MortalCall, args: DistrictInput) -> str:
         facts={"district": district.kind},
         place=district.settlement_entity_id,
     )
-    return result(MortalResult.TURF_CLAIMED, kind=district.kind.value.replace("_", " "))
+    return result(MortalResult.TURF_CLAIMED, kind=spoken(district.kind))
 
 
 async def bribe_official(call: MortalCall, args: OfficialInput) -> str:
@@ -134,7 +135,7 @@ async def corner_market(call: MortalCall, args: CornerInput) -> str:
         facts={"good": args.commodity, "strength": CORNERED},
         place=profile.home_entity_id,
     )
-    return result(MortalResult.CORNERED, good=args.commodity.value.replace("_", " "), name=town.name if town is not None else "your market")
+    return result(MortalResult.CORNERED, good=spoken(args.commodity), name=town.name if town is not None else "your market")
 
 
 async def call_tribunal(call: MortalCall, args: TribunalInput) -> str:
@@ -151,7 +152,7 @@ async def call_tribunal(call: MortalCall, args: TribunalInput) -> str:
         roles={IncidentRole.ACCUSER: call.me.id, IncidentRole.ACCUSED: accused.id, IncidentRole.AUTHORITY: profile.faction_entity_id},
         facts={"verdict": trial.verdict},
     )
-    return result(MortalResult.TRIBUNAL_HELD, name=accused.name, verdict=trial.verdict.value)
+    return result(MortalResult.TRIBUNAL_HELD, name=accused.name, verdict=spoken(trial.verdict))
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

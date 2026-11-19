@@ -479,7 +479,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.death.fading_many",
         G.GODS,
-        "{subject} is nearly forgotten; few still worship them. If {left} more epochs pass like this, they will fade.",
+        "{subject} is nearly forgotten; few still worship them. If {left:more epoch passes|more epochs pass} like this, they will fade.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("left", FactValue.NUMBER, FactUnit.NONE),),
         place=PlaceRule.WHEN_KNOWN,
@@ -866,7 +866,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.power.bloodline_curse",
         G.GODS,
-        "{actor} cursed {subject[0]}'s bloodline{reason}: {count} living descendants fell under the curse; those yet to be born will carry it too.",
+        "{actor} cursed {subject[0]}'s bloodline{reason}: {count:living descendant|living descendants} fell under the curse; "
+        "those yet to be born will carry it too.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("reason", FactValue.NAME, required=False), FactSpec("count", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -1597,7 +1598,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "player.climate.commanded",
         G.GODS,
-        "{authority}'s hand: commanded {era} to the sky of {target_detail} ({epochs} epochs).",
+        "{authority}'s hand: commanded {era} to the sky of {target_detail} ({epochs:epoch|epochs}).",
         roles=(RoleSpec(R.AUTHORITY),),
         facts=(
             FactSpec("era", FactValue.ENUM, enum=ClimateEra, required=False),
@@ -1671,7 +1672,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "player.entity.expedition",
         G.GODS,
-        "{authority}'s hand: {target} was sent on {intent:an} expedition to the world {world} ({epochs} epochs).",
+        "{authority}'s hand: {target} was sent on {intent:an} expedition to the world {world} ({epochs:epoch|epochs}).",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.AUTHORITY)),
         facts=(
             FactSpec("intent", FactValue.ENUM, enum=JourneyIntent, required=False),
@@ -2186,7 +2187,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "player.son.star",
         G.GODS,
-        "{co_actor} gave {actor} another star: {stars} stars.",
+        "{co_actor} gave {actor} another star, raising its count of stars to {stars}.",
         roles=(RoleSpec(R.CO_ACTOR), RoleSpec(R.ACTOR)),
         facts=(FactSpec("stars", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -4272,7 +4273,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.shape_weather",
         G.GODS,
-        "{actor} held {weather} over {place} for {epochs} ages: {reason}.",
+        "{actor} held {weather} over {place} for {epochs:age|ages}: {reason}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),
         facts=(
             FactSpec("weather", FactValue.NAME, required=False),
@@ -4479,7 +4480,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.sway_diviner",
         G.GODS,
-        "{actor} swayed the diviners of {realm} to read an {verdict} omen: {reason}",
+        "{actor} swayed the diviners of {realm} to read {verdict:an} omen: {reason}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(
             FactSpec("realm", FactValue.NAME, required=False),

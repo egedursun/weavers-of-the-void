@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -49,7 +50,7 @@ async def shape_biology(call: SonCall, args: ShapeBiologyInput) -> str:
     await set_variant(call.tick, holder.id, args.variant, args.gain, hold=False)
     call.spend_essence(cost)
     call.target(holder.id)
-    told = args.variant.value.replace("_", " ")
+    told = spoken(args.variant)
     await call.record(
         "tools.son.shape_biology",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.OWNER: holder.id},

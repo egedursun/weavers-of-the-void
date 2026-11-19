@@ -62,7 +62,13 @@ POWER_VISIBILITY = total(
     {
         PowerVisibility.OVERT: Defined(
             "Plain to see",
-            checked_by=("engine.powers.phase.live_with", "engine.powers.society.go_quiet", "engine.powers.society.keep_apart", "engine.powers.use.use"),
+            checked_by=(
+                "engine.powers.phase.live_with",
+                "engine.powers.society.go_quiet",
+                "engine.powers.society.keep_apart",
+                "engine.powers.systems.unsettle",
+                "engine.powers.use.use",
+            ),
             used_by=("engine.powers.backfill.BUILT_IN",),
         ),
         PowerVisibility.SUBTLE: Defined(

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.dominion import DivineCreatureRow, GodImageRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -75,7 +76,7 @@ async def teach_creature(call: SonCall, args: TeachCreatureInput) -> str:
     call.spend_essence(cost)
     call.target(row.creature_entity_id)
     told = "rewarded" if args.lesson is CreatureLesson.REWARD else "punished"
-    return result(SonResult.CREATURE_TAUGHT, told=told, deed=args.deed.value.replace("_", " "))
+    return result(SonResult.CREATURE_TAUGHT, told=told, deed=spoken(args.deed))
 
 
 async def release_creature(call: SonCall, args: ReleaseCreatureInput) -> str:
@@ -108,7 +109,7 @@ async def shape_image(call: SonCall, args: ShapeImageInput) -> str:
     await call.record(
         "tools.son.shape_image", roles={IncidentRole.ACTOR: call.son.id}, facts={"stance": args.stance, "reason": str(args.reason)}, kind=ChronicleKind.WORLD
     )
-    return result(SonResult.IMAGE_SHAPED, stance=args.stance.value)
+    return result(SonResult.IMAGE_SHAPED, stance=spoken(args.stance))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

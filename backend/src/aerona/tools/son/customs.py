@@ -59,7 +59,7 @@ async def stir_revival(call: SonCall, args: StirRevivalInput) -> str:
         call.tick, "revival", {}, {"people_entity_id": people.id, "aim": AIMS[args.goal], "goal": args.goal, "started_epoch": call.tick.epoch}
     )
     call.target(people.id)
-    told = args.goal.value.replace("_", " ")
+    told = spoken(args.goal)
     await call.record(
         "tools.son.stir_revival",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},

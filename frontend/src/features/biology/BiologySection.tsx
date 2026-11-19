@@ -247,7 +247,7 @@ export function BiologySection({
     <Section
       id='section-biology'
       title='Biology: the variants of its body'
-      description='The biology of the people or species this thing belongs to: its variants of body and what they do to how much it eats, how many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks and ages, and how its minds lean. Peoples, species, their towns, mortals, armies and beasts show the biology of their kind; gods, worlds and stars carry none, and the controls say so.'
+      description='The biology of the people or species this thing belongs to: its variants of body and what they do to how much it eats, how many it bears, how it dies and sickens, how it holds in battle, how fire and storms harm it, whether it breathes, drinks, ages and sleeps, and how its minds lean. Peoples, species, their towns, mortals, armies and beasts show the biology of their kind; gods, worlds and stars carry none, and the controls say so.'
       icon={BIOLOGY_ICON}
       tone='verdigris'
     >

@@ -1,5 +1,8 @@
 import {
   Anchor,
+  Ban,
+  Clover,
+  TriangleAlert,
   Bird,
   BookOpen,
   Box,
@@ -142,6 +145,13 @@ export const CLOCKS: Record<Schema['ClockKind'], Named> = {
 export const NOTATIONS: Record<Schema['Notation'], Named> = {
   additive: { label: 'Added up', icon: Hash, tone: 'muted' },
   positional: { label: 'By place', icon: Grid3x3, tone: 'gold' },
+}
+
+export const READINGS: Record<Schema['NumberReading'], Named> = {
+  lucky: { label: 'Lucky', icon: Clover, tone: 'gold' },
+  unlucky: { label: 'Unlucky', icon: TriangleAlert, tone: 'warning' },
+  sacred: { label: 'Sacred', icon: Sparkles, tone: 'info' },
+  forbidden: { label: 'Forbidden', icon: Ban, tone: 'danger' },
 }
 
 export const MODES: Record<Schema['AffinityMode'], Named> = {

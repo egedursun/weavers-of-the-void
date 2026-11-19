@@ -90,8 +90,7 @@ def owner_of(mapper: Mapper[Any], row: Any) -> int | None:
     return next((value for key in shape.owners if isinstance(value := getattr(row, key), int)), None)
 
 
-@player_action("record_row:edit", ActionKind.EDIT_RECORD)
-async def edit_row(scope: PlayerScope, command: EditRow) -> Effect:
+async def reshape_row(scope: PlayerScope, command: EditRow) -> Effect:
     mapper = controllable(command.table)
     row = await row_of(scope, mapper, command.key)
     allowed = set(editable_columns(mapper))
@@ -115,8 +114,7 @@ async def edit_row(scope: PlayerScope, command: EditRow) -> Effect:
     return Effect(f"A row of {label(mapper)} was reshaped{held}{freed}.", target_node_id=owner)
 
 
-@player_action("record_row:delete", ActionKind.EDIT_RECORD)
-async def delete_row(scope: PlayerScope, command: RowTarget) -> Effect:
+async def unmake_row(scope: PlayerScope, command: RowTarget) -> Effect:
     mapper = controllable(command.table)
     row = await row_of(scope, mapper, command.key)
     owner = owner_of(mapper, row)
@@ -125,8 +123,7 @@ async def delete_row(scope: PlayerScope, command: RowTarget) -> Effect:
     return Effect(f"A row of {label(mapper)} was unmade.", target_node_id=owner)
 
 
-@player_action("record_row:create", ActionKind.EDIT_RECORD)
-async def create_row(scope: PlayerScope, command: CreateRow) -> Effect:
+async def make_row(scope: PlayerScope, command: CreateRow) -> Effect:
     mapper = controllable(command.table)
     values = {column: value_for(mapper, column, value) for column, value in command.values.items()}
     shape = owned_shape(mapper)
@@ -139,3 +136,18 @@ async def create_row(scope: PlayerScope, command: CreateRow) -> Effect:
     await flushed(scope, label(mapper))
     keys = [mapper.get_property_by_column(column).key for column in mapper.primary_key]
     return Effect(f"A new row of {label(mapper)} was made.", target_node_id=owner_of(mapper, row), values={key: scalar(getattr(row, key)) for key in keys})
+
+
+@player_action("record_row:edit", ActionKind.EDIT_RECORD)
+async def edit_row(scope: PlayerScope, command: EditRow) -> Effect:
+    return await reshape_row(scope, command)
+
+
+@player_action("record_row:delete", ActionKind.EDIT_RECORD)
+async def delete_row(scope: PlayerScope, command: RowTarget) -> Effect:
+    return await unmake_row(scope, command)
+
+
+@player_action("record_row:create", ActionKind.EDIT_RECORD)
+async def create_row(scope: PlayerScope, command: CreateRow) -> Effect:
+    return await make_row(scope, command)

@@ -12,6 +12,7 @@ from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.kin import KinGroupMemberRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import Domain
@@ -65,6 +66,7 @@ SOURCE_STATE_KINDS = frozenset(
         BondKind.BETROTHED_TO,
         BondKind.CONCUBINE_OF,
         BondKind.SWORN_KIN,
+        BondKind.GODPARENT_OF,
     }
 )
 TARGET_STATE_KINDS = frozenset(
@@ -96,6 +98,7 @@ TARGET_STATE_KINDS = frozenset(
         BondKind.BETROTHED_TO,
         BondKind.CONCUBINE_OF,
         BondKind.SWORN_KIN,
+        BondKind.GODPARENT_OF,
     }
 )
 INHERITED_KINDS = frozenset({BondKind.OWNS, BondKind.RULES})
@@ -260,6 +263,20 @@ async def retire(
     return entity
 
 
+async def kin_heir(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
+    groups = select(KinGroupMemberRow.group_id).where(KinGroupMemberRow.member_node_id == dead.id)
+    kin = await session.scalars(
+        select(KinGroupMemberRow.member_node_id)
+        .where(KinGroupMemberRow.group_id.in_(groups), KinGroupMemberRow.member_node_id != dead.id)
+        .order_by(KinGroupMemberRow.joined_epoch, KinGroupMemberRow.member_node_id)
+    )
+    for member_id in list(kin):
+        candidate = await living_entity(session, member_id)
+        if candidate is not None and candidate.entity_type in HEIR_TYPES:
+            return candidate
+    return None
+
+
 async def heir_of(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
     for bond in reversed(await active_bonds(session, [BondKind.PARENT_OF], sources=[dead.id])):
         candidate = await living_entity(session, bond.target_node_id)
@@ -269,6 +286,9 @@ async def heir_of(session: AsyncSession, dead: EntityRow) -> EntityRow | None:
         candidate = await living_entity(session, bond.source_node_id)
         if candidate is not None and candidate.entity_type in HEIR_TYPES:
             return candidate
+    kin = await kin_heir(session, dead)
+    if kin is not None:
+        return kin
     location = await living_entity(session, dead.location_id)
     if location is not None and location.entity_type in COMMUNITY_TYPES:
         return location

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.nature_kinds50 import PRESERVATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow
@@ -18,8 +19,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import TemperatureBand
-from aerona.domain.enums.fossil import FossilReading, FossilSource
+from aerona.domain.enums.environment import ScarKind, TemperatureBand
+from aerona.domain.enums.fossil import FossilReading, FossilSource, Preservation
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
@@ -42,6 +43,9 @@ READINGS = (
     (ValueAxis.PIETY, FossilReading.RELIC),
     (ValueAxis.KNOWLEDGE, FossilReading.DEEP_TIME),
 )
+
+
+ASHEN = frozenset({ScarKind.BURNED.value, ScarKind.CRATER.value})
 
 
 @dataclass
@@ -121,6 +125,24 @@ async def is_frozen(ctx: TickContext, region_id: int, world_id: int | None) -> b
     return (world is not None and world.world_type in COLD_WORLDS) or (land is not None and land.temperature_band is TemperatureBand.FROZEN)
 
 
+async def preservation_of(ctx: TickContext, region_id: int, frozen: bool) -> Preservation:
+    table = ctx.rules.fossils
+    land = await ctx.session.get(RegionEnvironmentRow, region_id)
+    if frozen:
+        return Preservation.ICE
+    if land is not None and (land.scars or {}).keys() & ASHEN:
+        return Preservation.ASH
+    if land is not None and land.wetland >= table.bog_wetland:
+        return Preservation.BOG
+    if land is not None and land.rainfall < table.dry_rainfall:
+        return Preservation.DRY
+    return Preservation.ROCK
+
+
+def depth_of(ctx: TickContext, bed: FossilBedRow) -> int:
+    return clamp_int(bed.layer + (ctx.epoch - bed.laid_epoch) * ctx.rules.fossils.layer_per_epoch, 0, PERCENT)
+
+
 async def lay_beds(ctx: TickContext, atlas: RegionAtlas, tally: FossilTally) -> None:
     table = ctx.rules.fossils
     for item in await remains(ctx):
@@ -137,6 +159,7 @@ async def lay_beds(ctx: TickContext, atlas: RegionAtlas, tally: FossilTally) -> 
                 source_entity_id=item.entity.id,
                 richness=richness,
                 frozen=frozen,
+                preservation=await preservation_of(ctx, region, frozen),
                 disease_entity_id=await sealed_disease(ctx, region) if frozen else None,
                 laid_epoch=ctx.epoch,
                 locked=[],
@@ -205,6 +228,8 @@ async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, 
     table = ctx.rules.fossils
     bed.found_epoch = ctx.epoch
     bed.finder_entity_id = finder.id if finder is not None else None
+    if "layer" not in bed.locked:
+        bed.layer = depth_of(ctx, bed)
     tally.found += 1
     luxuries = 0
     if finder is not None:
@@ -216,6 +241,17 @@ async def reveal(ctx: TickContext, bed: FossilBedRow, finder: EntityRow | None, 
         luxuries = max(0, units)
         if units > 0:
             await goods_of(ctx.session, ctx.epoch).add(finder.id, CommodityKind.LUXURIES, units, GoodsFlow.EXTRACTION)
+            await record(
+                ctx,
+                "land.fossil_traded",
+                roles={IncidentRole.PLACE: bed.region_entity_id, IncidentRole.ACTOR: finder.id},
+                facts={"units": units},
+                place=bed.region_entity_id,
+            )
+        fuel_kind = PRESERVATIONS[bed.preservation].fuel
+        fuel = round_half_up(bed.richness / 10 * table.fuel_per_10) if fuel_kind is not None else 0
+        if fuel > 0 and fuel_kind is not None:
+            await goods_of(ctx.session, ctx.epoch).add(finder.id, fuel_kind, fuel, GoodsFlow.EXTRACTION)
     if bed.frozen and bed.disease_entity_id is not None:
         ctx.session.add(
             OutbreakRow(
@@ -248,7 +284,8 @@ async def find_beds(ctx: TickContext, atlas: RegionAtlas, tally: FossilTally) ->
     for bed in list(await ctx.session.scalars(select(FossilBedRow).where(FossilBedRow.found_epoch.is_(None)).order_by(FossilBedRow.id))):
         if "found_epoch" in bed.locked or held(bed.region_entity_id):
             continue
-        if ctx.rng(f"fossil.find.{bed.id}.{ctx.epoch}").chance(await disturbed(ctx, atlas, bed.region_entity_id)):
+        shallow = 1 - depth_of(ctx, bed) * ctx.rules.fossils.layer_find_cut_pct / PERCENT / PERCENT
+        if ctx.rng(f"fossil.find.{bed.id}.{ctx.epoch}").chance(await disturbed(ctx, atlas, bed.region_entity_id) * shallow):
             await reveal(ctx, bed, await finder_in(ctx, bed.region_entity_id), tally)
 
 

@@ -9,6 +9,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.powers import MagicSystemRow, PowerRegistryRow, PowerRow, PowerSourceRow, SourceDensityRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.concealment import BreachCause, ConcealScope, HiddenTruthKind, KeeperRole
@@ -18,7 +19,8 @@ from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind
-from aerona.domain.enums.powers import PowerCost, PowerOrigin, PowerState, PowerVisibility, SourceAccess, SourceLocus, SourceRenewal
+from aerona.domain.enums.powers import PowerCost, PowerOrigin, PowerState, PowerStructure, PowerVisibility, SourceAccess, SourceLocus, SourceRenewal
+from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import ArmyStats, PolityStats
 from aerona.engine.concealment.truths import breach, reveal_or_fade
 from aerona.engine.polity.laws import enact
@@ -27,6 +29,7 @@ from aerona.engine.powers.backfill import built_in_source, legacy_backfill
 from aerona.engine.powers.phase import keep_powers
 from aerona.engine.powers.society import keep_registries
 from aerona.engine.powers.sources import density_row, keep_density
+from aerona.engine.powers.systems import keep_systems
 from aerona.engine.powers.use import use
 from aerona.engine.powers.war import power_edge
 from aerona.engine.primitives.stats import stat_or
@@ -190,3 +193,18 @@ async def test_a_breach_answered_by_a_keeper_takes_back_belief(session: AsyncSes
     assert row is not None and row.response.value == "cover_story"
     stored = await session.scalar(select(BreachRow).where(BreachRow.truth_id == truth.id))
     assert stored is not None
+
+
+async def test_an_overt_system_of_costly_common_powers_stirs_its_towns_and_a_subtle_one_does_not(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Brightmere", world, world.regions[0])
+    profile = SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN, unrest=10, locked=[], foreigners={})
+    system = MagicSystemRow(
+        name="The Open Way", scope_node_id=world.world.id, structure=next(iter(PowerStructure)), cost_severity=100, prevalence=100, locked=[]
+    )
+    session.add_all([profile, system])
+    await session.flush()
+    await keep_systems(await at(session, 2, magic_systems={"overt_cost_unrest": 5, "drift": 0, "theory_gain": 0}))
+    assert profile.unrest == 10
+    system.visibility = PowerVisibility.OVERT
+    await keep_systems(await at(session, 3, magic_systems={"overt_cost_unrest": 5, "drift": 0, "theory_gain": 0}))
+    assert profile.unrest == 15

@@ -1,6 +1,6 @@
 from typing import Any
 
-from aerona.catalog.communication import CONTENT_LABELS, MEDIUM_LABELS
+from aerona.catalog.communication import CONTENT_LABELS, MEDIUM_LABELS, MORTAL_MEDIA
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.communication import DispatchContent, Medium
@@ -14,8 +14,6 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail, require_canon
-
-MORTAL_MEDIA = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD, Medium.BIRD, Medium.SIGNAL_FIRE, Medium.NETWORK})
 
 
 class DispatchInput(ToolInput):

@@ -31,11 +31,16 @@ WONDER_GROUP = "wonder"
     "table.bodies",
     "table.bonds",
     "table.conditions",
+    "table.creator",
     "table.cult_doctrines",
     "table.cult_tenets",
+    "table.dimensions",
     "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.modifiers",
@@ -43,6 +48,7 @@ WONDER_GROUP = "wonder"
     "table.polity_members",
     "table.son_powers",
     "table.sons",
+    "table.stars",
     "table.tradition_participation",
     "table.tradition_profiles",
     "table.traits",
@@ -50,6 +56,7 @@ WONDER_GROUP = "wonder"
     "table.treaty_parties",
     "table.treaty_profiles",
     "table.world_maps",
+    "table.worlds",
 )
 @writes("table.modifiers")
 async def modifier_upkeep(ctx: TickContext) -> None:

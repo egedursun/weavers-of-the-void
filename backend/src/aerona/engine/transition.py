@@ -101,8 +101,16 @@ async def overflow_to_sons(session: AsyncSession, rules: Rules, budget: int) -> 
     "settlement.population",
     "table.bonds",
     "table.creator",
+    "table.dimensions",
+    "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.nodes",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes("region.fertility", "table.chronicle", "table.creator", "table.entities", "table.incidents")
 async def creator_essence(ctx: TickContext) -> None:

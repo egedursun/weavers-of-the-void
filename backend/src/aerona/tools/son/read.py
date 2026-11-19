@@ -47,14 +47,14 @@ class InspectSiblingInput(ToolInput):
 async def world_summary(call: SonCall, args: WorldSummaryInput) -> str:
     views = call.ports.views
     if views is None:
-        fail(CommonResult.NOT_AVAILABLE, tool=SonToolId.WORLD_SUMMARY.value)
+        fail(CommonResult.NOT_AVAILABLE, tool=SonToolId.WORLD_SUMMARY)
     return await views.world_summary(call.session, call.rules, call.son, args.section)
 
 
 async def my_memory(call: SonCall, _args: EmptyInput) -> str:
     views = call.ports.views
     if views is None:
-        fail(CommonResult.NOT_AVAILABLE, tool=SonToolId.MY_MEMORY.value)
+        fail(CommonResult.NOT_AVAILABLE, tool=SonToolId.MY_MEMORY)
     return await views.son_memory(call.session, call.rules, call.son)
 
 

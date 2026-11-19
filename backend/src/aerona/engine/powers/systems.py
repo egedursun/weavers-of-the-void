@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.powers import (
     MagicSystemLinkRow,
     MagicSystemRow,
@@ -8,11 +9,14 @@ from aerona.db.tables.powers import (
     PowerSourceKnowledgeRow,
     SourceDensityRow,
 )
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.powers import SystemRelation
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.powers import PowerVisibility, SystemRelation
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.recording.terms import explaining, term
 
 
 async def mean_density(ctx: TickContext, system: MagicSystemRow) -> int | None:
@@ -55,6 +59,30 @@ async def share_roots(ctx: TickContext, system: MagicSystemRow) -> int:
     return shared
 
 
+async def unsettle(ctx: TickContext, system: MagicSystemRow) -> int:
+    if system.visibility is not PowerVisibility.OVERT:
+        return 0
+    shift = round(ctx.rules.magic_systems.overt_cost_unrest * system.cost_severity * system.prevalence / PERCENT / PERCENT)
+    if not shift:
+        return 0
+    stirred = 0
+    towns = select(EntityRow.id).where(
+        EntityRow.world_id == system.scope_node_id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON
+    )
+    for profile in list(
+        await ctx.session.scalars(
+            select(SettlementProfileRow).where(SettlementProfileRow.settlement_entity_id.in_(towns)).order_by(SettlementProfileRow.settlement_entity_id)
+        )
+    ):
+        if held(profile.settlement_entity_id) or "unrest" in (profile.locked or []):
+            continue
+        with explaining():
+            term("magic_systems.overt_cost_unrest", shift, source_node_id=system.scope_node_id)
+            profile.unrest = clamp_percent(profile.unrest + shift)
+        stirred += 1
+    return stirred
+
+
 @reads("table.magic_system_links", "table.magic_system_sources", "table.magic_systems", "table.power_source_knowledge", "table.source_density")
 @writes("table.magic_systems")
 async def keep_systems(ctx: TickContext) -> None:
@@ -63,5 +91,6 @@ async def keep_systems(ctx: TickContext) -> None:
             continue
         await drift(ctx, system)
         ctx.count("systems_sharing", await share_roots(ctx, system))
+        ctx.count("towns_unsettled_by_powers", await unsettle(ctx, system))
         ctx.count("magic_systems_kept")
     await ctx.session.flush()

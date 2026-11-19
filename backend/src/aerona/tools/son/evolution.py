@@ -2,11 +2,12 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.domain_powers import TAINTING, TAINTING_WORDS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.modifier import IncidentRole
@@ -21,7 +22,6 @@ from aerona.tools.framework.validation import fail, require_canon, require_type
 from aerona.tools.son.support import ensure_in_reach
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
-TAINTING = frozenset({Domain.DEATH, Domain.PLAGUE, Domain.MADNESS, Domain.SHADOW, Domain.BLOOD, Domain.HUNGER})
 INSPIRED = 70
 
 
@@ -44,7 +44,7 @@ async def mark_lineage(call: SonCall, args: MarkLineageInput) -> str:
     )
     await ensure_in_reach(call, species)
     if args.taint and not {call.son.domain_primary, call.son.domain_secondary} & TAINTING:
-        fail(SonResult.LINEAGE_REFUSED, why="tainting a line is not in your domains")
+        fail(SonResult.LINEAGE_REFUSED, why=f"only gods of these domains taint a line: {TAINTING_WORDS}")
     await mark(call.tick, species, TAINT if args.taint else BLESSING, blessing=not args.taint, source_node_id=call.son.id)
     call.target(species.id)
     word = "tainted" if args.taint else "blessed"
@@ -67,7 +67,7 @@ async def move_plague_response(call: SonCall, args: MovePlagueResponseInput) -> 
     await ensure_in_reach(call, community)
     await take_up(call.tick, community, disease.id, args.response, strength=INSPIRED)
     call.target(community.id)
-    response = args.response.value.replace("_", " ")
+    response = spoken(args.response)
     await call.record(
         "tools.son.move_plague_response",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [community.id, disease.id]},

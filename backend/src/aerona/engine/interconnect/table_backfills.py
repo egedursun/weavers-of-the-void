@@ -1,6 +1,10 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("unions_and_birth", "restraint_customs"): "none: customs of restraint are set by peoples and gods from the next epoch",
+    ("unions_and_birth", "child_recognitions"): "none: children are recognised from the next epoch",
+    ("public_works", "public_work_stages"): "none: stages are set down as works are built from the next epoch",
+    ("body_systems", "sensitivities"): "none: beings gain sensitivities when gods or the model give them",
     (
         "minds",
         "mind_profiles",

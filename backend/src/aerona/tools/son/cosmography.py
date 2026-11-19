@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.catalog.gates import Gate
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, REASON_MAX, REASON_MIN, SHORT_DESCRIPTION_MAX, SHORT_DESCRIPTION_MIN
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import spoken
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
@@ -271,7 +272,7 @@ async def turn_climate(call: SonCall, args: TurnClimateInput) -> str:
         fail(SonResult.CLIMATE_REFUSED, reason=error.message)
     call.spend_essence(cost)
     call.target(region.id)
-    return result(SonResult.CLIMATE_TURNED, place=region.name, turn=args.turn.value)
+    return result(SonResult.CLIMATE_TURNED, place=region.name, turn=spoken(args.turn))
 
 
 async def claim_galaxy(call: SonCall, args: GalaxyInput) -> str:

@@ -73,6 +73,273 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "or move the household to a richer place nearby. Your purse, your home and your people must allow it. 1 action.",
         {"choice": "What your household does"},
     ),
+    T.HIRE_SERVANT: ToolText(
+        "As head of your household or its head's spouse, you take someone of your town who is free into the service of your household, "
+        "on the terms you set: a wage your household pays each epoch, board, or bondage where your law allows it. "
+        "You may give the servant duties of the house. 1 action.",
+        {
+            "household_id": "Your household",
+            "terms": "The terms of service: wage, board or bound",
+            "wage": "The wage your household pays each epoch when the terms are a wage",
+            "duties": "Duties of the house the servant keeps: food, water, fuel, cleaning, textiles, childcare, eldercare, animals or repairs",
+        },
+    ),
+    T.TAKE_LEISURE: ToolText(
+        "You give part of your time to a pursuit you enjoy, at a place if you name one: it lifts your mood and eases your stress, "
+        "and a pursuit of travel spends your coin at the place you visit. 1 action.",
+        {
+            "kind": "The pursuit: conversation, games, sport, music, crafts, collecting, reading, excursion, tourism, drinking, worship_extra, rest or media",
+            "venue_id": "Where you pursue it, if anywhere in particular",
+        },
+    ),
+    T.SET_HOUSE_DUTIES: ToolText(
+        "As head of your household or its head's spouse, you decide who in your household keeps which duty of the house. "
+        "Duties can go only to members and servants of your household; the load of each falls on whoever keeps it. 1 action.",
+        {
+            "household_id": "Your household",
+            "assignments": "Who keeps which duty",
+            "assignments.member_id": "A member or servant of your household",
+            "assignments.duty": "The duty: food, water, fuel, cleaning, textiles, childcare, eldercare, animals or repairs",
+        },
+    ),
+    T.CALL_ON_KIN: ToolText(
+        "You call on kin of one role for what you need. Kin answer as far as your people's duties bind that role to you: "
+        "support for food, coin or care, hosting for shelter, protection for protection. "
+        "Kin whom no strong duty binds may refuse, and the refusal is remembered. 1 action.",
+        {
+            "role": "Which kin: parent, child, sibling, grandparent, grandchild, parent_sibling_first_line, parent_sibling_second_line, "
+            "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent or sworn_kin",
+            "need": "What you need: food, coin, care, shelter or protection",
+        },
+    ),
+    T.CONVENE_KIN_GROUP: ToolText(
+        "You call your kin group together on one matter: choose_head to choose a head, share_land to share the yield of the kin's land "
+        "with members in need, feud to answer blood shed against its members, marriage to tighten the rule against marrying within the kin, "
+        "or migrate to bring its members to where you are. 1 action.",
+        {
+            "group_id": "A kin group you belong to",
+            "agenda": "The matter: choose_head, share_land, feud, marriage or migrate",
+        },
+    ),
+    T.RAISE_CHILD: ToolText(
+        "As a parent of a child or the head of its household, you raise it by the ways you weigh: "
+        "they move what the child will value, and harsh ways leave stress. 1 action.",
+        {
+            "child_id": "The child you raise",
+            "techniques": "The ways you raise it, each with a weight",
+            "techniques.technique": "The way: example, instruction, praise, shame, punishment, ritual_ordeal, storytelling, play, "
+            "apprenticeship, schooling, peer_group or age_set",
+            "techniques.weight": "How much of the upbringing goes this way, from 0 to 100",
+        },
+    ),
+    T.FOUND_SCHOOL_METHOD: ToolText(
+        "You set the way a school teaches: its theory sets how fast its pupils learn, and its depth whether it teaches few things deeply or many broadly. 1 action.",
+        {
+            "school_id": "The school",
+            "theory": "The theory: rote, dialectic, apprenticeship, discovery, ritual_transmission, examination, network_learning or mind_transfer",
+            "depth": "From 0 for breadth to 100 for depth",
+        },
+    ),
+    T.SEEK_RECOGNITION: ToolText(
+        "As a parent of a child whose standing among your people is less than full, you have it recognised by the way your people allow, "
+        "paying what that way costs; a recognised child inherits and may hold office as one born in full standing. 1 action.",
+        {
+            "child_id": "Your child",
+            "path": "The way: recognition, adoption, payment, rite or none",
+        },
+    ),
+    T.TAKE_RESTRAINT_VOW: ToolText(
+        "You take a vow of restraint of your own will. Breaking it is remembered. 1 action.",
+        {
+            "kind": "The vow: celibacy or fidelity",
+            "term": "For how many epochs, from 0 for life to 10",
+        },
+    ),
+    T.LEAD_YOUTH: ToolText(
+        "In your years of youth, you take the lead of a youth group of your town and turn it to a purpose: "
+        "its purpose moves the town's order, crime or unrest and what its members come to value. 1 action.",
+        {
+            "group_id": "The youth group of your town",
+            "purpose": "The purpose: sport, service, courtship, defence, faith, mischief, crime or politics",
+        },
+    ),
+    T.REFORM_YOUTH: ToolText(
+        "As an elder of your town, you set a youth group to a measure: schooling raises its members' learning, service and sport turn it to those, "
+        "and discipline raises its standing and turns trouble to defence. 1 action.",
+        {
+            "group_id": "The youth group of your town",
+            "measure": "The measure: schooling, service, sport or discipline",
+        },
+    ),
+    T.SET_POPULATION_POLICY: ToolText(
+        "As the ruler of a realm, you set its policy on its numbers: an aim and the instruments that serve it, each with a strength. "
+        "Instruments shift births, movement, health and grievance in the realm's towns; enforcing them costs the treasury, and harsh ones meet resistance. 1 action.",
+        {
+            "aim": "The aim: grow, hold, shrink, rebalance_age, rebalance_class, settle_land, empty_land, keep_kind, mix_kinds or none",
+            "instruments": "The instruments, each with a strength",
+            "instruments.instrument": "The instrument: birth_reward, birth_tax, union_law, child_limit, child_support, inheritance_rule, settlement_grant, "
+            "migration_permit, migration_ban, expulsion, resettlement, recruitment_abroad, health_campaign, faith_teaching or made_birth",
+            "instruments.strength": "Its strength, from 0 to 100",
+            "target_node_id": "A people or place within your realm the policy aims at, or none for the whole realm",
+            "reason": "Why you set it",
+        },
+    ),
+    T.OPEN_SHOP: ToolText(
+        "You open a shop in your town for the goods you name. It sells from its stock each season for its margin; "
+        "a town with shops is supplied better than one without. 1 action.",
+        {
+            "form": "The form: stall, shop, house_trade, peddler, market_hall, warehouse_outlet, order_house or network_store",
+            "goods_kinds": "The goods it carries",
+            "structure_id": "A building of your town it opens in, or none",
+        },
+    ),
+    T.PROMOTE: ToolText(
+        "You spread word of your wares or brand. Reach raises a brand's reputation each season at a cost; "
+        "claims that are not true may be found out, costing reputation and honour, and a fine where fair dealing is law. 1 action.",
+        {
+            "medium": "The medium: crier, sign, display, patronage, gift or media",
+            "claim_accuracy": "How true the claims are, from 0 to 100",
+            "reach": "How far the word goes, from 0 to 100",
+            "commodity": "The good it speaks of, or none",
+            "brand_id": "Your brand it speaks of, or none",
+        },
+    ),
+    T.LEASE_OUT: ToolText(
+        "You lease land, a building, a vessel, an item or a beast you own to another for a rent each season and a term. "
+        "If the lessee cannot pay, the lease ends in eviction, a debt or a case at court as you set. 1 action.",
+        {
+            "thing_id": "The thing you own",
+            "lessee_id": "Who takes it",
+            "rent": "The rent each season, from 0 to 100",
+            "term": "How many epochs it runs, from 1 to 10",
+            "on_default": "What follows an unpaid rent: eviction, court or debt",
+        },
+    ),
+    T.BEGIN_WORKS: ToolText(
+        "As the ruler of a realm, you begin public works on a route, region or town of your realm, setting a budget aside from the treasury. "
+        "They advance a stage each season their labour is paid or pressed; paid labour costs the treasury, corvée and bound labour raise grievance, "
+        "and finished works change roads, bridges, water, walls, stores, harbours or prosperity. 1 action.",
+        {
+            "kind": "The works: road, bridge, canal, rail_line, aqueduct, dam, drainage, harbour_works, walls, granary_system, sewer, power_line, "
+            "network_line, terraforming_stage, megastructure_stage or grown_works",
+            "route_or_region_id": "The route, region or town they lie on",
+            "labour": "The labour: paid, corvee, bound, made_minds or constructs",
+            "budget": "What the treasury sets aside for them",
+        },
+    ),
+    T.FUND_WORKS: ToolText(
+        "You give from your own wealth to public works being built. 1 action.",
+        {"works_id": "The works", "amount": "How much you give"},
+    ),
+    T.FOUND_ENTERPRISE: ToolText(
+        "As the ruler of a realm, you found a state enterprise: it earns for the treasury each season, a monopoly earns more and starves rival shops, "
+        "and a corrupt manager may skim it. 1 action.",
+        {
+            "sector": "The good it deals in, or none",
+            "form": "The form: monopoly, royal_works, state_company, licence_holder, arsenal or mint",
+            "manager_id": "Who manages it: an official, a company or a made mind, or none",
+        },
+    ),
+    T.FOUND_OUTLET: ToolText(
+        "You found an outlet in your town that puts out word to its audience each season. Its reach grows with its staff and medium; "
+        "its stance and lean colour what it tells, and its trust falls when what it spreads is found false. 1 action.",
+        {
+            "name": "The outlet's name",
+            "medium_id": "A recorded medium it uses, or none",
+            "stance": "A value it leans on, or none",
+            "lean": "How far it leans, from -100 against to 100 for",
+            "funding": "How it is paid for: sales, patronage, advertising or state",
+        },
+    ),
+    T.PUBLISH_ITEM: ToolText(
+        "Your outlet puts out an item. Told of a happening on record, its accuracy follows the record and your slant; "
+        "slanted items move the opinion of its audience on their subject. 1 action.",
+        {
+            "outlet_id": "Your outlet",
+            "kind": "The item: news, opinion, record_of_event, entertainment, instruction, promotion, devotion or official",
+            "subject_incident_id": "The happening it tells of, or none",
+            "subject_node_id": "Whom or what it speaks of, or none",
+            "slant": "How it leans, from -100 against to 100 for",
+        },
+    ),
+    T.CENSOR_OUTLET: ToolText(
+        "As the ruler of a realm, you act on an outlet in it: censor halves its reach, license also costs it trust, seize takes it for the realm, close ends it. 1 action.",
+        {"outlet_id": "The outlet", "measure": "The measure: censor, license, seize or close"},
+    ),
+    T.EXPOSE_HYPOCRISY: ToolText(
+        "You show that someone professes a value and acts against it, naming happenings that show it if you know them. If the gap between "
+        "what they profess and what they do is wide enough, they lose trust and standing, and those who follow them for that value may "
+        "leave. 1 action.",
+        {
+            "target_id": "Whom you expose",
+            "value_axis": "The value they profess",
+            "evidence_incident_ids": "Happenings that show them acting against it, if you know any",
+        },
+    ),
+    T.FORECAST: ToolText(
+        "You read the coming weather of your land by one of the ways your people read it ({{ observation_methods | join(', ') }}). How true "
+        "the reading is follows how well that way reads the weather. 1 action.",
+        {"method": "The way you read it"},
+    ),
+    T.WORK_WEATHER: ToolText(
+        "You work the weather of your land toward rain, dry, calm, cold or warmth ({{ weather_aims | join(', ') }}) by a way you know "
+        "({{ weather_work_methods | join(', ') }}), at a cost in coin that grows with its strength. The land downwind takes the opposite, "
+        "and those harmed there may turn against you and make you stop. 1 action.",
+        {"aim": "What you work the weather toward", "method": "How you work it", "strength": "How strongly, 1 to 100"},
+    ),
+    T.STUDY_FOSSILS: ToolText(
+        "You study a bed of remains laid bare in your land as the record of deep time: the theories you hold grow stronger, and with living "
+        "craft a kind well kept in amber, ice or bog may be raised again from its remains. 1 action.",
+        {"bed_id": "The bed of remains you study"},
+    ),
+    T.DREDGE: ToolText(
+        "You pay to dredge the harbour of the land you live in: each point of silting you clear costs coin, and a clear harbour keeps its "
+        "ships coming. 1 action.",
+        {"region_id": "The land whose harbour you dredge; your own if empty", "budget": "How much coin you spend on it"},
+    ),
+    T.GIVE_SPEECH: ToolText(
+        "You speak in your town. At the assembly a speech moves the realm's standing, in the square or camp it stirs or calms the crowd, "
+        "at the temple it moves the faithful; its force follows your charisma and the reach of the venue. 1 action.",
+        {
+            "venue": "Where: assembly, court, temple, square, school, camp or outlet",
+            "aim": "To what end: persuade, teach, mock, mourn, rally, defend or accuse",
+            "audience_node_id": "Whom you speak to or of, or none",
+        },
+    ),
+    T.SATIRISE: ToolText(
+        "You mock someone in public. Where your people allow mocking such a one, it costs them honour and gains you some; "
+        "where they do not, it gives offence, and mocking a ruler where speech is censored is punished. 1 action.",
+        {"target_id": "Whom you mock", "venue": "Where: assembly, court, temple, square, school, camp or outlet"},
+    ),
+    T.TEACH_LORE: ToolText(
+        "You teach what your people know of a domain to someone. A learner of another people brings its accuracy closer to yours where yours is higher; "
+        "a learner of your own people deepens what you all know. 1 action.",
+        {
+            "domain": "The domain: weather, sky, matter, land, waters, plants, animals, body, illness, mind, society, number or time",
+            "learner_id": "Whom you teach",
+        },
+    ),
+    T.TEST_LORE: ToolText(
+        "You put one of your people's classes to the test against the world. A class they had wrong is put right and their knowledge grows more accurate; "
+        "testing something harmful taken for harmless costs you health. 1 action.",
+        {
+            "domain": "The domain: weather, sky, matter, land, waters, plants, animals, body, illness, mind, society, number or time",
+            "class_id": "The class you test",
+        },
+    ),
+    T.ENDOW: ToolText(
+        "You give part of your wealth as an endowment that serves a beneficiary every epoch for its purpose, and you keep it as its trustee. "
+        "It raises your renown while it serves and goes on after you. 1 action.",
+        {
+            "beneficiary_id": "What or whom it serves: a town, a building, a school, a temple, a people or a being",
+            "purpose": "Its purpose: relief, learning, worship, health, works, art, kin, memory or research",
+            "capital": "How much of your wealth you give to it",
+        },
+    ),
+    T.AUDIT_ENDOWMENT: ToolText(
+        "You audit an endowment. What its trustee kept for themselves comes to light; they lose honour and you take their place as trustee. 1 action.",
+        {"endowment_id": "The endowment you audit"},
+    ),
     T.PLOT_SCHEME: ToolText(
         "You begin a scheme against someone: to murder, abduct, seduce, sway, fabricate a claim or a hook, steal a relic, seize a throne, poison a well, "
         "frame, elope, convert in secret, spoil a wedding, free a prisoner, sabotage a land or learn a true name. "
@@ -225,13 +492,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
         "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "
         "forbid it, driving out the sick slows it at home and marks the sick, prayer comforts but crowds, seeking a cure sets the learned "
-        "to work. 1 action.",
-        {"disease_id": "The sickness", "response": "The answer"},
+        "to work. You may also treat it with a kind of cure ({{ cure_classes | join(', ') }}); a cure works only on the kind of thing the "
+        "sickness is, and one that fails costs your healers trust. 1 action.",
+        {"disease_id": "The sickness", "response": "The answer", "cure_class": "The kind of cure you treat it with, or none"},
     ),
     T.SEEK_CURE: ToolText(
         "You work at a cure for a sickness at the hospital, academy or monastery where you live; your medicine adds to the search, and the "
-        "cure, once found, belongs to your community and can be sold along its trade routes. 1 action.",
-        {"disease_id": "The sickness"},
+        "cure, once found, belongs to your community and can be sold along its trade routes. A search by a kind of cure that fits what the "
+        "sickness is goes faster, and one that does not fit goes slower. 1 action.",
+        {"disease_id": "The sickness", "cure_class": "The kind of cure you seek ({{ cure_classes | join(', ') }}), or none"},
     ),
     T.FIND_CARRIER: ToolText(
         "With deep medicine you find that a mortal in your land carries a sickness without falling ill; once found, a carrier spreads it no further. 1 action.",
@@ -269,14 +538,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.SEND_DISPATCH: ToolText(
         "You send a message to someone: a proposal, a demand, a threat, an insult, word of a gift, a declaration, a report, a plea or intelligence, "
-        "by envoy, letter, herald, messenger bird or signal fire. It takes time by distance, medium and season; spies may read or seize it, "
+        "by one of these: {{ mortal_media | join(', ') }}. It takes time by distance, medium and season; spies may read or seize it, "
         "outlaws may waylay it, and in another tongue it may be misread. 1 action.",
         {"recipient_id": "To whom", "content": "What it says", "medium": "How it travels"},
     ),
     T.BARGAIN_WITH_ESTATE: ToolText(
         "As the ruler of a realm, you grant one of its estates a privilege (freedom from taxes, a monopoly, a seat in council, the right to bear arms, "
         "immunity from the courts) to win its loyalty, or take one back at a cost in loyalty. "
-        "At most {{ rules.mortal_tools.estate_bargain_per_epoch }} bargains an age. 1 action.",
+        "At most {{ rules.mortal_tools.estate_bargain_per_epoch | several('bargain', 'bargains') }} an age. 1 action.",
         {"estate_id": "The estate", "privilege": "The privilege", "grant": "True to grant it, false to take it back"},
     ),
     T.PROPOSE_LAW: ToolText(
@@ -617,7 +886,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"species_id": "The kind of the herd, from those your people keep", "training": "What you train it for"},
     ),
     T.MERGE_SPECIES: ToolText(
-        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.species_merge_distance }} steps), into a single merged (requires "
+        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.species_merge_distance | several('step', 'steps') }}), into a single merged (requires "
         "biomancy knowledge). The merged species carries the traits of both species; but it may get out of control. 1 action.",
         {"a_id": "The first species", "b_id": "The second species", "name": NAME_FIELD, "goal": "Why you make it"},
     ),

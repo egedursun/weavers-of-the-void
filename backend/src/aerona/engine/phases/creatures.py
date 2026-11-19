@@ -12,6 +12,7 @@ from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.space_weather import WorldFieldRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind
@@ -50,6 +51,7 @@ from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entit
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, put_stat, scale_stat, shift_bounded, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.space_weather.reading import dose_mutation
 from aerona.rules.registry import Rules
 
 VICTIM_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
@@ -123,7 +125,8 @@ async def _mutation_chance(ctx: TickContext, species: EntityRow, leaks: dict[int
         chance += creatures.mutation_cursed_bonus_pct / PERCENT
     if stat_or(species, "might", 0):
         chance += creatures.mutation_might_bonus_pct / PERCENT
-    return chance + radiation_mutation(ctx.rules, await ctx.session.get(WorldRow, species.world_id))
+    field = await ctx.session.get(WorldFieldRow, species.world_id) if species.world_id is not None else None
+    return chance + radiation_mutation(ctx.rules, await ctx.session.get(WorldRow, species.world_id)) + dose_mutation(ctx.rules, field)
 
 
 async def mutate_species(ctx: TickContext, species: EntityRow, leak: int, chance: float) -> EntityRow:
@@ -477,9 +480,14 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.bodies",
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.holder_levels",
     "table.incident_participants",
     "table.incidents",
@@ -488,10 +496,13 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.nodes",
     "table.polity_profiles",
     "table.region_environment",
+    "table.sons",
     "table.species_products",
     "table.species_profiles",
     "table.species_ranges",
+    "table.stars",
     "table.world_biochemistries",
+    "table.world_fields",
     "table.world_maps",
     "table.worlds",
 )
@@ -832,7 +843,22 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
     await creature_phase(await manual_context(session, "creatures", rules))
 
 
-@reads("species.danger", "table.bonds", "table.entities", "table.entity_traits", "table.nodes", "table.world_maps")
+@reads(
+    "species.danger",
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.entity_traits",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.sons",
+    "table.stars",
+    "table.world_maps",
+    "table.worlds",
+)
 @writes(
     "table.bonds",
     "table.chronicle",

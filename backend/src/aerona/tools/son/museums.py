@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -68,7 +69,7 @@ async def lay_out_garden(call: SonCall, args: LayOutGardenInput) -> str:
     await found_garden(call.tick, town.id, args.kind)
     call.spend_essence(cost)
     call.target(town.id)
-    told = args.kind.value.replace("_", " ")
+    told = spoken(args.kind)
     await call.record(
         "tools.son.lay_out_garden",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: town.id},

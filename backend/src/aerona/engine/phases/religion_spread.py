@@ -145,7 +145,11 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.ciphers",
     "table.creator",
     "table.cult_doctrines",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -159,11 +163,13 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.signal_links",
     "table.son_relations",
     "table.sons",
+    "table.stars",
     "table.vassalages",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "cult.followers",
@@ -207,7 +213,22 @@ async def schisms(ctx: TickContext) -> None:
     ctx.count("schisms", split)
 
 
-@reads("settlement.piety", "table.bonds", "table.creator", "table.entities", "table.entity_flags", "table.nodes", "table.reverences", "table.sons")
+@reads(
+    "settlement.piety",
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.reverences",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.incident_participants", "table.incidents")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
@@ -530,10 +551,14 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.dimensions",
     "table.divine_standing",
     "table.dominions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.god_designs",
     "table.god_scales",
     "table.journeys",
@@ -548,11 +573,13 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.reverences",
     "table.sons",
     "table.speaker_cohorts",
+    "table.stars",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
     "table.treaty_clauses",
+    "table.worlds",
     "trade_route.culture",
 )
 async def religion_spread(ctx: TickContext) -> None:

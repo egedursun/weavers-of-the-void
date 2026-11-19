@@ -28,6 +28,7 @@ from aerona.db.tables.crafts import (
     SympatheticLinkRow,
 )
 from aerona.db.tables.economy import WorldMaterialRow
+from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.engine.collective.control import saved
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.aids import AidTally, keep_aids
@@ -101,6 +102,22 @@ async def edit_record(ctx: TickContext, name: str, key: object, values: Values, 
     row = apply(await found(ctx, kind.table, key, kind.label), allowed(values, kind.fields, kind.label), release)
     await ctx.session.flush()
     return row
+
+
+async def read_number(ctx: TickContext, people_id: int, number: int, reading: NumberReading | None) -> NumberSystemRow:
+    system = await ctx.session.get(NumberSystemRow, people_id)
+    if system is None:
+        raise ValidationFailedError("That people has no number system to read yet.")
+    if not 0 <= number < system.base:
+        raise ValidationFailedError(f"In base {system.base} a number to read lies from 0 to {system.base - 1}.")
+    readings = dict(system.numerology or {})
+    if reading is None:
+        readings.pop(str(number), None)
+    else:
+        readings[str(number)] = reading.value
+    system.numerology = readings
+    await ctx.session.flush()
+    return system
 
 
 async def delete_record(ctx: TickContext, name: str, key: object) -> None:

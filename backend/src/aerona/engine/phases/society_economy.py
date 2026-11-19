@@ -27,6 +27,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw, 
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
+from aerona.engine.commerce.trade import retail_short, without_shops
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import light_pct, view_of
 from aerona.engine.cuisine.dishes import KitchenTally, cook_dishes
@@ -548,6 +549,8 @@ async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: 
     meal = await eat(ctx, entity, staples)
     taste_meal(ctx, world.economy, entity, meal.quality)
     worn = await wear(ctx, entity)
+    if entity.entity_type is EntityType.SETTLEMENT:
+        worn = without_shops(worn, await retail_short(ctx.session, ctx.rules.commerce.no_shop_basket_pct, entity.id))
     standing = await standing_of(ctx.session, entity.id)
     found = await needs_of(ctx.session, entity.id)
     basket = build_basket(
@@ -706,6 +709,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.entity_flags",
     "table.faction_profiles",
     "table.ferment_cultures",
+    "table.folk_knowledge",
     "table.forced_weather",
     "table.foreign_gods",
     "table.galactic_structures",
@@ -754,6 +758,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.reverences",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
+    "table.shops",
     "table.signal_links",
     "table.skills",
     "table.sky_events",
@@ -761,6 +766,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.species_products",
     "table.species_profiles",
     "table.stars",
+    "table.supply_tiers",
     "table.treaty_parties",
     "table.tributes",
     "table.war_production",

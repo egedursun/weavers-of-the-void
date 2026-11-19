@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.ages import ArcRow, IrregularSeasonRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -117,7 +118,7 @@ async def press_tale(call: SonCall, args: PressTaleInput) -> str:
         fail(SonResult.TALE_REFUSED, why="a stronger hand holds it")
     await control.press_arc(call.tick, arc.id, PERCENT)
     call.target(subject.id)
-    told = arc.template.value.replace("_", " ")
+    told = spoken(arc.template)
     await call.record(
         "tools.son.press_tale",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: subject.id},
@@ -162,7 +163,7 @@ async def echo_life(call: SonCall, args: EchoLifeInput) -> str:
     await call.record(
         "tools.son.echo_life", roles={IncidentRole.ACTOR: call.son.id, IncidentRole.TARGET: mortal.id}, facts={"reason": args.reason}, kind=ChronicleKind.FATE
     )
-    return result(SonResult.LIFE_ECHOED, mortal=mortal.name, tale=arc.template.value.replace("_", " "))
+    return result(SonResult.LIFE_ECHOED, mortal=mortal.name, tale=spoken(arc.template))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

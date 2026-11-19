@@ -26,6 +26,7 @@ from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
+from aerona.engine.death_work.handling import reachable, remains_of
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.economy.materials import set_node_material
@@ -273,10 +274,10 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
     bones = await create_record(
         ctx,
         RecordSpec(
-            name=f"Bones of {saint.name}",
+            name=f"Remains of {saint.name}",
             entity_type=EntityType.ITEM,
             stats=ItemStats(),
-            body=f"The bones of {saint.name}, kept by {church.cult.name} as a holy relic.",
+            body=f"The remains of {saint.name}, kept by {church.cult.name} as a holy relic.",
             power=max(1, saint.power_level),
             world_id=saint.world_id,
             location_id=saint.location_id,
@@ -300,8 +301,12 @@ async def bones_of(ctx: TickContext, church: Church, saint: EntityRow) -> Entity
         )
     )
     await set_node_material(ctx.session, bones.id, MaterialSlot.BODY, MaterialKind.BONE, None, force=True)
-    await connect(ctx.session, church.cult.id, bones.id, BondKind.OWNS, ctx.epoch, description="the bones of its saint")
+    await connect(ctx.session, church.cult.id, bones.id, BondKind.OWNS, ctx.epoch, description="the remains of its saint")
     return bones
+
+
+async def keeps_remains(ctx: TickContext, saint: EntityRow) -> bool:
+    return reachable(await remains_of(ctx.session, saint))
 
 
 async def canonise(ctx: TickContext, church: Church, saint: EntityRow, item: EntityRow | None = None) -> RelicRow:

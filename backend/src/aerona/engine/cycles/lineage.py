@@ -12,6 +12,7 @@ from aerona.domain.enums.unions import KinMatch, PartnerScope
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.cycles.sides import second_sex
+from aerona.engine.death_work.handling import death_match
 from aerona.engine.mortal.kin import children_of, parents_of
 from aerona.rules.registry import Rules
 
@@ -122,6 +123,10 @@ SOUGHT_OUTSIDE = frozenset({PartnerScope.LINE, PartnerScope.MOIETY})
 
 
 async def preference_bonus(session: AsyncSession, rules: Rules, first: EntityRow, second: EntityRow) -> int:
+    return await custom_bonus(session, rules, first, second) + await death_match(session, rules, second)
+
+
+async def custom_bonus(session: AsyncSession, rules: Rules, first: EntityRow, second: EntityRow) -> int:
     union = await union_of(session, first)
     if union is None:
         return 0

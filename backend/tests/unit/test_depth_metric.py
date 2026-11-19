@@ -60,3 +60,13 @@ def test_node_table_attributes_count_only_columns_the_engine_reads() -> None:
 def test_the_published_depth_metric_is_current() -> None:
     metric = load()
     assert metric.OUTPUT.read_text(encoding="utf-8") == metric.render(metric.measure()), "run scripts/depth_metric.py write"
+
+
+def test_the_rows_a_type_owns_are_real_tables_and_count_only_columns_the_engine_reads() -> None:
+    metric = load()
+    known = set(metric.Base.metadata.tables)
+    assert all(set(tables) <= known for tables in metric.TYPE_TABLES.values())
+    assert {"sons", "son_powers"} <= metric.owned_tables("son")
+    assert "worlds" in metric.owned_tables("world")
+    for name in metric.TYPE_TABLES:
+        assert all(column.split(".", 1)[0] in metric.owned_tables(name) for column in metric.owned_columns(name))

@@ -4,8 +4,10 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.catalog.gates import Gate
+from aerona.catalog.weather import SEASON_DOMAIN_WORDS, SEASON_DOMAINS
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, REASON_MAX, REASON_MIN
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import spoken
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -38,7 +40,6 @@ from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
-from aerona.tools.son.cosmos import SEASON_DOMAINS
 from aerona.tools.son.heavens import world_in_hand
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
@@ -149,7 +150,7 @@ async def forge_ley_line(call: SonCall, args: ForgeLeyInput) -> str:
 
 async def add_season(call: SonCall, args: AddSeasonInput) -> str:
     if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
-        fail(SonResult.SEASONS_NOT_YOURS)
+        fail(SonResult.SEASONS_NOT_YOURS, domains=SEASON_DOMAIN_WORDS)
     world = await world_in_hand(call, args.world_id)
     cost = call.rules.son_tools.add_season_essence
     require_essence(call, cost)
@@ -375,7 +376,7 @@ async def bless_host(call: SonCall, args: BlessHostInput) -> str:
         facts={"aspect": str(args.aspect.value), "reason": args.reason},
         kind=ChronicleKind.WAR,
     )
-    return result(SonResult.HOST_BLESSED, army=army.name, aspect=args.aspect.value, amount=amount)
+    return result(SonResult.HOST_BLESSED, army=army.name, aspect=spoken(args.aspect), amount=amount)
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

@@ -44,6 +44,7 @@ from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.memories import strength_of
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.held_titles import title_prestige
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.loyalty import loyalty_autonomy
 from aerona.engine.polity.oaths import break_on
@@ -123,6 +124,9 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
     pacifist = church is not None and await ctx.session.get(CultTenetRow, (church.cult_entity_id, TenetKind.PACIFISM)) is not None
     if pacifist and (await war_record(ctx, realm))[2]:
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
+    crowned = (await title_prestige(ctx.session, [ruler.id])).get(ruler.id, 0) * table.title_prestige_pct // PERCENT
+    if crowned:
+        parts["the titles the ruler holds"] = min(table.title_cap, crowned)
     parts.update(await fortunes(ctx, book, realm, ruler))
     parts.update(await bearing(ctx, realm, ruler))
     parts.update(await legitimacy_kinds(ctx.session, ctx.rules, realm.entity.id))

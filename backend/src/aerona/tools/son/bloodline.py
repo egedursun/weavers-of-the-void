@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -41,7 +42,7 @@ async def bless_bloodline(call: SonCall, args: BloodlineInput) -> str:
         facts={"trait": args.trait},
         kind=ChronicleKind.DIVINE_SIGN,
     )
-    return result(SonResult.BLOODLINE_SET, house=house.name, trait=args.trait.value.replace("_", " "))
+    return result(SonResult.BLOODLINE_SET, house=house.name, trait=spoken(args.trait))
 
 
 def bloodline_cost(rules: Rules) -> int:

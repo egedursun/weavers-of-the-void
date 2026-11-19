@@ -12,6 +12,7 @@ from aerona.engine.phase import Phase
     "table.bonds",
     "table.chronicle",
     "table.cosmos",
+    "table.creator",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",

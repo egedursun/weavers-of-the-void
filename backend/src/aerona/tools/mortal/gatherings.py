@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.polity import OfficeRow
@@ -62,7 +62,7 @@ async def hold_gathering(call: MortalCall, args: HoldGatheringInput) -> str:
     row = await plan(call.tick, occasion)
     if row is None:
         fail(MortalResult.GATHERING_REFUSED, why="a god holds you against change")
-    return result(MortalResult.GATHERING_PLANNED, kind=args.kind.value.replace("_", " "), guests=len(guests))
+    return result(MortalResult.GATHERING_PLANNED, kind=spoken(args.kind), guests=len(guests))
 
 
 async def delve_site(call: MortalCall, args: SiteInput) -> str:

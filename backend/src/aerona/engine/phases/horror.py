@@ -416,6 +416,7 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.breach_points",
     "table.community_societies",
     "table.cosmos",
+    "table.creator",
     "table.dimensional_events",
     "table.dimensions",
     "table.divine_wounds",

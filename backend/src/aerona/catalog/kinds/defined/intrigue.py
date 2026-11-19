@@ -11,6 +11,7 @@ INTRIGUE_SECRET = total(
             used_by=(
                 "catalog.intrigue.SCHEMES",
                 "catalog.intrigue.SECRETS",
+                "engine.intimacy.norms.judge_pair",
                 "engine.intrigue.schemes.seduce",
                 "engine.intrigue.talk.affair_secret",
                 "engine.polity.trials.AREA_SECRETS",

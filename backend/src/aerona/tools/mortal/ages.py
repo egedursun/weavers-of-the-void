@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.ages import EcoTransformationRow, IrregularSeasonRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import LongPlanRow
@@ -97,7 +98,7 @@ async def swear_vengeance(call: MortalCall, args: SwearVengeanceInput) -> str:
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.OPPONENT: foe.id},
         facts={"stage": row.stage},
     )
-    return result(MortalResult.VENGEANCE_SWORN, foe=foe.name, stage=row.stage.value)
+    return result(MortalResult.VENGEANCE_SWORN, foe=foe.name, stage=spoken(row.stage))
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

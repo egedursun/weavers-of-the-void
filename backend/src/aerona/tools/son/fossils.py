@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -50,7 +51,7 @@ async def lay_bare_fossils(call: SonCall, args: LayBareFossilsInput) -> str:
         place=region.id,
         kind=ChronicleKind.DIVINE_SIGN,
     )
-    return result(SonResult.FOSSILS_LAID_BARE, region=region.name, source=bed.source.value.replace("_", " "), reading=bed.reading.value.replace("_", " "))
+    return result(SonResult.FOSSILS_LAID_BARE, region=region.name, source=spoken(bed.source), reading=spoken(bed.reading))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

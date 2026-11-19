@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.catalog.peoples import MountFit
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import (
     AgeBand,
     CohortCondition,
@@ -113,6 +114,7 @@ class CultureView(ApiModel):
     liturgical_language: LinkedRecord | None
     trade_language: LinkedRecord | None
     funeral_rite: FuneralCustom
+    remains_treatment: RemainsTreatment
     funeral_tradition: LinkedRecord | None
     martial_record: list[MartialRecordView]
     martial_net: int

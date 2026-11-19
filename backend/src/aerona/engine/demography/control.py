@@ -15,6 +15,7 @@ from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import AgeBand, CohortCondition, FuneralCustom, InheritanceCustom, MartialStyle, MotifSource, NaturalTrait
 from aerona.domain.enums.ecology import Biochemistry, Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
@@ -70,6 +71,7 @@ CULTURE_CHOICES: dict[str, type[StrEnum]] = {
     "martial_style": MartialStyle,
     "inheritance": InheritanceCustom,
     "funeral_rite": FuneralCustom,
+    "remains_treatment": RemainsTreatment,
 }
 CULTURE_FLAGS = ("slavery_lawful",)
 UNION_CHOICES: dict[str, tuple[str, type[StrEnum]]] = {

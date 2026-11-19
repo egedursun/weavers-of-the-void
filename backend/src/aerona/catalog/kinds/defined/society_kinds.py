@@ -99,7 +99,7 @@ PROFESSION_CATEGORY = total(
             "Trade", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")
         ),
         ProfessionCategory.TRANSPORT: Defined("Transport", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
-        ProfessionCategory.CARE: Defined("Care", checked_by=(), used_by=()),
+        ProfessionCategory.CARE: Defined("Care", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
         ProfessionCategory.HEALING: Defined("Healing", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_PROFESSIONS",)),
         ProfessionCategory.LEARNING: Defined(
             "Learning", checked_by=(), used_by=("db.kind_concepts.society.BUILT_IN_JOBS", "db.kind_concepts.society.BUILT_IN_PROFESSIONS")

@@ -567,6 +567,7 @@ ENTITY_FLAG = total(
             "Exile",
             checked_by=("engine.intrigue.sources.masked_lives",),
             used_by=(
+                "engine.intimacy.norms.sanction",
                 "engine.law.sentences.banish",
                 "engine.law.sentences.transport",
                 "engine.mortal.justice.sentence",

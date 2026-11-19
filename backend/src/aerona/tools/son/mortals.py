@@ -6,6 +6,7 @@ from pydantic import Field
 from aerona.catalog.mind_split import IDEAS
 from aerona.catalog.renown import AXIS_LABELS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -135,7 +136,7 @@ async def bind_mortals(call: SonCall, args: BindInput) -> str:
         facts={"binding": str(args.binding.value.replace("_", " ")), "reason": str(args.reason)},
         kind=ChronicleKind.LINEAGE,
     )
-    return result(SonResult.MORTALS_BOUND, first=first.name, second=second.name, binding=args.binding.value.replace("_", " "))
+    return result(SonResult.MORTALS_BOUND, first=first.name, second=second.name, binding=spoken(args.binding))
 
 
 async def touch_mortal(call: SonCall, args: TouchInput) -> str:
@@ -168,7 +169,7 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
         facts={"touch": str(args.touch.value.replace("_", " ")), "reason": str(args.reason)},
         kind=ChronicleKind.INTRIGUE,
     )
-    return result(SonResult.MORTAL_TOUCHED, name=mortal.name, touch=args.touch.value.replace("_", " "))
+    return result(SonResult.MORTAL_TOUCHED, name=mortal.name, touch=spoken(args.touch))
 
 
 async def plant_idea(call: SonCall, args: PlantIdeaInput) -> str:
@@ -229,7 +230,7 @@ async def stir_hearts(call: SonCall, args: StirInput) -> str:
         shift(call.rules, row, call.epoch, **{args.stir.value: amount, "familiarity": amount})
     call.spend_essence(cost)
     call.target(first.id)
-    stir = args.stir.value
+    stir = spoken(args.stir)
     await call.record(
         "tools.son.stir_hearts",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: [first.id, second.id]},

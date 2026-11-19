@@ -5,7 +5,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.catalog.gates import Gate
-from aerona.catalog.weather import WEATHER
+from aerona.catalog.weather import SEASON_DOMAIN_WORDS, SEASON_DOMAINS, WEATHER
 from aerona.constants.tool_inputs import (
     INSPIRATION_MAX,
     INSPIRATION_MIN,
@@ -16,6 +16,7 @@ from aerona.constants.tool_inputs import (
     SHORT_DESCRIPTION_MAX,
     SHORT_DESCRIPTION_MIN,
 )
+from aerona.core.grammar import spoken
 from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -56,7 +57,6 @@ from aerona.tools.son.support import ensure_in_reach, grant, require_essence, sh
 from aerona.tools.son.war import known_god
 
 PERCENT = 100
-SEASON_DOMAINS = frozenset({Domain.SKY, Domain.STORM, Domain.TIME, Domain.SUN, Domain.MOON, Domain.HARVEST, Domain.ICE, Domain.PLANTS})
 INHABITANTS = (EntityType.PEOPLE, EntityType.SETTLEMENT)
 
 
@@ -208,7 +208,7 @@ async def sever_ley_line(call: SonCall, args: SeverLeyInput) -> str:
 async def reorder_world_seasons(call: SonCall, args: ReorderSeasonsInput) -> str:
     tools = call.rules.son_tools
     if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
-        fail(SonResult.SEASONS_NOT_YOURS)
+        fail(SonResult.SEASONS_NOT_YOURS, domains=SEASON_DOMAIN_WORDS)
     await call.within_limit(TurnCounter.SEASON_ORDER, tools.reorder_seasons_per_epoch, "son_tools.reorder_seasons_per_epoch", SonResult.SEASONS_LIMIT)
     world = await _world(call, args.world_id)
     if call.world_id != world.id and not await call.reachable_world(world.id):
@@ -235,7 +235,7 @@ async def reorder_world_seasons(call: SonCall, args: ReorderSeasonsInput) -> str
 async def shape_weather(call: SonCall, args: ShapeWeatherInput) -> str:
     tools = call.rules.son_tools
     if not {call.son.domain_primary, call.son.domain_secondary} & SEASON_DOMAINS:
-        fail(SonResult.SEASONS_NOT_YOURS)
+        fail(SonResult.SEASONS_NOT_YOURS, domains=SEASON_DOMAIN_WORDS)
     await call.within_limit(TurnCounter.WEATHER_SHAPING, tools.shape_weather_per_epoch, "son_tools.shape_weather_per_epoch", SonResult.WEATHER_LIMIT)
     region = await call.session.get(EntityRow, args.region_id)
     if region is None or region.entity_type is not EntityType.REGION:
@@ -388,7 +388,7 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
     tools = call.rules.son_tools
     god = await known_god(call, args.god_id)
     if god.status is not ForeignGodStatus.AWAKE:
-        fail(SonResult.GOD_CANNOT_SPEAK, name=god.name, state=god.status.value)
+        fail(SonResult.GOD_CANNOT_SPEAK, name=god.name, state=spoken(god.status))
     if await call.target_uses(ActionKind.FOREIGN_GOD_TALK, god.id) >= tools.foreign_talk_per_god:
         fail(SonResult.TALK_LIMIT, name=god.name, cap=tools.foreign_talk_per_god)
     if call.world_id is not None and not await WorldRepository(call.session).connected(call.world_id, god.world_id):

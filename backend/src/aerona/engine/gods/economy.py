@@ -633,8 +633,13 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "settlement.prosperity",
     "table.bonds",
     "table.cosmos",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.journeys",
@@ -642,6 +647,8 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.node_births",
     "table.nodes",
     "table.routes",
+    "table.sons",
+    "table.stars",
     "table.worlds",
 )
 @writes(

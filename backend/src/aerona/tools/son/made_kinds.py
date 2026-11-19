@@ -169,7 +169,7 @@ async def shape_dish(call: SonCall, args: ShapeDishInput) -> str:
         facts={"owner_detail": str(owner.name), "name": dish.name},
         kind=ChronicleKind.CULTURE,
     )
-    return result(SonResult.DISH_SHAPED, owner=owner.name, name=dish.name, id=dish.id, method=args.method.value, course=label_of(args.course))
+    return result(SonResult.DISH_SHAPED, owner=owner.name, name=dish.name, id=dish.id, method=spoken(args.method), course=label_of(args.course))
 
 
 async def shape_structure_type(call: SonCall, args: ShapeStructureTypeInput) -> str:

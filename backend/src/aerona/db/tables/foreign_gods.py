@@ -29,7 +29,7 @@ class ForeignGodRow(StatColumns, NodeRow):
         CheckConstraint("status <> 'dead' OR death_epoch IS NOT NULL", name="dead_has_epoch"),
         Index("ix_foreign_gods_world_status", "world_id", "status"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.FOREIGN_GOD})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.FOREIGN_GOD, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     title: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))

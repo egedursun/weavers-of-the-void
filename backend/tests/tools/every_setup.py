@@ -18,20 +18,27 @@ from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
 from aerona.db.tables.divine_powers import DivinePowerRow
 from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, MagicSiteRow
-from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
+from aerona.db.tables.ecology import HerdRow, SpeciesProductRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
+from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
+from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
+from aerona.db.tables.forecasting import ObservationMethodRow
+from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.intimacy import LegitimacyRuleRow
 from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
 from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.kin import KinGroupMemberRow, KinGroupRow, KinRoleDutyRow
 from aerona.db.tables.law_depth import LegalSystemRow, OutlawRow, PrisonerRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.media import MediaOutletRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
@@ -47,11 +54,15 @@ from aerona.db.tables.sacred import DivinationSystemRow, GeniusLocusRow, MysticR
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
+from aerona.db.tables.standing import ProfessionOfValueRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.urban import ConvoyRow, OrderLawRow, TurfRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.db.tables.water import CoastRow
+from aerona.db.tables.works import PublicWorksRow
+from aerona.db.tables.youth import YouthGroupRow, YouthStandingRow
 from aerona.domain.enums.agrarian import CommonsKind, RebuildCause
 from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
@@ -70,13 +81,18 @@ from aerona.domain.enums.ecology import AnimalRole, Diet, DomesticationStage, Sp
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.folk_knowledge import FolkDomain, FolkTaking
+from aerona.domain.enums.forecasting import ObservationMethod
+from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.gathering import CollectionKind
+from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Verdict
+from aerona.domain.enums.kin import KinDuty, KinGroupForm, KinRole
 from aerona.domain.enums.law_depth import LegalSystem
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.mortal import CrimeKind, LifeStage
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.operations import EchelonLevel, ExpeditionRole
@@ -94,7 +110,10 @@ from aerona.domain.enums.structure import ConstructionStatus, StructureKind
 from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.urban import ConvoyStatus, OrderLaw
+from aerona.domain.enums.water import CoastForm
+from aerona.domain.enums.works import WorksKind
 from aerona.domain.enums.world import StarType
+from aerona.domain.enums.youth import YouthPurpose
 from aerona.domain.models.entity_stats import (
     ArmyStats,
     BeastStats,
@@ -114,17 +133,20 @@ from aerona.domain.models.entity_stats import (
     TradeRouteStats,
 )
 from aerona.domain.models.profiles import TravelResource
+from aerona.engine.body.customs import people_of
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.secrets import draft_for, hide
 from aerona.engine.households.formation import found_household
+from aerona.engine.intimacy.legitimacy import parent_union
 from aerona.engine.mind.book import write_values
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.services.war import open_war, take_captive
 from aerona.engine.tongues.modality import own_tongue
@@ -435,6 +457,239 @@ async def well_housed(session: AsyncSession, realm: Realm) -> Ids:
     home = await found_household(await manual_context(session, "household"), head)
     home.wealth = 200
     return {"household": home.id}
+
+
+async def household_with_hand(session: AsyncSession, realm: Realm) -> Ids:
+    found = await well_housed(session, realm)
+    hand = await second_mortal(session, realm)
+    for mortal_id in (realm.mortal_id, hand["mortal"]):
+        if await session.get(MortalProfileRow, mortal_id) is None:
+            session.add(MortalProfileRow(entity_id=mortal_id, locked=[]))
+    await session.flush()
+    return {**found, **hand}
+
+
+async def kin_bound(session: AsyncSession, realm: Realm) -> Ids:
+    parent = await second_mortal(session, realm)
+    await connect(session, parent["mortal"], realm.mortal_id, BondKind.PARENT_OF)
+    await connect(session, realm.mortal_id, realm.people_id, BondKind.DESCENDS_FROM)
+    for mortal_id, wealth in ((realm.mortal_id, 5), (parent["mortal"], 80)):
+        profile = await session.get(MortalProfileRow, mortal_id)
+        if profile is None:
+            session.add(MortalProfileRow(entity_id=mortal_id, wealth=wealth, locked=[]))
+        else:
+            profile.wealth = wealth
+    session.add(KinRoleDutyRow(people_entity_id=realm.people_id, role=KinRole.PARENT, duty=KinDuty.SUPPORT, strength=90, locked=[]))
+    group = KinGroupRow(people_entity_id=realm.people_id, name="Kin of the Ford", form=KinGroupForm.CLAN, founded_epoch=EPOCH, locked=[])
+    session.add(group)
+    await session.flush()
+    session.add_all(
+        KinGroupMemberRow(group_id=group.id, member_node_id=member, joined_epoch=EPOCH, locked=[]) for member in (realm.mortal_id, parent["mortal"])
+    )
+    await session.flush()
+    return {"parent": parent["mortal"], "group": group.id}
+
+
+async def child_at_home(session: AsyncSession, realm: Realm) -> Ids:
+    child = await second_mortal(session, realm)
+    await connect(session, realm.mortal_id, child["mortal"], BondKind.PARENT_OF)
+    profile = await session.get(MortalProfileRow, child["mortal"])
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=child["mortal"], life_stage=LifeStage.CHILD, locked=[]))
+    else:
+        profile.life_stage = LifeStage.CHILD
+    await session.flush()
+    return {"child": child["mortal"]}
+
+
+async def child_out_of_union(session: AsyncSession, realm: Realm) -> Ids:
+    found = await child_at_home(session, realm)
+    other = await make_entity(
+        session, "Ilse Vane", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=MortalStats(age=30)
+    )
+    await connect(session, other.id, found["child"], BondKind.PARENT_OF)
+    await connect(session, found["child"], realm.people_id, BondKind.DESCENDS_FROM)
+    child = await session.get(EntityRow, found["child"])
+    assert child is not None
+    if await people_of(session, child) is None:
+        await connect(session, realm.settlement_id, realm.people_id, BondKind.DESCENDS_FROM)
+    folk = await people_of(session, child)
+    key = (folk.id if folk is not None else realm.people_id, await parent_union(session, found["child"]))
+    rule = await session.get(LegitimacyRuleRow, key)
+    if rule is None:
+        rule = LegitimacyRuleRow(people_entity_id=key[0], parent_union=key[1], locked=[])
+        session.add(rule)
+    rule.standing, rule.path, rule.cost = ChildLegitimacy.PARTIAL, LegitimacyPath.RECOGNITION, 0
+    await session.flush()
+    return found
+
+
+async def youth_of_town(session: AsyncSession, realm: Realm, *, young: bool) -> Ids:
+    me = await session.get(EntityRow, realm.mortal_id)
+    assert me is not None
+    me.location_id = realm.settlement_id
+    folk = await people_of(session, me)
+    standing = await session.get(YouthStandingRow, folk.id) if folk is not None else None
+    if folk is not None and standing is None:
+        standing = YouthStandingRow(people_entity_id=folk.id, locked=[])
+        session.add(standing)
+    if standing is not None:
+        standing.youth_from, standing.youth_to = (0, 200) if young else (0, 0)
+    profile = await session.get(MortalProfileRow, realm.mortal_id)
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=realm.mortal_id, life_stage=LifeStage.YOUTH if young else LifeStage.ADULT, locked=[]))
+    else:
+        profile.life_stage = LifeStage.YOUTH if young else LifeStage.ADULT
+    group = YouthGroupRow(settlement_entity_id=realm.settlement_id, name="the youth of the vale", purpose=YouthPurpose.MISCHIEF, founded_epoch=EPOCH, locked=[])
+    session.add(group)
+    await session.flush()
+    return {"group": group.id}
+
+
+async def young_in_town(session: AsyncSession, realm: Realm) -> Ids:
+    return await youth_of_town(session, realm, young=True)
+
+
+async def elder_in_town(session: AsyncSession, realm: Realm) -> Ids:
+    return await youth_of_town(session, realm, young=False)
+
+
+async def shopkeeper(session: AsyncSession, realm: Realm) -> Ids:
+    me = await session.get(EntityRow, realm.mortal_id)
+    assert me is not None
+    me.location_id = realm.settlement_id
+    await session.flush()
+    return await wealthy(session, realm)
+
+
+async def harbour_dweller(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    me = await session.get(EntityRow, realm.mortal_id)
+    region = await top_region(session, me)
+    assert region is not None
+    session.add(CoastRow(region_entity_id=region.id, form=CoastForm.LAGOON, harbour_silting=40, locked=[]))
+    await session.flush()
+    return found
+
+
+async def fossil_scholar(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    me = await session.get(EntityRow, realm.mortal_id)
+    region = await top_region(session, me)
+    assert region is not None
+    bed = FossilBedRow(region_entity_id=region.id, world_id=realm.cosmos.world_id, source=FossilSource.MEGAFAUNA, richness=40, found_epoch=0, locked=[])
+    session.add(bed)
+    await session.flush()
+    return {**found, "bed": bed.id}
+
+
+async def sky_reader(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    me = await session.get(EntityRow, realm.mortal_id)
+    assert me is not None
+    if await people_of(session, me) is None:
+        await connect(session, realm.settlement_id, realm.people_id, BondKind.DESCENDS_FROM)
+    folk = await people_of(session, me)
+    assert folk is not None
+    session.add(ObservationMethodRow(people_entity_id=folk.id, domain=FolkDomain.WEATHER, method=ObservationMethod.SIGHT, accuracy=60, locked=[]))
+    await session.flush()
+    return found
+
+
+async def weather_worker(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    return {**found, **await knows(session, realm, KnowledgeBranch.MAGIC, "Cloudcalling")}
+
+
+async def hypocrite_near(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    other = await second_mortal(session, realm)
+    session.add(ProfessionOfValueRow(holder_node_id=other["mortal"], axis=ValueAxis.HONOUR, strength=70, gap=60, acts_against=6, knowers=2, locked=[]))
+    await session.flush()
+    return {**found, **other}
+
+
+async def lore_keeper(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    me = await session.get(EntityRow, realm.mortal_id)
+    assert me is not None
+    if await people_of(session, me) is None:
+        await connect(session, realm.settlement_id, realm.people_id, BondKind.DESCENDS_FROM)
+    folk = await people_of(session, me)
+    assert folk is not None
+    session.add(FolkKnowledgeRow(people_entity_id=folk.id, domain=FolkDomain.PLANTS, depth=40, accuracy=60, locked=[]))
+    weed = await make_entity(session, "Bitter Sedge", EntityType.SPECIES, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    session.add(SpeciesProfileRow(species_entity_id=weed.id, species_class=SpeciesClass.PLANT, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC))
+    session.add(SpeciesProductRow(species_entity_id=weed.id, product="sap", commodity=CommodityKind.POISON))
+    lore = FolkClassRow(
+        people_entity_id=folk.id,
+        domain=FolkDomain.PLANTS,
+        name="Bitter Sedge",
+        grouped_node_id=weed.id,
+        taken_as=FolkTaking.FOOD,
+        misclassified=True,
+        locked=[],
+    )
+    session.add(lore)
+    await session.flush()
+    return {**found, **await second_mortal(session, realm), "folk_class": lore.id}
+
+
+async def endowment_to_audit(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    other = await second_mortal(session, realm)
+    trust = EndowmentRow(
+        founder_node_id=other["mortal"],
+        beneficiary_node_id=realm.settlement_id,
+        trustee_node_id=other["mortal"],
+        capital=100,
+        skimmed=6,
+        locked=[],
+    )
+    session.add(trust)
+    await session.flush()
+    return {**found, **other, "endowment": trust.id}
+
+
+async def landlord(session: AsyncSession, realm: Realm) -> Ids:
+    found = await shopkeeper(session, realm)
+    house = await make_entity(session, "Corner House", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(StructureProfileRow(structure_entity_id=house.id, kind=StructureKind.WORKSHOP, host_entity_id=realm.settlement_id))
+    await connect(session, realm.mortal_id, house.id, BondKind.OWNS)
+    tenant = await second_mortal(session, realm)
+    await session.flush()
+    return {**found, "house": house.id, "tenant": tenant["mortal"]}
+
+
+async def works_underway(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    await wealthy(session, realm)
+    works = PublicWorksRow(polity_entity_id=found["polity"], place_node_id=realm.settlement_id, kind=WorksKind.ROAD, begun_epoch=EPOCH, locked=[])
+    session.add(works)
+    await session.flush()
+    return {**found, "works": works.id}
+
+
+async def outlet_owner(session: AsyncSession, realm: Realm) -> Ids:
+    await shopkeeper(session, realm)
+    outlet = MediaOutletRow(owner_node_id=realm.mortal_id, seat_entity_id=realm.settlement_id, name="The Vale Crier", reach=40, founded_epoch=EPOCH, locked=[])
+    session.add(outlet)
+    await session.flush()
+    return {"outlet": outlet.id}
+
+
+async def outlet_in_realm(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    other = await second_mortal(session, realm)
+    outlet = MediaOutletRow(owner_node_id=other["mortal"], seat_entity_id=realm.settlement_id, name="The Vale Crier", reach=40, founded_epoch=EPOCH, locked=[])
+    session.add(outlet)
+    await session.flush()
+    return {**found, "outlet": outlet.id}
+
+
+async def rival_in_town(session: AsyncSession, realm: Realm) -> Ids:
+    await shopkeeper(session, realm)
+    return await second_mortal(session, realm)
 
 
 async def named_spirit(session: AsyncSession, realm: Realm) -> Ids:

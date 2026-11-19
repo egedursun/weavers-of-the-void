@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import (
     AgeBand,
     CohortCondition,
@@ -106,6 +107,9 @@ class PeopleCultureRow(Base):
     martial_style: Mapped[MartialStyle] = mapped_column(enum_type(MartialStyle, "martial_style"))
     funeral_rite_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     funeral_rite: Mapped[FuneralCustom] = mapped_column(enum_type(FuneralCustom, "funeral_rite"), default=FuneralCustom.BURIAL)
+    remains_treatment: Mapped[RemainsTreatment] = mapped_column(
+        enum_type(RemainsTreatment, "remains_treatment"), default=RemainsTreatment.BURIAL, server_default=RemainsTreatment.BURIAL.value
+    )
     martial_record: Mapped[dict[str, list[int]]] = mapped_column(JSON, default=dict)
     martial_epoch: Mapped[int] = mapped_column(default=0)
     inheritance: Mapped[InheritanceCustom] = mapped_column(enum_type(InheritanceCustom, "inheritance"))

@@ -33,6 +33,7 @@ from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
 from aerona.engine.crafts.cover import claim
 from aerona.engine.crafts.heirs import pass_rights
+from aerona.engine.death_work.handling import remains_of, spirit_share
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
 from aerona.engine.divine.wounds import avatar_slain
@@ -298,7 +299,9 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     rite = await rite_of(session, mortal)
     if await blocked(ctx, TransformKind.SPIRIT_RISING, mortal.id):
         return
-    if not rng.chance(min(PERCENT, ctx.rules.world_engine.famous_spirit_chance * spirit_factor(ctx.rules, rite))):
+    if not rng.chance(
+        min(PERCENT, ctx.rules.world_engine.famous_spirit_chance * spirit_factor(ctx.rules, rite) * spirit_share(await remains_of(session, mortal)))
+    ):
         return
     if await _spirits_at(session, place_id) >= ctx.rules.deep_world.spirits_per_place_cap:
         return

@@ -37,6 +37,132 @@
       "low": 0,
       "high": 5,
       "meaning": "the doom clock creeps rather than races"
+    },
+    {
+      "metric": "population_policies_per_polity",
+      "low": 0,
+      "high": 3,
+      "meaning": "realms hold a few policies on numbers at most, never a pile of them"
+    },
+    {
+      "metric": "outlet_mean_trust",
+      "low": 5,
+      "high": 100,
+      "meaning": "outlets keep some trust overall; exposure does not drive every one of them to nothing"
+    },
+    {
+      "metric": "shops_per_town",
+      "low": 0,
+      "high": 60,
+      "meaning": "towns keep shops in proportion, not without bound"
+    },
+    {
+      "metric": "failed_works_share_pct",
+      "low": 0,
+      "high": 60,
+      "meaning": "some works fail, but most are built or still building"
+    },
+    {
+      "metric": "household_mean_servants",
+      "low": 0,
+      "high": 6,
+      "meaning": "households take on help when burdened without filling with servants"
+    },
+    {
+      "metric": "kin_groups_per_people",
+      "low": 0,
+      "high": 40,
+      "meaning": "kin groups split when too large but do not multiply without bound"
+    },
+    {
+      "metric": "folk_misclassified_share_pct",
+      "low": 0,
+      "high": 85,
+      "meaning": "folk knowledge errs, but most classes are not wrong"
+    },
+    {
+      "metric": "restraint_customs_per_people",
+      "low": 0,
+      "high": 10,
+      "meaning": "peoples hold a handful of customs of restraint at most"
+    },
+    {
+      "metric": "pedagogies_per_people",
+      "low": 0,
+      "high": 30,
+      "meaning": "ways of teaching follow the schools a people has"
+    },
+    {
+      "metric": "endowments_per_town",
+      "low": 0,
+      "high": 10,
+      "meaning": "endowments are founded, captured and spent, not heaped without end"
+    },
+    {
+      "metric": "youth_group_mean_size",
+      "low": 0,
+      "high": 500,
+      "meaning": "youth groups stay groups and split or disband rather than swallow towns"
+    },
+    {
+      "metric": "death_work_roles_per_people",
+      "low": 0,
+      "high": 20,
+      "meaning": "a people keeps its roles of death work, never more than its kinds of role"
+    },
+    {
+      "metric": "speeches_per_epoch",
+      "low": 0,
+      "high": 200,
+      "meaning": "speeches are given, but the world does not talk without end"
+    },
+    {
+      "metric": "world_mean_surface_dose",
+      "low": 0,
+      "high": 70,
+      "meaning": "fields and air shield most worlds from most of their star's weather"
+    },
+    {
+      "metric": "coast_mean_silting",
+      "low": 0,
+      "high": 90,
+      "meaning": "harbours silt, but dredging and currents keep most coasts open"
+    },
+    {
+      "metric": "disease_mean_cure_overuse",
+      "low": 0,
+      "high": 90,
+      "meaning": "cures are overused in places without every disease resisting every cure"
+    },
+    {
+      "metric": "body_system_failed_share_pct",
+      "low": 0,
+      "high": 40,
+      "meaning": "bodies fail where worlds are past bearing, not everywhere"
+    },
+    {
+      "metric": "plant_parts_per_plant",
+      "low": 0,
+      "high": 12,
+      "meaning": "every plant has a body of a few parts"
+    },
+    {
+      "metric": "fossil_beds_per_region",
+      "low": 0,
+      "high": 20,
+      "meaning": "beds of remains are laid by what died out, not in every land without end"
+    },
+    {
+      "metric": "weather_works_per_region",
+      "low": 0,
+      "high": 2,
+      "meaning": "weather works are rare enough that most lands keep their own sky"
+    },
+    {
+      "metric": "professions_exposed_share_pct",
+      "low": 0,
+      "high": 60,
+      "meaning": "some who profess a value are shown to act against it, not most"
     }
   ],
   "record_bands": {

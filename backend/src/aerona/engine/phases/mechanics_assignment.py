@@ -66,13 +66,21 @@ async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> 
 
 @reads(
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.node_births",
     "table.nodes",
     "table.resource_mechanics",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",

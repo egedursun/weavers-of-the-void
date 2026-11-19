@@ -143,10 +143,15 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.bonds",
     "table.cosmos",
     "table.council_rulings",
+    "table.creator",
+    "table.dimensions",
     "table.divine_standing",
     "table.divine_wounds",
     "table.dominions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.god_designs",
     "table.god_scales",
     "table.incident_participants",
@@ -157,6 +162,8 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.reverences",
     "table.son_powers",
     "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.incident_facts", "table.incident_participants", "table.incidents", "table.sons")
 async def sons_renewal(ctx: TickContext) -> None:

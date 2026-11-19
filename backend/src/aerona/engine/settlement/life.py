@@ -602,10 +602,10 @@ YIELDS: Mapping[UrbanService, tuple[Yield, ...]] = total(
 BOUNDED = frozenset({"public_order", "crime", "unrest", "sanitation", "prestige"})
 
 
-def serve(ctx: TickContext, town: Town) -> None:
+def serve(ctx: TickContext, town: Town, *, grounds: bool) -> None:
     profile = town.profile
     for service, yields in YIELDS.items():
-        share = town.urban.covered(service)
+        share = town.urban.covered(service) if grounds or service is not UrbanService.BURIAL else 0.0
         for item in yields:
             amount = round_half_up(share * getattr(ctx.rules.coverage, item.rule)) * item.sign
             if not amount:
@@ -630,8 +630,8 @@ async def warded(ctx: TickContext, town: Town) -> None:
             setattr(profile, field, clamp_int(getattr(profile, field) + step, 0, PERCENT))
 
 
-def hallow(ctx: TickContext, town: Town) -> None:
-    serve(ctx, town)
+def hallow(ctx: TickContext, town: Town, *, grounds: bool) -> None:
+    serve(ctx, town, grounds=grounds)
     table = ctx.rules.coverage
     shift_stat(town.entity, "piety", -(1 - town.urban.covered(UrbanService.FAITH)) * table.impiety, ctx.rules.society.default_stat)
     shift_stat(town.entity, "prosperity", -(1 - town.urban.covered(UrbanService.MARKET)) * table.prices, ctx.rules.society.default_stat)

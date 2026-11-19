@@ -14,3 +14,13 @@ class FossilReading(StrEnum):
     LEGEND = "legend"
     RELIC = "relic"
     DEEP_TIME = "deep_time"
+
+
+class Preservation(StrEnum):
+    ROCK = "rock"
+    AMBER = "amber"
+    ICE = "ice"
+    BOG = "bog"
+    TAR = "tar"
+    ASH = "ash"
+    DRY = "dry"

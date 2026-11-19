@@ -18,6 +18,7 @@ from aerona.engine.customs.rights import unwed_by_law
 from aerona.engine.cycles.lineage import breeds_or_weds, descent_custom, kin_bars
 from aerona.engine.cycles.sides import first_sex, second_sex, system_of_people
 from aerona.engine.folkways.purity import caste_bars
+from aerona.engine.kin.groups import kin_group_bars
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
@@ -92,6 +93,7 @@ async def may_wed(session: AsyncSession, rules: Rules, first: EntityRow, second:
     if (
         not may_wed_terms(rules, one, two)
         or await kin_bars(session, first, second)
+        or await kin_group_bars(session, rules, first, second)
         or await caste_bars(session, first, second)
         or await too_young_to_wed(session, first, second)
         or await unwed_by_law(session, first, second)

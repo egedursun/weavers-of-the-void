@@ -215,6 +215,53 @@ describe('trades, aids, games and magic', () => {
     })
   })
 
+  it('shows what its people read into numbers and reads one more', async () => {
+    serveBase()
+    serveGames(false)
+    onApi('GET', '/api/crafts/of/40', {
+      ...EMPTY,
+      node: TOWN,
+      numbers: {
+        base: 12,
+        notation: 'additive',
+        zero: false,
+        numeracy: 30,
+        numerology: [{ number: 7, reading: 'sacred' }],
+        locked: [],
+      },
+    })
+    onApi('POST', '/api/actions/number_system:read', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CraftsSection nodeId={40} />)
+    await screen.getByRole('tab', { name: /Aids, games and numbers/ }).click()
+    await expect
+      .element(screen.getByText('What the numbers mean (1)'))
+      .toBeVisible()
+    await expect.element(screen.getByText('Sacred')).toBeVisible()
+    await screen.getByLabelText('Number to read', { exact: true }).fill('12')
+    await expect
+      .element(screen.getByRole('button', { name: 'Read it so' }))
+      .toBeDisabled()
+    await screen.getByLabelText('Number to read', { exact: true }).fill('5')
+    await screen.getByRole('button', { name: 'Read it so' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/number_system:read'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/number_system:read')[0].body).toEqual({
+      people_id: 41,
+      number: 5,
+      reading: 'lucky',
+    })
+    await screen.getByRole('button', { name: 'Read 7 no more' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/number_system:read'))
+      .toHaveLength(2)
+    expect(callsTo('POST', '/api/actions/number_system:read')[1].body).toEqual({
+      people_id: 41,
+      number: 7,
+      reading: null,
+    })
+  })
+
   it('keeps the aids of a thing that is no mortal', async () => {
     serveBase()
     onApi('GET', '/api/crafts/of/40', { ...EMPTY, node: TOWN })

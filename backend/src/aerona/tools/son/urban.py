@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.settlement import DESIGN_PARAMETERS, DistrictDesignRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -57,7 +58,7 @@ async def raise_district(call: SonCall, args: RaiseDistrictInput) -> str:
     district = await control.build_district(call.tick, town.id, args.kind, material=args.material, son_id=call.son.id, design_id=args.design_id)
     call.spend_essence(tools.raise_district_essence)
     call.target(town.id)
-    label = district.kind.value.replace("_", " ")
+    label = spoken(district.kind)
     await call.record(
         "tools.son.raise_district",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: town.id},

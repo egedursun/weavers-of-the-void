@@ -48,6 +48,7 @@ OUTLIVES: MappingProxyType[B, bool] = total(
         B.PET_OF: False,
         B.RIVAL: False,
         B.APPRENTICE_OF: True,
+        B.GODPARENT_OF: True,
         B.COMMANDS: False,
         B.PART_OF: True,
         B.PASSENGER_OF: False,

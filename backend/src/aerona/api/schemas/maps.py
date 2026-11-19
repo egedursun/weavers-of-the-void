@@ -100,6 +100,7 @@ class RegionStocks(ApiModel):
     frontier: int = 0
     networks: int = 0
     hidden: int = 0
+    works: int = 0
 
 
 class MapConvoy(ApiModel):

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.customs import AgeGrade
+from aerona.engine.childhood.standing import below_marriage_age
 
 UNWED_GRADES = frozenset({AgeGrade.CHILDREN, AgeGrade.YOUTHS})
 
@@ -15,7 +16,9 @@ async def grade_of(session: AsyncSession, mortal_id: int) -> AgeGrade | None:
 
 
 async def too_young_to_wed(session: AsyncSession, first: EntityRow, second: EntityRow) -> bool:
-    return await grade_of(session, first.id) in UNWED_GRADES or await grade_of(session, second.id) in UNWED_GRADES
+    if await grade_of(session, first.id) in UNWED_GRADES or await grade_of(session, second.id) in UNWED_GRADES:
+        return True
+    return await below_marriage_age(session, first, second)
 
 
 async def warriors_ready(session: AsyncSession, people_id: int | None) -> bool:

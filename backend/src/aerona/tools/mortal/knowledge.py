@@ -70,7 +70,7 @@ async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> st
     await require_lore(call)
     await practised(call, LEARNED_SKILLS, call.rules.skills.preach_xp)
     decision = await development_for(call.session, call.rules, call.me, args.branch)
-    label = args.branch.value.replace("_", " ")
+    label = spoken(args.branch)
     if decision.kind is DevelopmentKind.DEEPEN and decision.knowledge is not None:
         return await _deepen_held(call, decision.knowledge, label)
     if decision.kind is DevelopmentKind.LEARN and decision.knowledge is not None:

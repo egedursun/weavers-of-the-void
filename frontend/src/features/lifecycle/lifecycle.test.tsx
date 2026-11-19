@@ -113,6 +113,8 @@ describe('lifecycle ends', () => {
           found_epoch: null,
           finder: null,
           reading: 'unread',
+          layer: 12,
+          preservation: 'bog',
           locked: [],
         },
       ],
@@ -123,6 +125,7 @@ describe('lifecycle ends', () => {
     onApi('POST', '/api/actions/fossil_bed:reveal', ACCEPTED_ACTION)
     const { screen } = await renderApp(<FossilSection nodeId={30} />)
     await expect.element(screen.getByText('Great beasts').first()).toBeVisible()
+    await expect.element(screen.getByText(/Kept in bog/).first()).toBeVisible()
     await screen.getByRole('button', { name: 'Bring it to light now' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/fossil_bed:reveal'))

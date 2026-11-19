@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.civics import OFFICE_GATES
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.action import ActionKind
@@ -75,7 +76,7 @@ async def appoint_officer(call: MortalCall, args: AppointOfficerInput) -> str:
     office = next((row for row in realm.offices if row.kind is args.office), None)
     needed = OFFICE_GATES.get(args.office)
     if office is None and not await realm_allows(call.session, realm, needed):
-        fail(MortalResult.OFFICE_UNLEARNED, office=args.office.value.replace("_", " "), needs=unlearned(needed))
+        fail(MortalResult.OFFICE_UNLEARNED, office=spoken(args.office), needs=unlearned(needed))
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=args.office, since_epoch=call.epoch, powers=[], locked=[])
         call.session.add(office)
@@ -83,7 +84,7 @@ async def appoint_officer(call: MortalCall, args: AppointOfficerInput) -> str:
         await call.session.flush()
     await appoint(call.tick, realm, office, holder, by_id=call.me.id, reason=f"appointed by {call.me.name}")
     await call.bump(TurnCounter.OFFICERS_APPOINTED)
-    label = args.office.value.replace("_", " ")
+    label = spoken(args.office)
     if holder is not None:
         call.target(holder.id)
     return result(MortalResult.OFFICER_APPOINTED, office=label, name=holder.name if holder is not None else "no one", realm=realm.entity.name)

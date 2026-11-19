@@ -23,6 +23,7 @@ from aerona.agents.son import prepare_prompts, son_toolkit, start_turn
 from aerona.agents.tool_ports import attach_toolkits
 from aerona.constants.paths import DATABASE_FILENAME
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.migrations import upgrade_to_head_sync
 from aerona.db.session import Database
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalaxyRow
@@ -71,6 +72,7 @@ def snapshot(source: Path, folder: Path) -> Path:
     target = folder / "world.db"
     with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as reader, sqlite3.connect(target) as writer:
         reader.backup(writer)
+    upgrade_to_head_sync(f"sqlite+aiosqlite:///{target}")
     return target
 
 

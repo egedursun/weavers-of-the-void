@@ -238,7 +238,7 @@ async def sibling_scheme(ctx: TickContext, sibling: SonRow, son: SonRow, kind: S
             sibling.status = SonStatus.ASLEEP
             sibling.sleep_epochs_left = death.sibling_descent_sleep_epochs
             slept = True
-            extra = god_lines.SCHEME_DESCENT_FAILURE.format(sibling=sibling.name, epochs=death.sibling_descent_sleep_epochs)
+            extra = fill(god_lines.SCHEME_DESCENT_FAILURE, sibling=sibling.name, epochs=death.sibling_descent_sleep_epochs)
     else:
         god = await _bargain_god(ctx.session, son)
         if god is None:

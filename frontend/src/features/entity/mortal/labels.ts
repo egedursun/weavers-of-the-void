@@ -183,6 +183,13 @@ export const KIN_KINDS: Record<string, Named & { out: string; in: string }> = {
     out: 'Sworn kin',
     in: 'Sworn kin',
   },
+  godparent_of: {
+    label: 'Godparent',
+    icon: HandHeart,
+    tone: 'gold',
+    out: 'Godchild',
+    in: 'Godparent',
+  },
 }
 
 export const MARRIAGE_ENDS: Record<
@@ -421,4 +428,5 @@ export const PROFESSIONS: Record<string, Named> = {
   artist: { label: 'Artist', icon: Palette, tone: 'verdigris' },
   administrator: { label: 'Administrator', icon: Briefcase, tone: 'gold' },
   spacer: { label: 'Spacer', icon: Rocket, tone: 'info' },
+  death_worker: { label: 'Death worker', icon: Hourglass, tone: 'muted' },
 }

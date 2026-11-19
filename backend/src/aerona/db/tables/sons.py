@@ -39,7 +39,7 @@ class SonRow(StatColumns, PassionColumns, NodeRow):
         CheckConstraint("domain_primary <> domain_secondary", name="distinct_domains"),
         Index("ix_sons_status", "status"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.SON})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.SON, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     title: Mapped[str] = mapped_column(String(TITLE_MAX_LENGTH))

@@ -3908,6 +3908,10 @@ The depth metric's shortfalls are closed section by section. The seven types rea
 | `star` | attributes, mechanics (17 / 35, 3 / 30) | W47 47.6.1; 50.7 |
 | `route` | attributes, mechanics (26 / 45, 3 / 30) | 50.3 tiers on routes; 50.4 works; W49 49.3 |
 
+**Measure.** The phases record what they read and write by table, so the metric reads a type through its own rows: its stats, its node table and the tables keyed by it (or, for an entity type, the tables listed for it in `TYPE_TABLES`). A mechanic acts on a type when it targets it, or its phases read or write those rows; its attributes are the fields the acting mechanics declare and the columns of those rows that engine code reads.
+
+**Closed in W50.** Held titles weigh in a ruler's legitimacy and hold a kin group together past its usual size; the bodies of the heavens a people watches sharpen its forecasts, keep its lore of the sky right and guide its pilots and travellers.
+
 **Guard.** After W50, `scripts/depth_metric.py check` fails when any node type is below its target.
 
 ### 50.16 Facets with kinds but no behaviour
@@ -4027,7 +4031,7 @@ The 100 subcategories that existing waves give kinds but not behaviour are marke
 | `scripts/check_mechanic_couplings.py` | a registered mechanic has fewer than two couplings to other subsystems without a stated reason |
 | `scripts/depth_metric.py check` | a node type is below its target after W50 |
 | `scripts/check_inventory.py` (5.10) | a table, enum, step, kind, tool, lever, screen or text file of W50 has no inventory row |
-| `tests/engine/core/test_daily_life.py`, `test_kin_duties.py`, `test_media.py`, `test_commerce.py`, `test_public_works.py`, `test_population_policy.py`, `test_folk_knowledge.py`, `test_unions_and_birth.py`, `test_childhood.py`, `test_endowments.py`, `test_youth.py`, `test_death_work.py`, `test_speech.py` | a family's behaviour does not produce its effects on a seeded world |
+| `tests/engine/core/test_daily_life.py`, `test_kin_duties.py`, `test_media.py`, `test_commerce_practice.py`, `test_public_works.py`, `test_population_policy.py`, `test_folk_knowledge.py`, `test_unions_and_birth.py`, `test_childhood.py`, `test_endowments.py`, `test_youth.py`, `test_death_work.py`, `test_speech.py` | a family's behaviour does not produce its effects on a seeded world |
 
 ### 50.17a Integration of every family
 
@@ -4262,9 +4266,9 @@ The rules below apply to each family of 50.1–50.13, and to 50.22–50.29 (50.3
 | 50.14–50.16 | registry couplings, depth targets, `ocm-coverage.md` | — | — | — | — | — | the guards of 50.17 | — |
 | 50.22 space weather | `world_fields`, `star_activity`, `space_weather_events` | sky, cosmos, signals, navigation, body | `world_field:*`, `star_activity:*`, `space_weather_event:*` | "Fields and space weather" in world and star drawers | `shield_world`; `space_weather` | world and star entries | events reach existing worlds | from world physics and star type |
 | 50.23 water, ice and sediment | `region_cryosphere`, `sediment_flows`, `coasts`, `local_climates` | environment, routes, agrarian, works, excavation | levers per table | atlas layers | `dredge`, `move_ice`; `water_and_ice` | region entries | flows join existing regions | from terrain and climate |
-| 50.24 disease agents | `disease_profiles` agent, survival, reservoirs, cure classes | disease | existing disease levers | disease drawer | `disease` | disease entries | cure classes valid for agent | agents from vector and origin |
+| 50.24 disease agents | `disease_agents`: agent, survival, reservoirs, overuse and cure classes | disease | `disease_agent:*` | "Agents of disease" in the disease drawer | `disease` | disease entries | cure classes valid for agent | agents from vector and origin |
 | 50.25 body systems | `body_systems`, `sensitivities` | body, travel, settlement | `body_system:*`, `sensitivity:*` | body section | `body` | body sections | systems per biology | from plans and biochemistry |
-| 50.26 plant bodies | `plant_anatomy` | ecology, production, agrarian | `plant_anatomy:*` | species drawer | — | species entries | parts match products | generated for plants |
+| 50.26 plant bodies | `plant_anatomy`, `plant_parts` | ecology, production, agrarian | `plant_anatomy:*`, `plant_part:*` | species drawer | — | species entries | parts match products | generated for plants |
 | 50.27 fossils | `fossil_beds` | excavation, extraction, theories, W46 revival | `fossil_bed:*` | region and excavation screens | `study_fossils`; `excavation` | region entries | species exist | from prehistory and geology |
 | 50.28 observation and weather works | `observation_methods`, `weather_works` | forecasts, navigation, calendars, weather | `observation_method:*`, `weather_work:*` | people and region drawers | `forecast`, `work_weather`; `forecasting` | people entries | methods per people | from techniques |
 | 50.29 professed values | `professions_of_value` | mind, standing, secrets, media | `profession_of_value:*` | mortal drawer | `expose_hypocrisy`; `standing` | mortal entries | acts are recorded incidents | from values and acts |
@@ -4362,7 +4366,7 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 
 **State.**
 
-- **`world_fields`.** World, magnetosphere strength (0–100), field reversals (epoch, length), upper air shielding (0–100), radiation at the surface (derived).
+- **`world_fields`.** World, field reversals (epoch, epochs left), a passing shift of the field (−100 to 100, epochs left), upper air shielding (0–100), radiation at the surface, compass error and the reach of auroras (derived). The strength of the field is the world's own `magnetism` plus the shift, so a god who changes the magnetism of a world changes its field.
 - **`star_activity`.** Star, cycle length in years, phase, flare rate, particle storm rate, wind strength.
 - **`space_weather_events`.** Star or source, kind (`SpaceWeatherKind`: `flare`, `particle_storm`, `field_storm`, `field_reversal`, `cosmic_ray_burst`, `wind_surge`), strength, worlds and orbits reached, epoch.
 
@@ -4444,8 +4448,8 @@ Below the engine's scale (cells, molecules, chromosomes), the world is read thro
 
 **State.**
 
-- `disease_profiles` gains `agent` (`DiseaseAgent`: `virus`, `bacterium`, `fungus`, `parasite`, `prion`, `toxin`, `deficiency` (nutrition, F39), `spirit` (where spirits exist), `curse` (where curses exist), `made` (W44, W46 designed), `unknown`).
-- It also gains environmental survival (outside a host, in water, in soil, in cold), reservoir species, and the cure classes that work (`CureClass`: `rest_and_care`, `herbal`, `antimicrobial`, `antiparasitic`, `antitoxin`, `nutritional`, `rite`, `exorcism`, `power`, `designed`).
+- A `disease_agents` row beside each disease's profile holds its `agent` (`DiseaseAgent`: `virus`, `bacterium`, `fungus`, `parasite`, `prion`, `toxin`, `deficiency` (nutrition, F39), `spirit` (where spirits exist), `curse` (where curses exist), `made` (W44, W46 designed), `unknown`).
+- The row also holds environmental survival (outside a host, in water, in soil, on objects, in cold), the reservoir species, how overused its cures are, and the cure classes that work (`CureClass`: `rest_and_care`, `herbal`, `antimicrobial`, `antiparasitic`, `antitoxin`, `nutritional`, `rite`, `exorcism`, `power`, `designed`).
 
 **Behaviour.**
 

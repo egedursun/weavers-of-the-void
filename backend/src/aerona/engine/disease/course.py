@@ -11,6 +11,7 @@ from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
@@ -23,6 +24,7 @@ from aerona.engine.disease.designed import designed_aim
 from aerona.engine.disease.emergence import WET, new_strain, plain
 from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
+from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.loops.delay import lagged
 from aerona.engine.military.units import resize
 from aerona.engine.phases.disasters import strike_plague
@@ -61,6 +63,7 @@ async def linger(ctx: TickContext, book: DiseaseBook, outbreak: OutbreakRow, kno
         rate = fraction(effects.plague_population_loss) * scale * lethality_factor(book, disease.id, [community], knowledge)
         rate *= await kin_lethality(ctx.session, ctx.rules, community, disease.id)
         rate *= await designed_aim(ctx.session, ctx.rules, community, disease.id)
+        rate *= 2 - await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ILLNESS)
         before = stat(community, "population") or 0
         floor, _ = headcount_bounds(ctx.rules, community)
         after = max(floor, round_half_up(before * (1 - min(1.0, rate))))

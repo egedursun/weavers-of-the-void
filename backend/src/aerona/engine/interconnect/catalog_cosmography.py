@@ -181,6 +181,9 @@ COSMOGRAPHY_MECHANICS = (
         couplings=(
             Coupling(S.ENVIRONMENT, "phenomena change magic, fertility and passability of their regions", EdgeKind.MODIFIER, "phenomena.spread_at"),
             Coupling(S.MIND, "phenomena erode the sanity of those inside", EdgeKind.MODIFIER, "phenomena.ward_containment"),
+            Coupling(
+                S.FAITH, "phenomena move the piety of the communities inside them by their kind", EdgeKind.MODIFIER, "phenomenon_kinds.eternal_storm_piety"
+            ),
         ),
     ),
     Mechanic(

@@ -53,6 +53,14 @@ async def sworn_kin_of(session: AsyncSession, mortal_id: int) -> list[int]:
     return await _either(session, BondKind.SWORN_KIN, mortal_id)
 
 
+async def godparents_of(session: AsyncSession, mortal_id: int) -> list[int]:
+    return await _ends(session, BondKind.GODPARENT_OF, target=mortal_id)
+
+
+async def godchildren_of(session: AsyncSession, mortal_id: int) -> list[int]:
+    return await _ends(session, BondKind.GODPARENT_OF, source=mortal_id)
+
+
 async def fosterers_of(session: AsyncSession, mortal_id: int) -> list[int]:
     return await _ends(session, BondKind.FOSTERED_BY, source=mortal_id, past=True)
 

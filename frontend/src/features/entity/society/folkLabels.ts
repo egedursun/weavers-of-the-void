@@ -55,6 +55,7 @@ export type SizeClass = Schemas['SizeClass']
 export type Diet = Schemas['Diet']
 export type NaturalTrait = Schemas['NaturalTrait']
 export type FuneralCustom = Schemas['FuneralCustom']
+export type RemainsTreatment = Schemas['RemainsTreatment']
 
 export const BODY_SPEC: Record<BodyPlan, Spec> = {
   humanoid: {
@@ -272,6 +273,69 @@ export const TRAIT_SPEC: Record<NaturalTrait, Spec> = {
   },
 }
 
+export const REMAINS_SPEC: Record<RemainsTreatment, Spec> = {
+  burial: {
+    label: 'Burial',
+    icon: Shovel,
+    tone: 'muted',
+    hint: 'Laid in the ground; the raised dead can reach them',
+  },
+  cremation: {
+    label: 'Cremation',
+    icon: Flame,
+    tone: 'warning',
+    hint: 'Burned; the town stays cleaner and fewer spirits linger',
+  },
+  exposure: {
+    label: 'Exposure',
+    icon: Cloud,
+    tone: 'info',
+    hint: 'Left in the open; cheap, but it fouls the town',
+  },
+  preservation: {
+    label: 'Preservation',
+    icon: Gem,
+    tone: 'gold',
+    hint: 'Kept whole at great cost; spirits linger most',
+  },
+  water: {
+    label: 'Given to water',
+    icon: Droplets,
+    tone: 'info',
+    hint: 'Given to the waters; it fouls the town a little',
+  },
+  consumption: {
+    label: 'Consumption',
+    icon: Utensils,
+    tone: 'danger',
+    hint: 'Taken in by the living as their own custom',
+  },
+  storage: {
+    label: 'Storage',
+    icon: Landmark,
+    tone: 'muted',
+    hint: 'Kept in a house of the dead; the raised dead can reach them',
+  },
+  return_to_maker: {
+    label: 'Returned to the maker',
+    icon: Bot,
+    tone: 'verdigris',
+    hint: 'A made body goes back to whoever made it',
+  },
+  release: {
+    label: 'Release',
+    icon: Sparkles,
+    tone: 'verdigris',
+    hint: 'The spirit is let go; nothing lingers',
+  },
+  none_needed: {
+    label: 'None needed',
+    icon: CircleSlash,
+    tone: 'muted',
+    hint: 'Nothing is left to tend',
+  },
+}
+
 export const FUNERAL_SPEC: Record<FuneralCustom, Spec> = {
   burial: {
     label: 'Burial',
@@ -359,6 +423,7 @@ export const FOLK_FIELDS: Record<string, string> = {
   staples: 'Staples',
   funeral_rite: 'Funeral rite',
   funeral_rite_id: 'Funeral tradition',
+  remains_treatment: 'Treatment of the dead',
   liturgical_language_id: 'Tongue of prayer',
   trade_language_id: 'Tongue of trade',
   martial_record: 'Battle record',

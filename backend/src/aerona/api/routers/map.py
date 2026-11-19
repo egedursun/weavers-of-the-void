@@ -65,6 +65,7 @@ from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.urban import ConvoyRow, DistrictServiceRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.db.tables.works import PublicWorksRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agrarian import CentralityRank, LandUseRing, NutrientKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -74,6 +75,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.war import WarStatus
+from aerona.domain.enums.works import WorksStatus
 from aerona.domain.models.records import GroundSnapshot
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
 from aerona.engine.ecology.niches import NicheKey, niche_of
@@ -603,7 +605,24 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["networks"] = count
     for region, count in (await hidden_by_region(session, world_id, atlas)).items():
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["hidden"] = count
+    for region, count in (await works_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["works"] = count
     return {region: RegionStocks(**values) for region, values in totals.items()}
+
+
+async def works_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, int]:
+    found: dict[int, int] = {}
+    places = (
+        select(PublicWorksRow.place_node_id)
+        .join(EntityRow, EntityRow.id == PublicWorksRow.polity_entity_id)
+        .where(EntityRow.world_id == world_id, PublicWorksRow.status == WorksStatus.BUILDING)
+        .order_by(PublicWorksRow.id)
+    )
+    for place in await session.scalars(places):
+        region = atlas.top_region(place)
+        if region is not None:
+            found[region] = found.get(region, 0) + 1
+    return found
 
 
 async def hidden_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, int]:

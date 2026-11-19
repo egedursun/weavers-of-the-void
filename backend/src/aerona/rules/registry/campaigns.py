@@ -134,6 +134,14 @@ class CampaignsRules:
     new_war_cap: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Maximum new wars per epoch (from enemy pairs; only below the war caps)")
     battle_chance: int = rule(70, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Enemies clash this epoch (%)")
     battle_chance_war_ban: int = rule(35, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Clash while a war ban is in effect (%)")
+    omen_battle_pct: int = rule(
+        5,
+        0,
+        100,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Chance to clash an attacker gains or loses for each body of the heavens its people reads as a good or an evil omen (%)",
+    )
+    omen_battle_cap: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Most chance to clash the omens of the heavens can add or take away (%)")
     tribute_epochs: int = rule(4, 1, 30, RuleGroup.WAR_AND_DIPLOMACY, "Tribute duration (epochs)")
     tribute_flow: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Prosperity and wealth transferred per epoch by tribute")
     tribute_goods_pct: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of goods transferred by tribute (%)")

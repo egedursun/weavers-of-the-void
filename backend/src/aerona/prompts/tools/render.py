@@ -1,8 +1,10 @@
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.bonds import BOND_KINDS
+from aerona.catalog.communication import MORTAL_MEDIA
 from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TYPES
 from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.catalog.cuisine import DISH_FOODS
+from aerona.catalog.domain_powers import LAND_DOMAIN_WORDS, TAINTING_WORDS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
@@ -15,6 +17,7 @@ from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.theories import DISCIPLINES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
+from aerona.catalog.weather import SEASON_DOMAIN_WORDS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.db.kind_concepts.society import BUILT_IN_ORGANISATIONS
 from aerona.domain.enums.affliction import Transmission
@@ -38,8 +41,10 @@ from aerona.domain.enums.cycles import (
     ReproductiveSystem,
     ResidenceRule,
 )
+from aerona.domain.enums.death_work import RemainsTreatment
 from aerona.domain.enums.demography import FuneralCustom, MartialStyle, Sex
 from aerona.domain.enums.discovery import TheoryDomain
+from aerona.domain.enums.disease_agents import CureClass
 from aerona.domain.enums.ecology import (
     AttackDelivery,
     AttackEffect,
@@ -61,8 +66,10 @@ from aerona.domain.enums.ecology import (
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.evolution import PlagueResponse
+from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
+from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
@@ -263,6 +270,16 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "tissue_materials": [kind.value for kind in TissueMaterial],
         "tenets": "; ".join(f"{tenet} ({effect})" for tenet, effect in TENET_EFFECTS.items()),
         "funeral_rites": [rite.value for rite in FuneralCustom],
+        "remains_treatments": [treatment.value for treatment in RemainsTreatment],
+        "practices": [practice.value for practice in FacetKind],
+        "mortal_media": sorted(medium.value for medium in MORTAL_MEDIA),
+        "season_domains": SEASON_DOMAIN_WORDS,
+        "cure_classes": [cure.value for cure in CureClass],
+        "observation_methods": [method.value for method in ObservationMethod],
+        "weather_aims": [aim.value for aim in WeatherAim],
+        "weather_work_methods": [method.value for method in WeatherWorkMethod],
+        "land_domains": LAND_DOMAIN_WORDS,
+        "tainting_domains": TAINTING_WORDS,
         "judgements": [doctrine.value for doctrine in JudgementDoctrine],
         "rebirth_paths": [path.value for path in RebirthPath],
         "place_kinds": [kind.value for kind in PlaceKind],

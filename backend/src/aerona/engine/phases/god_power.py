@@ -215,7 +215,22 @@ async def prophet_conversions(ctx: TickContext, creator: CreatorRow) -> None:
             )
 
 
-@reads("table.bonds", "table.creator", "table.entities", "table.entity_flags", "table.nodes", "table.son_relations", "table.sons", "table.world_attention")
+@reads(
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.son_relations",
+    "table.sons",
+    "table.stars",
+    "table.world_attention",
+    "table.worlds",
+)
 @writes("table.chronicle", "table.incident_participants", "table.incidents", "table.son_relations", "table.sons")
 async def god_power(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)

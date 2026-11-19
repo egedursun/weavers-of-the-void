@@ -106,7 +106,7 @@ async def enclose_commons(call: MortalCall, args: EncloseCommonsInput) -> str:
         facts={"commons": row.kind, "driven": row.dispossessed},
         place=row.region_entity_id,
     )
-    return result(MortalResult.COMMONS_ENCLOSED, kind=row.kind.value, driven=row.dispossessed)
+    return result(MortalResult.COMMONS_ENCLOSED, kind=spoken(row.kind), driven=row.dispossessed)
 
 
 async def rule_commons(call: MortalCall, args: RuleCommonsInput) -> str:
@@ -131,7 +131,7 @@ async def rule_commons(call: MortalCall, args: RuleCommonsInput) -> str:
             ),
         ),
     )
-    return result(MortalResult.COMMONS_RULED, kind=row.kind.value, condition=row.condition)
+    return result(MortalResult.COMMONS_RULED, kind=spoken(row.kind), condition=row.condition)
 
 
 async def reserve_game(call: MortalCall, args: ReserveGameInput) -> str:
@@ -195,7 +195,7 @@ async def plant_perennial(call: MortalCall, args: PlantPerennialInput) -> str:
         facts={"perennial": args.kind, "epochs": row.mature_epochs},
         place=land.id,
     )
-    return result(MortalResult.PERENNIAL_PLANTED, kind=args.kind.value, epochs=row.mature_epochs)
+    return result(MortalResult.PERENNIAL_PLANTED, kind=spoken(args.kind), epochs=row.mature_epochs)
 
 
 async def send_aid(call: MortalCall, args: SendAidInput) -> str:
@@ -216,7 +216,7 @@ async def send_aid(call: MortalCall, args: SendAidInput) -> str:
         facts={"aid": args.kind, "refused": int(row.refused)},
         place=town.id,
     )
-    return result(MortalResult.AID_TURNED_AWAY if row.refused else MortalResult.AID_SENT, kind=args.kind.value, town=town.name)
+    return result(MortalResult.AID_TURNED_AWAY if row.refused else MortalResult.AID_SENT, kind=spoken(args.kind), town=town.name)
 
 
 async def plan_rebuilding(call: MortalCall, args: PlanRebuildingInput) -> str:
@@ -254,7 +254,7 @@ async def prepare_town(call: MortalCall, args: PrepareTownInput) -> str:
         facts={"work": args.kind, "level": level, "cost": WORK_COST * level},
         place=town.id,
     )
-    return result(MortalResult.TOWN_PREPARED, kind=args.kind.value, level=level)
+    return result(MortalResult.TOWN_PREPARED, kind=spoken(args.kind), level=level)
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

@@ -1,3 +1,5 @@
+from collections.abc import Awaitable, Callable
+
 from sqlalchemy import select
 
 from aerona.agents.context.ages_lines import son_ages_lines
@@ -26,6 +28,7 @@ from aerona.agents.context.powers_lines import son_power_lines
 from aerona.agents.context.regime_lines import son_regime_lines
 from aerona.agents.context.sacred_lines import son_sacred_lines
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.sky_weather_lines import son_sky_lines, son_water_lines
 from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.agents.context.world_view_lines import son_world_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
@@ -70,6 +73,41 @@ async def hook_lines(son: SonRow, severed: set[str]) -> list[str]:
     return found
 
 
+SON_BLOCKS: tuple[Callable[[Scope, SonRow], Awaitable[list[str]]], ...] = (
+    dominion_lines,
+    mythic_lines,
+    son_tongue_lines,
+    son_evolution_lines,
+    son_collective_lines,
+    son_cycle_lines,
+    son_regime_lines,
+    son_agrarian_lines,
+    son_operations_lines,
+    son_sacred_lines,
+    son_arts_lines,
+    son_minds_lines,
+    son_power_lines,
+    son_living_lines,
+    son_ages_lines,
+    son_folkways_lines,
+    son_customs_lines,
+    son_crafts_lines,
+    son_kinds_lines,
+    son_climes_lines,
+    son_sky_lines,
+    son_water_lines,
+    son_belonging_lines,
+    son_era_lines,
+    son_nature_lines,
+    son_economy_lines,
+    son_world_lines,
+    son_biology_lines,
+    son_lifecycle_lines,
+    son_world_end_lines,
+    son_fossil_lines,
+)
+
+
 async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     session = scope.session
     lines = await goal_lines(scope, son)
@@ -100,33 +138,6 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     for ruling in await session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)).order_by(CouncilRulingRow.id)):
         target = await name_of(scope, ruling.target_node_id)
         lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}")
-    lines.extend(await dominion_lines(scope, son))
-    lines.extend(await mythic_lines(scope, son))
-    lines.extend(await son_tongue_lines(scope, son))
-    lines.extend(await son_evolution_lines(scope, son))
-    lines.extend(await son_collective_lines(scope, son))
-    lines.extend(await son_cycle_lines(scope, son))
-    lines.extend(await son_regime_lines(scope, son))
-    lines.extend(await son_agrarian_lines(scope, son))
-    lines.extend(await son_operations_lines(scope, son))
-    lines.extend(await son_sacred_lines(scope, son))
-    lines.extend(await son_arts_lines(scope, son))
-    lines.extend(await son_minds_lines(scope, son))
-    lines.extend(await son_power_lines(scope, son))
-    lines.extend(await son_living_lines(scope, son))
-    lines.extend(await son_ages_lines(scope, son))
-    lines.extend(await son_folkways_lines(scope, son))
-    lines.extend(await son_customs_lines(scope, son))
-    lines.extend(await son_crafts_lines(scope, son))
-    lines.extend(await son_kinds_lines(scope, son))
-    lines.extend(await son_climes_lines(scope, son))
-    lines.extend(await son_belonging_lines(scope, son))
-    lines.extend(await son_era_lines(scope, son))
-    lines.extend(await son_nature_lines(scope, son))
-    lines.extend(await son_economy_lines(scope, son))
-    lines.extend(await son_world_lines(scope, son))
-    lines.extend(await son_biology_lines(scope, son))
-    lines.extend(await son_lifecycle_lines(scope, son))
-    lines.extend(await son_world_end_lines(scope, son))
-    lines.extend(await son_fossil_lines(scope, son))
+    for more in SON_BLOCKS:
+        lines.extend(await more(scope, son))
     return lines

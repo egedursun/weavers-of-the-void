@@ -15,6 +15,7 @@ from aerona.domain.enums.crafts import (
     RightKind,
 )
 from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.mind import Emotion
 
 
@@ -93,11 +94,17 @@ class ClockView(ApiModel):
     locked: list[str]
 
 
+class NumberReadingView(ApiModel):
+    number: int
+    reading: NumberReading
+
+
 class NumbersView(ApiModel):
     base: int
     notation: Notation
     zero: bool
     numeracy: int
+    numerology: list[NumberReadingView]
     locked: list[str]
 
 

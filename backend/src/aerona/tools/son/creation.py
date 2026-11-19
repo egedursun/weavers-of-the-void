@@ -567,7 +567,7 @@ async def make_bond(call: SonCall, args: MakeBondInput) -> str:
         fail(SonResult.BOND_ESSENCE)
     link = args.target
     if not BOND_KINDS[link.kind].weavable:
-        fail(SonResult.BOND_MECHANICAL, kind=link.kind.value, allowed=", ".join(kind.value for kind, spec in BOND_KINDS.items() if spec.weavable))
+        fail(SonResult.BOND_MECHANICAL, kind=link.kind, allowed=", ".join(kind.value for kind, spec in BOND_KINDS.items() if spec.weavable))
     source = await call.session.get(EntityRow, args.source_id)
     if source is None or source.status not in WEAVABLE_SOURCE_STATES:
         fail(SonResult.BOND_SOURCE, reason=state_reason(source, args.source_id))

@@ -14,6 +14,7 @@ from aerona.domain.enums.polity import OathBreach, OathKind
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.relations import RelationType
 from aerona.engine.context import TickContext
+from aerona.engine.intimacy.norms import outside_union_weight
 from aerona.engine.intrigue.talk import affair_secret
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.mind.ethics import culture_of, honour_of
@@ -74,12 +75,13 @@ async def consequences(ctx: TickContext, cheat: EntityRow, lover: EntityRow, spo
     await break_on(ctx, [cheat.id], OathKind.FIDELITY, OathBreach.LOVER_TAKEN)
     custom = await divorce_allowed(ctx, spouse)
     marriage = await marriage_between(ctx.session, cheat.id, spouse.id)
-    odds = table.affair_divorce_pct * (2 if custom == "free" else 1)
+    weight = await outside_union_weight(ctx.session, spouse)
+    odds = table.affair_divorce_pct * (2 if custom == "free" else 1) * weight
     if marriage is not None and custom != "forbidden" and rng.chance(min(PERCENT, odds)):
         await end_marriage(ctx.session, marriage, ctx.epoch, MarriageEnd.DIVORCE)
         tally.divorces += 1
         told.append(StepDraft(StepAction.SEPARATE, actor=spouse.id, target=cheat.id))
-    if rng.chance(table.affair_feud_pct) and await house_feud(ctx, lover.id, spouse.id, "an affair") is not None:
+    if rng.chance(table.affair_feud_pct * weight) and await house_feud(ctx, lover.id, spouse.id, "an affair") is not None:
         tally.feuds += 1
         told.append(StepDraft(StepAction.FEUD, actor=spouse.id, target=lover.id))
     return told

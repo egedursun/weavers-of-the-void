@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.folkways import CharmRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -49,7 +50,7 @@ async def purify_self(call: MortalCall, args: PurifySelfInput) -> str:
     await purify(call.tick, call.me, row, methods, tally)
     call.target(call.me.id)
     await call.record("tools.mortal.purify_self", roles={IncidentRole.ACTOR: call.me.id}, kind=ChronicleKind.WORSHIP)
-    return result(MortalResult.PURIFIED if tally.purified else MortalResult.STILL_IMPURE, state=row.state.value)
+    return result(MortalResult.PURIFIED if tally.purified else MortalResult.STILL_IMPURE, state=spoken(row.state))
 
 
 async def accuse_of_witchcraft(call: MortalCall, args: AccuseOfWitchcraftInput) -> str:
@@ -79,7 +80,7 @@ async def make_a_charm(call: MortalCall, args: MakeCharmInput) -> str:
     name = item.name if item is not None else "your item"
     call.target(call.me.id)
     await call.record("tools.mortal.make_charm", roles={IncidentRole.ACTOR: call.me.id}, facts={"item": str(name)}, kind=ChronicleKind.CULTURE)
-    return result(MortalResult.CHARM_MADE, item=name, power=args.power.value, real=row.real)
+    return result(MortalResult.CHARM_MADE, item=name, power=spoken(args.power), real=row.real)
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

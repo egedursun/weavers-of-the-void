@@ -40,6 +40,7 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
+from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import Attribute, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -59,6 +60,7 @@ from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
 from aerona.engine.dominion.effects import step_here
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.genetics.life import healing_factor
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
@@ -445,6 +447,7 @@ async def mending_of(ctx: TickContext, bearer: Bearer) -> float:
     mending = 1 + lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.RECUPERATION), ctx.rules.mind_split.recuperation_pct)
     mending *= await ctx.hook_factor(bearer.id, DomainHook.HEALING)
     if isinstance(bearer, EntityRow):
+        mending *= await folk_factor(ctx.session, ctx.rules, bearer, FolkDomain.BODY)
         mending *= await step_here(ctx, bearer.id, DivineScale.GROWTH, ctx.rules.dominion.healing_per_step_pct)
         mending *= healing_factor(ctx.rules, await ctx.session.get(GenomeRow, bearer.id))
     return mending

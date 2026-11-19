@@ -1,6 +1,7 @@
 from typing import Any
 
 from aerona.catalog.statecraft import DEMAND_TEXT
+from aerona.core.grammar import spoken
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -73,7 +74,7 @@ async def back_crisis(call: MortalCall, args: BackInput) -> str:
     lead = row.demander_entity_id if args.side is CrisisSide.DEMANDER else row.target_entity_id
     call.target(lead)
     await call.record("tools.mortal.backed", roles={IncidentRole.ALLY: call.me.id, IncidentRole.BENEFICIARY: lead}, facts={"side": args.side})
-    return result(MortalResult.CRISIS_BACKED, side=args.side.value)
+    return result(MortalResult.CRISIS_BACKED, side=spoken(args.side))
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

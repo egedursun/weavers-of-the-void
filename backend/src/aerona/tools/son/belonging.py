@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -49,7 +50,7 @@ async def stir_identity(call: SonCall, args: StirIdentityInput) -> str:
     )
     call.target(community.id)
     told = "quieted" if args.calm else "stirred"
-    layer = args.layer.value
+    layer = spoken(args.layer)
     await call.record(
         "tools.son.stir_identity",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.PLACE: community.id},

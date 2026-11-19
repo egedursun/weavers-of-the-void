@@ -63,6 +63,7 @@ from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
 from aerona.engine.interconnect.catalog_kinds import KIND_MECHANICS
 from aerona.engine.interconnect.catalog_law_depth import LAW_MECHANICS
 from aerona.engine.interconnect.catalog_law_outer import LAW_OUTER_MECHANICS
+from aerona.engine.interconnect.catalog_life import LIFE_MECHANICS
 from aerona.engine.interconnect.catalog_lifecycle import LIFECYCLE_MECHANICS
 from aerona.engine.interconnect.catalog_lineage import LINEAGE_MECHANICS
 from aerona.engine.interconnect.catalog_living import LIVING_MECHANICS
@@ -78,6 +79,7 @@ from aerona.engine.interconnect.catalog_minds import MINDS_MECHANICS
 from aerona.engine.interconnect.catalog_mortal import BEHAVIOURS as MORTAL_BEHAVIOURS
 from aerona.engine.interconnect.catalog_mortal import MORTAL_MECHANICS
 from aerona.engine.interconnect.catalog_nature import NATURE_MECHANICS
+from aerona.engine.interconnect.catalog_nature50 import NATURE50_MECHANICS
 from aerona.engine.interconnect.catalog_operations import OPERATIONS_MECHANICS
 from aerona.engine.interconnect.catalog_peoples import PEOPLE_MECHANICS
 from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_MECHANICS
@@ -1071,6 +1073,8 @@ BUILT_IN = (
     *LIFECYCLE_MECHANICS,
     *REFERENCE8_MECHANICS,
     *CUSTOMS_MECHANICS,
+    *LIFE_MECHANICS,
+    *NATURE50_MECHANICS,
     *MADE_KIND_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,

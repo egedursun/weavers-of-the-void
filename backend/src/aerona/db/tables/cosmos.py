@@ -85,7 +85,7 @@ class CreatorRow(NodeRow):
         between("mood_loneliness", PERCENT_MIN, PERCENT_MAX),
         between("mood_temperament", -PERCENT_MAX, PERCENT_MAX),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.CREATOR})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.CREATOR, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     title: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))

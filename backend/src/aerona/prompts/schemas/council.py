@@ -44,7 +44,7 @@ class CouncilOutput(OutputModel):
     punishment: SonPunishment | None = Field(default=None, description="How a punished son is punished")
     voting_rule: VotingRule | None = Field(default=None, description="How the council decides from now on, when the decision changes its rules")
     minutes: str = Field(
-        description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it, told in a way that suits this world; {{ attendance }} sons attended the council (write no other number)"
+        description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it, told in a way that suits this world; {{ attendance | several('son', 'sons') }} attended the council (write no other number)"
     )
     agenda: str = Field(
         description="One-sentence, third-person summary of the agenda for the chronicle (do not repeat the god's question verbatim in the first person: e.g. \"the fate of <the subject's name>\")"

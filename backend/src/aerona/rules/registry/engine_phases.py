@@ -524,10 +524,121 @@ class EnginePhasesRules:
     customs: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: revival movements, intoxicant customs, naming, age-sets, body marks and time budgets"
     )
+    daily_life: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: hours of the day, care customs, housework, servants, pursuits of leisure and norms of space"
+    )
+    kin_duties: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: duties between kin, fostering of orphans, mourning, vengeance and kin groups"
+    )
+    childhood: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: infant care and survival, the standing of children, upbringing and schooling")
     town_life: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: taverns and inns, houses of welfare, the way to work and cooperatives")
     civics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: evidence, citizenship, borders, poor relief and standard measures")
     trades: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fishing and hunting grounds, chemical works, insurance, incorporeal rights and public clocks"
+    )
+    unions_and_birth: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: norms of intimacy and their scandals, vows of restraint and their breaking"
+    )
+    youth: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: youth groups form, act on their towns, misbehave, are drawn into gangs, movements and service, and come of age",
+    )
+    population_policy: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: population policies are paid for, enforced, resisted, reviewed, adopted and repealed"
+    )
+    commerce_practice: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: shops, supply tiers and their cornering, promotions and their claims, leases and their rent"
+    )
+    public_works: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: public works advance, finish, decay and fail; state enterprises earn, skim and are sold"
+    )
+    media: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: outlets reach, earn, report, sway opinion, are exposed, censored and found again")
+    speech: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: speeches move assemblies, crowds and congregations; mockery offends or is punished; satire wears legitimacy",
+    )
+    folk_knowledge: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: peoples name classes of things, learn from neighbours, theories and schools, lose lore with its holders, suffer misclassifications and read the numbers of the epoch",
+    )
+    endowments: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: endowments pay their beneficiaries, are skimmed, captured or confiscated, and outlive their founders",
+    )
+    death_work: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the dead are treated by their people's custom, death workers are honoured or shunned, untended remains spread plague",
+    )
+    facets: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: every practice a community keeps follows its sources and acts on its community",
+    )
+    hypocrisy: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the gap between what beings profess and what they do closes with time, and a wide gap that others know of comes out and costs trust and following",
+    )
+    forecasting: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: peoples read the weather by their methods and foresee hard seasons or fail to, and weather works shift the weather of a land at the cost of the land downwind",
+    )
+    plant_bodies: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: every plant grows its body and parts, its parts become its goods, storms and fires take what its form exposes, and its seeds spread, invade and are tamed",
+    )
+    body_systems: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: the systems of every body bear their world or strain against it, peoples adapt to the worlds they live on, and beings meet what they are sensitive to",
+    )
+    disease_agents: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: every disease is typed by what it is; communities try the cures their healers hold, which work only by class, and overused cures breed resistance",
+    )
+    water_and_ice: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: ice comes and goes on seas, rivers and ground, snow melts into rivers, sediment builds deltas and silts harbours, coasts build or wear and towns warm their own air",
+    )
+    space_weather: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: stars turn through their cycles and send flares and storms, fields reverse, and worlds take what their shields let through",
     )
     learning_aids: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: assistive aids, games and number systems")
     sympathies: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: material affinities, sympathetic links and emotion spirits")

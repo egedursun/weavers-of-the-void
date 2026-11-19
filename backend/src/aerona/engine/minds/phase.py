@@ -324,7 +324,12 @@ async def keep_remote_bodies(ctx: TickContext) -> int:
 @reads(
     "table.bonds",
     "table.constructs",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.memories",
     "table.mind_archives",
     "table.mind_laws",
@@ -333,6 +338,9 @@ async def keep_remote_bodies(ctx: TickContext) -> int:
     "table.mind_states",
     "table.nodes",
     "table.remote_bodies",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.memories", "table.mind_archives", "table.mind_profiles", "table.mind_states", "table.mind_will_changes", "table.remote_bodies")
 async def minds(ctx: TickContext) -> None:

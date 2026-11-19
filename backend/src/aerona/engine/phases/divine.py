@@ -46,9 +46,13 @@ async def domain_economy(ctx: TickContext) -> None:
 @reads(
     "table.bias_weights",
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.divine_wounds",
     "table.entities",
     "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.god_designs",
     "table.house_members",
     "table.incident_participants",
@@ -66,6 +70,7 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.son_powers",
     "table.sons",
     "table.spy_networks",
+    "table.stars",
     "table.thrones",
     "table.war_sides",
     "table.wars",
@@ -88,7 +93,22 @@ async def god_goals(ctx: TickContext) -> None:
     ctx.count("attention_moved", await pursue_goals(ctx))
 
 
-@reads("table.action_records", "table.bonds", "table.creator", "table.divine_standing", "table.entities", "table.messages", "table.nodes", "table.sons")
+@reads(
+    "table.action_records",
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.divine_standing",
+    "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.messages",
+    "table.nodes",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
+)
 @writes("table.divine_standing")
 async def divine_standing(ctx: TickContext) -> None:
     ctx.count("standings", await tend_standing(ctx))
@@ -155,11 +175,17 @@ async def creator_taboos(ctx: TickContext) -> None:
     "table.creator_depictions",
     "table.creator_standing",
     "table.culture_values",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.sons",
+    "table.stars",
     "table.world_attention",
     "table.worlds",
 )

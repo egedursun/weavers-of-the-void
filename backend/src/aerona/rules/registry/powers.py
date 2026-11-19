@@ -44,6 +44,9 @@ class MagicSystemRules:
     shared_discovery_pct: int = rule(50, 0, 100, P, "Share of a discovery in one system passed to a system of the same root (%)")
     drift: int = rule(2, 0, 100, P, "Largest change in a system's prevalence or predictability each epoch from its sources' density")
     theory_gain: int = rule(2, 0, 100, P, "Predictability a system gains each epoch from the theories of its users")
+    overt_cost_unrest: int = rule(
+        4, 0, 50, P, "Unrest the towns of a world gain each epoch from an overt system, scaled by how costly and how common its powers are"
+    )
 
 
 @dataclass(frozen=True)

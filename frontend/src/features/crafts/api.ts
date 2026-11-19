@@ -51,6 +51,7 @@ export type CraftsAction =
   | 'number_system:set'
   | 'number_system:edit'
   | 'number_system:delete'
+  | 'number_system:read'
   | 'material_affinity:set'
   | 'material_affinity:edit'
   | 'material_affinity:delete'

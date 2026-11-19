@@ -28,6 +28,13 @@ class StandingRules:
     glorious_death_prestige: int = rule(6, 0, 100, G, "House prestige gained when a member dies gloriously")
     shameful_death_prestige: int = rule(8, 0, 100, G, "House prestige lost when a member is executed or dies in shame")
     decapitation_exposure_pct: int = rule(300, 100, 1000, G, "How much more a commander is struck when the enemy seeks to cut off the head (%)")
+    hypocrisy_gap_threshold: int = rule(30, 0, 100, G, "Gap between what a being professes and what it does at which its hypocrisy can be exposed")
+    hypocrisy_trust_loss: int = rule(15, 0, 100, G, "Legitimacy and renown a being loses when its hypocrisy is exposed")
+    hypocrisy_follower_loss_pct: int = rule(10, 0, 100, G, "Share of its followers a leader loses when its hypocrisy is exposed (%)")
+    gap_per_act: int = rule(10, 0, 100, G, "Gap one act against a professed value opens")
+    gap_fade: int = rule(2, 0, 100, G, "Gap that closes each epoch a being does not act against what it professes")
+    profess_from: int = rule(40, 0, 100, G, "Value from which a being professes it")
+    exposure_pct: int = rule(20, 0, 100, G, "Chance each epoch that a wide gap seen by others comes out on its own (%)")
 
 
 @dataclass(frozen=True)

@@ -22,6 +22,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
+from aerona.engine.media.press import recorded_evidence
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.folk import present_among
@@ -81,6 +82,7 @@ async def read_and_confess(ctx: TickContext, case: CrimeCaseRow) -> list[Evidenc
                     locked=[],
                 )
             )
+    found.extend(await recorded_evidence(ctx, case))
     return found
 
 

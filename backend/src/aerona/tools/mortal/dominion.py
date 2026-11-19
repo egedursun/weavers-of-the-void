@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -40,7 +41,7 @@ async def search_magic_sites(call: MortalCall, args: SearchInput) -> str:
         return result(MortalResult.SEARCH_EMPTY)
     await reveal(call.tick, site, call.me, SiteTally())
     call.target(site.place_entity_id)
-    return result(MortalResult.SITE_FOUND, kind=site.kind.value.replace("_", " "), school=site.school.value.replace("_", " "), id=site.id)
+    return result(MortalResult.SITE_FOUND, kind=spoken(site.kind), school=spoken(site.school), id=site.id)
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

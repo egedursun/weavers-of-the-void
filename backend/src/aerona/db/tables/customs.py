@@ -22,13 +22,14 @@ from aerona.domain.enums.customs import (
     RevivalStage,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 
 REVIVAL_FIELDS = ("aim", "stage", "goal", "strength", "prophet_node_id", "ended_epoch")
 INTOXICANT_FIELDS = ("use", "acceptance")
 MARK_CUSTOM_FIELDS = ("meaning",)
 MARK_FIELDS = ("kind", "meaning", "placed_epoch")
-TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art")
+TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art", "housework", "sleep")
 NAMING_FIELDS = ("pattern", "secret_names", "taboo_epochs", "rename_on_initiation", "rename_on_marriage", "rename_on_vow")
 NAME_FORM_FIELDS = ("name", "given_epoch")
 AGE_SET_FIELDS = ("name", "initiated_from", "initiated_to", "grade", "promoted_epoch")
@@ -100,6 +101,9 @@ class TimeBudgetRow(Base):
 
     people_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     social_class: Mapped[SocialClass] = mapped_column(enum_type(SocialClass, "social_class"), primary_key=True)
+    life_stage: Mapped[LifeStage] = mapped_column(
+        enum_type(LifeStage, "life_stage"), primary_key=True, default=LifeStage.ADULT, server_default=LifeStage.ADULT.value
+    )
     work: Mapped[int] = mapped_column(default=55)
     rest: Mapped[int] = mapped_column(default=20)
     worship: Mapped[int] = mapped_column(default=10)
@@ -109,6 +113,8 @@ class TimeBudgetRow(Base):
     learning: Mapped[int] = mapped_column(default=0, server_default="0")
     care: Mapped[int] = mapped_column(default=0, server_default="0")
     art: Mapped[int] = mapped_column(default=0, server_default="0")
+    housework: Mapped[int] = mapped_column(default=0, server_default="0")
+    sleep: Mapped[int] = mapped_column(default=0, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

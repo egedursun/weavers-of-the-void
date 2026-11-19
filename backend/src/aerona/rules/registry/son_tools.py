@@ -199,6 +199,7 @@ class SonToolsRules:
     shape_structure_essence: int = rule(70, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to shape an arm, nebula or other structure in a galaxy")
     shape_structure_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "shape_galactic_structure action cost")
     stir_galaxy_essence: int = rule(90, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to bring about an event in a galaxy")
+    shield_world_essence: int = rule(60, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to strengthen or strip the magnetic field of a world")
     stir_galaxy_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "stir_galaxy action cost")
     stir_dimension_essence: int = rule(100, 0, 10000, RuleGroup.SON_TOOLS, "Essence a son spends to bring about an event in a dimension")
     stir_dimension_ap: int = rule(2, 1, 10, RuleGroup.SON_TOOLS, "stir_dimension action cost")

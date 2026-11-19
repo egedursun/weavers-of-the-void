@@ -15,6 +15,7 @@ from aerona.domain.enums.crafts import (
     RightKind,
 )
 from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.mind import Emotion
 from aerona.engine.crafts import control
 from aerona.services.player.cosmography import Edited
@@ -151,6 +152,12 @@ class NumberSystemDraft(Command):
 
 class NumberSystemTarget(Command):
     people_id: int
+
+
+class NumberReadingDraft(Command):
+    people_id: int
+    number: int
+    reading: NumberReading | None = None
 
 
 class NumberSystemEdit(Edited):
@@ -399,6 +406,12 @@ async def number_system_edit(scope: PlayerScope, command: NumberSystemEdit) -> E
 async def number_system_delete(scope: PlayerScope, command: NumberSystemTarget) -> Effect:
     await control.delete_record(await scope.context("number_system_delete"), "number_system", command.people_id)
     return Effect("The number system is struck.")
+
+
+@player_action("number_system:read", ActionKind.EDIT_RECORD)
+async def number_system_read(scope: PlayerScope, command: NumberReadingDraft) -> Effect:
+    await control.read_number(await scope.context("number_system_read"), command.people_id, command.number, command.reading)
+    return Effect("The number is read so." if command.reading is not None else "The number is read no more.")
 
 
 @player_action("material_affinity:set", ActionKind.EDIT_RECORD)

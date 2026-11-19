@@ -30,6 +30,7 @@ from aerona.engine.factions.book import robber_ids
 from aerona.engine.finance.policy import PolicyBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
+from aerona.engine.water.ice import ice_open_pct
 
 
 @reads(
@@ -154,13 +155,17 @@ async def markets(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.container_stocks",
     "table.convoys",
+    "table.creator",
     "table.cult_tenets",
+    "table.dimensions",
     "table.districts",
     "table.divine_wounds",
     "table.entities",
     "table.faction_profiles",
     "table.forced_weather",
     "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.goods_flows",
     "table.herds",
     "table.holder_levels",
@@ -181,6 +186,7 @@ async def markets(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.number_systems",
+    "table.observation_methods",
     "table.people_biology",
     "table.people_culture",
     "table.place_environment",
@@ -191,6 +197,7 @@ async def markets(ctx: TickContext) -> None:
     "table.polity_territories",
     "table.preferences",
     "table.region_crops",
+    "table.region_cryosphere",
     "table.region_dangers",
     "table.region_environment",
     "table.region_pollution",
@@ -225,6 +232,7 @@ async def markets(ctx: TickContext) -> None:
     "table.workshops",
     "table.world_biochemistries",
     "table.world_domain_hooks",
+    "table.world_fields",
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
@@ -300,7 +308,7 @@ async def trade_flow(ctx: TickContext) -> None:
         if orphaned(book, route):
             await close_orphan(ctx, route, tally)
             continue
-        tally.dangers[route.entity.id] = assess(ctx, book, route, lairs)
+        tally.dangers[route.entity.id] = assess(ctx, book, route, lairs, await ice_open_pct(ctx, route.profile.mode, route.path))
         await set_tolls(ctx, book, route, masters, realms=realms, grants=grants)
         await carry(ctx, book, route, quotes, tally, policies=policies)
         await upkeep(ctx, book, route, works=works, enemies=enemies, tally=tally)

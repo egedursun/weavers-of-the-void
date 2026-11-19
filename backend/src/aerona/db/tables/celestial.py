@@ -26,7 +26,7 @@ class StarRow(NodeRow):
         between("sacredness", PERCENT_MIN, PERCENT_MAX),
         CheckConstraint("lifecycle_clock IS NULL OR lifecycle_clock >= 0", name="lifecycle_clock_min"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.STAR})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.STAR, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     star_type: Mapped[StarType] = mapped_column(enum_type(StarType, "star_type"))
@@ -77,7 +77,7 @@ class WorldRow(NodeRow):
         between("mood", -PERCENT_MAX, PERCENT_MAX),
         Index("ix_worlds_discovery", "discovery"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.WORLD})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.WORLD, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     world_type: Mapped[WorldType] = mapped_column(enum_type(WorldType, "world_type"))

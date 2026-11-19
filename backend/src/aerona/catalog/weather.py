@@ -292,3 +292,6 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
         ),
     )
 }
+
+SEASON_DOMAINS = frozenset({Domain.SKY, Domain.STORM, Domain.TIME, Domain.SUN, Domain.MOON, Domain.HARVEST, Domain.ICE, Domain.PLANTS})
+SEASON_DOMAIN_WORDS = ", ".join(domain.value for domain in Domain if domain in SEASON_DOMAINS)

@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.catalog.tongues import SCRIPT_CHAIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import LanguageProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.domain.enums.action import ActionKind
@@ -74,7 +75,7 @@ async def proclaim_tongue(call: MortalCall, args: ProclaimInput) -> str:
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm, IncidentRole.SUBJECT: language.id},
         facts={"policy": args.policy},
     )
-    return result(MortalResult.PROCLAIMED, name=language.name, policy=args.policy.value)
+    return result(MortalResult.PROCLAIMED, name=language.name, policy=spoken(args.policy))
 
 
 async def reform_script(call: MortalCall, args: ReformInput) -> str:

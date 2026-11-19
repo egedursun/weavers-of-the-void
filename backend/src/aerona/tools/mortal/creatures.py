@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import HerdRow
@@ -243,7 +244,7 @@ async def train_herd(call: MortalCall, args: TrainHerdInput) -> str:
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: args.species_id},
         facts={"training": args.training, "gained": gained, "trained": herd.trained, "head": herd.head},
     )
-    return result(MortalResult.HERD_TRAINED, id=args.species_id, name=name, training=args.training.value, gained=gained, trained=herd.trained, head=herd.head)
+    return result(MortalResult.HERD_TRAINED, id=args.species_id, name=name, training=spoken(args.training), gained=gained, trained=herd.trained, head=herd.head)
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

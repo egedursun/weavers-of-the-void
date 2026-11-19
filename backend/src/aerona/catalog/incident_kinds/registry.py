@@ -18,6 +18,8 @@ from aerona.catalog.incident_kinds.g13_nature import KINDS as NATURE
 from aerona.catalog.incident_kinds.g14_cosmos import KINDS as COSMOS
 from aerona.catalog.incident_kinds.g15_gods import KINDS as GODS
 from aerona.catalog.incident_kinds.g16_peoples import KINDS as PEOPLES
+from aerona.catalog.incident_kinds.life import KINDS as LIFE
+from aerona.catalog.incident_kinds.nature50 import KINDS as NATURE50
 from aerona.catalog.incident_kinds.phases import KINDS as PHASES
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.incident_kinds.tellings import KINDS as TELLINGS
@@ -39,6 +41,8 @@ GROUP_KINDS: tuple[tuple[IncidentKindSpec, ...], ...] = (
     COSMOS,
     GODS,
     PEOPLES,
+    LIFE,
+    NATURE50,
     PHASES,
     AUTHORED,
     TELLINGS,

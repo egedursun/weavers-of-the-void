@@ -4,8 +4,10 @@ import {
   Bone,
   Bug,
   CircleOff,
+  Cloud,
   Cross,
   Crown,
+  Droplets,
   Eye,
   Flame,
   Flower2,
@@ -128,6 +130,16 @@ export const FOSSIL_READINGS: Record<Schema['FossilReading'], Named> = {
   legend: { label: 'Remains of legend', icon: BookOpen, tone: 'gold' },
   relic: { label: 'Sacred relics', icon: Cross, tone: 'verdigris' },
   deep_time: { label: 'Evidence of deep time', icon: Hourglass, tone: 'info' },
+}
+
+export const FOSSIL_PRESERVATIONS: Record<Schema['Preservation'], Named> = {
+  rock: { label: 'Rock', icon: Mountain, tone: 'muted' },
+  amber: { label: 'Amber', icon: Gem, tone: 'gold' },
+  ice: { label: 'Ice', icon: Snowflake, tone: 'info' },
+  bog: { label: 'Bog', icon: Droplets, tone: 'verdigris' },
+  tar: { label: 'Tar', icon: Flame, tone: 'danger' },
+  ash: { label: 'Ash', icon: Cloud, tone: 'muted' },
+  dry: { label: 'Dry ground', icon: Sun, tone: 'warning' },
 }
 
 export const HOARD_KINDS: Record<Schema['HoardKind'], Named> = {

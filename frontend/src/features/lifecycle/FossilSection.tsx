@@ -23,7 +23,12 @@ import { Ref } from '@/features/gatherings/parts'
 import { Bars } from '@/features/sacred/parts'
 import { ChoiceField, NumberField } from '@/features/wars/military/parts'
 import { type FossilBedView, useEndsAction, useNodeFossils } from './api'
-import { FOSSIL_ICON, FOSSIL_READINGS, FOSSIL_SOURCES } from './labels'
+import {
+  FOSSIL_ICON,
+  FOSSIL_PRESERVATIONS,
+  FOSSIL_READINGS,
+  FOSSIL_SOURCES,
+} from './labels'
 
 const BEDS_SHOWN = 6
 const YES_NO = { true: 'Yes', false: 'No' }
@@ -48,6 +53,13 @@ const FIELDS: readonly Field[] = [
     kind: 'pick',
     table: table(FOSSIL_READINGS),
   },
+  {
+    key: 'preservation',
+    label: 'Kept in',
+    kind: 'pick',
+    table: table(FOSSIL_PRESERVATIONS),
+  },
+  { key: 'layer', label: 'Depth', kind: 'number', min: 0, max: 100 },
 ]
 
 function Bed({ bed, blocked }: { bed: FossilBedView; blocked: string | null }) {
@@ -87,6 +99,10 @@ function Bed({ bed, blocked }: { bed: FossilBedView; blocked: string | null }) {
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Ref node={bed.source_node} empty='no single source' />
         {bed.finder && <Ref node={bed.finder} empty='no finder' />}
+        <Chip icon={FOSSIL_PRESERVATIONS[bed.preservation].icon}>
+          Kept in {FOSSIL_PRESERVATIONS[bed.preservation].label.toLowerCase()},
+          depth {bed.layer}
+        </Chip>
         {bed.frozen && (
           <Chip icon={FOSSIL_ICON} variant='warning'>
             Kept in ice

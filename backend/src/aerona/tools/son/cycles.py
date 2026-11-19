@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.cycles import DivineDebtRow, GiftRow, LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -206,7 +207,7 @@ async def shape_unions(call: SonCall, args: ShapeUnionsInput) -> str:
         facts={"people": people.name, "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.UNIONS_SHAPED, name=people.name, form=row.form.value, purpose=row.purpose.value, residence=row.residence.value)
+    return result(SonResult.UNIONS_SHAPED, name=people.name, form=spoken(row.form), purpose=spoken(row.purpose), residence=spoken(row.residence))
 
 
 async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
@@ -229,8 +230,8 @@ async def shape_kinship(call: SonCall, args: ShapeKinshipInput) -> str:
     return result(
         SonResult.KINSHIP_SHAPED,
         name=people.name,
-        descent=row.descent.value,
-        residence=row.residence.value,
+        descent=spoken(row.descent),
+        residence=spoken(row.residence),
     )
 
 
@@ -244,7 +245,7 @@ async def shape_reproduction(call: SonCall, args: ShapeReproductionInput) -> str
         facts={"people": people.name, "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.REPRODUCTION_SHAPED, name=people.name, system=row.system.value.replace("_", " "))
+    return result(SonResult.REPRODUCTION_SHAPED, name=people.name, system=spoken(row.system))
 
 
 async def try_realm(call: SonCall, args: TryRealmInput) -> str:
@@ -257,7 +258,7 @@ async def try_realm(call: SonCall, args: TryRealmInput) -> str:
         facts={"realm": str(realm.name), "kind": args.kind, "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.REALM_TRIED, name=realm.name, kind=args.kind.value, response=challenge.response.value)
+    return result(SonResult.REALM_TRIED, name=realm.name, kind=spoken(args.kind), response=spoken(challenge.response))
 
 
 async def set_circuit(call: SonCall, args: SetCircuitInput) -> str:

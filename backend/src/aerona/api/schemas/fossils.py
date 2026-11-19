@@ -1,6 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
-from aerona.domain.enums.fossil import FossilReading, FossilSource
+from aerona.domain.enums.fossil import FossilReading, FossilSource, Preservation
 
 
 class FossilBedView(ApiModel):
@@ -15,6 +15,8 @@ class FossilBedView(ApiModel):
     found_epoch: int | None
     finder: NodeRef | None
     reading: FossilReading
+    layer: int
+    preservation: Preservation
     locked: list[str]
 
 

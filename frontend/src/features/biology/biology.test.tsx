@@ -26,6 +26,7 @@ const EFFECTS = {
   breathes: true,
   drinks: true,
   ages: true,
+  sleeps: true,
 }
 
 function serveBase() {
@@ -59,7 +60,7 @@ describe('biology', () => {
         heals: true,
         infects: true,
         material: true,
-        tissue: 'crystal',
+        tissue: 'crystalline',
       },
       seeded: true,
       updated_epoch: 5,
@@ -73,7 +74,7 @@ describe('biology', () => {
       .toBeVisible()
     await expect.element(screen.getByText('Groupthink: +50')).toBeVisible()
     await expect.element(screen.getByText('Bleeds: no')).toBeVisible()
-    await expect.element(screen.getByText('Tissue: Crystal')).toBeVisible()
+    await expect.element(screen.getByText('Tissue: Crystalline')).toBeVisible()
     await expect
       .element(screen.getByRole('button', { name: 'Hive' }))
       .toHaveAttribute('aria-pressed', 'true')

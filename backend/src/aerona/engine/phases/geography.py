@@ -178,7 +178,12 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "region.magic",
     "settlement.population",
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -189,6 +194,9 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.place_environment",
     "table.place_profiles",
     "table.region_environment",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes(
     "table.bonds",

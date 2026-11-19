@@ -73,6 +73,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.army_units",
     "table.beliefs",
     "table.bias_weights",
+    "table.bonds",
     "table.community_relations",
     "table.entities",
     "table.favours",
@@ -106,6 +107,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.true_names",
     "table.world_maps",
     "table.world_seasons",
+    "table.worlds",
 )
 @writes(
     "table.beliefs",

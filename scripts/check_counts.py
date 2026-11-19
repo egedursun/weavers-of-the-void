@@ -15,6 +15,12 @@ SECOND_WORD = re.compile(r"^ ([a-z][a-z-]*) ([a-z][a-z-]*)")
 LINKS = frozenset({"in", "of", "for", "to", "at", "on", "by", "from", "with", "per", "into", "than", "and", "or", "out"})
 INT_CALLS = frozenset({"len", "sum", "round", "int", "min", "max", "round_half_up", "clamp_int"})
 TEMPLATE = re.compile(r"\{(count|total|n)\} ([a-z][a-z-]*)")
+TEMPLATE_PAIR = re.compile(r"\{(count|total|n)\} ([a-z][a-z-]*) ([a-z][a-z-]*)")
+NUMBER_FIELDS = frozenset(
+    {"count", "total", "n", "epochs", "remaining", "cap", "limit", "steps", "legs", "length"}
+    | {"attendance", "wait", "tonnage", "found", "stall", "minimum", "keeps", "caught", "purged"}
+)
+SINGLE_SAME = re.compile(r"(?<!\{)\{([a-z_]+)\}((?: [a-z-]+)?) \1\b")
 JINJA_SAME = re.compile(r"\{\{ ([a-z_]+) \}\}((?: [a-z-]+)?) \1\b")
 SPEC = re.compile(r"\{\w+:[a-z -]+\|[a-z -]+\}")
 TESTS = ROOT / "backend" / "tests"
@@ -139,6 +145,10 @@ def in_template(node: ast.Constant) -> list[str]:
     if not isinstance(node.value, str):
         return []
     found = [f"{{{name}}} {word}" for name, word in TEMPLATE.findall(node.value) if plural(word)]
+    pairs = TEMPLATE_PAIR.findall(node.value)
+    found += [f"{{{name}}} {first} {second}" for name, first, second in pairs if not plural(first) and first not in IRREGULAR | LINKS and plural(second)]
+    found += [f"{{{{ {name} }}}} {word}" for name, word in TEMPLATE_COUNT.findall(node.value) if plural(word) and numeric(name)]
+    found += [f"{{{name}}}{between} {name}" for name, between in SINGLE_SAME.findall(node.value) if plural(name)]
     return found + [f"{{{{ {name} }}}}{between} {name}" for name, between in JINJA_SAME.findall(node.value) if plural(name)]
 
 
@@ -208,8 +218,13 @@ NAMED_FIELDS = frozenset({"captor", "patron", "people"})
 
 
 def named(field: str) -> bool:
-    last = field.split(".")[-1]
+    last = field.rsplit(".", maxsplit=1)[-1]
     return last.endswith("name") or last in NAMED_FIELDS
+
+
+def numeric(field: str) -> bool:
+    last = field.rsplit(".", maxsplit=1)[-1]
+    return field.startswith("rules.") or last in NUMBER_FIELDS or last.endswith(("_count", "_epochs", "_ap", "_max", "_min"))
 
 
 def template_counts() -> list[Count]:

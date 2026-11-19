@@ -39,6 +39,7 @@ from aerona.engine.folkways.fed import fed_fertility
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intimacy.course import birth_course
 from aerona.engine.intrigue.sources import hidden_birth
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.ruler_roles import ruler_role
@@ -46,10 +47,12 @@ from aerona.engine.mind.book import effect_of, pressures_of, scaled_by
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas
+from aerona.engine.numbers.book import PolicyBook
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
 from aerona.engine.polity.houses import bloodline_fertility
@@ -738,9 +741,14 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.allele_pools",
     "table.bonds",
     "table.community_societies",
+    "table.creator",
     "table.culture_values",
+    "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.genomes",
     "table.incident_participants",
     "table.incidents",
@@ -754,8 +762,11 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
+    "table.sons",
+    "table.stars",
     "table.storytellers",
     "table.world_maps",
+    "table.worlds",
 )
 @writes(
     "mortal.agility",
@@ -992,6 +1003,8 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
             roles = {IncidentRole.PARENT: [first.id, second.id], IncidentRole.CHILD: [child.id for child in born], IncidentRole.HEALER: attendant}
             await record(ctx, "births.twins", roles=roles, facts={"children": count, **facts}, place=bearer.location_id)
             ctx.count("twins")
+    if born and not lost:
+        await birth_course(ctx, bearer, born, attendant)
     if lost:
         other = second if bearer is first else first
         for child in born:
@@ -1048,7 +1061,10 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.people_biology",
     "table.people_culture",
     "table.people_reproduction",
+    "table.population_instruments",
+    "table.population_policies",
     "table.pressures",
+    "table.reproductive_courses",
     "table.time_budgets",
     "table.traits",
 )
@@ -1072,6 +1088,7 @@ async def couples_bear_children(ctx: TickContext) -> None:
     bonds = await BondIndex.load(ctx.session, COUPLE_KINDS)
     born = 0
     seen: set[frozenset[int]] = set()
+    numbers = await PolicyBook.load(ctx)
     for bond in bonds.bonds:
         if born >= rules.world_effects.birth_cap:
             return
@@ -1084,7 +1101,11 @@ async def couples_bear_children(ctx: TickContext) -> None:
         if first is None or second is None or first.entity_type is not EntityType.MORTAL or second.entity_type is not EntityType.MORTAL:
             continue
         fertile = await bloodline_fertility(ctx.session, rules, first.id, second.id)
-        if not rng.chance(await couple_chance(ctx, first, second, bond.kind) * fertile):
+        limit = numbers.child_limit(first.location_id)
+        if limit is not None and len(await children_of(ctx.session, first.id)) >= limit:
+            ctx.count("births_held_by_child_limit")
+            continue
+        if not rng.chance(await couple_chance(ctx, first, second, bond.kind) * fertile * numbers.birth_factor(first.location_id)):
             continue
         children = await deliver(ctx, first, second, namer)
         if bond.kind is BondKind.LOVES:

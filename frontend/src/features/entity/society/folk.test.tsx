@@ -70,6 +70,7 @@ const VIEW = {
     liturgical_language: { id: 50, name: 'Old Aerie' },
     trade_language: { id: 51, name: 'Harbour Cant' },
     funeral_rite: 'sky_burial',
+    remains_treatment: 'exposure',
     funeral_tradition: { id: 60, name: 'The Sky Burial of the Wingkin' },
     martial_record: [{ style: 'skirmisher', wins: 3, losses: 1 }],
     martial_net: 2,

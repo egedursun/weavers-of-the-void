@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.write_guard import held
@@ -75,7 +76,7 @@ async def shape_rule(call: SonCall, args: ShapeRuleInput) -> str:
         facts={"realm": str(realm.name), "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.RULE_SHAPED, name=realm.name, selectorate=args.selectorate.value, share=args.public_share)
+    return result(SonResult.RULE_SHAPED, name=realm.name, selectorate=spoken(args.selectorate), share=args.public_share)
 
 
 async def anoint_founder(call: SonCall, args: AnointFounderInput) -> str:

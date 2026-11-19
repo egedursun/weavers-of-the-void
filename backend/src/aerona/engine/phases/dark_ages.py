@@ -21,6 +21,7 @@ from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarEnding
 from aerona.engine.context import TickContext
+from aerona.engine.endowments.trust import endowed
 from aerona.engine.faith.zealotry import monastery_keeps
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -133,6 +134,7 @@ async def _forgetting(ctx: TickContext, holdings: KnowledgeHoldings) -> int:
             continue
         protected = await is_protected(ctx.session, ctx.rules, community, keepers)
         kept = 1 - ctx.rules.doctrine.monastic_protection_pct / PERCENT if await monastery_keeps(ctx, community.id) else 1.0
+        kept *= 1 - ctx.rules.endowments.dark_age_keep_pct / PERCENT if await endowed(ctx.session, community.id) else 1.0
         if not rng.chance((settings.dark_age_forget_protected_chance if protected else settings.dark_age_forget_chance) * kept):
             continue
         await forget_knowledge(ctx, community, rng.pick(known), holdings)
@@ -223,15 +225,24 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "settlement.prosperity",
     "table.bonds",
     "table.community_societies",
+    "table.creator",
     "table.cult_holdings",
+    "table.dimensions",
+    "table.endowments",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.node_births",
     "table.nodes",
+    "table.sons",
+    "table.stars",
     "table.wars",
     "table.world_maps",
+    "table.worlds",
 )
 @writes(
     "knowledge.spread",

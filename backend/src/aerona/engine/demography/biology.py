@@ -2,6 +2,7 @@ from collections.abc import Mapping
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.death_shapes import REACHABLE_REMAINS
 from aerona.catalog.peoples import (
     DIETS,
     FINE_JOBS,
@@ -288,7 +289,7 @@ def kin_army(
         found[kind] = found.get(kind, 0.0) + share * fleet
     if lifted > 0:
         found[UnitKind.SKY_RIDERS] = found.get(UnitKind.SKY_RIDERS, 0.0) + lifted
-    if culture is not None and raises_dead(culture.funeral_rite):
+    if culture is not None and raises_dead(culture.funeral_rite) and culture.remains_treatment in REACHABLE_REMAINS:
         found[UnitKind.SUMMONED_HOST] = found.get(UnitKind.SUMMONED_HOST, 0.0) + rules.customs.reanimation_host_pct / PERCENT
     return found
 

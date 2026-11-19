@@ -53,7 +53,7 @@ async def knowable(call: MortalCall, entity: EntityRow, regions: set[int]) -> bo
 async def look_at_world(call: MortalCall, _args: EmptyInput) -> str:
     views = call.ports.views
     if views is None:
-        fail(CommonResult.NOT_AVAILABLE, tool=MortalToolId.LOOK_AT_WORLD.value)
+        fail(CommonResult.NOT_AVAILABLE, tool=MortalToolId.LOOK_AT_WORLD)
     return await views.mortal_view(call.session, call.rules, call.me)
 
 

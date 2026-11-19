@@ -6,6 +6,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.death_work.handling import remains_of, uses_grounds
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.faith.spirit_bonds import keep_bound_spirits
 from aerona.engine.interconnect.annotations import reads, writes
@@ -77,6 +78,7 @@ JUSTICE_FULL = 100
     "table.community_labour",
     "table.community_societies",
     "table.cosmos",
+    "table.creator",
     "table.culture_values",
     "table.custom_kinds",
     "table.dimensional_events",
@@ -228,7 +230,7 @@ async def settlement_life(ctx: TickContext) -> None:
         burned = await fires(ctx, town, ground, knowledge, weather)
         ctx.count("fires", burned)
         sanitation(ctx, town, knowledge, lifted=await lifted_water(ctx, town.entity.id))
-        hallow(ctx, town)
+        hallow(ctx, town, grounds=uses_grounds(await remains_of(ctx.session, town.entity)))
         await warded(ctx, town)
         ctx.count("structure_effects", await act_own_effects(ctx, town.entity, town.profile))
         await endure_siege(ctx, town, values)

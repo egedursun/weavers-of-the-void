@@ -348,7 +348,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SEAL_DIVINE_PACT: ToolText(
         "You seal a divine pact with a foreign god whose friendship toward you is at least {{ rules.god_relations.pact_friendship }}. "
-        "Neither of you may make war on the other while it holds ({{ rules.god_relations.pact_epochs }} ages). 1 action.",
+        "Neither of you may make war on the other while it holds ({{ rules.god_relations.pact_epochs | several('age', 'ages') }}). 1 action.",
         {"god_id": "The foreign god's id", "reason": "Why you seal the pact"},
     ),
     T.MEND_WOUND: ToolText(
@@ -420,7 +420,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CREATE_GALAXY: ToolText(
         "You make a new galaxy inside a cluster, or loose in a dimension, that holds a world you reach; with neither it lies in the prime dimension. "
         "You become its patron. It starts without stars and bears them in its nurseries over the epochs. A great work: "
-        "{{ rules.galaxies.create_essence }} essence, {{ rules.son_tools.create_galaxy_ap }} actions.",
+        "{{ rules.galaxies.create_essence }} essence, {{ rules.son_tools.create_galaxy_ap | several('action', 'actions') }}.",
         {
             "name": "The galaxy's name",
             "galaxy_type": "Galaxy type: {{ galaxy_types }}",
@@ -432,7 +432,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CREATE_CLUSTER: ToolText(
         "You gather a new cluster in a dimension, or inside a larger cluster, that holds a world you reach; with neither it lies in the prime dimension. "
         "Its kind sets the heat of the medium between its galaxies and how they are placed in it. A greater work than a galaxy: "
-        "{{ rules.clusters.create_essence }} essence, {{ rules.son_tools.create_cluster_ap }} actions.",
+        "{{ rules.clusters.create_essence }} essence, {{ rules.son_tools.create_cluster_ap | several('action', 'actions') }}.",
         {
             "name": "The cluster's name",
             "kind": "Cluster kind: {{ cluster_kinds }}",
@@ -444,7 +444,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CREATE_DIMENSION: ToolText(
         "You bring a new dimension into being, on its own or inside a dimension that holds a world you reach. You rule it. "
         "Its kind sets its veil, stability, time, magic, hostility, sanity drain and leak. The greatest of works: "
-        "{{ rules.dimensions.create_essence }} essence, {{ rules.son_tools.create_dimension_ap }} actions.",
+        "{{ rules.dimensions.create_essence }} essence, {{ rules.son_tools.create_dimension_ap | several('action', 'actions') }}.",
         {
             "name": "The dimension's name",
             "kind": "Dimension kind: {{ dimension_kinds }}",
@@ -456,12 +456,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SHAPE_GALACTIC_STRUCTURE: ToolText(
         "You shape a new structure of the kind you choose in a galaxy you are patron of or whose worlds you reach. "
-        "Stars inside it take what it gives. {{ rules.son_tools.shape_structure_essence }} essence, {{ rules.son_tools.shape_structure_ap }} actions.",
+        "Stars inside it take what it gives. {{ rules.son_tools.shape_structure_essence }} essence, {{ rules.son_tools.shape_structure_ap | several('action', 'actions') }}.",
         {"galaxy_id": "The id of the galaxy", "kind": "The kind of structure", "name": "The structure's name", "reason": "Why you shape it"},
     ),
     T.STIR_GALAXY: ToolText(
         "You bring about an event in a galaxy you are patron of or whose worlds you reach; some events need a second galaxy or one of its stars. "
-        "{{ rules.son_tools.stir_galaxy_essence }} essence, {{ rules.son_tools.stir_galaxy_ap }} actions.",
+        "{{ rules.son_tools.stir_galaxy_essence }} essence, {{ rules.son_tools.stir_galaxy_ap | several('action', 'actions') }}.",
         {
             "galaxy_id": "The id of the galaxy",
             "kind": "The kind of galactic event",
@@ -472,7 +472,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.STIR_DIMENSION: ToolText(
         "You bring about an event in a dimension you rule or whose worlds you reach; some events need a second dimension or a world. "
-        "{{ rules.son_tools.stir_dimension_essence }} essence, {{ rules.son_tools.stir_dimension_ap }} actions.",
+        "{{ rules.son_tools.stir_dimension_essence }} essence, {{ rules.son_tools.stir_dimension_ap | several('action', 'actions') }}.",
         {
             "dimension_id": "The id of the dimension",
             "kind": "The kind of dimensional event",
@@ -483,13 +483,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.BIND_LAW_ACROSS_DIMENSION: ToolText(
         "You make a natural law you reach hold on every world of a dimension you rule. "
-        "{{ rules.son_tools.dimension_law_essence }} essence, {{ rules.son_tools.dimension_law_ap }} actions.",
+        "{{ rules.son_tools.dimension_law_essence }} essence, {{ rules.son_tools.dimension_law_ap | several('action', 'actions') }}.",
         {"dimension_id": "The id of the dimension you rule", "law_id": "The id of the natural law", "reason": "Why it should hold there"},
     ),
     T.SET_COSMIC_FEATURE: ToolText(
         "You set a feature of the kind you choose in the heavens. A wormhole joins two worlds, a rogue world needs its star or its galaxy, "
         "and the other kinds belong to a star. Each star, galaxy and world you name must be within your reach. "
-        "{{ rules.son_tools.cosmic_feature_essence }} essence, {{ rules.son_tools.cosmic_feature_ap }} actions.",
+        "{{ rules.son_tools.cosmic_feature_essence }} essence, {{ rules.son_tools.cosmic_feature_ap | several('action', 'actions') }}.",
         {
             "kind": "The kind of feature",
             "name": "The feature's name",
@@ -502,17 +502,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.GATHER_STAR_SYSTEM: ToolText(
         "You gather two or more stars within your reach into one system that moves together. "
-        "{{ rules.son_tools.star_system_essence }} essence, {{ rules.son_tools.star_system_ap }} actions.",
+        "{{ rules.son_tools.star_system_essence }} essence, {{ rules.son_tools.star_system_ap | several('action', 'actions') }}.",
         {"name": "The system's name", "star_ids": "The ids of the stars", "reason": "Why you gather them"},
     ),
     T.RAISE_PHENOMENON: ToolText(
         "You raise a phenomenon in a region you reach; it grows and acts on the land around it until it fades or is held. "
-        "{{ rules.son_tools.phenomenon_essence }} essence, {{ rules.son_tools.phenomenon_ap }} actions.",
+        "{{ rules.son_tools.phenomenon_essence }} essence, {{ rules.son_tools.phenomenon_ap | several('action', 'actions') }}.",
         {"kind": "The kind of phenomenon", "region_id": "The id of the region", "reason": "Why you raise it"},
     ),
     T.OPEN_BREACH: ToolText(
         "You open a breach in a region you reach through which an outer being can press into the world. "
-        "{{ rules.son_tools.breach_essence }} essence, {{ rules.son_tools.breach_ap }} actions.",
+        "{{ rules.son_tools.breach_essence }} essence, {{ rules.son_tools.breach_ap | several('action', 'actions') }}.",
         {"being_id": "The id of the outer being", "region_id": "The id of the region", "reason": "Why you open it"},
     ),
     T.FORGE_LEY_LINE: ToolText(
@@ -520,8 +520,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"first_region_id": "The id of the first region", "second_region_id": "The id of the neighbouring region", "reason": "Why you forge it"},
     ),
     T.ADD_SEASON: ToolText(
-        "As a god of the sky, storm, time, sun, moon, harvest, ice or plants you add a season to the year of a world you reach, "
-        "with its warmth, rain, growth, travel and campaigning. {{ rules.son_tools.add_season_essence }} essence, {{ rules.son_tools.reorder_seasons_ap }} actions.",
+        "As a god of one of these domains, {{ season_domains }}, you add a season to the year of a world you reach, "
+        "with its warmth, rain, growth, travel and campaigning. {{ rules.son_tools.add_season_essence }} essence, {{ rules.son_tools.reorder_seasons_ap | several('action', 'actions') }}.",
         {
             "world_id": "The id of the world",
             "name": "The season's name",
@@ -534,7 +534,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.OPEN_ROAD: ToolText(
         "You open a road between two known worlds, one of which you reach, by a way of travel you choose. "
-        "{{ rules.son_tools.open_road_essence }} essence, {{ rules.son_tools.open_road_ap }} actions.",
+        "{{ rules.son_tools.open_road_essence }} essence, {{ rules.son_tools.open_road_ap | several('action', 'actions') }}.",
         {
             "first_world_id": "The id of the first world",
             "second_world_id": "The id of the second world",
@@ -544,7 +544,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.RAISE_THRONE: ToolText(
         "You raise a throne of power at a place you reach and hold it yourself; its holder draws power from it. "
-        "{{ rules.son_tools.throne_essence }} essence, {{ rules.son_tools.throne_ap }} actions.",
+        "{{ rules.son_tools.throne_essence }} essence, {{ rules.son_tools.throne_ap | several('action', 'actions') }}.",
         {"place_id": "The id of the place, region, settlement or structure", "reason": "Why you raise it"},
     ),
     T.LAY_MAGIC_SITE: ToolText(
@@ -564,7 +564,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SEED_LIFE: ToolText(
         "You let native life take root on a world you reach: a new kind of life, or with people a new people of that world. "
-        "{{ rules.son_tools.seed_life_essence }} essence, {{ rules.son_tools.seed_life_ap }} actions.",
+        "{{ rules.son_tools.seed_life_essence }} essence, {{ rules.son_tools.seed_life_ap | several('action', 'actions') }}.",
         {"world_id": "The id of the world", "people": "Whether a people takes root rather than a kind of life", "reason": "Why you seed it"},
     ),
     T.CALL_UP_SOUL: ToolText(
@@ -649,7 +649,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
-        "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch }} times per age, at most {{ rules.son_tools.coin_word_max_words }} words each time.",
+        "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch | several('time', 'times') }} per age, at most {{ rules.son_tools.coin_word_max_words | several('word', 'words') }} each time.",
         {"language_id": "The language entity's id", **WORD_FIELDS},
     ),
     T.CALL_SIBLING: ToolText(
@@ -707,7 +707,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     **{tool: creation_text(entity_type) for tool, entity_type in CREATION_TOOLS.items()},
     T.AFFECT_ENTITY: ToolText(
         "You change the stats of an existing entity. Touching someone else's creation is "
-        "{{ rules.son_tools.influence_foreign_cost_mult }} times as expensive and angers its creator. Lifespan, age and knowledge level do not change this way; each stat once per call; "
+        "{{ rules.son_tools.influence_foreign_cost_mult | several('time', 'times') }} as expensive and angers its creator. Lifespan, age and knowledge level do not change this way; each stat once per call; "
         "the same entity at most {{ rules.son_tools.affect_per_target }} time(s) per age. Cost {{ rules.costs.influence }} + power level essence. 1 action.",
         {
             "entity_id": "The entity's id",
@@ -743,9 +743,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.RESURRECT_SIBLING: ToolText(
         "You plot the return of a dead sibling: a rite ({{ rules.death.sibling_rite_cost }} essence, +{{ rules.death.sibling_rite_devotion }} devotion), a descent into the "
         "realm of the dead ({{ rules.death.sibling_descent_cost }} essence, +{{ rules.death.sibling_descent_devotion }}; succeeds {{ rules.death.sibling_descent_success }}%, "
-        "if it fails you fall asleep for {{ rules.death.sibling_descent_sleep_epochs }} ages) or a bargain with an awake foreign god ({{ rules.death.sibling_bargain_cost }} "
+        "if it fails you fall asleep for {{ rules.death.sibling_descent_sleep_epochs | several('age', 'ages') }}) or a bargain with an awake foreign god ({{ rules.death.sibling_bargain_cost }} "
         "essence and one of your sibling's loyal communities passes to that god; +{{ rules.death.sibling_bargain_devotion }}). When devotion reaches "
-        "{{ rules.death.resurrection_devotion_required }} the resurrection rite can succeed (at least {{ rules.death.resurrection_min_epochs }} ages after death). "
+        "{{ rules.death.resurrection_devotion_required }} the resurrection rite can succeed (at least {{ rules.death.resurrection_min_epochs | several('age', 'ages') }} after death). "
         "1 action, {{ rules.death.sibling_intrigues_per_epoch }} per age.",
         {"son_id": "The dead sibling's id", "path": "rite, descent or bargain"},
     ),
@@ -778,7 +778,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.SHAPE_FOLK: ToolText(
-        "You set the customs of a people that worships you: its way of war, the axes of its style, funeral rite, inheritance or what it eats. Its customs "
+        "You set the customs of a people that worships you: its way of war, the axes of its style, funeral rite, what is done with its dead, inheritance, what it eats or how far it keeps one practice. Its customs "
         "of union are set by shaping its unions. The people holds to what you set until the Creator releases it. Cost: {{ rules.customs.son_shape_essence }} "
         "essence for each custom; {{ rules.customs.son_shape_ap }} action.",
         {
@@ -790,8 +790,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "scale": "The size they favour, from 0 (small and close) to 100 (vast)",
             "symmetry": "How much they favour balance, from 0 (asymmetric) to 100 (strictly symmetric)",
             "funeral_rite": "How the dead are handled: {{ funeral_rites | join(', ') }}",
+            "remains_treatment": "What is done with the remains, within what the funeral rite allows: {{ remains_treatments | join(', ') }}",
             "inheritance": "Inheritance (equal_shares, primogeniture, ultimogeniture, through_second_line, elective, by_merit)",
             "diet": "What they eat: {{ diets | join(', ') }}",
+            "practice": "A practice of theirs to set: {{ practices | join(', ') }}",
+            "practice_level": "How far they keep that practice, from 0 (not at all) to 100 (fully); it then follows what they know, hold and build",
             "reason": "Why you give them these ways",
         },
     ),
@@ -846,7 +849,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.BIRTH_CHILD: ToolText(
         "You birth a new son from your own essence; a new card joins the pantheon. Its rarity is lower than yours. {{ rules.costs.bear_child }} essence, "
-        "{{ rules.son_tools.bear_child_ap }} actions.",
+        "{{ rules.son_tools.bear_child_ap | several('action', 'actions') }}.",
         {"inspiration": "Why and from what the child is born, which domains it will carry", "co_parent_id": "Optional: the sibling you birth together with"},
     ),
     T.MOVE_TO_WORLD: ToolText(
@@ -879,7 +882,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SEVER_LEY: ToolText(
         "You cut a ley line between two regions: magic stops flowing along it, storms no longer run down it and works on it stop gaining power, "
-        "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
+        "for {{ rules.environment.sever_ley_epochs | several('age', 'ages') }}. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
     ),
     T.RAISE_DIVINE_CREATURE: ToolText(
@@ -890,7 +893,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TEACH_CREATURE: ToolText(
         "You reward or punish your divine creature for one kind of deed; rewarded deeds it does more often, punished ones less. "
-        "Left without lessons for {{ rules.divine_creatures.neglect_epochs }} epochs it follows its own leanings. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
+        "Left without lessons for {{ rules.divine_creatures.neglect_epochs | several('epoch', 'epochs') }} it follows its own leanings. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
         {"creature_id": "Your creature", "deed": "The deed you reward or punish", "lesson": "reward or punish", "reason": "Why"},
     ),
     T.RELEASE_CREATURE: ToolText(
@@ -987,7 +990,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.MARK_LINEAGE: ToolText(
         "You mark the line of a species: a blessing passes to every young of that line, to the breeds herders make of it and to the great "
-        "beasts born of it; a taint does the same, and only gods of death, plague, madness, shadow, blood or hunger may lay one. 1 action.",
+        "beasts born of it; a taint does the same, and only gods of these domains may lay one: {{ tainting_domains }}. 1 action.",
         {"species_id": "The species", "taint": "True to taint the line, false to bless it", "reason": "Why you mark it"},
     ),
     T.MOVE_PLAGUE_RESPONSE: ToolText(
@@ -1081,15 +1084,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You reshape a land: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
         "bring the grass back to a desert (green), make its soil saline (make_saline), make its soil rich (enrich_soil), raise or lower "
         "the land (raise_land, lower_land), carve a valley or fill one (carve_valley, fill_valley), open a spring (open_spring), call up "
-        "lava (call_lava) or sink a coast under the sea (sink_coast). Rivers bow to gods of sea, storm, earth or stone; deserts to gods of "
-        "sun, fire, hunger, salt or ash; green to gods of plants, harvest, life or sea; saline soil to gods of salt, sea or death; rich soil to gods "
-        "of earth, fire, ash, harvest, plants or stone; raising to gods of earth or stone; lowering to gods of earth, stone or sea; valleys "
-        "to gods of earth, stone, storm or sea, and filling them to gods of earth, stone or ash; springs to gods of sea, life, earth or "
-        "plants; lava to gods of fire, earth, ash or stone; sinking a coast to gods of sea, storm or earth. Wells and fields follow the "
+        "lava (call_lava) or sink a coast under the sea (sink_coast). Each reshaping bows only to gods of these domains: {{ land_domains }}. Wells and fields follow the "
         "river, deserts lose their rain and harvests, saline soil bears little, a raised or lowered land keeps the height you give it, lava "
         "burns the woods and raises the world's volcanism, a sunken coast floods. The folk of the land hold you in more awe when you water, "
         "raise or enrich it and in less when you drown, burn, parch or make it saline. {{ rules.son_tools.reshape_land_essence }} essence, "
-        "{{ rules.son_tools.reshape_land_ap }} actions.",
+        "{{ rules.son_tools.reshape_land_ap | several('action', 'actions') }}.",
         {
             "region_id": "The land's id",
             "act": "shift_river, parch, green, make_saline, enrich_soil, raise_land, lower_land, carve_valley, fill_valley, open_spring, call_lava or sink_coast",
@@ -1115,15 +1114,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.REORDER_SEASONS: ToolText(
         "You reorder the seasons of a world: the year runs in the order you name, so harvests, campaigns, travel and festivals fall differently. "
-        "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.reorder_seasons_essence }} essence, "
-        "{{ rules.son_tools.reorder_seasons_ap }} actions, {{ rules.son_tools.reorder_seasons_per_epoch }} per age.",
+        "Only gods of these domains can do it: {{ season_domains }}. {{ rules.son_tools.reorder_seasons_essence }} essence, "
+        "{{ rules.son_tools.reorder_seasons_ap | several('action', 'actions') }}, {{ rules.son_tools.reorder_seasons_per_epoch }} per age.",
         {"world_id": "The world's id", "order": "The current positions of the world's seasons (see SEASONS in the world summary), in the new order"},
     ),
     T.SHAPE_WEATHER: ToolText(
         "You hold a weather over a region: for the ages you name its sky does as you say, so harvests, battles, travel and disease follow your weather. "
-        "Only gods of sky, storm, time, sun, moon, harvest, ice or plants can do it. {{ rules.son_tools.shape_weather_essence }} essence per age, "
-        "{{ rules.son_tools.shape_weather_ap }} actions, {{ rules.son_tools.shape_weather_per_epoch }} per age, at most "
-        "{{ rules.son_tools.shape_weather_max_epochs }} ages at once.",
+        "Only gods of these domains can do it: {{ season_domains }}. {{ rules.son_tools.shape_weather_essence }} essence per age, "
+        "{{ rules.son_tools.shape_weather_ap | several('action', 'actions') }}, {{ rules.son_tools.shape_weather_per_epoch }} per age, at most "
+        "{{ rules.son_tools.shape_weather_max_epochs | several('age', 'ages') }} at once.",
         {
             "region_id": "The region's id",
             "weather": "The weather to hold, one of the world's kinds of weather",
@@ -1143,7 +1142,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.REKINDLE_STAR: ToolText(
         "You rekindle a dead, darkened or exploded star: light returns to the worlds around it, leakage recedes. "
-        "{{ rules.cosmic_costs.rekindle_dead_star | share_of(rules.son_tools.cosmic_rekindle_pct) }} essence, {{ rules.son_tools.rekindle_star_ap }} actions.",
+        "{{ rules.cosmic_costs.rekindle_dead_star | share_of(rules.son_tools.cosmic_rekindle_pct) }} essence, {{ rules.son_tools.rekindle_star_ap | several('action', 'actions') }}.",
         {"star_id": "The star's id"},
     ),
     T.BIND_SPIRIT: ToolText(
@@ -1153,7 +1152,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.HANG_STAR: ToolText(
         "You place a new star in a galaxy or in the sky of a world you reach; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
-        "{{ rules.son_tools.hang_star_ap }} actions.",
+        "{{ rules.son_tools.hang_star_ap | several('action', 'actions') }}.",
         {
             "name": "The star's name",
             "type": "Star type: {{ star_types }}",
@@ -1164,7 +1163,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.EXTINGUISH_STAR: ToolText(
         "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and doom advances; the whole cosmos remembers it. "
-        "{{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_extinguish_pct) }} essence, {{ rules.son_tools.extinguish_star_ap }} actions.",
+        "{{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_extinguish_pct) }} essence, {{ rules.son_tools.extinguish_star_ap | several('action', 'actions') }}.",
         {"star_id": "The star's id", "reason": "Why you put it out"},
     ),
     T.TALK_TO_FOREIGN_GOD: ToolText(
@@ -1215,13 +1214,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.OPEN_COSMIC_BED: ToolText(
         "On the world you are on, you open a bed of the cosmic travel resource in a region or place: mortals can claim it and travel between worlds. The cosmos's travel "
-        "resource must be defined. {{ rules.son_tools.open_deposit_cost }} essence, {{ rules.son_tools.open_deposit_ap }} actions.",
+        "resource must be defined. {{ rules.son_tools.open_deposit_cost }} essence, {{ rules.son_tools.open_deposit_ap | several('action', 'actions') }}.",
         {"region_id": "The region or place where the bed opens", "reason": "Why you open it"},
     ),
     T.WAR_ON_FOREIGN_GOD: ToolText(
         "You declare war on the old or foreign god of another world. Your strength, your will and your rank clash with their power. If you win they fall defeated (in a "
         "crushing victory they die), you gain fame and experience; if you lose you are wounded and lose essence. You must be in that world or there must be a known open "
-        "road between you. {{ rules.son_tools.foreign_war_cost }} essence, {{ rules.son_tools.foreign_war_ap }} actions.",
+        "road between you. {{ rules.son_tools.foreign_war_cost }} essence, {{ rules.son_tools.foreign_war_ap | several('action', 'actions') }}.",
         {"god_id": "The foreign god's id", "reason": "Why you make war"},
     ),
     T.BARGAIN_WITH_OUTSIDER: ToolText(
@@ -1256,7 +1255,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.BIRTH_WORLD: ToolText(
         "You birth a new world into the cosmos: with its own sky, physics, regions, unique resource and perhaps natives. The world reflects your domains and you turn to it. "
-        "{{ rules.balance.birth_world }} essence, {{ rules.son_tools.birth_world_ap }} actions.\n"
+        "{{ rules.balance.birth_world }} essence, {{ rules.son_tools.birth_world_ap | several('action', 'actions') }}.\n"
         "EXISTING STARS (the new world usually orbits one of these; choose with star_id):\n"
         "{% if context.stars %}{% for star in context.stars %}- star_id {{ star.id }}: {{ star.name }} ({{ star.type_label }}){% if not loop.last %}\n{% endif %}{% endfor %}"
         "{% else %}none{% endif %}",
@@ -1272,7 +1271,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, slums, palace, foreign quarter, "
         "necropolis, residential, civic quarter, gardens or one of the world's district designs. Each kind changes the city: storage, housing, order, "
         "sanitation, piety, administration, "
-        "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap }} actions.",
+        "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap | several('action', 'actions') }}.",
         {
             "settlement_id": "The settlement's id",
             "kind": (
@@ -1288,7 +1287,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You devise a new kind of district for your world on a base kind; every city may then raise it. Each number you give replaces the base "
         "kind's effect per level: housing (people), food_store and goods_store (stored goods), harbour (trade capacity), order, sanitation (may be "
         "negative), piety_floor, admin_pct (administrative reach), policing, investment_pct and tension_relief_pct. "
-        "{{ rules.son_tools.design_district_essence }} essence, {{ rules.son_tools.design_district_ap }} actions.",
+        "{{ rules.son_tools.design_district_essence }} essence, {{ rules.son_tools.design_district_ap | several('action', 'actions') }}.",
         {
             "name": "The design's name",
             "base_kind": "The base district kind it builds on",
@@ -1431,7 +1430,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.FURTHER_PLAN: ToolText(
-        "You take one of your long plans forward by a step. {{ rules.long_plans.steps_per_epoch }} steps an epoch is its own pace. 1 action.",
+        "You take one of your long plans forward by a step. {{ rules.long_plans.steps_per_epoch | several('step', 'steps') }} an epoch is its own pace. 1 action.",
         {"plan_id": "Your long plan", "reason": "Why you further it"},
     ),
     T.SHAPE_KINSHIP: ToolText(
@@ -1844,6 +1843,28 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "the courts try the accused. 1 action.",
         {"town_id": "The town", "reason": "Why you stir it"},
     ),
+    T.MOVE_POPULATION_POLICY: ToolText(
+        "Turn the policy a realm, people, faction, cult or town holds on its numbers to a new aim. "
+        "Its instruments stay as they are; the holder reweighs them as its numbers answer.",
+        {
+            "holder_node_id": "The realm, people, faction, cult or town",
+            "aim": "The aim: grow, hold, shrink, rebalance_age, rebalance_class, settle_land, empty_land, keep_kind, mix_kinds or none",
+            "reason": "Why you turn it",
+        },
+    ),
+    T.BLESS_WORKS: ToolText(
+        "Bless public works: their quality rises, and finished works are made whole again.",
+        {"works_id": "The works", "reason": "Why you bless them"},
+    ),
+    T.SWAY_OUTLET: ToolText(
+        "Turn the stance and lean of an outlet: what it tells and how its audience is moved follow the new lean.",
+        {
+            "outlet_id": "The outlet",
+            "stance": "The value it leans on",
+            "lean": "How far it leans, from -100 against to 100 for",
+            "reason": "Why you turn it",
+        },
+    ),
     T.STIR_REVIVAL: ToolText(
         "You stir a movement among a people within your reach that others press on: to revive its language, restore its old god, expel "
         "foreigners or adopt the ways pressed on it; the movement passes through stress, distortion and revival to a new steady way. 1 action.",
@@ -1873,6 +1894,22 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You turn the prevailing wind of a land within your reach to blow from another direction (0 from the north, counting round by eighths "
         "through the east to 7 from the north-west); the wind moves the rain, the ships and the foul air of the land. 1 action.",
         {"region_id": "The land", "wind_from": "The direction the wind blows from, 0 to 7", "reason": "Why you turn it"},
+    ),
+    T.MOVE_ICE: ToolText(
+        "You add months of ice to the seas, rivers and ground of a land within your reach, or take them away. More ice closes its waters to "
+        "ships, opens roads across the ice and freezes its ground; less opens its waters and thaws what the ice held. 1 action.",
+        {"region_id": "The land", "change": "Months of ice a year to add (positive) or take away (negative), -12 to 12", "reason": "Why you move it"},
+    ),
+    T.SHIELD_WORLD: ToolText(
+        "You strengthen or strip the magnetic field of a world within your reach for some epochs. A stronger field turns flares and storms from "
+        "the sky away from its ground, keeps its signals working and its compasses true; a weaker one lets them through, spreads its auroras "
+        "and harms those who live outside shelter. {{ rules.son_tools.shield_world_essence }} essence, 1 action.",
+        {
+            "world_id": "The world",
+            "change": "How much stronger (positive) or weaker (negative) its field grows, -100 to 100",
+            "epochs": "For how many epochs, 1 to 50",
+            "reason": "Why you change it",
+        },
     ),
     T.STIR_IDENTITY: ToolText(
         "You make one of the identities of a town or people within your reach matter more to it, or quiet it. The identity that matters most "

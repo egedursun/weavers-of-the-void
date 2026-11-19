@@ -1,6 +1,6 @@
 from aerona.catalog.kinds.definition import Defined
 from aerona.core.total import total
-from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse, DescentGroup, GiftOccasion, KinTermSystem, LabourRegime, LegacyKind, ManumissionPath
+from aerona.domain.enums.cycles import ChallengeKind, ChallengeResponse, DescentGroup, GiftOccasion, KinTermSystem, LegacyKind, ManumissionPath
 
 CHALLENGE_KIND = total(
     ChallengeKind,
@@ -44,12 +44,16 @@ DESCENT_GROUP = total(
     {
         DescentGroup.LINEAGE: Defined(
             "Lineages",
-            checked_by=("engine.cycles.lineage.line_of",),
+            checked_by=("engine.cycles.lineage.line_of", "engine.kin.seed.GROUP_FORMS"),
             used_by=("db.tables.cycles.KinshipSystemRow", "engine.cycles.seeding.group_for", "services.player.cycles.KinshipDraft"),
         ),
-        DescentGroup.CLAN: Defined("Clans", checked_by=("engine.cycles.seeding.match_for",), used_by=("engine.cycles.seeding.group_for",)),
+        DescentGroup.CLAN: Defined(
+            "Clans", checked_by=("engine.cycles.seeding.match_for", "engine.kin.seed.GROUP_FORMS"), used_by=("engine.cycles.seeding.group_for",)
+        ),
         DescentGroup.MOIETY: Defined(
-            "Two halves", checked_by=("engine.cycles.lineage.kin_bars", "engine.cycles.seeding.match_for"), used_by=("engine.cycles.seeding.group_for",)
+            "Two halves",
+            checked_by=("engine.cycles.lineage.kin_bars", "engine.cycles.seeding.match_for", "engine.kin.seed.GROUP_FORMS"),
+            used_by=("engine.cycles.seeding.group_for",),
         ),
         DescentGroup.HOUSE: Defined(
             "Houses", checked_by=("engine.cycles.lineage.line_of",), used_by=("engine.cycles.lineage.line_of", "engine.cycles.seeding.group_for")
@@ -98,27 +102,10 @@ KIN_TERM_SYSTEM = total(
         KinTermSystem.BIFURCATE_COLLATERAL: Defined("Each side has its own terms", checked_by=(), used_by=("engine.cycles.seeding.cousins_for",)),
         KinTermSystem.CROSS_PARALLEL: Defined(
             "Parallel cousins are siblings, cross cousins apart",
-            checked_by=(),
+            checked_by=("engine.kin.seed.duties_for",),
             used_by=("engine.cycles.lineage.PARALLEL_AS_SIBLINGS", "engine.cycles.seeding.cousins_for"),
         ),
         KinTermSystem.DESCRIPTIVE: Defined("Each kinsperson has a term of their own", checked_by=(), used_by=("engine.cycles.seeding.cousins_for",)),
-    },
-)
-
-LABOUR_REGIME = total(
-    LabourRegime,
-    {
-        LabourRegime.INDENTURE: Defined(
-            "Indenture for a term",
-            checked_by=("engine.cycles.bondage.serve_terms",),
-            used_by=(
-                "db.tables.cycles.IndentureRow",
-                "engine.cycles.bondage.bind_debtors",
-                "engine.cycles.bondage.bind_migrants",
-                "services.player.cycles.IndentureDraft",
-            ),
-        ),
-        LabourRegime.PEONAGE: Defined("Debt peonage", checked_by=(), used_by=("engine.cycles.bondage.bind_debtors",)),
     },
 )
 

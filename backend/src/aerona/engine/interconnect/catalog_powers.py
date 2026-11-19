@@ -91,6 +91,7 @@ POWER_MECHANICS: tuple[Mechanic, ...] = (
         couplings=(
             Coupling(S.MAGIC, "an opposing system weakens a power in a contest", E.MODIFIER, "magic_systems.oppose_pct"),
             Coupling(S.KNOWLEDGE, "systems of one root share what they learn", E.FLOW, "magic_systems.shared_discovery_pct"),
+            Coupling(S.SOCIAL, "an overt system with costly, common powers stirs the towns of its world", E.MODIFIER, "magic_systems.overt_cost_unrest"),
         ),
     ),
     Mechanic(

@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import EntityType
@@ -29,7 +30,7 @@ async def swear_oath(call: MortalCall, args: SwearInput) -> str:
     oath = await swear(call.tick, call.me, args.kind, recipient_id=recipient.id if recipient is not None else None, note_text=args.words)
     await call.bump(TurnCounter.OATHS_SWORN)
     call.target(oath.recipient_node_id or call.me.id)
-    return result(MortalResult.OATH_SWORN, kind=args.kind.value.replace("_", " "), witnessed="before a god" if oath.witness_son_id else "before the people")
+    return result(MortalResult.OATH_SWORN, kind=spoken(args.kind), witnessed="before a god" if oath.witness_son_id else "before the people")
 
 
 def specs() -> list[ToolSpec[MortalCall, Any]]:

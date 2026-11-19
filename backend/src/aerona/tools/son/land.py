@@ -2,8 +2,10 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.domain_powers import LAND_DOMAINS
 from aerona.catalog.gates import Gate
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.action import ActionKind
@@ -22,20 +24,6 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate
 from aerona.tools.framework.validation import fail
 from aerona.tools.son.support import require_essence
 
-LAND_DOMAINS: dict[LandAct, frozenset[Domain]] = {
-    LandAct.SHIFT_RIVER: frozenset({Domain.SEA, Domain.STORM, Domain.EARTH, Domain.STONE}),
-    LandAct.PARCH: frozenset({Domain.SUN, Domain.FIRE, Domain.HUNGER, Domain.SALT, Domain.ASH}),
-    LandAct.GREEN: frozenset({Domain.PLANTS, Domain.HARVEST, Domain.LIFE, Domain.SEA}),
-    LandAct.MAKE_SALINE: frozenset({Domain.SALT, Domain.SEA, Domain.DEATH}),
-    LandAct.ENRICH_SOIL: frozenset({Domain.EARTH, Domain.FIRE, Domain.ASH, Domain.HARVEST, Domain.PLANTS, Domain.STONE}),
-    LandAct.RAISE_LAND: frozenset({Domain.EARTH, Domain.STONE}),
-    LandAct.LOWER_LAND: frozenset({Domain.EARTH, Domain.STONE, Domain.SEA}),
-    LandAct.CARVE_VALLEY: frozenset({Domain.EARTH, Domain.STONE, Domain.STORM, Domain.SEA}),
-    LandAct.FILL_VALLEY: frozenset({Domain.EARTH, Domain.STONE, Domain.ASH}),
-    LandAct.OPEN_SPRING: frozenset({Domain.SEA, Domain.LIFE, Domain.EARTH, Domain.PLANTS}),
-    LandAct.CALL_LAVA: frozenset({Domain.FIRE, Domain.EARTH, Domain.ASH, Domain.STONE}),
-    LandAct.SINK_COAST: frozenset({Domain.SEA, Domain.STORM, Domain.EARTH}),
-}
 FIERY = frozenset({Domain.FIRE, Domain.ASH, Domain.EARTH, Domain.STONE})
 ACT_WORDS = {
     LandAct.SHIFT_RIVER: "moved its river",
@@ -64,7 +52,7 @@ async def reshape_land(call: SonCall, args: ReshapeLandInput) -> str:
     tools = call.rules.son_tools
     domains = {call.son.domain_primary, call.son.domain_secondary}
     if not domains & LAND_DOMAINS[args.act]:
-        fail(SonResult.LAND_NOT_YOURS, act=args.act.value.replace("_", " "))
+        fail(SonResult.LAND_NOT_YOURS, act=spoken(args.act))
     region = await call.session.get(EntityRow, args.region_id)
     ground = await call.session.get(RegionEnvironmentRow, args.region_id)
     if region is None or region.entity_type is not EntityType.REGION or ground is None:

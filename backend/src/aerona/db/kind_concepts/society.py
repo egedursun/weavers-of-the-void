@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.catalog.kinds.labels import spoken_labels
 from aerona.core.total import partial, total
 from aerona.db.kind_concepts.spec import ConceptSpec, KindProperty
 from aerona.db.tables.society_kinds import OrganisationKindRow, ProfessionKindRow, RankKindRow
@@ -88,6 +89,7 @@ BUILT_IN_PROFESSIONS: MappingProxyType[Profession, BuiltInProfession] = total(
         Profession.ARTIST: BuiltInProfession(PC.ART_AND_ENTERTAINMENT, 45, 30, 55, 5, 55),
         Profession.ADMINISTRATOR: BuiltInProfession(PC.RULE_AND_ADMINISTRATION, 50, 50, 55, 5, 50),
         Profession.SPACER: BuiltInProfession(PC.EXPLORATION, 45, 50, 50, 55, 55),
+        Profession.DEATH_WORKER: BuiltInProfession(PC.CARE, 40, 35, 50, 30, 30),
     },
 )
 BUILT_IN_JOBS: MappingProxyType[Job, BuiltInProfession] = partial(
@@ -194,33 +196,7 @@ PROFESSION_CATEGORY_LABELS: dict[str, str] = {
     "magic": "Magic",
     "exploration": "Exploration",
 }
-PROFESSION_BASE_LABELS: dict[str, str] = {
-    "soldier": "Soldier",
-    "rider": "Rider",
-    "smith": "Smith",
-    "builder": "Builder",
-    "weaver": "Weaver",
-    "healer": "Healer",
-    "scholar": "Scholar",
-    "priest": "Priest",
-    "sorcerer": "Sorcerer",
-    "merchant": "Merchant",
-    "diplomat": "Diplomat",
-    "hunter": "Hunter",
-    "sailor": "Sailor",
-    "commander": "Commander",
-    "engineer": "Engineer",
-    "scientist": "Scientist",
-    "pilot": "Pilot",
-    "technician": "Technician",
-    "programmer": "Programmer",
-    "mechanic": "Mechanic",
-    "miner": "Miner",
-    "farmer": "Farmer",
-    "artist": "Artist",
-    "administrator": "Administrator",
-    "spacer": "Spacer",
-}
+PROFESSION_BASE_LABELS = spoken_labels(Profession)
 CLASS_LABELS: dict[str, str] = {
     "farmer": "Farmer",
     "artisan": "Artisan",

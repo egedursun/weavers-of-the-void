@@ -1,24 +1,27 @@
 import { useState } from 'react'
-import { Clock, Hash, Plus, Telescope } from 'lucide-react'
+import { Clock, Hash, Plus, Telescope, X } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { Muted } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
-import { ForgeCard, Meter } from '@/features/cosmography/parts'
+import { Chip, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { YES_NO } from '@/features/cycles/labels'
 import { StepButton } from '@/features/cycles/parts'
 import { why } from '@/features/dominion/model'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { Bars } from '@/features/sacred/parts'
+import { NumberField } from '@/features/wars/military/parts'
 import { GamesPanel } from './GamesPanel'
 import { type CraftsNodeView, useCraftsAction } from './api'
-import { AIDS, CLOCKS, NOTATIONS } from './labels'
+import { AIDS, CLOCKS, NOTATIONS, READINGS } from './labels'
 import { MANY, SPAN, useCraftsRow, useCraftsStep } from './model'
 
 type View = CraftsNodeView
 type Aid = View['aids'][number]
 type ClockRow = NonNullable<View['clock']>
 type Numbers = NonNullable<View['numbers']>
+type Schema = components['schemas']
 
 const BASE_MIN = 2
 const BASE_MAX = 60
@@ -123,6 +126,97 @@ function ClockCard({
   )
 }
 
+type Reading = Schema['NumberReading']
+
+function Numerology({
+  people,
+  row,
+  blocked,
+}: {
+  people: number
+  row: Numbers
+  blocked: string | null
+}) {
+  const [number, setNumber] = useState('1')
+  const [reading, setReading] = useState<Reading>('lucky')
+  const read = useCraftsAction(
+    'number_system:read',
+    (vars: { number: number; reading: Reading | null }) => ({
+      people_id: people,
+      ...vars,
+    }),
+    'The number is read'
+  )
+  const busy = why(blocked, read.isPending)
+  const value = Number(number)
+  const outside =
+    number === '' || value < 0 || value >= row.base
+      ? `In base ${row.base} a number to read lies from 0 to ${row.base - 1}`
+      : null
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Listed
+        title='What the numbers mean'
+        items={row.numerology}
+        empty='No number carries a reading for this people; the epoch whose number is read moves its towns.'
+        noun={['reading', 'readings']}
+        itemKey={(item) => item.number}
+      >
+        {(item) => {
+          const named = READINGS[item.reading]
+          return (
+            <div className='flex min-w-0 items-center gap-2 rounded-md border surface-sheen px-3 py-2'>
+              <Text as='span' weight='semibold' className='font-mono'>
+                {item.number}
+              </Text>
+              <Chip icon={named.icon}>{named.label}</Chip>
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                className='ms-auto'
+                aria-label={`Read ${item.number} no more`}
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  read.mutate({ number: item.number, reading: null })
+                }
+              >
+                <X />
+              </Button>
+            </div>
+          )
+        }}
+      </Listed>
+      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-3'>
+        <NumberField
+          label='Number to read'
+          icon={Hash}
+          value={number}
+          min={0}
+          max={row.base - 1}
+          onChange={setNumber}
+        />
+        <MindPicker
+          label='Reading'
+          value={reading}
+          table={table(READINGS)}
+          blocked={busy}
+          onPick={(next) => setReading(next as Reading)}
+        />
+        <Button
+          size='sm'
+          disabled={busy !== null || outside !== null}
+          disabledReason={busy ?? outside ?? undefined}
+          onClick={() => read.mutate({ number: value, reading })}
+        >
+          <Plus />
+          Read it so
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function NumbersCard({
   people,
   row,
@@ -181,6 +275,7 @@ function NumbersCard({
         tone='warning'
         icon={Hash}
       />
+      <Numerology people={people} row={row} blocked={blocked} />
     </Held>
   )
 }

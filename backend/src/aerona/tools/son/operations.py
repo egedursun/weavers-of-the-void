@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.operations import TheatreRow
 from aerona.db.write_guard import held
@@ -153,7 +154,7 @@ async def mark_quirk(call: SonCall, args: MarkQuirkInput) -> str:
         facts={"mortal": str(mortal.name), "quirk": args.kind, "reason": args.reason},
         kind=ChronicleKind.WORLD,
     )
-    return result(SonResult.QUIRK_MARKED, mortal=mortal.name, quirk=args.kind.value)
+    return result(SonResult.QUIRK_MARKED, mortal=mortal.name, quirk=spoken(args.kind))
 
 
 async def limit_fleets(call: SonCall, args: LimitFleetsInput) -> str:

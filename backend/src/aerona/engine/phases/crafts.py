@@ -118,7 +118,12 @@ async def trades(ctx: TickContext) -> None:
     "table.assistive_aids",
     "table.bonds",
     "table.conditions",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.games",
     "table.holder_techniques",
     "table.incident_participants",
@@ -134,6 +139,9 @@ async def trades(ctx: TickContext) -> None:
     "table.offices",
     "table.settlement_profiles",
     "table.skills",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes(
     "settlement.prosperity",

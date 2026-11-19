@@ -300,7 +300,16 @@ OATH_KIND = total(
             "Vengeance", checked_by=("engine.polity.oaths.lapse",), used_by=("engine.phases.mind.vengeance", "engine.polity.oaths.TIMED")
         ),
         OathKind.CELIBACY: Defined(
-            "Celibacy", checked_by=("engine.polity.oaths.lapse",), used_by=("engine.polity.houses.break_celibacy", "engine.polity.oaths.vows")
+            "Celibacy",
+            checked_by=("engine.polity.oaths.lapse",),
+            used_by=(
+                "agents.context.intimacy_lines.mortal_intimacy_lines",
+                "engine.intimacy.restraint.break_vows",
+                "engine.intimacy.restraint.vow_customs",
+                "engine.polity.houses.break_celibacy",
+                "engine.polity.oaths.vows",
+                "tools.mortal.intimacy.VOW_OATHS",
+            ),
         ),
         OathKind.PILGRIMAGE: Defined(
             "Pilgrimage",
@@ -331,7 +340,9 @@ OATH_KIND = total(
         OathKind.POVERTY: Defined("Poverty", checked_by=("engine.polity.vows.BREACHES", "engine.polity.vows.VOWS"), used_by=()),
         OathKind.NONVIOLENCE: Defined("Nonviolence", checked_by=("engine.polity.vows.BREACHES", "engine.polity.vows.VOWS"), used_by=()),
         OathKind.FIDELITY: Defined(
-            "Fidelity", checked_by=("engine.polity.vows.BREACHES", "engine.polity.vows.VOWS"), used_by=("engine.relations.affairs.consequences",)
+            "Fidelity",
+            checked_by=("engine.polity.vows.BREACHES", "engine.polity.vows.VOWS"),
+            used_by=("agents.context.intimacy_lines.mortal_intimacy_lines", "engine.relations.affairs.consequences", "tools.mortal.intimacy.VOW_OATHS"),
         ),
         OathKind.SECRECY: Defined("Secrecy", checked_by=("engine.polity.vows.BREACHES", "engine.polity.vows.VOWS"), used_by=()),
     },

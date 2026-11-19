@@ -1,13 +1,16 @@
 from typing import Any
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.disease_agents import CureClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.disease.agents import apply_cure, works_on
 from aerona.engine.disease.research import institutions
 from aerona.engine.disease.responses import take_up
 from aerona.engine.mind.book import skill_level
@@ -25,10 +28,12 @@ from aerona.tools.mortal.tongues import realm_of
 class AnswerSicknessInput(ToolInput):
     disease_id: int
     response: PlagueResponse
+    cure_class: CureClass | None = None
 
 
 class SeekCureInput(ToolInput):
     disease_id: int
+    cure_class: CureClass | None = None
 
 
 class FindCarrierInput(ToolInput):
@@ -57,14 +62,15 @@ async def answer_sickness(call: MortalCall, args: AnswerSicknessInput) -> str:
     if realm is None and await skill_level(call.session, call.me.id, SkillKind.MEDICINE) <= 0:
         fail(MortalResult.ANSWER_REFUSED, why="you neither rule nor heal")
     await take_up(call.tick, community, disease.id, args.response)
+    worked = await apply_cure(call.tick, community, disease.id, args.cure_class) if args.cure_class is not None else None
     call.target(community.id)
-    response = args.response.value.replace("_", " ")
     await call.record(
         "tools.mortal.answer_sickness",
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: community.id, IncidentRole.TARGET: disease.id},
         facts={"response": args.response},
     )
-    return result(MortalResult.ANSWERED, name=community.name, response=response)
+    told = "" if worked is None else " The cure works on it." if worked else " The cure does nothing against it."
+    return result(MortalResult.ANSWERED, name=community.name, response=spoken(args.response)) + told
 
 
 async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
@@ -82,8 +88,11 @@ async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
         call.session.add(row)
     if row.cured_epoch is not None:
         fail(MortalResult.CURE_REFUSED, why="that cure is found already")
+    works = await works_on(call.tick, disease.id, args.cure_class) if args.cure_class is not None else None
+    gain = max(1, skill // 10) * call.rules.cure_research.per_scholar
+    gain = gain * 3 // 2 if works else gain // 2 if works is False else gain
     if "points" not in row.locked:
-        row.points = (row.points or 0) + max(1, skill // 10) * call.rules.cure_research.per_scholar
+        row.points = (row.points or 0) + gain
     await call.session.flush()
     call.target(seat.id)
     await call.record(

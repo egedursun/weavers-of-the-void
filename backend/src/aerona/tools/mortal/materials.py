@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.economy import CommunityStockRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -28,7 +29,7 @@ async def chosen_material(call: MortalCall, material: MaterialKind | None, resou
         return None
     props = (await MaterialBook.load(call.session)).props(call.me.world_id, material)
     if props is None:
-        fail(MortalResult.MATERIAL_UNHELD, material=material.value.replace("_", " "))
+        fail(MortalResult.MATERIAL_UNHELD, material=spoken(material))
     home = await home_of(call)
     community = home if home is not None else call.me
     levels = (await known_levels(call.session, [community.id, call.me.id])).get(community.id, {})

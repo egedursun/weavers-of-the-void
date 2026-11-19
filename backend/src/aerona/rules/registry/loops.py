@@ -40,3 +40,5 @@ class LoopRules:
     delay_novelty_drain: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a form everyone has loses its freshness")
     delay_kind_prestige: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the spread of a kind lends it prestige, or wears it thin once everyone holds it")
     delay_kind_substitution: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a good that stays dear moves its people to a substitute")
+    delay_policy_grievance: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before the grievance of the towns under a harsh population policy weakens it")
+    delay_housework_burden: int = rule(0, 0, MOST_DELAY, LINKS, "Epochs before a household weighed down by its housework takes on help")

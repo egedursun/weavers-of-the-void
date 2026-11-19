@@ -121,3 +121,27 @@ def test_a_template_count_before_a_plural_word_is_caught() -> None:
     line = "you used {{ line.tool }} {{ line.uses }} times; {{ world_name }} cosmos; {{ line.epochs | several('age', 'ages') }}"
     found = [(field, word) for field, word in module.TEMPLATE_COUNT.findall(line) if module.plural(word) and not module.named(field)]
     assert found == [("line.uses", "times")]
+
+
+def test_a_jinja_number_in_a_python_string_before_a_plural_word_is_flagged() -> None:
+    source = (
+        "class Result:\n"
+        '    GATHERED = "{{ count }} stars are gathered into {{ name }}."\n'
+        '    COST = "Costs {{ rules.son_tools.create_galaxy_ap }} actions."\n'
+        '    NAMED = "{{ town }} fabricates goods."\n'
+        "    FINE = \"{{ name }} gathers {{ count | several('star', 'stars') }}.\"\n"
+    )
+    found = checker().counts({Path("module.py"): source})
+    assert sorted(item.text for item in found) == ["{{ count }} stars", "{{ rules.son_tools.create_galaxy_ap }} actions"]
+
+
+def test_a_single_brace_count_before_its_own_plural_noun_is_flagged() -> None:
+    source = 'LINE = "Ice closed the waters for {months} months."\nFINE = "Ice closed the waters for {months:month|months}."\n'
+    found = checker().counts({Path("module.py"): source})
+    assert [item.text for item in found] == ["{months} months"]
+
+
+def test_a_template_count_before_an_adjective_and_a_plural_word_is_flagged() -> None:
+    source = 'LINE = "{count} sensed worlds born"\nFINE = "{count:sensed world|sensed worlds} born"\n'
+    found = checker().counts({Path("module.py"): source})
+    assert [item.text for item in found] == ["{count} sensed worlds"]

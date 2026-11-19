@@ -18,6 +18,7 @@ from aerona.api.schemas.crafts import (
     InsurancePolicyView,
     InsurerView,
     LinkView,
+    NumberReadingView,
     NumbersView,
     SpiritView,
 )
@@ -39,6 +40,7 @@ from aerona.db.tables.crafts import (
 )
 from aerona.db.tables.economy import ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.folk_knowledge import NumberReading
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -219,7 +221,18 @@ async def node_crafts(services: ServicesDep, node_id: NodeId) -> CraftsNodeView:
         ],
         aids=[AidView(kind=row.kind, quality=row.quality, since_epoch=row.since_epoch, locked=row.locked) for row in aids],
         clock=ClockView(kind=clock.kind, precision=clock.precision, built_epoch=clock.built_epoch, locked=clock.locked) if clock is not None else None,
-        numbers=NumbersView(base=numbers.base, notation=numbers.notation, zero=numbers.zero, numeracy=numbers.numeracy, locked=numbers.locked)
+        numbers=NumbersView(
+            base=numbers.base,
+            notation=numbers.notation,
+            zero=numbers.zero,
+            numeracy=numbers.numeracy,
+            numerology=[
+                NumberReadingView(number=int(number), reading=NumberReading(reading))
+                for number, reading in sorted(numbers.numerology.items(), key=lambda item: int(item[0]))
+                if number.isdigit() and reading in set(NumberReading)
+            ],
+            locked=numbers.locked,
+        )
         if numbers is not None
         else None,
         affinities=[

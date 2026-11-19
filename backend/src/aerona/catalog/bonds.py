@@ -100,6 +100,7 @@ BOND_KINDS: Mapping[BondKind, BondKindSpec] = total(
             BondKindSpec(BondKind.CONCUBINE_OF, "concubine of", MECHANICAL, KIN_TYPES, KIN_TYPES),
             BondKindSpec(BondKind.FOSTERED_BY, "fostered by", MECHANICAL, KIN_TYPES, KIN_TYPES),
             BondKindSpec(BondKind.SWORN_KIN, "sworn kin of", MECHANICAL, KIN_TYPES, KIN_TYPES),
+            BondKindSpec(BondKind.GODPARENT_OF, "godparent of", MECHANICAL, KIN_TYPES, KIN_TYPES),
             BondKindSpec(BondKind.PET_OF, "pet of", MECHANICAL, frozenset({EntityType.BEAST}), frozenset({EntityType.MORTAL})),
             BondKindSpec(BondKind.TELLS, "tells", MECHANICAL),
             BondKindSpec(BondKind.FIXED_IN, "is fixed in", MECHANICAL),

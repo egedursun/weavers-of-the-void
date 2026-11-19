@@ -569,10 +569,12 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
 
 @reads(
     "table.cosmos",
+    "table.creator",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
     "table.galactic_events",
     "table.galactic_structures",
     "table.galaxies",
@@ -580,6 +582,7 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.node_births",
     "table.nodes",
     "table.routes",
+    "table.sons",
     "table.stars",
     "table.worlds",
 )

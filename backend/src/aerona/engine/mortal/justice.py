@@ -18,6 +18,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.engine.belonging.refuge import sheltered
 from aerona.engine.body.bands import banded
 from aerona.engine.body.hits import Harm
+from aerona.engine.childhood.standing import below_responsibility
 from aerona.engine.constructs.remaking import may_remake, remake
 from aerona.engine.context import TickContext
 from aerona.engine.customs.marks import read_mark
@@ -101,13 +102,22 @@ async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: Puni
     return punishment
 
 
+async def softened(ctx: TickContext, culprit: EntityRow, punishment: PunishmentKind) -> PunishmentKind | None:
+    young = await below_responsibility(ctx.session, culprit)
+    if young is None:
+        return punishment
+    return None if young.protected else PunishmentKind.PUBLIC_SHAMING
+
+
 async def sentence(
     ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None, case_id: int | None = None
 ) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
-    if await immune(ctx, culprit) or await sheltered(ctx.session, culprit.id):
+    softer = await softened(ctx, culprit, punishment)
+    if softer is None or await immune(ctx, culprit) or await sheltered(ctx.session, culprit.id):
         return False
+    punishment = softer
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
     await add_infamy(ctx.session, culprit.id, CRIMES[crime].severity * ctx.rules.sentences.severity_infamy_pct / PERCENT, ctx.epoch, rules=ctx.rules)
     if crime in JUDGED_CRIMES:

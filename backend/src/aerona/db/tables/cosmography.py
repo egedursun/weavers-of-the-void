@@ -46,7 +46,7 @@ class DimensionRow(NodeRow):
         CheckConstraint("time_factor > 0", name="time_factor_positive"),
         CheckConstraint("parent_dimension_id IS NULL OR parent_dimension_id <> id", name="not_own_parent"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.DIMENSION})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.DIMENSION, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     dimension_kind: Mapped[DimensionKind] = mapped_column(enum_type(DimensionKind, "dimension_kind"))
@@ -77,7 +77,7 @@ class ClusterRow(NodeRow):
         CheckConstraint("parent_cluster_id IS NULL OR dimension_id IS NULL", name="one_place"),
         CheckConstraint("parent_cluster_id IS NULL OR parent_cluster_id <> id", name="not_own_parent"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.CLUSTER})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.CLUSTER, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     cluster_kind: Mapped[ClusterKind] = mapped_column(enum_type(ClusterKind, "cluster_kind"))
@@ -108,7 +108,7 @@ class GalaxyRow(NodeRow):
         CheckConstraint("cluster_id IS NULL OR dimension_id IS NULL", name="one_place"),
         CheckConstraint("merging_with_galaxy_id IS NULL OR merging_with_galaxy_id <> id", name="not_own_merger"),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.GALAXY})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.GALAXY, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     galaxy_type: Mapped[GalaxyType] = mapped_column(enum_type(GalaxyType, "galaxy_type"))

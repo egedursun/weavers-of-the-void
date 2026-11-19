@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import OutlawRow, PrisonerRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
@@ -72,7 +73,7 @@ async def register_deed(call: MortalCall, args: DeedInput) -> str:
     await call.record(
         "tools.mortal.register_deed", roles={IncidentRole.OWNER: call.me.id, IncidentRole.CO_ACTOR: other.id}, facts={"deed": args.kind, "amount": args.amount}
     )
-    return result(MortalResult.DEED_REGISTERED, kind=args.kind.value.replace("_", " "), name=other.name)
+    return result(MortalResult.DEED_REGISTERED, kind=spoken(args.kind), name=other.name)
 
 
 async def appeal_conviction(call: MortalCall, args: EmptyInput) -> str:
@@ -88,7 +89,7 @@ async def appeal_conviction(call: MortalCall, args: EmptyInput) -> str:
     if row is None:
         fail(MortalResult.APPEAL_REFUSED, why="there is no higher court, the appeal is filed already, or you cannot pay its fee")
     await call.record("tools.mortal.appeal", roles={IncidentRole.ACCUSED: call.me.id}, facts={"court": row.to_court, "fee": row.fee})
-    return result(MortalResult.APPEAL_FILED, court=row.to_court.value.replace("_", " "), fee=row.fee)
+    return result(MortalResult.APPEAL_FILED, court=spoken(row.to_court), fee=row.fee)
 
 
 async def claim_bounty(call: MortalCall, args: OutlawInput) -> str:

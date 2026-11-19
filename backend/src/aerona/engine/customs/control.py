@@ -68,7 +68,7 @@ KINDS: Mapping[str, Kind] = {
     "intoxicant_custom": Kind(IntoxicantCustomRow, INTOXICANT_FIELDS, "intoxicant custom", ("people_entity_id", "intoxicant")),
     "mark_custom": Kind(MarkCustomRow, MARK_CUSTOM_FIELDS, "mark custom", ("people_entity_id", "kind")),
     "body_mark": Kind(BodyMarkRow, MARK_FIELDS, "mark", ("id",)),
-    "time_budget": Kind(TimeBudgetRow, TIME_FIELDS, "time budget", ("people_entity_id", "social_class")),
+    "time_budget": Kind(TimeBudgetRow, TIME_FIELDS, "time budget", ("people_entity_id", "social_class", "life_stage")),
     "naming_custom": Kind(NamingCustomRow, NAMING_FIELDS, "naming custom", ("people_entity_id",)),
     "name_form": Kind(NameFormRow, NAME_FORM_FIELDS, "name", ("holder_node_id", "form")),
     "age_set": Kind(AgeSetRow, AGE_SET_FIELDS, "age-set", ("id",)),

@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.orders import ExchangeRateRow
@@ -71,7 +72,7 @@ async def set_economic_order(call: MortalCall, args: SetEconomicOrderInput) -> s
         roles={IncidentRole.AUTHORITY: call.me.id, IncidentRole.SUBJECT: realm.id},
         facts={"ownership": args.ownership, "allocation": args.allocation, "labour": args.labour, "distribution": args.distribution, "reason": args.reason},
     )
-    return result(MortalResult.ORDER_SET, realm=realm.name, allocation=args.allocation.value.replace("_", " "))
+    return result(MortalResult.ORDER_SET, realm=realm.name, allocation=spoken(args.allocation))
 
 
 async def begin_transition(call: MortalCall, args: BeginTransitionInput) -> str:
@@ -93,7 +94,7 @@ async def begin_transition(call: MortalCall, args: BeginTransitionInput) -> str:
         roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.id},
         facts={"transition": args.kind, "compensation": args.compensation, "sector": args.sector, "reason": args.reason},
     )
-    return result(MortalResult.TRANSITION_BEGUN, realm=realm.name, kind=args.kind.value.replace("_", " "), id=row.id)
+    return result(MortalResult.TRANSITION_BEGUN, realm=realm.name, kind=spoken(args.kind), id=row.id)
 
 
 async def change_money(call: MortalCall, args: ChangeMoneyInput) -> str:

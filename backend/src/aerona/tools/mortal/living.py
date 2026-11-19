@@ -5,6 +5,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.ecology import SpeciesProductRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -159,7 +160,7 @@ async def breed_line(call: MortalCall, args: BreedLineInput) -> str:
     draft = LineDraft(args.name, CultivationMethod.SELECTIVE_BREEDING, call.me.id, call.me.id, (species.id,), traits(args.traits))
     line = await attempt(MortalResult.LINE_DECLINED, make_line(call.tick, draft))
     await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
-    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
+    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=spoken(line.outcome))
 
 
 async def design_line(call: MortalCall, args: DesignLineInput) -> str:
@@ -167,7 +168,7 @@ async def design_line(call: MortalCall, args: DesignLineInput) -> str:
     draft = LineDraft(args.name, args.method, call.me.id, call.me.id, tuple(args.source_ids), traits(args.traits), args.fertility)
     line = await attempt(MortalResult.LINE_DECLINED, make_line(call.tick, draft))
     await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
-    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
+    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=spoken(line.outcome))
 
 
 async def bank_sample(call: MortalCall, args: BankSampleInput) -> str:
@@ -214,7 +215,7 @@ async def raise_line(call: MortalCall, args: SampleInput) -> str:
         fail(MortalResult.LINE_DECLINED, why="you hold no such sample")
     line = await attempt(MortalResult.LINE_DECLINED, control.raise_line(call.tick, sample.id, call.me.id))
     await call.record("tools.mortal.line_made", roles={IncidentRole.ACTOR: call.me.id}, facts={"line": line.name})
-    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=line.outcome.value.replace("_", " "))
+    return result(MortalResult.LINE_MADE, name=line.name, line=line.id, outcome=spoken(line.outcome))
 
 
 async def growing(call: MortalCall, args: GrowInput, declined: MortalResult) -> Growing:

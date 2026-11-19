@@ -68,7 +68,7 @@ async def take_longevity(call: MortalCall, args: LongevityInput) -> str:
     row = await begin_longevity(call.tick, call.me, args.form)
     if row is None:
         fail(MortalResult.LONGEVITY_REFUSED, why="your body will not take it")
-    return result(MortalResult.LONGEVITY_BEGUN, form=args.form.value)
+    return result(MortalResult.LONGEVITY_BEGUN, form=spoken(args.form))
 
 
 async def found_enchantment(call: MortalCall, args: FoundEnchantmentInput) -> str:

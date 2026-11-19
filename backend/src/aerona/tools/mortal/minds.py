@@ -4,7 +4,7 @@ from pydantic import Field
 from sqlalchemy import func, select
 
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import several
+from aerona.core.grammar import several, spoken
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow, CompanyShareRow
@@ -420,7 +420,7 @@ async def install_augment(call: MortalCall, args: InstallAugmentInput) -> str:
     await call.record(
         "tools.mortal.install_augment", roles={IncidentRole.ACTOR: call.me.id}, facts={"augment": args.kind, "make": args.make, "integration": row.integration}
     )
-    return result(MortalResult.AUGMENT_INSTALLED, kind=args.kind.value.replace("_", " "), integration=row.integration)
+    return result(MortalResult.AUGMENT_INSTALLED, kind=spoken(args.kind), integration=row.integration)
 
 
 async def remove_augment(call: MortalCall, args: AugmentInput) -> str:
@@ -476,7 +476,7 @@ async def build_network(call: MortalCall, args: BuildNetworkInput) -> str:
         fail(MortalResult.NETWORK_BUILD_DECLINED, why=why(error))
     call.target(row.network_entity_id)
     await call.record("tools.mortal.build_network", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.PRODUCT: row.network_entity_id})
-    return result(MortalResult.NETWORK_BUILT, carrier=args.carrier.value.replace("_", " "))
+    return result(MortalResult.NETWORK_BUILT, carrier=spoken(args.carrier))
 
 
 async def network_of(call: MortalCall, network_id: int, declined: MortalResult) -> tuple[EntityRow, NetworkProfileRow]:
@@ -523,7 +523,7 @@ async def intrude_tool(call: MortalCall, args: IntrudeInput) -> str:
     except ValidationFailedError as error:
         fail(MortalResult.INTRUSION_DECLINED, why=why(error))
     await call.record("tools.mortal.intrude", roles={IncidentRole.ACTOR: call.me.id})
-    return result(MortalResult.INTRUSION_MADE, outcome=row.outcome.value.replace("_", " "), found="found" if row.detection >= 50 else "unseen")
+    return result(MortalResult.INTRUSION_MADE, outcome=spoken(row.outcome), found="found" if row.detection >= 50 else "unseen")
 
 
 async def defend_system(call: MortalCall, args: SystemInput) -> str:
@@ -796,7 +796,7 @@ async def set_surveillance(call: MortalCall, args: SurveillanceInput) -> str:
     await call.record(
         "tools.mortal.set_surveillance", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.AUTHORITY: realm.entity.id}, facts={"focus": args.focus}
     )
-    return result(MortalResult.SURVEILLANCE_SET, realm=realm.entity.name, focus=args.focus.value.replace("_", " "))
+    return result(MortalResult.SURVEILLANCE_SET, realm=realm.entity.name, focus=spoken(args.focus))
 
 
 async def set_provision(call: MortalCall, args: ProvisionInput) -> str:

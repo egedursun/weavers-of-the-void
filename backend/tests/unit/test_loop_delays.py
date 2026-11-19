@@ -10,7 +10,12 @@ SPEC = ROOT / "docs" / "spec" / "13-depth-expansion.md"
 
 
 KINDS_SPEC = ROOT / "docs" / "spec" / "16-minds-powers-living-craft.md"
-KIND_LOOPS = {"L109": BalanceLoop.KIND_PRESTIGE, "L110": BalanceLoop.KIND_SUBSTITUTION}
+KIND_LOOPS = {
+    "L109": BalanceLoop.KIND_PRESTIGE,
+    "L110": BalanceLoop.KIND_SUBSTITUTION,
+    "L114": BalanceLoop.POLICY_GRIEVANCE,
+    "L116": BalanceLoop.HOUSEWORK_BURDEN,
+}
 
 
 def test_every_balancing_loop_of_the_spec_has_a_delay_rule() -> None:

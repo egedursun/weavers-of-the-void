@@ -61,7 +61,7 @@ class EntityRow(NodeRow):
         Index("ix_entities_engine_kind_status", "engine_kind", "status"),
         Index("ix_entities_pending", "pending_name", sqlite_where=text("pending_name = 1")),
     )
-    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.ENTITY})
+    __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.ENTITY, "polymorphic_load": "inline"})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     title: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))

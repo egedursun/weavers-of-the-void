@@ -358,7 +358,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "logistics.depot_founded",
-        "{actor} stocked a depot of {supplies} supplies in {region}.",
+        "{actor} stocked a depot of {supplies:supply|supplies} in {region}.",
         (role(R.ACTOR),),
         (node("region"), number("supplies", U.COUNT), number("capacity", U.COUNT)),
         place=PlaceRule.REQUIRED,

@@ -979,6 +979,7 @@ class Profession(StrEnum):
     ARTIST = "artist"
     ADMINISTRATOR = "administrator"
     SPACER = "spacer"
+    DEATH_WORKER = "death_worker"
 
 
 class CareerChange(StrEnum):

@@ -6,10 +6,12 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.models.entity_stats import ItemStats, LegendStats, SettlementStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.records import RecordSpec, heir_of, introduce, open_record, retire, sweep_dead_bonds
+from aerona.engine.recording.record import record
 from aerona.engine.records import death_path, retire_record, sweep_bonds_of_the_dead
 from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, settlement
 
@@ -93,3 +95,11 @@ async def test_retire_record_by_hand(ctx: TickContext, world: CoreWorld, session
     assert gone.status is EntityStatus.DESTROYED
     states = set(await session.scalars(select(BondRow.state).where(BondRow.target_node_id == world.language.id)))
     assert BondState.ACTIVE not in states
+
+
+async def test_a_happening_names_a_being_that_is_not_held_in_memory(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
+    town = await settlement(session, "Forgotten Ford", world, world.regions[0])
+    being_id = (await mortal(session, "Unremembered", world, town.id)).id
+    session.expunge_all()
+    recorded = await record(ctx, "youth.came_of_age", roles={IncidentRole.SUBJECT: being_id}, facts={"group": "the youth of the ford"})
+    assert recorded is not None

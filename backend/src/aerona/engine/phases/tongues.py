@@ -54,7 +54,12 @@ async def grammar(ctx: TickContext) -> None:
 
 @reads(
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.language_grammar",
@@ -64,7 +69,9 @@ async def grammar(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.sons",
+    "table.stars",
     "table.tradition_profiles",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",
@@ -122,7 +129,22 @@ async def pidgins(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.entities", "table.incident_participants", "table.incidents", "table.language_policies", "table.node_births", "table.nodes", "table.polity_members"
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.incident_participants",
+    "table.incidents",
+    "table.language_policies",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_members",
+    "table.polity_memberstable.creator",
+    "table.sons",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.language_policies")
 async def language_policy(ctx: TickContext) -> None:

@@ -36,5 +36,7 @@ BALANCE_LOOP = total(
         BalanceLoop.NOVELTY_DRAIN: Defined("Novelty drain", checked_by=(), used_by=("engine.couplings.novelty.novelty",)),
         BalanceLoop.KIND_PRESTIGE: Defined("Kind prestige", checked_by=(), used_by=("engine.kinds.derive.tend_prestige",)),
         BalanceLoop.KIND_SUBSTITUTION: Defined("Kind substitution", checked_by=(), used_by=("engine.kinds.derive.substitute",)),
+        BalanceLoop.POLICY_GRIEVANCE: Defined("Policy grievance", checked_by=(), used_by=("engine.numbers.policies.aggrieve",)),
+        BalanceLoop.HOUSEWORK_BURDEN: Defined("Housework burden", checked_by=(), used_by=("engine.daily.life.take_help",)),
     },
 )

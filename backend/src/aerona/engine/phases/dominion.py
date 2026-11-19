@@ -16,9 +16,14 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 
 @reads(
     "table.bonds",
+    "table.creator",
+    "table.dimensions",
     "table.divine_standing",
     "table.dominions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.god_designs",
     "table.god_scales",
     "table.incident_participants",
@@ -27,6 +32,8 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.nodes",
     "table.place_profiles",
     "table.region_dominion",
+    "table.sons",
+    "table.stars",
     "table.thrones",
     "table.worlds",
 )
@@ -49,7 +56,12 @@ async def thrones(ctx: TickContext) -> None:
 
 @reads(
     "table.community_stocks",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.magic_sites",
@@ -57,6 +69,8 @@ async def thrones(ctx: TickContext) -> None:
     "table.nodes",
     "table.place_profiles",
     "table.skills",
+    "table.sons",
+    "table.stars",
     "table.worlds",
 )
 @writes(
@@ -85,9 +99,12 @@ async def magic_sites(ctx: TickContext) -> None:
     "table.bonds",
     "table.creator",
     "table.cult_holdings",
+    "table.dimensions",
     "table.dominions",
     "table.entities",
     "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.god_designs",
     "table.god_scales",
     "table.incident_participants",
@@ -102,8 +119,10 @@ async def magic_sites(ctx: TickContext) -> None:
     "table.place_profiles",
     "table.region_dominion",
     "table.sons",
+    "table.stars",
     "table.structure_profiles",
     "table.thrones",
+    "table.worlds",
 )
 @writes(
     "table.chronicle",

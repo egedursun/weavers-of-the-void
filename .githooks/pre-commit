@@ -62,6 +62,9 @@ run canned_lines "$PYTHON" scripts/check_canned_lines.py
 run incident_kinds "$PYTHON" scripts/check_incident_kinds.py
 run text_ledger "$PYTHON" scripts/check_text_ledger.py
 run moon_orbits "$PYTHON" scripts/check_moon_orbits.py
+run ocm_coverage "$PYTHON" scripts/check_ocm_coverage.py
+run mechanic_couplings "$PYTHON" scripts/check_mechanic_couplings.py
+run depth_targets "$PYTHON" scripts/depth_metric.py check
 run goods_ledger "$PYTHON" scripts/check_goods_ledger.py
 run town_people "$PYTHON" scripts/check_town_people.py
 run backfills "$PYTHON" scripts/check_backfills.py

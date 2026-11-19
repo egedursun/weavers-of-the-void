@@ -58,6 +58,7 @@ class BondKind(StrEnum):
     CONCUBINE_OF = "concubine_of"
     FOSTERED_BY = "fostered_by"
     SWORN_KIN = "sworn_kin"
+    GODPARENT_OF = "godparent_of"
     TELLS = "tells"
     FIXED_IN = "fixed_in"
     ADHERENT_OF = "adherent_of"
@@ -136,5 +137,6 @@ KIN_BOND_KINDS = (
     BondKind.CONCUBINE_OF,
     BondKind.FOSTERED_BY,
     BondKind.SWORN_KIN,
+    BondKind.GODPARENT_OF,
     BondKind.BETROTHED_TO,
 )

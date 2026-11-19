@@ -4,14 +4,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -23,6 +26,13 @@ from aerona.rules.registry import Rules
 
 TEN = 10
 SPARED = frozenset({SocialClass.NOBLE, SocialClass.PRIEST})
+SEEDED_STAGES = (LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT, LifeStage.ELDER)
+STAGE_SHIFTS: dict[LifeStage, dict[str, int]] = {
+    LifeStage.CHILD: {"learning": 20, "leisure": 15, "care": -3, "service": -2},
+    LifeStage.YOUTH: {"learning": 10, "leisure": 5},
+    LifeStage.ADULT: {},
+    LifeStage.ELDER: {"rest": 15, "care": 5, "travel": -2},
+}
 
 
 @dataclass
@@ -31,7 +41,7 @@ class TimeTally:
     towns: int = 0
 
 
-def shares_for(values: dict[ValueAxis, int]) -> dict[str, int]:
+def shares_for(values: dict[ValueAxis, int], rules: Rules, *, sleeps: bool = True, stage: LifeStage = LifeStage.ADULT) -> dict[str, int]:
     leisure = clamp_int(10 + values.get(ValueAxis.LEISURE, 0) // 10, 0, 40)
     worship = clamp_int(10 + values.get(ValueAxis.PIETY, 0) // 10, 0, 40)
     service = clamp_int(2 + values.get(ValueAxis.MARTIAL, 0) // 20, 0, 20)
@@ -39,8 +49,9 @@ def shares_for(values: dict[ValueAxis, int]) -> dict[str, int]:
     care = clamp_int(3 + values.get(ValueAxis.FAMILY, 0) // 20, 0, 15)
     art = clamp_int(1 + values.get(ValueAxis.ARTWORK, 0) // 20, 0, 15)
     rest, travel = 20, 3
-    return {
-        "work": max(0, PERCENT - leisure - worship - service - rest - travel - learning - care - art),
+    housework = clamp_int(rules.daily_life.usual_housework + values.get(ValueAxis.FAMILY, 0) // 20, 0, 30)
+    sleep = rules.daily_life.usual_sleep if sleeps else 0
+    shares = {
         "rest": rest,
         "worship": worship,
         "leisure": leisure,
@@ -49,22 +60,45 @@ def shares_for(values: dict[ValueAxis, int]) -> dict[str, int]:
         "learning": learning,
         "care": care,
         "art": art,
+        "housework": housework,
+        "sleep": sleep,
     }
+    for key, shift in STAGE_SHIFTS[stage].items():
+        shares[key] = clamp_int(shares[key] + shift, 0, PERCENT)
+    spent = sum(shares.values())
+    if spent > PERCENT:
+        shares["rest"] = max(0, shares["rest"] - (spent - PERCENT))
+        spent = sum(shares.values())
+    return {"work": max(0, PERCENT - spent), **shares}
 
 
 async def budgets_of(ctx: TickContext, people_id: int) -> dict[SocialClass, TimeBudgetRow]:
-    rows = await ctx.session.scalars(select(TimeBudgetRow).where(TimeBudgetRow.people_entity_id == people_id))
+    rows = await ctx.session.scalars(
+        select(TimeBudgetRow)
+        .where(TimeBudgetRow.people_entity_id == people_id, TimeBudgetRow.life_stage == LifeStage.ADULT)
+        .order_by(TimeBudgetRow.social_class)
+    )
     return {row.social_class: row for row in rows}
+
+
+async def sleeps_of(session: AsyncSession, people_id: int) -> bool:
+    biology = await session.get(BiologyRow, people_id)
+    return biology is None or biology.sleeps
 
 
 async def seed_budgets(ctx: TickContext, people: EntityRow, tally: TimeTally) -> dict[SocialClass, TimeBudgetRow]:
     found = await budgets_of(ctx, people.id)
     if found or held(people.id):
         return found
-    shares = shares_for(await stored_values(ctx.session, ValueHolder.CULTURE, people.id))
-    for social_class in SocialClass:
-        found[social_class] = TimeBudgetRow(people_entity_id=people.id, social_class=social_class, **shares, locked=[])
-        ctx.session.add(found[social_class])
+    values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
+    sleeps = await sleeps_of(ctx.session, people.id)
+    for stage in SEEDED_STAGES:
+        shares = shares_for(values, ctx.rules, sleeps=sleeps, stage=stage)
+        for social_class in SocialClass:
+            row = TimeBudgetRow(people_entity_id=people.id, social_class=social_class, life_stage=stage, **shares, locked=[])
+            ctx.session.add(row)
+            if stage is LifeStage.ADULT:
+                found[social_class] = row
     tally.seeded += 1
     return found
 
@@ -104,7 +138,10 @@ async def budget_of(session: AsyncSession, mortal: EntityRow) -> TimeBudgetRow |
     folk = await people_of(session, mortal)
     if folk is None or mortal.social_class is None:
         return None
-    return await session.get(TimeBudgetRow, (folk.id, mortal.social_class))
+    profile = await session.get(MortalProfileRow, mortal.id)
+    stage = profile.life_stage if profile is not None else LifeStage.ADULT
+    exact = await session.get(TimeBudgetRow, (folk.id, mortal.social_class, stage))
+    return exact if exact is not None else await session.get(TimeBudgetRow, (folk.id, mortal.social_class, LifeStage.ADULT))
 
 
 async def rested_fertility(session: AsyncSession, rules: Rules, mortal: EntityRow) -> float:

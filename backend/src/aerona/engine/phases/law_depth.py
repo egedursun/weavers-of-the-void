@@ -76,7 +76,12 @@ async def jurisdictions(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.node_births",
@@ -85,8 +90,11 @@ async def jurisdictions(ctx: TickContext) -> None:
     "table.outlaws",
     "table.pardons",
     "table.prisoners",
+    "table.sons",
+    "table.stars",
     "table.war_sides",
     "table.wars",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.pardons")
 async def pardons(ctx: TickContext) -> None:

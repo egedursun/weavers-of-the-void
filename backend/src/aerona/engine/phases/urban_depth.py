@@ -144,7 +144,7 @@ async def convoys(ctx: TickContext) -> None:
 
 
 @reads("settlement.wealth", "table.polity_members", "table.polity_profiles", "table.transport_fleets")
-@writes("table.transport_fleets")
+@writes("settlement.wealth", "table.entities", "table.transport_fleets")
 async def transport_fleets(ctx: TickContext) -> None:
     tally = ConvoyTally()
     await wear_fleets(ctx, tally)

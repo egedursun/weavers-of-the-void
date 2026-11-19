@@ -194,6 +194,7 @@ TECHNIQUE = total(
             "Siegecraft",
             checked_by=(),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.vehicles.FAMILY_TECHNIQUES",
@@ -205,6 +206,7 @@ TECHNIQUE = total(
             checked_by=("catalog.discovery.STRUCTURE_SUPERSEDED",),
             used_by=(
                 "catalog.civics.TRIGGERS",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "engine.settlement.life.permitted",
@@ -217,6 +219,7 @@ TECHNIQUE = total(
             checked_by=(),
             used_by=(
                 "catalog.civics.TRIGGERS",
+                "catalog.facets.FACETS",
                 "catalog.law_depth.MEDICINE_TECHNIQUES",
                 "catalog.medicine.MEDICINE",
                 "catalog.techniques.TECHNIQUES",
@@ -229,6 +232,7 @@ TECHNIQUE = total(
             "Surgery",
             checked_by=(),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.law_depth.MEDICINE_TECHNIQUES",
                 "catalog.medicine.MEDICINE",
                 "catalog.techniques.TECHNIQUES",
@@ -249,6 +253,7 @@ TECHNIQUE = total(
             "Irrigation",
             checked_by=("engine.economy.extraction.craft_factor",),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.means.LIFTS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
@@ -260,10 +265,18 @@ TECHNIQUE = total(
         Technique.CROP_ROTATION: Defined(
             "Crop rotation",
             checked_by=("engine.economy.extraction.craft_factor",),
-            used_by=("catalog.methods.METHODS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES", "engine.crafts.chemistry.RECIPES"),
+            used_by=(
+                "catalog.facets.FACETS",
+                "catalog.methods.METHODS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.crafts.chemistry.RECIPES",
+            ),
         ),
         Technique.TERRACING: Defined(
-            "Terracing", checked_by=("engine.economy.extraction.craft_factor",), used_by=("catalog.means.LIFTS", "catalog.techniques.TECHNIQUES")
+            "Terracing",
+            checked_by=("engine.economy.extraction.craft_factor",),
+            used_by=("catalog.facets.FACETS", "catalog.means.LIFTS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.PLOUGH: Defined(
             "Plough",
@@ -273,7 +286,13 @@ TECHNIQUE = total(
         Technique.SELECTIVE_BREEDING: Defined(
             "Selective breeding",
             checked_by=("engine.economy.extraction.craft_factor",),
-            used_by=("catalog.methods.METHODS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES", "catalog.vehicles.FAMILY_TECHNIQUES"),
+            used_by=(
+                "catalog.facets.FACETS",
+                "catalog.methods.METHODS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.technology.FAMILY_TECHNIQUES",
+                "catalog.vehicles.FAMILY_TECHNIQUES",
+            ),
         ),
         Technique.BRONZE: Defined(
             "Bronze",
@@ -309,6 +328,7 @@ TECHNIQUE = total(
                 "catalog.discovery.ITEM_CLASSES",
                 "catalog.discovery.ITEM_MATERIALS",
                 "catalog.eras.ERA_MARKERS",
+                "catalog.facets.FACETS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -331,6 +351,7 @@ TECHNIQUE = total(
             "Arch",
             checked_by=(),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.gatherings.STAGE_TECHNIQUES",
                 "catalog.means.BUILDING",
                 "catalog.techniques.TECHNIQUES",
@@ -344,6 +365,7 @@ TECHNIQUE = total(
             "Dome",
             checked_by=(),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.settlement.life.permitted",
@@ -354,6 +376,7 @@ TECHNIQUE = total(
             "Aqueduct",
             checked_by=("catalog.discovery.STRUCTURE_SUPERSEDED",),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.means.BUILDING",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -376,6 +399,7 @@ TECHNIQUE = total(
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.crafts.numbers.SCHOOLING",
                 "engine.demography.peoples.culture_for",
+                "engine.folk_knowledge.seed.transmission_of",
             ),
         ),
         Technique.PAPER: Defined(
@@ -383,6 +407,7 @@ TECHNIQUE = total(
             checked_by=("engine.means.media.medium_for",),
             used_by=(
                 "catalog.discovery.ITEM_CLASSES",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.lore.research.read_books",
@@ -393,6 +418,7 @@ TECHNIQUE = total(
             "Printing",
             checked_by=("catalog.civics.SOCIAL_CHANGE",),
             used_by=(
+                "catalog.facets.FACETS",
                 "catalog.money.MONEY_FORMS",
                 "catalog.techniques.TECHNIQUES",
                 "engine.communication.opinion.voice",
@@ -420,7 +446,7 @@ TECHNIQUE = total(
         Technique.NAVIGATION_STARS: Defined(
             "Navigation stars",
             checked_by=("engine.economy.routes.spoken_capacity",),
-            used_by=("catalog.means.AIDS", "catalog.techniques.TECHNIQUES", "engine.crafts.clocks.LADDER"),
+            used_by=("catalog.facets.FACETS", "catalog.means.AIDS", "catalog.techniques.TECHNIQUES", "engine.crafts.clocks.LADDER"),
         ),
         Technique.ECLIPSE_PREDICTION: Defined(
             "Eclipse prediction",
@@ -439,6 +465,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.civics.TRIGGERS",
+                "catalog.facets.FACETS",
                 "catalog.means.AIDS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
@@ -520,6 +547,7 @@ TECHNIQUE = total(
             checked_by=("catalog.discovery.STRUCTURE_SUPERSEDED", "engine.economy.routes.spoken_capacity"),
             used_by=(
                 "catalog.discovery.ITEM_CLASSES",
+                "catalog.facets.FACETS",
                 "catalog.means.AIDS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -537,6 +565,7 @@ TECHNIQUE = total(
                 "catalog.civics.CAPABILITIES",
                 "catalog.civics.TRIGGERS",
                 "catalog.discovery.ITEM_CLASSES",
+                "catalog.facets.FACETS",
                 "catalog.gatherings.STAGE_TECHNIQUES",
                 "catalog.means.AIDS",
                 "catalog.techniques.TECHNIQUES",
@@ -553,6 +582,7 @@ TECHNIQUE = total(
                 "catalog.civics.OFFICE_GATES",
                 "catalog.civics.TENET_GATES",
                 "catalog.civics.TRIGGERS",
+                "catalog.facets.FACETS",
                 "catalog.law_depth.CODE_TECHNIQUES",
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
@@ -581,6 +611,7 @@ TECHNIQUE = total(
             checked_by=("catalog.civics.SOCIAL_CHANGE",),
             used_by=(
                 "catalog.civics.GOVERNMENT_GATES",
+                "catalog.facets.FACETS",
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -627,7 +658,13 @@ TECHNIQUE = total(
         Technique.GUILDS: Defined(
             "Guilds",
             checked_by=("catalog.civics.SOCIAL_CHANGE",),
-            used_by=("catalog.civics.LAW_GATES", "catalog.civics.PRIVILEGE_GATES", "catalog.techniques.TECHNIQUES", "engine.lore.blueprints.trade_designs"),
+            used_by=(
+                "catalog.civics.LAW_GATES",
+                "catalog.civics.PRIVILEGE_GATES",
+                "catalog.facets.FACETS",
+                "catalog.techniques.TECHNIQUES",
+                "engine.lore.blueprints.trade_designs",
+            ),
         ),
         Technique.UNIVERSITIES: Defined(
             "Universities",
@@ -637,7 +674,7 @@ TECHNIQUE = total(
         Technique.HOSPITALS: Defined(
             "Hospitals",
             checked_by=("catalog.discovery.STRUCTURE_SUPERSEDED", "engine.disease.book.DiseaseBook.load"),
-            used_by=("catalog.civics.TRIGGERS", "catalog.medicine.MEDICINE", "catalog.techniques.TECHNIQUES"),
+            used_by=("catalog.civics.TRIGGERS", "catalog.facets.FACETS", "catalog.medicine.MEDICINE", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.PRINTING_PRESS: Defined(
             "Printing press",
@@ -669,23 +706,24 @@ TECHNIQUE = total(
                 "catalog.civics.CAPABILITIES",
                 "catalog.civics.OFFICE_GATES",
                 "catalog.civics.TENET_GATES",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.crafts.numbers.keep_numbers",
             ),
         ),
         Technique.NATURAL_PHILOSOPHY: Defined(
-            "Natural philosophy", checked_by=("engine.lore.research.thought_factor",), used_by=("catalog.techniques.TECHNIQUES",)
+            "Natural philosophy", checked_by=("engine.lore.research.thought_factor",), used_by=("catalog.facets.FACETS", "catalog.techniques.TECHNIQUES")
         ),
         Technique.EMPIRICISM: Defined(
             "Empiricism",
             checked_by=("catalog.civics.SOCIAL_CHANGE", "engine.lore.research.thought_factor"),
-            used_by=("catalog.medicine.MEDICINE", "catalog.techniques.TECHNIQUES"),
+            used_by=("catalog.facets.FACETS", "catalog.medicine.MEDICINE", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.HUMANIST_IDEALS: Defined(
             "Humanist ideals",
             checked_by=("catalog.civics.SOCIAL_CHANGE",),
-            used_by=("catalog.civics.LAW_GATES", "catalog.civics.TENET_GATES", "catalog.techniques.TECHNIQUES"),
+            used_by=("catalog.civics.LAW_GATES", "catalog.civics.TENET_GATES", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.EXAMINATIONS: Defined(
             "Examinations",
@@ -693,7 +731,9 @@ TECHNIQUE = total(
             used_by=("catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES", "engine.regime.learning.exam_row"),
         ),
         Technique.DRAINAGE: Defined(
-            "Drainage", checked_by=("engine.agrarian.soil.field_work",), used_by=("catalog.means.LIFTS", "catalog.techniques.TECHNIQUES")
+            "Drainage",
+            checked_by=("engine.agrarian.soil.field_work",),
+            used_by=("catalog.facets.FACETS", "catalog.means.LIFTS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.GUNPOWDER: Defined(
             "Gunpowder",
@@ -702,6 +742,7 @@ TECHNIQUE = total(
                 "catalog.eras.ERA_MARKERS",
                 "catalog.eras.POWDER",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -721,12 +762,18 @@ TECHNIQUE = total(
         Technique.CANNON: Defined(
             "Cannon",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.POWDER", "catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES", "catalog.techniques.UNIT_TECHNIQUES"),
+            used_by=(
+                "catalog.eras.POWDER",
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.techniques.UNIT_TECHNIQUES",
+            ),
         ),
         Technique.STAR_FORTS: Defined(
             "Star forts",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.POWDER", "catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES"),
+            used_by=("catalog.eras.POWDER", "catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.VOLLEY_DRILL: Defined(
             "Volley drill",
@@ -739,6 +786,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.eras.ERA_MARKERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.means.LIFTS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
@@ -756,6 +804,7 @@ TECHNIQUE = total(
             checked_by=("catalog.eras.ERA_EFFECTS",),
             used_by=(
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -769,6 +818,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
@@ -783,7 +833,7 @@ TECHNIQUE = total(
         Technique.FACTORY_PRODUCTION: Defined(
             "Factory production",
             checked_by=("catalog.eras.ERA_EFFECTS", "engine.phases.factions.industrial_kinds"),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES", "engine.orders.putting_out.work_put_out"),
+            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES", "engine.orders.putting_out.work_put_out"),
         ),
         Technique.INDUSTRIAL_CHEMISTRY: Defined(
             "Industrial chemistry",
@@ -791,6 +841,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.medicine.MEDICINE",
                 "catalog.methods.METHODS",
                 "catalog.taxes.TAXES",
@@ -814,6 +865,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.eras.ERA_MARKERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.methods.METHODS",
                 "catalog.money.MONEY_FORMS",
                 "catalog.techniques.TECHNIQUES",
@@ -836,12 +888,18 @@ TECHNIQUE = total(
         Technique.ELECTRIC_LIGHT: Defined(
             "Electric light",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.methods.METHODS", "catalog.techniques.TECHNIQUES"),
+            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.methods.METHODS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.REFRIGERATION: Defined(
             "Refrigeration",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.methods.METHODS", "catalog.preservation.PRESERVATION", "catalog.techniques.TECHNIQUES"),
+            used_by=(
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
+                "catalog.methods.METHODS",
+                "catalog.preservation.PRESERVATION",
+                "catalog.techniques.TECHNIQUES",
+            ),
         ),
         Technique.COMBUSTION_ENGINE: Defined(
             "Combustion engine",
@@ -849,6 +907,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.methods.METHODS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
@@ -862,6 +921,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -875,6 +935,7 @@ TECHNIQUE = total(
                 "catalog.carriers.CARRIERS",
                 "catalog.eras.ERA_MARKERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.money.MONEY_FORMS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
@@ -886,6 +947,7 @@ TECHNIQUE = total(
             checked_by=("catalog.eras.ERA_EFFECTS",),
             used_by=(
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
@@ -906,7 +968,7 @@ TECHNIQUE = total(
         Technique.GREEN_REVOLUTION: Defined(
             "Green revolution",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES"),
+            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES"),
         ),
         Technique.NUCLEAR_POWER: Defined(
             "Nuclear power",
@@ -914,6 +976,7 @@ TECHNIQUE = total(
             used_by=(
                 "catalog.eras.ERA_MARKERS",
                 "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
                 "catalog.methods.METHODS",
                 "catalog.preservation.PRESERVATION",
                 "catalog.techniques.TECHNIQUES",

@@ -13,7 +13,19 @@ from aerona.engine.faith.doctrine import ensure_doctrines, staff
 from aerona.engine.faith.exorcism import possessions
 from aerona.engine.faith.souls import fear_of_torment, gnaw, possess, profiles, realm_essence, reincarnate, soul_eaters, tend
 from aerona.engine.faith.strata_life import stratum_turn
-from aerona.engine.faith.works import canonise, devotion, holding_income, pilgrim_plague, pilgrimage, sacred_beasts, saints, spend, survey_holdings, tithe
+from aerona.engine.faith.works import (
+    canonise,
+    devotion,
+    holding_income,
+    keeps_remains,
+    pilgrim_plague,
+    pilgrimage,
+    sacred_beasts,
+    saints,
+    spend,
+    survey_holdings,
+    tithe,
+)
 from aerona.engine.faith.zeal import stir
 from aerona.engine.faith.zealotry import drift, fanaticism, investiture, suppress
 from aerona.engine.gods.progress import cap_gained_essence
@@ -101,9 +113,12 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     pilgrims, _ = await pilgrimage(ctx, church)
     ctx.count("pilgrims", pilgrims)
     for saint in await saints(ctx, church):
+        ctx.count("saints")
+        if not await keeps_remains(ctx, saint):
+            lines.append(FaithLine("faith.saint_remembered", {IncidentRole.AUTHORITY: cult, IncidentRole.SUBJECT: saint.id}))
+            continue
         relic = await canonise(ctx, church, saint)
         lines.append(FaithLine("faith.saint", {IncidentRole.AUTHORITY: cult, IncidentRole.SUBJECT: saint.id, IncidentRole.PRODUCT: relic.item_entity_id}))
-        ctx.count("saints")
     zeal = await stir(ctx, church, book, laws=laws, atlas=atlas)
     if pilgrims >= THOUSAND and church.doctrine is not None:
         gain = pilgrims // THOUSAND * ctx.rules.zeal.pilgrimage_per_1000
@@ -167,6 +182,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.cult_offices",
     "table.cult_tenets",
     "table.culture_values",
+    "table.dimensions",
     "table.disease_cures",
     "table.disease_profiles",
     "table.districts",
@@ -174,6 +190,9 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.genomes",
     "table.goods_flows",
     "table.herds",
@@ -226,6 +245,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.species_profiles",
     "table.species_ranges",
     "table.spirit_profiles",
+    "table.stars",
     "table.structure_profiles",
     "table.theory_adherents",
     "table.theory_profiles",
@@ -233,6 +253,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.traits",
     "table.world_maps",
     "table.world_materials",
+    "table.worlds",
 )
 @writes(
     "cult.devotion",

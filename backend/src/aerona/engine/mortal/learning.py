@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.death_shapes import CALLED_PROFESSIONS
 from aerona.catalog.mind import BRANCH_SKILLS, PROFESSIONS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -93,9 +94,11 @@ def best_profession(rules: Rules, rows: dict[SkillKind, SkillRow], barred: froze
 
 async def refresh_profession(session: AsyncSession, rules: Rules, mortal: EntityRow, profile: MortalProfileRow) -> Profession | None:
     if not is_held(profile, "profession"):
-        profile.profession = best_profession(
-            rules, await skills_of(session, mortal.id), await barred_professions(session, mortal.id) | await unarmed(session, mortal.id)
-        )
+        barred = await barred_professions(session, mortal.id) | await unarmed(session, mortal.id)
+        best = best_profession(rules, await skills_of(session, mortal.id), barred)
+        current = profile.profession
+        called = current is not None and current in CALLED_PROFESSIONS and current.value not in barred
+        profile.profession = current if best is None and called else best
     return profile.profession
 
 

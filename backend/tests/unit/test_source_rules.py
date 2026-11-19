@@ -58,3 +58,10 @@ def test_a_local_or_argument_that_hides_an_import_is_caught_but_a_comprehension_
     assert rules.shadowed_imports(ast.parse(source)) == [(3, "total"), (4, "record")]
     kept = "from aerona.engine.recording.record import record\nasync def write(ctx):\n    return [record for record in range(3)]\n"
     assert rules.shadowed_imports(ast.parse(kept)) == []
+
+
+def test_a_fixed_a_or_an_before_a_placeholder_is_caught() -> None:
+    rules = load_rules()
+    assert rules.FIXED_ARTICLE.search("read an {verdict} omen")
+    assert rules.FIXED_ARTICLE.search("with a {cure} cure")
+    assert not rules.FIXED_ARTICLE.search("read {verdict:an} omen")

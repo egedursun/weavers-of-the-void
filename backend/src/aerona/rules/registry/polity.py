@@ -87,6 +87,8 @@ class LegitimacyRules(Spanned):
     usurper: int = rule(25, 0, 100, P, "Legitimacy lost by a usurper")
     unwhole: int = rule(15, 0, 100, P, "Legitimacy lost by a maimed ruler where wholeness is required")
     renown_per_10: int = rule(2, 0, 100, P, "Legitimacy per ten points of the ruler's importance")
+    title_prestige_pct: int = rule(10, 0, 100, P, "Legitimacy the ruler gains from the prestige of the titles it holds (%)")
+    title_cap: int = rule(15, 0, 100, P, "Most legitimacy the titles the ruler holds can give")
     oathbreaker: int = rule(15, 0, 100, P, "Legitimacy lost by an oathbreaker ruler")
     sanction: int = rule(10, 0, 100, P, "Legitimacy from a state religion that favours the ruler")
     excommunication: int = rule(20, 0, 100, P, "Legitimacy lost when the state religion turns against the ruler")

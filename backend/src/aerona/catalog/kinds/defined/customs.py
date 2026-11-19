@@ -20,7 +20,7 @@ AGE_GRADE = total(
         AgeGrade.CHILDREN: Defined("Children", checked_by=(), used_by=("engine.customs.age_sets.GRADES", "engine.customs.grades.UNWED_GRADES")),
         AgeGrade.YOUTHS: Defined(
             "Youths",
-            checked_by=(),
+            checked_by=("engine.youth.seed.seed_from_age_sets",),
             used_by=(
                 "db.tables.customs.AgeSetRow",
                 "engine.customs.age_sets.GRADES",
@@ -62,7 +62,9 @@ EVIDENCE_KIND = total(
         EvidenceKind.TRACE: Defined(
             "A trace", checked_by=(), used_by=("catalog.crimes.CRIMES", "engine.customs.civics.gather_evidence", "services.player.customs.EvidenceDraft")
         ),
-        EvidenceKind.DOCUMENT: Defined("A document", checked_by=(), used_by=("catalog.crimes.CRIMES", "engine.customs.civics.gather_evidence")),
+        EvidenceKind.DOCUMENT: Defined(
+            "A document", checked_by=(), used_by=("catalog.crimes.CRIMES", "engine.customs.civics.gather_evidence", "engine.media.press.recorded_evidence")
+        ),
         EvidenceKind.CONFESSION: Defined("A confession", checked_by=(), used_by=("catalog.crimes.CRIMES", "engine.customs.civics.read_and_confess")),
         EvidenceKind.DIVINATION: Defined("A divination", checked_by=(), used_by=("catalog.crimes.CRIMES", "engine.customs.civics.read_and_confess")),
         EvidenceKind.MAGIC: Defined(

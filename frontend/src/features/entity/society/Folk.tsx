@@ -55,6 +55,7 @@ import {
   DIET_SPEC,
   FOUND_ICON,
   FUNERAL_SPEC,
+  REMAINS_SPEC,
   IMMUNE_ICON,
   LANGUAGE_ICON,
   MOUNT_SPEC,
@@ -851,6 +852,15 @@ export function FolkControls({
             held={held('funeral_rite')}
             blocked={busy}
             onPick={set('funeral_rite')}
+          />
+          <ChoiceEditor
+            label='Treatment of the dead'
+            hint='What is done with the remains, within what the funeral rite allows'
+            value={culture.remains_treatment}
+            table={REMAINS_SPEC}
+            held={held('remains_treatment')}
+            blocked={busy}
+            onPick={set('remains_treatment')}
           />
           <FlagEditor
             label='Slavery lawful'

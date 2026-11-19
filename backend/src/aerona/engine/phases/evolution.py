@@ -36,15 +36,23 @@ async def trait_evolution(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.creator",
+    "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.incident_participants",
     "table.incidents",
     "table.node_births",
     "table.nodes",
+    "table.sons",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_traits",
+    "table.stars",
+    "table.worlds",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.species_ranges")
 async def niches(ctx: TickContext) -> None:

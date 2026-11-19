@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.domain.enums.action import ActionKind
@@ -59,7 +60,7 @@ async def answer_oracle(call: SonCall, args: AnswerOracleInput) -> str:
         kind=ChronicleKind.WORLD,
         steps=(StepDraft(StepAction.ANSWER, actor=call.son.id, target=town.id, record_table=CrimeCaseRow.__tablename__, record_key=str(case.id)),),
     )
-    return result(SonResult.ORACLE_ANSWERED, name=town.name, verdict=args.verdict.value)
+    return result(SonResult.ORACLE_ANSWERED, name=town.name, verdict=spoken(args.verdict))
 
 
 async def read_dreams(call: SonCall, args: ReadDreamsInput) -> str:

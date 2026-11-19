@@ -6,6 +6,7 @@ from aerona.catalog.dangers import DANGERS
 from aerona.catalog.gates import Gate
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import AeronaError
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -104,7 +105,7 @@ async def redirect_river(call: SonCall, args: RedirectRiverInput) -> str:
         fail(SonResult.RIVER_NOT_TURNED, reason=error.message)
     call.target(target.id)
     call.spend_essence(cost)
-    river = moved.river.value.replace("_", " ")
+    river = spoken(moved.river)
     await call.record(
         "tools.son.redirect_river",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: source.id, IncidentRole.TARGET: target.id},

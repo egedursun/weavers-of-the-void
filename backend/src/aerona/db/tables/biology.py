@@ -14,7 +14,7 @@ BIOLOGY_SHARES = (
     "fire_harm_pct",
     "storm_harm_pct",
 )
-BIOLOGY_FLAGS = ("breathes", "drinks", "ages")
+BIOLOGY_FLAGS = ("breathes", "drinks", "ages", "sleeps")
 BIOLOGY_EFFECTS = (*BIOLOGY_SHARES, *BIOLOGY_FLAGS)
 
 
@@ -37,5 +37,6 @@ class BiologyRow(Base):
     breathes: Mapped[bool] = mapped_column(default=True)
     drinks: Mapped[bool] = mapped_column(default=True)
     ages: Mapped[bool] = mapped_column(default=True)
+    sleeps: Mapped[bool] = mapped_column(default=True, server_default="1")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

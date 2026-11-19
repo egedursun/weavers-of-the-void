@@ -56,6 +56,7 @@ class BiologyView:
     breathes: bool = True
     drinks: bool = True
     ages: bool = True
+    sleeps: bool = True
 
     def factor(self, key: str) -> float:
         value: int = getattr(self, key)

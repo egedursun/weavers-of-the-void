@@ -113,7 +113,7 @@ async def test_a_source_trusted_too_little_is_not_heeded(session: AsyncSession, 
 def test_new_gatherings_and_the_day_of_eight_activities() -> None:
     for kind in (GatheringKind.EXHIBITION, GatheringKind.SUMMIT_OF_GODS, GatheringKind.MOURNING, GatheringKind.SPORT_MATCH):
         assert GATHERING_COLLECTIONS[kind] and GATHERING_THOUGHTS[kind]
-    shares = shares_for({ValueAxis.KNOWLEDGE: 60, ValueAxis.FAMILY: 40, ValueAxis.ARTWORK: 20})
+    shares = shares_for({ValueAxis.KNOWLEDGE: 60, ValueAxis.FAMILY: 40, ValueAxis.ARTWORK: 20}, Rules())
     assert shares["learning"] and shares["care"] and shares["art"]
 
 

@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 SUMMARY_COUNTS = (
     ("rejected", "{count:creation|creations} rejected by Fate"),
     ("fixed", "{count:creation|creations} corrected by Fate"),
-    ("worlds_born", "{count} sensed worlds born"),
+    ("worlds_born", "{count:sensed world|sensed worlds} born"),
     ("engine_notes", "{count:event|events} in the world's own course"),
     ("localised_lines", "{count:line|lines} localised"),
 )
 EPOCH_NAME_LINE = 'The age was named "{name}"'
 COUNCIL_LINE = "Council: {motion}"
-DURATION_LINE = "The epoch took {seconds} seconds"
+DURATION_LINE = "The epoch took {seconds:second|seconds}"
 UNKNOWN_ERROR = "Something went wrong in the background."
 
 
@@ -50,7 +50,7 @@ def summary_lines(summary: dict[str, Any]) -> list[str]:
         lines.append(COUNCIL_LINE.format(motion=motion))
     duration = count_of(summary.get("duration_s"))
     if duration:
-        lines.append(DURATION_LINE.format(seconds=duration))
+        lines.append(fill(DURATION_LINE, seconds=duration))
     return lines
 
 

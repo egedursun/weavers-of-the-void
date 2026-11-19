@@ -232,7 +232,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.WORSHIP_BAN: "The worship of a god is banned.",
         LawKind.BLOOD_FEUD: "Blood feuds may end in wergild: {wergild_allowed}. Blood feuds are banned: {banned}.",
         LawKind.CENSORSHIP: "Contrary rumours, broadsheets and satire are suppressed with strictness {strictness}.",
-        LawKind.QUARANTINE: "Sick lands are sealed for {epochs} epochs.",
+        LawKind.QUARANTINE: "Sick lands are sealed for {epochs:epoch|epochs}.",
         LawKind.BURIAL_LAW: "The dead are given to {rite}; burning slows plague.",
         LawKind.SANITATION: "The realm pays for sanitation works.",
         LawKind.FAIR_MARKET: "Buying up a market to raise its prices, or flooding a rival's, is forbidden ({strength}).",

@@ -72,7 +72,7 @@ MARKET_PLAY = total(
         MarketPlay.CORNER: Defined(
             "Cornered",
             checked_by=("engine.economy.manipulation.swing",),
-            used_by=("engine.economy.manipulation.play_markets", "tools.mortal.urban_depth.corner_market"),
+            used_by=("engine.economy.manipulation.play_markets", "engine.media.press.alarm", "tools.mortal.urban_depth.corner_market"),
         ),
         MarketPlay.DUMP: Defined("Flooded", checked_by=(), used_by=("engine.economy.manipulation.play_markets",)),
     },

@@ -460,6 +460,8 @@ SKY: tuple[IncidentKindSpec, ...] = (
                 amount("revealed", U.COUNT, required=False),
                 amount("duration", U.COUNT, required=False),
                 amount("piety", U.PERCENT, required=False),
+                amount("strength", U.PERCENT, required=False),
+                amount("dose", U.PERCENT, required=False),
             ),
             steps=(A.APPEAR,),
             clock=C.SEASON,

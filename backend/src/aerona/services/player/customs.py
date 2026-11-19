@@ -17,6 +17,7 @@ from aerona.domain.enums.customs import (
     RevivalAim,
     RevivalGoal,
 )
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.customs import control
 from aerona.services.player.cosmography import Edited
@@ -98,6 +99,7 @@ class BodyMarkEdit(Edited):
 class TimeBudgetDraft(Command):
     people_id: int
     social_class: SocialClass
+    life_stage: LifeStage = LifeStage.ADULT
     work: int = 55
     rest: int = 20
     worship: int = 10
@@ -107,16 +109,20 @@ class TimeBudgetDraft(Command):
     learning: int = 0
     care: int = 0
     art: int = 0
+    housework: int = 0
+    sleep: int = 0
 
 
 class TimeBudgetTarget(Command):
     people_id: int
     social_class: SocialClass
+    life_stage: LifeStage = LifeStage.ADULT
 
 
 class TimeBudgetEdit(Edited):
     people_id: int
     social_class: SocialClass
+    life_stage: LifeStage = LifeStage.ADULT
 
 
 class NamingCustomDraft(Command):
@@ -408,7 +414,7 @@ async def time_budget_set(scope: PlayerScope, command: TimeBudgetDraft) -> Effec
     row = await control.set_record(
         await scope.context("time_budget_set"),
         "time_budget",
-        {"people_entity_id": command.people_id, "social_class": command.social_class},
+        {"people_entity_id": command.people_id, "social_class": command.social_class, "life_stage": command.life_stage},
         {
             "work": command.work,
             "rest": command.rest,
@@ -419,6 +425,8 @@ async def time_budget_set(scope: PlayerScope, command: TimeBudgetDraft) -> Effec
             "learning": command.learning,
             "care": command.care,
             "art": command.art,
+            "housework": command.housework,
+            "sleep": command.sleep,
         },
     )
     return Effect("The year of the class is set.", values={"record_id": getattr(row, "id", 0)})
@@ -427,14 +435,14 @@ async def time_budget_set(scope: PlayerScope, command: TimeBudgetDraft) -> Effec
 @player_action("time_budget:edit", ActionKind.EDIT_RECORD)
 async def time_budget_edit(scope: PlayerScope, command: TimeBudgetEdit) -> Effect:
     await control.edit_record(
-        await scope.context("time_budget_edit"), "time_budget", (command.people_id, command.social_class), command.values, command.release
+        await scope.context("time_budget_edit"), "time_budget", (command.people_id, command.social_class, command.life_stage), command.values, command.release
     )
     return Effect("The time budget is set so.")
 
 
 @player_action("time_budget:delete", ActionKind.EDIT_RECORD)
 async def time_budget_delete(scope: PlayerScope, command: TimeBudgetTarget) -> Effect:
-    await control.delete_record(await scope.context("time_budget_delete"), "time_budget", (command.people_id, command.social_class))
+    await control.delete_record(await scope.context("time_budget_delete"), "time_budget", (command.people_id, command.social_class, command.life_stage))
     return Effect("The time budget is struck.")
 
 

@@ -57,3 +57,4 @@ SIGNAL_STATE_LABELS: dict[SignalState, str] = {
     SignalState.CAPTURED: "Captured",
     SignalState.BURNED: "Burned",
 }
+MORTAL_MEDIA = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD, Medium.BIRD, Medium.SIGNAL_FIRE, Medium.NETWORK})

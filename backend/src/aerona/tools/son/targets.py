@@ -43,14 +43,14 @@ async def check_links(call: SonCall, links: Sequence[LinkInput], *, creating: bo
     entities: list[EntityRow] = []
     for link in links:
         if creating and link.kind in CREATION_FORBIDDEN_BONDS:
-            fail(SonResult.LINK_MECHANICAL, kind=link.kind.value)
+            fail(SonResult.LINK_MECHANICAL, kind=link.kind)
         if (
             creating
             and link.kind in SEIZING_BONDS
             and link.target_kind is LinkTarget.ENTITY
             and await active_bonds(call.session, [link.kind], targets=[link.target_id])
         ):
-            fail(SonResult.LINK_SEIZES, id=link.target_id, kind=link.kind.value)
+            fail(SonResult.LINK_SEIZES, id=link.target_id, kind=link.kind)
         if link.target_kind is LinkTarget.SON:
             if await call.session.get(SonRow, link.target_id) is None:
                 fail(SonResult.LINK_NO_SIBLING, id=link.target_id)

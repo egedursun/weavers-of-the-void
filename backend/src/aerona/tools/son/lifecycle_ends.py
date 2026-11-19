@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -49,7 +50,7 @@ async def wake_lore(call: SonCall, args: WakeLoreInput) -> str:
         facts={"reason": args.reason},
         kind=ChronicleKind.DIVINE_SIGN,
     )
-    return result(SonResult.LORE_WOKEN, lore=lore.name, state=row.state.value.replace("_", " "))
+    return result(SonResult.LORE_WOKEN, lore=lore.name, state=spoken(row.state))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

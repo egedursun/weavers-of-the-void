@@ -22,6 +22,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.agrarian.book import reserve_factor, reserve_marks
@@ -33,6 +34,7 @@ from aerona.engine.ecology.evolution import alert, cold_reach, drought_reach, es
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
+from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.loops.delay import delay_of, lagged
 from aerona.engine.museums.reading import refuges
 from aerona.engine.nature.islands import spared_kinds
@@ -564,6 +566,7 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
     share = hunted / len(wilds.hunters[region])
     for community in wilds.hunters[region]:
         luck = await ctx.hook_factor(community.id, DomainHook.HUNT_YIELD)
+        luck *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)
         for item in products:
             amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0) * luck)
             if amount > 0 and item.commodity is not None:

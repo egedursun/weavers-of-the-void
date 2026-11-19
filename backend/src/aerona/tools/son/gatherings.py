@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -42,7 +43,7 @@ async def convene_gathering(call: SonCall, args: ConveneGatheringInput) -> str:
     if row is None:
         fail(SonResult.GATHERING_REFUSED, why=f"{host.name} is held against change")
     call.target(host.id)
-    kind = args.kind.value.replace("_", " ")
+    kind = spoken(args.kind)
     await call.record(
         "tools.son.convene_gathering",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.HOST: host.id},

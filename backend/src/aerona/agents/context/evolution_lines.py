@@ -1,11 +1,16 @@
 from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
-from aerona.core.grammar import spoken
+from aerona.catalog.disease_agents import AGENTS, CURE_LABELS
+from aerona.core.grammar import an, spoken
+from aerona.db.tables.disease import OutbreakRow
+from aerona.db.tables.disease_agents import DiseaseAgentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow, LineageMarkRow, PlagueResponseRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.engine.disease.research import institutions
+from aerona.engine.primitives.queries import top_region
 
 
 async def son_evolution_lines(scope: Scope, son: SonRow) -> list[str]:
@@ -45,4 +50,29 @@ async def mortal_evolution_lines(scope: Scope, me: EntityRow) -> list[str]:
                 f"found in epoch {research.cured_epoch}" if research.cured_epoch is not None else f"{research.points} of {scope.rules.cure_research.threshold}"
             )
             found.append(f"{seat.name} seeks a cure for {disease.name}: {state}")
+    found.extend(await agent_lines(scope, me))
+    return found
+
+
+async def agent_lines(scope: Scope, me: EntityRow) -> list[str]:
+    session = scope.session
+    region = await top_region(session, me)
+    if region is None:
+        return []
+    found: list[str] = []
+    sick = await session.scalars(
+        select(OutbreakRow.disease_entity_id)
+        .where(OutbreakRow.region_entity_id == region.id, OutbreakRow.status == OutbreakStatus.ACTIVE)
+        .order_by(OutbreakRow.id)
+    )
+    for disease_id in sorted(set(sick)):
+        disease = await session.get(EntityRow, disease_id)
+        agent = await session.get(DiseaseAgentRow, disease_id)
+        if disease is None or agent is None:
+            continue
+        if not agent.identified:
+            found.append(f"no healer yet knows what {disease.name} is")
+            continue
+        cures = ", ".join(CURE_LABELS[cure].lower() for cure in sorted(AGENTS[agent.agent].cures))
+        found.append(f"{disease.name} is {an(AGENTS[agent.agent].label.lower())}; cures that work on it: {cures}")
     return found

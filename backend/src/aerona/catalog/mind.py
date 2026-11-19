@@ -1393,6 +1393,7 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = total(
         Profession.ARTIST: ProfessionSpec("Artist", (S.WEAVING, S.POTTERY, S.JEWELLING, S.ORATORY), MortalRole.ARTISAN),
         Profession.ADMINISTRATOR: ProfessionSpec("Administrator", (S.ADMINISTRATION, S.LAW, S.ACCOUNTING), MortalRole.SCRIBE),
         Profession.SPACER: ProfessionSpec("Spacer", (S.PILOTING, S.NAVIGATION, S.MECHANICS), MortalRole.PILOT),
+        Profession.DEATH_WORKER: ProfessionSpec("Death worker", (S.RITUAL, S.MEDICINE), MortalRole.COMMONER),
     },
 )
 BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = total(

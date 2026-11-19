@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.core.grammar import spoken
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import CooperativeRow, MembershipRow
 from aerona.domain.enums.action import ActionKind
@@ -48,7 +49,7 @@ async def join_cooperative(call: MortalCall, args: JoinCooperativeInput) -> str:
     await call.record(
         "tools.mortal.join_cooperative", roles={IncidentRole.MEMBER: call.me.id, IncidentRole.TARGET: faction.id}, facts={"purpose": pool.purpose}
     )
-    return result(MortalResult.COOPERATIVE_JOINED, faction=faction.name, purpose=pool.purpose.value)
+    return result(MortalResult.COOPERATIVE_JOINED, faction=faction.name, purpose=spoken(pool.purpose))
 
 
 async def seek_citizenship(call: MortalCall, args: SeekCitizenshipInput) -> str:

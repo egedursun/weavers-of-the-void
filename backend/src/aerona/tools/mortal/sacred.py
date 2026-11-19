@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.sacred import GeniusLocusRow, MillenarianRow, MysticRow, SpiritOfficeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -71,7 +72,7 @@ async def petition_spirit(call: MortalCall, args: PetitionSpiritInput) -> str:
         fail(MortalResult.PETITION_DECLINED, why=str(error).rstrip("."))
     call.target(spirit.id)
     await call.record("tools.mortal.petition_spirit", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.SUBJECT: spirit.id}, kind=ChronicleKind.PRAYER)
-    return result(MortalResult.PETITION_FILED, spirit=spirit.name, kind=args.kind.value.replace("_", " "), due=row.due_epoch)
+    return result(MortalResult.PETITION_FILED, spirit=spirit.name, kind=spoken(args.kind), due=row.due_epoch)
 
 
 async def offer_to_spirit(call: MortalCall, args: OfferToSpiritInput) -> str:
@@ -119,7 +120,7 @@ async def consult_diviner(call: MortalCall, args: ConsultDivinerInput) -> str:
         facts={"question": args.question},
         kind=ChronicleKind.FATE,
     )
-    return result(MortalResult.OMENS_READ, question=args.question.value, verdict=row.verdict.value)
+    return result(MortalResult.OMENS_READ, question=spoken(args.question), verdict=spoken(row.verdict))
 
 
 async def preach_end_time(call: MortalCall, args: PreachEndTimeInput) -> str:

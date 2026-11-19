@@ -40,7 +40,21 @@ BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
 REBELS_SUBTYPE = "rebels"
 
 
-@reads("table.bonds", "table.entities", "table.entity_flags", "table.nodes", "table.sons", "table.world_maps")
+@reads(
+    "table.bonds",
+    "table.creator",
+    "table.dimensions",
+    "table.entities",
+    "table.entity_flags",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.nodes",
+    "table.sons",
+    "table.stars",
+    "table.world_maps",
+    "table.worlds",
+)
 @writes("table.bonds")
 async def language_and_faith(ctx: TickContext) -> None:
     session = ctx.session
@@ -133,6 +147,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.claims",
     "table.community_societies",
     "table.cosmos",
+    "table.creator",
     "table.creator_taboos",
     "table.culture_ethics",
     "table.culture_values",
@@ -142,6 +157,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -168,6 +184,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.secrets",
     "table.settlement_profiles",
     "table.signal_links",
+    "table.sons",
     "table.stars",
     "table.tax_policies",
     "table.tradition_profiles",
@@ -243,11 +260,19 @@ async def uprisings(ctx: TickContext) -> None:
     "mortal.age",
     "table.age_set_members",
     "table.bonds",
+    "table.child_standing",
+    "table.creator",
+    "table.dimensions",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
     "table.incidents",
+    "table.kin_group_members",
+    "table.kin_groups",
     "table.kinship_systems",
     "table.memberships",
     "table.node_births",
@@ -256,7 +281,10 @@ async def uprisings(ctx: TickContext) -> None:
     "table.people_culture",
     "table.people_reproduction",
     "table.purity",
+    "table.sons",
+    "table.stars",
     "table.union_customs",
+    "table.worlds",
 )
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.incident_participants", "table.incidents")
 async def love_and_rivalry(ctx: TickContext) -> None:

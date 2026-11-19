@@ -12,6 +12,7 @@ from aerona.db.repositories.worlds import StarDraft, WorldDraft, WorldRepository
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import ChronicleRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
@@ -43,6 +44,8 @@ from aerona.domain.models.entity_stats import (
 from aerona.domain.models.profiles import Personality
 from aerona.domain.models.stats import PassionBlock, StatBlock
 from aerona.engine.context import TickContext
+from aerona.engine.phases.environment import environment_survey
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
@@ -367,3 +370,8 @@ def tuned_rules(**namespaces: dict[str, int]) -> Rules:
 async def tell_history(ctx: TickContext, text: str, *, ids: Sequence[int] = (), feed: FeedCategory | None = None) -> ChronicleRow:
     written = await record(ctx, "player.history", roles={IncidentRole.SUBJECT: tuple(ids)}, facts={"account": text}, feed=feed)
     return written.row
+
+
+async def surveyed(session: AsyncSession, world: CoreWorld) -> None:
+    if await session.get(RegionEnvironmentRow, world.regions[0].id) is None:
+        await environment_survey(await manual_context(session, "survey", rules=tuned_rules()))

@@ -87,6 +87,7 @@ class Mechanic:
     levers: tuple[str, ...] = ()
     targets: tuple[str, ...] = ()
     couplings: tuple[Coupling, ...] = field(default_factory=tuple)
+    isolated_reason: str | None = None
 
 
 MECHANICS: dict[str, Mechanic] = {}

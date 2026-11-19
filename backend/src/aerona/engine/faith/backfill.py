@@ -15,7 +15,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import liturgy_for, rebirth_path_of
 from aerona.engine.faith.judgement import default_criteria, judge, profile_for, recount
-from aerona.engine.faith.works import bones_of, canonise, hold, saints
+from aerona.engine.faith.works import bones_of, canonise, hold, keeps_remains, saints
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.words import names_word
@@ -109,8 +109,9 @@ async def dead_saints(ctx: TickContext, book: FaithBook) -> int:
         if church.doctrine is None:
             continue
         for saint in await saints(ctx, church, since=0):
-            await canonise(ctx, church, saint)
-            named += 1
+            if await keeps_remains(ctx, saint):
+                await canonise(ctx, church, saint)
+                named += 1
     return named
 
 

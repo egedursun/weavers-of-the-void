@@ -76,11 +76,13 @@ async def water_lifting(ctx: TickContext) -> None:
     "table.navigation_kits",
     "table.node_births",
     "table.nodes",
+    "table.observation_methods",
     "table.polity_members",
     "table.skills",
     "table.sons",
     "table.stars",
     "table.trade_route_profiles",
+    "table.world_fields",
     "table.worlds",
 )
 @writes(

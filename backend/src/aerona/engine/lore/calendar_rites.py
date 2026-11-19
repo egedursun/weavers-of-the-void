@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import fill
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -224,8 +225,8 @@ async def sleep_custom_kept(session: AsyncSession, community_id: int) -> bool:
 
 SLEEP_NAMES = {K.REST_CUSTOM: "The Midday Rest of {name}", K.VIGIL: "The Long Night Vigil of {name}"}
 SLEEP_BODIES = {
-    K.REST_CUSTOM: "Under a day of {hours} hours the work stops in the middle of the day and the folk rest.",
-    K.VIGIL: "Through a night of {hours} hours some keep watch while the rest sleep in turns.",
+    K.REST_CUSTOM: "Under a day of {hours:hour|hours} the work stops in the middle of the day and the folk rest.",
+    K.VIGIL: "Through a night of {hours:hour|hours} some keep watch while the rest sleep in turns.",
 }
 
 
@@ -254,7 +255,7 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
                 name=SLEEP_NAMES[kind].format(name=community.name),
                 entity_type=EntityType.TRADITION,
                 stats=TraditionStats(spread=PERCENT // 4, rigidity=PERCENT // 3),
-                body=SLEEP_BODIES[kind].format(hours=hours),
+                body=fill(SLEEP_BODIES[kind], hours=hours),
                 power=1,
                 world_id=community.world_id,
                 location_id=community.id,

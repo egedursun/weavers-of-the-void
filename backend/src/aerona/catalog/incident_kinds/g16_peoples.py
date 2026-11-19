@@ -585,6 +585,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.WORSHIP,
     ),
     IncidentKindSpec(
+        "faith.saint_remembered",
+        G.PEOPLES,
+        "{authority} named {subject} a saint; no remains were kept to revere.",
+        roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT)),
+        facts=(),
+        chronicle_kind=K.WORSHIP,
+    ),
+    IncidentKindSpec(
         "faith.temple",
         G.PEOPLES,
         "{maker} raised a temple from its tithes.",

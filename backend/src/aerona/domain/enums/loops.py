@@ -33,3 +33,5 @@ class BalanceLoop(StrEnum):
     NOVELTY_DRAIN = "novelty_drain"
     KIND_PRESTIGE = "kind_prestige"
     KIND_SUBSTITUTION = "kind_substitution"
+    POLICY_GRIEVANCE = "policy_grievance"
+    HOUSEWORK_BURDEN = "housework_burden"

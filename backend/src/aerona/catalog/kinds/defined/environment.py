@@ -41,7 +41,9 @@ WEATHER_KIND = total(
     WeatherKind,
     {
         WeatherKind.CLEAR: Defined(
-            "Clear", checked_by=("engine.environment.weather.weather_weights",), used_by=("catalog.weather.WEATHER", "engine.environment.weather.draw_weather")
+            "Clear",
+            checked_by=("engine.environment.weather.weather_weights",),
+            used_by=("catalog.weather.WEATHER", "engine.environment.weather.draw_weather", "engine.forecasting.works.AIM_WEATHER"),
         ),
         WeatherKind.OVERCAST: Defined("Overcast", checked_by=(), used_by=("catalog.weather.WEATHER",)),
         WeatherKind.RAIN: Defined(
@@ -51,6 +53,7 @@ WEATHER_KIND = total(
                 "catalog.weather.WEATHER",
                 "engine.environment.weather.LIQUID_KINDS",
                 "engine.environment.weather.WET_KINDS",
+                "engine.forecasting.works.AIM_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
                 "engine.lore.rites.do_weather",
                 "engine.military.battle.RAIN",
@@ -88,6 +91,7 @@ WEATHER_KIND = total(
                 "engine.military.naval.WINDY",
                 "engine.military.vessels.STORMS",
                 "engine.military.vessels.WINDY",
+                "engine.plants.bodies.STORMS",
                 "engine.powers.effects.FORM_WEATHER",
             ),
         ),
@@ -118,6 +122,7 @@ WEATHER_KIND = total(
                 "catalog.weather.WEATHER",
                 "engine.demography.biology.WINTER",
                 "engine.environment.weather.COLD_KINDS",
+                "engine.forecasting.works.AIM_WEATHER",
                 "engine.military.battle.SNOW",
                 "engine.military.campaign.SLOW_WEATHER",
                 "engine.military.clash.WINTER",
@@ -140,6 +145,7 @@ WEATHER_KIND = total(
                 "engine.military.naval.STORMS",
                 "engine.military.vessels.STORMS",
                 "engine.phases.environment.EXTREME_WEATHER",
+                "engine.plants.bodies.STORMS",
             ),
         ),
         WeatherKind.HEAT_WAVE: Defined(
@@ -150,6 +156,7 @@ WEATHER_KIND = total(
                 "catalog.weather.WEATHER",
                 "engine.demography.biology.HOT_WEATHER",
                 "engine.environment.weather.HOT_KINDS",
+                "engine.forecasting.works.AIM_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
                 "engine.phases.environment.EXTREME_WEATHER",
                 "engine.powers.effects.FORM_WEATHER",
@@ -163,6 +170,7 @@ WEATHER_KIND = total(
                 "catalog.weather.WEATHER",
                 "engine.demography.biology.HOT_WEATHER",
                 "engine.environment.weather.DRY_KINDS",
+                "engine.forecasting.works.AIM_WEATHER",
                 "engine.military.battle.WIND",
                 "engine.military.naval.WINDY",
                 "engine.military.vessels.WINDY",
@@ -194,6 +202,7 @@ WEATHER_KIND = total(
                 "engine.military.duels.WET",
                 "engine.military.vessels.STORMS",
                 "engine.phases.environment.EXTREME_WEATHER",
+                "engine.plants.bodies.STORMS",
             ),
         ),
         WeatherKind.MAGIC_STORM: Defined(
@@ -212,6 +221,7 @@ WEATHER_KIND = total(
                 "engine.military.naval.STORMS",
                 "engine.military.vessels.STORMS",
                 "engine.phases.environment.EXTREME_WEATHER",
+                "engine.plants.bodies.STORMS",
             ),
         ),
         WeatherKind.ASH_FALL: Defined(

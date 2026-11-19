@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.catalog.law_grammar import Grammar
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -57,7 +58,7 @@ async def set_natural_law(call: SonCall, args: NaturalLawInput) -> str:
         roles={IncidentRole.PATRON: call.son.id, IncidentRole.SUBJECT: law.id},
         facts={"operator": args.operator, "value": args.value, "reason": args.reason},
     )
-    return result(SonResult.LAW_SET, name=law.name, operator=args.operator.value.replace("_", " "), value=args.value)
+    return result(SonResult.LAW_SET, name=law.name, operator=spoken(args.operator), value=args.value)
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

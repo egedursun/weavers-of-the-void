@@ -15,6 +15,7 @@ class BiologyEffectsView(ApiModel):
     storm_harm_pct: int
     breathes: bool
     drinks: bool
+    sleeps: bool
     ages: bool
 
 

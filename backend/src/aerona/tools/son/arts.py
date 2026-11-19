@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.arts import ClubRow, ForgeryRow
 from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.entities import EntityRow
@@ -123,7 +124,7 @@ async def build_construct(call: SonCall, args: BuildConstructInput) -> str:
         facts={"maker_detail": str(maker.name), "name": str(name), "reason": args.reason},
         kind=ChronicleKind.CREATION,
     )
-    return result(SonResult.CONSTRUCT_BUILT, maker=maker.name, name=name, material=row.material.value, source=row.power_source.value)
+    return result(SonResult.CONSTRUCT_BUILT, maker=maker.name, name=name, material=spoken(row.material), source=spoken(row.power_source))
 
 
 async def construct_of(call: SonCall, construct_id: int, refused: SonResult) -> EntityRow:
@@ -153,7 +154,7 @@ async def order_construct(call: SonCall, args: OrderConstructInput) -> str:
         facts={"order": args.kind, "reason": args.reason},
         kind=ChronicleKind.CREATION,
     )
-    return result(SonResult.CONSTRUCT_ORDERED, name=body.name, order=args.kind.value.replace("_", " "), target=aim)
+    return result(SonResult.CONSTRUCT_ORDERED, name=body.name, order=spoken(args.kind), target=aim)
 
 
 async def seize_construct(call: SonCall, args: SeizeConstructInput) -> str:
@@ -285,7 +286,7 @@ async def mark_birth(call: SonCall, args: MarkBirthInput) -> str:
         facts={"mortal": str(mortal.name), "sign": str(sign), "reason": args.reason},
         kind=ChronicleKind.FATE,
     )
-    return result(SonResult.BIRTH_MARKED, mortal=mortal.name, sign=sign, influence=row.influence.value)
+    return result(SonResult.BIRTH_MARKED, mortal=mortal.name, sign=sign, influence=spoken(row.influence))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

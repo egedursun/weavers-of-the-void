@@ -28,12 +28,15 @@ from aerona.engine.phases import (
     biology_variants,
     births,
     body,
+    body_systems,
     casualties,
+    childhood,
     civilization,
     climate,
     climes,
     collective,
     commerce,
+    commerce_practice,
     communication,
     cosmic_economy,
     cosmography,
@@ -47,15 +50,19 @@ from aerona.engine.phases import (
     curses,
     customs,
     cycles,
+    daily_life,
     dark_ages,
+    death_work,
     demography,
     dialects,
     diplomacy,
     disasters,
+    disease_agents,
     divine,
     dominion,
     doom,
     ecology,
+    endowments,
     environment,
     epidemics,
     eras,
@@ -63,11 +70,14 @@ from aerona.engine.phases import (
     estates,
     evolution,
     exploration,
+    facets,
     factions,
     faith,
     finance,
+    folk_knowledge,
     folkways,
     foodways,
+    forecasting,
     fortune,
     fossils,
     gatherings,
@@ -83,11 +93,14 @@ from aerona.engine.phases import (
     honours,
     horror,
     households,
+    hypocrisy,
     industry,
     institutions,
     interconnect,
+    intimacy,
     intrigue,
     justice,
+    kin_duties,
     kinds,
     knowledge_levels,
     language_contact,
@@ -104,6 +117,7 @@ from aerona.engine.phases import (
     market,
     means,
     mechanics_assignment,
+    media,
     migration,
     mind,
     minds,
@@ -118,12 +132,15 @@ from aerona.engine.phases import (
     orders,
     pantheon,
     places,
+    plant_bodies,
     population,
+    population_policy,
     powers,
     prehistory,
     prisoners,
     production,
     prosperity,
+    public_works,
     realms,
     record_keepers,
     recording,
@@ -147,6 +164,8 @@ from aerona.engine.phases import (
     society_economy,
     society_kinds,
     sons,
+    space_weather,
+    speech,
     spirits,
     statecraft,
     structures,
@@ -159,12 +178,14 @@ from aerona.engine.phases import (
     urban_depth,
     vendettas,
     warfare,
+    water_and_ice,
     wilds,
     wonders,
     works,
     world_balance,
     world_views,
     writing,
+    youth,
 )
 from aerona.engine.primitives.manual import silent
 from aerona.engine.recording.scope import phase_scope
@@ -266,6 +287,27 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + crafts.PHASES
     + customs.PHASES
     + made_kinds.PHASES
+    + daily_life.PHASES
+    + kin_duties.PHASES
+    + childhood.PHASES
+    + intimacy.PHASES
+    + youth.PHASES
+    + population_policy.PHASES
+    + commerce_practice.PHASES
+    + public_works.PHASES
+    + media.PHASES
+    + speech.PHASES
+    + folk_knowledge.PHASES
+    + endowments.PHASES
+    + death_work.PHASES
+    + facets.PHASES
+    + hypocrisy.PHASES
+    + forecasting.PHASES
+    + plant_bodies.PHASES
+    + body_systems.PHASES
+    + disease_agents.PHASES
+    + water_and_ice.PHASES
+    + space_weather.PHASES
     + foodways.PHASES
     + kinds.PHASES
     + culture_kinds.PHASES
@@ -741,11 +783,32 @@ MIND_STAGE = stage(
     "mishaps",
     "witchcraft",
     "customs",
+    "daily_life",
+    "kin_duties",
+    "childhood",
+    "unions_and_birth",
+    "youth",
+    "population_policy",
+    "commerce_practice",
+    "public_works",
+    "media",
+    "speech",
     "belonging",
     "town_life",
     "civics",
     "trades",
     "learning_aids",
+    "folk_knowledge",
+    "endowments",
+    "death_work",
+    "facets",
+    "hypocrisy",
+    "forecasting",
+    "plant_bodies",
+    "body_systems",
+    "disease_agents",
+    "water_and_ice",
+    "space_weather",
     "sympathies",
     "gatherings",
     "reciprocity",

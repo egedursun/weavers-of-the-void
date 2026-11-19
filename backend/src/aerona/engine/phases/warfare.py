@@ -43,6 +43,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.domain.models.moment import Moment
 from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.cohorts import return_maimed
+from aerona.engine.body.customs import people_of
 from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import WorldView, world_views
@@ -64,6 +65,7 @@ from aerona.engine.environment.book import EnvironmentBook, add_scar, region_env
 from aerona.engine.environment.years import grant_sub_steps
 from aerona.engine.equipment.field import main_arms
 from aerona.engine.eras.effects import tech_factor
+from aerona.engine.forecasting.reading import sky_omens
 from aerona.engine.honours.units import HonourTally, disband_units, honour_battle
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.causes import war_cause_incident
@@ -1429,6 +1431,15 @@ async def _armies(ctx: TickContext, theatre: Theatre, war: WarRow, attacker: Ent
     return armies
 
 
+async def omen_shift(ctx: TickContext, attacker: EntityRow) -> int:
+    table = ctx.rules.campaigns
+    folk = await people_of(ctx.session, attacker)
+    if folk is None:
+        return 0
+    shift = await sky_omens(ctx.session, folk.id) * table.omen_battle_pct
+    return max(-table.omen_battle_cap, min(table.omen_battle_cap, shift))
+
+
 def _battle_chance(ctx: TickContext, theatre: Theatre, attacker: EntityRow, defender: EntityRow) -> int:
     banned = theatre.laws.has(NaturalLaw.WAR_BAN, attacker.world_id) or theatre.laws.has(NaturalLaw.WAR_BAN, defender.world_id)
     return ctx.rules.campaigns.battle_chance_war_ban if banned else ctx.rules.campaigns.battle_chance
@@ -1714,6 +1725,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.captive_cohorts",
     "table.captives",
     "table.casus_belli",
+    "table.celestial_readings",
     "table.charms",
     "table.claims",
     "table.commander_traits",
@@ -1723,6 +1735,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.community_stocks",
     "table.conditions",
     "table.cosmos",
+    "table.creator",
     "table.creator_taboos",
     "table.creature_anatomy",
     "table.cult_tenets",
@@ -1825,6 +1838,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.polity_regard",
     "table.polity_territories",
     "table.polity_treasury",
+    "table.professions_of_value",
     "table.prostheses",
     "table.public_clocks",
     "table.regimes",
@@ -2020,7 +2034,7 @@ async def campaigns(ctx: TickContext) -> None:
                 sum(1 for war in ongoing if war.involves(side)) >= rules.diplomacy.community_war_cap for side in (first_id, second_id)
             ):
                 continue
-        if not rng.chance(_battle_chance(ctx, theatre, first, second)):
+        if not rng.chance(clamp_int(_battle_chance(ctx, theatre, first, second) + await omen_shift(ctx, first), 0, PERCENT)):
             continue
         if item is None:
             new_wars += 1

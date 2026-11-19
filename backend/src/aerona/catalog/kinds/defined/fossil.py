@@ -12,6 +12,10 @@ FOSSIL_READING = total(
         ),
         FossilReading.LEGEND: Defined("Remains of legend", checked_by=("engine.ecology.fossils.told",), used_by=("engine.ecology.fossils.READINGS",)),
         FossilReading.RELIC: Defined("Sacred relics", checked_by=("engine.ecology.fossils.told",), used_by=("engine.ecology.fossils.READINGS",)),
-        FossilReading.DEEP_TIME: Defined("Evidence of deep time", checked_by=("engine.ecology.fossils.told",), used_by=("engine.ecology.fossils.READINGS",)),
+        FossilReading.DEEP_TIME: Defined(
+            "Evidence of deep time",
+            checked_by=("engine.ecology.fossils.told",),
+            used_by=("engine.ecology.fossils.READINGS", "tools.mortal.fossils.study_fossils"),
+        ),
     },
 )

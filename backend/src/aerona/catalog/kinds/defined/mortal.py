@@ -66,7 +66,9 @@ DEATH_CAUSE = total(
             "Monster", checked_by=(), used_by=("engine.mortal.death.GLORIOUS_DEATHS", "engine.mortal.death.HARM_DEATHS", "engine.phases.heroism._hero_loses")
         ),
         DeathCause.DISEASE: Defined(
-            "Disease", checked_by=("engine.folkways.mishaps.deaths_in",), used_by=("catalog.law_depth.METHOD_SEEMING", "engine.mortal.course.DEATH_FLAGS")
+            "Disease",
+            checked_by=("engine.folkways.mishaps.deaths_in",),
+            used_by=("catalog.law_depth.METHOD_SEEMING", "engine.childhood.life.keep_infants", "engine.mortal.course.DEATH_FLAGS"),
         ),
         DeathCause.CHILDBIRTH: Defined("Childbirth", checked_by=(), used_by=("engine.phases.births.deliver",)),
         DeathCause.FAMINE: Defined("Famine", checked_by=(), used_by=("engine.demography.promotion.starve_named",)),

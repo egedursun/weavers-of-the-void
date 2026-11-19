@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.core.grammar import spoken
 from aerona.db.tables.arcana import LawUpkeepRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -106,7 +107,7 @@ async def make_servitor(call: SonCall, args: MakeServitorInput) -> str:
     row = await make(call.tick, call.son.id, name=args.name, role=args.role, post_id=post.id if post else None, world_id=call.son.current_world_id)
     call.spend_essence(cost)
     call.target(row.spirit_entity_id)
-    role = args.role.value.replace("_", " ")
+    role = spoken(args.role)
     await call.record(
         "tools.son.make_servitor",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: row.spirit_entity_id},
@@ -125,7 +126,7 @@ async def command_servitor(call: SonCall, args: CommandServitorInput) -> str:
     wear(call.rules, row)
     await call.session.flush()
     call.target(row.spirit_entity_id)
-    return result(SonResult.SERVITOR_COMMANDED, role=args.role.value)
+    return result(SonResult.SERVITOR_COMMANDED, role=spoken(args.role))
 
 
 async def release_servitor(call: SonCall, args: ServitorInput) -> str:
@@ -188,7 +189,7 @@ async def resign_office(call: SonCall, args: OfficeInput) -> str:
         fail(SonResult.OFFICE_REFUSED, why="a higher will keeps you in it")
     row.holder_node_id, row.since_epoch = None, None
     await call.session.flush()
-    return result(SonResult.OFFICE_RESIGNED, office=args.office.value)
+    return result(SonResult.OFFICE_RESIGNED, office=spoken(args.office))
 
 
 async def lay_enchantment(call: SonCall, args: EnchantInput) -> str:

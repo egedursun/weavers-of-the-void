@@ -1,4 +1,10 @@
-import { useMemo, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Baby,
@@ -34,6 +40,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
@@ -87,6 +94,11 @@ import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
+import {
+  RECORD_LEVERS,
+  type RecordFamily,
+  type RowLevers,
+} from './recordLevers'
 
 type TableView = components['schemas']['ThingRecordTableView']
 type ColumnView = components['schemas']['ThingRecordColumnView']
@@ -551,29 +563,22 @@ function RowEditor({
   )
   const [invalid, setInvalid] = useState<string[]>([])
   const [hold, setHold] = useState(false)
+  const levers = useContext(LeversContext)(table.table)
   const save = useGodAction({
     run: () =>
       row !== null
-        ? unwrap(
-            api.POST('/api/actions/record_row:edit', {
-              body: {
-                table: table.table,
-                key: row.key as RowKey,
-                values: changedValues(draft, row),
-                hold,
-              },
-            })
-          )
-        : unwrap(
-            api.POST('/api/actions/record_row:create', {
-              body: {
-                table: table.table,
-                values: Object.fromEntries(
-                  Object.entries(draft).filter(([, value]) => value !== null)
-                ),
-              },
-            })
-          ),
+        ? postAction(levers.edit, {
+            table: table.table,
+            key: row.key as RowKey,
+            values: changedValues(draft, row),
+            hold,
+          } as never)
+        : postAction(levers.create, {
+            table: table.table,
+            values: Object.fromEntries(
+              Object.entries(draft).filter(([, value]) => value !== null)
+            ),
+          } as never),
     onDone: onClose,
   })
   const missing =
@@ -697,17 +702,40 @@ function RowActions({
   blocked: string | null
 }) {
   const [confirming, setConfirming] = useState(false)
+  const levers = useContext(LeversContext)(table.table)
   const remove = useGodAction({
     run: () =>
-      unwrap(
-        api.POST('/api/actions/record_row:delete', {
-          body: { table: table.table, key: row.key as RowKey },
-        })
-      ),
+      postAction(levers.remove, {
+        table: table.table,
+        key: row.key as RowKey,
+      } as never),
   })
-  const reason = blocked ?? (remove.isPending ? WORKING : null)
+  const step = levers.step
+  const stepping = useGodAction({
+    run: () =>
+      step
+        ? postAction(step.action, {
+            [step.field]: (row.key as RowKey).id,
+          } as never)
+        : Promise.resolve(null),
+  })
+  const reason =
+    blocked ?? (remove.isPending || stepping.isPending ? WORKING : null)
+  const stepReason = reason ?? (step ? step.ready(row.values) : null)
   return (
     <div className='flex items-center justify-end gap-1'>
+      {step && (
+        <Button
+          size='icon-sm'
+          variant='ghost'
+          aria-label={step.label}
+          disabled={stepReason !== null}
+          disabledReason={stepReason ?? undefined}
+          onClick={() => stepping.mutate()}
+        >
+          <step.icon />
+        </Button>
+      )}
       <Button
         size='icon-sm'
         variant='ghost'
@@ -1028,7 +1056,17 @@ function MakeRecord({
   )
 }
 
-export function RecordRowsSection({ nodeId }: { nodeId: number }) {
+const LeversContext = createContext<(table: string) => RowLevers>(
+  () => RECORD_LEVERS
+)
+
+export function RecordRowsSection({
+  nodeId,
+  family,
+}: {
+  nodeId: number
+  family?: RecordFamily
+}) {
   const { reason } = useGodGate()
   const [query, setQuery] = useState('')
   const [opened, setOpened] = useState<string | null>(null)
@@ -1042,7 +1080,24 @@ export function RecordRowsSection({ nodeId }: { nodeId: number }) {
       ),
     retry: false,
   })
-  const tables = useMemo(() => view.data?.tables ?? [], [view.data])
+  const tables = useMemo(
+    () =>
+      (view.data?.tables ?? []).filter(
+        (table) => !family || table.table in family.tables
+      ),
+    [view.data, family]
+  )
+  const creatable = useMemo(
+    () =>
+      (view.data?.creatable ?? []).filter(
+        (table) => !family || table.table in family.tables
+      ),
+    [view.data, family]
+  )
+  const leversFor = useCallback(
+    (table: string) => family?.tables[table] ?? RECORD_LEVERS,
+    [family]
+  )
   const found = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (!needle) return tables
@@ -1062,93 +1117,99 @@ export function RecordRowsSection({ nodeId }: { nodeId: number }) {
   const open = tables.find((table) => table.table === opened) ?? null
   const present = new Set(tables.map((table) => table.table))
   return (
-    <Section
-      id='section-records'
-      title='Every record'
-      description='Every typed record the world keeps about this thing. Open a kind to reshape or hold any value, unmake a row or make a new one.'
-      icon={Database}
-      tone='info'
-    >
-      {view.isError ? (
-        <EmptyState
-          icon={TriangleAlert}
-          title='The records could not be read'
-          description={view.error.message}
-        />
-      ) : !view.data ? (
-        <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
-          <Skeleton className='h-control-lg w-full' />
-          <Skeleton className='h-control-lg w-full' />
-          <Skeleton className='h-control-lg w-full' />
-        </div>
-      ) : (
-        <div className='@container/records flex min-w-0 flex-col gap-4'>
-          <div className='grid min-w-0 grid-cols-1 gap-3 @md/records:grid-cols-3'>
-            <KpiTile
-              label='Kinds of record'
-              value={tables.length}
-              icon={Database}
-              tone='info'
-            />
-            <KpiTile label='Rows' value={rows} icon={BookOpen} tone='gold' />
-            <KpiTile
-              label='Held values'
-              value={held}
-              icon={Lock}
-              tone={held > 0 ? 'warning' : 'muted'}
-            />
-          </div>
-          {tables.length === 0 ? (
-            <EmptyState
-              icon={Database}
-              title='No records yet'
-              description='The world has written nothing about this thing yet.'
-            />
-          ) : (
-            <>
-              <Input
-                type='search'
-                leadingIcon={Search}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder='Find a kind of record or a value'
-                aria-label='Find a kind of record or a value'
-              />
-              {found.length === 0 ? (
-                <Muted>Nothing matches that search.</Muted>
-              ) : (
-                <ul className='grid min-w-0 grid-cols-1 gap-2 @md/records:grid-cols-2 @3xl/records:grid-cols-3'>
-                  <Paged items={found} as='li'>
-                    {(table) => (
-                      <KindCard
-                        key={table.table}
-                        table={table}
-                        onOpen={() => setOpened(table.table)}
-                      />
-                    )}
-                  </Paged>
-                </ul>
-              )}
-            </>
-          )}
-          <MakeRecord
-            tables={view.data.creatable.filter(
-              (table) => !present.has(table.table)
-            )}
-            nodeId={nodeId}
-            blocked={reason()}
+    <LeversContext.Provider value={leversFor}>
+      <Section
+        id={family ? family.section : 'section-records'}
+        title={family?.title ?? 'Every record'}
+        description={
+          family?.description ??
+          'Every typed record the world keeps about this thing. Open a kind to reshape or hold any value, unmake a row or make a new one.'
+        }
+        icon={family?.icon ?? Database}
+        tone={family?.tone ?? 'info'}
+      >
+        {view.isError ? (
+          <EmptyState
+            icon={TriangleAlert}
+            title='The records could not be read'
+            description={view.error.message}
           />
-          {open && (
-            <RecordSheet
-              table={open}
+        ) : !view.data ? (
+          <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
+            <Skeleton className='h-control-lg w-full' />
+            <Skeleton className='h-control-lg w-full' />
+            <Skeleton className='h-control-lg w-full' />
+          </div>
+        ) : (
+          <div className='@container/records flex min-w-0 flex-col gap-4'>
+            <div className='grid min-w-0 grid-cols-1 gap-3 @md/records:grid-cols-3'>
+              <KpiTile
+                label='Kinds of record'
+                value={tables.length}
+                icon={Database}
+                tone='info'
+              />
+              <KpiTile label='Rows' value={rows} icon={BookOpen} tone='gold' />
+              <KpiTile
+                label='Held values'
+                value={held}
+                icon={Lock}
+                tone={held > 0 ? 'warning' : 'muted'}
+              />
+            </div>
+            {tables.length === 0 ? (
+              <EmptyState
+                icon={Database}
+                title='No records yet'
+                description={
+                  family?.empty ??
+                  'The world has written nothing about this thing yet.'
+                }
+              />
+            ) : (
+              <>
+                <Input
+                  type='search'
+                  leadingIcon={Search}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder='Find a kind of record or a value'
+                  aria-label='Find a kind of record or a value'
+                />
+                {found.length === 0 ? (
+                  <Muted>Nothing matches that search.</Muted>
+                ) : (
+                  <ul className='grid min-w-0 grid-cols-1 gap-2 @md/records:grid-cols-2 @3xl/records:grid-cols-3'>
+                    <Paged items={found} as='li'>
+                      {(table) => (
+                        <KindCard
+                          key={table.table}
+                          table={table}
+                          onOpen={() => setOpened(table.table)}
+                        />
+                      )}
+                    </Paged>
+                  </ul>
+                )}
+              </>
+            )}
+            <MakeRecord
+              tables={creatable.filter((table) => !present.has(table.table))}
               nodeId={nodeId}
-              names={view.data.names}
-              onClose={() => setOpened(null)}
               blocked={reason()}
             />
-          )}
-        </div>
-      )}
-    </Section>
+            {open && (
+              <RecordSheet
+                table={open}
+                nodeId={nodeId}
+                names={view.data.names}
+                onClose={() => setOpened(null)}
+                blocked={reason()}
+              />
+            )}
+          </div>
+        )}
+      </Section>
+    </LeversContext.Provider>
   )
 }

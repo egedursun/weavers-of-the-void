@@ -16,6 +16,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
+from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
@@ -27,6 +28,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
 from aerona.engine.environment.profile import CropMix, crop_mix
+from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.industry.energy import worked_by_hand
 from aerona.engine.industry.methods import feed, method_for, outdated
 from aerona.engine.industry.pollution import fish_factor, region_id_of
@@ -99,15 +101,17 @@ async def harvest_goods(
     land = units * farming.output_pct / PERCENT * powered
     land *= outdated(book, ctx.rules, community.id, ProcessKind.FARMING)
     land *= await feed(ctx, community.id, farming, crews)
+    land *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.WEATHER)
     catch = farmers * table.farm_units_per_1000_farmers / THOUSAND * table.sea_catch_pct / PERCENT * labour * tools
     sea = catch * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
     sea *= outdated(book, ctx.rules, community.id, ProcessKind.FISHING)
     sea *= await ctx.hook_factor(community.id, DomainHook.CATCH)
+    sea *= await folk_factor(ctx.session, ctx.rules, community, FolkDomain.WATERS)
     if mix.fish > 0:
         sea *= worked_by_hand(book, ctx.rules, community.id, fishing.energy, need=round_half_up(fishing.energy_need * crews * mix.fish), workers=farmers)
     fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)
     chain = ctx.rules.food_chain
-    herds = round_half_up(land * mix.pasture) - fodder
+    herds = round_half_up(land * mix.pasture * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)) - fodder
     milk = round_half_up(herds * chain.milk_pct / PERCENT)
     fields = land * mix.grain
     split = {
@@ -232,7 +236,7 @@ async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityR
     region = book.ground.region_of(community.id)
     if region is None:
         return {}
-    farmers = headcount(community) * farmer_share / PERCENT
+    farmers = headcount(community) * farmer_share / PERCENT * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.PLANTS)
     gathered = {
         CommodityKind.TIMBER: round_half_up(farmers * table.commons_timber_per_1000_farmers / THOUSAND * region.forest_cover / PERCENT),
         CommodityKind.STONE: round_half_up(farmers * table.commons_stone_per_1000_farmers / THOUSAND * region.roughness / PERCENT),

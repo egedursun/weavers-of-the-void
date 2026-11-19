@@ -6,7 +6,7 @@ from aerona.catalog.domains import match_domain
 from aerona.catalog.mind import CRAFT_SKILLS
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
-from aerona.core.grammar import fill
+from aerona.core.grammar import fill, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
@@ -173,7 +173,7 @@ async def produce_item(call: MortalCall, args: ProduceInput) -> str:
         "might": min(enchanted, enchantment_cap(call.rules, material)) if material is not None else enchanted,
         "curse": clamp(call.die(tools.craft_curse_die) - tools.craft_curse_shift + (curse_bonus(call.rules, material) if material is not None else 0)),
     }
-    label = args.category.value.replace("_", " ")
+    label = spoken(args.category)
     subtype = lines.ITEM_SUBTYPE.format(label=label, subtype=args.subtype) if args.subtype else label
     home = await home_of(call)
     item = await create_record(

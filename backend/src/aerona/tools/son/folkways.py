@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import spoken
 from aerona.db.tables.folkways import BiasWeightRow, WitchHuntRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
@@ -84,7 +85,7 @@ async def nudge_bias(call: SonCall, args: NudgeBiasInput) -> str:
         fail(SonResult.BIAS_REFUSED, why="a stronger hand holds that leaning")
     await control.set_bias(call.tick, mortal.id, args.bias, args.weight)
     call.target(mortal.id)
-    told = args.bias.value.replace("_", " ")
+    told = spoken(args.bias)
     await call.record(
         "tools.son.nudge_bias",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: mortal.id},
@@ -99,7 +100,7 @@ async def declare_impurity(call: SonCall, args: DeclareImpurityInput) -> str:
     rules = call.tick.rules.purity
     await control.set_source(call.tick, people.id, args.source, (rules.weight_low + rules.weight_high) // 2, 1)
     call.target(people.id)
-    told = args.source.value.replace("_", " ")
+    told = spoken(args.source)
     await call.record(
         "tools.son.declare_impurity",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: people.id},
@@ -115,7 +116,7 @@ async def bless_charm(call: SonCall, args: BlessCharmInput) -> str:
     if "real" not in row.locked:
         row.real = True
     call.target(item.id)
-    told = args.power.value
+    told = spoken(args.power)
     await call.record(
         "tools.son.bless_charm",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: item.id},
@@ -135,7 +136,7 @@ async def send_misfortune(call: SonCall, args: SendMisfortuneInput) -> str:
             fail(SonResult.MISFORTUNE_REFUSED, why="a stronger hand holds that life")
     row = await control.add_mishap(call.tick, town.id, args.kind, args.victim_id, call.son.id)
     call.target(town.id)
-    told = args.kind.value.replace("_", " ")
+    told = spoken(args.kind)
     await call.record(
         "tools.son.send_misfortune",
         roles={IncidentRole.ACTOR: call.son.id, IncidentRole.SUBJECT: town.id},

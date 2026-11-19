@@ -43,7 +43,7 @@ TURKISH_ALLOWED_FILES = frozenset(
 PROMPT_HOME = Path("backend/src/aerona/prompts")
 PROMPT_MARKERS = re.compile(r"\b(you are|your task|respond with|return only|write a|as the narrator)\b", re.IGNORECASE)
 PROMPT_WORD_LIMIT = 40
-FIXED_ARTICLE = re.compile(r"(?<![A-Za-z{])[Aa] \{")
+FIXED_ARTICLE = re.compile(r"(?<![A-Za-z{])[Aa]n? \{")
 ARTICLE_HOME = Path("backend/src")
 PROSE_ALLOWED = (PROMPT_HOME, Path("backend/src/aerona/catalog"), Path("backend/src/aerona/rules"), Path("backend/tests"), Path("scripts"))
 

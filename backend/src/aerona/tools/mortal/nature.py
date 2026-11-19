@@ -1,6 +1,7 @@
 from typing import Any
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.nature import FermentCultureRow
 from aerona.db.write_guard import held
@@ -40,7 +41,7 @@ async def tend_culture(call: MortalCall, args: TendCultureInput) -> str:
         row.quality = clamp_int(row.quality + table.hand_tending, 0, PERCENT)
     await call.session.flush()
     call.target(town.id)
-    kind = args.kind.value
+    kind = spoken(args.kind)
     await call.record(
         "tools.mortal.tend_culture",
         roles={IncidentRole.ACTOR: me.id, IncidentRole.PLACE: town.id},

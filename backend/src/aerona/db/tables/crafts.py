@@ -180,6 +180,7 @@ class NumberSystemRow(Base):
     notation: Mapped[Notation] = mapped_column(enum_type(Notation, "notation"), default=Notation.ADDITIVE)
     zero: Mapped[bool] = mapped_column(default=False)
     numeracy: Mapped[int] = mapped_column(default=20)
+    numerology: Mapped[dict[str, str]] = mapped_column(JSON, default=dict, server_default="{}")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

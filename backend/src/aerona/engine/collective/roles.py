@@ -16,6 +16,7 @@ from aerona.domain.enums.collective import RoleEligibility, RoleKind
 from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.intimacy import ChildLegitimacy
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CareerPath
@@ -24,6 +25,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import caste_of, sexes_fixed, system_of
+from aerona.engine.intimacy.legitimacy import legitimacy_of, legitimate_heirs
 from aerona.engine.mind.book import stored_values
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.stats import stat_or
@@ -145,10 +147,13 @@ async def career_open(session: AsyncSession, rules: Rules, mortal: EntityRow, pa
         return False
     if role is RoleKind.OFFICE and await examined(session, mortal) and not await credentialed(session, mortal.id):
         return False
+    if role is RoleKind.OFFICE and await legitimacy_of(session, mortal) is ChildLegitimacy.NONE:
+        return False
     return await role_rank(session, mortal, role) is not None
 
 
 async def allowed_heirs(session: AsyncSession, dead: EntityRow, heirs: list[EntityRow]) -> list[EntityRow]:
+    heirs = await legitimate_heirs(session, heirs)
     ranked = [(rank, heir) for heir in heirs if (rank := await role_rank(session, heir, RoleKind.INHERITANCE)) is not None]
     if not ranked:
         return heirs
