@@ -64,11 +64,7 @@ async def physicians_among(ctx: TickContext, community_ids: list[int], skill: in
 async def name_carriers(ctx: TickContext, book: DiseaseBook, folk: dict[int, list[int]], tally: CarrierTally) -> None:
     table = ctx.rules.carriers
     for outbreak in book.outbreaks:
-        if tally.found >= table.per_epoch:
-            return
         for mortal in await mortals_among(ctx, folk.get(outbreak.region_entity_id, [])):
-            if tally.found >= table.per_epoch:
-                return
             if held(mortal.id) or await ctx.session.get(CarrierRow, (mortal.id, outbreak.disease_entity_id)) is not None:
                 continue
             if not ctx.rng(f"carrier.{mortal.id}.{outbreak.disease_entity_id}").chance(table.carrier_pct):

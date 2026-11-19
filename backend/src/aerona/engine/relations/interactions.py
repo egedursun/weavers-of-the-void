@@ -208,7 +208,7 @@ async def pairs_for(scene: Scene, rng: SeededRandom) -> list[tuple[int, int]]:
         strangers = [other for other in ids if other != mortal_id and other not in known[mortal_id]]
         for _ in range(min(table.new_acquaintances, len(strangers))):
             add(mortal_id, rng.pick(strangers))
-    return found[: table.pairs_per_place]
+    return rng.shuffled(found)[: table.pairs_per_place * len(ids)]
 
 
 def grown(scene: Scene, mortal_id: int) -> bool:

@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.carriers import CARRIERS
 from aerona.catalog.operations import TRANSPORTS
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow
@@ -25,6 +25,7 @@ from aerona.engine.military.command import command_areas
 from aerona.engine.military.logistics import March
 from aerona.engine.military.units import stacks_of
 from aerona.engine.operations.fields import keep
+from aerona.engine.operations.limits import realm_people
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -114,7 +115,9 @@ async def home_depot(ctx: TickContext, owner: EntityRow, web: Network, tally: Su
     found = next((row for row in rows if not row.field), None)
     if found is not None or home is None or held(owner.id):
         return found
-    row = DepotRow(owner_entity_id=owner.id, region_entity_id=home, capacity=ctx.rules.supply_network.depot_capacity, founded_epoch=ctx.epoch, locked=[])
+    table = ctx.rules.supply_network
+    capacity = max(table.depot_capacity, table.depot_capacity * await realm_people(ctx, owner.id) // PER_MILLE)
+    row = DepotRow(owner_entity_id=owner.id, region_entity_id=home, capacity=capacity, founded_epoch=ctx.epoch, locked=[])
     ctx.session.add(row)
     await ctx.session.flush()
     tally.depots += 1
@@ -188,7 +191,7 @@ async def feeding_depot(ctx: TickContext, march: March, web: Network, tally: Sup
     field = DepotRow(
         owner_entity_id=march.owner.id,
         region_entity_id=spot,
-        capacity=ctx.rules.supply_network.field_capacity,
+        capacity=max(ctx.rules.supply_network.field_capacity, ctx.rules.supply_network.field_capacity * stat_or(march.army, "size", 0) // PER_MILLE),
         field=True,
         founded_epoch=ctx.epoch,
         locked=[],

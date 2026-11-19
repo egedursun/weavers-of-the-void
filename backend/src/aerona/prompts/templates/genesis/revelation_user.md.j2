@@ -13,6 +13,6 @@ ENTITY TYPES AND THEIR STATS:
 {{ item.type_label }}: {{ item.stats | join(", ") if item.stats else "-" }}; location: {{ item.locations | join("/") if item.locations else "none" }}
 {% endfor %}
 
-THE GOD'S REVELATION: "{% if first_star %}The first celestial body {{ god_name }} set in the world's sky, fitting the cosmology and seen by all the peoples of the world.{% else %}{{ revelation_text }}{% endif %}"
+THE GOD'S REVELATION: "{% if first_star %}The first celestial body {{ god_name }} made for this world, fitting its cosmology.{% else %}{{ revelation_text }}{% endif %}"
 
 Carry this revelation into the world as a single entity. Bind it to existing entities with their real ids. The name must fit the world's naming language.

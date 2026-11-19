@@ -111,15 +111,19 @@ async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | Non
         return None
     taken = set(await ctx.session.scalars(select(SpyAgentRow.mortal_entity_id).where(SpyAgentRow.mortal_entity_id.is_not(None))))
     homes = {owner.id, owner.location_id or 0, network.side_entity_id or 0}
-    candidates = await ctx.session.scalars(
-        select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes))
-        .order_by(EntityRow.id)
-        .limit(50)
-    )
+    candidates = [
+        row
+        for row in await ctx.session.scalars(
+            select(EntityRow)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes))
+            .order_by(EntityRow.id)
+        )
+        if row.id not in taken
+    ]
+    shuffled = ctx.rng(f"spy.recruit.{network.id}.{ctx.epoch}").shuffled(candidates)
     mortal = None
-    for item in sorted(candidates, key=lambda row: (row.mortal_role is not MortalRole.SPY, row.id)):
-        if item.id not in taken and await held_captive(ctx.session, item.id) is None:
+    for item in sorted(shuffled, key=lambda row: row.mortal_role is not MortalRole.SPY):
+        if await held_captive(ctx.session, item.id) is None:
             mortal = item
             break
     if mortal is None:

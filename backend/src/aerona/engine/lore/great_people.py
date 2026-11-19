@@ -121,7 +121,10 @@ async def threshold(ctx: TickContext, world_id: int | None) -> int:
 async def great_threshold(session: AsyncSession, rules: Rules, world_id: int | None) -> int:
     table = rules.discovery
     risen = await session.scalar(
-        select(func.count()).select_from(GreatPersonRow).join(EntityRow, EntityRow.id == GreatPersonRow.mortal_entity_id).where(EntityRow.world_id == world_id)
+        select(func.count())
+        .select_from(GreatPersonRow)
+        .join(EntityRow, EntityRow.id == GreatPersonRow.mortal_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
     )
     return table.great_threshold + int(risen or 0) * table.threshold_growth
 

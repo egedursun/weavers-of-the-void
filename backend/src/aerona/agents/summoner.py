@@ -131,7 +131,7 @@ async def clean_powers(session: AsyncSession, rules: Rules, rng: SeededRandom, p
 
 
 def existence_of(output: ExistenceOutput) -> ExistenceProfile:
-    return ExistenceProfile(nature=output.nature, mode=output.state, manifestation=output.manifestation, true_name=output.true_name)
+    return ExistenceProfile(nature=output.nature, mode=output.state, manifestation=output.manifestation)
 
 
 async def son_world(session: AsyncSession, rules: Rules, parent_id: int | None, requested: int | None) -> int | None:

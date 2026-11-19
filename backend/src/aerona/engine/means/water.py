@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.means import LIFTS, MINE_PUMPS
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 
 
@@ -66,7 +67,7 @@ async def build_lifts(ctx: TickContext, tally: WaterTally) -> None:
         if row is None:
             ctx.session.add(WaterLiftRow(settlement_entity_id=town.id, device=lift, count=1, since_epoch=ctx.epoch, locked=[]))
             await record(ctx, "water.lift", roles={IncidentRole.MAKER: town.id}, facts={"device": lift, "for_mine": int(deep and not dry)}, place=town.id)
-        elif "count" not in row.locked and row.count < table.most_devices:
+        elif "count" not in row.locked and row.count < table.most_devices + table.devices_per_thousand * stat_or(town, "population", 0) // PER_MILLE:
             row.count += 1
         else:
             continue

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.tellings import PLANTED, PLANTED_ATROCITY
@@ -286,6 +286,13 @@ CHANCES = {
 }
 
 
+async def community_count(session: AsyncSession) -> int:
+    found = await session.scalar(
+        select(func.count()).select_from(EntityRow).where(EntityRow.entity_type.in_(list(COMMUNITY_TYPES)), EntityRow.status == EntityStatus.CANON)
+    )
+    return int(found or 0)
+
+
 async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     table = ctx.rules.rumours
     counts = {channel.value: 0 for channel in CHANCES}
@@ -304,9 +311,10 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     told = await distortions_of(ctx.session, [*(row.id for row in fresh), *(row.id for row in holders.values())])
     renown = await doers_renown(ctx, fresh)
     passed = 0
+    most = table.cap + table.cap_per_community * await community_count(ctx.session)
     born: list[tuple[RumourRow, RumourRow]] = []
     taverns: dict[int, TavernRow | None] = {}
-    for rumour in fresh:
+    for rumour in ctx.rng("rumour.order").shuffled(fresh):
         carrier = await is_carrier(ctx.session, rumour.carrier_entity_id)
         if carrier is None:
             continue
@@ -314,7 +322,7 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             found.pilgrims[carrier.id].add(community_id)
         fame = renown.get((rumour.incident_id, carrier.id), 0)
         for target, channel in found.of(carrier.id):
-            if passed >= table.cap or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
+            if passed >= most or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
                 continue
             if target not in taverns:
                 taverns[target] = await tavern_of(ctx.session, target)

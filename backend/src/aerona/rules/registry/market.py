@@ -9,9 +9,9 @@ class MarketRules(Spanned):
     flow_price_gap_pct: int = rule(
         150, 100, 10000, RuleGroup.ECONOMY, "Trade flow: goods move when the buyer's price is at least this share of the seller's (%)"
     )
-    flow_reserve: int = rule(40, 0, 100000, RuleGroup.ECONOMY, "Trade flow: units of a good the seller always keeps in its stores")
+    flow_reserve: int = rule(40, 0, 100000, RuleGroup.ECONOMY, "Trade flow: units of a good the seller always keeps in its stores, per 1000 of its people")
     flow_share_pct: int = rule(15, 0, 100, RuleGroup.ECONOMY, "Trade flow: share of the seller's surplus that moves per epoch (%)")
-    flow_cap: int = rule(2000, 0, 1000000, RuleGroup.ECONOMY, "Trade flow: most units of one good moving along one road per epoch")
+    flow_cap: int = rule(2000, 0, 10000000, RuleGroup.ECONOMY, "Trade flow: most units of one good moving along one road (units per year)")
     famine_gap_pct: int = rule(250, 100, 10000, RuleGroup.ECONOMY, "Trade flow: a grain purchase is chronicled as a famine purchase above this price gap (%)")
     flow_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Trade flow: prosperity a seller gains for selling a good")
     credit_threshold: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Trade flow: a buyer below this wealth or prosperity buys on credit (a debt is born)")
@@ -19,7 +19,6 @@ class MarketRules(Spanned):
     credit_term_years: int = span(3, 1, 1250, RuleGroup.ECONOMY, "Term of a credit debt (years)")
     credit_divisor: int = rule(3, 1, 1000, RuleGroup.ECONOMY, "Size of a credit debt: the moved amount divided by this")
     debt_patience_years: int = span(1, 0, 2500, RuleGroup.ECONOMY, "Debt: years the creditor waits after the term before acting")
-    debt_ending_cap: int = rule(3, 0, 100, RuleGroup.ECONOMY, "Debt: most overdue debts closed per epoch")
     debt_forgive_relation: int = rule(30, -100, 100, RuleGroup.ECONOMY, "Debt: a creditor whose relation to the debtor is at least this forgives the debt")
     debt_tribute_chance: int = rule(40, 0, 100, RuleGroup.ECONOMY, "Debt: chance a stronger creditor turns an overdue debt into tribute (%)")
     debt_seize_chance: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Debt: chance the creditor seizes one of the debtor's resources (%)")
@@ -36,7 +35,6 @@ class MarketRules(Spanned):
     depletion_abundance: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Depletion: a resource at or below this abundance (with enough demand) starts running out")
     depletion_chance: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Depletion: chance a running-out resource is exhausted this epoch (%)")
     depletion_loss: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Depletion: prosperity and wealth its owners lose when a resource is exhausted")
-    depletion_cap: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Depletion: most resources exhausted per epoch")
     depleted_clawback: int = rule(
         3, 0, 100, RuleGroup.ECONOMY, "Exhausted resource: abundance taken back from the general regrowth (the rest is its refill speed)"
     )

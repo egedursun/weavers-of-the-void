@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.crafts import NumberSystemRow
+from aerona.db.tables.crafts import UNTAUGHT_NUMERACY, NumberSystemRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.crafts import Notation, NumberMilestone
@@ -12,13 +13,14 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
-from aerona.engine.lore.research import has_technique
+from aerona.engine.lore.research import has_technique, techniques_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.recording.record import StepDraft, record
 
 BASES = (10, 12, 20, 60)
 SCHOOLING = (Technique.ALPHABET, Technique.BUREAUCRACY, Technique.UNIVERSITIES, Technique.DOUBLE_ENTRY)
+PLACE_VALUE_RECKONING = frozenset({Technique.DOUBLE_ENTRY, Technique.COMPUTATION})
 
 
 @dataclass
@@ -33,7 +35,16 @@ async def seed_system(ctx: TickContext, people: EntityRow, tally: NumberTally) -
     if row is not None:
         return row
     rng = ctx.rng(seed_of("numbers", people.id))
-    row = NumberSystemRow(people_entity_id=people.id, base=rng.pick(list(BASES)), locked=[])
+    culture = await ctx.session.get(PeopleCultureRow, people.id)
+    placed = bool(await techniques_of(ctx.session, people.id) & PLACE_VALUE_RECKONING)
+    row = NumberSystemRow(
+        people_entity_id=people.id,
+        base=rng.pick(list(BASES)),
+        notation=Notation.POSITIONAL if placed else Notation.ADDITIVE,
+        zero=placed,
+        numeracy=max(UNTAUGHT_NUMERACY, culture.literacy if culture is not None else 0),
+        locked=[],
+    )
     ctx.session.add(row)
     tally.read += 1
     return row

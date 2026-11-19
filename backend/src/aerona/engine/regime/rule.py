@@ -27,6 +27,7 @@ from aerona.engine.factions.balance import power_balance
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.lore.legends import foretold_return
 from aerona.engine.mortal.kin import children_of, siblings_of
+from aerona.engine.operations.limits import TEN_THOUSAND, realm_people
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.polity.governance import spend
@@ -485,7 +486,8 @@ async def coups_proofed(ctx: TickContext, realm: Realm, row: RegimeRow, tally: R
         if field is not None:
             setattr(row, field, False)
     if row.parallel_guard:
-        spend(ctx, realm, -table.guard_upkeep, TreasuryEntry.UPKEEP, "a parallel guard")
+        upkeep = max(table.guard_upkeep, table.guard_upkeep * await realm_people(ctx, realm.entity.id) // TEN_THOUSAND)
+        spend(ctx, realm, -upkeep, TreasuryEntry.UPKEEP, "a parallel guard")
 
 
 async def lead(ctx: TickContext, realm: Realm, row: RegimeRow, tally: RegimeTally) -> None:

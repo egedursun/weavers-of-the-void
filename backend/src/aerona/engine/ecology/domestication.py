@@ -41,13 +41,14 @@ from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.rules.registry import Rules
+from aerona.rules.registry.wilds import DomesticationRules
 
 S = DomesticationStage
 KEPT = frozenset({S.HERDED, S.DOMESTICATED, S.BREED})
@@ -101,14 +102,27 @@ async def fertility(ctx: TickContext, species_id: int) -> float:
     return max(0.0, min(table.litter_growth_cap_pct / PERCENT, young))
 
 
+def fodder_for(table: DomesticationRules, head: int) -> int:
+    return max(1, round_half_up(head / TEN * table.fodder_per_head))
+
+
+def fed_head(table: DomesticationRules, head: int, grown: int, eaten: int, *, fed: bool) -> int:
+    feeds = grown if table.fodder_per_head <= 0 else eaten * TEN // table.fodder_per_head
+    if fed:
+        return max(head, min(grown, feeds))
+    return max(0, head - round_half_up(max(0, head - feeds) * table.starve_pct / PERCENT))
+
+
 async def feed(ctx: TickContext, herd: HerdRow) -> bool:
     table = ctx.rules.domestication
-    need = max(1, round_half_up(herd.head / TEN * table.fodder_per_head))
-    eaten = await GoodsLedger(ctx.session, ctx.epoch).take_units(herd.community_entity_id, CommodityKind.FODDER, need, GoodsFlow.CONSUMPTION)
+    need = fodder_for(table, herd.head)
+    yearly = table.growth_pct * await fertility(ctx, herd.species_entity_id) / PERCENT
+    grown = max(herd.head, round_half_up(herd.head * (1 + yearly) ** table.years_per_epoch))
+    wanted = fodder_for(table, grown) if "head" not in herd.locked else need
+    eaten = await GoodsLedger(ctx.session, ctx.epoch).take_units(herd.community_entity_id, CommodityKind.FODDER, wanted, GoodsFlow.CONSUMPTION)
     fed = eaten >= need
     if "head" not in herd.locked:
-        change = table.growth_pct * await fertility(ctx, herd.species_entity_id) if fed else -table.starve_pct
-        herd.head = max(0, round_half_up(herd.head * (1 + change / PERCENT)))
+        herd.head = fed_head(table, herd.head, grown, eaten, fed=fed)
     herd.fed_epochs = herd.fed_epochs + 1 if fed else 0
     return fed
 
@@ -189,7 +203,7 @@ class Advanced:
     facts: dict[str, FactInput]
 
 
-async def advance(ctx: TickContext, herd: HerdRow, made: int) -> Advanced | None:
+async def advance(ctx: TickContext, herd: HerdRow, made: int, most: int | None = None) -> Advanced | None:
     table = ctx.rules.domestication
     if "stage" in herd.locked:
         return None
@@ -206,7 +220,7 @@ async def advance(ctx: TickContext, herd: HerdRow, made: int) -> Advanced | None
             {IncidentRole.ACTOR: keeper.id, IncidentRole.SUBJECT: species.id},
             {"head": herd.head, "fed_epochs": herd.fed_epochs},
         )
-    if made >= table.cap:
+    if made >= (table.cap if most is None else most):
         return None
     tamed = rng.chance(table.domesticate_chance * profile.tameability / PERCENT)
     return await promote(ctx, herd, species, keeper, tamed=tamed, bred=rng.chance(table.breed_chance), tameability=profile.tameability)
@@ -330,7 +344,9 @@ async def stage_from_herds(ctx: TickContext) -> int:
 async def husbandry(ctx: TickContext) -> dict[str, int]:
     counts = {"herds_opened": await ensure_herds(ctx), "fed": 0, "starving": 0, "goods": 0, "advanced": 0, "lost": 0}
     made = 0
-    for herd in list(await ctx.session.scalars(select(HerdRow).order_by(HerdRow.community_entity_id, HerdRow.species_entity_id))):
+    herds = list(await ctx.session.scalars(select(HerdRow).order_by(HerdRow.community_entity_id, HerdRow.species_entity_id)))
+    most = scaled_cap(ctx.rules.domestication.cap, ctx.rules.domestication.herds_per_extra, len(herds))
+    for herd in ctx.rng("husbandry.order").shuffled(herds):
         if await feed(ctx, herd):
             counts["fed"] += 1
         else:
@@ -343,7 +359,7 @@ async def husbandry(ctx: TickContext) -> dict[str, int]:
         if "trained" not in herd.locked:
             herd.trained = min(herd.trained, herd.head)
         counts["trained"] = counts.get("trained", 0) + await train(ctx, herd)
-        advanced = await advance(ctx, herd, made)
+        advanced = await advance(ctx, herd, made, most)
         if advanced is not None:
             counts["advanced"] += 1
             made += 1

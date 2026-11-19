@@ -43,7 +43,7 @@ class CollectiveBehaviourRules:
     deterrence_full: int = rule(8, 1, 100, S, "Soldiers and watch per hundred dwellers that give a town full deterrence")
     spread_pct: int = rule(20, 0, 100, S, "Spread of thresholds around a town's mean, as a share of the scale (%)")
     sample: int = rule(200, 10, 5000, S, "Dwellers a cascade samples to find who joins")
-    famine_food: int = rule(30, 0, 1000, S, "Food stock per hundred dwellers below which a town feels famine")
+    famine_food: int = rule(30, 0, 1000, S, "Food stores below which a town feels famine (supply index, 100 = one epoch of its needs)")
     price_spike: int = rule(160, 100, 1000, S, "Food price, against the usual hundred, past which a town feels a price spike")
 
 
@@ -78,7 +78,8 @@ class StoryletRules:
     cooldown_epochs: int = rule(6, 0, 1000, F, "Epochs before the same storylet may open again in a world")
     open_epochs: int = rule(2, 0, 100, F, "Epochs a storylet waits for its chooser before the engine chooses")
     follow_epochs: int = rule(3, 0, 100, F, "Epochs before a chosen branch's follow-up opens")
-    max_open: int = rule(3, 0, 100, F, "Storylets a world holds open at once")
+    max_open: int = rule(3, 0, 10000, F, "Storylets a world holds open at once (base)")
+    max_open_community_divisor: int = rule(10, 0, 100000, F, "Open storylets a world may hold grow by 1 for every this many communities on it (0: fixed)")
 
 
 @dataclass(frozen=True)
@@ -103,7 +104,6 @@ class SocialLearningRules:
     copy_step: int = rule(4, 0, 100, M, "Value points a copy moves the learner toward the model")
     prestige_floor: int = rule(30, 0, 100, M, "Renown a model needs before others copy them for prestige")
     fear_stickiness: int = rule(150, 100, 500, M, "How much faster fear-borne beliefs spread in an anxious people (%)")
-    learners_cap: int = rule(30, 1, 1000, M, "Most mortals in one town that copy someone in an epoch")
 
 
 @dataclass(frozen=True)
@@ -171,7 +171,7 @@ class HeraldryRules:
 
 @dataclass(frozen=True)
 class DesignRules:
-    mass_budget: int = rule(30, 1, 1000, W, "Size points a design's components may total")
+    mass_budget: int = rule(30, 1, 100000, W, "Size points a design's components may total")
     wear_per_leg: int = rule(6, 0, 100, W, "Wear a component takes on each voyage leg or campaign")
     storm_wear: int = rule(10, 0, 100, W, "Extra wear a storm leg adds")
     failure_at: int = rule(70, 0, 100, W, "Wear past which a component may fail on a leg")

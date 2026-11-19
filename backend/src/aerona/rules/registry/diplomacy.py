@@ -14,11 +14,24 @@ class DiplomacyRules:
         0,
         20,
         RuleGroup.WAR_AND_DIPLOMACY,
-        "Maximum spontaneous hostility declarations per epoch, shared by every path (grudge, wonder envy, espionage, tribute, betrayal, independence, rivalry, schism, invasion); uprisings are separate",
+        "Base of the most spontaneous hostility declarations per epoch, shared by every path (grudge, wonder envy, espionage, tribute, betrayal, independence, rivalry, schism, invasion), grown by the number of communities; uprisings are separate",
     )
-    peace_cap: int = rule(3, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum neighbour peaces per epoch (by oath or truce)")
+    cap_community_divisor: int = rule(
+        5,
+        0,
+        1000,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Communities per extra unit of every per-epoch diplomacy cap and of the world war cap (0: the caps stay at their base)",
+    )
+    peace_cap: int = rule(
+        3, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Base of the most neighbour peaces per epoch (by oath or truce), grown by the number of communities"
+    )
     exhaustion_peace_cap: int = rule(
-        3, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum exhaustion peaces per epoch (long wars; counted separately from neighbour peace)"
+        3,
+        0,
+        200,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Base of the most exhaustion peaces per epoch (long wars; counted separately from neighbour peace), grown by the number of communities",
     )
     grudge_fade_relation: int = rule(
         0,
@@ -35,7 +48,7 @@ class DiplomacyRules:
         RuleGroup.WAR_AND_DIPLOMACY,
         "Forgotten grudge: hostility lasting this many epochs without ever clashing (no ongoing war) closes even if the relation is bad (0: off)",
     )
-    grudge_fade_cap: int = rule(6, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Maximum fading grudges per epoch")
+    grudge_fade_cap: int = rule(6, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Base of the most fading grudges per epoch, grown by the number of communities")
     grudge_pool_pct: int = rule(
         300,
         100,
@@ -60,10 +73,14 @@ class DiplomacyRules:
         RuleGroup.WAR_AND_DIPLOMACY,
         "A mortal's hostility (with a mortal or a community): hostility lasting this many epochs without any new encounter is forgotten (0: off)",
     )
-    alliance_cap: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum alliances per epoch")
-    community_war_cap: int = rule(2, 0, 10, RuleGroup.WAR_AND_DIPLOMACY, "Maximum simultaneous ongoing wars of one community (war event)")
+    alliance_cap: int = rule(2, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Base of the most alliances per epoch, grown by the number of communities")
+    community_war_cap: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Maximum simultaneous ongoing wars of one community (war event)")
     world_war_cap: int = rule(
-        6, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Maximum simultaneous ongoing community wars in the world (war event; hostility links fade separately)"
+        6,
+        0,
+        1000,
+        RuleGroup.WAR_AND_DIPLOMACY,
+        "Base of the most simultaneous ongoing community wars in the world, grown by the number of communities (war event; hostility links fade separately)",
     )
     truce_epochs: int = rule(3, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Truce duration after peace (epochs)")
     exhaustion_start_epoch: int = rule(3, 1, 30, RuleGroup.WAR_AND_DIPLOMACY, "Epoch of a long war at which exhaustion peace begins")
@@ -94,7 +111,7 @@ class DiplomacyRules:
     marriage_min_age: int = rule(16, 0, 200, RuleGroup.HEROES_AND_MORTALS, "Minimum age of a hero who can enter a marriage alliance (years)")
     default_hero_age: int = rule(30, 0, 200, RuleGroup.HEROES_AND_MORTALS, "Age assumed for a hero with unknown age (years)")
     marriage_relation: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Relation bonus of a marriage alliance (points)")
-    betrayal_cap: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum betrayals per epoch")
+    betrayal_cap: int = rule(1, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Base of the most betrayals per epoch, grown by the number of communities")
     traitor_default_strength: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Strength assumed in a betrayal for a party with unknown sway or strength")
     betrayal_war_collapse_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A war the betrayed ally is fighting collapses into defeat (%)")
     betrayal_relation: int = rule(30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Relation reduced by betrayal (points)")
@@ -104,7 +121,9 @@ class DiplomacyRules:
     alliance_end_chance: int = rule(
         15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance per epoch an alliance past its lifetime ends (%; allies with a common enemy renew the oath)"
     )
-    alliance_end_cap: int = rule(4, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Most alliances lapsing on their own per epoch")
+    alliance_end_cap: int = rule(
+        4, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Base of the most alliances lapsing on their own per epoch, grown by the number of communities"
+    )
     coalition_threshold: int = rule(
         50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Threat a realm's neighbours must feel before they band into a coalition against it"
     )

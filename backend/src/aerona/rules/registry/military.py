@@ -160,7 +160,8 @@ class DuelsRules:
     mercy_spare: int = rule(20, -100, 100, W, "Mercy value at which a victor spares a downed foe")
     disarm_chance: int = rule(10, 0, 100, W, "A clean parry disarms the foe (%)")
     honour_grievance: int = rule(40, 0, 100, W, "Grievance at which a mortal of an honour culture calls a duel")
-    honour_cap: int = rule(4, 0, 100, W, "Most honour duels in an epoch")
+    honour_cap: int = rule(4, 0, 10000, W, "Base of the most honour duels in an epoch, grown by the number of standing grievances")
+    honour_cap_grievance_divisor: int = rule(3, 0, 10000, W, "Standing grievances per extra honour duel in an epoch (0: the cap stays at its base)")
     pain_pct: int = rule(60, 0, 300, W, "Pain a hit leaves against its harm (%)")
     stagger: int = rule(10, 0, 100, W, "Footing a heavy hit costs")
     footing_floor: int = rule(40, 0, 100, W, "Least footing a fighter keeps")
@@ -254,7 +255,7 @@ class PeaceRules(Spanned):
     vassal_score: int = rule(80, 0, 100, W, "Score at which a winner makes the loser its vassal")
     tribute_score: int = rule(30, 0, 100, W, "Score at which a winner demands tribute")
     hostage_score: int = rule(40, 0, 100, W, "Score at which a winner takes a hostage")
-    reparations: int = rule(20, 0, 100000, W, "Wealth a loser pays in reparations")
+    reparations: int = rule(20, 0, 100, W, "Share of its coin and treasury a loser pays in reparations, unless the war aim names an amount (%)")
     treaty_years: int = span(20, 1, 2500, W, "Years a peace treaty binds")
 
     @property
@@ -271,7 +272,10 @@ class VendettaRules(Spanned):
     escalate_chance: int = rule(8, 0, 100, W, "A feud escalates to war (%)")
     mediation_chance: int = rule(20, 0, 100, W, "A peace-minded priest mediates a feud (%)")
     raid_hp: int = rule(25, 0, 1000, W, "Harm a feud raid deals")
-    cap: int = rule(6, 0, 100, W, "Most feud actions in an epoch")
+    cap: int = rule(
+        6, 0, 10000, W, "Base of the most feud actions in an epoch, grown by the number of live feuds; also the most people of a side a feud action reaches"
+    )
+    cap_feud_divisor: int = rule(1, 0, 10000, W, "Live feuds per extra feud action in an epoch (0: the cap stays at its base)")
     honour_pct: int = rule(100, 0, 300, W, "Weight of an honour culture in a feud's intensity (%)")
     marriage_brake_pct: int = rule(40, 0, 100, W, "Intensity a marriage between the feuding sides takes away (%)")
     common_enemy_brake_pct: int = rule(30, 0, 100, W, "Intensity a shared enemy takes away (%)")

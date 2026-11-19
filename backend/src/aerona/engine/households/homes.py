@@ -58,7 +58,6 @@ CLASS_EXPECTATION: dict[SocialClass, int] = {
 }
 COMMON_EXPECTATION = 30
 WAGE_CLASSES = frozenset({SocialClass.WORKER, SocialClass.PROFESSIONAL, SocialClass.OFFICIAL, SocialClass.CITIZEN, SocialClass.UNEMPLOYED})
-TOWN_POPULATION = 1500
 SEA_ROLES = frozenset({MortalRole.CAPTAIN, MortalRole.EXPLORER, MortalRole.PILOT})
 TOWER_ROLES = frozenset({MortalRole.SEER, MortalRole.SAGE, MortalRole.SCIENTIST})
 
@@ -113,16 +112,16 @@ async def in_cave(session: AsyncSession, mortal: EntityRow) -> bool:
     return profile is not None and profile.kind is PlaceKind.CAVE
 
 
-async def settled_kind(session: AsyncSession, mortal: EntityRow) -> str:
+async def settled_kind(session: AsyncSession, rules: Rules, mortal: EntityRow) -> str:
     community = await community_of(session, mortal)
     if community is None or community.entity_type is not EntityType.SETTLEMENT:
         return "tent"
-    if (stat(community, "population") or 0) >= TOWN_POPULATION:
+    if (stat(community, "population") or 0) >= rules.urban.town_population:
         return "apartment" if mortal.social_class in WAGE_CLASSES else "townhouse"
     return "longhouse" if mortal.social_class in (SocialClass.WARRIOR, SocialClass.FARMER) else "hut"
 
 
-async def dwelling_key_for(session: AsyncSession, mortal: EntityRow) -> str:
+async def dwelling_key_for(session: AsyncSession, rules: Rules, mortal: EntityRow) -> str:
     choices = (
         (mortal.mortal_role is MortalRole.RULER or await rules_realm(session, mortal.id), "palace"),
         (await in_cave(session, mortal), "cave"),
@@ -130,12 +129,12 @@ async def dwelling_key_for(session: AsyncSession, mortal: EntityRow) -> str:
         (mortal.mortal_role in TOWER_ROLES, "tower"),
         (mortal.social_class is SocialClass.NOBLE, "manor"),
     )
-    return next((key for chosen, key in choices if chosen), None) or await settled_kind(session, mortal)
+    return next((key for chosen, key in choices if chosen), None) or await settled_kind(session, rules, mortal)
 
 
-async def dwelling_kind_for(session: AsyncSession, mortal: EntityRow) -> DwellingKindRow:
+async def dwelling_kind_for(session: AsyncSession, rules: Rules, mortal: EntityRow) -> DwellingKindRow:
     people = await people_of(session, mortal)
-    return await dwelling_of_people(session, people.id if people is not None else None, await dwelling_key_for(session, mortal))
+    return await dwelling_of_people(session, people.id if people is not None else None, await dwelling_key_for(session, rules, mortal))
 
 
 CLASS_DISTRICTS: dict[SocialClass, tuple[DistrictKind, ...]] = {

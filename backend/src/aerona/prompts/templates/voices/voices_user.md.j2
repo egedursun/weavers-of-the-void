@@ -1,14 +1,10 @@
 {% from "shared/macros.md.j2" import entity_line %}
 {% from "fate/_events.md.j2" import events_by_world %}
 {% set distortions = [
-  "ties a detail to the wrong person or place (confuses who did it)",
+  "confuses who did it",
   "reverses the order of an event",
-  "tells only what the god gave, never what the god took or cost",
-  "says a ban or rite was set by its own ancestors, not by the god",
-  "magnifies a small event, shrinks a great loss",
-  "confuses the god with another god or another being",
-  "misunderstands a word and builds the whole belief on that misunderstanding",
-  "attributes something the god did to a natural phenomenon of their own land"
+  "makes a small event large or a large one small",
+  "credits the deed to someone or something else"
 ] %}
 {{ world_header }}
 
@@ -43,7 +39,7 @@ PAYOFFS THIS AGE (each pays off what was set up in an earlier age; a people that
 HISTORIANS (for each, this age's account from its own people's side; do not open with "We …", do not repeat the opening of the previous account; each account is written by the historian named for it, a mortal of that people{% if world_events %}; every historian tells as "we" ONLY the events of its own world, never another world's event as if it befell its own people, at most as news from afar{% endif %}):
 {% for entry in historians %}
 people_id {{ entry.people.id }}{% if entry.world %} (its world: {{ entry.world }}){% endif %}: {{ entity_line(entry.people) }}
-Its historian, who writes this account: {{ entry.historian }}, {{ entry.historian_who }}, a mortal of this people.
+Its account is told by: {{ entry.historian }}, {{ entry.historian_who }}, a mortal of this people.
 {% if entry.society %}
 {{ entry.society }}
 {% endif %}
@@ -64,4 +60,4 @@ people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id 
 {% endfor %}
 
 {% endif %}
-Historians should use their own peoples' names and lexicon. Beliefs should name the god by the name the people gave; they must not know the whole truth.
+Historians should use their own peoples' names and lexicon. Beliefs should name the god by the name the people gave; they know only what this people saw or heard.

@@ -14,7 +14,7 @@ class SoundChangeRules:
     migration_pct: int = rule(8, 0, 100, L, "Extra chance when its speakers moved to a new land this epoch (%)")
     prestige_gap: int = rule(25, 0, 100, L, "Prestige by which a neighbouring tongue must outrank it before its sounds are copied")
     most: int = rule(24, 0, 200, L, "Sound changes a language holds at most before older ones fade into its proto-forms")
-    per_epoch: int = rule(60, 0, 10000, L, "Languages that may take a new sound change each epoch at most")
+    per_epoch: int = rule(3, 0, 100, L, "Sound changes one language may take in an epoch at most; each further one needs its own roll")
     reconstruct_pct: int = rule(20, 0, 100, L, "Chance a scholar who knows two daughter tongues recovers a proto-word of their dead parent each epoch (%)")
     reconstruct_skill: int = rule(40, 0, 100, L, "Languages skill a scholar needs to reconstruct proto-words")
     name_pct: int = rule(5, 0, 100, L, "Chance each place named in a tongue takes that tongue's newest sound change; names change slower than words (%)")
@@ -35,7 +35,7 @@ class SemanticDriftRules:
     drift_pct: int = rule(3, 0, 100, L, "Chance each epoch that one word of a living language shifts its meaning (%)")
     taboo_terror: int = rule(70, 0, 100, L, "Terror a beast must hold before the folk who dread it stop saying its name")
     taboo_pct: int = rule(25, 0, 100, L, "Chance each epoch the folk replace the name of a dreaded or holy thing with a euphemism (%)")
-    per_epoch: int = rule(40, 0, 10000, L, "Words that may shift or be replaced each epoch at most")
+    per_epoch: int = rule(5, 0, 1000, L, "Words of one language that may shift their meaning in an epoch at most; each further one needs its own roll")
 
 
 @dataclass(frozen=True)

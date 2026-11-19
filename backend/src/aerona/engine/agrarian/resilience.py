@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.ethics import HONOUR_MODELS
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
@@ -56,6 +56,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import relation
 from aerona.engine.settlement.book import ledger, town_of
 from aerona.engine.structures.construction import best_architect
+from aerona.rules.registry import Rules
 
 K = PreparednessKind
 TIERS = tuple(SizeTier)
@@ -149,40 +150,60 @@ async def prepare(ctx: TickContext, atlas: RegionAtlas, tally: ResilienceTally) 
         if town.id in ordered and not +wanted:
             wanted[K.WATCHTOWER] = 1
         own = works[town.id]
-        options = [(count, kind) for kind, count in wanted.items() if count > 0 and (own.get(kind) is None or own[kind].level < MOST_LEVEL)]
-        if not options:
-            continue
-        _, kind = max(options, key=lambda item: (item[0], item[1].value))
-        work = own.get(kind)
-        level = (work.level if work is not None else 0) + 1
-        cost = table.cost * level
-        if work is not None and "level" in work.locked:
-            continue
-        if profile.investment_pool >= cost:
-            profile.investment_pool -= cost
-        elif town.id in ordered and profile.treasury >= cost and "treasury" not in profile.locked:
-            profile.treasury -= cost
-            ctx.session.add(
-                SettlementTreasuryRow(
-                    settlement_entity_id=town.id,
-                    epoch=ctx.epoch,
-                    entry=TreasuryEntry.BUILDING,
-                    amount=-cost,
-                    balance=profile.treasury,
-                    note="works against disaster",
-                )
+        people = stat_or(town, "population", 0)
+        top = most_level(ctx.rules, people)
+        options = [(count, kind) for kind, count in wanted.items() if count > 0 and (own.get(kind) is None or own[kind].level < top)]
+        chosen = sorted(options, key=lambda item: (-item[0], item[1].value))[: 1 + max(0, people) // ctx.rules.scale.preparedness_works_people]
+        for _, kind in chosen:
+            if not await raise_work(ctx, town, profile, own, kind, paid_by_realm=town.id in ordered):
+                break
+            tally.raised += 1
+
+
+def most_level(rules: Rules, population: int) -> int:
+    return MOST_LEVEL + max(0, population) // rules.scale.preparedness_level_people
+
+
+async def raise_work(
+    ctx: TickContext,
+    town: EntityRow,
+    profile: SettlementProfileRow,
+    own: dict[PreparednessKind, PreparednessRow],
+    kind: PreparednessKind,
+    *,
+    paid_by_realm: bool,
+) -> bool:
+    table = ctx.rules.resilience
+    work = own.get(kind)
+    level = (work.level if work is not None else 0) + 1
+    cost = table.cost * level
+    if work is not None and "level" in work.locked:
+        return False
+    if profile.investment_pool >= cost:
+        profile.investment_pool -= cost
+    elif paid_by_realm and profile.treasury >= cost and "treasury" not in profile.locked:
+        profile.treasury -= cost
+        ctx.session.add(
+            SettlementTreasuryRow(
+                settlement_entity_id=town.id,
+                epoch=ctx.epoch,
+                entry=TreasuryEntry.BUILDING,
+                amount=-cost,
+                balance=profile.treasury,
+                note="works against disaster",
             )
-        else:
-            continue
-        if work is None:
-            work = PreparednessRow(settlement_entity_id=town.id, kind=kind, level=0, built_epoch=ctx.epoch, locked=[])
-            ctx.session.add(work)
-            own[kind] = work
-        work.level = level
-        put(work, "condition", PERCENT)
-        work.built_epoch = ctx.epoch
-        tally.raised += 1
-        await record(ctx, "resilience.built", roles={IncidentRole.SUBJECT: town.id}, facts={"work": kind, "level": level}, place=town.id)
+        )
+    else:
+        return False
+    if work is None:
+        work = PreparednessRow(settlement_entity_id=town.id, kind=kind, level=0, built_epoch=ctx.epoch, locked=[])
+        ctx.session.add(work)
+        own[kind] = work
+    work.level = level
+    put(work, "condition", PERCENT)
+    work.built_epoch = ctx.epoch
+    await record(ctx, "resilience.built", roles={IncidentRole.SUBJECT: town.id}, facts={"work": kind, "level": level}, place=town.id)
+    return True
 
 
 async def struck_towns(ctx: TickContext) -> list[tuple[EntityRow, EntityRow]]:
@@ -258,10 +279,15 @@ class Aid:
     capital: int | None
 
 
+def per_thousand(amount: int, town: EntityRow) -> int:
+    return round_half_up(amount * max(0, stat_or(town, "population", 0)) / PER_MILLE)
+
+
 async def send_grain(ctx: TickContext, aid: Aid) -> None:
     if aid.capital is not None and aid.capital != aid.town.id:
         stocks = goods_of(ctx.session, ctx.epoch)
-        moved = sum(lot.quantity for lot in await stocks.take(aid.capital, CommodityKind.GRAIN, ctx.rules.relief.grain, GoodsFlow.AID))
+        wanted = per_thousand(ctx.rules.relief.grain, aid.town)
+        moved = sum(lot.quantity for lot in await stocks.take(aid.capital, CommodityKind.GRAIN, wanted, GoodsFlow.AID))
         if moved > 0:
             await stocks.add(aid.town.id, CommodityKind.GRAIN, moved, GoodsFlow.AID)
 
@@ -326,7 +352,7 @@ async def aid_shelter(ctx: TickContext, aid: Aid) -> None:
 async def aid_soldiers(ctx: TickContext, aid: Aid) -> None:
     profile = await town_profile(ctx, aid)
     if profile is not None and "militia" not in profile.locked:
-        profile.militia += ctx.rules.relief.soldiers_sent
+        profile.militia += per_thousand(ctx.rules.relief.soldiers_sent, aid.town)
 
 
 async def aid_knowledge(ctx: TickContext, aid: Aid) -> None:
@@ -369,7 +395,8 @@ async def aid_from(
     )
     coin = realm is not None and realm.profile.treasury > 0
     kind = kind or aid_kind(event, rebuild is not None, coin=coin)
-    amount = amount if amount is not None else min(table.cap, realm.profile.treasury * table.share_pct // PERCENT) if realm is not None else 0
+    most = per_thousand(table.cap, town)
+    amount = amount if amount is not None else min(most, realm.profile.treasury * table.share_pct // PERCENT) if realm is not None else 0
     target = receiver.entity if receiver is not None else town
     rival = await relation(ctx.session, ctx.rules, target.id, giver.id) <= table.refuse_below
     gift = None if rival else await give(ctx, giver.id, target.id, max(1, amount), GiftOccasion.RELIEF, pay=False)
@@ -458,13 +485,14 @@ async def seize(ctx: TickContext, row: ReconstructionRow, town: EntityRow, profi
     put(row, "seized", round_half_up(stat_or(town, "population", 0) * table.seize_share / PERCENT))
     shift(profile, "homeless", row.seized, high=10**9)
     shift(profile, "unrest", table.seize_unrest)
-    await give_coin(ctx.session, ctx.rules, elite, table.seize_coin)
+    coin = round_half_up(table.seize_coin * row.seized / PERCENT)
+    await give_coin(ctx.session, ctx.rules, elite, coin)
     tally.seized += 1
     await record(
         ctx,
         "reconstruction.seized",
         roles={IncidentRole.ACTOR: elite.id, IncidentRole.PLACE: town.id},
-        facts={"seized": row.seized, "coin": table.seize_coin},
+        facts={"seized": row.seized, "coin": coin},
         place=town.id,
     )
 

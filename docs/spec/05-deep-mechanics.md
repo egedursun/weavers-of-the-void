@@ -529,12 +529,10 @@ For ongoing war events by id: sides x, y from tags. If the unordered side pair w
 5. Hostile pairs = active enemy bonds whose both ends are canon communities (indexed by snapshot order), unique unordered.
 6. `ongoing = surenSavaslar()`; `warPairs` = set of unordered side pairs.
 7. Shuffle hostile pairs (random comparator sort — biased), then order **pairs with an ongoing war first**, then the rest.
-8. Counters `battles = 0, newWars = 0`. For each pair:
-   - break if `battles ≥ ENGINE.battle_cap && newWars ≥ ENGINE.new_war_cap`;
+8. No cosmos-wide battle or new-war counter (realism pass: each war fights at most `CAMP.battle_cap` battles in its own seasons, one campaign season a year for `CAMP.seasons_per_war_epoch` × years per epoch). For each pair:
    - refresh a, b; skip unless both canon;
    - `war` = ongoing war if pair ∈ warPairs, else none;
-   - skip if (war ? `battles ≥ battle_cap` : `newWars ≥ new_war_cap`);
-   - if no war: skip if `ongoing.length ≥ ENGINE.world_war_cap` or either side's ongoing count ≥ `ENGINE.community_war_cap`;
+   - if no war: skip if `ongoing.length ≥` the world war limit (grows with the number of communities) or either side's ongoing count ≥ `ENGINE.community_war_cap`;
    - `chance(Y.has('war_ban', a) ? ENGINE.battle_chance_under_ban : ENGINE.battle_chance)` (only a's world law is checked) else skip;
    - increment `battles` (existing war) or `newWars`.
    - **New war**: record event subtype `savaş`, name `"War of A and B"` (`A ile B Savaşı`), power `CAMP.war_record_power`, location b if settlement else b's location, stats `{violence: CAMP.war_initial_violence, score: 0, battles: 0, start: epoch}`, tags `['suruyor', 'taraf:a', 'taraf:b']`, description "[World engine] A war began between A and B. Cause: <newest active enemy bond description || 'old hostility'>." Bonds war → a `side` ('side'), war → b `side`. Push to `ongoing`.
@@ -685,7 +683,7 @@ For each active `holds_prisoner` bond captor → prisoner:
 
 ## 13. Society and economy (`toplumEkonomi(epoch, note, Y)`)
 
-Per-epoch caps: famines `SOC.famine_cap`, uprisings `SOC.uprising_cap`, bankruptcies `SOC.bankruptcy_cap`, weapon batches `SOC.weapon_cap`.
+No cosmos-wide per-epoch caps (realism pass): every hungry community with a failing harvest suffers famine, and each class uprising, guild bankruptcy and weapon batch is gated only by its own community's conditions and chance.
 
 For each canon **people or settlement** `v` (fresh read):
 1. `s = toplumOf(v)`; `climate = iklimOf(v.world)`; `atWar` = any active enemy bond involving v (with anything); `routes` = count of active trade bonds; `paysTribute`; `god = hami(v)` or, if v worships the creator (`tapar` to `t`), a creator marker.
@@ -949,13 +947,13 @@ For each son:
    - class = weighted by t's class shares (default farmer); role = random of class.
    - `circle = "from among <t>'s <class plural>"`; `olumluDogur(t, {name: "<t> <role suffix>", subtype: role.subtype, biases, extraLifespan: warrior ? LIFE.notable_warrior_lifespan : 0, description: "[World engine] A <subtype> whose name is spoken arose <circle>."})`; note "A <subtype> whose name is spoken arose <circle>: <name>."
 2. **Rulers**: for canon entities where (community with `(population || followers || 0) ≥ ENGINE.ruler_min_population`) or type faction, until `ENGINE.ruler_cap`: skip if `yoneticiVar(t)` or `!chance(ENGINE.ruler_chance)`. Role: cult → high priest (`başrahip`, "<t> High Priest"), faction → leader ("<t> Leader"), people → chieftain (`reis`, "<t> Chieftain"), settlement → sovereign (`hükümdar`, "<t> Sovereign"). `olumluDogur(… biases {charisma: LIFE.ruler_charisma, intellect: LIFE.ruler_intellect}, extraLifespan: LIFE.ruler_lifespan, tags ['yönetici'], description "[World engine] took the throne of <t> as <role>.")`; bond mortal → t `rules` ('took the throne'); note "<name> took the throne of <t> as <role>."
-3. **Villages**: canon peoples with population ≥ `ENGINE.village_first_population`, until `LIFE.village_cap`:
+3. **Villages**: canon peoples with population ≥ `ENGINE.village_first_population`, each people gated only by its own chance (no cosmos-wide village cap; peoples are visited in a seeded shuffled order):
    - `r` = top region (skip if none). `existing` = canon settlements in r that descend from h or speak h's language.
    - skip if `existing && pop < ENGINE.village_extra_population`; skip if `existing ≥ ceil(pop / ENGINE.village_per_population)` or `!chance(existing ? LIFE.village_extra_chance : LIFE.village_first_chance)`.
    - `migrants = min(max(ENGINE.village_min_population, round(pop * LIFE.village_migration_share/100)), max(0, pop − ENGINE.village_people_remaining))`; skip if `< ENGINE.village_min_population`. `h.pop −= migrants`.
    - Try `harabeyeKur(r, h, migrants, epoch, "when <h> grew crowded")`: if a ruin was rebuilt → if no ruler: bond h → ruin `rules` ("own people's homeland"); note "<h> grew crowded; they settled the ruin of <ruin> and rebuilt it." Continue.
    - Else new settlement: name `dildenAd(h, seed, 'place') || "<h> Village"` / `"<h> Homeland"`; subtype `köy` village (if existing) or `ana yurt` homeland; power `max(LIFE.derived_power_min, h.power − 1)`; location h's location; stats `{population: migrants, prosperity: LIFE.village_prosperity, defence: LIFE.village_defence, faith: h.faith ?? SOC.default_stat}`; description "[World engine] <h> grew crowded; <n> people founded a new settlement in <r>." Bonds: settlement → h `descends_from`; h → settlement `rules` ("own people's homeland"); settlement → h's language `speaks`; → hami(h) `worships`. Note "<h> grew crowded; they founded a new settlement in <r>."
-4. **Ethnogenesis**: canon settlements with `epoch − created ≥ ENGINE.ethnogenesis_min_age` and population ≥ `ENGINE.ethnogenesis_min_population`, until `LIFE.new_people_cap`:
+4. **Ethnogenesis**: canon settlements with `epoch − created ≥ ENGINE.ethnogenesis_min_age` and population ≥ `ENGINE.ethnogenesis_min_population`, until `LIFE.new_people_cap` new peoples on that settlement's world (a cap per world shared with sapience; settlements visited in a seeded shuffled order):
    - ancestor `A` = target of y's first active `descends_from`; must be a people/settlement in a **different** top region; skip if `kavimDogurdu(y)` or `!chance(ENGINE.ethnogenesis_chance)`.
    - `split = round(pop * min(100, LIFE.ethnogenesis_population_share)/100)`; record people subtype `yeni kavim` (new tribe), name `dildenAd(y, seed, 'people') || "People of <y>"`, power `max(min, y.power)`, location r or y's location, stats `{population: split, martiality: LIFE.ethno_stat_base + d(LIFE.ethno_stat_die), magic: d(LIFE.ethno_magic_die), craft: base + d(die), faith: y.faith ?? default}`, description "[World engine] Rooted in <r> and descended from <A>, the people of <y> became a distinct folk over generations, with its own customs, its own tongue and its own name."
    - `y.pop = clampi(pop − split, LIMITS.population_floor, LIMITS.town_population_cap)`.
@@ -980,7 +978,7 @@ Weighted pick → tag `yazi:<type>`; complexity = `clampi((complexity || LIFE.sc
 2. **Traditions** older than `LIFE.tradition_grace`: `celebrants` = active bonds into it from canon entities where bond type is `celebrates` **or** the source is a community (any bond type). `y1 = clampi(y0 + (celebrants ? min(LIFE.tradition_celebrant_cap, celebrants) − 1 : (engine-made ? −LIFE.engine_tradition_decay : −LIFE.tradition_decay)), 0, 100)`. If `y1 ≤ LIFE.tradition_forget_spread` and no celebrants → `oldur(g, "Epoch <n>: no one left to celebrate it; forgotten.", closeBonds)`; note "The <g> tradition was forgotten; no one celebrates it any more." (One celebrant holds steady, two or more grow by 1.)
 3. **Fairy tales forgotten**: legends tagged `masal` with `(spread || 0) ≤ LIFE.fairytale_forget_spread` and age ≥ `LIFE.fairytale_forget_age` → `oldur(… "Epoch <n>: its last teller died too; the tale was forgotten.", closeBonds)` (no note).
 4. **Prophecies forgotten** (if `LIFE.prophecy_forget_age > 0`): canon prophecies older than that → `oldur(… "Epoch <n>: waited <age> epochs and was forgotten unfulfilled.", closeBonds)`; note "The <k> prophecy went unfulfilled for <age> epochs; no one knows it by heart any more."
-5. **Manifestation** (belief changes reality): legends with spread ≥ `LIFE.manifestation_min_spread` not tagged `tezahür etti`, until `LIFE.manifestation_cap` and each `chance(ENGINE.manifestation_chance)`:
+5. **Manifestation** (belief changes reality): legends with spread ≥ `LIFE.manifestation_min_spread` not tagged `tezahür etti`, until `LIFE.manifestation_cap` on that legend's world (legends visited in a seeded shuffled order) and each `chance(ENGINE.manifestation_chance)`:
    - place = legend location, or target of its first active tells_of/related/inside bond that is a canon place/region/settlement; must be canon.
    - text = name + subtype + description → first matching rule:
      | Regex (Turkish keywords → English) | Creates | Subtype | Stats |
@@ -991,7 +989,7 @@ Weighted pick → tag `yazi:<type>`; complexity = `clampi((complexity || LIFE.sc
      | (anything) | item | relic from the legend | damage d(), protection d(), might base+d(), curse d() |
      LANGUAGE-SPECIFIC: the Turkish regexes are substring matches without word boundaries (e.g. "su" water matches many words); in English use a keyword list with word boundaries or an explicit legend `category`.
    - record name `"Manifestation of <legend>"`, power `clampi(legend.power + LIFE.manifestation_power_bonus, LIFE.derived_power_min, LIFE.manifestation_power_max)`, location place, tag `inançtan doğdu`, description "[World engine] So many believed the legend of <e> for so long that what it told truly appeared in <place>." Bond new → legend `kaynagi` ('born of belief'); tag legend `tezahür etti`; note "So many believed the <e> legend that it became real in <place>: what was told is now there."
-6. **Legendification**: events (canon or dead) older than `LIFE.legend_event_min_age` with violence ≥ `LIFE.legend_event_min_violence`, not yet the target of any `tells_of` bond, oldest first, until `LIFE.legendification_cap` with `chance(ENGINE.legendification_chance)` each: record legend subtype `bulanık hatıra` (blurred memory), name `"Tale of <event>"`, power `max(min, event.power − LIFE.legend_power_gap)`, stats `{spread: LIFE.legend_spread_base + d(LIFE.legend_spread_die)}`, tag `bozulmuş bellek`, description "[World engine] <event> of Epoch <n> became a legend through generations of retelling: details blurred, heroes grew, culprits changed, numbers were exaggerated." (no location). Bond legend → event `tells_of` ('distortingly'); note "<event> of Epoch <n> is now a legend no one fully remembers; every teller adds something."
+6. **Legendification**: events (canon or dead) older than `LIFE.legend_event_min_age` with violence ≥ `LIFE.legend_event_min_violence`, not yet the target of any `tells_of` bond, in a seeded shuffled order, until `LIFE.legendization_cap` legends on that event's world (shared with legends of notable years) with `chance(ENGINE.legendification_chance)` each: record legend subtype `bulanık hatıra` (blurred memory), name `"Tale of <event>"`, power `max(min, event.power − LIFE.legend_power_gap)`, stats `{spread: LIFE.legend_spread_base + d(LIFE.legend_spread_die)}`, tag `bozulmuş bellek`, description "[World engine] <event> of Epoch <n> became a legend through generations of retelling: details blurred, heroes grew, culprits changed, numbers were exaggerated." (no location). Bond legend → event `tells_of` ('distortingly'); note "<event> of Epoch <n> is now a legend no one fully remembers; every teller adds something."
 7. **Fairy tales**: keepers = canon mortals with subtype sage|bard|seer|scribe|historian. Legends older than `LIFE.fairytale_min_age`, not tagged `masal`, with `(spread || 0) < LIFE.fairytale_spread`: skip if any keeper within `LIFE.fairytale_keeper_distance` (`mesafe`) or `!chance(ENGINE.fairytale_chance)`; tag `masal`; note "<e> is now only a fairy tale told to children; adults no longer believe it."
 
 ## 23. Life seeding (`yasamTohumu(epoch, note)`)
@@ -1020,7 +1018,7 @@ Find a dead settlement tagged `harabe`, not tagged `boşluk`, in the region's wo
 ## 26. Refugees (`multeciler(epoch, note)`)
 - `defeated` = targets of `side`/`related` bonds described 'loser' made this epoch from siege/battle/war events.
 - `disasterSites` = targets of `caused` bonds from events created this epoch tagged `afet` with violence ≥ `LIFE.refugee_disaster_violence`.
-- For canon settlements/peoples with population ≥ `LIFE.refugee_min_population`, until `LIFE.refugee_cap`:
+- For canon settlements/peoples with population ≥ `LIFE.refugee_min_population`, each rolling its own chance (no cosmos-wide refugee cap):
   - cause = "from war" if defeated; "from disaster" if v, v's location or v's top region is a disaster site; else skip. `chance(ENGINE.refugee_chance)`.
   - `n = round(pop * ENGINE.refugee_share/100)`; skip if `< LIFE.refugee_min_count`.
   - candidates: canon settlements/peoples in the same world, neighbours, not enemies of v, not defeated; score = ally·`refugee_weight_ally` + same language·`_language` + same god·`_god` + different top region·`_other_region`; sort desc, then id.
@@ -1136,9 +1134,9 @@ Notes on ownership:
 | `mortal_grudge_forget_age` | `olumlu_kin_unutma_cag` | 8 | 0 | 1000 | War & diplomacy | A mortal's hostility (with a mortal or community) is forgotten after this many epochs with no new encounter (0 = off) |
 | `alliance_cap` | `ittifak_tavan` | 2 | 0 | 20 | War & diplomacy | Max alliances per epoch |
 | `community_war_cap` | `topluluk_savas_tavan` | 2 | 0 | 10 | War & diplomacy | Max simultaneous ongoing wars (war events) for one community |
-| `battle_cap` | `muharebe_tavan` | 6 | 0 | 50 | War & diplomacy | Max battles per epoch (in ongoing wars; a new war's first clash counts against new_war_cap) |
+| `battle_cap` | `muharebe_tavan` | 12 | 0 | 1000 | War & diplomacy | Most battles one war fights in an epoch |
 | `mobilization` | `seferberlik` | 1 | 0 | 1 | War & diplomacy | First epoch of a new war is mobilisation; first clash is next epoch (1 on, 0 clash in declaration epoch) |
-| `new_war_cap` | `yeni_savas_tavan` | 3 | 0 | 50 | War & diplomacy | Max new wars per epoch (from hostile pairs; only under the war caps) |
+| `new_war_cap` | `yeni_savas_tavan` | — | — | — | War & diplomacy | Removed in the realism pass: new wars are limited by the per-pair clash chance, the world war limit that grows with communities, and the per-community war cap |
 | `battle_chance` | `muharebe_sans` | 70 | 0 | 100 | War & diplomacy | Enemies clash this epoch (%) |
 | `battle_chance_under_ban` | `muharebe_yasak_sans` | 35 | 0 | 100 | War & diplomacy | Clash chance while a war-ban law is in force (%) |
 | `notable_min_population` | `unlu_nufus` | 800 | 0 | 1000000 | Heroes & mortals | Minimum population of a community that produces notable mortals |
@@ -1398,9 +1396,9 @@ Notes on ownership:
 | `class_warrior` | `sinif_savasci` | 10 | 0 | 100 | Economy | Base warrior share (%) |
 | `class_scribe` | `sinif_katip` | 5 | 0 | 100 | Economy | Base scribe share (%) |
 | `initial_satisfaction` | `memnuniyet_ilk` | 55 | 0 | 100 | Economy | Initial satisfaction of classes |
-| `initial_food` | `erzak_ilk` | 60 | 0 | 1000 | Economy | Community's initial food |
-| `initial_ore` | `maden_ilk` | 10 | 0 | 1000 | Economy | Community's initial ore |
-| `initial_goods` | `mal_ilk` | 20 | 0 | 1000 | Economy | Community's initial goods |
+| `initial_food` | `erzak_ilk` | 60 | 0 | 1000 | Economy | Community's initial food stores (supply index, 100 = one epoch of its needs) |
+| `initial_ore` | `maden_ilk` | 10 | 0 | 1000 | Economy | Community's initial ore stores (supply index, 100 = one epoch of its needs) |
+| `initial_goods` | `mal_ilk` | 20 | 0 | 1000 | Economy | Community's initial goods stores (supply index, 100 = one epoch of its needs) |
 | `storage_cap` | `ambar_tavan` | 200 | 10 | 100000 | Economy | Cap of food, ore and goods storage |
 | `default_stat` | `stat_varsayilan` | 50 | 0 | 100 | Economy | Value assumed for unknown prosperity, faith or fertility |
 | `target_agriculture_farmer` | `hedef_tarim_ciftci` | 10 | 0 | 100 | Economy | Farmer share bonus for those who know agriculture |
@@ -1453,7 +1451,7 @@ Notes on ownership:
 | `price_goods_equilibrium` | `fiyat_denge` | 40 | 1 | 10000 | Economy | Stock at which goods are at normal price |
 | `price_ore_equilibrium` | `fiyat_denge_maden` | 10 | 1 | 10000 | Economy | Stock at which ore is at normal price (ore stores run much lower than goods) |
 | `price_stock_floor` | `fiyat_stok_alt` | 10 | 1 | 10000 | Economy | Floor of stock in ore and goods price |
-| `sat_hungry_food` | `m_ac_erzak` | 60 | 0 | 200 | Economy | Below this food farmers are hungry |
+| `sat_hungry_food` | `m_ac_erzak` | 60 | 0 | 200 | Economy | Below these food stores farmers are hungry (supply index, 100 = one epoch of its needs) |
 | `sat_farmer_hungry` | `m_ciftci_ac` | 25 | 0 | 100 | Economy | Satisfaction loss of hungry farmers |
 | `sat_farmer_fed` | `m_ciftci_tok` | 5 | 0 | 100 | Economy | Satisfaction gain of fed farmers |
 | `sat_farmer_war` | `m_ciftci_savas` | 8 | 0 | 100 | Economy | Farmer satisfaction lost from war |
@@ -1476,15 +1474,15 @@ Notes on ownership:
 | `sat_curse` | `m_lanet` | 6 | 0 | 100 | Economy | Satisfaction loss to all classes from a curse |
 | `sat_drift` | `m_kayma` | 30 | 0 | 100 | Economy | Per-epoch drift of satisfaction toward target (%) |
 | `effect_prosperity_divisor` | `etki_refah_bolen` | 4 | 1 | 100 | Economy | Merchant share effect on prosperity: (share-base) / this |
-| `effect_goods_plenty` | `etki_mal_bol` | 60 | 0 | 100000 | Economy | Above this goods prosperity rises extra |
+| `effect_goods_plenty` | `etki_mal_bol` | 60 | 0 | 100000 | Economy | Above these goods stores prosperity rises additionally (supply index, 100 = one epoch of its needs) |
 | `effect_goods_prosperity` | `etki_mal_refah` | 1 | 0 | 100 | Economy | Per-epoch prosperity gain from plentiful goods |
 | `effect_faith_divisor` | `etki_inanc_bolen` | 3 | 1 | 100 | Economy | Priest share effect on piety: (share-base) / this |
 | `effect_defence_divisor` | `etki_savunma_bolen` | 4 | 1 | 100 | Economy | Warrior share effect on town defence: (share-base) / this |
 | `effect_default_defence` | `etki_savunma_varsayilan` | 30 | 0 | 100 | Economy | Defence assumed for a town of unknown defence |
 | `effect_martial_divisor` | `etki_savascilik_bolen` | 5 | 1 | 100 | Economy | Warrior share effect on people's martiality: (share-base) / this |
 | `famine_ratio` | `kitlik_oran` | 90 | 0 | 1000 | Population & growth | Production ratio must be below this for famine (%) |
-| `famine_food` | `kitlik_erzak` | 60 | 0 | 1000 | Population & growth | Food must drop to this for famine (granary self-refills via saving so rarely hits zero) |
-| `famine_cap` | `kitlik_tavan` | 1 | 0 | 100 | Population & growth | Max famines per epoch |
+| `famine_food` | `kitlik_erzak` | 60 | 0 | 1000 | Population & growth | Food stores at or below which famine can strike (supply index, 100 = one epoch of its needs) |
+| `famine_cap` | `kitlik_tavan` | — | — | — | Population & growth | Removed in the realism pass: no cosmos-wide limit; every hungry community with a failing harvest suffers famine |
 | `famine_population_remaining` | `kitlik_nufus_kalan` | 92 | 0 | 100 | Population & growth | Population remaining in famine (%) |
 | `famine_prosperity_loss` | `kitlik_refah` | 6 | 0 | 100 | Population & growth | Prosperity lost to famine |
 | `weapon_ore_required` | `silah_maden` | 12 | 0 | 10000 | Economy | Ore required to forge weapons (ore stores are low in most communities) |
@@ -1500,7 +1498,7 @@ Notes on ownership:
 | `weapon_might_die` | `silah_kudret_zar` | 10 | 1 | 100 | Economy | Might die of forged weapons (1–N) |
 | `bankruptcy_merchant_share` | `iflas_tuccar` | 12 | 0 | 100 | Economy | Merchant share required for bankruptcy (%) |
 | `bankruptcy_prosperity` | `iflas_refah` | 35 | 0 | 100 | Economy | Below this prosperity a guild may go bankrupt |
-| `bankruptcy_cap` | `iflas_tavan` | 1 | 0 | 100 | Economy | Max guild bankruptcies per epoch |
+| `bankruptcy_cap` | `iflas_tavan` | — | — | — | Economy | Removed in the realism pass: no cosmos-wide limit; each struggling guild rolls its own chance |
 | `bankruptcy_satisfaction_loss` | `iflas_memnuniyet` | 20 | 0 | 100 | Economy | Merchant satisfaction lost to bankruptcy |
 | `bankruptcy_share_loss` | `iflas_pay` | 4 | 0 | 100 | Economy | Merchant share lost to bankruptcy |
 | `bankruptcy_prosperity_loss` | `iflas_refah_kayip` | 5 | 0 | 100 | Economy | Prosperity lost to bankruptcy |
@@ -1673,14 +1671,14 @@ Notes on ownership:
 | `ruler_charisma` | `hukumdar_karizma` | 20 | 0 | 100 | Heroes & mortals | Charisma bias of a new ruler |
 | `ruler_intellect` | `hukumdar_akil` | 10 | 0 | 100 | Heroes & mortals | Intellect bias of a new ruler |
 | `ruler_lifespan` | `hukumdar_omur` | 10 | 0 | 500 | Heroes & mortals | Extra lifespan (years) of a new ruler |
-| `village_cap` | `koy_tavan` | 2 | 0 | 50 | Population & growth | Max new villages per epoch |
+| `village_cap` | `koy_tavan` | — | — | — | Population & growth | Removed in the realism pass: no cosmos-wide limit; each people founds a village only by its own chance and population gates |
 | `village_first_chance` | `koy_ilk_sans` | 60 | 0 | 100 | Population & growth | Chance (%) a people with no homeland founds its first |
 | `village_extra_chance` | `koy_ek_sans` | 30 | 0 | 100 | Population & growth | Chance (%) a populous people founds an extra village |
 | `village_migration_share` | `koy_goc_pay` | 8 | 0 | 100 | Population & growth | Share (%) of population migrating to a new village |
 | `village_prosperity` | `koy_refah` | 40 | 0 | 100 | Population & growth | New village prosperity |
 | `village_defence` | `koy_savunma` | 20 | 0 | 100 | Population & growth | New village defence |
 | `derived_power_min` | `turev_guc_alt` | 2 | 1 | 12 | Population & growth | Lowest power level of derived settlement, people, work and faction |
-| `new_people_cap` | `yeni_halk_tavan` | 1 | 0 | 20 | Population & growth | Max new peoples per epoch (ethnogenesis or sapience) |
+| `new_people_cap` | `yeni_halk_tavan` | 1 | 0 | 100 | Population & growth | Maximum new peoples per world per epoch (ethnogenesis or sapience) |
 | `ethnogenesis_population_share` | `etnogenez_nufus_pay` | 50 | 0 | 100 | Population & growth | Population moving to the split-off people: share (%) of settlement (subtracted from settlement) |
 | `ethno_stat_base` | `etno_stat_taban` | 30 | 0 | 100 | Population & growth | Split-off people's martiality and craft base |
 | `ethno_stat_die` | `etno_stat_zar` | 40 | 1 | 100 | Population & growth | Die added to split-off people's martiality and craft |
@@ -1743,7 +1741,7 @@ Notes on ownership:
 | `tradition_forget_spread` | `gelenek_unutma` | 5 | 0 | 100 | Religion & language | A tradition with no celebrants is forgotten at or below this spread |
 | `fairytale_forget_spread` | `masal_unutma_yayginlik` | 3 | 0 | 100 | Religion & language | An old fairy tale is forgotten at or below this spread |
 | `fairytale_forget_age` | `masal_unutma_cag` | 15 | 0 | 1000 | Religion & language | Age (epochs) at which a fairy tale can be forgotten |
-| `manifestation_cap` | `tezahur_tavan` | 1 | 0 | 20 | Religion & language | Max legends becoming real per epoch |
+| `manifestation_cap` | `tezahur_tavan` | 1 | 0 | 100 | Religion & language | Maximum legends becoming real per world per epoch |
 | `manifestation_min_spread` | `tezahur_yayginlik` | 70 | 0 | 100 | Religion & language | Minimum spread of a legend that can become real |
 | `manifestation_power_max` | `tezahur_guc_ust` | 8 | 1 | 12 | Religion & language | Highest power level of something born from legend |
 | `manifestation_power_bonus` | `tezahur_guc_ek` | 1 | 0 | 12 | Religion & language | Power level of the manifestation above the legend's |
@@ -1790,7 +1788,7 @@ Notes on ownership:
 | `ruin_defence_fallback` | `harabe_savunma_yedek` | 20 | 0 | 100 | Population & growth | Defence assumed for a ruin with none recorded |
 | `ruin_defence_divisor` | `harabe_savunma_bolen` | 2 | 1 | 100 | Population & growth | A resettled ruin gets old defence / this |
 | `refugee_min_population` | `multeci_nufus` | 600 | 0 | 10000000 | Population & growth | Minimum population of a community that can send refugees |
-| `refugee_cap` | `multeci_tavan` | 1 | 0 | 20 | Population & growth | Max refugee migrations per epoch |
+| `refugee_cap` | `multeci_tavan` | — | — | — | Population & growth | Removed in the realism pass: no cosmos-wide limit; each struck community rolls its own refugee chance |
 | `refugee_disaster_violence` | `multeci_afet_siddet` | 60 | 0 | 100 | Population & growth | Minimum violence of a disaster that creates refugees |
 | `refugee_min_count` | `multeci_en_az` | 50 | 1 | 1000000 | Population & growth | Minimum people in a refugee migration |
 | `refugee_weight_ally` | `multeci_muttefik_agirlik` | 3 | 0 | 100 | Population & growth | Refugee target: ally weight |

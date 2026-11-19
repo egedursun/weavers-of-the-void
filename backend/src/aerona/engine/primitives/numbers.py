@@ -71,6 +71,10 @@ def scaled_cap(base: int, divisor: int, communities: int) -> int:
     return base + (communities // divisor if divisor > 0 else 0)
 
 
+def at_cap(count: int, cap: int) -> bool:
+    return cap > 0 and count >= cap
+
+
 def stochastic_round(value: float, roll: float) -> int:
     whole = math.floor(value)
     return whole + (1 if roll < value - whole else 0)

@@ -24,7 +24,8 @@ from aerona.engine.kinds.life import CARRIED
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.queries import count_communities
 from aerona.engine.recording.record import record
 from aerona.language.generator import NameKind
 
@@ -275,6 +276,7 @@ async def fuse(ctx: TickContext, holder_id: int, holdings: list[KindHoldingRow],
 
 async def tend_prestige(ctx: TickContext, tally: DeriveTally) -> None:
     table = ctx.rules.kinds
+    saturation = scaled_cap(table.prestige_saturation, table.prestige_saturation_community_divisor, await count_communities(ctx.session))
     counts: dict[tuple[KindConcept, int], int] = {}
     for concept, kind_id in await ctx.session.execute(select(KindHoldingRow.concept, KindHoldingRow.kind_id).where(KindHoldingRow.stance.in_(sorted(CARRIED)))):
         counts[concept, kind_id] = counts.get((concept, kind_id), 0) + 1
@@ -286,7 +288,7 @@ async def tend_prestige(ctx: TickContext, tally: DeriveTally) -> None:
             if not isinstance(prestige, int) or "prestige" in kind.locked or (kind.origin_node_id is not None and held(kind.origin_node_id)):
                 continue
             seen = await lagged(ctx, BalanceLoop.KIND_PRESTIGE, kind.origin_node_id, counts.get((concept, kind.id), 0), subject=kind.id)
-            shift = -table.prestige_fade if seen >= table.prestige_saturation else table.prestige_gain * seen // table.prestige_saturation
+            shift = -table.prestige_fade if seen >= saturation else table.prestige_gain * seen // saturation
             if shift:
                 cast(Any, kind).prestige = clamp_int(prestige + shift, 0, PERCENT)
                 tally.prestige_moved += 1

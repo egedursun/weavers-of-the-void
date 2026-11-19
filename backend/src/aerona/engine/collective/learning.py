@@ -81,9 +81,9 @@ async def learn_in(ctx: TickContext, town: EntityRow, tally: LearningTally) -> N
     if len(folk) < 2:
         return
     rng = ctx.rng(f"learning.{town.id}.{ctx.epoch}")
-    learners = [mortal for mortal, _ in folk if rng.chance(table.learners_pct)][: table.learners_cap]
+    learners = [mortal for mortal, _ in folk if rng.chance(table.learners_pct)]
     famous = max(folk, key=lambda pair: (pair[1], -pair[0]))
-    majority = await mean_of(ctx.session, ValueHolder.PERSONAL, [mortal for mortal, _ in folk[: table.learners_cap * 2]])
+    majority = await mean_of(ctx.session, ValueHolder.PERSONAL, [mortal for mortal, _ in folk])
     mood = await ctx.session.get(CrowdMoodRow, town.id)
     fear = table.fear_stickiness / PERCENT if mood is not None and mood.anxiety >= ANXIOUS_AT else 1.0
     for learner in learners:

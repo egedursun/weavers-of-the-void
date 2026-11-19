@@ -33,7 +33,7 @@ class NewStarOutput(OutputModel):
 
 class BirthRegionOutput(OutputModel):
     name: str
-    subtype: str = Field(description="The kind of region in a few words, in this world's own terms")
+    subtype: str = Field(description="The kind of region in a few words")
     description: str = Field(description="2 to 4 sentences")
     danger: int = Field(ge=0, le=PERCENT_MAX)
     fertility: int = Field(ge=0, le=PERCENT_MAX)
@@ -113,9 +113,7 @@ class NewWorldOutput(OutputModel):
     name: str = Field(description="The world's name; in the new dialect, repeating no existing name")
     language: BirthLanguageOutput = Field(description="This world's native language: matching the dialect exactly")
     description: str = Field(description="3 to 5 sentences: what makes this world distinctive and concrete")
-    cosmology: str = Field(
-        description="This world's OWN view of creation and death, 2 to 4 sentences; do not repeat the main cosmology, extend it with what is particular to this world"
-    )
+    cosmology: str = Field(description="What this world holds that the main cosmology does not already say, 2 to 4 sentences")
     gravity: Gravity
     atmosphere: Atmosphere
     time_factor: float = Field(

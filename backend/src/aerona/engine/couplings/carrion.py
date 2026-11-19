@@ -3,7 +3,7 @@ from collections import Counter
 from sqlalchemy import select
 
 from aerona.catalog.couplings import KEEPING_RESTS, WORLD_RESTS
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.couplings import CarrionPulseRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
@@ -20,8 +20,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_percent
-from aerona.engine.primitives.queries import top_region
+from aerona.engine.primitives.queries import canon, top_region
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
@@ -43,6 +44,20 @@ async def dead_by_region(ctx: TickContext) -> Counter[int]:
         if region is not None:
             regions[region.id] += count
     return regions
+
+
+async def living_by_region(ctx: TickContext) -> Counter[int]:
+    atlas = await RegionAtlas.load(ctx.session)
+    living: Counter[int] = Counter()
+    for community in await canon(ctx.session, [EntityType.SETTLEMENT, EntityType.PEOPLE]):
+        region_id = atlas.top_region(community.id)
+        if region_id is not None:
+            living[region_id] += stat_or(community, "population", 0)
+    return living
+
+
+def per_living(per_mille: int, living: int) -> int:
+    return max(1, per_mille * living // PER_MILLE)
 
 
 async def scavenger_ranges(ctx: TickContext, region_id: int) -> list[SpeciesRangeRow]:
@@ -111,14 +126,15 @@ async def unburied_of(ctx: TickContext, region_id: int) -> list[EntityRow]:
     return list(await ctx.session.scalars(query.order_by(EntityRow.id)))
 
 
-async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnvironmentRow | None, region: EntityRow) -> None:
+async def restless(ctx: TickContext, row: CarrionPulseRow, ground: RegionEnvironmentRow | None, region: EntityRow, living: int) -> None:
     table = ctx.rules.carrion
     if ground is not None:
         add_scar(ground, ScarKind.HAUNTED, table.haunting)
-    if row.carrion < table.restless_dead or not ctx.rng(f"carrion.restless.{region.id}.{ctx.epoch}").chance(table.restless_chance):
+    mass = per_living(table.restless_dead, living)
+    if row.carrion < mass or not ctx.rng(f"carrion.restless.{region.id}.{ctx.epoch}").chance(table.restless_chance):
         return
-    strength = clamp_percent(row.carrion // table.restless_dead * 10)
-    unrest = clamp_percent(table.unburied_unrest_base + row.carrion // table.restless_dead * table.unburied_unrest_per)
+    strength = clamp_percent(row.carrion // mass * 10)
+    unrest = clamp_percent(table.unburied_unrest_base + row.carrion // mass * table.unburied_unrest_per)
     walking = [spirit for spirit in await unburied_of(ctx, region.id) if not held(spirit.id)]
     if walking:
         spirit = walking[0]
@@ -206,8 +222,9 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
 async def carrion(ctx: TickContext) -> None:
     table = ctx.rules.carrion
     rows = {row.region_entity_id: row for row in await ctx.session.scalars(select(CarrionPulseRow))}
+    living = await living_by_region(ctx)
     for region_id, dead in sorted((await dead_by_region(ctx)).items()):
-        if dead < table.mass_dead or held(region_id):
+        if dead < per_living(table.mass_dead, living[region_id]) or held(region_id):
             continue
         row = rows.get(region_id)
         if row is None:
@@ -231,13 +248,13 @@ async def carrion(ctx: TickContext) -> None:
         elif row.carrion:
             await lie_unscavenged(ctx, row, ground, region)
         if row.carrion and not row.kept:
-            buried = min(row.carrion, table.burial)
+            buried = min(row.carrion, table.burial * living[region_id] // PER_MILLE)
             row.carrion -= buried
             await mourn_cost(ctx, region_id)
         if row.carrion:
-            await restless(ctx, row, ground, region)
+            await restless(ctx, row, ground, region, living[region_id])
         if not row.carrion and not row.kept:
             await ctx.session.delete(row)
-    still = {region_id for region_id, row in rows.items() if row.carrion >= table.restless_dead}
+    still = {region_id for region_id, row in rows.items() if row.carrion >= per_living(table.restless_dead, living[region_id])}
     ctx.count("unburied_settling", await settle_unburied(ctx, still))
     await ctx.session.flush()

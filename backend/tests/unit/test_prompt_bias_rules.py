@@ -457,3 +457,21 @@ def test_screen_text_is_read_for_imagery_but_code_is_not() -> None:
     assert "borrowed imagery" not in rules_hit(module, screen, "      queryKey: loreKeys.threads,")
     assert "borrowed imagery" not in rules_hit(module, screen, "  thread: 'a story',")
     assert "borrowed imagery" not in rules_hit(module, screen, "          label='Open it again'")
+
+
+def test_a_question_that_puts_the_same_lore_in_every_world_is_caught() -> None:
+    module = checker()
+    for text in (
+        "4 to 6 sentences: the shape of the universe as the seed gives it, how time passes in it, and what death is if it knows death",
+        "This world's OWN view of creation and death, 2 to 4 sentences",
+        "Its true name, which nobody knows; fits the naming language",
+        "How they speak: word choice, rhythm, tics",
+        "Detailed appearance: form, material, surface and marks, whatever this god has",
+        "Epithet or title in this world's idiom",
+        "Choose a domain left empty in the pantheon",
+        "How they count time and what they mark with feasts",
+        "The secret they tell no one",
+    ):
+        assert "imposed lore question" in rules_hit(module, PROMPT, text), text
+    assert "imposed lore question" not in rules_hit(module, PROMPT, "4 to 6 sentences: the universe as the seed gives it")
+    assert "imposed lore question" not in rules_hit(module, PROMPT, "What they keep to themselves, if anything")

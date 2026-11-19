@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from math import ceil
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -120,7 +121,26 @@ async def load_cargo(ctx: TickContext, route_id: int) -> dict[str, int]:
     return found
 
 
-async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfileRow, tally: ConvoyTally) -> None:
+def split_evenly(amount: int, parts: int) -> list[int]:
+    whole, extra = divmod(max(0, amount), max(1, parts))
+    return [whole + (1 if index < extra else 0) for index in range(max(1, parts))]
+
+
+def split_cargo(cargo: dict[str, int], parts: int) -> list[dict[str, int]]:
+    loads: list[dict[str, int]] = [{} for _ in range(max(1, parts))]
+    for commodity, amount in sorted(cargo.items()):
+        for load, share in zip(loads, split_evenly(amount, parts), strict=True):
+            if share > 0:
+                load[commodity] = share
+    return loads
+
+
+def convoys_wanted(rules: Rules, cargo: dict[str, int]) -> int:
+    table = rules.convoys
+    return min(table.per_epoch(table.per_route), max(1, ceil(sum(cargo.values()) / table.traffic_per_convoy)))
+
+
+async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfileRow, tally: ConvoyTally, parts: int = 1) -> None:
     table = ctx.rules.convoys
     owner_id = profile.controller_entity_id or profile.first_market_id
     fleet = await fleet_of(ctx, owner_id, profile.mode, stat_or(route, "capacity", 0))
@@ -132,28 +152,33 @@ async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfil
         capacity = max(capacity, carriers.cargo)
         vehicles = max(vehicles, carriers.group.count)
     animals = fleet.count if fleet.kind in ANIMAL_KINDS else 0
+    parts = max(1, min(parts, vehicles + animals))
     origin = await ctx.session.get(EntityRow, profile.first_market_id)
-    rng = ctx.rng(f"convoy.{route.id}")
-    passengers = {PILGRIMS: rng.integer(0, table.pilgrims), MIGRANTS: rng.integer(0, table.pilgrims), MISSIONARIES: rng.integer(0, table.pilgrims // 2)}
-    ctx.session.add(
-        ConvoyRow(
-            owner_entity_id=owner_id,
-            route_entity_id=route.id,
-            cargo=cargo,
-            preservation=await preservation_for(ctx, owner_id, cargo, profile.mode),
-            animals=animals,
-            vehicles=vehicles,
-            guards=round_half_up(stat_or(origin, "defense", 0) / 10) if origin is not None else 0,
-            passengers=passengers,
-            season=ctx.epoch,
-            status=ConvoyStatus.TRAVELLING,
-            region_entity_id=None,
-            capacity=capacity,
-            departed_epoch=ctx.epoch,
-            locked=[],
+    preservation = await preservation_for(ctx, owner_id, cargo, profile.mode)
+    guards = round_half_up(stat_or(origin, "defense", 0) / 10) if origin is not None else 0
+    shares = zip(split_cargo(cargo, parts), split_evenly(capacity, parts), split_evenly(vehicles, parts), split_evenly(animals, parts), strict=True)
+    for part, (load, room, wagons, beasts) in enumerate(shares):
+        rng = ctx.rng(f"convoy.{route.id}" if part == 0 else f"convoy.{route.id}.{part}")
+        passengers = {PILGRIMS: rng.integer(0, table.pilgrims), MIGRANTS: rng.integer(0, table.pilgrims), MISSIONARIES: rng.integer(0, table.pilgrims // 2)}
+        ctx.session.add(
+            ConvoyRow(
+                owner_entity_id=owner_id,
+                route_entity_id=route.id,
+                cargo=load,
+                preservation=preservation if load else PreservationMethod.NONE,
+                animals=beasts,
+                vehicles=wagons,
+                guards=guards,
+                passengers=passengers,
+                season=ctx.epoch,
+                status=ConvoyStatus.TRAVELLING,
+                region_entity_id=None,
+                capacity=room,
+                departed_epoch=ctx.epoch,
+                locked=[],
+            )
         )
-    )
-    tally.sent += 1
+        tally.sent += 1
 
 
 def fate_of(
@@ -318,8 +343,12 @@ async def run_convoys(ctx: TickContext, tally: ConvoyTally) -> None:
         .where(EntityRow.status == EntityStatus.CANON, TradeRouteProfileRow.status == TradeRouteStatus.OPEN)
         .order_by(EntityRow.id)
     )
+    most = ctx.rules.convoys.per_epoch(ctx.rules.convoys.per_route)
     for route, profile in routes.all():
+        if held(route.id):
+            continue
         sent = len(list(await ctx.session.scalars(select(ConvoyRow.id).where(ConvoyRow.route_entity_id == route.id, ConvoyRow.status.in_(OPEN)))))
-        if not held(route.id) and sent < ctx.rules.convoys.per_route:
-            await dispatch(ctx, route, profile, tally)
+        parts = min(convoys_wanted(ctx.rules, await load_cargo(ctx, route.id)), most - sent)
+        if parts > 0:
+            await dispatch(ctx, route, profile, tally, parts)
     await ctx.session.flush()

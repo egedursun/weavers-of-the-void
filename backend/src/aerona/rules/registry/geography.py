@@ -8,7 +8,8 @@ G = RuleGroup.EXPLORATION
 
 @dataclass(frozen=True)
 class GeographyRules:
-    seed_cap: int = rule(3, 0, 100, G, "Most places born in empty regions per epoch")
+    seed_cap: int = rule(3, 0, 10000, G, "Most places born in empty regions per epoch, before the regions are counted (0 off)")
+    seed_regions_per_extra: int = rule(10, 0, 100000, G, "One more place may be born in empty regions per epoch for every this many regions (0 none)")
     seed_chance: int = rule(35, 0, 100, G, "Chance that a place is born in a region without any place this epoch (%; doubled where a community lives)")
     move_chance: int = rule(50, 0, 100, G, "Chance that the most crowded settlement standing directly in the region moves to the new place's edge (%)")
     place_power: int = rule(2, 1, 12, G, "Power level of a place born in an empty region")

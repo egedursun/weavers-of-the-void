@@ -13,6 +13,7 @@ from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
@@ -26,8 +27,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import holdings
-from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import headcount
 from aerona.rules.registry import Rules
 
@@ -180,8 +182,15 @@ async def levels_by_host(session: AsyncSession, kinds: frozenset[StructureKind])
     return found
 
 
+async def people_towns(ctx: TickContext, people: EntityRow) -> list[int]:
+    ruled = [bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.RULES], sources=[people.id])]
+    return sorted({*await towns_of_people(ctx.session, people.id), *ruled})
+
+
 async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> int:
-    return (await levels_by_host(ctx.session, kinds)).get(community.id, 0)
+    levels = await levels_by_host(ctx.session, kinds)
+    hosts = await people_towns(ctx, community) if community.entity_type is EntityType.PEOPLE else [community.id]
+    return sum(levels.get(host, 0) for host in hosts)
 
 
 @memoized(StructureProfileRow, EntityRow)

@@ -24,6 +24,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.items import profile_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
@@ -230,9 +231,10 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
-    for maker in list(makers):
-        if tally.forged >= table.forgeries_per_epoch:
-            return
+    quota = WorldQuota(table.forgeries_per_epoch)
+    for maker in ctx.rng("forge.order").shuffled(makers):
+        if quota.full(maker.world_id):
+            continue
         if held(maker.id) or stat_or(maker, "creativity", 0) < table.skill_floor or not ctx.rng(f"forge.{maker.id}").chance(table.forge_chance):
             continue
         original = await worth_forging(ctx, maker.world_id)
@@ -242,6 +244,7 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
         if original is None or held(original.id):
             continue
         row = await forge(ctx, original, maker, brand=brand)
+        quota.take(maker.world_id)
         tally.forged += 1
         await record(
             ctx,

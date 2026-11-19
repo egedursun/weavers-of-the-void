@@ -8,8 +8,8 @@ P = RuleGroup.POPULATION_AND_GROWTH
 
 
 @dataclass(frozen=True)
-class LivingRules:
-    seasons_per_epoch: int = rule(4, 1, 40, C, "Seasons a living thing ages each epoch")
+class LivingRules(Spanned):
+    seasons_per_epoch: int = rule(4, 1, 40, C, "Seasons in a year; a living thing ages and eats this many seasons for every year of an epoch")
     young_at: int = rule(2, 0, 400, C, "Seasons at which a seed becomes young")
     grown_at: int = rule(8, 0, 400, C, "Seasons at which a young thing is grown and can work at full")
     prime_at: int = rule(20, 0, 4000, C, "Seasons at which a grown thing reaches its prime")
@@ -21,7 +21,7 @@ class LivingRules:
     neglect_bond: int = rule(5, 0, 100, C, "Bond a living thing loses each epoch it goes unfed")
     care_bond: int = rule(2, 0, 100, C, "Bond a fed living thing gains with its handler each epoch")
     refuse_bond: int = rule(20, 0, 100, C, "Bond below which a living thing with a nervous system refuses its handler")
-    breed_chance: int = rule(10, 0, 100, C, "Chance each epoch a fertile living thing in its prime breeds")
+    breed_chance: int = rule(5, 0, 100, C, "Chance a fertile living thing in its prime breeds (% per year)")
     wild_drift: int = rule(10, 0, 100, C, "Drift a line that breeds wild gains each generation")
     decay_fertility: int = rule(2, 0, 100, C, "Fertility a dead grown thing gives back to its land")
     mutation_pct: int = rule(3, 0, 100, C, "Chance a breeding brings a new trait into its line")
@@ -33,6 +33,10 @@ class LivingRules:
     escape_spread_pct: int = rule(100, 0, 1000, C, "Extra chance of escape a flying or swimming line has (%)")
     unfed_army_harm: int = rule(10, 0, 100, C, "Condition a living army loses each epoch it goes unfed")
     link_heal: int = rule(1, 0, 20, C, "Epochs a cut in a grown link heals by each epoch")
+
+    @property
+    def seasons_in_epoch(self) -> int:
+        return self.per_epoch(self.seasons_per_epoch)
 
 
 @dataclass(frozen=True)

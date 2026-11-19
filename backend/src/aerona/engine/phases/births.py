@@ -75,6 +75,7 @@ from aerona.engine.primitives.queries import (
     living_son,
     spoken_language,
 )
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
@@ -416,7 +417,8 @@ async def notables(ctx: TickContext, namer: Namer) -> None:
     life = rules.deep_life
     rng = ctx.rng("notables")
     communities = await canon(ctx.session, SOCIETY_TYPES)
-    cap = clamp_int(math.ceil(len(communities) * life.notable_cap_share_pct / PERCENT), life.notable_cap_min, rules.deep_world.notable_cap)
+    worlds = max(1, len({community.world_id for community in communities}))
+    cap = clamp_int(math.ceil(len(communities) * life.notable_cap_share_pct / PERCENT), life.notable_cap_min, rules.deep_world.notable_cap * worlds)
     born = 0
     for community in unheld(rng.shuffled(communities)):
         if born >= cap:
@@ -461,8 +463,10 @@ async def rulers(ctx: TickContext, namer: Namer) -> None:
     world_rules = ctx.rules.deep_world
     rng = ctx.rng("rulers")
     crowned = 0
-    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
-        if crowned >= world_rules.ruler_cap:
+    communities = unheld(await canon(ctx.session, COMMUNITY_TYPES))
+    cap = world_rules.ruler_cap * max(1, len({community.world_id for community in communities}))
+    for community in rng.shuffled(communities):
+        if crowned >= cap:
             return
         if community.entity_type is not EntityType.FACTION and headcount(community) < world_rules.ruler_min_population:
             continue
@@ -554,10 +558,7 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
     world_rules = rules.deep_world
     life = rules.deep_life
     rng = ctx.rng("villages")
-    founded = 0
-    for people in unheld(await canon(ctx.session, [EntityType.PEOPLE])):
-        if founded >= life.village_cap:
-            return
+    for people in rng.shuffled(unheld(await canon(ctx.session, [EntityType.PEOPLE]))):
         population = stat(people, "population") or 0
         region = await living_entity(ctx.session, atlas.top_region(people.id))
         if population < world_rules.first_village_population or region is None:
@@ -576,7 +577,6 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
         site = await gap_site(ctx.session, rules, atlas, region.id) if existing else None
         land = await living_entity(ctx.session, site) if site is not None else None
         await found_settlement(ctx, atlas, people, land or region, migrants=migrants, existing=existing, namer=namer)
-        founded += 1
 
 
 async def ethnogenesis(ctx: TickContext, atlas: RegionAtlas, settlement: EntityRow, ancestor: EntityRow, namer: Namer) -> EntityRow:
@@ -635,13 +635,12 @@ async def first_ancestor(ctx: TickContext, settlement: EntityRow) -> EntityRow |
     return await living_entity(ctx.session, bonds[0].target_node_id) if bonds else None
 
 
-async def ethnogeneses(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> int:
+async def ethnogeneses(ctx: TickContext, atlas: RegionAtlas, namer: Namer, born: WorldQuota) -> None:
     world_rules = ctx.rules.deep_world
     rng = ctx.rng("ethnogenesis")
-    born = 0
-    for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
-        if born >= ctx.rules.deep_life.new_people_cap:
-            break
+    for settlement in rng.shuffled(unheld(await canon(ctx.session, [EntityType.SETTLEMENT]))):
+        if born.full(settlement.world_id):
+            continue
         if (
             ctx.epoch - settlement.birth_epoch < world_rules.ethnogenesis_min_age
             or (stat(settlement, "population") or 0) < world_rules.ethnogenesis_min_population
@@ -659,8 +658,7 @@ async def ethnogeneses(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> in
         if await birthed_people(ctx, settlement.id) or not rng.chance(world_rules.ethnogenesis_chance):
             continue
         await ethnogenesis(ctx, atlas, settlement, ancestor, namer)
-        born += 1
-    return born
+        born.take(settlement.world_id)
 
 
 async def uplift(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> EntityRow:
@@ -705,19 +703,18 @@ async def uplift(ctx: TickContext, atlas: RegionAtlas, species: EntityRow) -> En
     return people
 
 
-async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
+async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> None:
     life = ctx.rules.deep_life
     rng = ctx.rng("sapience")
-    born = already
-    for species in unheld(await canon(ctx.session, [EntityType.SPECIES])):
-        if born >= life.new_people_cap:
-            return
+    for species in rng.shuffled(unheld(await canon(ctx.session, [EntityType.SPECIES]))):
+        if born.full(species.world_id):
+            continue
         if (stat(species, "intelligence") or 0) < life.sapience_min_intelligence or await has_flag(ctx.session, species.id, EntityFlag.SPECIES_BECAME_PEOPLE):
             continue
         if not rng.chance(ctx.rules.deep_world.sapience_chance) or await blocked(ctx, TransformKind.UPLIFT, species.id):
             continue
         await uplift(ctx, atlas, species)
-        born += 1
+        born.take(species.world_id)
 
 
 @reads(
@@ -796,7 +793,8 @@ async def spontaneous_births(ctx: TickContext) -> None:
     await notables(ctx, namer)
     await rulers(ctx, namer)
     await villages(ctx, atlas, namer)
-    born = await ethnogeneses(ctx, atlas, namer)
+    born = WorldQuota(ctx.rules.deep_life.new_people_cap)
+    await ethnogeneses(ctx, atlas, namer, born)
     await sapience(ctx, atlas, born)
 
 
@@ -996,7 +994,9 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
         await record(ctx, "births.stillborn", roles=roles, facts=facts, steps=steps, place=bearer.location_id)
         ctx.count("stillborn")
     else:
-        count = table.twin_cap if rng.chance(table.twins_pct) else 1
+        count = 2 if table.twin_cap > 1 and rng.chance(table.twins_pct) else 1
+        while 1 < count < table.twin_cap and rng.chance(table.twins_pct):
+            count += 1
         for twin in range(count):
             born.append(await bear_child(ctx, first, second, namer, twin=twin, bearer=bearer, attendant=attendant, birth=facts))
         if count > 1:
@@ -1086,12 +1086,9 @@ async def couples_bear_children(ctx: TickContext) -> None:
     rng = ctx.rng()
     namer = Namer(ctx.session, rules)
     bonds = await BondIndex.load(ctx.session, COUPLE_KINDS)
-    born = 0
     seen: set[frozenset[int]] = set()
     numbers = await PolicyBook.load(ctx)
     for bond in bonds.bonds:
-        if born >= rules.world_effects.birth_cap:
-            return
         pair = frozenset((bond.source_node_id, bond.target_node_id))
         if pair in seen:
             continue
@@ -1110,7 +1107,6 @@ async def couples_bear_children(ctx: TickContext) -> None:
         children = await deliver(ctx, first, second, namer)
         if bond.kind is BondKind.LOVES:
             await hidden_birth(ctx, first, second, children)
-        born += 1
 
 
 async def require_living(ctx: TickContext, entity_id: int, types: frozenset[EntityType], label: str) -> EntityRow:

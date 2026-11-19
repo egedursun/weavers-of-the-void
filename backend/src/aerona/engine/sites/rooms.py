@@ -36,6 +36,7 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import realm_of_community
 
 CHALLENGES = (SiteChallenge.TRAP, SiteChallenge.GUARDIAN, SiteChallenge.PUZZLE, SiteChallenge.HAZARD)
+LAYOUT_ENDS = 3
 
 
 @dataclass
@@ -54,13 +55,20 @@ class Walk:
     loot: list[int] = field(default_factory=list)
 
 
+def grown(layout: tuple[SiteRoomKind, ...], level: int) -> tuple[SiteRoomKind, ...]:
+    if len(layout) < LAYOUT_ENDS:
+        return layout
+    return (layout[0], *layout[1:-1] * (1 + max(0, level - 1) // 2), layout[-1])
+
+
 async def layout_of(ctx: TickContext, site: EntityRow) -> tuple[SiteRoomKind, ...] | None:
     if site.entity_type is EntityType.PLACE:
         place = await ctx.session.get(PlaceProfileRow, site.id)
         return ROOM_PLACES.get(place.kind) if place is not None else None
     if site.entity_type is EntityType.STRUCTURE:
         work = await ctx.session.get(StructureProfileRow, site.id)
-        return ROOM_STRUCTURES.get(work.kind) if work is not None else None
+        layout = ROOM_STRUCTURES.get(work.kind) if work is not None else None
+        return grown(layout, work.level) if layout is not None and work is not None else None
     if site.entity_type is EntityType.SETTLEMENT:
         town = await ctx.session.get(SettlementProfileRow, site.id)
         return ROOM_SETTLEMENTS.get(town.size_tier) if town is not None else None

@@ -15,10 +15,14 @@ class KnowledgeRules:
     )
     writing_diffusion_mult: int = rule(2, 1, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Knowledge-spread multiplier from those knowing writing (times)")
     language_spread_chance: int = rule(20, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Under the one-language law a language spreads along links (%)")
-    dark_age_forget_cap: int = rule(2, 0, 50, RuleGroup.CIVILIZATION, "Maximum knowledge forgotten per epoch")
+    dark_age_forget_cap: int = rule(
+        0, 0, 100000, RuleGroup.CIVILIZATION, "Most knowledges forgotten per epoch (0 for no limit beyond each community's own roll)"
+    )
     dark_age_min_severity: int = rule(70, 0, 100, RuleGroup.CIVILIZATION, "Minimum severity of an event counted as ruin")
     dark_age_scribe_pct: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Scribe share that protects knowledge from being forgotten (%)")
-    relic_rediscovery_cap: int = rule(1, 0, 20, RuleGroup.CIVILIZATION, "Maximum knowledge rediscovered from remnants per epoch")
+    relic_rediscovery_cap: int = rule(
+        0, 0, 100000, RuleGroup.CIVILIZATION, "Most knowledges rediscovered from remnants per epoch (0 for no limit beyond each community's own roll)"
+    )
     relic_min_scribe_pct: int = rule(7, 0, 100, RuleGroup.CIVILIZATION, "Minimum scribe share of a community able to decipher knowledge from remnants (%)")
     spread_base: int = rule(8, 0, 100, RuleGroup.CIVILIZATION, "Base spread of a known knowledge")
     spread_per_knower: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Contribution of each knowing community to knowledge spread")
@@ -33,18 +37,24 @@ class KnowledgeRules:
     level_multiplier_cap_pct: int = rule(180, 100, 1000, RuleGroup.CIVILIZATION, "Highest multiplier the level can give a branch effect (%)")
     ratio_floor_pct: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Lowest severity a level can push a softening branch effect to (%)")
     branch_record_cap: int = rule(
-        2, 1, 100, RuleGroup.CIVILIZATION, "Most separate knowledge records one branch may hold in a world; later ones find or deepen an existing one"
+        20, 1, 1000, RuleGroup.CIVILIZATION, "Most separate knowledge records one branch may hold in a world; later ones find or deepen an existing one"
     )
     level_up_spread: int = rule(4, 0, 100, RuleGroup.CIVILIZATION, "Spread gained when a knowledge rises a level")
     develop_level_gain: int = rule(1, 1, 10, RuleGroup.CIVILIZATION, "Levels a mortal adds when it develops a knowledge it already holds")
     craft_level_bonus: int = rule(1, 0, 10, RuleGroup.CIVILIZATION, "Extra level for a strongly crafting community when it develops a knowledge")
-    deepen_chance: int = rule(4, 0, 100, RuleGroup.CIVILIZATION, "Engine: base chance a knowing community deepens one of its knowledges per epoch (%)")
+    deepen_chance: int = rule(40, 0, 100, RuleGroup.CIVILIZATION, "Engine: base chance a knowing community deepens one of its knowledges per epoch (%)")
     deepen_scribe_divisor: int = rule(4, 1, 1000, RuleGroup.CIVILIZATION, "Engine: scribe share (%) divided by this is added to the deepening chance (%)")
     deepen_min_prosperity: int = rule(35, 0, 100, RuleGroup.CIVILIZATION, "Engine: communities below this prosperity cannot deepen their knowledge")
-    deepen_cap: int = rule(4, 0, 100, RuleGroup.CIVILIZATION, "Engine: most knowledges deepened per epoch")
-    discovery_chance: int = rule(14, 0, 100, RuleGroup.CIVILIZATION, "Engine: chance per world and epoch that a branch nobody knows there is discovered (%)")
-    discovery_cap: int = rule(2, 0, 50, RuleGroup.CIVILIZATION, "Engine: most new branches discovered per epoch")
-    discovery_candidates: int = rule(5, 1, 100, RuleGroup.CIVILIZATION, "Engine: most-scribed communities per world that may discover a new branch")
+    deepen_cap: int = rule(
+        0, 0, 100000, RuleGroup.CIVILIZATION, "Engine: most knowledges deepened per epoch (0 for no limit beyond each community's own progress)"
+    )
+    discovery_chance: int = rule(50, 0, 100, RuleGroup.CIVILIZATION, "Engine: chance per world and epoch that a branch nobody knows there is discovered (%)")
+    discovery_cap: int = rule(
+        0, 0, 100000, RuleGroup.CIVILIZATION, "Engine: most new branches discovered per epoch (0 for no limit beyond each world's own roll)"
+    )
+    discovery_candidates: int = rule(
+        10, 1, 100, RuleGroup.CIVILIZATION, "Engine: share of a world's able communities, most scribed first, that may discover a new branch (%, at least one)"
+    )
     discovery_min_scribe_pct: int = rule(4, 0, 100, RuleGroup.CIVILIZATION, "Engine: lowest scribe share of a community able to discover a new branch (%)")
     rare_branch_weight_pct: int = rule(
         300, 0, 10000, RuleGroup.CIVILIZATION, "Engine: discovery weight of a rare branch whose prerequisite is known (%; an ordinary branch is 100)"
@@ -53,7 +63,9 @@ class KnowledgeRules:
     discovery_power: int = rule(3, 1, 12, RuleGroup.CIVILIZATION, "Power level of a newly discovered branch")
     decline_chance: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Engine: chance per epoch a knowledge whose every holder is in ruin loses a level (%)")
     decline_prosperity: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Engine: a holder below this prosperity counts as ruined for knowledge decline")
-    decline_cap: int = rule(3, 0, 100, RuleGroup.CIVILIZATION, "Engine: most knowledges losing a level per epoch")
+    decline_cap: int = rule(
+        0, 0, 100000, RuleGroup.CIVILIZATION, "Engine: most knowledges losing a level per epoch (0 for no limit beyond each knowledge's own roll)"
+    )
     creator_deepen_cost: int = rule(
         10, 0, 1000, RuleGroup.INTERVENTIONS_IN_THE_MORTAL_WORLD, "Creator: essence to deepen a knowledge by one level (blunting is free)"
     )

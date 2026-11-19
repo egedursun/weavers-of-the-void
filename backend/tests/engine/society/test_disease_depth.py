@@ -1,7 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.tissues import FULL_COUNTS
 from aerona.db.tables.body import ConditionRow, InjuryRow, MaimedCohortRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
@@ -194,8 +193,8 @@ async def test_target_functions_wound_the_matching_organ_and_leave_a_matching_we
     condition = await lasting_illness(ctx, patient, profile)
     assert condition is not None and condition.kind is ConditionKind.CHRONIC_ILLNESS and condition.part == part
     stats = BearerStats(strength=50, agility=50, intellect=50, charisma=50, endurance=50)
-    whole = capacities(RULES, stats, BodyState(anatomy, (), FULL_COUNTS, 0))
-    rotten = capacities(RULES, stats, BodyState(anatomy, (), FULL_COUNTS, 0, afflicted=afflicted_parts(RULES, [condition])))
+    whole = capacities(RULES, stats, BodyState(anatomy, (), anatomy.full_counts, 0))
+    rotten = capacities(RULES, stats, BodyState(anatomy, (), anatomy.full_counts, 0, afflicted=afflicted_parts(RULES, [condition])))
     assert rotten[Capacity.MOBILITY] < whole[Capacity.MOBILITY]
     assert rotten[Capacity.SCHOLARSHIP] == whole[Capacity.SCHOLARSHIP]
 

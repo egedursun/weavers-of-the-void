@@ -76,6 +76,7 @@ type Values = Record<string, number | string | boolean | null>
 type Edit = { values: Values; release: string[] }
 
 const BOOLEAN = { true: 'Yes', false: 'No' }
+const CASES_MAX = 64
 const HOLDER_TYPES = ['polity', 'cult', 'people', 'settlement', 'faction']
 const COMMUNITY_TYPES = ['people', 'settlement', 'faction', 'cult']
 
@@ -202,7 +203,13 @@ function GrammarCard({
                 kind: 'pick',
                 table: table(MORPHOLOGIES),
               },
-              { key: 'cases', label: 'Cases', kind: 'number', min: 0, max: 20 },
+              {
+                key: 'cases',
+                label: 'Cases',
+                kind: 'number',
+                min: 0,
+                max: CASES_MAX,
+              },
               {
                 key: 'noun_classes',
                 label: 'Noun classes',

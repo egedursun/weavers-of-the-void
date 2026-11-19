@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 V = RuleGroup.CIVILIZATION
 E = RuleGroup.ECONOMY
@@ -9,13 +9,15 @@ W = RuleGroup.WAR_AND_DIPLOMACY
 
 
 @dataclass(frozen=True)
-class WritingMediaRules:
+class WritingMediaRules(Spanned):
     rot_pct: int = rule(100, 0, 400, V, "Scale of the condition a written work loses each epoch to the damp of its land (%)")
     fire_loss: int = rule(40, 0, 100, V, "Condition a written work of a burning medium loses when fire strikes the town that keeps it")
     clay_baking: int = rule(10, 0, 100, V, "Condition a work on clay gains when fire strikes the town that keeps it")
-    copy_gain: int = rule(1, 0, 100, V, "Copies a work on a medium that copies quickly gains each epoch")
-    printing_pct: int = rule(300, 100, 1000, V, "Scale of the copies made where printing is known (%)")
-    copy_shield_pct: int = rule(10, 0, 100, V, "Share of decay each further copy of a work spares it (%)")
+    copy_gain: int = rule(1, 0, 100, V, "Copies a work on a medium that copies quickly gains each year")
+    printing_pct: int = rule(3000, 100, 100000, V, "Scale of the copies made where printing is known (%)")
+    copy_shield_pct: int = rule(
+        10, 0, 1000, V, "How much each further copy of a work slows its decay (%): the decay is divided by one plus this share for every further copy"
+    )
     reading_pct: int = rule(100, 0, 100, V, "Share of what a work teaches that its condition decides (%)")
 
 
@@ -23,7 +25,10 @@ class WritingMediaRules:
 class SecurityRules:
     seed_quality: int = rule(30, 0, 100, V, "Lock quality a treasury, archive or store first takes where its people work metal")
     metal_level: int = rule(2, 0, 10, V, "Metalworking a people needs before its holders lock their stores")
-    seed_guards: int = rule(2, 0, 100, V, "Guards a treasury, archive or store keeps from the epoch it is first secured")
+    seed_guards: int = rule(
+        2, 0, 10000, V, "Guards a treasury, archive or store keeps from the epoch it is first secured, before its town's people are counted"
+    )
+    guards_per_ten_thousand: int = rule(1, 0, 10000, V, "More guards a treasury, archive or store first keeps for every 10000 people of its town")
     smith_gain: int = rule(2, 0, 100, V, "Lock quality a master smith of the town adds each epoch")
     smith_skill: int = rule(5, 0, 10, V, "Smithing a mortal needs to improve the locks of its town")
     lock_pct: int = rule(60, 0, 100, V, "Share by which a lock of full quality thwarts a theft (%)")
@@ -42,7 +47,8 @@ class WaterLiftingRules:
     flooded_pct: int = rule(50, 0, 100, E, "Share of its yield a deep mine without pumps loses to the water (%)")
     sanitation_gain: int = rule(2, 0, 100, E, "Sanitation each device adds to its town")
     build_chance: int = rule(20, 0, 100, E, "Chance each epoch that a town that needs water lifted builds a device it knows (%)")
-    most_devices: int = rule(8, 1, 100, E, "Most devices of one kind a town keeps")
+    most_devices: int = rule(8, 1, 100000, E, "Most devices of one kind a town keeps, before its people are counted")
+    devices_per_thousand: int = rule(1, 0, 10000, E, "More devices of one kind a town keeps for every 1000 of its people")
 
 
 @dataclass(frozen=True)

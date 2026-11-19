@@ -108,6 +108,7 @@ from aerona.engine.structures.readers import regions_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
+MIN_LAND_SIZE = 0.1
 HIGHLAND_BIOMES = (Biome.DRY_HILLS, Biome.WET_HILLS, Biome.MOUNTAINS, Biome.PEAKS)
 EXTREME_WEATHER = frozenset(
     {
@@ -797,7 +798,15 @@ def drift(current: int, target: int, divisor: int) -> int:
 
 
 def work_land(
-    rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, load: RegionLoad, divisor: int, *, herds: int = 0, ring: LandRingRow | None = None
+    rules: Rules,
+    env: RegionEnvironmentRow,
+    capacity: CapacityModel,
+    load: RegionLoad,
+    divisor: int,
+    *,
+    herds: int = 0,
+    ring: LandRingRow | None = None,
+    size: float = 1.0,
 ) -> None:
     settings = rules.land_use
     farm_pct, graze_pct = ring_shares(rules, ring.ring) if ring is not None else (PERCENT, PERCENT)
@@ -813,7 +822,7 @@ def work_land(
         pasture = occupancy * (1 - farming) * settings.graze_target_pct / PERCENT + herds / rules.husbandry.graze_head_per_pct
         env.grazed = drift(env.grazed, land_target(pasture * graze_pct / PERCENT), divisor)
     if "built" not in locked:
-        env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
+        env.built = drift(env.built, land_target(settled / (settings.built_population_per_pct * max(MIN_LAND_SIZE, size))), divisor)
     cleared = env.farmed + env.built * settings.cleared_built_pct / PERCENT + env.grazed * settings.cleared_grazed_pct / PERCENT
     if "cleared" not in locked:
         env.cleared = drift(env.cleared, land_target(cleared), divisor)
@@ -897,6 +906,12 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.worlds",
 )
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.region_environment")
+def land_sizes(atlas: RegionAtlas, region_ids: list[int]) -> dict[int, float]:
+    measured = {region_id: record.size for region_id in region_ids if (record := atlas.record(region_id)) is not None and record.size > 0}
+    mean = sum(measured.values()) / len(measured) if measured else 1.0
+    return {region_id: size / mean for region_id, size in measured.items()}
+
+
 async def land_use(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.land_use
@@ -906,6 +921,7 @@ async def land_use(ctx: TickContext) -> None:
     grazing = await grazing_heads(ctx.session)
     rings = await rings_of(ctx.session)
     worked = rewilded = 0
+    sizes = land_sizes(book.atlas, list(book.regions))
     for region_id, env in book.regions.items():
         before = LandMark(env.erosion, env.farmed, env.soil_fertility, env.cleared)
         load = loads.get(("region", region_id))
@@ -915,7 +931,9 @@ async def land_use(ctx: TickContext) -> None:
                     setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
             rewilded += 1
         else:
-            work_land(rules, env, capacity, load, settings.drift_divisor, herds=grazing.get(region_id, 0), ring=rings.get(region_id))
+            work_land(
+                rules, env, capacity, load, settings.drift_divisor, herds=grazing.get(region_id, 0), ring=rings.get(region_id), size=sizes.get(region_id, 1.0)
+            )
             worked += 1
         if "erosion" not in env.locked:
             env.erosion = (

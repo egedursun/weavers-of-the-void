@@ -389,6 +389,14 @@ class DisasterWorld:
     views: Mapping[int, WorldView] = field(default_factory=dict)
     bodies: Mapping[int, WorldPhysicsRow] = field(default_factory=dict)
     dominion: DominionBook = field(default_factory=DominionBook)
+    struck_by_world: dict[int | None, int] = field(default_factory=dict)
+
+    def world_full(self, rules: Rules, world_id: int | None) -> bool:
+        return self.struck_by_world.get(world_id, 0) >= rules.disasters.cap
+
+    def tally(self, world_id: int | None) -> None:
+        self.struck += 1
+        self.struck_by_world[world_id] = self.struck_by_world.get(world_id, 0) + 1
 
     def fortune_mult(self, rules: Rules, region_id: int) -> float:
         fortune = self.dominion.scale_at(rules, region_id, DivineScale.FORTUNE)
@@ -631,9 +639,9 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         home = atlas.top_region(community.id)
         if home is not None:
             regional_population[home] = regional_population.get(home, 0) + stat_or(community, "population", 0)
-    for region in unheld(await canon(ctx.session, [EntityType.REGION])):
-        if world.struck >= ctx.rules.disasters.cap:
-            return
+    for region in ctx.rng("region_disaster.order").shuffled(unheld(await canon(ctx.session, [EntityType.REGION]))):
+        if world.world_full(ctx.rules, region.world_id):
+            continue
         if atlas.is_water(region.id) or region.is_water:
             continue
         rng = ctx.rng(f"region_disaster.{region.id}")
@@ -657,7 +665,7 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
             key = f"disasters.{Disaster(disaster).value}"
             async with recording(ctx, key, place_id=region.id, world_id=region.world_id):
                 event, impact = await strike(ctx, region, disaster, severity)
-                world.struck += 1
+                world.tally(region.world_id)
                 await record_strike(ctx, key, region, (disaster, severity, event, impact))
             break
 
@@ -671,9 +679,9 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
     hostility = (await BondIndex.load(ctx.session, [BondKind.ENEMY])).bonds
     at_war = {bond.source_node_id for bond in hostility} | {bond.target_node_id for bond in hostility}
     effects = ctx.rules.world_effects
-    for city in cities:
+    for city in ctx.rng("city_plague.order").shuffled(cities):
         population = stat_or(city, "population", 0)
-        if held(city.id) or population < settings.city_plague_min_population or world.struck >= settings.cap:
+        if held(city.id) or population < settings.city_plague_min_population or world.world_full(ctx.rules, city.world_id):
             continue
         crowded = population >= crowd(city)
         hungry = (await society_of(ctx.session, ctx.rules, city.id)).stocks[Commodity.FOOD] < effects.hungry_food
@@ -685,7 +693,7 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
         severity = severity_roll(ctx, f"city_severity.{city.id}")
         async with recording(ctx, "disasters.city_plague", place_id=city.id, world_id=city.world_id):
             event, impact = await strike(ctx, city, Disaster.PLAGUE, severity)
-            world.struck += 1
+            world.tally(city.world_id)
             await record_strike(ctx, "disasters.city_plague", city, (Disaster.PLAGUE, severity, event, impact), extra={"chance": chance})
 
 

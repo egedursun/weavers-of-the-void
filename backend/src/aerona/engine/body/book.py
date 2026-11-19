@@ -5,12 +5,11 @@ from dataclasses import dataclass, replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
+from aerona.catalog.anatomy import Anatomy, anatomy_of
 from aerona.catalog.body_plans import BEING_PLANS, BUILD_RANK, HEIGHT_RANK, HUNGER_PLANS, PLANS, WHOLE_PLANS
 from aerona.catalog.body_words import BODY_WORDS
 from aerona.catalog.creature_anatomy import MONSTER_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
-from aerona.catalog.tissues import FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
@@ -42,7 +41,7 @@ from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyState, capacities, function_percents, perception_factor
-from aerona.engine.body.digits import effective_counts, handedness_for
+from aerona.engine.body.digits import effective_counts, fill_counts, handedness_for
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
@@ -222,17 +221,20 @@ async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch
         hp = await vast_hp(session, rules, bearer)
     floor = rules.world_effects.heir_hp
     height, build = mortal_frame(rules, bearer, plan) if isinstance(bearer, EntityRow) else (PLANS[plan].height, PLANS[plan].build)
-    body = BodyRow(
-        node_id=bearer.id,
-        plan=plan,
-        traits=traits,
-        fingers=FINGER_COUNT,
-        handedness=handedness_for(rules, bearer.id),
-        hp_max=max(hp or 0, floor),
-        updated_epoch=epoch,
-        locked=[],
-        height_class=height,
-        build=build,
+    body = fill_counts(
+        BodyRow(
+            node_id=bearer.id,
+            plan=plan,
+            traits=traits,
+            fingers=0,
+            lost_digits=[],
+            handedness=handedness_for(rules, bearer.id),
+            hp_max=max(hp or 0, floor),
+            updated_epoch=epoch,
+            locked=[],
+            height_class=height,
+            build=build,
+        )
     )
     session.add(body)
     if isinstance(bearer, EntityRow) and bearer.entity_type in VAST and stat(bearer, "hp") is None:
@@ -248,15 +250,18 @@ async def ensure_species_body(session: AsyncSession, species: EntityRow, plan: B
     traits = await species_traits(session, species.id)
     functions = sorted(TRAIT_FUNCTIONS[trait].value for trait in traits if trait in TRAIT_FUNCTIONS)
     chosen = plan or await typed_plan(session, species, traits)
-    body = BodyRow(
-        node_id=species.id,
-        plan=chosen,
-        traits=functions,
-        fingers=FINGER_COUNT,
-        hp_max=0,
-        locked=[],
-        height_class=PLANS[chosen].height,
-        build=PLANS[chosen].build,
+    body = fill_counts(
+        BodyRow(
+            node_id=species.id,
+            plan=chosen,
+            traits=functions,
+            fingers=0,
+            lost_digits=[],
+            hp_max=0,
+            locked=[],
+            height_class=PLANS[chosen].height,
+            build=PLANS[chosen].build,
+        )
     )
     session.add(body)
     await session.flush()
@@ -410,7 +415,7 @@ def factors_of(
         reading.magnifier,
     )
     actual = capacities(rules, stats, state)
-    whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FULL_COUNTS, 0))
+    whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), anatomy.full_counts, 0))
     factors = {capacity: round(actual[capacity] * PERCENT / whole[capacity]) if whole[capacity] else PERCENT for capacity in Capacity}
     if bedridden(rules, bearer):
         factors.update(dict.fromkeys(BEDRIDDEN_LOSSES, 0))

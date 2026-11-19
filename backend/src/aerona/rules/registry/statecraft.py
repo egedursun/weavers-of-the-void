@@ -25,7 +25,7 @@ class StatecraftRules(Spanned):
     trust_drift: int = rule(2, 0, 100, W, "Trust that drifts back toward its middle each epoch")
     coalition_members: int = rule(2, 2, 20, W, "Realms that must share the threat before a coalition forms")
     coalition_war_pct: int = rule(25, 0, 100, W, "Chance each epoch a coalition stronger than its foe goes to war (%)")
-    capacity_base: int = rule(2, 0, 50, W, "Relations every realm can keep")
+    capacity_base: int = rule(6, 0, 500, W, "Relations every realm can keep")
     capacity_admin: int = rule(25, 1, 100, W, "Administration per extra relation a realm can keep")
     capacity_skill: int = rule(30, 1, 100, W, "Diplomatic skill of the chancellor and envoys per extra relation")
     capacity_embassy: int = rule(1, 0, 10, W, "Extra relations each embassy holds up")

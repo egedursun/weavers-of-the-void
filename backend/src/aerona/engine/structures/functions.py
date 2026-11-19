@@ -1,3 +1,4 @@
+from collections import Counter
 from collections.abc import Awaitable, Callable
 from types import MappingProxyType
 
@@ -38,6 +39,7 @@ Effect = Callable[[TickContext, Working, EntityRow, "Tally"], Awaitable[None]]
 class Tally:
     def __init__(self) -> None:
         self.deepened = 0
+        self.deepened_in: Counter[int | None] = Counter()
         self.held = 0
         self.duels = 0
 
@@ -66,9 +68,9 @@ async def piety_house(ctx: TickContext, item: Working, host: EntityRow, tally: T
 
 
 async def deepen(ctx: TickContext, item: Working, host: EntityRow, tally: Tally, *, pct: int, branch: KnowledgeBranch | None = None) -> None:
-    if tally.deepened >= ctx.rules.record_schema.function_knowledge_cap or not ctx.rng(f"structure_knowledge.{item.structure.id}").chance(
-        item.profile.effect_pct * pct / PERCENT
-    ):
+    if tally.deepened_in[item.structure.world_id] >= ctx.rules.record_schema.function_knowledge_cap or not ctx.rng(
+        f"structure_knowledge.{item.structure.id}"
+    ).chance(item.profile.effect_pct * pct / PERCENT):
         return
     options = [
         entry
@@ -82,6 +84,7 @@ async def deepen(ctx: TickContext, item: Working, host: EntityRow, tally: Tally,
     if level is None:
         return
     tally.deepened += 1
+    tally.deepened_in[item.structure.world_id] += 1
     await record(
         ctx,
         "living_stats.work_knowledge",
@@ -258,7 +261,7 @@ async def dedication(ctx: TickContext, item: Working, host: EntityRow | None) ->
 
 async def run_functions(ctx: TickContext) -> Tally:
     tally = Tally()
-    for item in await working(ctx.session, list(StructureKind)):
+    for item in ctx.rng("functions.order").shuffled(await working(ctx.session, list(StructureKind))):
         host = await ctx.session.get(EntityRow, item.profile.host_entity_id) if item.profile.host_entity_id is not None else None
         live = host if host is not None and host.status is EntityStatus.CANON else None
         await dedication(ctx, item, live)

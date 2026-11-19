@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -10,10 +11,13 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat
+from aerona.engine.settlement.circuit import circuit_gates, circuit_towers
 from aerona.engine.settlement.districts import DistrictEffects, designs_for, effects_of
 from aerona.engine.structures.megastructures import habitat_room
 from aerona.engine.urban.coverage import UrbanState, urban_state
 from aerona.rules.registry import Rules
+
+DISTRICT_LEVEL_MAX = 5
 
 
 @dataclass
@@ -64,31 +68,42 @@ def fresh_infrastructure(rules: Rules, settlement: EntityRow, knowledge: Knowled
     defense = stat(settlement, "defense") or 0
     water = WaterSupply.AQUEDUCT if architecture >= table.aqueduct_level else WaterSupply.CISTERN if architecture >= table.cistern_level else WaterSupply.WELL
     population = stat(settlement, "population") or 0
+    walls_level = min(5, defense // max(1, table.walls_per_level))
     return SettlementInfrastructureRow(
         settlement_entity_id=settlement.id,
-        walls_level=min(5, defense // max(1, table.walls_per_level)),
+        walls_level=walls_level,
         walls_material=BuildMaterial.STONE if architecture >= rules.fire.stone_level else BuildMaterial.TIMBER,
         walls_condition=100,
-        gates=1 if defense > 0 else 0,
+        gates=circuit_gates(rules, population) if walls_level > 0 else 1 if defense > 0 else 0,
         roads=min(5, 1 + architecture // 2) if population >= table.town_population else 0,
         water=water,
         sewers=architecture >= table.sewer_level and population >= table.city_population,
         granary_capacity=0,
         warehouse_capacity=0,
         harbour_capacity=0,
-        towers=min(20, defense // 20),
+        towers=circuit_towers(rules, population) if walls_level > 0 else 0,
         locked=[],
     )
 
 
 def starting_districts(rules: Rules, settlement: EntityRow, epoch: int) -> list[DistrictKind]:
     population = stat(settlement, "population") or 0
+    quarters = 1 + population // rules.scale.quarter_people
     kinds = [DistrictKind.FARMLAND]
     if population >= rules.urban.town_population:
-        kinds.append(DistrictKind.MARKET)
+        kinds.extend([DistrictKind.MARKET] * quarters)
     if population >= rules.urban.city_population:
-        kinds.extend([DistrictKind.CRAFT_QUARTER, DistrictKind.TEMPLE_QUARTER])
+        kinds.extend([DistrictKind.CRAFT_QUARTER, DistrictKind.TEMPLE_QUARTER] * quarters)
+    kinds.extend([DistrictKind.RESIDENTIAL] * (population // rules.urban.district_people))
     return kinds
+
+
+def starting_rows(kinds: list[DistrictKind]) -> list[tuple[DistrictKind, int]]:
+    rows: list[tuple[DistrictKind, int]] = []
+    for kind, count in Counter(kinds).items():
+        full, rest = divmod(count, DISTRICT_LEVEL_MAX)
+        rows.extend([(kind, DISTRICT_LEVEL_MAX)] * full + ([(kind, rest)] if rest else []))
+    return rows
 
 
 async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeMap) -> Town:
@@ -100,9 +115,9 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
         session.add(infrastructure)
     districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == settlement.id).order_by(DistrictRow.id)))
     if profile is None:
-        for kind in starting_districts(ctx.rules, settlement, ctx.epoch):
+        for kind, level in starting_rows(starting_districts(ctx.rules, settlement, ctx.epoch)):
             district = DistrictRow(
-                settlement_entity_id=settlement.id, kind=kind, level=1, condition=100, material=infrastructure.walls_material, built_epoch=ctx.epoch
+                settlement_entity_id=settlement.id, kind=kind, level=level, condition=100, material=infrastructure.walls_material, built_epoch=ctx.epoch
             )
             session.add(district)
             districts.append(district)

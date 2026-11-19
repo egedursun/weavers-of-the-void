@@ -30,7 +30,7 @@ class ChainStep:
 
 
 CHAIN_STEPS: tuple[ChainStep, ...] = (
-    ChainStep("charcoal", "Charcoal burning", W.CHARCOAL_KILN, ((C.TIMBER, 2),), C.FUEL, 2, S.CARPENTRY),
+    ChainStep("charcoal", "Fuel making", W.CHARCOAL_KILN, ((C.TIMBER, 2),), C.FUEL, 2, S.CARPENTRY),
     ChainStep("forge_tools", "Forging tools", W.FORGE, ((C.ORE, 1), (C.FUEL, 1)), C.TOOLS, 2, S.SMITHING, B.METALLURGY, 1, keeps_material=C.ORE),
     ChainStep("forge_weapons", "Forging weapons", W.FORGE, ((C.ORE, 2), (C.FUEL, 1)), C.WEAPONS, 1, S.SMITHING, B.METALLURGY, 1, keeps_material=C.ORE),
     ChainStep("forge_armour", "Forging armour", W.FORGE, ((C.ORE, 3), (C.FUEL, 1)), C.ARMOUR, 1, S.SMITHING, B.METALLURGY, 2, keeps_material=C.ORE),
@@ -127,23 +127,23 @@ EXTRACTION_OF: MappingProxyType[CommodityKind, ExtractionKind] = MappingProxyTyp
 WORKSHOP_LABELS: MappingProxyType[WorkshopKind, str] = MappingProxyType(
     {
         W.MARKET: "Market",
-        W.GRANARY: "Granary",
+        W.GRANARY: "Grain store",
         W.WAREHOUSE: "Warehouse",
         W.MINE: "Mine",
-        W.LUMBER_CAMP: "Lumber camp",
+        W.LUMBER_CAMP: "Logging site",
         W.FISHERY: "Fishery",
-        W.CHARCOAL_KILN: "Charcoal kiln",
-        W.FORGE: "Forge",
-        W.TANNERY: "Tannery",
+        W.CHARCOAL_KILN: "Fuel works",
+        W.FORGE: "Metal works",
+        W.TANNERY: "Leather works",
         W.MILL: "Mill",
         W.BREWERY: "Brewery",
-        W.WEAVERY: "Weavery",
+        W.WEAVERY: "Textile works",
         W.STABLE: "Stable",
-        W.MASON_YARD: "Mason yard",
+        W.MASON_YARD: "Stone works",
         W.SHIPYARD: "Shipyard",
-        W.SIEGE_YARD: "Siege yard",
-        W.ALCHEMIST: "Alchemist",
-        W.SHRINE_WORKSHOP: "Shrine workshop",
+        W.SIEGE_YARD: "Arms works",
+        W.ALCHEMIST: "Chemical works",
+        W.SHRINE_WORKSHOP: "Sacred works",
         W.MINT: "Mint",
     }
 )

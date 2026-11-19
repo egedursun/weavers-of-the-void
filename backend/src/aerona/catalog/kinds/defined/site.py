@@ -71,7 +71,9 @@ SITE_ROOM_KIND = total(
             "Hall", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES")
         ),
         SiteRoomKind.STAIR: Defined("Stair", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")),
-        SiteRoomKind.CELL: Defined("Cell", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")),
+        SiteRoomKind.CELL: Defined(
+            "Cell", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES")
+        ),
         SiteRoomKind.CHAMBER: Defined("Chamber", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")),
         SiteRoomKind.VAULT: Defined(
             "Vault",
@@ -80,19 +82,31 @@ SITE_ROOM_KIND = total(
                 "catalog.gatherings.GUARDED_ROOMS",
                 "catalog.gatherings.ITEM_ROOMS",
                 "catalog.gatherings.ROOM_PLACES",
+                "catalog.gatherings.ROOM_SETTLEMENTS",
                 "catalog.gatherings.ROOM_STRUCTURES",
             ),
         ),
         SiteRoomKind.SHRINE: Defined(
-            "Shrine", checked_by=("engine.sites.rooms.furnish",), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")
+            "Shrine",
+            checked_by=("engine.sites.rooms.furnish",),
+            used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES"),
         ),
         SiteRoomKind.LAIR: Defined(
             "Lair", checked_by=("engine.sites.rooms.furnish",), used_by=("catalog.gatherings.GUARDED_ROOMS", "catalog.gatherings.ROOM_PLACES")
         ),
         SiteRoomKind.LIBRARY: Defined(
-            "Library", checked_by=(), used_by=("catalog.gatherings.ITEM_ROOMS", "catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")
+            "Library",
+            checked_by=(),
+            used_by=(
+                "catalog.gatherings.ITEM_ROOMS",
+                "catalog.gatherings.ROOM_PLACES",
+                "catalog.gatherings.ROOM_SETTLEMENTS",
+                "catalog.gatherings.ROOM_STRUCTURES",
+            ),
         ),
-        SiteRoomKind.ARMOURY: Defined("Armoury", checked_by=(), used_by=("catalog.gatherings.ITEM_ROOMS", "catalog.gatherings.ROOM_STRUCTURES")),
+        SiteRoomKind.ARMOURY: Defined(
+            "Armoury", checked_by=(), used_by=("catalog.gatherings.ITEM_ROOMS", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES")
+        ),
         SiteRoomKind.CRYPT: Defined(
             "Crypt",
             checked_by=("engine.sites.rooms.furnish",),
@@ -100,10 +114,13 @@ SITE_ROOM_KIND = total(
                 "catalog.gatherings.GUARDED_ROOMS",
                 "catalog.gatherings.ITEM_ROOMS",
                 "catalog.gatherings.ROOM_PLACES",
+                "catalog.gatherings.ROOM_SETTLEMENTS",
                 "catalog.gatherings.ROOM_STRUCTURES",
             ),
         ),
-        SiteRoomKind.LABORATORY: Defined("Laboratory", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_STRUCTURES")),
+        SiteRoomKind.LABORATORY: Defined(
+            "Laboratory", checked_by=(), used_by=("catalog.gatherings.ROOM_PLACES", "catalog.gatherings.ROOM_SETTLEMENTS", "catalog.gatherings.ROOM_STRUCTURES")
+        ),
         SiteRoomKind.HOUSE: Defined("House", checked_by=(), used_by=("catalog.gatherings.ROOM_SETTLEMENTS",)),
         SiteRoomKind.STORE: Defined(
             "Store",
@@ -122,6 +139,7 @@ SITE_ROOM_KIND = total(
                 "catalog.gatherings.GUARDED_ROOMS",
                 "catalog.gatherings.ITEM_ROOMS",
                 "catalog.gatherings.ROOM_PLACES",
+                "catalog.gatherings.ROOM_SETTLEMENTS",
                 "catalog.gatherings.ROOM_STRUCTURES",
             ),
         ),

@@ -216,6 +216,8 @@ async def test_a_fashionable_garment_wears_thin_when_everyone_wears_it_and_its_h
 async def test_a_rare_fashionable_garment_regains_its_pull_and_comes_back(session: AsyncSession, world: CoreWorld) -> None:
     fad = GarmentKindRow(name="Long veil", category=GarmentCategory.HEAD, fashion=100, novelty=45)
     await hold(session, KindConcept.GARMENT, fad, world.people.id)
+    for name in ("Barehold", "Plainmoor", "Lowfield"):
+        await settlement(session, name, world, world.regions[0])
     tally = await keep_crafts_of_life(await at(session, 2, fashion={"saturation": 100, "recovery": 20, "drain": 0, "revival_floor": 50}))
     assert fad.novelty > 50 and tally.revived == 1
 

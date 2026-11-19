@@ -1,3 +1,4 @@
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -409,8 +410,10 @@ async def transfer_holdings(ctx: TickContext, row: OrderTransitionRow, realm: En
     table = ctx.rules.economic_orders
     regime = OWN(row.to_axes.get("ownership", row.from_axes.get("ownership", OWN.HOUSEHOLD.value)))
     moved = 0
-    for bond, town_id in await holdings_in(ctx, await towns_of_realm(ctx, realm.id)):
-        if moved >= table.transfers_per_stage:
+    holdings = await holdings_in(ctx, await towns_of_realm(ctx, realm.id))
+    quota = math.ceil(len(holdings) * table.transfers_per_stage / PERCENT)
+    for bond, town_id in holdings:
+        if moved >= quota:
             break
         owner = await owner_for(ctx, regime, realm.id, town_id)
         loser = await ctx.session.get(EntityRow, bond.source_node_id)
@@ -484,7 +487,8 @@ async def advance(ctx: TickContext, row: OrderTransitionRow, tally: OrderTally) 
         return
     if row.resistance >= table.fail_from // 2:
         await record(ctx, "economy.transition_resisted", roles={IncidentRole.AUTHORITY: realm.id}, facts={"transition": row.kind, "resistance": row.resistance})
-    if row.transferred >= table.transfers_to_finish or not await holdings_in(ctx, await towns_of_realm(ctx, realm.id)):
+    holdings = await holdings_in(ctx, await towns_of_realm(ctx, realm.id))
+    if not holdings or row.transferred * PERCENT >= len(holdings) * table.transfers_to_finish:
         await finish(ctx, row, realm, tally)
 
 

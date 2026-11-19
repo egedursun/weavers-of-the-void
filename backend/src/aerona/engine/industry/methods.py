@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.eras import TECHNIQUE_ERAS
 from aerona.catalog.methods import (
     ALWAYS_PRACTISED,
     EXTRACTION_PROCESS,
@@ -37,10 +38,12 @@ from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.world import TechnologyEra
 from aerona.engine.agrarian.book import method_lift
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.eras.effects import era_order, world_start
 from aerona.engine.industry.energy import available
 from aerona.engine.industry.quality import premium
 from aerona.engine.intrigue.beliefs import BeliefView, price_key
@@ -330,8 +333,18 @@ async def owner_reveres(ctx: TickContext, owner_id: int, cache: dict[int, bool])
     return cache[owner_id]
 
 
+def method_era(spec: MethodSpec) -> TechnologyEra:
+    era = TECHNIQUE_ERAS.get(spec.technique) if spec.technique is not None else None
+    return era or TechnologyEra.STONE
+
+
+def founded_past(current: MethodSpec, best: MethodSpec, start: TechnologyEra) -> bool:
+    return era_order(method_era(current)) < era_order(start) and era_order(method_era(best)) <= era_order(start) and method_era(best) is not method_era(current)
+
+
 async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: MethodTally, *, banned: bool = False) -> None:
     beliefs: dict[int, bool] = {}
+    start = await world_start(ctx.session)
     margin = 1 + ctx.rules.methods.switch_margin_pct / PERCENT
     for process in ProcessKind:
         if not practised(book, community, process):
@@ -351,7 +364,7 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
         if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue
-        if row is not None and current is not None and current is not best and not refit(ctx, community):
+        if row is not None and current is not None and current is not best and not founded_past(current, best, start) and not refit(ctx, community):
             if row.obsolete_since is None and "obsolete_since" not in row.locked:
                 row.obsolete_since = ctx.epoch
             continue

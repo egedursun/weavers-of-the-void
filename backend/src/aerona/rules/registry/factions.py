@@ -6,7 +6,10 @@ from aerona.rules.model import Spanned, rule, span
 
 @dataclass(frozen=True)
 class FactionsRules:
-    faction_cap: int = rule(1, 0, 10, RuleGroup.CIVILIZATION, "Maximum factions founded spontaneously per epoch")
+    faction_cap: int = rule(1, 0, 1000, RuleGroup.CIVILIZATION, "Base of the most factions founded spontaneously per epoch, grown by the number of communities")
+    faction_cap_community_divisor: int = rule(
+        4, 0, 1000, RuleGroup.CIVILIZATION, "Communities per extra faction founded spontaneously in an epoch (0: the cap stays at its base)"
+    )
     faction_chance: int = rule(15, 0, 100, RuleGroup.CIVILIZATION, "A faction is founded within a community (%)")
     revolt_disband_chance: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "An uprising whose war ended disbands (%)")
     guild_min_merchant_pct: int = rule(11, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum merchant share of a community that founds a guild (%)")
@@ -44,7 +47,8 @@ class FactionsRules:
         10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Strength a class faction gains each epoch per point of its class's discontent below the middle (%)"
     )
     act_chance: int = rule(60, 0, 100, RuleGroup.CIVILIZATION, "A faction acts on its agenda in an epoch (%)")
-    act_cap: int = rule(40, 0, 1000, RuleGroup.CIVILIZATION, "Most faction acts in an epoch")
+    act_cap: int = rule(40, 0, 100000, RuleGroup.CIVILIZATION, "Base of the most faction acts in an epoch, grown by the number of factions")
+    act_cap_faction_divisor: int = rule(1, 0, 1000, RuleGroup.CIVILIZATION, "Factions per extra faction act in an epoch (0: the cap stays at its base)")
     dues_per_member: int = rule(2, 0, 1000, RuleGroup.CIVILIZATION, "Treasury a faction collects per member each epoch")
     wealth_dues: int = rule(1, 0, 1000, RuleGroup.CIVILIZATION, "Treasury per ten points of a faction's wealth each epoch")
     lobby_cost: int = rule(10, 0, 100000, RuleGroup.CIVILIZATION, "Treasury a lobbying campaign costs")
@@ -125,7 +129,10 @@ class IntrigueRules(Spanned):
     identity_slip: int = rule(4, 0, 50, RuleGroup.REPUTATION, "Exposure a false identity gains each epoch for a mortal of little caution")
     identity_look: int = rule(3, 0, 50, RuleGroup.REPUTATION, "Exposure a false identity gains each epoch for every ten points of recognisability")
     identity_investigation: int = rule(40, 0, 100, RuleGroup.REPUTATION, "Exposure a false identity gains when an investigation names its wearer (%)")
-    scheme_cap: int = rule(4, 0, 50, RuleGroup.REPUTATION, "Most new schemes the world's mortals and factions begin each epoch")
+    scheme_cap: int = rule(
+        4, 0, 10000, RuleGroup.REPUTATION, "Base of the most new schemes the world's mortals begin each epoch, grown by the number of living mortals"
+    )
+    scheme_cap_mortal_divisor: int = rule(20, 0, 100000, RuleGroup.REPUTATION, "Living mortals per extra new scheme in an epoch (0: the cap stays at its base)")
     scheme_ambition_pct: int = rule(8, 0, 100, RuleGroup.REPUTATION, "Chance each epoch an ambitious or cruel mortal with a rival begins a scheme (%)")
     recruit_years: int = span(1, 0, 250, RuleGroup.REPUTATION, "Years a scheme spends recruiting before it prepares")
     agent_power: int = rule(10, 0, 100, RuleGroup.REPUTATION, "Power each agent adds to a scheme for every ten points of intrigue skill")
@@ -167,7 +174,9 @@ class IntrigueRules(Spanned):
 
 @dataclass(frozen=True)
 class MercenariesRules(Spanned):
-    pay: int = rule(20, 0, 100000, RuleGroup.WAR_AND_DIPLOMACY, "Pay a mercenary company asks per epoch")
+    pay: int = rule(
+        20, 0, 100000, RuleGroup.WAR_AND_DIPLOMACY, "Pay a mercenary company asks per epoch for each of its members (at least once for a company of none)"
+    )
     hire_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A realm at war hires an idle company in an epoch (%)")
     contract_years: int = span(3, 1, 2500, RuleGroup.WAR_AND_DIPLOMACY, "Years a condotta runs")
     loyalty_paid: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Loyalty a paid company gains each epoch")

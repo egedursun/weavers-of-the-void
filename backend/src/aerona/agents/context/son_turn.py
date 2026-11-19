@@ -18,6 +18,7 @@ from aerona.catalog.rarities import RARITY_LABELS
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, EXISTENCE_MODES, STATS, existence_band, existence_band_effect, max_essence, max_hp
 from aerona.core.grammar import several, spoken
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.meta import ScenarioRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.meta import ScenarioStatus
@@ -41,6 +42,11 @@ from aerona.prompts.contexts.son_turn import (
     SonTurnUserContext,
     StatValue,
 )
+
+
+async def true_name_of(scope: Scope, son_id: int) -> str | None:
+    row = await scope.session.get(TrueNameRow, son_id)
+    return row.name if row is not None else None
 
 
 async def creator_wishes(scope: Scope) -> str:
@@ -71,9 +77,7 @@ async def incitement_lines(scope: Scope, son: SonRow) -> list[str]:
         event = await scope.session.get(EntityRow, war.event_entity_id)
         name = event.name if event is not None else f"war #{war.id}"
         state = (
-            f"ended in age {war.ended_epoch} ({spoken(war.ending)})"
-            if war.ending is not None
-            else f"still burning, {several(war.battles, 'battle', 'battles')}"
+            f"ended in age {war.ended_epoch} ({spoken(war.ending)})" if war.ending is not None else f"still going, {several(war.battles, 'battle', 'battles')}"
         )
         lines.append(f"{name}, begun in age {war.started_epoch}, {state}")
     return lines
@@ -102,7 +106,7 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
             nature=profile.nature or None if profile else None,
             state_label=EXISTENCE_MODES[profile.mode] if profile and profile.mode else None,
             manifestation=profile.manifestation or None if profile else None,
-            true_name=profile.true_name or None if profile else None,
+            true_name=await true_name_of(scope, son.id) or (profile.true_name if profile else None) or None,
             known_by=await name_knowers(scope.session, son.id),
             names_known=await names_known(scope.session, son.id, scope.rules.context.son_location_tree_lines),
         ),

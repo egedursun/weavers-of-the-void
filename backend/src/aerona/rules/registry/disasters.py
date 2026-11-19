@@ -6,7 +6,7 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class DisastersRules:
-    cap: int = rule(2, 0, 20, RuleGroup.POPULATION_AND_GROWTH, "Maximum natural events per epoch")
+    cap: int = rule(6, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Maximum natural events on one world per epoch")
     earthquake_chance: int = rule(8, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Earthquake in a mountainous region (%)")
     flood_chance: int = rule(6, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Flood on the coast (%)")
     storm_chance: int = rule(6, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Storm on the coast (%)")

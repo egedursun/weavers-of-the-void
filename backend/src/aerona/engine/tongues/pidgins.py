@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import SpeakerCohortRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
@@ -43,7 +44,8 @@ async def words_from(ctx: TickContext, language: EntityRow, origin: str) -> list
     rows = list(await ctx.session.scalars(select(LexemeRow).where(LexemeRow.language_entity_id == language.id).order_by(LexemeRow.id)))
     rng = ctx.rng(f"pidgin.words.{language.id}.{ctx.epoch}")
     rng.shuffle(rows)
-    return [LexiconEntry(word=row.word, meaning=row.meaning, origin=origin) for row in rows[:PIDGIN_WORDS] if row.part_of_speech is not None]
+    taken = max(PIDGIN_WORDS, len(rows) * ctx.rules.scale.pidgin_lexicon_pct // PERCENT)
+    return [LexiconEntry(word=row.word, meaning=row.meaning, origin=origin) for row in rows[:taken] if row.part_of_speech is not None]
 
 
 async def already_talk(ctx: TickContext, first: int, second: int) -> bool:

@@ -24,7 +24,7 @@ async def keep_cohort_mishaps(ctx: TickContext) -> int:
         profile = await ctx.session.get(SettlementProfileRow, town.id)
         crowding = profile.fire_risk if profile is not None else PERCENT // 5
         cold = table.winter_pct if ctx.epoch % 4 == 3 else PERCENT
-        rate = table.cohort_rate_per_mil * (PERCENT + crowding) // PERCENT * cold // PERCENT
+        rate = table.per_epoch(table.cohort_rate_per_mil) * (PERCENT + crowding) // PERCENT * cold // PERCENT
         people = headcount(town)
         dead = round_half_up(people * rate / PER_MIL)
         injured = dead * 4

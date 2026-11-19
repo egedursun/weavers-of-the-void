@@ -36,7 +36,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats
 from aerona.engine.recording.record import record
 from aerona.engine.recording.record import record as record_incident
@@ -59,7 +59,7 @@ async def sacrifice_of_people(ctx: TickContext, church: Church, book: FaithBook)
     given = 0
     for member in church.members:
         people = headcount(member)
-        victims = min(people, table.sacrifice_cohort)
+        victims = min(people, max(1, round_half_up(table.sacrifice_cohort * people / THOUSAND))) if table.sacrifice_cohort else 0
         if victims <= 0:
             continue
         with flowing(FlowCategory.DEATH):
@@ -87,7 +87,8 @@ async def sacrifices(ctx: TickContext, church: Church, book: FaithBook) -> int:
     if church.holds(TenetKind.ANIMAL_SACRIFICE):
         ledger = goods_of(ctx.session, ctx.epoch)
         for member in church.members:
-            offered += await ledger.take_units(member.id, CommodityKind.LIVESTOCK, table.animal_sacrifice_livestock, GoodsFlow.OFFERING)
+            heads = max(1, round_half_up(table.animal_sacrifice_livestock * headcount(member) / THOUSAND)) if table.animal_sacrifice_livestock else 0
+            offered += await ledger.take_units(member.id, CommodityKind.LIVESTOCK, heads, GoodsFlow.OFFERING)
         if offered:
             feed_god(ctx, church, table.sacrifice_essence // 2 or 1)
     if church.holds(TenetKind.SACRIFICE_OF_PEOPLE) and church.members:

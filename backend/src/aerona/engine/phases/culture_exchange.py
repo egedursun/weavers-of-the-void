@@ -362,8 +362,9 @@ async def cultural_exchange(ctx: TickContext) -> None:
     entities: Mapping[int, EntityRow] = {entity.id: entity for entity in await canon(ctx.session, COMMUNITY_TYPES)}
     rng = ctx.rng("exchange")
     exchanges = 0
+    cap = scaled_cap(culture.exchange_cap, culture.exchange_communities_per_extra, len(entities))
     for link in sorted(await trade_links(ctx), key=lambda item: (-item.volume, item.first, item.second)):
-        if exchanges >= culture.exchange_cap:
+        if exchanges >= cap:
             break
         pair = _trading_communities((entities.get(link.first), entities.get(link.second)))
         if pair is None or not rng.chance(min(100.0, culture.exchange_chance * link_weight(ctx, link))):

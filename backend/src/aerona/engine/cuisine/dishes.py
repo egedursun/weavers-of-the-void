@@ -361,8 +361,10 @@ async def invent(ctx: TickContext, knowledge: KnowledgeMap, tally: KitchenTally)
     for people in list(peoples):
         if held(people.id):
             continue
-        known = set(await ctx.session.scalars(select(DishRow.course).where(DishRow.origin_node_id == people.id)))
+        cooked = list(await ctx.session.scalars(select(DishRow.course).where(DishRow.origin_node_id == people.id).order_by(DishRow.id)))
+        known = set(cooked)
         missing: list[DishCourse | None] = [course for course in FIRST_COURSES[: table.starting_dishes] if course not in known]
+        missing += [None] if not missing and len(cooked) < table.starting_dishes else []
         if not missing and not ctx.rng(f"invent_dish.{people.id}.{ctx.epoch}").chance(table.invent_pct):
             continue
         homes = await homes_of(ctx.session, people)

@@ -23,7 +23,9 @@ class WorldViewRules:
     belief_from: int = rule(50, 0, 100, C, "Piety of a town from which belief sustains it where a world feeds on belief")
     shortfall_unrest: int = rule(10, 0, 100, C, "Unrest a town gains in an epoch when what its world binds it to runs out")
     shortfall_prosperity: int = rule(5, 0, 100, C, "Prosperity a town loses in an epoch when what its world binds it to runs out")
-    float_upkeep: int = rule(20, 0, 10000, C, "Coin a floating or sealed town pays each epoch to stay aloft or sealed")
+    float_upkeep: int = rule(
+        20, 0, 10000, C, "Coin a floating or sealed town pays each epoch for every thousand of its people to stay aloft or sealed (at least this much)"
+    )
     upkeep_unpaid_prosperity: int = rule(4, 0, 100, C, "Prosperity a floating or sealed town loses in an epoch it cannot pay its upkeep")
     son_step: int = rule(20, 1, 100, C, "Most a son can move one share of a world's nature in one act")
     son_cost: int = rule(15, 0, 1000, C, "Essence a son spends to move one share of a world's nature")

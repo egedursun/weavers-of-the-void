@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.war_causes import WAR_CAUSES
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.belonging import HeldIdentityRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import MovementRow
@@ -167,8 +168,9 @@ def write(row: HeldIdentityRow, value: Value, salience: int, driver: SalienceDri
 
 async def keep_holder(ctx: TickContext, atlas: RegionAtlas, holder: EntityRow, targets: dict[IdentityLayer, tuple[int, SalienceDriver]], pct: int) -> None:
     values = await values_of(ctx.session, atlas, holder)
+    stored = {row.layer: row for row in await rows_by_prefix(ctx.session, HeldIdentityRow, holder.id)}
     for layer in IdentityLayer:
-        row = await ctx.session.get(HeldIdentityRow, (holder.id, layer))
+        row = stored.get(layer)
         target, driver = targets[layer]
         if row is None:
             row = HeldIdentityRow(
@@ -210,11 +212,14 @@ async def keep_identities(ctx: TickContext, tally: IdentityTally) -> None:
     mortals = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
+    homes: dict[int, dict[IdentityLayer, HeldIdentityRow]] = {}
     for mortal in list(mortals):
         if held(mortal.id):
             continue
         home = mortal.location_id
-        rows = {row.layer: row for row in await ctx.session.scalars(select(HeldIdentityRow).where(HeldIdentityRow.holder_entity_id == home))} if home else {}
+        if home and home not in homes:
+            homes[home] = {row.layer: row for row in await ctx.session.scalars(select(HeldIdentityRow).where(HeldIdentityRow.holder_entity_id == home))}
+        rows = homes.get(home, {}) if home else {}
         targets = {
             layer: (rows[layer].salience, rows[layer].driver) if layer in rows else (table.base_salience, SalienceDriver.BASELINE) for layer in IdentityLayer
         }

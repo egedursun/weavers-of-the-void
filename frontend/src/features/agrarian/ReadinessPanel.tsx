@@ -35,7 +35,8 @@ type Aid = AgrarianNodeView['aid'][number]
 type Rebuild = AgrarianNodeView['rebuilds'][number]
 
 const NOT_TOWN = 'Only a settlement raises works, receives aid and rebuilds'
-const MOST_LEVEL = 5
+const MOST_LEVEL = 1000
+const SMALL_TOWN_LEVEL = 5
 const GODS = ['son', 'foreign_god', 'creator'] as const
 const NO_TYPES = [] as const
 const MORTALS = ['mortal'] as const
@@ -88,7 +89,7 @@ function WorkCard({ row, blocked }: { row: Work; blocked: string | null }) {
       <Meter
         label='Level'
         value={row.level}
-        max={MOST_LEVEL}
+        max={Math.max(SMALL_TOWN_LEVEL, row.level)}
         tone='info'
         icon={Shield}
       />

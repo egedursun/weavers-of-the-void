@@ -62,9 +62,12 @@ class MortalToolsRules:
     unknown_world_per_epoch: int = rule(
         1,
         0,
-        20,
+        1000,
         RuleGroup.COSMOS_AND_TRAVEL,
-        "discover_route: maximum new-world discoveries in the cosmos per epoch (worlds born another way that epoch also count)",
+        "discover_route: base of the most new-world discoveries in the cosmos per epoch, grown by the number of worlds (worlds born another way that epoch also count)",
+    )
+    unknown_world_world_divisor: int = rule(
+        3, 0, 10000, RuleGroup.COSMOS_AND_TRAVEL, "discover_route: worlds per extra new-world discovery in an epoch (0: the cap stays at its base)"
     )
     agent_power_weight: int = rule(2, 0, 1000, RuleGroup.MORTAL_AGENTS, "Agent selection: score multiplier of power level")
     agent_population_weight: int = rule(2, 0, 1000, RuleGroup.MORTAL_AGENTS, "Agent selection: score multiplier of log10(population or followers)")

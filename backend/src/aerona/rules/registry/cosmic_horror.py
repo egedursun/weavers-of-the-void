@@ -38,13 +38,28 @@ class CosmicHorrorRules:
     worshipper_cap: int = rule(
         5,
         0,
-        100,
+        10000,
         RuleGroup.COSMIC_HORROR,
-        "Cap of repair coming from the number of worshipping communities (a crowded world cannot repair the fabric infinitely; the rest comes from the worshipper ratio)",
+        "Base cap of repair coming from the number of worshipping communities, grown by the communities of the world (the rest comes from the worshipper ratio)",
     )
-    priest_cap: int = rule(3, 0, 100, RuleGroup.COSMIC_HORROR, "Cap of repair by communities with a strong priest class (1 per community)")
+    priest_cap: int = rule(
+        3,
+        0,
+        10000,
+        RuleGroup.COSMIC_HORROR,
+        "Base cap of repair by communities with a strong priest class (1 per community), grown by the communities of the world",
+    )
+    repair_cap_community_divisor: int = rule(
+        10,
+        0,
+        100000,
+        RuleGroup.COSMIC_HORROR,
+        "Communities of a world per extra point of each worshipper, priest and temple repair cap (0: the caps stay at their base)",
+    )
     worshipper_ratio_repair: int = rule(3, 0, 50, RuleGroup.COSMIC_HORROR, "Repair from the worshipper ratio (if everyone worships)")
-    temple_cap: int = rule(3, 0, 50, RuleGroup.COSMIC_HORROR, "Maximum leak repair by temples (1 per temple)")
+    temple_cap: int = rule(
+        3, 0, 10000, RuleGroup.COSMIC_HORROR, "Base of the most leak repair by temples (1 per temple), grown by the communities of the world"
+    )
     priest_min_pct: int = rule(10, 0, 100, RuleGroup.COSMIC_HORROR, "Minimum priest-class share that repairs leak (%)")
     fabric_self_repair: int = rule(1, 0, 50, RuleGroup.COSMIC_HORROR, "Spontaneous repair of the fabric each epoch")
     repair_full_at: int = rule(

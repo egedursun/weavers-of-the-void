@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.constants.units import PER_MILLE
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
@@ -26,6 +27,7 @@ from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
 
 PERCENT = 100
@@ -120,6 +122,10 @@ async def neighbours_of(ctx: TickContext, book: RealmBook, community: EntityRow)
     return [other for place in sorted(near) for other in book.atlas.communities_in(place) if other != community.id]
 
 
+def per_thousand(stock: int, community: EntityRow) -> float:
+    return stock * PER_MILLE / max(PER_MILLE, stat_or(community, "population", 0))
+
+
 async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grievance]:
     found: list[Grievance] = []
     table = ctx.rules.war_conduct
@@ -130,7 +136,7 @@ async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grieva
     for community in communities:
         zealous = TenetKind.HOLY_WAR in await faith_tenets(ctx.session, community.id)
         society = await ctx.session.get(CommunitySocietyRow, community.id)
-        hungry = society is not None and society.stock_food < table.hunger_food
+        hungry = society is not None and per_thousand(society.stock_food, community) < table.hunger_food
         if not zealous and not hungry:
             continue
         patron = await patron_node(ctx.session, community.id) if zealous else None
@@ -140,7 +146,8 @@ async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grieva
             if zealous and patron is not None and patrons[other] not in {patron, None}:
                 found.append((community.id, other, CasusBelliKind.HOLY_WAR, patron))
             neighbour = await ctx.session.get(CommunitySocietyRow, other) if hungry else None
-            if neighbour is not None and neighbour.stock_food >= table.hunger_food * 3:
+            neighbour_entity = await ctx.session.get(EntityRow, other) if neighbour is not None else None
+            if neighbour is not None and neighbour_entity is not None and per_thousand(neighbour.stock_food, neighbour_entity) >= table.hunger_food * 3:
                 found.append((community.id, other, CasusBelliKind.RESOURCE_NEED, None))
     return found
 

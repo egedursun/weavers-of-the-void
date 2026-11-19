@@ -21,6 +21,7 @@ function part(changes: Partial<Part>): Part {
     severable: true,
     internal: false,
     vital: false,
+    counted: 0,
     loss: 0,
     state: null,
     prosthesis: null,

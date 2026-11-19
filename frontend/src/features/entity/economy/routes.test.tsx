@@ -238,7 +238,7 @@ describe('the realm at work', () => {
       .toBeVisible()
     await expect.element(screen.getByText('Short of fuel in')).toBeVisible()
     await expect
-      .element(screen.getByText('Forge in 1 of 2 members'))
+      .element(screen.getByText('Metal works in 1 of 2 members'))
       .toBeVisible()
     await expect.element(screen.getByText('1 short')).toBeVisible()
   })

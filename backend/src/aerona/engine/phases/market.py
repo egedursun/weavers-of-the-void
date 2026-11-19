@@ -155,21 +155,15 @@ async def end_debt(ctx: TickContext, bond: BondRow, debtor: EntityRow, creditor:
 
 async def debt_endings(ctx: TickContext, tally: MarketTally) -> None:
     table = ctx.rules.market
-    closed = 0
     for bond in sorted(await active_bonds(ctx.session, [BondKind.OWES]), key=lambda item: item.id):
-        if closed >= table.debt_ending_cap:
-            break
         if bond.debt_due_epoch is None or ctx.epoch - bond.debt_due_epoch < table.debt_patience:
-            if not await jubilee_now(ctx, bond, tally):
-                continue
-            closed += 1
+            await jubilee_now(ctx, bond, tally)
             continue
         debtor, creditor = await living_entity(ctx.session, bond.source_node_id), await living_entity(ctx.session, bond.target_node_id)
         if debtor is None or creditor is None:
             continue
         ending = await end_debt(ctx, bond, debtor, creditor)
         if ending is not None:
-            closed += 1
             tally.endings[ending] = tally.endings.get(ending, 0) + 1
 
 
@@ -263,7 +257,7 @@ async def resource_market(ctx: TickContext) -> None:
                     facts={"abundance": abundance, "demand": load},
                     place=resource.location_id,
                 )
-            elif exhausted < table.depletion_cap and ctx.rng(f"exhaust.{resource.id}").chance(table.depletion_chance):
+            elif ctx.rng(f"exhaust.{resource.id}").chance(table.depletion_chance):
                 await exhaust(ctx, resource)
                 exhausted += 1
         elif resource.id in depleting and abundance > table.depletion_abundance * DOUBLE:

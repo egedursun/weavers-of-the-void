@@ -61,7 +61,7 @@ from aerona.engine.mythic.geasa import spring_trap
 from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
@@ -148,12 +148,14 @@ async def hire(ctx: TickContext, scheme: SchemeRow, agents: list[int], wanted: i
     payer = await ctx.session.get(MortalProfileRow, scheme.owner_node_id)
     if owner is None or owner.location_id is None or payer is None or WEALTH in payer.locked:
         return []
-    locals_ = await ctx.session.scalars(
+    place = await ctx.session.get(EntityRow, owner.location_id)
+    seek = scaled_cap(HIRE_SEEK, ctx.rules.scale.hire_seek_people, stat_or(place, "population", 0) if place is not None else 0)
+    everyone = await ctx.session.scalars(
         select(EntityRow.id)
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [owner.location_id]))
-        .order_by(EntityRow.importance.desc(), EntityRow.id)
-        .limit(HIRE_SEEK)
+        .order_by(EntityRow.id)
     )
+    locals_ = ctx.rng(f"scheme.hire.{scheme.id}.{ctx.epoch}").sample(list(everyone), seek)
     pool = [node for node in locals_ if await recruitable(ctx, scheme, node, agents)]
     skills = {node: await skill(ctx, node) for node in pool}
     hired: list[int] = []
@@ -661,8 +663,10 @@ async def plotters(ctx: TickContext, tally: SchemeTally) -> None:
     table = ctx.rules.intrigue
     open_owners = set(await ctx.session.scalars(select(SchemeRow.owner_node_id).where(SchemeRow.phase.in_(list(OPEN)))))
     statement = select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
-    for mortal in await ctx.session.scalars(statement):
-        if tally.begun >= table.scheme_cap:
+    mortals = ctx.rng("scheme.order").shuffled(list(await ctx.session.scalars(statement)))
+    limit = scaled_cap(table.scheme_cap, table.scheme_cap_mortal_divisor, len(mortals))
+    for mortal in mortals:
+        if tally.begun >= limit:
             return
         if mortal.id in open_owners or held(mortal.id):
             continue

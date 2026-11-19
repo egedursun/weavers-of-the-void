@@ -123,9 +123,10 @@ async def spread(
             destination=far,
         )
         return 1
-    share = presence.mass // (4 * max(1, SCALE_REACH[line.scale]))
-    for region in atlas.neighbours(presence.place_node_id):
-        if seeded >= SCALE_REACH[line.scale] or share <= 0:
+    reach = SCALE_REACH[line.scale] + max(0, presence.mass) // ctx.rules.scale.replicator_mass_per_reach
+    share = presence.mass // (4 * max(1, reach))
+    for region in ctx.rng(f"replicator.spread.{line.id}.{presence.place_node_id}.{ctx.epoch}").shuffled(atlas.neighbours(presence.place_node_id)):
+        if seeded >= reach or share <= 0:
             break
         if region in here or held(region):
             continue

@@ -53,7 +53,6 @@ from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.readers import Working, working
 
 EXAMINED = (SkillKind.LAW, SkillKind.WRITING, SkillKind.LORE)
-CARRIED = 3
 LICENSED_ROLES = frozenset({MortalRole.PHYSICIAN, MortalRole.ENGINEER, MortalRole.PILOT, MortalRole.OFFICER})
 
 
@@ -282,18 +281,20 @@ async def migrate(ctx: TickContext, rows: dict[int, tuple[Working, AcademicFreed
         if destination is None or destination == origin:
             continue
         for mortal in await scholars_at(ctx, origin):
-            if await best_skill(ctx, mortal.id, SCHOLARLY) is None or not ctx.rng(f"learning.migrate.{mortal.id}.{ctx.epoch}").chance(table.migrate_pct):
+            skill = await best_skill(ctx, mortal.id, SCHOLARLY)
+            if skill is None or not ctx.rng(f"learning.migrate.{mortal.id}.{ctx.epoch}").chance(table.migrate_pct):
                 continue
             mortal.location_id = destination
             lacking = sorted(await techniques_of(ctx.session, origin) - await techniques_of(ctx.session, destination), key=lambda item: item.value)
-            for technique in lacking[:CARRIED]:
+            carried = ctx.rng(f"learning.carried.{mortal.id}.{ctx.epoch}").sample(lacking, 1 + skill[1] // ctx.rules.scale.skill_per_carried_technique)
+            for technique in carried:
                 await add_progress(ctx, destination, technique, table.carried_progress)
             tally.migrated += 1
             await record_incident(
                 ctx,
                 "learning.migrated",
                 roles={IncidentRole.ACTOR: mortal.id, IncidentRole.ORIGIN: origin, IncidentRole.DESTINATION: destination},
-                facts={"techniques_carried": len(lacking[:CARRIED]), "progress": table.carried_progress},
+                facts={"techniques_carried": len(carried), "progress": table.carried_progress},
                 origin=origin,
                 destination=destination,
                 terms=[Term("rules.academic_freedom.carried_progress", table.carried_progress)],

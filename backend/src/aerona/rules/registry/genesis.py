@@ -7,7 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class GenesisRules:
     regions_min: int = rule(3, 1, 50, RuleGroup.GENESIS, "Minimum regions at genesis")
-    regions_max: int = rule(5, 1, 50, RuleGroup.GENESIS, "Maximum regions at genesis")
+    regions_max: int = rule(5, 1, 1000, RuleGroup.GENESIS, "Maximum regions at genesis")
     region_breadth: int = rule(60, 0, 100, RuleGroup.GENESIS, "Breadth of the initial regions")
     region_power: int = rule(8, 1, 11, RuleGroup.GENESIS, "Power level of the initial regions")
     sky_brightness: int = rule(70, 0, 100, RuleGroup.GENESIS, "Brightness of the first celestial body")

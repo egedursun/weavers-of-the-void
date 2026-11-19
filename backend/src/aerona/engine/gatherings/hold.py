@@ -66,6 +66,7 @@ from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.relations.book import ensure_relation, relation, relations_of, shift
 
 G = GatheringKind
+MINGLE_GROUP = 10
 OUTCOME_ORDER = (GatheringOutcome.CONVIVIAL, GatheringOutcome.UNEVENTFUL, GatheringOutcome.QUARRELSOME, GatheringOutcome.VIOLENT, GatheringOutcome.MASSACRE)
 
 
@@ -244,7 +245,7 @@ async def mingle(ctx: TickContext, holding: Holding, tally: GatheringTally) -> N
         select(SecretRow).where(SecretRow.holder_node_id.in_(mortals), SecretRow.exposed_epoch.is_(None)).order_by(SecretRow.id)
     ):
         kept_count.setdefault(unexposed.holder_node_id, unexposed)
-    for index in range(table.mingle_pairs):
+    for index in range(max(1, round(table.mingle_pairs * len(mortals) / MINGLE_GROUP))):
         first = draw.pick(mortals)
         second = draw.pick([node for node in mortals if node != first])
         there = await ensure_relation(ctx.session, first, second, ctx.epoch)

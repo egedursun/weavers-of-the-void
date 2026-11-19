@@ -46,10 +46,11 @@ class ChemistryRules:
 
 
 @dataclass(frozen=True)
-class InsuranceRules:
+class InsuranceRules(Spanned):
     found_chance: int = rule(20, 0, 100, M, "Chance each epoch a guild or company of a people that knows insurance begins to insure (%)")
-    seed_pool: int = rule(30, 0, 1000, M, "Means an insurer first holds")
-    policies_per_epoch: int = rule(3, 0, 50, M, "Policies an insurer writes each epoch")
+    seed_pool: int = rule(30, 0, 100000, M, "Means an insurer first holds, before its members are counted")
+    seed_pool_per_member: int = rule(3, 0, 10000, M, "More means an insurer first holds for each of its members")
+    policies_per_epoch: int = rule(3, 0, 1000, M, "Policies an insurer writes each year")
     sum_insured: int = rule(20, 0, 1000, M, "Means a policy pays at most on a loss")
     cargo_payout_pct: int = rule(60, 0, 100, M, "Share of the value lost on a road an insured cargo is paid back (%)")
     life_payout: int = rule(5, 0, 100, M, "Wealth an insured life pays to its household when it ends")
@@ -61,7 +62,9 @@ class InsuranceRules:
 
 @dataclass(frozen=True)
 class RightsRules:
-    seed_per_epoch: int = rule(3, 0, 50, V, "Works and rites each epoch that become the held right of their maker's house or maker")
+    seed_per_epoch: int = rule(
+        0, 0, 100000, V, "Most works and rites each epoch that become the held right of their maker's house or maker (0 no limit, each work once)"
+    )
     infringe_chance: int = rule(10, 0, 100, V, "Chance each epoch someone of another clan performs or copies a held right (%)")
     insult_opinion: int = rule(15, 0, 100, V, "Opinion a holder loses of one who performs or copies its right")
     licence_fee: int = rule(2, 0, 100, V, "Wealth a licensee pays the holder each epoch")

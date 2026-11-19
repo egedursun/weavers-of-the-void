@@ -328,7 +328,7 @@ async def attract(ctx: TickContext, god: ForeignGodRow, natives: list[EntityRow]
     )
     rng = ctx.rng(f"attract.{god.id}")
     living = {son.id for son in await ctx.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD))}
-    unclaimed = [item for item in unheld(natives) if not index.outgoing(item.id, BondKind.WORSHIPS) and item.creator_son_id not in living][
+    unclaimed = rng.shuffled(item for item in unheld(natives) if not index.outgoing(item.id, BondKind.WORSHIPS) and item.creator_son_id not in living)[
         : pantheon.foreign_attract_targets
     ]
     drawn = 0
@@ -464,7 +464,7 @@ async def friendly_help(ctx: TickContext, god: ForeignGodRow, powers: set[Foreig
         return 0
     bounty = settings.power_bountiful / PERCENT if F.FERTILE in powers else 1
     gift = max(0, round((pantheon.foreign_friend_prosperity + stat_effect(ctx.rules, god, Stat.CREATIVITY, settings.prosperity_creativity)) * bounty))
-    helped = [item for item in await worshippers(ctx.session, god.id) if has_stat(item, PROSPERITY_KEY)][: pantheon.foreign_friend_help_targets]
+    helped = rng.shuffled(item for item in await worshippers(ctx.session, god.id) if has_stat(item, PROSPERITY_KEY))[: pantheon.foreign_friend_help_targets]
     for believer in helped:
         add_prosperity(ctx.rules, believer, gift)
     return len(helped)

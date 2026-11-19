@@ -47,6 +47,10 @@ async def keep_peoples(ctx: TickContext) -> int:
         )
     )
     levels = await known_levels(ctx.session, peoples)
+    stored = {
+        (row.holder_node_id, row.family): row
+        for row in await ctx.session.scalars(select(TechnologyProfileRow).where(TechnologyProfileRow.holder_node_id.in_(peoples)))
+    }
     moved = 0
     for people in peoples:
         if held(people):
@@ -54,7 +58,7 @@ async def keep_peoples(ctx: TickContext) -> int:
         known = await techniques_of(ctx.session, people)
         for family in TechFamily:
             level = derived(levels.get(people, {}), known, family)
-            row = await ctx.session.get(TechnologyProfileRow, (people, family))
+            row = stored.get((people, family))
             if row is None:
                 ctx.session.add(TechnologyProfileRow(holder_node_id=people, family=family, level=level, updated_epoch=ctx.epoch, locked=[]))
                 moved += 1

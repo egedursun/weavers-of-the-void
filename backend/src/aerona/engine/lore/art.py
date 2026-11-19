@@ -47,6 +47,8 @@ HALF = 2
 PERFORMERS = (SkillKind.ORATORY, SkillKind.LORE)
 IMAGES = IMAGE_MODES
 
+DECADE_YEARS = 10
+
 
 async def favourite_form(ctx: TickContext, seat: EntityRow) -> ArtMode | None:
     people = await people_of(ctx.session, seat)
@@ -315,7 +317,8 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
         )
     if row.medium in VERBAL_MODES and (stat(artwork, "renown") or 0) >= PERCENT // HALF and "copies" not in row.locked:
         printed = await has_technique(ctx.session, artwork.location_id, Technique.PRINTING)
-        gain = ctx.rules.art.copies_gain + (ctx.rules.technique_effects.printing_copies if printed else 0)
+        decades = ctx.rules.art.years_per_epoch / DECADE_YEARS
+        gain = (ctx.rules.art.copies_gain + (ctx.rules.technique_effects.printing_copies if printed else 0)) * decades
         pace = await scribe_pace(ctx.session, ctx.rules, artwork.location_id)
         if not await banned_for(ctx.session, artwork.location_id, artwork.id):
             row.copies += max(0, round_half_up(gain * pace * craft_weight(row) * canon_weight(ctx, row)))

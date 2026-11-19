@@ -39,7 +39,7 @@ class CivilizationRules(Spanned):
         "Demotion margin: a community at a stage regresses only when it drops this percentage below the population and dominated-share thresholds (so it doesn't flicker at the threshold)",
     )
     stage_min_epochs: int = rule(
-        3,
+        1,
         0,
         100,
         RuleGroup.CIVILIZATION,
@@ -57,7 +57,7 @@ class CivilizationRules(Spanned):
     colony_grudge_bonus_pct: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Independence contribution of a colony estranged from its homeland (%)")
     federation_min_members: int = rule(3, 2, 100, RuleGroup.CIVILIZATION, "Minimum members of a federation")
     federation_max: int = rule(
-        1, 0, 100, RuleGroup.CIVILIZATION, "Maximum simultaneous federations in the cosmos (a community can only be a member of one; 0 disables)"
+        6, 0, 10000, RuleGroup.CIVILIZATION, "Maximum simultaneous federations in the cosmos (a community can only be a member of one; 0 disables)"
     )
     federation_min_worlds: int = rule(2, 1, 100, RuleGroup.CIVILIZATION, "Minimum worlds federation members are spread across")
     federation_power: int = rule(6, 1, 12, RuleGroup.CIVILIZATION, "Power level of a federation")
@@ -81,31 +81,31 @@ class CivilizationRules(Spanned):
     ancient_knowledge_power: int = rule(7, 1, 12, RuleGroup.CIVILIZATION, "Power level of previous-creation knowledge")
     ancient_knowledge_level: int = rule(7, 1, 10, RuleGroup.CIVILIZATION, "Level of previous-creation knowledge")
     ancient_knowledge_forbidden_chance: int = rule(50, 0, 100, RuleGroup.CIVILIZATION, "Previous-creation knowledge is forbidden knowledge (%)")
-    loan_chance: int = rule(10, 0, 100, RuleGroup.ECONOMY, "A wealthy community lends to its poor neighbour on its own (% per epoch)")
+    loan_chance: int = rule(70, 0, 100, RuleGroup.ECONOMY, "A wealthy community lends to its poor neighbour on its own (% per epoch)")
     loan_lender_min: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Minimum wealth or prosperity of a community able to lend")
     loan_borrower_max: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Maximum wealth or prosperity of a community asking for a loan")
     loan_amount: int = rule(10, 1, 100, RuleGroup.ECONOMY, "Amount of a spontaneous loan")
     loan_term_years: int = span(5, 1, 1250, RuleGroup.ECONOMY, "Term of a spontaneous loan (years)")
-    loan_distance: int = rule(3, 0, 99, RuleGroup.ECONOMY, "Farthest distance between borrowing communities (steps)")
+    loan_distance: int = rule(6, 0, 99, RuleGroup.ECONOMY, "Farthest distance between borrowing communities (steps)")
     loan_repay_chance: int = rule(40, 0, 100, RuleGroup.ECONOMY, "A debtor able to pay repays on its own (% per epoch)")
     loan_repay_reserve: int = rule(10, 0, 100, RuleGroup.ECONOMY, "Wealth or prosperity the debtor must keep after paying")
     loan_relation: int = rule(5, 0, 100, RuleGroup.ECONOMY, "Relation contribution of a loan (spontaneous, decreed or lent by a mortal agent)")
     loan_repay_relation: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Relation contribution of a repaid loan (all loans of the engine and mortals)")
     loan_default_relation: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Relation damage of a loan not repaid on time (all loans of the engine and mortals)")
-    barter_chance: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Trade partners barter items on their own (% per epoch)")
+    barter_chance: int = rule(90, 0, 100, RuleGroup.ECONOMY, "Trade partners barter items on their own (% per epoch)")
     barter_max_value_diff: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Maximum value difference between two bartered things")
     barter_relation: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Relation contribution of a spontaneous barter")
-    adoption_chance: int = rule(6, 0, 100, RuleGroup.HEROES_AND_MORTALS, "An old mortal adopts a nearby orphaned youth on their own (% per epoch)")
+    adoption_chance: int = rule(30, 0, 100, RuleGroup.HEROES_AND_MORTALS, "An old mortal adopts a nearby orphaned youth on their own (% per epoch)")
     adoption_max_child_age: int = rule(16, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Oldest age that can be adopted (years)")
     adoption_min_age_gap: int = rule(15, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Minimum age gap between adopter and child (years)")
     adoption_distance: int = rule(1, 0, 99, RuleGroup.HEROES_AND_MORTALS, "Farthest distance between adopter and child (steps)")
     adoption_relation: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Relation contribution of adoption")
     treaty_chance: int = rule(
-        8, 0, 100, RuleGroup.CIVILIZATION, "Communities of two worlds connected by an open route make a treaty on their own (% per epoch)"
+        30, 0, 100, RuleGroup.CIVILIZATION, "Communities of two worlds connected by an open route make a treaty on their own (% per epoch)"
     )
     treaty_trade_min_relation: int = rule(0, -100, 100, RuleGroup.CIVILIZATION, "Minimum relation for an inter-world trade treaty")
     treaty_alliance_min_relation: int = rule(25, -100, 100, RuleGroup.CIVILIZATION, "Minimum relation for an inter-world alliance of trade partners")
-    treaty_candidates: int = rule(4, 1, 100, RuleGroup.CIVILIZATION, "Number of most populous communities examined at each end of the route for a treaty")
+    treaty_candidates: int = rule(8, 1, 1000, RuleGroup.CIVILIZATION, "Number of most populous communities examined at each end of the route for a treaty")
     treaty_relation: int = rule(12, 0, 100, RuleGroup.CIVILIZATION, "Relation contribution of a spontaneous inter-world treaty")
     unlock_expedition_tier: int = rule(
         1, 0, 5, RuleGroup.CIVILIZATION, "Civilization tier that unlocks sending expeditions to other worlds (0 tribe to 5 cosmic power)"

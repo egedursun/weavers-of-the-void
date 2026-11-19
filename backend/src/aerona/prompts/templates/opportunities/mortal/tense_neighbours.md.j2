@@ -1,3 +1,3 @@
 {% from "opportunities/_macros.md.j2" import valued %}
-{% set moves = offered(available_tools, [("build_spy_network", "watch them with build_spy_network")] + ([("sabotage", "weaken them with sabotage")] if line.can_sabotage else []) + [("declare_war", "settle accounts with declare_war")]) %}
+{% set moves = offered(available_tools, [("build_spy_network", "watch them with build_spy_network")] + ([("sabotage", "weaken them with sabotage")] if line.can_sabotage else []) + [("declare_war", "go to war with declare_war")]) %}
 Your tense neighbours (relations are bad; {% if moves %}{{ moves | join(", ") }}, or {% endif %}soothe them with trade and gifts): {{ valued(line.neighbours[:rules.opportunities.list_short]) }}

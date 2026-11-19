@@ -102,17 +102,17 @@ class AgeSetRules(Spanned):
 
 
 @dataclass(frozen=True)
-class TavernRules:
+class TavernRules(Spanned):
     patrons_pct: int = rule(10, 0, 100, S, "Share of a town's folk who keep a tavern each epoch (%)")
     rumour_pct: int = rule(20, 0, 100, S, "Chance added to a rumour reaching a town that keeps a tavern (%)")
     brawl_chance: int = rule(5, 0, 100, S, "Chance each epoch a busy tavern sees a brawl (%)")
     keeper_renown: int = rule(2, 0, 100, S, "Most renown the keeper of a tavern gains each epoch from the rumours that pass through it")
-    lodging_per_inn: int = rule(20, 0, 1000, S, "Travellers an inn lodges each epoch")
+    lodging_per_inn: int = rule(20, 0, 100000, S, "Travellers an inn lodges each year")
 
 
 @dataclass(frozen=True)
 class WelfareRules:
-    inmates_per_house: int = rule(30, 0, 1000, S, "Poor, orphans and maimed a house of welfare takes in")
+    inmates_per_house: int = rule(10, 0, 1000, S, "Poor, orphans and maimed a house of welfare takes in for each thousand townsfolk at full poverty")
     poverty_relief: int = rule(5, 0, 100, S, "Poverty pressure each house of welfare takes off its town each epoch")
     upkeep_per_inmate: int = rule(
         50,
@@ -181,9 +181,11 @@ class BorderRules(Spanned):
 
 @dataclass(frozen=True)
 class PoorReliefRules:
-    relief_per_coin: int = rule(1, 0, 100, J, "Poverty pressure each ten coin of relief takes off the towns it reaches each epoch")
+    relief_per_coin: int = rule(
+        1, 0, 100, J, "Poverty pressure each ten coin of relief for every thousand people of the realm takes off the towns it reaches each epoch"
+    )
     adopt_from: int = rule(50, 0, 100, J, "Mean poverty of its towns from which a realm takes up poor relief")
-    adopt_budget: int = rule(50, 0, 100000, J, "Coin a realm sets aside for poor relief each epoch when it takes it up")
+    adopt_budget: int = rule(50, 0, 100000, J, "Coin for every thousand of its people a realm sets aside for poor relief each epoch when it takes it up")
     adopt_reach: int = rule(40, 0, 100, J, "Share of its poor that a realm's relief reaches when it takes it up (%)")
     theft_pct: int = rule(30, 0, 100, J, "Share by which full relief lowers theft among the poor (%)")
 
@@ -192,6 +194,9 @@ class PoorReliefRules:
 class MeasureRules:
     trade_pct: int = rule(10, 0, 100, J, "Trade a realm with standard measures gains (%)")
     tax_pct: int = rule(5, 0, 100, J, "Taxes a realm with standard measures collects more (%)")
-    adopt_members: int = rule(3, 1, 100, J, "Towns a realm holds before it sets standard weights and measures")
+    adopt_members: int = rule(3, 1, 100, J, "Towns a realm holds before it sets standard weights and measures, unless its people already reach the count below")
+    adopt_population: int = rule(
+        10000, 0, 1000000000, J, "People of its towns at which a realm sets standard weights and measures whatever the number of its towns"
+    )
     adopt_fraud: int = rule(10, 0, 100, J, "Fraud with false measures in a realm when it first sets its standard")
     fraud_chance: int = rule(20, 0, 100, J, "Chance at full fraud that a merchant of the realm is tried for false measures each epoch (%)")

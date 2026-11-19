@@ -7,7 +7,12 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class HeroesRules:
     birth_always_population: int = rule(8000, 0, 100000000, RuleGroup.HEROES_AND_MORTALS, "A people this populous can always produce a hero (people)")
-    birth_cap: int = rule(1, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Maximum spontaneously born heroes per epoch")
+    birth_cap: int = rule(
+        1, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Base of the most spontaneously born heroes per epoch, grown by the number of peoples and settlements"
+    )
+    birth_cap_community_divisor: int = rule(
+        8, 0, 10000, RuleGroup.HEROES_AND_MORTALS, "Peoples and settlements per extra hero born in an epoch (0: the cap stays at its base)"
+    )
     birth_power: int = rule(4, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of a spontaneously born hero")
     birth_hp: int = rule(120, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "HP of a spontaneously born hero")
     birth_strength_base: int = rule(45, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Hero strength: base")
@@ -32,10 +37,17 @@ class HeroesRules:
     weapon_bequest_chance: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A master hands their weapon to their apprentice (%)")
     quest_death_chance: int = rule(25, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Death on a failed quest (%)")
     hero_strength_agility_sum: int = rule(90, 0, 200, RuleGroup.HEROES_AND_MORTALS, "Strength + agility total for a mortal to count as a hero")
-    quest_resolution_cap: int = rule(4, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Maximum hero quests resolved per epoch")
-    quest_new_cap: int = rule(3, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Maximum new hero quests per epoch")
-    companion_new_cap: int = rule(1, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Maximum new companionships per epoch")
-    apprentice_new_cap: int = rule(1, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Maximum new apprentices per epoch")
+    quest_resolution_cap: int = rule(4, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Base of the most hero quests resolved per epoch, grown by the number of heroes")
+    quest_new_cap: int = rule(3, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Base of the most new hero quests per epoch, grown by the number of heroes")
+    companion_new_cap: int = rule(1, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Base of the most new companionships per epoch, grown by the number of heroes")
+    apprentice_new_cap: int = rule(1, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Base of the most new apprentices per epoch, grown by the number of heroes")
+    cap_hero_divisor: int = rule(
+        3,
+        0,
+        10000,
+        RuleGroup.HEROES_AND_MORTALS,
+        "Living heroes per extra quest, companionship and apprentice allowed in an epoch (0: the caps stay at their base)",
+    )
     apprentice_min_life_pct: int = rule(
         60, 0, 100, RuleGroup.HEROES_AND_MORTALS, "At least this share of lifespan must have been lived to train an apprentice (%)"
     )

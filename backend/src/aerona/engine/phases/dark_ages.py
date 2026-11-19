@@ -28,7 +28,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import society_of
 from aerona.engine.phases.society_support.knowledge import KnowledgeHoldings, teach
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import at_cap, clamp_int
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
@@ -126,8 +126,8 @@ async def _forgetting(ctx: TickContext, holdings: KnowledgeHoldings) -> int:
     keepers = await keepers_by_place(ctx.session, ctx.rules)
     rng = ctx.rng("forgetting")
     forgotten = 0
-    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
-        if forgotten >= settings.dark_age_forget_cap:
+    for community in ctx.rng("forgetting.order").shuffled(unheld(await canon(ctx.session, COMMUNITY_TYPES))):
+        if at_cap(forgotten, settings.dark_age_forget_cap):
             break
         known = holdings.known_by(community.id)
         if not known or not is_devastated(ctx.rules, community, scars):
@@ -193,8 +193,8 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     atlas = await RegionAtlas.load(ctx.session)
     rng = ctx.rng("rediscovery")
     found = 0
-    for community in await canon(ctx.session, SOCIETY_TYPES):
-        if found >= settings.relic_rediscovery_cap:
+    for community in ctx.rng("rediscovery.order").shuffled(await canon(ctx.session, SOCIETY_TYPES)):
+        if at_cap(found, settings.relic_rediscovery_cap):
             break
         society = await society_of(ctx.session, ctx.rules, community.id)
         if society.shares[SocialClass.SCRIBE] < settings.relic_min_scribe_pct:

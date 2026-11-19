@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import MandateRow, NobleDemandRow
@@ -35,7 +35,8 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
@@ -141,11 +142,13 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
         hunger = (await pressures_of(ctx.session, member.id)).get(PressureKind.HUNGER, 0)
         issued: MandateRow | None = None
         if hunger >= table.famine_hunger and capital is not None and member.id != capital:
-            issued = await issue(ctx, realm, MandateKind.FAMINE_RELIEF, settlement_id=member.id, commodity=GRAIN, amount=table.relief_food)
+            amount = round_half_up(table.relief_food * stat_or(member, "population", 0) / PER_MILLE)
+            issued = await issue(ctx, realm, MandateKind.FAMINE_RELIEF, settlement_id=member.id, commodity=GRAIN, amount=amount)
         elif town is not None and town.unrest >= table.curfew_unrest:
             issued = await issue(ctx, realm, MandateKind.CURFEW, settlement_id=member.id)
         elif fighting and town is not None:
-            issued = await issue(ctx, realm, MandateKind.PRODUCE, settlement_id=member.id, commodity=CommodityKind.WEAPONS, amount=table.produce_amount)
+            amount = round_half_up(table.produce_amount * stat_or(member, "population", 0) / PER_MILLE)
+            issued = await issue(ctx, realm, MandateKind.PRODUCE, settlement_id=member.id, commodity=CommodityKind.WEAPONS, amount=amount)
         elif town is not None and town.crime >= PERCENT // 2 and await has_district(ctx, member.id, DistrictKind.SLUMS):
             issued = await issue(ctx, realm, MandateKind.SLUM_CLEARANCE, settlement_id=member.id)
         elif town is not None and town.crime >= PERCENT // 2 and not await has_district(ctx, member.id, DistrictKind.CITADEL):
@@ -153,7 +156,8 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
         elif town is not None and await unready(ctx.session, ctx.rules, book.atlas, member.id, ctx.epoch):
             issued = await issue(ctx, realm, MandateKind.PREPARE, settlement_id=member.id)
         tally.issued += issued is not None
-    if capital is not None and await units_of(ctx, capital, GRAIN) < table.ban_below:
+    seat = await ctx.session.get(EntityRow, capital) if capital is not None else None
+    if capital is not None and await units_of(ctx, capital, GRAIN) < table.ban_below * (stat_or(seat, "population", 0) if seat is not None else 0) // PER_MILLE:
         tally.issued += await issue(ctx, realm, MandateKind.EXPORT_BAN, settlement_id=None, commodity=GRAIN) is not None
 
 

@@ -10,7 +10,7 @@ WHAT IS ALREADY TOLD:
 {{ lore }}
 {% endif %}
 
-{{ "ITS STAR, NEIGHBOURS AND PEOPLES" if kind == "world" else "WORLDS IN ITS LIGHT" if kind == "star" else "WHAT IT HOLDS AND WHAT HOLDS IT" }}:
+{{ "ITS STAR, NEIGHBOURS AND PEOPLES" if kind == "world" else "WORLDS THAT ORBIT IT" if kind == "star" else "WHAT IT HOLDS AND WHAT HOLDS IT" }}:
 {{ neighbour_lines[:rules.content.deepen_neighbor_links] | join("\n") if neighbour_lines else "(none)" }}
 
 Recent events:
@@ -37,6 +37,6 @@ Deepen this {{ kind }}. The output consists of SEPARATE KEYS; never write one in
 - hidden_truth: a single paragraph about what the {{ kind }} truly is or hides, only if it hides something; otherwise leave it empty
 {% endif %}
 
-Do not open the history with "In Age N" and do not count age numbers; tell time through an event, a season, a generation. Do not describe the world's sound rules. Do not write record numbers (like #12), stat names and values, or percentages in the text; say everything in the language of the narrative.
+Do not open the history with "In Age N" and do not count age numbers; place events relative to other events. Do not describe the world's sound rules. Do not write record numbers (like #12), stat names and values, or percentages in the text; say everything in the language of the narrative.
 
 {% include "shared/section_keys_rule.md.j2" %}

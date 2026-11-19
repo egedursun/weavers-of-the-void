@@ -3,6 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.units import PER_MILLE
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.economy import CommunityStockRow, GoodsFlowRow
@@ -37,6 +38,7 @@ from aerona.engine.mind.book import add_trait, write_pressures
 from aerona.engine.phases.faith import sacrifice_of_people
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 from tests.engine.faith.factories import faithful, mortal, tick
 from tests.engine.gods.factories import GodsWorld, add_world, bond, make_entity
@@ -210,8 +212,9 @@ async def test_sacrifice_of_people_takes_people_and_appals_every_other_people(se
     before = faith.town.stats.population or 0
     book = await FaithBook.load(session)
     given = await sacrifice_of_people(ctx, book.churches[faith.cult.id], book)
-    assert given >= rules.doctrine.sacrifice_cohort
-    assert (faith.town.stats.population or 0) == before - rules.doctrine.sacrifice_cohort
+    victims = min(before, max(1, round_half_up(rules.doctrine.sacrifice_cohort * before / PER_MILLE)))
+    assert given >= victims
+    assert (faith.town.stats.population or 0) == before - victims
     appalled = set(await session.scalars(select(MemoryRow.holder_node_id).where(MemoryRow.subject_node_id == faith.cult.id)))
     assert {other.id for other in others} <= appalled
 

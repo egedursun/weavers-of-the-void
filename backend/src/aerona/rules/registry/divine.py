@@ -197,7 +197,7 @@ class OuterBeingRules:
 
 @dataclass(frozen=True)
 class DivineGrammarRules:
-    reach: int = rule(3, 1, 50, G, "Communities, mortals or works one divine power reaches for each step of its scope")
+    reach: int = rule(10, 1, 1000, G, "Communities, mortals or works one divine power reaches for each step of its scope")
     effect_pct: int = rule(20, 0, 300, G, "Share of a divine power's strength that lands on each target each time it acts (%)")
     goods_per_point: int = rule(2, 0, 1000, G, "Goods a divine power over a commodity makes or takes per point of its effect")
     trigger_at: int = rule(40, 0, 100, G, "Insecurity or hunger among its faithful at which a triggered divine power acts")

@@ -28,7 +28,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.ecology import AnimalRole, BeastTemper, DomesticationStage, FoodLink, RangeTrend, SizeClass
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature_kinds import ProductPart
 from aerona.domain.enums.society import CreatureTrait
@@ -317,6 +317,23 @@ async def shift_lair(ctx: TickContext, beast_id: int, place_id: int) -> BeastPro
     row.locked = lock(row.locked, "lair_place_id")
     await ctx.session.flush()
     return row
+
+
+async def commonest_species(ctx: TickContext, region_id: int | None) -> int | None:
+    if region_id is None:
+        return None
+    return await ctx.session.scalar(
+        select(SpeciesRangeRow.species_entity_id)
+        .join(EntityRow, EntityRow.id == SpeciesRangeRow.species_entity_id)
+        .where(
+            SpeciesRangeRow.region_entity_id == region_id,
+            SpeciesRangeRow.abundance > 0,
+            EntityRow.entity_type == EntityType.SPECIES,
+            EntityRow.status == EntityStatus.CANON,
+        )
+        .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
+        .limit(1)
+    )
 
 
 async def spawn_beast(ctx: TickContext, species_id: int) -> EntityRow:

@@ -47,7 +47,7 @@ from aerona.engine.folkways.biases import lean
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.loops.delay import lagged
-from aerona.engine.lore.civics import realm_allows, realm_reaches
+from aerona.engine.lore.civics import reaches, realm_allows, realm_levels
 from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
@@ -58,10 +58,11 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.oaths import break_on, swear
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.knowledge import BranchLevels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.regime.book import appointment_weights, coup_factor, credential_rank, plotter
 from aerona.engine.services.community_relations import change_relation, relation
@@ -115,6 +116,7 @@ COUNCIL = (
     OfficeKind.SPEAKER,
     OfficeKind.CHIEF_SCIENTIST,
 )
+MANY_SEATS = frozenset({OfficeKind.MINISTER, OfficeKind.GENERAL, OfficeKind.ADMIRAL})
 W = OfficePower
 DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
     {
@@ -254,11 +256,14 @@ async def embassy_targets(ctx: TickContext, book: RealmBook, realm: Realm) -> li
 
 
 def wanted_offices(
-    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, held_towns: Mapping[int, SettlementProfileRow]
+    book: RealmBook, realm: Realm, embassies: list[int], rules: Rules, held_towns: Mapping[int, SettlementProfileRow], *, subjects: int
 ) -> list[tuple[OfficeKind, int | None, int | None]]:
     seat = held_towns.get(realm.profile.capital_entity_id or -1)
     seat_tier = TIER_ORDER.index(seat.size_tier) if seat is not None else 0
-    wanted: list[tuple[OfficeKind, int | None, int | None]] = [(kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind)]
+    extra = max(0, subjects) // rules.scale.council_seat_people
+    wanted: list[tuple[OfficeKind, int | None, int | None]] = [
+        (kind, None, None) for kind in COUNCIL if seat_tier >= office_tier(rules, kind) for _ in range(1 + (extra if kind in MANY_SEATS else 0))
+    ]
     if seat_tier >= office_tier(rules, OfficeKind.JESTER):
         wanted.append((OfficeKind.JESTER, None, None))
     if realm.profile.tier >= rules.realm_tiers.provinces:
@@ -280,10 +285,19 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
         if recalled and seat.holder_entity_id is not None and "offices" not in realm.profile.locked and "holder" not in seat.locked:
             await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
     opened: dict[OfficeKind, bool] = {}
-    for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
-        office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
+    levels: dict[int, BranchLevels] | None = None
+    matched: set[int] = set()
+    for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session), subjects=stat_or(realm.entity, "subjects", 0)):
+        office = next(
+            (row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target and row.id not in matched),
+            None,
+        )
         if office is None and kind not in opened:
-            opened[kind] = await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)) and await realm_reaches(ctx.session, realm, OFFICE_LEVELS.get(kind))
+            gate = OFFICE_LEVELS.get(kind)
+            allowed = await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind))
+            if allowed and gate is not None and levels is None:
+                levels = await realm_levels(ctx.session, realm)
+            opened[kind] = allowed and reaches(levels, realm, gate)
         if office is None and not opened[kind]:
             continue
         if office is None:
@@ -299,6 +313,7 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
             ctx.session.add(office)
             realm.offices.append(office)
             await ctx.session.flush()
+        matched.add(office.id)
         holder = await living_entity(ctx.session, office.holder_entity_id) if office.holder_entity_id is not None else None
         if holder is not None and holder.status is EntityStatus.CANON:
             occupied.add(holder.id)

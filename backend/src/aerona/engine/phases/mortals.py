@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -101,6 +101,7 @@ class AgingWorld:
     atlas: RegionAtlas
     medicine: set[int]
     start_year: int
+    healing: dict[int, int] = field(default_factory=dict)
 
 
 async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> None:
@@ -124,7 +125,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
     multiplier *= await ctx.hook_easing(mortal.id, DomainHook.AGING)
     aged = age + round_half_up(lived * multiplier)
-    info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)
+    info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine, healing=world.healing)
     limit = info.effective
     profile = await profile_of(ctx.session, mortal.id)
     health = profile.health if profile is not None else PERCENT

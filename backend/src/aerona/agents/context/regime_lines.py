@@ -52,7 +52,7 @@ async def standing_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"you hold the credential of {words(credential.kind.value)}")
     base = await session.get(PowerBaseRow, me.id)
     if base is not None:
-        found.append(f"your power base weighs {base.total}, a threat of {base.threat} to the throne; you stand {words(base.stance.value)}")
+        found.append(f"your power base weighs {base.total}, a threat of {base.threat} to the ruler; you stand {words(base.stance.value)}")
     for member in await session.scalars(select(CoalitionMemberRow).where(CoalitionMemberRow.mortal_entity_id == me.id)):
         found.append(f"you sit in the ruling circle of {await named(scope, member.polity_entity_id)}, reward {member.reward}, loyalty {member.loyalty}")
     for membership in await session.scalars(select(SchoolMemberRow).where(SchoolMemberRow.mortal_entity_id == me.id)):
@@ -99,7 +99,7 @@ async def throne_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         found.append(
             f"{await named(scope, base.mortal_entity_id)} (mortal {base.mortal_entity_id}) stands {words(base.stance.value)} "
-            f"toward your throne, threat {base.threat}"
+            f"toward your rule, threat {base.threat}"
         )
     return found
 
@@ -136,5 +136,5 @@ async def son_regime_lines(scope: Scope, son: SonRow) -> list[str]:
         .order_by(PowerBaseRow.threat.desc(), PowerBaseRow.mortal_entity_id)
         .limit(REALM_LINES)
     ):
-        found.append(f"{subject.name} (mortal {subject.id}) plots for the throne of {await named(scope, base.polity_entity_id)}, threat {base.threat}")
+        found.append(f"{subject.name} (mortal {subject.id}) plots to take power in {await named(scope, base.polity_entity_id)}, threat {base.threat}")
     return found

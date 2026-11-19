@@ -64,6 +64,7 @@ from aerona.db.tables.plants import PlantPartRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.population import PopulationPolicyRow
 from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
+from aerona.db.tables.region import RegionDangerRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sacred import DivinationSystemRow, DoctrineSacramentRow, GeniusLocusRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
@@ -1027,6 +1028,32 @@ PROPHECY = (
 )
 MAIMED = ("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 3, "lethal": False})
 
+
+async def town_debt(session: AsyncSession) -> int | None:
+    lender, borrower = await pick(session, TOWN, 0), await pick(session, TOWN, 1)
+    statement = select(BondRow.id).where(
+        BondRow.kind == BondKind.OWES, BondRow.state == BondState.ACTIVE, BondRow.source_node_id == borrower, BondRow.target_node_id == lender
+    )
+    return await session.scalar(statement.order_by(BondRow.id.desc()).limit(1))
+
+
+async def held_danger(session: AsyncSession) -> int | None:
+    region = await pick(session, EntityType.REGION, 0)
+    statement = select(RegionDangerRow.id).where(RegionDangerRow.region_entity_id == region, RegionDangerRow.held.is_(True))
+    return await session.scalar(statement.order_by(RegionDangerRow.id.desc()).limit(1))
+
+
+async def unruled_community(session: AsyncSession) -> int | None:
+    living_rulers = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
+    ruled = select(BondRow.target_node_id).where(BondRow.kind == BondKind.RULES, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(living_rulers))
+    statement = select(EntityRow.id).where(
+        EntityRow.entity_type.in_((EntityType.PEOPLE, TOWN)), EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(ruled)
+    )
+    return await session.scalar(statement.order_by(EntityRow.id).limit(1))
+
+
+LOANED = ("civilization:loan", {"lender_id": Pick(TOWN), "borrower_id": Pick(TOWN, 1), "amount": 10})
+
 GOAL = ("god_goal:set", {"god_id": Pick("son"), "kind": "be_worshipped", "amount": 3})
 STANDING = ("divine_standing:set", {"community_id": Pick(TOWN), "god_id": Pick("son"), "values": {"love": 40}})
 WOUND = ("divine_wound:inflict", {"god_id": Pick("son"), "kind": "stolen_name", "severity": 40})
@@ -1124,10 +1151,7 @@ LEVERS: dict[str, Lever] = {
         for name in ("circle:edit", "circle:member", "circle:disband")
     },
     "civilization:tier": given(entity_id=Pick(TOWN), tier=2),
-    **{
-        name: after(("civilization:loan", {"lender_id": Pick(TOWN), "borrower_id": Pick(TOWN, 1), "amount": 10}), bond_id=Newest("bond"))
-        for name in ("civilization:forgive_debt", "civilization:enforce_debt")
-    },
+    **{name: after(LOANED, bond_id=Computed(town_debt)) for name in ("civilization:forgive_debt", "civilization:enforce_debt")},
     **{
         name: after(("claim:grant", {"mortal_id": Pick(MORTAL), "polity_id": Pick(REALM)}), claim_id=Newest("claim")) for name in ("claim:edit", "claim:revoke")
     },
@@ -1382,7 +1406,7 @@ LEVERS: dict[str, Lever] = {
         ("regard:set", {"holder_id": Pick(REALM), "subject_id": Pick(REALM, 1), "trust": 40}), holder_id=Pick(REALM), subject_id=Pick(REALM, 1)
     ),
     "region:danger_release": after(
-        ("region:danger_create", {"region_id": Pick(EntityType.REGION), "strength": 30, "hold": True}), danger_id=Newest("region_danger")
+        ("region:danger_create", {"region_id": Pick(EntityType.REGION), "strength": 30, "hold": True}), danger_id=Computed(held_danger)
     ),
     "region:knowledge_release": after(
         ("region:knowledge_set", {"polity_id": Pick(REALM), "region_id": Pick(EntityType.REGION), "level": 50, "hold": True}),
@@ -1628,7 +1652,7 @@ LEVERS: dict[str, Lever] = {
         ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "musical"}}),
         art_form_id=Newest(EntityType.ART_FORM),
     ),
-    "community:crown": given(community_id=Pick(EntityType.PEOPLE, 1)),
+    "community:crown": given(community_id=Computed(unruled_community)),
     "company:edit": after(*COMPANY, company_id=Newest(EntityType.FACTION), dividend_pct=10),
     **{
         name: after(
@@ -1731,7 +1755,7 @@ LEVERS: dict[str, Lever] = {
     "item:transfer": given(receiver_id=Pick(MORTAL, 1)),
     "kin:end_marriage": after(("kin:marry", {"first_id": Pick(MORTAL), "second_id": Pick(MORTAL, 1)}), marriage_id=Newest("marriage")),
     "kin:unbond": after(("kin:bond", {"source_id": Pick(MORTAL), "target_id": Pick(MORTAL, 1), "kind": "parent_of"}), bond_id=Newest("bond")),
-    "market:write_off": after(("civilization:loan", {"lender_id": Pick(TOWN), "borrower_id": Pick(TOWN, 1), "amount": 10}), bond_id=Newest("bond")),
+    "market:write_off": after(LOANED, bond_id=Computed(town_debt)),
     **{
         name: after(("movement:found", {"realm_id": Pick(REALM), "home_id": Pick(TOWN)}), movement_id=Newest(EntityType.FACTION), community_id=Pick(TOWN))
         for name in ("movement:remove", "movement:support")
@@ -4513,8 +4537,8 @@ LEVERS.update(
 )
 
 
-async def oldest_sociolect(session: AsyncSession) -> int | None:
-    return await session.scalar(select(SociolectRow.id).order_by(SociolectRow.id).limit(1))
+async def earlier_sociolect(session: AsyncSession) -> int | None:
+    return await session.scalar(select(SociolectRow.id).order_by(SociolectRow.id.desc()).offset(1).limit(1))
 
 
 FOLK = EntityType.PEOPLE
@@ -4547,7 +4571,7 @@ LEVERS.update(
             ("captive:take", {"captor_id": Pick(TOWN), "mortal_id": Pick(MORTAL, 1)}), captive_id=Newest("captives"), restraint="gag", present=True
         ),
         "sociolect:create": given(holder_id=Pick(FOLK), kind="guild"),
-        "sociolect:merge": after(TALKERS, COURTLY, kept_id=Computed(oldest_sociolect), merged_id=Newest("sociolects")),
+        "sociolect:merge": after(TALKERS, COURTLY, kept_id=Computed(earlier_sociolect), merged_id=Newest("sociolects")),
         "sociolect:edit": after(TALKERS, sociolect_id=Newest("sociolects"), values=COUPLING_EDITS["sociolect:edit"], release=[]),
         "sociolect:delete": after(TALKERS, sociolect_id=Newest("sociolects")),
         "sign_language:create": given(community_id=Pick(FOLK), cause="deafness"),

@@ -7,6 +7,7 @@ from aerona.engine.technology.profiles import keep_technology
 
 
 @reads(
+    "knowledge.spread",
     "table.bonds",
     "table.cosmos",
     "table.custom_kinds",
@@ -20,7 +21,7 @@ from aerona.engine.technology.profiles import keep_technology
     "table.technology_profiles",
     "table.worlds",
 )
-@writes("table.holder_levels", "table.holder_techniques", "table.technology_profiles")
+@writes("table.entities", "table.holder_levels", "table.holder_techniques", "table.technology_profiles")
 async def tech_eras(ctx: TickContext) -> None:
     tally = EraTally()
     await keep_eras(ctx, tally)

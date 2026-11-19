@@ -1,17 +1,17 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 
 @dataclass(frozen=True)
-class SkyRules:
+class SkyRules(Spanned):
     supernova_apocalypse: int = rule(10, 0, 100, RuleGroup.APOCALYPSE, "Contribution of a supernova to the apocalypse")
     supernova_population_loss_pct: int = rule(40, 0, 100, RuleGroup.SKY, "Population lost in a supernova (%)")
     supernova_fertility_loss: int = rule(30, 0, 100, RuleGroup.SKY, "Fertility loss in a supernova")
     alignment_open_epochs: int = rule(2, 1, 20, RuleGroup.SKY, "Epochs a planetary alignment keeps a sealed route open")
     comet_peace_chance: int = rule(50, 0, 100, RuleGroup.SKY, "A comet ends a war (%)")
-    sky_event_chance: int = rule(18, 0, 100, RuleGroup.SKY, "Spontaneous sky event (% per epoch)")
+    sky_event_chance: int = rule(5, 0, 100, RuleGroup.SKY, "Spontaneous sky event (% per year)")
     star_event_chance: int = rule(30, 0, 100, RuleGroup.SKY, "A supernova or black sun occurs (%)")
     time_echo_chance: int = rule(6, 0, 100, RuleGroup.SKY, "Time echo (%)")
     time_traveler_share_pct: int = rule(50, 0, 100, RuleGroup.SKY, "Share of echoes that are time travellers (%)")

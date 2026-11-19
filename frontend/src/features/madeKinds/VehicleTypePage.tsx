@@ -58,7 +58,7 @@ const GODS = ['son', 'creator', 'foreign_god'] as const
 const WORLDS = ['world'] as const
 const DESIGNERS = ['mortal'] as const
 const YES_NO = { true: 'Yes', false: 'No' }
-const SIZE_MAX = 10
+const SIZE_MAX = 810
 const SEAGOING = new Set(['water', 'underwater', 'amphibious'])
 
 function SectionCard({

@@ -2,12 +2,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
-from sqlalchemy import select
-
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.fast_session import rows_by_id
 from aerona.db.record_context import Term, active_terms, current_scope
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository, scoped_cause
 from aerona.db.tables.entities import EntityRow
@@ -176,7 +175,7 @@ async def names_of(ctx: TickContext, nodes: Sequence[int]) -> dict[int, NodeRow]
     wanted = sorted(set(nodes))
     if not wanted:
         return {}
-    return {row.id: row for row in await ctx.session.scalars(select(NodeRow).where(NodeRow.id.in_(wanted)))}
+    return await rows_by_id(ctx.session, NodeRow, wanted)
 
 
 async def accepted(ctx: TickContext, spec: IncidentKindSpec, participants: Sequence[tuple[int, IncidentRole]], known: Mapping[int, NodeRow]) -> None:

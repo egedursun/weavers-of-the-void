@@ -27,6 +27,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
 from aerona.engine.recording.record import record
 from aerona.engine.structures.readers import workshop_output
+from aerona.rules.registry import Rules
 
 M = MaterialKind
 UPGRADES: dict[MaterialKind, MaterialKind] = {M.COPPER: M.BRONZE, M.IRON: M.STEEL}
@@ -266,10 +267,20 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     )
     if workshop is not None and not workshop.held:
         workshop.idle_epochs = 0
-        if batches >= room and workshop.level < table.max_level and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
+        if batches >= room and workshop.level < level_cap(ctx.rules, headcount(community)) and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
             workshop.level += 1
     tally.batches += batches
     return batches * crew
+
+
+def level_cap(rules: Rules, population: int) -> int:
+    table = rules.refining
+    return table.max_level + (population // table.people_per_level if table.people_per_level > 0 else 0)
+
+
+def fleet_room(rules: Rules, population: int) -> int:
+    table = rules.refining
+    return table.fleet_cap + (population // table.people_per_ship if table.people_per_ship > 0 else 0)
 
 
 def needed_workshops(ctx: TickContext, book: EconomyBook, community: EntityRow) -> list[WorkshopKind]:
@@ -321,7 +332,7 @@ async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow
     if (
         yard is None
         or yard.held
-        or yard.fleet >= table.fleet_cap
+        or yard.fleet >= fleet_room(ctx.rules, headcount(community))
         or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance * await workshop_output(ctx.session, ctx.rules, yard))
     ):
         return

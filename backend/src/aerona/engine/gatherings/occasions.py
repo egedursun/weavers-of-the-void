@@ -29,6 +29,8 @@ from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spou
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.numbers import scaled_cap
+from aerona.engine.primitives.queries import count_communities
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
 
@@ -58,7 +60,7 @@ class Occasion:
     guests: list[Guest] = field(default_factory=list)
 
 
-def chance(ctx: TickContext, key: str, pct: int) -> bool:
+def chance(ctx: TickContext, key: str, pct: float) -> bool:
     return ctx.rng(f"gathering.{key}.{ctx.epoch}").chance(pct)
 
 
@@ -155,7 +157,7 @@ async def festivals(ctx: TickContext) -> list[Occasion]:
     )
     for tradition_id, community_id in rows:
         community = await living(ctx, community_id)
-        if community is not None and chance(ctx, f"festival.{tradition_id}.{community_id}", ctx.rules.gatherings.festival_pct):
+        if community is not None and chance(ctx, f"festival.{tradition_id}.{community_id}", ctx.rules.gatherings.over_epoch(ctx.rules.gatherings.festival_pct)):
             found.append(Occasion(G.FESTIVAL, community.id, community.world_id, community.id, tradition_id=tradition_id))
     return found
 
@@ -170,7 +172,7 @@ async def testings(ctx: TickContext) -> list[Occasion]:
     return found
 
 
-async def structured(ctx: TickContext, kind: StructureKind, gathering: GatheringKind, pct: int) -> list[Occasion]:
+async def structured(ctx: TickContext, kind: StructureKind, gathering: GatheringKind, pct: float) -> list[Occasion]:
     found: list[Occasion] = []
     hosts = await ctx.session.scalars(
         select(StructureProfileRow.host_entity_id)
@@ -213,7 +215,7 @@ async def martial_folk(ctx: TickContext, polity: EntityRow) -> list[int]:
 async def councils(ctx: TickContext, ruled: Sequence[tuple[EntityRow, EntityRow, PolityProfileRow]]) -> list[Occasion]:
     found: list[Occasion] = []
     for polity, ruler, _ in ruled:
-        if not chance(ctx, f"council.{polity.id}", ctx.rules.gatherings.council_pct):
+        if not chance(ctx, f"council.{polity.id}", ctx.rules.gatherings.over_epoch(ctx.rules.gatherings.council_pct)):
             continue
         officers = await ctx.session.scalars(
             select(OfficeRow.holder_entity_id).where(
@@ -338,7 +340,9 @@ async def feasts(ctx: TickContext) -> list[Occasion]:
 async def elections(ctx: TickContext, ruled: Sequence[tuple[EntityRow, EntityRow, PolityProfileRow]]) -> list[Occasion]:
     found: list[Occasion] = []
     for polity, ruler, profile in ruled:
-        if profile.decision_rule is DecisionRule.ASSEMBLY and chance(ctx, f"election.{polity.id}", ctx.rules.gatherings.election_pct):
+        if profile.decision_rule is DecisionRule.ASSEMBLY and chance(
+            ctx, f"election.{polity.id}", ctx.rules.gatherings.over_epoch(ctx.rules.gatherings.election_pct)
+        ):
             found.append(Occasion(G.ELECTION, ruler.id, polity.world_id, profile.capital_entity_id or polity.id))
     return found
 
@@ -379,7 +383,7 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
         *await tournaments(ctx, ruled),
         *await structured(ctx, StructureKind.ARENA, G.GAMES, table.games_pct),
         *await performances(ctx),
-        *await structured(ctx, StructureKind.MARKET, G.FAIR, table.fair_pct),
+        *await structured(ctx, StructureKind.MARKET, G.FAIR, table.over_epoch(table.fair_pct)),
         *await hunts(ctx),
         *await feasts(ctx),
         *await elections(ctx, ruled),
@@ -391,8 +395,12 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
     ]
     kept: list[Occasion] = []
     per_world: dict[int | None, int] = {}
-    for occasion in found:
-        if held(occasion.host_id) or per_world.get(occasion.world_id, 0) >= table.per_world_max:
+    caps: dict[int | None, int] = {}
+    for occasion in ctx.rng(f"gathering.order.{ctx.epoch}").shuffled(found):
+        if occasion.world_id not in caps:
+            communities = await count_communities(ctx.session, occasion.world_id) if occasion.world_id is not None else 0
+            caps[occasion.world_id] = scaled_cap(table.per_world_max, table.per_world_communities, communities)
+        if held(occasion.host_id) or per_world.get(occasion.world_id, 0) >= caps[occasion.world_id]:
             continue
         per_world[occasion.world_id] = per_world.get(occasion.world_id, 0) + 1
         kept.append(occasion)

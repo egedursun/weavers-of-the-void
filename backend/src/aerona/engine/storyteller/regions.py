@@ -68,9 +68,9 @@ async def measure_parts(ctx: TickContext, world_id: int) -> int:
         if found is not None:
             by_region[found] += int(magnitude)
     crises = 0
-    measured = set(await ctx.session.scalars(select(RegionalTensionRow.region_entity_id).where(RegionalTensionRow.world_id == world_id)))
-    for region_id in sorted(set(by_region) | measured):
-        row = await ctx.session.get(RegionalTensionRow, region_id)
+    measured = {row.region_entity_id: row for row in await ctx.session.scalars(select(RegionalTensionRow).where(RegionalTensionRow.world_id == world_id))}
+    for region_id in sorted(set(by_region) | set(measured)):
+        row = measured.get(region_id) or await ctx.session.get(RegionalTensionRow, region_id)
         if row is None:
             row = RegionalTensionRow(region_entity_id=region_id, world_id=world_id, locked=[])
             ctx.session.add(row)
@@ -81,10 +81,10 @@ async def measure_parts(ctx: TickContext, world_id: int) -> int:
         if row.crisis and not was:
             await record_incident(ctx, "storyteller.region_crisis", roles={IncidentRole.SUBJECT: region_id}, facts={"tension": row.tension}, place=region_id)
         crises += row.crisis
-    known = set(await ctx.session.scalars(select(SubsystemTensionRow.subsystem).where(SubsystemTensionRow.world_id == world_id)))
-    for subsystem in sorted(known | set(by_subsystem)):
+    known = {row.subsystem: row for row in await ctx.session.scalars(select(SubsystemTensionRow).where(SubsystemTensionRow.world_id == world_id))}
+    for subsystem in sorted(set(known) | set(by_subsystem)):
         weight = by_subsystem[subsystem]
-        part = await ctx.session.get(SubsystemTensionRow, (world_id, subsystem))
+        part = known.get(subsystem)
         if part is None:
             part = SubsystemTensionRow(world_id=world_id, subsystem=subsystem, locked=[])
             ctx.session.add(part)

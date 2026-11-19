@@ -20,13 +20,11 @@ class DominionRules:
     decay_pct: int = rule(15, 0, 100, D, "Share of dominion that fades each epoch in a region where the god has no source (%)")
     contest_pct: int = rule(10, 0, 100, D, "Share of a rival's dominion the strongest god converts in a contested region each epoch (%)")
     dominate_share: int = rule(40, 0, 100, D, "Share of a region's dominion a god needs before its scales rule the land there (%)")
-    regions_max: int = rule(4000, 1, 1000000, D, "Regions the dominion step weighs at most each epoch")
     cheap_pct: int = rule(25, 0, 100, D, "Discount on a god's miracles and rites at full dominion in the target's region (%)")
     dear_pct: int = rule(25, 0, 300, D, "Surcharge on a god's miracles and rites in a region another god fully dominates (%)")
     conversion_pct: int = rule(20, 0, 200, D, "Better chance a missionary converts in a region its god fully dominates (%)")
     near_stress: int = rule(6, 0, 100, D, "Stress a worshipper sheds in a region its god dominates")
     alien_stress: int = rule(8, 0, 100, D, "Stress a priest of another god takes in a dominated region")
-    thoughts_max: int = rule(200, 0, 100000, D, "Mortals the dominion step gives a thought to each epoch at most")
     existence_per_region: int = rule(1, 0, 100, D, "Existence a son draws from each region its dominion rules")
     existence_cap: int = rule(12, 0, 100, D, "Most existence a son draws from the land its dominion rules")
     danger_per_step: int = rule(4, 0, 100, D, "Danger each step of turmoil adds to a dominated region, and each step of order removes")
@@ -64,7 +62,7 @@ class DominionRules:
 class MiracleImpressionRules:
     creator_magnitude: int = rule(100, 0, 100, D, "Magnitude of a miracle the Creator works, against a son's might")
     base_belief: int = rule(10, 0, 1000, D, "Belief a miracle of full magnitude wins with one witness, before need, novelty and legibility")
-    witness_cap: int = rule(400, 1, 100000, D, "Witnesses past which a miracle's belief stops growing")
+    witness_cap: int = rule(100000, 1, 2000000000, D, "Witnesses past which a miracle's belief stops growing")
     witness_log_pct: int = rule(100, 0, 1000, D, "Weight of the witnesses on a miracle's belief, by the doubling of their number (%)")
     need_pct: int = rule(100, 0, 400, D, "Extra belief a miracle wins at full need: hunger, sickness, war or disaster (%)")
     repeat_drop_pct: int = rule(25, 0, 100, D, "Novelty a miracle loses for each like miracle the same god worked there lately (%)")
@@ -112,7 +110,8 @@ class GodImageRules:
 
 @dataclass(frozen=True)
 class ThroneRules:
-    per_world: int = rule(3, 0, 50, D, "Thrones of power on each world")
+    per_world: int = rule(3, 0, 10000, D, "Thrones of power on each world, before its regions are counted")
+    regions_per_extra: int = rule(25, 0, 100000, D, "One more throne of power on a world for every this many of its regions (0 none)")
     power: int = rule(60, 0, 100, D, "Power of a new throne")
     dominion_share: int = rule(60, 0, 100, D, "Share of a throne's region a god's dominion needs to hold the throne (%)")
     essence: int = rule(6, 0, 10000, P, "Essence a held throne gives its god each epoch at full power")
@@ -125,7 +124,8 @@ class ThroneRules:
 
 @dataclass(frozen=True)
 class MagicSiteRules:
-    per_world: int = rule(4, 0, 100, D, "Magic sites hidden on each world")
+    per_world: int = rule(4, 0, 10000, D, "Magic sites hidden on each world, before its regions are counted")
+    regions_per_extra: int = rule(10, 0, 100000, D, "One more magic site hidden on a world for every this many of its regions (0 none)")
     strength: int = rule(50, 0, 100, D, "Strength of a new magic site")
     search_pct: int = rule(20, 0, 100, D, "Chance a mage with the site's school searches its land and finds it each epoch (%)")
     search_skill: int = rule(

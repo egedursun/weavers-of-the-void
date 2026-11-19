@@ -62,7 +62,13 @@ class OrderRules:
     tithe_wealth: int = rule(3, 0, 100, F, "Wealth a holy order draws each epoch from its faith's tithes")
     fortress_defense: int = rule(10, 0, 100, F, "Defence a holy order adds to the border town it holds")
     recruit_pct: int = rule(20, 0, 100, F, "Chance each epoch a warrior or noble of the faith near a holy order takes its vows (%)")
-    host_per_strength: int = rule(5, 0, 100, F, "Soldiers a holy order sends to a holy war for each point of its strength")
+    host_per_strength: int = rule(
+        5,
+        0,
+        10000,
+        F,
+        "Soldiers a holy order sends to a holy war for each point of its strength, for every thousand followers of its faith (at least a thousand counted)",
+    )
 
 
 @dataclass(frozen=True)

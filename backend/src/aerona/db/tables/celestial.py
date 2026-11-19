@@ -16,6 +16,8 @@ from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, Gravity
 from aerona.domain.models.phonology import Phonology
 from aerona.domain.models.profiles import EntityDepth
 
+SEASONS_MAX = 12
+
 
 class StarRow(NodeRow):
     __tablename__ = "stars"
@@ -64,7 +66,7 @@ class WorldRow(NodeRow):
         CheckConstraint("mortal_agents IS NULL OR mortal_agents >= 0", name="mortal_agents_min"),
         CheckConstraint("climate_epochs_left IS NULL OR climate_epochs_left >= 0", name="climate_epochs_left_min"),
         CheckConstraint("axial_tilt IS NULL OR axial_tilt BETWEEN 0 AND 90", name="axial_tilt_range"),
-        CheckConstraint("season_count IS NULL OR season_count BETWEEN 1 AND 6", name="season_count_range"),
+        CheckConstraint(f"season_count IS NULL OR season_count BETWEEN 1 AND {SEASONS_MAX}", name="season_count_range"),
         CheckConstraint("year_length_days IS NULL OR year_length_days >= 1", name="year_length_positive"),
         CheckConstraint("day_length_hours IS NULL OR day_length_hours >= 1", name="day_length_positive"),
         CheckConstraint("moon_count IS NULL OR moon_count >= 0", name="moon_count_min"),

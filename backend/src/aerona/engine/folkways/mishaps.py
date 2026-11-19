@@ -442,6 +442,7 @@ async def keep_mishaps(ctx: TickContext, tally: MishapTally) -> None:
             *[Befell(found.kind, found.cause, found.victim, severity=found.severity, died=found.died) for found in await everyday(ctx, folk)],
         ]
         folk_people = await people_of(ctx.session, town)
+        draw = ctx.rng(f"mishap.witnesses.{town.id}.{ctx.epoch}")
         for befell in befallen:
             row = MishapRow(
                 settlement_entity_id=town.id,
@@ -452,7 +453,7 @@ async def keep_mishaps(ctx: TickContext, tally: MishapTally) -> None:
                 explained=await explained(ctx, town, befell),
                 severity=befell.severity,
                 died=befell.died,
-                witnesses=[node for node in folk[:WITNESSES] if node != befell.victim],
+                witnesses=draw.sample([node for node in folk if node != befell.victim], WITNESSES),
                 epoch=ctx.epoch,
                 locked=[],
             )

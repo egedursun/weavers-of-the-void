@@ -384,7 +384,7 @@ async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
     rng = ctx.rng("spontaneous")
     stars = {star.id: star for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id))}
     bag = spontaneous_bag(ctx.rules)
-    if not bag or not rng.chance(await paced(ctx, None, SpontaneousKind.COMET, ctx.rules.sky.sky_event_chance)):
+    if not bag or not rng.chance(await paced(ctx, None, SpontaneousKind.COMET, ctx.rules.sky.over_epoch(ctx.rules.sky.sky_event_chance))):
         return None
     kind = bag[rng.die(len(bag)) - 1]
     order = await spontaneous_order(ctx, kind, stars)

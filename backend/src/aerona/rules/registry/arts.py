@@ -14,7 +14,7 @@ S = RuleGroup.SKY
 @dataclass(frozen=True)
 class ArtMarketRules:
     collector_chance: int = rule(20, 0, 100, M, "Chance each epoch that a realm, noble house, church or merchant guild without a collection begins one (%)")
-    collectors_per_epoch: int = rule(6, 0, 1000, M, "New collectors that may arise across the cosmos in one epoch")
+    collectors_per_epoch: int = rule(6, 0, 1000, M, "New collectors that may arise on one world in one epoch")
     connoisseur_at: int = rule(65, 0, 100, M, "Discernment at which a private collector is a connoisseur whose taste weighs more on the market")
     base_price: int = rule(20, 0, 100000, M, "Price in coin of a work of middling quality by an unknown hand")
     renown_pct: int = rule(100, 0, 1000, M, "Price a work gains at its maker's full renown (%)")
@@ -23,7 +23,7 @@ class ArtMarketRules:
     interest_pct: int = rule(50, 0, 1000, M, "Price a work gains at full collectors' interest (%)")
     sale_chance: int = rule(25, 0, 100, M, "Chance each epoch that an owned work comes up for sale (%)")
     gathering_pct: int = rule(200, 0, 1000, M, "Chance of a sale against the usual when a gathering is held in the work's land (%)")
-    sales_per_epoch: int = rule(30, 0, 10000, M, "Works that may change hands across the cosmos in one epoch")
+    sales_per_epoch: int = rule(30, 0, 10000, M, "Works that may change hands on one world in one epoch")
     auction_pct: int = rule(15, 0, 200, M, "Price a work gains at an auction for every rival bidder beyond the first (%)")
     grandeur_per_work: int = rule(2, 0, 100, M, "Grandeur a court gains each epoch for every work its realm holds, capped by its grandeur")
     lure_renown: int = rule(60, 0, 100, M, "Renown from which an artist is drawn to the grandest court of its world")
@@ -33,7 +33,7 @@ class ArtMarketRules:
 @dataclass(frozen=True)
 class ForgeryRules:
     forge_chance: int = rule(5, 0, 100, C, "Chance each epoch that a skilled maker forges a work worth the trouble (%)")
-    forgeries_per_epoch: int = rule(4, 0, 1000, C, "Forgeries that may be made across the cosmos in one epoch")
+    forgeries_per_epoch: int = rule(4, 0, 1000, C, "Forgeries that may be made on one world in one epoch")
     price_floor: int = rule(40, 0, 100000, C, "Price from which a work is worth forging")
     skill_floor: int = rule(55, 0, 100, C, "Creativity a maker needs before it forges")
     expose_chance: int = rule(10, 0, 100, C, "Chance each epoch that an expert examines a forgery in its land (%)")
@@ -46,7 +46,8 @@ class CanonRules(Spanned):
     renown_quality: int = rule(80, 0, 100, C, "Quality from which a work enters its people's canon by renown")
     age_years: int = span(50, 0, 2500, C, "Years a work must last before it enters the canon by renown")
     copies: int = rule(5, 0, 10000, C, "Copies from which a work enters the canon by copying")
-    canon_size: int = rule(12, 1, 1000, C, "Works a people's canon holds")
+    canon_size: int = rule(12, 1, 100000, C, "Works a small people's canon holds (base)")
+    canon_people_per_work: int = rule(10000, 0, 100000000, C, "A people's canon holds one more work for every this many of its people (0: fixed)")
     contest_chance: int = rule(20, 0, 100, C, "Chance each epoch that a rival movement contests a work of the canon (%)")
     contest_loss: int = rule(15, 0, 100, C, "Weight a contested work loses each epoch")
     value_pull: int = rule(5, 0, 100, C, "Share of the gap a people's values close each epoch toward the values its canon carries (%)")
@@ -61,7 +62,7 @@ class CanonRules(Spanned):
 class ArtMovementRules:
     found_artists: int = rule(3, 1, 100, C, "Makers of works in a town from which they band into a movement")
     found_chance: int = rule(10, 0, 100, C, "Chance each epoch that such makers found a movement (%)")
-    movements_per_epoch: int = rule(3, 0, 1000, C, "Movements that may be founded across the cosmos in one epoch")
+    movements_per_epoch: int = rule(3, 0, 1000, C, "Movements that may be founded on one world in one epoch")
     scandal_chance: int = rule(8, 0, 100, C, "Chance each epoch that a movement breaches the norms of its town (%)")
     scandal_agitation: int = rule(10, 0, 100, C, "Agitation a scandal stirs in the town's crowd")
     orthodoxy_patrons: int = rule(3, 1, 100, C, "Patrons from which a movement becomes the orthodoxy of its people")
@@ -71,13 +72,13 @@ class ArtMovementRules:
 class SportRules(Spanned):
     club_population: int = rule(1500, 0, 1000000, C, "People a town with an arena or stadium needs before a club forms in it")
     club_chance: int = rule(15, 0, 100, C, "Chance each epoch that such a town gains a club (%)")
-    clubs_per_epoch: int = rule(4, 0, 1000, C, "Clubs that may form across the cosmos in one epoch")
+    clubs_per_epoch: int = rule(4, 0, 1000, C, "Clubs that may form on one world in one epoch")
     league_clubs: int = rule(2, 2, 100, C, "Clubs a realm needs before they form a league")
     rating_step: int = rule(5, 0, 100, C, "Rating a club gains for a win or loses for a defeat")
     fandom_step: int = rule(3, 0, 100, C, "Fandom a club gains for a win or loses for a defeat")
     stake_pct: int = rule(2, 0, 100, C, "Share of a town's coin its fans wager on a match, at full fandom (%)")
     season_years: int = span(1, 1, 2500, C, "Years a league season runs before a champion is named")
-    athletes: int = rule(5, 0, 100, C, "Athletes a new club signs from the strongest and swiftest mortals of its town")
+    athletes: int = rule(11, 0, 1000, C, "Athletes a new club signs from the strongest and swiftest mortals of its town")
     field_following: int = rule(
         40,
         0,
@@ -106,7 +107,7 @@ class CircusFactionRules:
 @dataclass(frozen=True)
 class ConstructRules:
     make_chance: int = rule(5, 0, 100, H, "Chance each epoch that a maker with the skill makes a construct (%)")
-    constructs_per_epoch: int = rule(3, 0, 1000, H, "Constructs that may be made across the cosmos in one epoch")
+    constructs_per_epoch: int = rule(3, 0, 1000, H, "Constructs that may be made on one world in one epoch")
     maker_magic: int = rule(4, 0, 10, H, "Magic knowledge a maker's people needs before it makes constructs")
     upkeep: int = rule(5, 0, 100, H, "Power a construct burns each epoch")
     renew: int = rule(20, 0, 100, H, "Power a living maker, or a skilled maker of its town once it is dead, renews in its construct each epoch")

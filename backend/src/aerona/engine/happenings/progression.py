@@ -20,6 +20,7 @@ from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.happenings.effects import aftermath, famine_onset, peak_harm, plague_active, siege_over, siege_peaked, struck_communities
+from aerona.engine.happenings.emergence import emergent_room
 from aerona.engine.happenings.profile import (
     MULTI_SEASON,
     Happening,
@@ -143,7 +144,7 @@ async def advance(ctx: TickContext, atlas: RegionAtlas) -> Counter[str]:
     profiles = list(await ctx.session.scalars(select(EventProfileRow).where(EventProfileRow.end_epoch.is_(None)).order_by(EventProfileRow.entity_id)))
     for profile in profiles:
         event = await ctx.session.get(EntityRow, profile.entity_id)
-        if event is None or event.status is EntityStatus.REJECTED:
+        if event is None or event.status is EntityStatus.REJECTED or held(event.id):
             continue
         if ctx.epoch > profile.phase_epoch and PHASE_HOLD not in profile.locked:
             wanted = await next_phase(ctx, event, profile)
@@ -244,8 +245,11 @@ async def link_profiles(ctx: TickContext) -> int:
 async def siege_events(ctx: TickContext, atlas: RegionAtlas) -> int:
     covered = set(await ctx.session.scalars(select(EventProfileRow.siege_id).where(EventProfileRow.siege_id.is_not(None))))
     made = 0
-    for siege in list(await ctx.session.scalars(select(SiegeRow).where(SiegeRow.status == SiegeStatus.ONGOING).order_by(SiegeRow.id))):
-        if siege.id in covered or made >= ctx.rules.events.emergent_cap:
+    cap = await emergent_room(ctx)
+    for siege in ctx.rng("emerge.sieges").shuffled(
+        await ctx.session.scalars(select(SiegeRow).where(SiegeRow.status == SiegeStatus.ONGOING).order_by(SiegeRow.id))
+    ):
+        if siege.id in covered or made >= cap:
             continue
         town = await ctx.session.get(EntityRow, siege.besieged_entity_id)
         besieger = await ctx.session.get(EntityRow, siege.besieger_entity_id)

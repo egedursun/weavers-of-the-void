@@ -89,9 +89,9 @@ async def mortal_magic_lines(scope: Scope, me: EntityRow) -> list[str]:
     long_life = await session.get(LongevityRow, me.id)
     if long_life is not None:
         dose = f"{long_life.dose} {spoken(long_life.form)} vis each epoch"
-        found.append(f"longevity magic keeps you: {dose}, dependence {long_life.dependence}, {long_life.years_gained} borrowed years")
+        found.append(f"longevity magic keeps you: {dose}, dependence {long_life.dependence}, {long_life.years_gained} years gained")
     for geas in await session.scalars(select(GeasRow).where(GeasRow.bearer_entity_id == me.id).order_by(GeasRow.id)):
-        layer = await god_called(scope, geas.layer_node_id) if geas.layer_node_id is not None else "a seer"
+        layer = await god_called(scope, geas.layer_node_id) if geas.layer_node_id is not None else "an unknown source"
         found.append(f"a geas of {layer}: {spoken(geas.mode)} {spoken(geas.act.value)} ({spoken(geas.state)})")
     quest = await session.scalar(select(HeroquestRow).where(HeroquestRow.quester_entity_id == me.id, HeroquestRow.state == HeroquestState.QUESTING).limit(1))
     if quest is not None:

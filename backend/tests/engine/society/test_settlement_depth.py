@@ -165,12 +165,19 @@ def test_office_tiers_gate_council_and_governors() -> None:
         2: SettlementProfileRow(size_tier=SizeTier.TOWN),
         3: SettlementProfileRow(size_tier=SizeTier.HAMLET),
     }
-    wanted = wanted_offices(book, realm, [], RULES, cast(Any, towns))
+    wanted = wanted_offices(book, realm, [], RULES, cast(Any, towns), subjects=0)
     kinds = {kind for kind, _, _ in wanted}
     assert OfficeKind.MARSHAL in kinds and OfficeKind.CHANCELLOR in kinds
     assert OfficeKind.SPYMASTER not in kinds and OfficeKind.TREASURER not in kinds
     assert (OfficeKind.GOVERNOR, 200, None) in wanted
     assert (OfficeKind.GOVERNOR, 300, None) not in wanted
+    great = {1: SettlementProfileRow(size_tier=SizeTier.WORLD_CITY), 2: towns[2], 3: towns[3]}
+    seats = RULES.scale.council_seat_people
+    few = wanted_offices(book, realm, [], RULES, cast(Any, great), subjects=seats - 1)
+    many = wanted_offices(book, realm, [], RULES, cast(Any, great), subjects=3 * seats)
+    for kind in (OfficeKind.MINISTER, OfficeKind.GENERAL, OfficeKind.ADMIRAL):
+        assert few.count((kind, None, None)) == 1 and many.count((kind, None, None)) == 4
+    assert many.count((OfficeKind.CHANCELLOR, None, None)) == 1
 
 
 async def test_a_flood_wrecks_low_timber_districts_more_than_stone(realm: Realm) -> None:

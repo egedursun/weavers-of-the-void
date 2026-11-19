@@ -83,19 +83,22 @@ async def privateers(ctx: TickContext, factions: FactionBook, realms: RealmBook)
 async def hire(ctx: TickContext, factions: FactionBook, realms: RealmBook) -> int:
     table = ctx.rules.mercenaries
     hired = 0
-    idle = [
-        profile
-        for profile in factions.profiles.values()
-        if profile.kind is FactionKind.MERCENARY_COMPANY and profile.employer_entity_id is None and not held(profile.faction_entity_id)
-    ]
+    idle = ctx.rng("hire.order").shuffled(
+        [
+            profile
+            for profile in factions.profiles.values()
+            if profile.kind is FactionKind.MERCENARY_COMPANY and profile.employer_entity_id is None and not held(profile.faction_entity_id)
+        ]
+    )
     for realm in realms.realms.values():
         core = realm.profile.core_entity_id
-        if not idle or core is None or held(realm.entity.id, core) or not await ongoing_wars(ctx.session, core) or realm.profile.treasury < table.pay:
+        asked = max(idle[0].pay, table.pay * max(1, len(factions.members[idle[0].faction_entity_id]))) if idle else table.pay
+        if not idle or core is None or held(realm.entity.id, core) or not await ongoing_wars(ctx.session, core) or realm.profile.treasury < asked:
             continue
         if not ctx.rng(f"hire.{realm.entity.id}.{ctx.epoch}").chance(table.hire_chance):
             continue
         company = idle.pop(0)
-        await contract(ctx, factions, company, realm, pay=company.pay or table.pay, epochs=table.contract_epochs)
+        await contract(ctx, factions, company, realm, pay=asked, epochs=table.contract_epochs)
         hired += 1
     return hired
 

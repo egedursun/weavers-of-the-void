@@ -93,6 +93,7 @@ class PartView(ApiModel):
     severable: bool
     internal: bool
     vital: bool
+    counted: int
     loss: int
     state: InjuryState | None
     prosthesis: MaterialKind | None

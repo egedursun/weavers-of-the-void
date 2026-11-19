@@ -18,11 +18,13 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.agrarian import control
+from aerona.engine.agrarian.resilience import most_level, per_thousand
 from aerona.engine.collective.book import shift
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mind.hooks import judged
 from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.queries import living_entity, top_region
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -36,7 +38,6 @@ WORK_COST = 200
 CATCH_COIN = 15
 CATCH_POACHING = 10
 DEFAULT_STRICTNESS = 60
-MOST_LEVEL = 5
 STRICT_RESERVE = 50
 
 
@@ -206,7 +207,7 @@ async def send_aid(call: MortalCall, args: SendAidInput) -> str:
     if town is None or town.entity_type is not EntityType.SETTLEMENT or held(town.id):
         fail(MortalResult.AID_REFUSED, why="there is no such town")
     try:
-        row = await control.send_aid(call.tick, realm.id, town.id, args.kind, call.tick.rules.relief.cap)
+        row = await control.send_aid(call.tick, realm.id, town.id, args.kind, per_thousand(call.tick.rules.relief.cap, town))
     except ValidationFailedError as error:
         fail(MortalResult.AID_REFUSED, why=str(error).rstrip("."))
     call.target(town.id)
@@ -242,7 +243,7 @@ async def prepare_town(call: MortalCall, args: PrepareTownInput) -> str:
         fail(MortalResult.PREPARE_REFUSED, why="you live in no town")
     work = await call.session.get(PreparednessRow, (town.id, args.kind))
     level = (work.level if work is not None else 0) + 1
-    if level > MOST_LEVEL:
+    if level > most_level(call.tick.rules, stat_or(town, "population", 0)):
         fail(MortalResult.PREPARE_REFUSED, why="that work stands as high as it can")
     if not await take_coin(call.session, call.tick.rules, call.me, WORK_COST * level):
         fail(MortalResult.PREPARE_REFUSED, why=f"it costs {WORK_COST * level} coin")

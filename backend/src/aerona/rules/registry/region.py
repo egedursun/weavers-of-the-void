@@ -119,7 +119,8 @@ class HazardsRules:
     whiteout_army_pct: int = rule(3, 0, 100, G, "Whiteout: soldiers in the region killed (%)")
     named_hurt: int = rule(2, 0, 20, G, "Named mortals a hazard can hurt in each struck community")
     injury_damage: int = rule(30, 0, 200, G, "Damage a hazard deals to a named mortal")
-    per_epoch_cap: int = rule(40, 0, 10000, G, "Most hazard strikes the world suffers in one epoch")
+    per_epoch_cap: int = rule(40, 0, 100000, G, "Most hazard strikes one world suffers in one epoch, before its size is counted")
+    regions_per_extra_strike: int = rule(10, 0, 100000, G, "One more hazard strike a world may suffer in one epoch for every this many of its regions (0 none)")
 
 
 @dataclass(frozen=True)

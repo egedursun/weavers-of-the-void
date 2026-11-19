@@ -44,6 +44,7 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, spoken_language
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.unions.axes import Spousing, drift_custom, fresh_custom
 from aerona.rules.registry import Rules
 
@@ -352,7 +353,8 @@ async def culture_for(session: AsyncSession, rules: Rules, people: EntityRow, re
     values = await culture_of(session, people.id)
     tongues = len(await active_bonds(session, [BondKind.SPEAKS], sources=[people.id]))
     levels = (await known_levels(session, [people.id])).get(people.id, {})
-    homes = len(await active_bonds(session, [BondKind.LIVES_IN], sources=[people.id]))
+    homes = [await session.get(EntityRow, bond.target_node_id) for bond in await active_bonds(session, [BondKind.LIVES_IN], sources=[people.id])]
+    townsfolk = sum(stat_or(home, "population", 0) for home in homes if home is not None and home.status is EntityStatus.CANON)
     inheritance, slavery = customs_of(values)
     script = await script_factor(session, rules, people.id)
     if await has_technique(session, people.id, Technique.ALPHABET):
@@ -363,7 +365,7 @@ async def culture_for(session: AsyncSession, rules: Rules, people: EntityRow, re
         people_entity_id=people.id,
         cohesion=clamp_int(table.cohesion_base - max(0, tongues - 1) * table.cohesion_per_tongue + values.get(ValueAxis.KINSHIP, 0) // 4, 0, PERCENT),
         literacy=clamp_int(round_half_up(levels.get(KnowledgeBranch.WRITING, 0) * table.literacy_per_writing_level * script), 0, PERCENT),
-        urbanisation=clamp_int(homes * table.urban_per_settlement, 0, PERCENT),
+        urbanisation=clamp_int(townsfolk * table.urban_per_settlement / max(1, stat_or(people, "population", 0)), 0, PERCENT),
         liturgical_language_id=await liturgical_of(session, people),
         trade_language_id=await trade_language_of(session, people),
         staples=sorted({staple_for(rules, diet, region).value, *(item.value for item in edible(diet) if item in STAPLE_FOODS)}),

@@ -1,7 +1,7 @@
 from typing import Any, cast
 
 from aerona.catalog.anatomy import ANATOMIES
-from aerona.catalog.tissues import FULL_COUNTS, covering_of, stack_of
+from aerona.catalog.tissues import covering_of, stack_of
 from aerona.db.tables.body import InjuryRow
 from aerona.domain.enums.body import (
     BodyFunction,
@@ -40,7 +40,7 @@ def test_every_plan_has_a_covering_and_humans_have_teeth_and_toes() -> None:
     assert covering_of(BodyPlan.INSECTOID) is TissueKind.CHITIN
     assert covering_of(BodyPlan.HUMANOID) is TissueKind.SKIN
     assert stack_of(BodyPlan.HUMANOID, "left_leg", BodyRegion.LEGS)[0] is TissueKind.SKIN
-    assert part("teeth").counted == FULL_COUNTS["teeth"] and part("toes").counted == FULL_COUNTS["toes"]
+    assert part("teeth").counted == HUMAN.full_count("teeth") == 32 and part("toes").counted == HUMAN.full_count("toes") == 10
 
 
 def test_a_deep_cut_reaches_artery_nerve_and_tendon_while_a_scratch_stays_in_the_skin() -> None:
@@ -75,9 +75,9 @@ def test_treatments_follow_the_wound_and_a_crutch_lets_the_lame_walk() -> None:
 
 def test_numbness_dulls_fine_work_and_senselessness_stops_a_fighter() -> None:
     stats = BearerStats(50, 50, 50, 50, 50)
-    whole = capacities(RULES, stats, BodyState(HUMAN, (), FULL_COUNTS, 0))
-    numb = capacities(RULES, stats, BodyState(HUMAN, (Wound("left_hand", InjuryKind.CUT, 2, 0, NerveDamage.SENSORY),), FULL_COUNTS, 0))
-    out = capacities(RULES, stats, BodyState(HUMAN, (), FULL_COUNTS, 0, consciousness=Consciousness.UNCONSCIOUS))
+    whole = capacities(RULES, stats, BodyState(HUMAN, (), HUMAN.full_counts, 0))
+    numb = capacities(RULES, stats, BodyState(HUMAN, (Wound("left_hand", InjuryKind.CUT, 2, 0, NerveDamage.SENSORY),), HUMAN.full_counts, 0))
+    out = capacities(RULES, stats, BodyState(HUMAN, (), HUMAN.full_counts, 0, consciousness=Consciousness.UNCONSCIOUS))
     assert numb["craft"] <= whole["craft"]
     assert out["melee"] == 0 and out["command"] == 0
     assert BodyFunction.FINE_MANIPULATION in HUMAN.functions

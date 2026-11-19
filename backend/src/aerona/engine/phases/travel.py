@@ -251,8 +251,10 @@ async def route_knowledge(ctx: TickContext) -> int:
     knowledge = await KnowledgeMap.load(ctx.session)
     rng = ctx.rng("route_knowledge")
     learned = 0
-    for route in [item for item in book.routes if item.active and item.known]:
-        if learned >= travel.route_knowledge_cap:
+    known = ctx.rng("route_knowledge.order").shuffled([item for item in book.routes if item.active and item.known])
+    limit = scaled_cap(travel.route_knowledge_cap, travel.route_knowledge_route_divisor, len(known))
+    for route in known:
+        if learned >= limit:
             break
         branch = TRAVEL_METHODS[route.method].required_branch
         if branch is None:
@@ -943,7 +945,7 @@ async def first_contact(ctx: TickContext, arrival: Arrival) -> None:
         if any([await bonds.exists_between(arrival.traveller.id, native.id, kind) for kind in (BondKind.TRADES_WITH, BondKind.ENEMY, BondKind.ALLY)]):
             continue
         natives.append(native)
-    for native in natives[: ctx.rules.travel.contact_cap]:
+    for native in ctx.rng(f"contact.order.{arrival.traveller.id}").shuffled(natives)[: ctx.rules.travel.contact_cap]:
         arrival.contacts.append(await _contact(ctx, arrival, native))
         arrival.contact_ids.append(native.id)
 

@@ -31,6 +31,7 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mortal.kin import children_of, siblings_of, spouses_of
 from aerona.engine.mortal.kinship import marry
+from aerona.engine.operations.limits import TEN_THOUSAND, realm_people
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import LawBook
@@ -160,7 +161,8 @@ async def sell_office(ctx: TickContext, realm: Realm, row: RegimeRow, tally: Pat
     seat = await unsold_seat(ctx, realm)
     if seat is None:
         return None
-    return await sell_seat(ctx, realm, seat, price=table.base_price, tally=tally)
+    price = max(table.base_price, table.base_price * await realm_people(ctx, realm.entity.id) // TEN_THOUSAND)
+    return await sell_seat(ctx, realm, seat, price=price, tally=tally)
 
 
 async def sell_seat(
@@ -317,15 +319,16 @@ async def stance_of(ctx: TickContext, mortal: EntityRow, threat: int, *, armed: 
 async def act_on_base(ctx: TickContext, realm: Realm, mortal: EntityRow, row: PowerBaseRow, tally: PatronageTally) -> None:
     table = ctx.rules.power_bases
     if row.stance is PowerStance.EXTORTING:
-        spend(ctx, realm, -table.extortion, TreasuryEntry.GRANT, f"wrung from the treasury by {mortal.name}")
-        await receive_coin(ctx.session, ctx.rules, mortal, table.extortion)
+        wrung = max(table.extortion, table.extortion * await realm_people(ctx, realm.entity.id) // TEN_THOUSAND)
+        spend(ctx, realm, -wrung, TreasuryEntry.GRANT, f"wrung from the treasury by {mortal.name}")
+        await receive_coin(ctx.session, ctx.rules, mortal, wrung)
         tally.extorted += 1
         with explaining():
             await record(
                 ctx,
                 "power_bases.extorted",
                 roles={IncidentRole.ACTOR: mortal.id, IncidentRole.VICTIM: realm.entity.id},
-                facts={"amount": ctx.rules.power_bases.extortion, "threat": row.threat},
+                facts={"amount": wrung, "threat": row.threat},
                 place=mortal.location_id,
             )
     elif row.stance is PowerStance.DEFIANT:

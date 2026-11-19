@@ -20,7 +20,9 @@ class DoctrineRules:
     pacifist_legitimacy: int = rule(6, 0, 100, R, "Legitimacy a devout pacifist ruler loses for each war they wage")
     sacrifice_essence: int = rule(2, 0, 100, R, "Essence a death or blood god gains for each sacrificing cult in an epoch")
     sacrifice_infamy: int = rule(5, 0, 100, R, "Ill will other cultures hold for the sacrifice of people")
-    animal_sacrifice_livestock: int = rule(3, 0, 1000, R, "Livestock an animal-sacrificing cult offers in an epoch")
+    animal_sacrifice_livestock: int = rule(
+        3, 0, 100000, R, "Livestock an animal-sacrificing cult offers in an epoch for every thousand people of each of its communities (at least one head)"
+    )
     monastic_protection_pct: int = rule(50, 0, 100, R, "Share of knowledge loss in dark ages that monasteries prevent (%)")
     dietary_demand_pct: int = rule(0, 0, 100, R, "Demand left for a commodity forbidden by dietary law (%)")
     sacred_species_grievance: int = rule(20, 0, 100, R, "Grievance a faith holds against those who hunt its sacred species")
@@ -36,7 +38,9 @@ class DoctrineRules:
     devotion_per_1000: int = rule(5, 0, 1000, R, "Devotion a thousand followers bring each epoch at full zeal")
     devotion_tribute_pct: int = rule(20, 0, 100, R, "Share of a cult's devotion its living god draws into faith each epoch (%)")
     fanaticism_devotion: int = rule(20, 0, 1000, R, "Devotion a fanatic cult spends on an inquisition, iconoclasm or crusade")
-    sacrifice_cohort: int = rule(2, 0, 1000, R, "People each human-sacrificing community gives to the god in an epoch")
+    sacrifice_cohort: int = rule(
+        2, 0, 1000, R, "People each human-sacrificing community gives to the god in an epoch for every thousand of its people (at least one)"
+    )
 
 
 @dataclass(frozen=True)
@@ -59,7 +63,11 @@ class ZealRules(Spanned):
     fanaticism: int = rule(80, 0, 100, R, "Zeal above which a cult turns fanatic")
     fanaticism_chance: int = rule(25, 0, 100, R, "A fanatic cult turns to one of its fanaticisms in an epoch (%)")
     fanatic_reach: int = rule(
-        5, 1, 100, R, "Most people one outbreak of fanaticism reaches: heretics purged, unbelievers converted or harried, followers who fast or flee"
+        25,
+        1,
+        100,
+        R,
+        "Share of the people in its path one outbreak of fanaticism reaches, at least one: heretics purged, unbelievers converted or harried, followers who fast or flee (%)",
     )
     martyr_devotion: int = rule(20, 0, 1000, R, "Devotion a church gains from each of its martyrs")
     mortification_hp: int = rule(5, 0, 1000, R, "Harm a follower deals to their own body in mortification")
@@ -84,7 +92,7 @@ class TithesRules:
     network_income: int = rule(3, 0, 1000, R, "Treasury a cult's network brings it each epoch")
     share_income: int = rule(4, 0, 1000, R, "Treasury a cult's shares in a company bring it each epoch")
     line_income: int = rule(2, 0, 1000, R, "Treasury a holy line in a cult's keeping brings it each epoch")
-    alms_cost: int = rule(20, 0, 100000, R, "Treasury alms cost in an epoch")
+    alms_cost: int = rule(20, 0, 100000, R, "Treasury alms cost in an epoch for every thousand people of the faith's communities")
     alms_poverty: int = rule(10, 0, 100, R, "Poverty pressure alms relieve")
     monastery_cost: int = rule(80, 0, 100000, R, "Treasury a monastery costs")
     war_chest_pct: int = rule(25, 0, 100, R, "Share of the treasury a zealous cult gives to a holy war (%)")
@@ -103,7 +111,7 @@ class MissionsRules(Spanned):
     skill_pct: int = rule(100, 0, 300, R, "Weight of the missionary's skill (%)")
     miracle_pct: int = rule(50, 0, 300, R, "Weight of the god's recent miracles (%)")
     rival_clergy_pct: int = rule(50, 0, 300, R, "Weight of the rival clergy's quality against a mission (%)")
-    cap: int = rule(3, 0, 100, R, "Most missions in an epoch")
+    cap: int = rule(5, 0, 1000, R, "Most missions that work on one community in an epoch")
     journey_pct: int = rule(2, 0, 100, R, "Conversion a missionary arriving on a journey brings (%)")
     journey_years: int = span(3, 0, 1250, R, "Years a journey's preachers keep preaching where they arrived")
 

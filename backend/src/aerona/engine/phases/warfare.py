@@ -159,6 +159,7 @@ from aerona.engine.services.war import (
     uprising_target,
     violence_after,
     war_event,
+    world_war_limit,
 )
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import ENDING_LABELS, WarSettlement, close_stale_wars, end_war, settle_peace
@@ -1177,7 +1178,8 @@ async def _powers(
         walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
         town = await ctx.session.get(SettlementProfileRow, besieged.id)
         rings = siege_of(ctx.rules, town.morphology) if town is not None else 0
-        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls, rings) * await warded(ctx, besieged.id)
+        siege = await open_siege(ctx, war, besieged, attacker)
+        defender_power *= wall_defence(ctx, siege, walls, rings, people=stat_or(besieged, "population", 0)) * await warded(ctx, besieged.id)
         if walls is not None:
             defender_power *= await sturdiness(ctx.session, ctx.rules, walls.walls_material, walls.walls_world_material_id)
         defender_power *= await tech_factor(ctx.session, ctx.rules, besieged.id, EraChannel.FORTIFICATION)
@@ -1619,7 +1621,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     attacker, defender = await living_entity(ctx.session, item.attacker_id), await living_entity(ctx.session, item.defender_id)
     if attacker is None or defender is None:
         return 0
-    seasons = grant_sub_steps(ctx.environment, settings.seasons_per_war_epoch)
+    seasons = grant_sub_steps(ctx.environment, settings.war_seasons())
     if not seasons:
         report = await fight_battle(ctx, theatre, item, armies)
         return int(report is not None)
@@ -1629,15 +1631,16 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     rng = ctx.rng(f"campaign.{war.id}")
     start = rng.below(count)
     years = ctx.rules.time.years_per_epoch
-    first_year = rng.below(years)
+    per_year = max(1, settings.seasons_per_war_epoch)
+    first_year = rng.below(max(1, years - seasons // per_year))
     base = epoch_start_year(ctx.epoch, years)
     bouts = 0
     lost = 0
     winter_shamed = False
     for index in range(seasons):
-        year = base + min(years - 1, first_year + (start + index) // count)
+        year = base + min(years - 1, first_year + index // per_year)
         meeting = marches[0].profile.region_entity_id if in_contact(theatre.neighbourhood.atlas, marches[0].profile, marches[1].profile) else None
-        ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index, year=year, region_id=meeting)
+        ground = theatre.battleground(ctx, war, defender, slot=f"war.{war.id}.{index}", season_index=start + index % per_year, year=year, region_id=meeting)
         lost += await _weather_losses(ctx, theatre, ground, (attacker, defender), armies)
         contact = await _manoeuvre(ctx, theatre, marches, index, ground=ground, war_id=war.id)
         if await occupy(ctx, war, marches[0], defender, theatre.neighbourhood.atlas) is not None:
@@ -2017,27 +2020,22 @@ async def campaigns(ctx: TickContext) -> None:
     by_pair = {item.pair(): item for item in ongoing}
     pairs = ctx.rng("pairs").shuffled([(first, second) for first, second, _ in await hostile_pairs(ctx.session)])
     pairs.sort(key=lambda pair: unordered(*pair) not in by_pair)
-    battles = new_wars = 0
+    world_limit = await world_war_limit(ctx.session, ctx.rules)
     rng = ctx.rng("clash")
     for first_id, second_id in pairs:
-        if battles >= rules.campaigns.battle_cap and new_wars >= rules.campaigns.new_war_cap:
-            break
         first, second = await living_entity(ctx.session, first_id), await living_entity(ctx.session, second_id)
         if first is None or second is None or held(first_id, second_id):
             continue
         item = by_pair.get(unordered(first_id, second_id))
-        if (battles >= rules.campaigns.battle_cap) if item is not None else (new_wars >= rules.campaigns.new_war_cap):
-            continue
         if item is None:
             open_count = len(ongoing)
-            if open_count >= rules.diplomacy.world_war_cap or any(
+            if open_count >= world_limit or any(
                 sum(1 for war in ongoing if war.involves(side)) >= rules.diplomacy.community_war_cap for side in (first_id, second_id)
             ):
                 continue
         if not rng.chance(clamp_int(_battle_chance(ctx, theatre, first, second) + await omen_shift(ctx, first), 0, PERCENT)):
             continue
         if item is None:
-            new_wars += 1
             war = await open_war(ctx, first, second)
             item = OngoingWar(war, first.id, second.id)
             ongoing.append(item)
@@ -2051,7 +2049,7 @@ async def campaigns(ctx: TickContext) -> None:
             if attacker is None or defender is None:
                 continue
             armies = await _armies(ctx, theatre, item.war, attacker, defender)
-        battles += await campaign(ctx, theatre, item, armies, max(1, rules.campaigns.battle_cap - battles))
+        await campaign(ctx, theatre, item, armies, max(1, rules.campaigns.battle_cap))
     ctx.count("ordeals", await ordeals(ctx, theatre))
 
 

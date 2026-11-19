@@ -23,7 +23,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.vehicles import MountKind, VehicleFrame
-from aerona.engine.collective.designs import FULL_SIZE, draw_design, frame_sizes
+from aerona.engine.collective.designs import draw_design, frame_sizes, part_ceiling
 from aerona.engine.cosmos.being_wounds import FORCE_MAX, VAST, wound_being
 from aerona.engine.cuisine.dishes import found_dish
 from aerona.engine.equipment.models import draw_model
@@ -110,7 +110,7 @@ async def shape_vehicle_type(call: SonCall, args: ShapeVehicleTypeInput) -> str:
     if args.emphasis is not None:
         if args.emphasis not in sizes:
             fail(SonResult.SHAPING_REFUSED, reason=f"{an(FRAMES[args.frame].label.lower())} has no {spoken(args.emphasis)}")
-        sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
+        sizes[args.emphasis] = min(part_ceiling(FRAMES[args.frame].size), sizes[args.emphasis] + EMPHASIS)
     design = await draw_design(call.tick, owner, args.frame, sizes=sizes, name=args.name, knowledge=await KnowledgeMap.load(call.session))
     design.description = args.description
     for mount in args.mounts:

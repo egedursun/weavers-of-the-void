@@ -4,6 +4,7 @@ from aerona.domain.enums.settlement import BuildMaterial
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.settlement.book import town_of
+from aerona.engine.settlement.circuit import circuit_towers, tower_defence
 from aerona.engine.settlement.readout import defences_of, plan_readout
 from tests.engine.core.factories import CoreWorld, settlement
 
@@ -18,7 +19,11 @@ async def test_a_towns_plan_reads_its_walls_stores_and_prestige(session: AsyncSe
     rules = ctx.rules
     stone = defences_of(rules, town)
     assert stone.wall_pct == round(2 * rules.siegecraft.wall_defence_pct * rules.districts.stone_wall_pct / 100)
-    assert stone.tower_pct == 3 * rules.districts.tower_defence_pct and stone.gate_weakness_pct == 2 * rules.districts.gate_breach_pct
+    circuit = circuit_towers(rules, 6000)
+    assert stone.tower_pct == round(3 / circuit * rules.scale.circuit_tower_weight * rules.districts.tower_defence_pct)
+    assert stone.gate_weakness_pct == 2 * rules.districts.gate_breach_pct
+    full = rules.scale.circuit_tower_weight * rules.districts.tower_defence_pct / 100
+    assert tower_defence(rules, circuit, 6000) == full and tower_defence(rules, circuit_towers(rules, 600000), 600000) == full
     assert stone.batter_pct == rules.siege_depth.stone_bombard_pct
     walls.walls_material, walls.gates = BuildMaterial.TIMBER, 1
     timber = defences_of(rules, town)

@@ -245,14 +245,14 @@ async def borrowed(ctx: TickContext, lender_id: int) -> Change | None:
     return as_change(rows[-1]) if rows else None
 
 
-async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally) -> SoundChangeRow | None:
+async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally, attempt: int = 0) -> SoundChangeRow | None:
     table = ctx.rules.sound_changes
     profile = await ctx.session.get(LanguageProfileRow, language.id)
     if profile is None:
         return None
     contacts = await contacts_of(ctx, language.id)
     moved = await migrated(ctx, language.id)
-    rng = ctx.rng(f"sound.acquire.{language.id}.{ctx.epoch}")
+    rng = ctx.rng(f"sound.acquire.{language.id}.{ctx.epoch}" + (f".{attempt}" if attempt else ""))
     chance = table.base_pct + table.contact_pct * len(contacts) + (table.migration_pct if moved else 0)
     if not rng.chance(chance):
         return None
@@ -461,10 +461,10 @@ async def reconstruct(ctx: TickContext, tally: SoundTally) -> None:
 async def shift_sounds(ctx: TickContext, tally: SoundTally) -> None:
     table = ctx.rules.sound_changes
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
-        if tally.changes >= table.per_epoch:
-            break
         if held(language.id) or await has_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE):
             continue
-        await acquire(ctx, language, tally)
+        for attempt in range(table.per_epoch):
+            if await acquire(ctx, language, tally, attempt) is None:
+                break
     await reconstruct(ctx, tally)
     await ctx.session.flush()

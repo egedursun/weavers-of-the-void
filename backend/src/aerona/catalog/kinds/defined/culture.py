@@ -644,6 +644,7 @@ TECHNIQUE = total(
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.crafts.numbers.PLACE_VALUE_RECKONING",
                 "engine.crafts.numbers.SCHOOLING",
             ),
         ),
@@ -722,7 +723,7 @@ TECHNIQUE = total(
         ),
         Technique.HUMANIST_IDEALS: Defined(
             "Humanist ideals",
-            checked_by=("catalog.civics.SOCIAL_CHANGE",),
+            checked_by=("catalog.civics.SOCIAL_CHANGE", "engine.polity.governance.wanted_laws"),
             used_by=("catalog.civics.LAW_GATES", "catalog.civics.TENET_GATES", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES"),
         ),
         Technique.EXAMINATIONS: Defined(
@@ -757,6 +758,7 @@ TECHNIQUE = total(
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.CANNON: Defined(
@@ -833,7 +835,13 @@ TECHNIQUE = total(
         Technique.FACTORY_PRODUCTION: Defined(
             "Factory production",
             checked_by=("catalog.eras.ERA_EFFECTS", "engine.phases.factions.industrial_kinds"),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES", "engine.orders.putting_out.work_put_out"),
+            used_by=(
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
+                "catalog.techniques.TECHNIQUES",
+                "engine.orders.putting_out.work_put_out",
+                "engine.structures.needs.KIND_TECHNIQUES",
+            ),
         ),
         Technique.INDUSTRIAL_CHEMISTRY: Defined(
             "Industrial chemistry",
@@ -847,6 +855,7 @@ TECHNIQUE = total(
                 "catalog.taxes.TAXES",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.CANNED_FOOD: Defined(
@@ -870,6 +879,7 @@ TECHNIQUE = total(
                 "catalog.money.MONEY_FORMS",
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.TELEGRAPH: Defined(
@@ -913,6 +923,7 @@ TECHNIQUE = total(
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.AVIATION: Defined(
@@ -940,6 +951,8 @@ TECHNIQUE = total(
                 "catalog.techniques.TECHNIQUES",
                 "catalog.techniques.UNIT_TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.crafts.numbers.PLACE_VALUE_RECKONING",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.RADIO: Defined(
@@ -953,12 +966,18 @@ TECHNIQUE = total(
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.agrarian.lands.commons_kinds",
                 "engine.communication.signals.KIND_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.MASS_MEDIA: Defined(
             "Mass media",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES"),
+            used_by=(
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
+            ),
         ),
         Technique.ANTIBIOTICS: Defined(
             "Antibiotics",
@@ -968,7 +987,13 @@ TECHNIQUE = total(
         Technique.GREEN_REVOLUTION: Defined(
             "Green revolution",
             checked_by=("catalog.eras.ERA_EFFECTS",),
-            used_by=("catalog.eras.TECHNIQUE_ERAS", "catalog.facets.FACETS", "catalog.techniques.TECHNIQUES", "catalog.technology.FAMILY_TECHNIQUES"),
+            used_by=(
+                "catalog.eras.TECHNIQUE_ERAS",
+                "catalog.facets.FACETS",
+                "catalog.techniques.TECHNIQUES",
+                "catalog.technology.FAMILY_TECHNIQUES",
+                "engine.structures.needs.KIND_TECHNIQUES",
+            ),
         ),
         Technique.NUCLEAR_POWER: Defined(
             "Nuclear power",
@@ -998,6 +1023,7 @@ TECHNIQUE = total(
                 "catalog.techniques.TECHNIQUES",
                 "catalog.technology.FAMILY_TECHNIQUES",
                 "engine.agrarian.lands.commons_kinds",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.GENETIC_ENGINEERING: Defined(
@@ -1014,6 +1040,7 @@ TECHNIQUE = total(
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
                 "engine.living.lines.CRAFTS",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
         Technique.ARTIFICIAL_MINDS: Defined(
@@ -1028,6 +1055,7 @@ TECHNIQUE = total(
                 "engine.communication.signals.KIND_TECHNIQUES",
                 "engine.cosmos.routes.VEHICLE_TECHNIQUES",
                 "engine.polity.trials.trial_open",
+                "engine.structures.needs.KIND_TECHNIQUES",
             ),
         ),
     },

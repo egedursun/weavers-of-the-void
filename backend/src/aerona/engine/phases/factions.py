@@ -36,7 +36,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import is_uprising
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.society import class_shares
@@ -277,8 +277,10 @@ async def found_factions(ctx: TickContext) -> int:
     rules = ctx.rules.factions
     rng = ctx.rng("founding")
     founded = 0
-    for community in unheld(await canon(ctx.session, SOCIETY_TYPES)):
-        if founded >= rules.faction_cap:
+    communities = ctx.rng("founding.order").shuffled(unheld(await canon(ctx.session, SOCIETY_TYPES)))
+    limit = scaled_cap(rules.faction_cap, rules.faction_cap_community_divisor, len(communities))
+    for community in communities:
+        if founded >= limit:
             break
         if (stat(community, "population") or 0) < rules.faction_min_population:
             continue

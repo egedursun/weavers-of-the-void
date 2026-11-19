@@ -23,7 +23,7 @@ from aerona.engine.military.shipyard import Commission
 from aerona.engine.military.vessels import best_hull
 from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.operations.fields import keep
-from aerona.engine.operations.limits import cap_of, fleet_of, owners_of, tonnage_of, tonnage_under
+from aerona.engine.operations.limits import TEN_THOUSAND, cap_of, fleet_limit_of, fleet_of, owners_of, tonnage_of, tonnage_under
 from aerona.engine.operations.theatres import folk_of
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.treaties import breach
@@ -36,7 +36,6 @@ from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.services.war import current_war
 from aerona.language.generator import NameKind
 
-TEN_THOUSAND = 10_000
 MIDPOINT = 50
 
 
@@ -149,13 +148,18 @@ async def keep_admiralty(ctx: TickContext, polity: EntityRow, rivals: list[int],
     fleet = await fleet_of(ctx, polity.id)
     keep(row, "tonnage", sum(tonnage_of(ship) for ship in fleet))
     clauses = await limits_on(ctx, polity.id)
-    keep(row, "limit_tonnage", min((cap_of(ctx, clause) for clause in clauses), default=None))
-    reached = [clause for clause in clauses if await tonnage_under(ctx, clause) >= cap_of(ctx, clause)]
+    caps = {clause.id: await cap_of(ctx, clause) for clause in clauses}
+    keep(row, "limit_tonnage", min(caps.values(), default=None))
+    reached = [clause for clause in clauses if await tonnage_under(ctx, clause) >= caps[clause.id]]
     over = bool(reached)
     if over and await disregard(ctx, admiral) >= table.cheat_share:
         await hide_fleet(ctx, polity, admiral, reached[0], tally)
         over = False
-    count = 0 if over else min(table.max_commissions, row.budget_share // table.commission_share, await room_for(ctx, polity, fleet))
+    count = (
+        0
+        if over
+        else min(table.per_epoch(table.max_commissions), table.per_epoch(row.budget_share / table.commission_share), await room_for(ctx, polity, fleet))
+    )
     await commission_ships(ctx, polity, row, count, tally)
     await expose(ctx, polity, row, clauses, tally)
     row.updated_epoch = ctx.epoch
@@ -226,12 +230,13 @@ async def naval_treaties(ctx: TickContext, powers: list[EntityRow], tally: Admir
                 continue
             if not ctx.rng(f"naval_treaty.{first.id}.{second.id}.{ctx.epoch}").chance(table.treaty_chance):
                 continue
-            cap = {"tonnage": table.fleet_limit}
+            first_cap: dict[str, int | str | bool] = {"tonnage": await fleet_limit_of(ctx, first.id)}
+            second_cap: dict[str, int | str | bool] = {"tonnage": await fleet_limit_of(ctx, second.id)}
             await sign(
                 ctx,
                 TreatyKind.NAVAL_LIMIT,
                 [(first.id, PartyRole.SIGNATORY), (second.id, PartyRole.SIGNATORY)],
-                clauses=[Clause(ClauseKind.FLEET_LIMIT, first.id, second.id, dict(cap)), Clause(ClauseKind.FLEET_LIMIT, second.id, first.id, dict(cap))],
+                clauses=[Clause(ClauseKind.FLEET_LIMIT, first.id, second.id, first_cap), Clause(ClauseKind.FLEET_LIMIT, second.id, first.id, second_cap)],
             )
             tally.treaties += 1
 
@@ -251,6 +256,8 @@ async def keep_admiralties(ctx: TickContext, tally: AdmiraltyTally) -> None:
             continue
         await keep_admiralty(ctx, polity, rivals, tally)
     powers = [
-        polity for polity in naval if (row := await ctx.session.get(AdmiraltyRow, polity.id)) is not None and row.tonnage >= ctx.rules.admiralty.fleet_limit
+        polity
+        for polity in naval
+        if (row := await ctx.session.get(AdmiraltyRow, polity.id)) is not None and row.tonnage >= await fleet_limit_of(ctx, polity.id)
     ]
     await naval_treaties(ctx, powers, tally)

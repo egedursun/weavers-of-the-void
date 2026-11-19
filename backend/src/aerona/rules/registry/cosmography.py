@@ -25,7 +25,7 @@ class GalaxyRules:
     arm_wind_deg: int = rule(180, 0, 1080, G, "How far a spiral arm winds from the centre to the edge (degrees)")
     layout_intensity: int = rule(50, 0, 100, G, "Intensity of the arms, core, bulge and halo laid out in a new galaxy")
     formation_drift: int = rule(2, 0, 50, G, "Star formation a galaxy moves toward its type's value each epoch")
-    birth_cap: int = rule(2, 0, 20, G, "Most new stars a galaxy bears in one epoch")
+    birth_cap: int = rule(20, 0, 1000, G, "Most new stars a galaxy bears in one epoch")
     birth_brightness_die: int = rule(10, 0, 100, G, "Spread of brightness of a newly born star above its type's lowest")
     metallicity_per_supernova: int = rule(2, 0, 50, G, "Metallicity a galaxy gains from each of its stars that explodes")
     age_chance: int = rule(1, 0, 100, G, "Chance a galaxy passes into its next age in an epoch (%)")
@@ -180,7 +180,11 @@ class PhenomenaRules:
     spread_at: int = rule(70, 0, 100, P, "Intensity at which a phenomenon spreads into neighbouring regions")
     spread_intensity: int = rule(30, 0, 100, P, "Intensity a phenomenon starts with in a region it spreads into")
     spread_cap: int = rule(
-        6, 1, 100, P, "Most regions a phenomenon of regional scope can cover; one of world scope covers three times as many, one bound to a place never spreads"
+        30,
+        1,
+        10000,
+        P,
+        "Most regions a phenomenon of regional scope can cover; one of world scope covers three times as many, one bound to a place never spreads",
     )
     passing_fade: int = rule(4, 0, 100, P, "Intensity a passing phenomenon loses each epoch on top of its own growth")
     contain_pct: int = rule(100, 0, 300, P, "Share of a phenomenon's growth its containment holds back (%)")
@@ -225,7 +229,7 @@ class CosmographyRules:
     ark_sky_level: int = rule(8, 0, 10, T, "Level of sky navigation a void ark needs")
     signature_depth: int = rule(40, 0, 100, T, "Depth at which the signature minerals of a galaxy, structure or dimension lie in the regions of its worlds")
     trade_share_pct: int = rule(20, 0, 100, T, "Share of a world's surplus of a good that goes along an open route each epoch (%)")
-    trade_lines: int = rule(4, 0, 50, T, "Most goods one route carries in an epoch")
+    trade_lines: int = rule(30, 0, 1000, T, "Most kinds of goods one route carries in an epoch")
     traffic_wear: int = rule(50, 1, 100000, T, "Traffic that wears a route by one point")
     wear_repair: int = rule(4, 0, 100, T, "Wear a route that is not used heavily loses each epoch")
     wear_danger_pct: int = rule(20, 0, 300, T, "Danger a worn route gains against its wear (%)")
@@ -233,7 +237,7 @@ class CosmographyRules:
     piracy_loss_pct: int = rule(50, 0, 300, T, "Share of carried goods piracy takes against its level (%)")
     piracy_growth: int = rule(2, 0, 50, T, "Piracy a busy route draws each epoch")
     piracy_decay: int = rule(3, 0, 50, T, "Piracy a quiet or guarded route loses each epoch")
-    ark_capacity: int = rule(400, 0, 100000, T, "Settlers a void ark carries")
+    ark_capacity: int = rule(20000, 0, 10000000, T, "Most settlers a void ark carries")
     busy_traffic: int = rule(100, 1, 100000, T, "Traffic at which a route counts as busy")
     space_law_piracy: int = rule(
         3, 0, 100, T, "Piracy a route loses each epoch for each end that shares its claims, or gains for each end that leaves space open"

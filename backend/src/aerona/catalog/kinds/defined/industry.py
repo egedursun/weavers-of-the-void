@@ -104,5 +104,6 @@ METHOD_KIND = total(
         MethodKind.MILKING_MACHINES: Defined("Milking machines", checked_by=(), used_by=("catalog.methods.METHODS",)),
         MethodKind.POWER_SHEARS: Defined("Power shears", checked_by=(), used_by=("catalog.methods.METHODS",)),
         MethodKind.INCUBATORS: Defined("Incubators", checked_by=(), used_by=("catalog.methods.METHODS",)),
+        MethodKind.OIL_REFINING: Defined("Oil refining", checked_by=(), used_by=("catalog.methods.METHODS",)),
     },
 )

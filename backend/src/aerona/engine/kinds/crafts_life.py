@@ -35,6 +35,7 @@ from aerona.engine.kinds.acts import HOLDINGS
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import count_communities
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_of_town
@@ -357,6 +358,7 @@ async def colour_laws(ctx: TickContext, holders: dict[int, HolderKinds], tally: 
 async def garment_fashion(ctx: TickContext, tally: CraftTally) -> None:
     table = ctx.rules.fashion
     garments = list(await ctx.session.scalars(select(GarmentKindRow).where(GarmentKindRow.retired.is_(False)).order_by(GarmentKindRow.id)))
+    everywhere = max(1, await count_communities(ctx.session) * table.saturation // PERCENT)
     for garment in garments:
         holdings = list(
             await ctx.session.scalars(
@@ -367,7 +369,7 @@ async def garment_fashion(ctx: TickContext, tally: CraftTally) -> None:
         )
         weight = garment.fashion / PERCENT
         if "novelty" not in garment.locked:
-            adoption = clamp_int(len(holdings) * PERCENT // max(1, table.saturation), 0, PERCENT)
+            adoption = clamp_int(len(holdings) * PERCENT // everywhere, 0, PERCENT)
             before = garment.novelty
             change = (table.recovery * (PERCENT - adoption) - table.drain * adoption) / PERCENT * weight
             garment.novelty = clamp_int(garment.novelty + round_half_up(change), 0, PERCENT)

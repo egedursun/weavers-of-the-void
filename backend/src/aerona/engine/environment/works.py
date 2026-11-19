@@ -26,7 +26,6 @@ from aerona.engine.structures.readers import Working, working
 from aerona.rules.registry import Rules
 
 WORKS_FIXUP = "environment.typed_works"
-WORK_MAX = 5
 BRIDGE_WORDS = ("bridge",)
 HARBOUR_WORDS = ("harbour", "harbor", "port", "quay", "dock")
 
@@ -129,7 +128,7 @@ async def backfill_typed_works(ctx: TickContext) -> int:
             continue
         if bridge:
             works = await _infrastructure(ctx, settlement.id)
-            works.bridges = min(WORK_MAX, (works.bridges or 0) + 1)
+            works.bridges = (works.bridges or 0) + 1
             bridges += 1
         if harbour:
             found = await ctx.session.scalar(

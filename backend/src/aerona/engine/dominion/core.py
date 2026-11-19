@@ -224,7 +224,7 @@ async def rebuild_rulers(ctx: TickContext, atlas: RegionAtlas, tally: DominionTa
     open_regions = [region for region in previous if not held(region)]
     if open_regions:
         await ctx.session.execute(delete(RegionDominionRow).where(RegionDominionRow.region_entity_id.in_(open_regions)))
-    for region, gods in sorted(totals.items())[: ctx.rules.dominion.regions_max]:
+    for region, gods in sorted(totals.items()):
         top = max(gods, key=lambda god: (gods[god], -god))
         if held(region) or held(top):
             continue
@@ -313,8 +313,6 @@ async def presence(ctx: TickContext, atlas: RegionAtlas, gathered: Gathered, tal
     table = ctx.rules.dominion
     book = await DominionBook.load(ctx.session)
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if tally.thoughts >= table.thoughts_max:
-            break
         if held(mortal.id):
             continue
         ruler = book.ruler(ctx.rules, atlas.top_region(mortal.id))

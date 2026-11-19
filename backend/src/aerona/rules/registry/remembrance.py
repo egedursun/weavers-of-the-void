@@ -21,7 +21,7 @@ class RemembranceRules:
     disaster_losses: int = rule(500, 0, 100000000, G, "A disaster that took this many lives in all can be remembered")
     disaster_chance: int = rule(45, 0, 100, G, "Chance that a great disaster is remembered (%)")
     hero_chance: int = rule(55, 0, 100, G, "Chance that a fallen hero without a memorial is remembered an epoch later (%)")
-    epoch_cap: int = rule(5, 0, 100, G, "Most memorial records per epoch (wars, disasters and heroes)")
+    epoch_cap: int = rule(0, 0, 100000, G, "Most memorial records per epoch, wars, disasters and heroes together (0 for no limit beyond each one's own roll)")
     fallen_named: int = rule(3, 0, 50, G, "Most fallen heroes named in one war epic or lament")
     monument_power: int = rule(3, 1, 12, G, "Power level of a memorial monument")
     monument_splendor: int = rule(35, 0, 100, G, "Base splendor of a memorial monument")
@@ -48,5 +48,11 @@ class RemembranceRules:
     plague_piety_gain: int = rule(8, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Piety gained by a plague-struck community clinging to its god")
     plague_piety_loss: int = rule(12, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Piety lost by a plague-struck community turning from its god")
     plague_followers_pct: int = rule(12, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Follower growth of cults where a plague struck (%)")
-    plague_cap: int = rule(4, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Most plague-struck communities whose faith is shaken per epoch")
+    plague_cap: int = rule(
+        0,
+        0,
+        100000,
+        RuleGroup.RELIGION_AND_LANGUAGE,
+        "Most plague-struck communities whose faith is shaken per epoch (0 for no limit beyond each one's own roll)",
+    )
     commemorate_cost: int = rule(12, 0, 1000, RuleGroup.INTERVENTION, "Essence cost of the god ordering a war, disaster or death remembered")

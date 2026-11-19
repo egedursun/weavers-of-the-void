@@ -5,6 +5,7 @@ from aerona.core.grammar import several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import HeresyRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.faith import JudgementDoctrine
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.faith.souls import realm_population
 from aerona.engine.primitives.stats import stat
@@ -24,7 +25,7 @@ async def church_line(scope: Scope, church: Church) -> str:
     liturgy = await scope.session.get(EntityRow, doctrine.liturgical_language_id) if doctrine.liturgical_language_id is not None else None
     heresies = len(list(await scope.session.scalars(select(HeresyRow.heresy_entity_id).where(HeresyRow.parent_entity_id == cult.id))))
     parts = [
-        f"judges the dead by {words(doctrine.judgement.value)}",
+        *([f"judges the dead by {words(doctrine.judgement.value)}"] if doctrine.judgement is not JudgementDoctrine.NONE else []),
         f"orthodoxy {doctrine.orthodoxy}",
         f"zeal {zeal}",
         f"devotion {devotion}",
@@ -48,5 +49,6 @@ async def son_faith(scope: Scope, son: SonRow) -> str:
     if not churches and not souls:
         return ""
     lines = [await church_line(scope, church) for church in churches]
-    lines.append(f"Souls of your faithful dwelling in the realms of the dead: {souls}.")
+    if souls:
+        lines.append(f"Souls of your faithful in your afterlife realms: {souls}.")
     return "\n".join(lines)

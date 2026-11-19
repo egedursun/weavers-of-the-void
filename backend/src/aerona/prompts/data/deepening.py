@@ -27,8 +27,8 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
         _fields(
             ("temperament", "Temperament"),
             ("goal", "Goal in life"),
-            ("fear", "Greatest fear"),
-            ("secret", "The secret they tell no one"),
+            ("fear", "What they fear most, if anything"),
+            ("secret", "What they keep to themselves, if anything"),
             ("speech", "How they speak"),
             ("relationships", "Important relationships: loved ones, enemies, people they owe"),
         ),
@@ -39,15 +39,15 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
         _fields(
             ("governance", "Form of government and who has a say"),
             ("values", "Most sacred values"),
-            ("taboos", "Taboos and punishments"),
+            ("taboos", "What they hold forbidden, if anything"),
             ("cuisine", "Food: what they take in, what they never take, and the customs around it"),
             ("dress", "What they wear or bear, if anything: its make, its look and who may not wear what"),
             ("music", "Their arts of sound or signal, if any: what they make and when they refrain from it"),
             ("architecture", "Architectural style: what they build with and in what form"),
             ("art", "Their art: what it depicts, what is forbidden to depict"),
-            ("calendar", "How they count time and what they mark with feasts or observances"),
+            ("calendar", "Their calendar and what they mark, if anything"),
             ("warfare", "How they fight, if they do, and with what"),
-            ("death", "What they do with their dead"),
+            ("death", "Their customs around death, if any"),
         ),
     ),
     EntityType.SETTLEMENT: SpecialSection(
@@ -64,7 +64,13 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
     EntityType.FACTION: SpecialSection(
         "Organisation",
         "How this faction works",
-        _fields(("purpose", "Real purpose"), ("hierarchy", "Hierarchy"), ("methods", "Methods"), ("symbol", "Its signs and marks"), ("weakness", "Weak point")),
+        _fields(
+            ("purpose", "Real purpose"),
+            ("hierarchy", "Hierarchy"),
+            ("methods", "Methods"),
+            ("symbol", "Its signs, if any"),
+            ("weakness", "Its weak point, if any"),
+        ),
     ),
     EntityType.CULT: SpecialSection(
         "Faith",
@@ -73,7 +79,7 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
             ("doctrine", "Core teaching"),
             ("rites", "Rites"),
             ("ranks", "Ranks"),
-            ("prohibitions", "Prohibitions for its disciples"),
+            ("prohibitions", "What it forbids its disciples, if anything"),
             ("promise", "Its promise to its disciples"),
         ),
     ),
@@ -84,8 +90,8 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
             ("behaviour", "Behaviour"),
             ("life_cycle", "Life cycle"),
             ("feeding", "How it feeds, told from the diet, size and habits given in its typed nature; never change them"),
-            ("special_ability", "Special ability"),
-            ("weakness", "Weakness"),
+            ("special_ability", "What it can do that others cannot, if anything"),
+            ("weakness", "Its weakness, if any"),
         ),
     ),
     EntityType.ITEM: SpecialSection(
@@ -94,7 +100,7 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
         _fields(
             ("making", "How and from what it was made"),
             ("owners", "Chain of owners"),
-            ("powers", "Known powers"),
+            ("powers", "Known powers, if any"),
             ("price", "What using it does"),
         ),
     ),
@@ -114,8 +120,8 @@ SPECIAL_SECTIONS: dict[EntityType, SpecialSection] = {
         _fields(
             ("masters", "Who knows it, how it is taught"),
             ("tools", "Its tools and materials"),
-            ("secret", "The part kept secret"),
-            ("danger", "Its misuse"),
+            ("secret", "What part of it is kept from others, if any"),
+            ("danger", "How it can be misused, if at all"),
         ),
     ),
 }

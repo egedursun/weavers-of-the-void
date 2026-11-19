@@ -69,6 +69,7 @@ class Commission:
     name: str | None = None
     player: bool = False
     funds: int = 0
+    standing: bool = False
 
 
 def power_of(rules: Rules, builder: EntityRow | SonRow) -> int:
@@ -189,7 +190,8 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
         locked=[],
     )
     ctx.session.add(construction)
-    await charge_builder(ctx, builder)
+    if not order.standing:
+        await charge_builder(ctx, builder)
     if isinstance(builder, EntityRow):
         await connect(ctx.session, builder.id, work.id, BondKind.BUILT, ctx.epoch)
     if order.son_id is not None:

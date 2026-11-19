@@ -8,7 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
-from aerona.db.tables.tongues import LanguageGrammarRow
+from aerona.db.tables.tongues import CASES_MAX, LanguageGrammarRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.tongues import MorphologyType, NumberSystem, WordOrder
@@ -39,7 +39,7 @@ def drawn(seed: str, complexity: int) -> LanguageGrammarRow:
     return LanguageGrammarRow(
         word_order=rng.pick(list(ORDERS)),
         morphology=morphology,
-        cases=clamp_int(complexity // CASES_SPAN + (rng.integer(0, 4) if synthetic else 0), 0, 20),
+        cases=clamp_int(complexity // CASES_SPAN + (rng.integer(0, 4) if synthetic else 0), 0, CASES_MAX),
         noun_classes=rng.integer(0, 6),
         evidentiality=rng.chance(30),
         honorific_levels=rng.integer(0, 3),

@@ -29,7 +29,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.language_profile import language_profile
-from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.numbers import clamp_percent, scaled_cap
 from aerona.engine.primitives.queries import canon, connect, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
@@ -146,8 +146,10 @@ async def sign_languages(ctx: TickContext) -> None:
     known = await signers(ctx)
     silent = await silent_cults(ctx)
     made = 0
-    for community in await canon(ctx.session, [EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT]):
-        if community.id in known or held(community.id) or made >= ctx.rules.couplings.sign_per_epoch:
+    communities = ctx.rng("sign_languages.order").shuffled(await canon(ctx.session, [EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT]))
+    limit = scaled_cap(ctx.rules.couplings.sign_per_epoch, ctx.rules.couplings.sign_community_divisor, len(communities))
+    for community in communities:
+        if community.id in known or held(community.id) or made >= limit:
             continue
         cause = await sign_cause(ctx, community, silent)
         if cause is None:

@@ -16,6 +16,8 @@ from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.models.profiles import ExistenceProfile, Personality
 from aerona.domain.models.stats import PassionBlock, StatBlock
 
+COUNCIL_SEATING = (SonRow.level.desc(), SonRow.fame.desc(), SonRow.id)
+
 
 @dataclass(frozen=True)
 class PowerDraft:

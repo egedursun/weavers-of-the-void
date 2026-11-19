@@ -28,7 +28,6 @@ from aerona.engine.primitives.stats import shift_stat
 T = EffectTarget
 Apply = Callable[[TickContext, EntityRow, SettlementProfileRow, int], Awaitable[None]]
 BOUNDED = frozenset({T.PUBLIC_ORDER, T.CRIME, T.UNREST, T.SANITATION, T.FIRE_RISK, T.PRESTIGE, T.SIEGE_SUPPLIES, T.SIEGE_WATER})
-TRAINED_FEW = 3
 
 
 def field_shift(name: str) -> Apply:
@@ -71,8 +70,13 @@ async def folk_of(ctx: TickContext, town: EntityRow) -> list[int]:
     return [node for node in rows if not held(node)]
 
 
+async def training_levels(ctx: TickContext, town_id: int) -> float:
+    return sum(levels for effect, levels in (await own_effects(ctx, town_id)).items() if EFFECTS[effect].target is T.TRAIN)
+
+
 async def trained(ctx: TickContext, town: EntityRow, _profile: SettlementProfileRow, amount: int) -> None:
-    for node in (await folk_of(ctx, town))[:TRAINED_FEW]:
+    room = round_half_up(await training_levels(ctx, town.id) * ctx.rules.scale.trainees_per_training_level)
+    for node in ctx.rng(f"structures.trained.{town.id}.{ctx.epoch}").sample(await folk_of(ctx, town), room):
         best = await ctx.session.scalar(select(SkillRow.skill).where(SkillRow.holder_node_id == node).order_by(SkillRow.level.desc()).limit(1))
         if best is not None:
             await practise(ctx.session, ctx.rules, node, best, amount, epoch=ctx.epoch)

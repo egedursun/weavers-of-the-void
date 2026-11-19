@@ -166,6 +166,9 @@ async def test_creation_tools(database: Database) -> None:
         {"name": "Vellish", "description": LONG, "power_level": 1, "links": link, "words": [{"word": "vel", "meaning": "wave"}]},
     )
     assert "Vellish" in language
+    async with database.write() as session:
+        for index in range(Rules().exploration.crowded_communities_per_region):
+            await make_entity(session, f"Shore Folk {index}", EntityType.PEOPLE, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
     crowded = await ok(
         toolkit,
         "create_place",

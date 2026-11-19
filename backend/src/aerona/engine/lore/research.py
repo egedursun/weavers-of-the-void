@@ -435,9 +435,13 @@ async def fill_books(ctx: TickContext) -> int:
         if owner is None:
             continue
         known = await ctx.session.scalars(
-            select(BondRow.target_node_id).where(BondRow.source_node_id == owner, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE)
+            select(BondRow.target_node_id)
+            .where(BondRow.source_node_id == owner, BondRow.kind == BondKind.KNOWS, BondRow.state == BondState.ACTIVE)
+            .distinct()
+            .order_by(BondRow.target_node_id)
         )
-        for knowledge in list(known)[:3]:
+        subjects = 1 + max(0, book.quality) // ctx.rules.scale.book_quality_per_subject
+        for knowledge in ctx.rng(f"book.subjects.{book.item_entity_id}").sample(list(known), subjects):
             ctx.session.add(BookContentRow(book_entity_id=book.item_entity_id, knowledge_entity_id=knowledge, fidelity=clamp_int(book.quality, 0, PERCENT)))
             filled += 1
     return filled

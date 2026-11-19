@@ -40,7 +40,7 @@ from aerona.engine.lore.prophecy import Foretelling, met, seer_power, typed_cond
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
 from aerona.engine.primitives.folk import folk_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
@@ -179,13 +179,13 @@ async def true_omen(ctx: TickContext, question: DivinationQuestion, realm_id: in
     if question is DivinationQuestion.WEDDING:
         return OmenVerdict.AUSPICIOUS if profile is not None and profile.stress < MIDDLE else OmenVerdict.INAUSPICIOUS
     food = 0
-    people = 0
+    towns = 0
     for town_id in await members_of(ctx.session, realm_id):
         town = await ctx.session.get(EntityRow, town_id)
         if town is not None:
             food += await stock(ctx.session, ctx.rules, town_id, Commodity.FOOD)
-            people += stat_or(town, "population", 0)
-    return OmenVerdict.AUSPICIOUS if food >= people else OmenVerdict.INAUSPICIOUS
+            towns += 1
+    return OmenVerdict.AUSPICIOUS if food >= towns * ctx.rules.needs.hunger_food else OmenVerdict.INAUSPICIOUS
 
 
 async def question_for(ctx: TickContext, realm_id: int, ruler: EntityRow) -> DivinationQuestion:
@@ -217,7 +217,7 @@ async def heed(ctx: TickContext, row: DivinationRow, realm_id: int, ruler: Entit
         for town_id in towns:
             if held(town_id):
                 continue
-            lost = min(table.harvest_food // max(1, len(towns)), await stock(ctx.session, ctx.rules, town_id, Commodity.FOOD))
+            lost = min(table.harvest_food, await stock(ctx.session, ctx.rules, town_id, Commodity.FOOD))
             if lost:
                 await shift_stock(ctx.session, ctx.rules, town_id, Commodity.FOOD, -lost, epoch=ctx.epoch, flow=GoodsFlow.LOSS)
 
@@ -469,8 +469,10 @@ async def check_foresights(ctx: TickContext, tally: ForesightTally) -> None:
 async def keep_prescience(ctx: TickContext, tally: ForesightTally) -> None:
     table = ctx.rules.prescience
     await check_foresights(ctx, tally)
-    for seer_id, source, world_id, sight in await seers(ctx):
-        if tally.foresights >= table.foresights_per_epoch:
+    found = ctx.rng("foresee.order").shuffled(await seers(ctx))
+    limit = scaled_cap(table.foresights_per_epoch, table.foresights_seer_divisor, len(found))
+    for seer_id, source, world_id, sight in found:
+        if tally.foresights >= limit:
             break
         if held(seer_id) or not ctx.rng(f"foresee.{seer_id}").chance(table.foresee_chance):
             continue

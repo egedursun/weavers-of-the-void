@@ -29,6 +29,7 @@ COMMONS_FIELDS = ("kind", "rule", "condition", "use", "steward_entity_id", "encl
 RESERVE_FIELDS = ("holder_node_id", "species_entity_id", "strictness", "poaching", "resentment")
 FAMINE_FIELDS = ("memory", "famine_foods", "storage")
 PREPAREDNESS_FIELDS = ("level", "condition", "averted")
+PREPAREDNESS_LEVEL_MAX = 1000
 AID_FIELDS = ("kind", "amount", "god_node_id", "refused")
 REBUILD_FIELDS = ("cause", "plan", "cost", "paid", "progress", "planner_entity_id", "seized_by_node_id", "seized")
 KEYSTONE_FIELDS = (
@@ -185,7 +186,12 @@ class FamineLoreRow(Base):
 
 class PreparednessRow(Base):
     __tablename__ = "preparedness"
-    __table_args__ = (between("level", 0, 5), between("condition", PERCENT_MIN, PERCENT_MAX), at_least("averted", 0), at_least("built_epoch", 0))
+    __table_args__ = (
+        between("level", 0, PREPAREDNESS_LEVEL_MAX),
+        between("condition", PERCENT_MIN, PERCENT_MAX),
+        at_least("averted", 0),
+        at_least("built_epoch", 0),
+    )
 
     settlement_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     kind: Mapped[PreparednessKind] = mapped_column(enum_type(PreparednessKind, "kind"), primary_key=True)

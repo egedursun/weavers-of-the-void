@@ -13,12 +13,14 @@ import {
   Ghost,
   Globe2,
   Home,
+  Hotel,
   Landmark,
   type LucideIcon,
   Star,
   Sun,
   Swords,
   Zap,
+  Network,
   Orbit,
   Workflow,
   Layers,
@@ -34,6 +36,8 @@ export const SETTLEMENT_ICON: Record<SettlementTier, LucideIcon> = {
   town: Building,
   city: Building2,
   great_city: Landmark,
+  megacity: Hotel,
+  conurbation: Network,
   capital: Castle,
 }
 

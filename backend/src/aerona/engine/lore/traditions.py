@@ -600,7 +600,8 @@ async def remember_years(ctx: TickContext, atlas: RegionAtlas) -> list[EntityRow
     for year in list(years):
         if await commemorated(ctx, year.incident_id) or not ctx.rng(f"commemoration.year.{year.id}").chance(ctx.rules.traditions.commemoration_chance):
             continue
-        keepers = (await communities_in(ctx, atlas, year.world_id, year.region_entity_id))[: ctx.rules.traditions.commemoration_keepers]
+        land = await communities_in(ctx, atlas, year.world_id, year.region_entity_id)
+        keepers = ctx.rng(f"commemoration.keepers.{year.id}").shuffled(land)[: -(-len(land) * ctx.rules.traditions.commemoration_keepers // PERCENT)]
         if not keepers:
             continue
         founded.append(

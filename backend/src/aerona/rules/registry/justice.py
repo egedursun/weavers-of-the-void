@@ -23,7 +23,7 @@ class EnactmentRules(Spanned):
     compromise_support: int = rule(15, 0, 100, P, "Support a compromise wins by softening a proposal")
     debate_progress: int = rule(10, 0, 100, P, "Progress a debate in the assembly adds to a well supported proposal")
     favour_magnitude: int = rule(20, 0, 100, P, "Size of the favour a champion owes each council member who carried the law")
-    open_cap: int = rule(3, 1, 20, P, "Proposals a realm may debate at once")
+    open_cap: int = rule(10, 1, 500, P, "Proposals a realm may debate at once")
 
     @property
     def stall_epochs(self) -> int:

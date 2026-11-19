@@ -255,8 +255,9 @@ async def found_people(
     if region is None or region.entity_type is not EntityType.REGION or region.status is not EntityStatus.CANON:
         raise NotFoundError("No such land.")
     limits = ctx.rules.limits
-    if not limits.people_population_floor <= population <= limits.people_population_cap:
-        raise ValidationFailedError(f"A people numbers from {limits.people_population_floor} to {limits.people_population_cap}.")
+    if population < limits.people_population_floor:
+        raise ValidationFailedError(f"A people numbers at least {limits.people_population_floor}.")
+    population = min(population, limits.people_population_cap)
     species = await linked(ctx, "species", species_id, EntityType.SPECIES)
     language = await linked(ctx, "language", language_id, EntityType.LANGUAGE)
     founded = await open_record(

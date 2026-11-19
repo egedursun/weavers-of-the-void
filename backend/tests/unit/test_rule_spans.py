@@ -28,7 +28,6 @@ GAME_RHYTHM = frozenset(
         "climate_effects.variable_epochs",
         "clusters.expansion_cap",
         "cohorts.dormant_after_epochs",
-        "communication.interworld_epochs",
         "communication.signal_cut",
         "cosmic_beings.retreat_epochs",
         "cosmic_features.comet_period",

@@ -63,8 +63,6 @@ async def spill(ctx: TickContext, tally: SpilloverTally) -> None:
             .where(SpeciesRangeRow.species_entity_id == species_id, SpeciesRangeRow.abundance > 0)
             .order_by(SpeciesRangeRow.region_entity_id)
         ):
-            if tally.jumped >= table.per_epoch:
-                return
             region_id = row.region_entity_id
             if not folk.get(region_id) or held(region_id) or book.active_of(disease_id, region_id) is not None:
                 continue

@@ -10,7 +10,7 @@ from aerona.db.tables.minds import MindProfileRow, MindStateRow
 from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus
 from aerona.domain.enums.made import MadeMindStance
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.minds import DisputeOutcome, MindOrigin, MindSeat, SoulContinuity, StateMedium
@@ -24,9 +24,10 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.minds.profiles import profile_of
 from aerona.engine.minds.souls import soul_law
 from aerona.engine.polity.laws import law_param
-from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
-from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up, scaled_cap
+from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.primitives.stats import headcount
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.community_relations import change_relation
@@ -70,6 +71,12 @@ async def world_copies(ctx: TickContext, world_id: int | None) -> int:
     copies = select(MindProfileRow).join(EntityRow, EntityRow.id == MindProfileRow.node_id)
     statement = copies.where(MindProfileRow.origin == MindOrigin.COPIED, EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
     return sum(1 for row in await ctx.session.scalars(statement) if running(row))
+
+
+async def world_copy_cap(ctx: TickContext, world_id: int | None) -> int:
+    table = ctx.rules.minds
+    people = sum(headcount(item) for item in await canon(ctx.session, SOCIETY_TYPES, world_id)) if world_id is not None else 0
+    return scaled_cap(table.copy_cap_per_world, table.copy_world_people, people)
 
 
 async def copy_stack(ctx: TickContext, source_id: int, copy_id: int, fidelity: int) -> None:
@@ -165,9 +172,8 @@ async def copy_mind(ctx: TickContext, source_id: int, seat: MindSeat, seat_node_
         raise ValidationFailedError("The law here forbids copying a mind.")
     table = ctx.rules.continuity
     fidelity = clamp_percent(profile.fidelity_pct - table.copy_fidelity_loss - table.generation_loss * await generation(ctx, source_id))
-    if (
-        await running_copies(ctx, source_id) >= ctx.rules.minds.copy_cap_per_mind
-        or await world_copies(ctx, source.world_id) >= ctx.rules.minds.copy_cap_per_world
+    if await running_copies(ctx, source_id) >= ctx.rules.minds.copy_cap_per_mind or await world_copies(ctx, source.world_id) >= await world_copy_cap(
+        ctx, source.world_id
     ):
         raise ValidationFailedError(f"{source.name} or its world already runs as many copies as the rules allow; save its state instead.")
     copy = await create_record(

@@ -40,7 +40,8 @@ async def house_of(ctx: TickContext, maker_id: int) -> int:
 
 
 async def claim_works(ctx: TickContext, tally: RightsTally) -> None:
-    budget = ctx.rules.incorporeal.seed_per_epoch
+    limit = ctx.rules.incorporeal.seed_per_epoch
+    budget: float = limit if limit > 0 else float("inf")
     held_subjects = set(await ctx.session.scalars(select(IncorporealRightRow.subject_node_id).where(IncorporealRightRow.subject_node_id.is_not(None))))
     works = await ctx.session.execute(
         select(ArtworkProfileRow, EntityRow)
@@ -95,7 +96,7 @@ async def claim_works(ctx: TickContext, tally: RightsTally) -> None:
     await claim_names(ctx, tally, held_subjects, budget)
 
 
-async def claim_names(ctx: TickContext, tally: RightsTally, held_subjects: set[int | None], budget: int) -> None:
+async def claim_names(ctx: TickContext, tally: RightsTally, held_subjects: set[int | None], budget: float) -> None:
     houses = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.HOUSE, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )

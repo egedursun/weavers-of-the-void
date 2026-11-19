@@ -5,6 +5,7 @@ from aerona.prompts import PromptId, output_model, output_schema, render
 from aerona.prompts.contexts.base import PromptContext
 from aerona.prompts.schemas.base import OutputModel
 from aerona.prompts.schemas.constraints import Constraint
+from aerona.prompts.schemas.order import order_for, unordered
 from aerona.rules.registry import Rules
 
 
@@ -28,11 +29,12 @@ async def ask[T: OutputModel](
     user_id, user_context = user
     if output_model(user_id) is not output:
         raise OutputMismatchError(f"Prompt {user_id} does not produce {output.__name__}.")
-    schema = output_schema(user_id, rules, constraints, variables)
+    prompt = render(user_id, user_context)
+    schema = unordered(output_schema(user_id, rules, constraints, variables), order_for(prompt))
     return await model.structured(
         label,
         render(system_id, system_context),
-        render(user_id, user_context),
+        prompt,
         output=output,
         attempts=rules.fate.model_retries,
         schema=schema,

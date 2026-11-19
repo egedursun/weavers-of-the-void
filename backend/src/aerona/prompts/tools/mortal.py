@@ -13,11 +13,11 @@ DESCRIPTION_FIELD = "What it is, how it came to be, what makes it distinctive an
 
 MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.COMMISSION_ARTWORK: ToolText(
-        "You commission a work of art. It presses its message on those who keep it, remembers whom it portrays,"
+        "You commission a work of art. It moves the views of those who hold it, raises the standing of whom it portrays,"
         " and a realm or town pays for it from its treasury. 1 action.",
         {
             "name": "A proper name for it, in the world's naming language",
-            "medium": "What kind of work: {{ art_media }}; songs, plays and dances live only while someone can perform them",
+            "medium": "What kind of work: {{ art_media }}; a performed work lasts only while someone can perform it",
             "subject_id": "Whom or what it portrays (an entity id), if anyone",
             "author_id": "The artist who makes it (a mortal id), if any; a skilled hand makes a finer work",
             "patron_id": "Who commissions and keeps it (a community id); you if empty",
@@ -58,8 +58,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The mortal", "interaction": "What you do with them"},
     ),
     T.CHALLENGE_TO_CONTEST: ToolText(
-        "You challenge another mortal where you are to a contest of wit (riddles, an exchange of insults, debate, a game of skill, a trial of wisdom, song or storytelling) "
-        "for a stake. The winner gains renown; a famous contest may be remembered in art. 1 action.",
+        "You challenge another mortal where you are to a contest of wit "
+        "for a stake. The winner gains renown; a famous contest may become the subject of an artwork. 1 action.",
         {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
     ),
     T.CHOOSE_METHOD: ToolText(
@@ -105,7 +105,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.CALL_ON_KIN: ToolText(
         "You call on kin of one role for what you need. Kin answer as far as your people's duties bind that role to you: "
         "support for food, coin or care, hosting for shelter, protection for protection. "
-        "Kin whom no strong duty binds may refuse, and the refusal is remembered. 1 action.",
+        "Kin whom no strong duty binds may refuse, and a refusal counts as a breached duty. 1 action.",
         {
             "role": "Which kin: parent, child, sibling, grandparent, grandchild, parent_sibling_first_line, parent_sibling_second_line, "
             "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent or sworn_kin",
@@ -114,7 +114,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.CONVENE_KIN_GROUP: ToolText(
         "You call your kin group together on one matter: choose_head to choose a head, share_land to share the yield of the kin's land "
-        "with members in need, feud to answer blood shed against its members, marriage to tighten the rule against marrying within the kin, "
+        "with members in need, feud to answer harm done to its members, marriage to tighten the rule against marrying within the kin, "
         "or migrate to bring its members to where you are. 1 action.",
         {
             "group_id": "A kin group you belong to",
@@ -149,7 +149,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.TAKE_RESTRAINT_VOW: ToolText(
-        "You take a vow of restraint of your own will. Breaking it is remembered. 1 action.",
+        "You take a vow of restraint of your own will. Breaking it costs you honour. 1 action.",
         {
             "kind": "The vow: celibacy or fidelity",
             "term": "For how many epochs, from 0 for life to 10",
@@ -252,7 +252,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.PUBLISH_ITEM: ToolText(
-        "Your outlet puts out an item. Told of a happening on record, its accuracy follows the record and your slant; "
+        "Your outlet puts out an item. When it reports a happening, its accuracy follows what happened and your slant; "
         "slanted items move the opinion of its audience on their subject. 1 action.",
         {
             "outlet_id": "Your outlet",
@@ -288,8 +288,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"aim": "What you work the weather toward", "method": "How you work it", "strength": "How strongly, 1 to 100"},
     ),
     T.STUDY_FOSSILS: ToolText(
-        "You study a bed of remains laid bare in your land as the record of deep time: the theories you hold grow stronger, and with living "
-        "craft a kind well kept in amber, ice or bog may be raised again from its remains. 1 action.",
+        "You study a bed of remains found in your land: the theories you hold grow stronger, and with living "
+        "craft a kind whose remains are well preserved may be raised again from its remains. 1 action.",
         {"bed_id": "The bed of remains you study"},
     ),
     T.DREDGE: ToolText(
@@ -341,8 +341,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"endowment_id": "The endowment you audit"},
     ),
     T.PLOT_SCHEME: ToolText(
-        "You begin a scheme against someone: to murder, abduct, seduce, sway, fabricate a claim or a hook, steal a relic, seize a throne, poison a well, "
-        "frame, elope, convert in secret, spoil a wedding, free a prisoner, sabotage a land or learn a true name. "
+        "You begin a scheme against someone ({{ plot_kinds }}). "
         "Friends join as agents, power gathers from skill in intrigue and deception, and it strikes against the target's spymaster and intuition. "
         "Each epoch it may be discovered. One scheme at a time. 1 action.",
         {"kind": "The scheme", "target_id": "Whom or what it is aimed at"},
@@ -355,13 +354,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.DELVE_SITE: ToolText(
         "You walk a site that has rooms, room by room. A room may hold a trap, a guardian, a puzzle or a hazard, and things, spirits or beasts within; "
-        "you take what you win and stop at the first room you cannot pass. Reaching its heart wins renown. 1 action.",
+        "you take what you win and stop at the first room you cannot pass. Reaching its last room wins renown. 1 action.",
         {"site_id": "The site you walk"},
     ),
     T.UNDERTAKE_HEROQUEST: ToolText(
         "You set out on a heroquest: you enter a mythic realm and walk a legend of your people step by step, each step a trial of skill, passion, "
         "conviction or faith. You need renown, a faithful people and a legend to walk. Following the people's version helps; departing from it may "
-        "win another boon and rewrites the legend. A fall may hurt, madden or kill you, hold your soul in the myth while your body sleeps, or break "
+        "win another boon and rewrites the legend. A fall may hurt, madden or kill you, leave you stuck in the mythic realm, unable to act, or break "
         "the myth. Companions share the trials and the outcome. 1 action.",
         {
             "legend_id": "The legend you walk (a legend id); leave it out to walk your people's own",
@@ -391,7 +390,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.TAKE_LONGEVITY: ToolText(
         "You take longevity magic: it adds years to your life each epoch it is paid in vis of the form you choose, and you come to need it; "
-        "when the vis runs out the borrowed years fall away. 1 action.",
+        "when the vis runs out the added years are lost. 1 action.",
         {"form": "The vis it uses: {{ spell_forms }}"},
     ),
     T.FOUND_ENCHANTMENT: ToolText(
@@ -420,7 +419,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"host_id": "The foreign town"},
     ),
     T.SEND_CONVOY: ToolText(
-        "As leader of a merchant house you send a convoy along a route from your town; it may be raided, lost at sea or delayed, and "
+        "As leader of a merchant house you send a convoy along a route from your town; it may be raided, lost or delayed, and "
         "brings goods, migrants and missionaries when it arrives. 1 action.",
         {"route_id": "The trade route"},
     ),
@@ -468,14 +467,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"grievance": "What you speak about"},
     ),
     T.COMMISSION_ACCOUNT: ToolText(
-        "As ruler you have your realm's scribes write its account of an event; you choose whom it praises and whom it blames, and the further "
+        "As ruler you have your realm issue its official account of an event; you choose whom it praises and whom it blames, and the further "
         "it strays from what happened the more a scholar may one day expose. 1 action.",
         {"collection_id": "The event", "praise_ids": "Whom the account praises", "blame_ids": "Whom the account blames"},
     ),
     T.STRIKE_MEMORY: ToolText(
-        "As ruler you strike a figure from your realm's records: its accounts omit them, its inscriptions are defaced and works made of them "
+        "As ruler you strike a figure from your realm's records: its accounts omit them, public mentions of them are removed and works made of them "
         "for the realm are destroyed. Their fame fades unless the folk or foreigners keep it. 1 action.",
-        {"figure_id": "Whom you strike from memory"},
+        {"figure_id": "Whom you remove from the realm's records"},
     ),
     T.DRAW_DESIGN: ToolText(
         "You draw a new vehicle type for your realm or town on a frame it knows how to build, giving more weight to one part "
@@ -491,7 +490,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.ANSWER_SICKNESS: ToolText(
         "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
         "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "
-        "forbid it, driving out the sick slows it at home and marks the sick, prayer comforts but crowds, seeking a cure sets the learned "
+        "forbid it, driving out the sick slows it at home and turns folk against the sick, prayer comforts but crowds, seeking a cure sets the learned "
         "to work. You may also treat it with a kind of cure ({{ cure_classes | join(', ') }}); a cure works only on the kind of thing the "
         "sickness is, and one that fails costs your healers trust. 1 action.",
         {"disease_id": "The sickness", "response": "The answer", "cure_class": "The kind of cure you treat it with, or none"},
@@ -633,7 +632,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The mortal", "appeal": "How you argue", "axis": "The belief at stake", "toward": "How far toward it (-100 to 100)"},
     ),
     T.FOUND_SCHOOL: ToolText(
-        "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
+        "You found a school of thought, a creed that spreads from person to person and town to town, and can move a realm. 1 action.",
         {
             "name": "A proper name for the school or creed",
             "tenets": "What it teaches, 1 to 3 tenets: {{ ideology_tenets }}",
@@ -646,22 +645,18 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.INSPECT_ENTITY: ToolText("Shows the details of an entity. Free.", {"id": "The entity's id"}),
     T.SEARCH_ENTITIES: ToolText("Searches entities. Free.", {"query": "A word in the name or description"}),
     T.RECOUNT: ToolText(
-        "Tells the people you live among what you know of a happening you saw or took part in, step by step as you know it; they carry it on "
+        "Tells the people you live among what you know of a happening you saw or took part in, step by step as you know it; they pass it on "
         "as your account. 1 action.",
         {"incident_id": "The happening's id", "step_offset": "Where to start in its steps when they run past one page"},
     ),
     T.FOUND_LANGUAGE: ToolText(
-        "You give birth to your own language: its name, its kind in your people's own terms, its sound structure and first words. From now on "
-        "you speak this language. 1 action.",
+        "You create your own language: its name, its kind, its sound structure and first words. From now on you speak this language. 1 action.",
         {
             "name": NAME_FIELD,
-            "subtype": "What kind of language it is, in your people's own terms",
-            "description": "Its sound structure, its script, who speaks it, what is forbidden to say",
+            "subtype": "What kind of language it is",
+            "description": "Its sound structure, its script if it has one, and who speaks it",
             **WORD_FIELDS,
-            "image_prompt": (
-                "English image prompt: this language or script in use among those who use it, with lighting and composition. "
-                '{% include "shared/image_prompt_rules.md.j2" %}'
-            ),
+            "image_prompt": ('English image prompt: this language or script in use among those who use it. {% include "shared/image_prompt_rules.md.j2" %}'),
         },
     ),
     T.COIN_WORDS: ToolText(
@@ -676,7 +671,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "name": NAME_FIELD,
             "category": "weapon, armour, shield, tool, jewellery, sacred relic, instrument or book",
-            "subtype": "What kind of item it is, in your people's own terms",
+            "subtype": "What kind of item it is",
             "description": DESCRIPTION_FIELD,
             "resource_ids": "The resources it is made from (at most {{ " + M + ".craft_max_resources }})",
             "material": "What it is made of: {{ materials | join(', ') }}; it must come from one of those resources or your people's stores, and your people must be able to work it",
@@ -690,7 +685,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "name": NAME_FIELD,
             "structure_kind": "What it is and what it does: {{ structure_kinds }}",
-            "subtype": "Its own kind name in your people's terms",
+            "subtype": "Its own name for this kind of structure",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own settlement, place or region; if empty, where you are",
             "dedicated_son_id": "The god it is dedicated to, if any",
@@ -700,7 +695,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.CREATE_CULTURE: ToolText(
-        "You give birth to a tradition of your community, a legend, a work of art (by honouring your god it strengthens that god) or a law "
+        "You create a tradition of your community, a legend, a work of art (by honouring your god it strengthens that god) or a law "
         "(a just law reduces rebellion). 1 action.",
         {
             "kind": "tradition, legend, artwork or law",
@@ -711,20 +706,20 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "law_kind": "For a law: what it rules, one of: {{ law_kinds }}; required for laws",
             "law_params": "For a law: its terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: "
             + law_terms_guide(),
-            "image_prompt": 'English image prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
+            "image_prompt": 'English image prompt: the tradition, legend, artwork or law as it appears in the world. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
             "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
             "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionFunction),
             "calendar_slot": "Only for a tradition kept at a set time: " + ", ".join(item.value for item in CalendarSlot),
-            "taboo_target": "Only for a taboo: the good its keepers will not touch",
-            "taboo_act": "Only for a taboo: the deed its keepers will not do: " + ", ".join(item.value for item in ActKind),
+            "taboo_target": "Only for a taboo: the good those who hold the taboo will not touch",
+            "taboo_act": "Only for a taboo: the deed those who hold the taboo will not do: " + ", ".join(item.value for item in ActKind),
         },
     ),
     T.DISCOVER_RESOURCE: ToolText(
         "You discover a new resource on your land and own it. 1 action, {{ " + M + ".discover_resource_per_epoch }} per age.",
         {
             "name": NAME_FIELD,
-            "subtype": "What kind of resource it is, in your people's own terms",
+            "subtype": "What kind of resource it is",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own region or a place in your region",
             "domain": "One of: {{ domains | join(', ') }}",
@@ -735,7 +730,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.CLAIM_RESOURCE: ToolText(
-        "You claim an ownerless resource on your land. If you take someone else's resource, enmity is born between you. Free, {{ "
+        "You claim an ownerless resource on your land. If you take someone else's resource, your relation with its owner turns hostile. Free, {{ "
         + M
         + ".claim_per_epoch }} per age.",
         {"resource_id": "The resource's id"},
@@ -744,7 +739,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You split off a branch of your population (or your disciples) and found a new settlement; those who migrate leave you. In your own region or a neighbouring region. 1 action.",
         {
             "name": NAME_FIELD,
-            "subtype": "What kind of settlement it is, in your people's own terms",
+            "subtype": "What kind of settlement it is",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own region or a neighbouring region",
             "image_prompt": IMAGE_PROMPT_FIELD,
@@ -759,12 +754,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The community or creature", "reason": "Why you go to war"},
     ),
     T.WORSHIP: ToolText(
-        "You worship a god (a son) or change your god; if you give son_id 0 you worship the creator god directly, maker of all the sons. Your old god does not forget "
-        "this. Free, {{ " + M + ".worship_per_epoch }} per age.",
+        "You worship a god (a son) or change your god; if you give son_id 0 you worship the creator god directly, maker of all the sons. Your old god's favour toward you "
+        "falls. Free, {{ " + M + ".worship_per_epoch }} per age.",
         {"son_id": "The son's id, or 0 for the creator", "offering": "Your offering and vow"},
     ),
     T.PRAY_TO_CREATOR: ToolText(
-        "You pray directly to the creator god above the sons, the maker of all worlds. Your prayer reaches the creator; if answered, you will see it in your dream. Free, {{ "
+        "You pray directly to the creator god above the sons, the maker of all worlds. Your prayer reaches the creator; any answer comes later. Free, {{ "
         + M
         + ".pray_creator_per_epoch }} per age.",
         {"prayer": "Your prayer", "request": "What you ask of the creator"},
@@ -833,7 +828,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "kind": "region (new lands not on the map) or place (a new place in your own or a neighbouring region)",
             "name": "An original proper name; fitting your language's naming rule",
-            "subtype": "What kind of land or place it is, in your people's own terms",
+            "subtype": "What kind of land or place it is",
             "description": "What you found, how you found it, what the first to set foot there saw",
             "location_id": "Only for a place: the region it lies in (your own or a neighbouring one); if empty, your own region",
             "settle": "If you are a community, your pioneers settle there and found a new settlement",
@@ -877,7 +872,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.KEEP_PET: ToolText(
         "You take one beast of a small tame kind your people keep as your own companion. It stays at your side, comforts you, and if its kind hunts or guards "
-        "it sharpens your hunting; when it dies you mourn it. Free.",
+        "it sharpens your hunting; its death lowers your mood. Free.",
         {"species_id": "The kind it is of, from those your people keep; leave empty to take any"},
     ),
     T.TRAIN_HERD: ToolText(
@@ -920,16 +915,16 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"reason": "Why you turn away"},
     ),
     T.PROPHESY: ToolText(
-        "You make a prophecy: you say something that will happen in the future. If it comes true Fate records it and your reputation (charisma) rises; if it is misread it "
+        "You make a prophecy: you say something that will happen in the future. If it comes true it is tracked and your reputation (charisma) rises; if it is misread it "
         "is shaken. 1 action, {{ " + M + ".prophesy_per_epoch }} per age.",
         {
             "predicate": "What exactly must happen for the prophecy to come true, which the world itself will check: {{ prophecy_predicates }}",
-            "subject_id": "The one the foretelling names: who dies, what falls, the house, the realm, or the first side of a war",
+            "subject_id": "The one the foretelling names: a person, a place, a house, a realm, or the first side of a war",
             "second_id": "For a war: the second side",
             "archetype": "For who will rule: the kind of legend the coming ruler must fit",
             "sky_kind": "For a sign in the sky: which sign",
             "event_kind": "For a foretold happening: what kind",
-            "within_epochs": "In how many ages it must come true; if it does not, you are mocked and your cult loses heart",
+            "within_epochs": "In how many ages it must come true; if it does not, your standing falls and your followers' devotion drops",
             "consequence": "What it means when it comes true: {{ prophecy_consequences }}",
             "consequence_id": "Whom the consequence touches",
             "name": "The prophecy's name, from your own language",
@@ -991,13 +986,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.SWEAR_OATH: ToolText(
-        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, sworn_kinship); keeping it wins honour, breaking it brings shame and a god's wrath. "
+        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, sworn_kinship); keeping it wins honour, breaking it costs honour and a god's favour. "
         "Free, {{ " + M + ".swear_oath_per_epoch }} per age.",
         {"kind": "The oath", "recipient_id": "To whom or against whom, if anyone (for a pilgrimage: the holy place)", "words": "The words of the oath"},
     ),
     T.ACCEPT_TREATY: ToolText("You accept a treaty offered to you; it takes force at once. Free.", {"treaty_id": "The offered treaty"}),
     T.BREAK_TREATY: ToolText(
-        "You break a treaty your people are bound by: the other parties remember the betrayal, guarantors may march and your rulers lose honour. 1 action.",
+        "You break a treaty your people are bound by: the other parties' trust in you falls, guarantors may march and your rulers lose honour. 1 action.",
         {"treaty_id": "The treaty you break"},
     ),
     T.APPOINT_OFFICER: ToolText(
@@ -1012,7 +1007,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.BUILD_SPY_NETWORK: ToolText(
         "You build a spy network inside a nearby community: you learn its secrets and gain an advantage in war; if caught, relations sour and war may break out. 1 action.",
-        {"target_id": "The community's id", "cover": "The spies' cover, in your people's own terms"},
+        {"target_id": "The community's id", "cover": "The spies' cover"},
     ),
     T.BARTER: ToolText(
         "You barter with a community or a named mortal: you give resources, items or vessels you own and take what it owns (if you want nothing it is a gift). The value "
@@ -1027,11 +1022,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.LEND: ToolText(
         "You lend to a community or a named mortal: the amount, what is lent and the term (how many ages until repayment). The amount is deducted from your wealth or "
         "prosperity and passes to it (if you have no wealth or prosperity you cannot lend; at most {{ " + M + ".debt_max_amount }}, term at most "
-        "{{ "
-        + M
-        + ".debt_max_term }} ages). Nobody collects; but if it is not paid on time it enters the chronicle and relations cool. {{ "
-        + M
-        + ".debt_ap }} action.",
+        "{{ " + M + ".debt_max_term }} ages). Nobody collects; but if it is not paid on time relations cool. {{ " + M + ".debt_ap }} action.",
         {
             "debtor_id": "The borrower",
             "amount": "The debt amount (at most {{ " + M + ".debt_max_amount }})",
@@ -1045,7 +1036,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"creditor_id": "Who you owe"},
     ),
     T.ADOPT: ToolText(
-        "You adopt another named mortal: it counts as of your lineage and enters the chronicle. It must be younger than you and near you. "
+        "You adopt another named mortal: it counts as of your lineage. It must be younger than you and near you. "
         "{{ " + M + ".adopt_per_epoch }} per age, {{ " + M + ".adopt_ap }} action.",
         {"child_id": "The named mortal you adopt", "reason": "Why and how you adopt"},
     ),
@@ -1063,7 +1054,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"gift_id": "The gift you refuse"},
     ),
     T.MAKE_OFFERING: ToolText(
-        "You make an offering to your god from your purse; your people's ledger of offerings grows, and the god is bound to answer it. 1 action.",
+        "You make an offering to your god from your purse; the offerings your people have made rise, and the god is bound to answer it. 1 action.",
         {"value": "Coin the offering is worth"},
     ),
     T.FREE_BOUND: ToolText(
@@ -1073,7 +1064,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.LAY_CORVEE: ToolText(
         "As ruler you summon a share of the workers of a town of your realm to forced labour on a great work being raised; the work "
-        "goes faster, the harvest suffers, unrest rises and the town remembers the labour. 1 action.",
+        "goes faster, the harvest suffers, unrest rises and the town's grievance rises. 1 action.",
         {"town_id": "The town", "work_id": "The work being raised", "share": "Share of its workers, 0 to 100; 0 lifts the labour"},
     ),
     T.BEGIN_REALM_PLAN: ToolText(
@@ -1092,7 +1083,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"patron_id": "The patron you seek"},
     ),
     T.BUY_OFFICE: ToolText(
-        "You buy an empty seat of your realm at the price of offices; the seat repays its buyer over the years and feeds corruption. 1 action.",
+        "You buy an empty seat of your realm at the price of offices; the seat repays its buyer over the years and raises corruption. 1 action.",
         {"office_id": "The seat you buy"},
     ),
     T.SIT_EXAMINATION: ToolText(
@@ -1207,8 +1198,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.LEAD_EXPEDITION: ToolText(
-        "You lead an expedition with your companions into a site, a land, an underworld or another realm; each leg eats provisions and "
-        "light, the dark raises danger and stress, and those who return bring finds and renown. 1 action.",
+        "You lead an expedition with your companions into a site, a land, an underworld or another realm; each leg uses provisions, and light on dark ground; "
+        "running short raises danger and stress, and those who return bring finds and renown. 1 action.",
         {"target_id": "Where you go"},
     ),
     T.MAKE_CAMP: ToolText(
@@ -1298,7 +1289,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"plan_id": "The plan"},
     ),
     T.SWEAR_VENGEANCE: ToolText(
-        "You swear vengeance on one who killed your kin; your life takes the shape of that tale, which may end in their fall, in yours or in neither. 1 action.",
+        "You swear vengeance on one who killed your kin; you start a pursuit of vengeance, which may end in their fall, in yours or in neither. 1 action.",
         {"foe_id": "The one who killed your kin"},
     ),
     T.PURIFY_SELF: ToolText(
@@ -1415,7 +1406,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"network_id": "The network", "node_id": "The member to cut off, or empty to bring it all down"},
     ),
     T.INTRUDE: ToolText(
-        "You try to break into a network, store, mind or made thing for the aim you name; you may be found and named. 1 action.",
+        "You try to break into a network, store, mind or made thing for the aim you name; you may be found and identified. 1 action.",
         {"target": "What kind of thing you break into", "target_id": "The thing", "aim": "What you want from it"},
     ),
     T.DEFEND_SYSTEM: ToolText(
@@ -1523,7 +1514,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"truth_id": "The hidden truth", "aim": "What you want: expose, exploit, destroy_the_hidden, join_the_hidden or understand"},
     ),
     T.COVER_UP: ToolText(
-        "As a keeper, you cover up a hidden truth in your town so fewer believe what they heard. 1 action.",
+        "As one who holds it, you cover up a hidden truth in your town so fewer believe what they heard. 1 action.",
         {"truth_id": "The hidden truth"},
     ),
     T.SET_POWER_LAW: ToolText(
@@ -1545,7 +1536,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.DESIGN_LINE: ToolText(
         "You make a living line by a way of living craft from organisms you can reach. Each trait you add makes the line less stable. "
-        "A source with a written genome also carries what its own blood leans toward into the line. 1 action.",
+        "A source with a written genome also carries its own inherited leanings into the line. 1 action.",
         {
             "name": "Name of the line",
             "method": "How: selective_breeding, cultivation, shaping, engineering, synthesis, binding, cloning, merging or induction",
@@ -1780,15 +1771,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"kind": "What you want", "target_id": "What or whom the want is toward, if anything"},
     ),
     T.EASE_PRESSURE: ToolText(
-        "You ease one of the weights on your mind. 1 action.",
-        {"pressure": "The weight to ease"},
+        "You ease one of your pressures. 1 action.",
+        {"pressure": "The pressure to ease"},
     ),
     T.TEACH_HONOUR: ToolText(
         "As ruler, you teach your people a way of holding honour. 1 action.",
         {"model": "The way honour is held"},
     ),
     T.RESIST_DRIFT: ToolText(
-        "You hold your town to its ways against one cause that moves them; that pull is halved. 1 action.",
+        "You hold your town to its ways against one cause that moves them; its effect is halved. 1 action.",
         {"cause": "The cause you resist"},
     ),
     T.MAN_STATION: ToolText(

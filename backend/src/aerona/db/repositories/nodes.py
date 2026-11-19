@@ -70,10 +70,30 @@ class NodeRepository(Repository):
         return {node_id: name for node_id, name in rows}
 
     async def kinds_of(self, node_ids: list[int]) -> dict[int, NodeKind]:
-        if not node_ids:
-            return {}
-        rows = await self.session.execute(select(NodeRow.id, NodeRow.kind).where(NodeRow.id.in_(node_ids)))
-        return {node_id: kind for node_id, kind in rows}
+        found: dict[int, NodeKind] = {}
+        missing: list[int] = []
+        memo = memo_of(self.session, NODE_KINDS, KIND_TABLES)
+        for node_id in dict.fromkeys(node_ids):
+            known = self.session.sync_session.identity_map.get(identity_key(NodeRow, node_id))
+            if isinstance(known, NodeRow):
+                found[node_id] = known.kind
+            elif memo is not None and node_id in memo:
+                if memo[node_id] is not None:
+                    found[node_id] = memo[node_id]
+            else:
+                missing.append(node_id)
+        if not missing:
+            return found
+        rows: dict[int, NodeKind] = {
+            node_id: kind for node_id, kind in await self.session.execute(select(NodeRow.id, NodeRow.kind).where(NodeRow.id.in_(missing)))
+        }
+        after = memo_of(self.session, NODE_KINDS, KIND_TABLES)
+        for node_id in missing:
+            if node_id in rows:
+                found[node_id] = rows[node_id]
+            if after is not None:
+                after[node_id] = rows.get(node_id)
+        return found
 
     async def creator_id(self) -> int | None:
         node_id: int | None = await self.session.scalar(select(NodeRow.id).where(NodeRow.kind == NodeKind.CREATOR))

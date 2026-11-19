@@ -29,8 +29,9 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity, remove_flag
-from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.primitives.numbers import scaled_cap
+from aerona.engine.primitives.queries import active_bonds, add_flag, canon, living_entity, remove_flag
+from aerona.engine.primitives.stats import headcount, stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 
@@ -50,13 +51,23 @@ MAIMED_WOUNDS: dict[MaimedKind, tuple[BodyFunction, InjuryKind]] = {
     M.BROKEN_MINDED: (F.COGNITION, IK.CRUSH),
 }
 BOTH_SIDES = frozenset({M.BLIND, M.DEAF})
+PROMOTION_COMMUNITIES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 
 
-async def named_count(ctx: TickContext) -> int:
-    found = await ctx.session.scalar(
-        select(func.count()).select_from(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+async def named_by_world(ctx: TickContext) -> dict[int, int]:
+    rows = await ctx.session.execute(
+        select(EntityRow.world_id, func.count())
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .group_by(EntityRow.world_id)
     )
-    return int(found or 0)
+    return {world_id or 0: int(count) for world_id, count in rows}
+
+
+async def people_by_world(ctx: TickContext) -> Counter[int]:
+    people: Counter[int] = Counter()
+    for community in await canon(ctx.session, PROMOTION_COMMUNITIES):
+        people[community.world_id or 0] += headcount(community)
+    return people
 
 
 def famine_dead(ctx: TickContext) -> Counter[int]:
@@ -161,14 +172,21 @@ async def starve_named(ctx: TickContext) -> int:
 async def promote(ctx: TickContext) -> int:
     table = ctx.rules.cohorts
     ctx.count("starved_named", await starve_named(ctx))
-    over = await named_count(ctx) > table.named_mortal_soft_limit_per_world
-    chance = table.promotion_chance * (table.promotion_over_limit_pct / 100 if over else 1)
+    moments = await notable_moments(ctx)
+    if not moments:
+        return 0
+    named = await named_by_world(ctx)
+    people = await people_by_world(ctx)
+    risen: Counter[int] = Counter()
     raised = 0
-    for moment in await notable_moments(ctx):
-        if raised >= table.promotion_cap:
-            break
+    for moment in ctx.rng("promote.order").shuffled(moments):
+        world = moment.community.world_id or 0
+        if risen[world] >= scaled_cap(table.promotion_cap, table.promotion_people_per_extra, people[world]):
+            continue
         if frozen(moment.community.id):
             continue
+        over = named.get(world, 0) > table.named_mortal_soft_limit_per_world
+        chance = table.promotion_chance * (table.promotion_over_limit_pct / 100 if over else 1)
         if not ctx.rng(f"promote.{moment.community.id}.{moment.reason}").chance(chance):
             continue
         roles = NOTABLE_ROLES[moment.social_class]
@@ -180,6 +198,7 @@ async def promote(ctx: TickContext) -> int:
         elif moment.reason == "orphan":
             await orphan_memory(ctx, mortal, moment.community)
         raised += 1
+        risen[world] += 1
         ctx.count(f"promoted.{moment.reason}")
     return raised
 

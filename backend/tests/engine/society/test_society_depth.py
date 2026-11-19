@@ -162,9 +162,13 @@ def test_labour_follows_prices_structures_and_resources() -> None:
     gate(kept, Grounds({WorkshopKind.MINE: 1}, [], coastal=False))
     assert kept.workers[Job.MINING] == 100
     drawn = Plan(workers=Counter({Job.FARMING: 1000}))
-    draw(RULES, drawn, Grounds({WorkshopKind.FORGE: 2}, [(Job.MINING, CommodityKind.ORE)], coastal=False))
+    draw(RULES, drawn, Grounds({WorkshopKind.FORGE: 2}, [(Job.MINING, CommodityKind.ORE, 50)], coastal=False))
     assert drawn.workers[Job.CRAFTING] == 2 * RULES.labour.workshop_workers_per_level
     assert drawn.workers[Job.MINING] == RULES.labour.resource_workers
+    city = Plan(workers=Counter({Job.FARMING: 100000}))
+    draw(RULES, city, Grounds({WorkshopKind.FORGE: 2}, [(Job.MINING, CommodityKind.ORE, 100)], coastal=False, people=20000))
+    assert city.workers[Job.CRAFTING] == 2 * (RULES.labour.workshop_workers_per_level + 20 * RULES.labour.workshop_workers_per_thousand)
+    assert city.workers[Job.MINING] == 2 * RULES.labour.resource_workers + 20 * RULES.labour.resource_workers_per_thousand
     assert drawn.reasons[(Job.CRAFTING, LabourReason.STRUCTURE)].workshop is WorkshopKind.FORGE
     prices = {kind: 100 for kind in CommodityKind} | {CommodityKind.TOOLS: 400, CommodityKind.GRAIN: 50, CommodityKind.BREAD: 50}
     assert job_pull(prices, Job.CRAFTING) > 0 > job_pull(prices, Job.FARMING)

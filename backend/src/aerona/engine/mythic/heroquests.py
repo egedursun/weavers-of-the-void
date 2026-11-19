@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import several
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -44,6 +45,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
@@ -384,6 +386,9 @@ async def advance(ctx: TickContext, row: HeroquestRow, tally: QuestTally) -> Non
 
 
 async def fellows(ctx: TickContext, quester: EntityRow, ids: list[int]) -> list[int] | str:
+    most = ctx.rules.heroquests.party_max
+    if len(set(ids)) > most:
+        return f"a party may take at most {several(most, 'companion', 'companions')}"
     party: list[int] = []
     for mate_id in dict.fromkeys(ids):
         mate = await ctx.session.get(EntityRow, mate_id)
@@ -414,9 +419,10 @@ async def quest_world(ctx: TickContext, tally: QuestTally) -> None:
     for row in list(await ctx.session.scalars(select(HeroquestRow).where(HeroquestRow.state == HeroquestState.QUESTING).order_by(HeroquestRow.id))):
         if not held(row.quester_entity_id) and "step" not in row.locked:
             await advance(ctx, row, tally)
-    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if tally.begun >= table.per_epoch:
-            break
+    begun = WorldQuota(table.per_epoch)
+    for mortal in ctx.rng("heroquest.order").shuffled(await canon(ctx.session, [EntityType.MORTAL])):
+        if begun.full(mortal.world_id):
+            continue
         if mortal.id in questing or not ctx.rng(f"heroquest.call.{mortal.id}.{ctx.epoch}").chance(table.chance_pct):
             continue
         found = await eligible(ctx, mortal)
@@ -424,6 +430,7 @@ async def quest_world(ctx: TickContext, tally: QuestTally) -> None:
             party = await companions(ctx, mortal, questing) if ctx.rng(f"heroquest.party.{mortal.id}.{ctx.epoch}").chance(table.party_pct) else []
             await begin_quest(ctx, mortal, found[0], party)
             questing |= {mortal.id, *party}
+            begun.take(mortal.world_id)
             tally.begun += 1
     await settle_souls(ctx)
     await ctx.session.flush()

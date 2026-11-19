@@ -1,20 +1,20 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 D = RuleGroup.WAR_AND_DIPLOMACY
 
 
 @dataclass(frozen=True)
-class CommunicationRules:
-    envoy_hops: int = rule(2, 1, 50, D, "Regions an envoy crosses in an epoch")
-    letter_hops: int = rule(3, 1, 50, D, "Regions a letter crosses in an epoch")
-    herald_hops: int = rule(2, 1, 50, D, "Regions a herald crosses in an epoch")
-    bird_hops: int = rule(6, 1, 50, D, "Regions a messenger bird crosses in an epoch")
-    signal_fire_hops: int = rule(20, 1, 100, D, "Regions a chain of signal fires carries word in an epoch")
-    winter_delay_pct: int = rule(100, 0, 400, D, "How much longer messages over land take in the cold season, when passes close (%)")
-    interworld_epochs: int = rule(3, 0, 50, D, "Epochs a message takes between worlds by any medium but magic and dreams")
+class CommunicationRules(Spanned):
+    envoy_hops: int = rule(2, 1, 1000, D, "Regions an envoy crosses in a season")
+    letter_hops: int = rule(3, 1, 1000, D, "Regions a letter crosses in a season")
+    herald_hops: int = rule(2, 1, 1000, D, "Regions a herald crosses in a season")
+    bird_hops: int = rule(6, 1, 1000, D, "Regions a messenger bird crosses in a season")
+    signal_fire_hops: int = rule(20, 1, 10000, D, "Regions a chain of signal fires carries word in a season")
+    winter_delay_pct: int = rule(100, 0, 400, D, "How much longer messages over land take in each cold season of the year, when passes close (%)")
+    interworld_epochs: int = rule(12, 0, 100000, D, "Seasons a message takes between worlds by any medium but magic and dreams")
     signal_cut: int = rule(1, 0, 10, D, "Epochs a sender's signal links take off the journey of its messages")
     spy_intercept_pct: int = rule(25, 0, 100, D, "Chance a spy network at full depth intercepts a message to or from its target (%)")
     outlaw_loss_pct: int = rule(8, 0, 100, D, "Chance outlaws at either end waylay a messenger over land (%)")

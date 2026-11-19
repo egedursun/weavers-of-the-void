@@ -100,7 +100,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.sacred import control
-from aerona.engine.sacred.bureau import BureauTally, keep_bureau
+from aerona.engine.sacred.bureau import BureauTally, keep_bureau, need_of
 from aerona.engine.sacred.feeding import harvest_feelings
 from aerona.engine.sacred.foresight import ForesightTally, court_systems, keep_divination, keep_prescience, keep_psychohistory
 from aerona.engine.sacred.guards import guarded, perform, rite_chance, unrest_shift, warded_hosts
@@ -223,6 +223,19 @@ async def test_petitions_are_read_appealed_granted_and_an_unwatched_office_goes_
     for epoch in range(4, 20):
         await keep_bureau(await at(session, epoch, celestial_bureaucracy={"petition_chance": 0}), BureauTally())
     assert lowered.corruption >= ROGUE and lowered.superior_spirit_id is None
+
+
+async def test_a_large_town_with_full_stores_does_not_petition_for_the_harvest(session: AsyncSession, world: CoreWorld) -> None:
+    full = await settlement(session, "Broadmere", world, world.regions[1], population=5000)
+    empty = await settlement(session, "Drymere", world, world.regions[1], population=5000)
+    ctx = await at(session, 2)
+    session.add_all([society(full.id, ctx.rules.economy.supply_index_epoch), society(empty.id, 0)])
+    spirit = await entity(session, "Spirit of Broadmere", EntityType.SPIRIT, SpiritStats(), world_id=world.world.id, location_id=full.id)
+    office = SpiritOfficeRow(spirit_entity_id=spirit.id, rank=BureauRank.CITY, overseer_node_id=world.son.id, jurisdiction_entity_id=full.id, locked=[])
+    session.add(office)
+    await session.flush()
+    assert (await need_of(ctx, full, office))[0] is not PetitionKind.HARVEST
+    assert (await need_of(ctx, empty, office))[0] is PetitionKind.HARVEST
 
 
 async def test_a_wise_pious_mortal_has_visions_and_is_persecuted_into_founding_a_heresy(session: AsyncSession, world: CoreWorld) -> None:

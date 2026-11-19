@@ -141,7 +141,7 @@ def grade(ctx: TickContext, rng: SeededRandom, rate: float) -> tuple[int, int] |
         return 3, table.deadly_damage
     if roll < (table.deadly_per_mil + table.grave_per_mil) * rate:
         return 2, table.grave_damage
-    if roll < (table.deadly_per_mil + table.grave_per_mil) * rate + table.small_per_epoch * PER_MIL // PERCENT * rate:
+    if roll < (table.deadly_per_mil + table.grave_per_mil) * rate + table.over_epoch(table.small_per_epoch) * PER_MIL / PERCENT * rate:
         return 1, table.small_damage
     return None
 

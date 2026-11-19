@@ -1,3 +1,5 @@
+from math import log2, log10
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -438,17 +440,26 @@ def rank(book: RealmBook) -> None:
                 realm.profile.standing = RegionalStanding.MINOR_POWER
 
 
+def doubling_tier(amount: float) -> int:
+    return int(log2(1 + max(0.0, amount)))
+
+
+def people_tier(subjects: int, first: int) -> int:
+    return 1 + int(log10(subjects / first)) if subjects >= first else 0
+
+
 def tier_score(book: RealmBook, realm: Realm, rules: Rules, knowledge: KnowledgeMap) -> int:
     table = rules.realm_tiers
     members = book.members(realm)
     base = max((member.civ_tier or 0 for member in members), default=0)
-    land = len(realm.territory) // table.territory_per_tier
-    admin = realm.profile.administration // table.administration_per_tier
+    land = doubling_tier(len(realm.territory) / table.territory_per_tier)
+    admin = doubling_tier(realm.profile.administration / table.administration_per_tier)
     core = realm.profile.core_entity_id
-    writing = knowledge.level(core, KnowledgeBranch.WRITING) // table.knowledge_tier_level if core is not None else 0
+    writing = doubling_tier(knowledge.level(core, KnowledgeBranch.WRITING) / table.knowledge_tier_level) if core is not None else 0
+    people = people_tier(stat(realm.entity, "subjects") or 0, rules.scale.realm_subjects_tier)
     worlds = len({member.world_id for member in members if member.world_id is not None})
     over = 1 if realm.profile.overextension > PERCENT * 2 else 0
-    return max(0, base + min(land, 2) + min(admin, 2) + min(writing, 2) + max(0, worlds - 1) * table.worlds_tier - over)
+    return max(0, base + land + admin + writing + people + max(0, worlds - 1) * table.worlds_tier - over)
 
 
 async def realm_tier(ctx: TickContext, book: RealmBook, realm: Realm, knowledge: KnowledgeMap) -> int:

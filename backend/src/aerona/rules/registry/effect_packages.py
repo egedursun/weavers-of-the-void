@@ -10,7 +10,7 @@ G = RuleGroup.BODY
 class EffectPackageRules:
     bite_pct: int = rule(35, 0, 100, G, "Chance a bite from a bearer passes on a package carried by bite (%)")
     blood_pct: int = rule(20, 0, 100, G, "Chance a blood-cursed bearer's feeding passes the curse on (%)")
-    contact_pct: int = rule(5, 0, 100, G, "Chance each epoch a package carried by contact passes to someone living beside the bearer (%)")
+    contact_pct: int = rule(50, 0, 100, G, "Chance each epoch a package carried by contact passes to someone living beside the bearer (%)")
     birth_pct: int = rule(60, 0, 100, G, "Chance a child inherits a hereditary package from a parent (%)")
     medicine_pct: int = rule(30, 0, 100, G, "Chance each epoch a healer with enough medicine cures a package medicine can cure (%)")
     rite_pct: int = rule(25, 0, 100, G, "Chance each epoch a priest of the bearer's people cures a package a rite can cure (%)")

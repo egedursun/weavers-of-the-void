@@ -6,7 +6,10 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class ExplorationRules:
-    per_epoch_cap: int = rule(2, 0, 100, RuleGroup.EXPLORATION, "Maximum new lands mortals discover spontaneously on one world in one epoch (0 off)")
+    per_epoch_cap: int = rule(2, 0, 10000, RuleGroup.EXPLORATION, "Maximum new lands mortals discover spontaneously on one world in one epoch (base; 0 off)")
+    per_epoch_cap_community_divisor: int = rule(
+        10, 0, 100000, RuleGroup.EXPLORATION, "Land discovery cap of a world grows by 1 for every this many communities on it (0: fixed)"
+    )
     base_chance: int = rule(4, 0, 100, RuleGroup.EXPLORATION, "A community or explorer mortal sets out to explore on its own (% per epoch)")
     min_population: int = rule(300, 0, 10000000, RuleGroup.EXPLORATION, "Minimum population (or followers) of a community setting out to explore on its own")
     crowded_fill_pct: int = rule(
@@ -52,10 +55,13 @@ class ExplorationRules:
         "A community or mortal knowing a way to other worlds (sky navigation, gate science, pathfinding, magic or a flying mount) searches for a route on its own (% per epoch)",
     )
     route_search_cap: int = rule(
-        1, 0, 100, RuleGroup.EXPLORATION, "Maximum communities or mortals searching for a route on their own in the cosmos in one epoch (0 off)"
+        1, 0, 10000, RuleGroup.EXPLORATION, "Maximum communities or mortals searching for a route on their own in the cosmos in one epoch (base; 0 off)"
+    )
+    route_search_cap_seeker_divisor: int = rule(
+        20, 0, 100000, RuleGroup.EXPLORATION, "Route search cap grows by 1 for every this many able seekers in the cosmos (0: fixed)"
     )
     crowded_communities_per_region: int = rule(
-        3, 1, 100, RuleGroup.EXPLORATION, "If communities (peoples + settlements) per region on a world are at or above this, land counts as cramped"
+        20, 1, 1000, RuleGroup.EXPLORATION, "If communities (peoples + settlements) per region on a world are at or above this, land counts as cramped"
     )
     free_land_creation: int = rule(
         1, 0, 1, RuleGroup.EXPLORATION, "On cramped land the son's first land creation (region or place) in the epoch costs no action (1 on, 0 off)"
@@ -67,7 +73,7 @@ class ExplorationRules:
     )
     foreign_god_raise_land_chance: int = rule(8, 0, 100, RuleGroup.EXPLORATION, "An awake foreign god raises a new land on its own world (% per epoch)")
     tool_per_epoch: int = rule(
-        1, 0, 20, RuleGroup.EXPLORATION, "discover_land (toprak_kesfet): maximum discoveries by one mortal per epoch (0 disables the tool)"
+        3, 0, 50, RuleGroup.EXPLORATION, "discover_land (toprak_kesfet): maximum discoveries by one mortal per epoch (0 disables the tool)"
     )
     tool_success_threshold: int = rule(
         45,

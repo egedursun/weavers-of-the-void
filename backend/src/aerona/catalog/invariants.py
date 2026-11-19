@@ -79,6 +79,7 @@ GENERIC: dict[GenericCheck, GenericSpec] = {
 
 TYPED: tuple[InvariantSpec, ...] = (
     InvariantSpec("living_captor", "captives", "a captive still held is held by a living captor", Remedy.REPAIR, "released"),
+    InvariantSpec("living_range", "species_ranges", "only a living species holds numbers in a land", Remedy.REPAIR, "its numbers there set to none"),
     InvariantSpec("order_target", "instruction_orders", "an order that acts on a target has a target", Remedy.REPAIR, "lapsed"),
     InvariantSpec("maker_not_self", "constructs", "a construct is not its own maker or its own soul", Remedy.REPAIR, "the self reference cleared"),
     InvariantSpec("living_ruler", "bonds", "a ruler who still rules is alive and in the world", Remedy.REPAIR, "the rule closed"),

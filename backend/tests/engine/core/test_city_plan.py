@@ -27,8 +27,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import set_stats
 from aerona.engine.settlement.book import town_of
-from aerona.engine.settlement.life import add_district, quarter_wants
+from aerona.engine.settlement.life import add_district, housing_of, quarter_wants
 from aerona.engine.structures.needs import SiteFacts, wanted
 from aerona.engine.structures.readers import Working
 from aerona.engine.structures.settlement import civic_from
@@ -148,6 +149,8 @@ async def test_an_almshouse_shelters_the_homeless_and_the_tally_counts_only_thos
     town_id, _ = await built_town(session, world, ctx, population=90000)
     town = await session.get(EntityRow, town_id)
     assert town is not None
+    room = housing_of(ctx.rules, await town_of(ctx, town, await KnowledgeMap.load(session)))
+    set_stats(town, population=room + 20000)
     bare = HousingTally()
     await house_town(ctx, town, await KnowledgeMap.load(session), bare)
     profile = await session.get(SettlementProfileRow, town_id)

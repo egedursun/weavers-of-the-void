@@ -137,8 +137,10 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     prosperity = stat(community, "prosperity")
     prosperity = prosperity if prosperity is not None else table.unknown_prosperity
     population = stat(community, "population") or 0
+    stocked = await stock(session, ctx.rules, community.id, Commodity.FOOD)
     fed = await fed_index(session, community.id)
-    food = fed if fed is not None else await stock(session, ctx.rules, community.id, Commodity.FOOD)
+    eaten = fed if fed is not None and fed > stocked else 0
+    food = max(stocked, eaten)
     basket = await effect_shortfalls(session, community.id)
     plenty = ctx.rules.consumption
     hunger = max(

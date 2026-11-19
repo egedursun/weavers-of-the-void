@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 G = RuleGroup.MORTALS
 
@@ -48,7 +48,7 @@ class FertilityRules:
     other_sex_pct: float = rule(0.0, 0.0, 100.0, G, "Chance a child is born neither female nor male, where the world allows it (%)")
     kinship_pct: int = rule(40, 0, 200, G, "How much a culture that prizes kinship lifts the birth rate (%)")
     ability_deviation: int = rule(8, 0, 50, G, "How far a child's abilities stray from their parents' mean")
-    twin_cap: int = rule(2, 1, 6, G, "Most children one birth can bring")
+    twin_cap: int = rule(4, 1, 12, G, "Most children one birth can bring; each child past the second needs the twin chance again")
 
 
 @dataclass(frozen=True)
@@ -63,12 +63,12 @@ class EducationRules:
 
 
 @dataclass(frozen=True)
-class KinshipRules:
-    betrothal_chance: int = rule(10, 0, 100, G, "Chance each epoch a noble family betroths a child (%)")
+class KinshipRules(Spanned):
+    betrothal_chance: int = rule(3, 0, 100, G, "Chance a noble family betroths a child (% per year)")
     union_payment: int = rule(10, 0, 1000, G, "Value a union's exchange carries where the people names no payment")
     purpose_bonus: int = rule(15, 0, 100, G, "Pull toward a match that serves the purpose a people holds unions for")
     purpose_pull_pct: int = rule(30, 0, 300, G, "Share of a match's prestige, friendship, strength or wealth that its purpose weighs (%)")
-    marriage_chance: int = rule(25, 0, 100, G, "Chance each epoch that adult lovers or the betrothed wed (%)")
+    marriage_chance: int = rule(5, 0, 100, G, "Chance that adult lovers or the betrothed wed (% per year)")
     divorce_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold marriage ends (%)")
     divorce_opinion_below: int = rule(-40, -100, 100, G, "Opinion between spouses below which they may part")
     annulment_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold, childless marriage is declared void where divorce is forbidden (%)")

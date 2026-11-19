@@ -253,7 +253,7 @@ async def side_of(
     base = {unit.id: specs.get(unit.design_id or 0) or UNITS[unit.kind] for unit in rows}
     fielded = base | await field_specs(ctx.session, rows, base)
     fielded |= await crew_specs(ctx.session, rows, fielded)
-    stacks = make_stacks(rows, specs, hardness, fielded)
+    stacks = make_stacks(rows, specs, hardness, fielded, rounds=ctx.rules.scale.missile_rounds_carried)
     profile = await profile_of(ctx, army, community)
     table = ctx.rules
     commander = row.commander_entity_id

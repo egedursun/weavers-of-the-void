@@ -32,6 +32,7 @@ from aerona.engine.minds.making import Making, make_mind
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import record
 from aerona.engine.sacred.places import town_of
@@ -254,14 +255,16 @@ async def knows_making(ctx: TickContext, knowledge: KnowledgeMap, maker: EntityR
 async def make_constructs(ctx: TickContext, tally: MakingTally) -> None:
     table = ctx.rules.constructs
     knowledge = await KnowledgeMap.load(ctx.session)
+    quota = WorldQuota(table.constructs_per_epoch)
     for maker in await skilled_makers(ctx):
-        if tally.made >= table.constructs_per_epoch:
-            return
+        if quota.full(maker.world_id):
+            continue
         if held(maker.id) or not ctx.rng(f"construct.make.{maker.id}.{ctx.epoch}").chance(table.make_chance):
             continue
         if not await knows_making(ctx, knowledge, maker):
             continue
         row = await make_construct(ctx, maker, Design())
+        quota.take(maker.world_id)
         tally.made += 1
         tally.souled += row.soul_entity_id is not None
         await record(

@@ -20,7 +20,6 @@ from aerona.engine.structures.readers import Working, working
 K = StructureKind
 WALL_MAX = 5
 ROAD_MAX = 5
-COUNT_MAX = 20
 STONE_FAMILIES = frozenset({MaterialFamily.STONE, MaterialFamily.METAL, MaterialFamily.EXOTIC})
 
 
@@ -53,9 +52,9 @@ async def walls(ctx: TickContext, infrastructure: SettlementInfrastructureRow, i
 def infrastructure_from(infrastructure: SettlementInfrastructureRow, kinds: dict[StructureKind, list[Working]], road_pct: int) -> None:
     locked = infrastructure.locked
     if free(locked, "gates"):
-        infrastructure.gates = min(COUNT_MAX, max(infrastructure.gates, len(kinds[K.GATE]) + (1 if kinds[K.WALL] else 0)))
+        infrastructure.gates = max(infrastructure.gates, len(kinds[K.GATE]) + (1 if kinds[K.WALL] else 0))
     if free(locked, "towers"):
-        infrastructure.towers = min(COUNT_MAX, max(infrastructure.towers, len(kinds[K.TOWER]) + len(kinds[K.WATCHTOWER])))
+        infrastructure.towers = max(infrastructure.towers, len(kinds[K.TOWER]) + len(kinds[K.WATCHTOWER]))
     if free(locked, "roads") and kinds[K.ROAD]:
         built = max(round_half_up(item.profile.level * item.strength * road_pct / PERCENT) for item in kinds[K.ROAD])
         infrastructure.roads = min(ROAD_MAX, max(infrastructure.roads, built))

@@ -12,6 +12,7 @@ from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.stats import stats_from
 from aerona.agents.text import sanitize
+from aerona.catalog.eras import ERA_FLOORS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
@@ -28,6 +29,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.resources import set_resource_yield
+from aerona.engine.eras.effects import world_start
 from aerona.engine.kinds.genesis import KindSeed, found_kinds
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.recording.record import record as record_incident
@@ -149,7 +151,7 @@ async def awaken_one(
         rules,
         item.knowledge,
         EntityType.KNOWLEDGE,
-        {"level": awaken.knowledge_level, "spread": awaken.knowledge_spread},
+        {"level": max(awaken.knowledge_level, ERA_FLOORS[await world_start(session)].get(item.knowledge.branch, 0)), "spread": awaken.knowledge_spread},
         power=awaken.knowledge_power,
         epoch=epoch,
         region=region,

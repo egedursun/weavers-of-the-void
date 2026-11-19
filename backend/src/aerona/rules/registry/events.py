@@ -9,7 +9,10 @@ G = RuleGroup.FATE_AND_CHRONICLE
 @dataclass(frozen=True)
 class EventsRules(Spanned):
     event_power: int = rule(3, 1, 10, G, "Power of an event that rises from the life of the world")
-    emergent_cap: int = rule(12, 0, 200, G, "Most events of one kind that rise from the world's life in one epoch")
+    emergent_cap: int = rule(12, 0, 10000, G, "Most events of one kind that rise from the world's life in one epoch, before the communities are counted")
+    emergent_communities_per_extra: int = rule(
+        20, 0, 100000, G, "One more event of each kind may rise from the world's life in one epoch for every this many communities (0 none)"
+    )
     season_match_weight: int = rule(3, 1, 20, G, "How much likelier an event falls in a season that suits it (wet floods, dry fires) (times)")
     severity_neutral: int = rule(50, 1, 100, G, "Event severity at which per-phase harm is applied as written")
     peak_max_years: int = span(3, 1, 1250, G, "Most years a famine, plague or siege can stay at its height before it turns")
@@ -18,9 +21,9 @@ class EventsRules(Spanned):
     famine_peak_below_harvest: int = rule(70, 0, 200, G, "A famine deepens to its height while the land's harvest stays below this (% of normal)")
     famine_recover_harvest: int = rule(90, 0, 200, G, "A famine passes its height once the harvest is back to this (% of normal)")
     famine_onset_prosperity: int = rule(5, 0, 100, G, "Prosperity lost by the hungry communities when a famine begins")
-    famine_peak_death_pct: int = rule(2, 0, 100, G, "Share of the hungry who die in each epoch a famine stays at its height (%)")
+    famine_peak_death_pct: int = rule(10, 0, 100, G, "Share of the hungry who die in each epoch a famine stays at its height (%)")
     famine_aftermath_disease: int = rule(8, 0, 100, G, "Disease load left in the land by the weakened survivors of a famine")
-    plague_peak_death_pct: int = rule(2, 0, 100, G, "Share of the struck communities who die in each epoch a plague stays at its height (%)")
+    plague_peak_death_pct: int = rule(25, 0, 100, G, "Share of the struck communities who die in each epoch a plague stays at its height (%)")
     plague_aftermath_prosperity_pct: int = rule(
         40, 0, 1000, G, "Prosperity gained after a plague per point of the adult workforce it killed (%), as the survivors' labour grows dear"
     )

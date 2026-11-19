@@ -61,14 +61,23 @@ class TravelRules:
     colony_prosperity: int = rule(30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Prosperity of a new colony")
     colony_defense: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Defense of a new colony")
     conquest_outpost_defense: int = rule(45, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Defense of a new conquest outpost")
-    contact_cap: int = rule(3, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Maximum native communities contacted on arrival")
+    contact_cap: int = rule(10, 0, 10000, RuleGroup.COSMOS_AND_TRAVEL, "Maximum native communities contacted on arrival")
     invasion_relation_loss: int = rule(30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation loss with the natives in an invasion")
     contact_trade_relation: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation gain of a first contact that turns into trade")
     alliance_relation: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation gain of an inter-world alliance")
     uneasy_relation_loss: int = rule(5, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Relation loss of an uneasy first contact")
     exploration_charisma: int = rule(8, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Charisma gain from an exploration or pilgrimage expedition")
     trade_prosperity: int = rule(8, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Prosperity gain from a trade expedition")
-    route_knowledge_cap: int = rule(2, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Maximum communities learning route knowledge per epoch")
+    route_knowledge_cap: int = rule(
+        2,
+        0,
+        10000,
+        RuleGroup.COSMOS_AND_TRAVEL,
+        "Base of the most routes that teach their communities route knowledge per epoch, grown by the number of known routes",
+    )
+    route_knowledge_route_divisor: int = rule(
+        2, 0, 10000, RuleGroup.COSMOS_AND_TRAVEL, "Known routes per extra route teaching route knowledge in an epoch (0: the cap stays at its base)"
+    )
     route_knowledge_power: int = rule(4, 1, 12, RuleGroup.COSMOS_AND_TRAVEL, "Power level of knowledge born on the road")
     route_knowledge_spread: int = rule(5, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Initial spread of knowledge born on the road")
     reveal_route_cost: int = rule(20, 0, 500, RuleGroup.COSMIC_ACTIONS, "Cost for the god to reveal a hidden route (essence)")
@@ -76,7 +85,7 @@ class TravelRules:
         1, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Maximum expeditions communities send on their own (per epoch; base, grows with the community count)"
     )
     expedition_cap_community_divisor: int = rule(
-        100, 0, 100000, RuleGroup.COSMOS_AND_TRAVEL, "Expedition cap grows by 1 for every this many communities (0: fixed)"
+        10, 0, 100000, RuleGroup.COSMOS_AND_TRAVEL, "Expedition cap grows by 1 for every this many communities (0: fixed)"
     )
     expedition_visit_weight_pct: int = rule(
         50,

@@ -135,8 +135,13 @@ def upkeep_of(rules: Rules, resolved: Resolved, level: int) -> tuple[int, int]:
     )
 
 
-def slots_for(rules: Rules, tier: SizeTier) -> int:
-    return rules.construction.slots_base + TIER_ORDER.index(tier) * rules.construction.slots_per_tier
+def slots_for(rules: Rules, tier: SizeTier | None, population: int) -> int:
+    table = rules.construction
+    return table.slots_base + (TIER_ORDER.index(tier) * table.slots_per_tier if tier is not None else 0) + max(0, population) // table.people_per_slot
+
+
+def works_at_once(rules: Rules, population: int) -> int:
+    return rules.construction.active_per_site + max(0, population) // rules.construction.people_per_active_work
 
 
 def tier_allows(tier: SizeTier, resolved: Resolved) -> bool:

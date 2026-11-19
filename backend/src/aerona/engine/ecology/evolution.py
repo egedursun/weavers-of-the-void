@@ -174,7 +174,6 @@ def spread_out(rules: Rules, item: SpeciesTraitRow, leak: float) -> None:
 
 
 async def evolve_traits(ctx: TickContext, tally: EvolutionTally) -> None:
-    table = ctx.rules.trait_evolution
     profiles = {row.species_entity_id: row for row in await ctx.session.scalars(select(SpeciesProfileRow))}
     lands = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow))}
     stored: dict[tuple[int, int], dict[EvolvedTrait, SpeciesTraitRow]] = defaultdict(dict)
@@ -186,11 +185,10 @@ async def evolve_traits(ctx: TickContext, tally: EvolutionTally) -> None:
         )
     )
     selection = Selection(stored, await hunters_of(ctx.session), {(row.species_entity_id, row.region_entity_id) for row in ranges})
-    worked = 0
     for row in ranges:
         key = (row.species_entity_id, row.region_entity_id)
         profile = profiles.get(row.species_entity_id)
-        if worked >= table.per_epoch or profile is None or held(*key):
+        if profile is None or held(*key):
             continue
         if not stored[key]:
             species = await ctx.session.get(EntityRow, row.species_entity_id)
@@ -198,7 +196,6 @@ async def evolve_traits(ctx: TickContext, tally: EvolutionTally) -> None:
                 stored[key] = {item.trait: item for item in await seed_traits(ctx.session, species, profile, row.region_entity_id, ctx.epoch)}
                 tally.seeded += 1
             continue
-        worked += 1
         land = lands.get(row.region_entity_id)
         steps = pressures(ctx.rules, selection, row, profile, land)
         leak = land.leak / PERCENT if land is not None else 0.0

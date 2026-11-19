@@ -156,6 +156,7 @@ class MethodKind(StrEnum):
     MILKING_MACHINES = "milking_machines"
     POWER_SHEARS = "power_shears"
     INCUBATORS = "incubators"
+    OIL_REFINING = "oil_refining"
 
 
 class OwnerClass(StrEnum):

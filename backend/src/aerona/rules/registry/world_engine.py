@@ -31,9 +31,9 @@ class WorldEngineRules:
         400, 10, 100000, RuleGroup.POPULATION_AND_GROWTH, "Prosperity contribution to growth in a city: (prosperity \u2212 40) / this number"
     )
     growth_agriculture_pct: int = rule(140, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Growth multiplier for those who know agriculture (%)")
-    growth_max_pct: int = rule(60, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Maximum growth in one epoch (%)")
-    shrink_max_pct: int = rule(25, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Maximum shrinkage in one epoch (%)")
-    carrying_capacity: int = rule(60000, 100, 100000000, RuleGroup.POPULATION_AND_GROWTH, "Base carrying capacity of a region (people)")
+    growth_max_pct: int = rule(400, 0, 10000, RuleGroup.POPULATION_AND_GROWTH, "Maximum growth in one epoch (%)")
+    shrink_max_pct: int = rule(90, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Maximum shrinkage in one epoch (%)")
+    carrying_capacity: int = rule(500000, 100, 1000000000, RuleGroup.POPULATION_AND_GROWTH, "Base carrying capacity of a region (people)")
     capacity_agriculture_pct: int = rule(
         120, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Contribution of agriculture to capacity (by share of those knowing agriculture, %)"
     )
@@ -58,4 +58,6 @@ class WorldEngineRules:
     ghost_chance: int = rule(50, 0, 100, RuleGroup.THE_BEYOND, "If the dead return, the deceased becomes a ghost (%)")
     famous_spirit_chance: int = rule(30, 0, 100, RuleGroup.THE_BEYOND, "A famous dead person's spirit does not rest (%)")
     mourning_tradition_chance: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Mourning tradition for a famous dead person (%)")
-    seafaring_reach_hops: int = rule(2, 1, 20, RuleGroup.MORTAL_AGENTS, "Map regions away a seafaring community can still reach (unless the sea ban law holds)")
+    seafaring_reach_hops: int = rule(
+        6, 1, 100, RuleGroup.MORTAL_AGENTS, "Map regions away a seafaring community can still reach (unless the sea ban law holds)"
+    )

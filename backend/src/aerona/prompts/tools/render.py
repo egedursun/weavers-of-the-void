@@ -69,7 +69,9 @@ from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
+from aerona.domain.enums.folkways import ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
+from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, Formation, ShieldType
@@ -218,6 +220,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "preparedness_kinds": ", ".join(item.value for item in PreparednessKind),
         "keystone_uses": ", ".join(item.value for item in KeystoneUse),
         "quirk_kinds": ", ".join(item.value for item in QuirkKind),
+        "impurity_sources": ", ".join(item.value for item in ImpuritySource),
+        "mishap_kinds": ", ".join(item.value for item in MishapKind),
+        "plot_kinds": ", ".join(item.value for item in PlotKind),
         "echelon_orders": ", ".join(item.value for item in EchelonOrder),
         "bureau_ranks": ", ".join(item.value for item in BureauRank),
         "sacrament_kinds": ", ".join(item.value for item in SacramentKind),

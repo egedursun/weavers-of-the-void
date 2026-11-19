@@ -338,6 +338,8 @@ export function MapLegend({
     town: `≥ ${formatNumber(thresholds.town)}`,
     city: `≥ ${formatNumber(thresholds.city)}`,
     great_city: `≥ ${formatNumber(thresholds.greatCity)}`,
+    megacity: `≥ ${formatNumber(thresholds.megacity)}`,
+    conurbation: `≥ ${formatNumber(thresholds.conurbation)}`,
     capital: 'most populous of a ruler',
   }
   const anyMarker =

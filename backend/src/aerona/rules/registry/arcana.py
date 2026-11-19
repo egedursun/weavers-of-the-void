@@ -16,7 +16,7 @@ class SpellGrammarRules:
     lab_learn_pct: int = rule(25, 0, 100, H, "Chance a mage near a lab text learns its rite each epoch (%)")
     lab_skill: int = rule(20, 0, 100, H, "Spellcraft in a rite a mage gains from learning it out of a lab text")
     lab_fidelity_floor: int = rule(40, 0, 100, H, "Fidelity of a lab text written by a mage with no skill in its rite")
-    learners_max: int = rule(400, 0, 100000, H, "Mages who study lab texts each epoch at most")
+    learners_max: int = rule(0, 0, 10000000, H, "Mages who study lab texts each epoch at most (0: no limit)")
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,7 @@ class WarpingRules:
     touched_at: int = rule(25, 0, 100, H, "Warping at which a mortal is touched by magic")
     marked_at: int = rule(50, 0, 100, H, "Warping at which magic marks a mortal's body")
     unmoored_at: int = rule(75, 0, 100, H, "Warping at which magic unmoors a mortal's mind and slows its ageing")
-    bearers_max: int = rule(2000, 0, 100000, H, "Mortals the warping step weighs each epoch at most")
+    bearers_max: int = rule(0, 0, 10000000, H, "Mortals living on ley lines the warping step weighs each epoch at most (0: no limit)")
     fade: int = rule(2, 0, 100, H, "Warping that fades each epoch from a mortal not exposed to magic")
     permanent_stage: int = rule(3, 1, 3, H, "Stage of warping from which it never fades below the mark of that stage")
 

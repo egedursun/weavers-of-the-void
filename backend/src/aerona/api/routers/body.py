@@ -21,7 +21,7 @@ from aerona.api.schemas.body import (
 )
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.stats import max_hp
-from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, TISSUES, covering_of, digit_keys, digit_label, digit_weight
+from aerona.catalog.tissues import DIGIT_LIMBS, TISSUES, covering_of, digit_keys, digit_label, digit_weight
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, MaimedCohortRow, ProsthesisRow
@@ -163,7 +163,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         wounds = wounds_from(injuries, prostheses)
         levels = function_levels(rules.capacities, anatomy, wounds, counts_of(body), rules.injury.venom_paralysis_at)
         stats = bearer_stats(bearer)
-        whole = capacities(rules, stats, BodyState(anatomy, (), FULL_COUNTS, 0))
+        whole = capacities(rules, stats, BodyState(anatomy, (), anatomy.full_counts, 0))
         world = await HealingWorld.load(session, rules)
         care = await world.care_for(session, bearer)
         people = await people_of(session, bearer) if isinstance(bearer, EntityRow) else None
@@ -188,6 +188,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
                     severable=part.severable,
                     internal=part.internal,
                     vital=part.vital,
+                    counted=part.counted,
                     loss=loss,
                     state=worst.state if worst else None,
                     prosthesis=prosthesis,
@@ -225,6 +226,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
                     lost=key in body.lost_digits,
                 )
                 for part in DIGIT_LIMBS
+                if anatomy.part(part) is not None
                 for key in digit_keys(part)
             ],
             covering=covering_of(body.plan),

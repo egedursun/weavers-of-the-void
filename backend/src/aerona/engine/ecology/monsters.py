@@ -26,18 +26,20 @@ from aerona.engine.storyteller.pace import paced
 async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
     table = ctx.rules.monsters
     emerged = 0
+    by_world: dict[int, int] = {}
     resources = await ctx.session.execute(
         select(ResourceProfileRow.resource_entity_id, ResourceProfileRow.reserve, ResourceProfileRow.initial_reserve)
         .where(ResourceProfileRow.initial_reserve > 0)
         .order_by(ResourceProfileRow.resource_entity_id)
     )
-    for resource_id, reserve, initial in list(resources):
-        if emerged >= table.emerge_cap or (initial - reserve) * PERCENT < table.emerge_depth_pct * initial:
+    for resource_id, reserve, initial in ctx.rng("emerge.order").shuffled(list(resources)):
+        if (initial - reserve) * PERCENT < table.emerge_depth_pct * initial:
             continue
         region_id = atlas.top_region(resource_id)
         region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
         if (
             region is None
+            or by_world.get(region.world_id or 0, 0) >= table.emerge_cap
             or held(region.id)
             or not ctx.rng(f"emerge.{resource_id}.{ctx.epoch}").chance(await paced(ctx, region.world_id, SpontaneousKind.BEAST_AWAKENING, table.emerge_pct))
         ):
@@ -62,6 +64,7 @@ async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
         anatomy = await beast_anatomy(ctx, beast, row, deep=True)
         anatomy.awakening = AwakeningTrigger.DEEP_MINING
         emerged += 1
+        by_world[region.world_id or 0] = by_world.get(region.world_id or 0, 0) + 1
         facts: dict[str, FactInput] = {"region": region.id, "mined": (initial - reserve) * PERCENT // max(1, initial), "size": row.size_class}
         await record(ctx, "monsters.emerged", roles={IncidentRole.SUBJECT: beast.id}, facts=facts, place=region.id)
     return emerged

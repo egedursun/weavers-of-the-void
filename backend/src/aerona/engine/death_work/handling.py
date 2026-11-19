@@ -31,10 +31,12 @@ from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.death_work.seed import needed_workers
 from aerona.engine.economy.purse import shift_points
 from aerona.engine.folkways.purity import barred_professions
 from aerona.engine.primitives.folk import folk_among, towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
@@ -135,7 +137,18 @@ def standing_of(purity: int, line: int) -> DeathStanding:
     return DeathStanding.HONOURED if purity > line else DeathStanding.PLAIN
 
 
-async def recruit(ctx: TickContext, row: DeathWorkRow, tally: DeathTally) -> None:
+def recruited(ctx: TickContext, row: DeathWorkRow, population: int) -> int:
+    table = ctx.rules.death_work
+    need = needed_workers(ctx.rules.scale.death_workers_per_mille, population)
+    share = ctx.rules.scale.over_epoch(ctx.rules.scale.death_recruit_gap_pct) / PERCENT
+    if row.standing is DeathStanding.HONOURED:
+        return max(table.recruit_step, round_half_up((need - row.workers) * share)) if row.workers < need else 0
+    if row.standing is DeathStanding.AVOIDED:
+        return -max(table.recruit_step, round_half_up(row.workers * share)) if row.workers > 0 else 0
+    return round_half_up((need - row.workers) * share)
+
+
+async def recruit(ctx: TickContext, row: DeathWorkRow, tally: DeathTally, population: int) -> None:
     table = ctx.rules.death_work
     if "standing" not in (row.locked or []):
         row.standing = (
@@ -147,10 +160,10 @@ async def recruit(ctx: TickContext, row: DeathWorkRow, tally: DeathTally) -> Non
         )
     if "workers" in (row.locked or []):
         return
-    step = {DeathStanding.HONOURED: table.recruit_step, DeathStanding.PLAIN: 0, DeathStanding.AVOIDED: -table.recruit_step}[row.standing]
+    step = recruited(ctx, row, population)
     before = row.workers
     with explaining():
-        term("death_work.recruit_step", step, source_node_id=row.people_entity_id)
+        term("scale.death_recruit_gap_pct", step, source_node_id=row.people_entity_id)
         row.workers = max(0, row.workers + step)
     if before > 0 and row.workers == 0:
         await record(ctx, "death_work.role_shunned", roles={IncidentRole.SUBJECT: row.people_entity_id}, facts={"role": row.role, "standing": row.standing})
@@ -265,7 +278,7 @@ async def keep_death_work(ctx: TickContext, tally: DeathTally) -> None:
             row.role: row for row in await ctx.session.scalars(select(DeathWorkRow).where(DeathWorkRow.people_entity_id == people.id).order_by(DeathWorkRow.id))
         }
         for row in roles.values():
-            await recruit(ctx, row, tally)
+            await recruit(ctx, row, tally, stat_or(people, "population", 0))
         await untended(ctx, people, roles, towns, tally)
         await answer_calling(ctx, people, towns, people_standing(ctx.rules, list(roles.values())), tally)
     await ctx.session.flush()

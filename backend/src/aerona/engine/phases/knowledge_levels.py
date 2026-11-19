@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import StrEnum
+from math import ceil
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
 from aerona.engine.disease.load import DiseaseLoads, endemic_regions
+from aerona.engine.eras.effects import era_floors
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import gate_open, holder_levels, raise_holder, research_factor
 from aerona.engine.phase import Phase
@@ -31,7 +33,7 @@ from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import at_cap, clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
@@ -172,8 +174,8 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     loads = await DiseaseLoads.load(ctx.session, ctx.rules)
     sick = await endemic_regions(ctx.session)
     levels = await holder_levels(ctx.session)
-    for community in unheld(scene.communities):
-        if deepened >= table.deepen_cap:
+    for community in ctx.rng("deepen.order").shuffled(unheld(scene.communities)):
+        if at_cap(deepened, table.deepen_cap):
             break
         options = [
             scene.knowledge[item]
@@ -243,8 +245,8 @@ async def discover_branch(ctx: TickContext, discoverer: EntityRow, option: Branc
         RecordSpec(
             name=name or f"{discoverer.name} {label}",
             entity_type=EntityType.KNOWLEDGE,
-            body=f"The scribes of {discoverer.name} reached, {how}, a branch nobody in their world had known. {KNOWLEDGE_BRANCHES[option.branch].effect}",
-            stats=KnowledgeStats(level=1, spread=table.discovery_spread),
+            body=f"{discoverer.name} set down {label.lower()}, {how}, as a body of knowledge of its own. {KNOWLEDGE_BRANCHES[option.branch].effect}",
+            stats=KnowledgeStats(level=max(1, (await era_floors(ctx.session)).get(option.branch, 0)), spread=table.discovery_spread),
             power=table.discovery_power,
             world_id=discoverer.world_id,
             subtype=label.lower(),
@@ -260,8 +262,8 @@ async def discover_branch(ctx: TickContext, discoverer: EntityRow, option: Branc
 async def discovery_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     table = ctx.rules.knowledge
     found = 0
-    for world in await WorldRepository(ctx.session).reachable_worlds():
-        if found >= table.discovery_cap:
+    for world in ctx.rng("discovery.order").shuffled(await WorldRepository(ctx.session).reachable_worlds()):
+        if at_cap(found, table.discovery_cap):
             break
         rng = ctx.rng(f"discovery.{world.id}")
         if not rng.chance(table.discovery_chance):
@@ -273,7 +275,7 @@ async def discovery_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         able = sorted(
             (item for item in scene.communities if shares.get(item.id, 0.0) >= table.discovery_min_scribe_pct), key=lambda item: (-shares[item.id], item.id)
         )
-        candidates = [item for item in able if not frozen(item.id)][: table.discovery_candidates]
+        candidates = [item for item in able if not frozen(item.id)][: max(1, ceil(len(able) * table.discovery_candidates / PERCENT))]
         if not candidates:
             continue
         discoverer = rng.pick(candidates)
@@ -302,8 +304,8 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     table = ctx.rules.knowledge
     entities = {item.id: item for item in scene.communities}
     declined = 0
-    for knowledge_id, holder_ids in sorted(scene.holders.items()):
-        if declined >= table.decline_cap:
+    for knowledge_id, holder_ids in ctx.rng("decline.order").shuffled(sorted(scene.holders.items())):
+        if at_cap(declined, table.decline_cap):
             break
         knowledge = scene.knowledge.get(knowledge_id)
         if knowledge is None or frozen(knowledge.id) or knowledge_level(ctx.rules, knowledge) <= 1:

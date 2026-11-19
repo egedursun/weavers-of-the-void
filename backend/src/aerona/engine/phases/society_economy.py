@@ -616,18 +616,18 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     society.satisfaction = drift_satisfaction(rules, society.satisfaction, targets)
     apply_class_effects(rules, entity, society)
     hungry = society.stocks[Commodity.FOOD] <= settings.famine_food or meal.fed_pct < settings.famine_fed_pct
-    if hungry and rate < fraction(settings.famine_rate_pct) and counters.famines < settings.famine_cap:
+    if hungry and rate < fraction(settings.famine_rate_pct):
         counters.famines += 1
         await strike_famine(ctx, entity, society)
     weapons = await holding(ctx.session, entity.id, CommodityKind.WEAPONS)
     metallurgy = KnowledgeBranch.METALLURGY in inputs.branches
     can_forge = weapons >= rules.refining.weapon_batch_threshold and metallurgy and society.shares[SocialClass.WARRIOR] >= settings.weapon_warrior_pct
-    if can_forge and counters.weapons < settings.weapon_batch_cap and rng.chance(settings.forge_weapon_chance):
+    if can_forge and rng.chance(settings.forge_weapon_chance):
         counters.weapons += 1
         await forge_weapons(ctx, entity, society)
     merchants = society.shares[SocialClass.MERCHANT] >= settings.bankruptcy_merchant_pct
     struggling = inputs.routes == 0 and stat_or(entity, "prosperity", settings.default_stat) < settings.bankruptcy_prosperity
-    if merchants and struggling and counters.bankruptcies < settings.bankruptcy_cap and rng.chance(settings.guild_bankruptcy_chance):
+    if merchants and struggling and rng.chance(settings.guild_bankruptcy_chance):
         counters.bankruptcies += 1
         await bankrupt_guilds(ctx, entity, society)
     restless = unhappiest_class(rules, society)
@@ -636,7 +636,6 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
         restless is not None
         and society.satisfaction[restless] < settings.revolt_satisfaction
         and population > settings.revolt_min_population
-        and counters.uprisings < settings.revolt_cap
         and rng.chance(settings.class_revolt_chance)
     ):
         counters.uprisings += 1

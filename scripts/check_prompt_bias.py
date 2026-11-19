@@ -120,6 +120,16 @@ PATTERNS = (
         ),
     ),
     Pattern(
+        "imposed lore question",
+        re.compile(
+            r"\b(how time passes|what death is|creation and death|time passes in it|which nobody knows|secret they tell no one|"
+            r"surface,? (?:and )?marks|marks, lighting|(?:world'?s|own) idiom|domains and idiom|material, light|content, light|"
+            r"word choice, rhythm|speech tics?|domain left empty|how they count time)\b",
+            re.IGNORECASE,
+        ),
+        prompts_only=True,
+    ),
+    Pattern(
         "forced strangeness",
         re.compile(r"\b(strange|stranger|strangest|strangeness|uncanny|eerie|otherworldly)\b", re.IGNORECASE),
         prompts_only=True,

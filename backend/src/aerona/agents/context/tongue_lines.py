@@ -55,5 +55,5 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     for work in await session.scalars(select(DecipherWorkRow).where(DecipherWorkRow.scholar_entity_id == me.id)):
         language = await session.get(EntityRow, work.language_entity_id)
         if language is not None:
-            found.append(f"you work at the dead script of {language.name} ({work.progress} of 100, {several(work.errors, 'misreading', 'misreadings')})")
+            found.append(f"you work at the unread script of {language.name} ({work.progress} of 100, {several(work.errors, 'misreading', 'misreadings')})")
     return found

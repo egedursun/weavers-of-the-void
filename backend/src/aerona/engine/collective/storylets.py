@@ -32,7 +32,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import CasusBelliKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.accounts import house_of
-from aerona.engine.collective.book import population_of, realm_of_town, ruler_id, shift
+from aerona.engine.collective.book import realm_of_town, ruler_id, shift
 from aerona.engine.collective.crowds import stir
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin
@@ -46,8 +46,8 @@ from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.queries import count_communities, living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -126,7 +126,7 @@ async def town_with_lord(ctx: TickContext, town: EntityRow) -> Cast | None:
 async def cast_hoarded_store(ctx: TickContext, world_id: int) -> Cast | None:
     for town in await towns_in(ctx, world_id):
         food = await stock(ctx.session, ctx.rules, town.id, Commodity.FOOD)
-        if food * PERCENT / max(1, population_of(town)) < ctx.rules.collective_behaviour.famine_food:
+        if food < ctx.rules.collective_behaviour.famine_food:
             return await town_with_lord(ctx, town)
     return None
 
@@ -364,7 +364,7 @@ async def open_storylets(ctx: TickContext, tally: StoryletTally) -> None:
         waiting = await ctx.session.scalar(
             select(func.count()).select_from(StoryletRunRow).where(StoryletRunRow.world_id == world_id, StoryletRunRow.status == StoryletStatus.OPEN)
         )
-        if (waiting or 0) >= table.max_open:
+        if (waiting or 0) >= scaled_cap(table.max_open, table.max_open_community_divisor, await count_communities(ctx.session, world_id)):
             continue
         boost = await boost_of(ctx, world_id)
         for storylet in StoryletId:

@@ -279,7 +279,7 @@ async def test_solidarity_rises_on_a_frontier_and_softens_with_ease(session: Asy
 async def test_a_challenge_in_the_band_is_answered_and_one_beyond_it_breaks_the_realm(session: AsyncSession, world: CoreWorld) -> None:
     town = await town_of(session, world, "Ashby")
     realm = await realm_of(session, world, town)
-    ctx = await context(session, challenge_response={"severity_scale": 1000, "band_low": 5, "band_high": 60})
+    ctx = await context(session, challenge_response={"severity_scale": 8333, "band_low": 5, "band_high": 60})
     ctx.environment.stats.flows[("epidemics", HEADCOUNT_KEY, town.id, FlowCategory.PLAGUE.value)] = -10
     await meet_challenges(ctx, ChallengeTally())
     challenge = await session.scalar(select(ChallengeRow).where(ChallengeRow.holder_entity_id == realm.id))
@@ -287,7 +287,7 @@ async def test_a_challenge_in_the_band_is_answered_and_one_beyond_it_breaks_the_
     profile = await session.get(PolityProfileRow, realm.id)
     assert profile is not None
     stability = profile.stability
-    ctx = await context(session, challenge_response={"severity_scale": 2000, "band_low": 5, "band_high": 30})
+    ctx = await context(session, challenge_response={"severity_scale": 16666, "band_low": 5, "band_high": 30})
     ctx.environment.stats.flows[("war_casualties", HEADCOUNT_KEY, town.id, FlowCategory.CASUALTY.value)] = -1500
     await meet_challenges(ctx, ChallengeTally())
     kinds = {row.kind: row.response for row in await session.scalars(select(ChallengeRow).where(ChallengeRow.holder_entity_id == realm.id))}

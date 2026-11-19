@@ -217,7 +217,7 @@ async def test_merchants_put_wool_out_to_villages_that_make_cloth_and_prosper(se
     session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.WOOL, quantity=50, quality=50))
     await session.flush()
     tally = PuttingOutTally()
-    await keep_putting_out(await at(session, 2, putting_out={"found_chance": 100, "volume": 10}), tally)
+    await keep_putting_out(await at(session, 2, putting_out={"found_chance": 100, "volume": 50}), tally)
     row = await session.scalar(select(PuttingOutRow).where(PuttingOutRow.merchant_entity_id == guild.id))
     assert row is not None and row.town_entity_id == village.id and tally.founded == 1 and tally.worked == 1
     cloth = await session.scalar(

@@ -42,7 +42,7 @@ async def found_household(ctx: TickContext, head: EntityRow) -> HouseholdRow:
     )
     ctx.session.add(household)
     await ctx.session.flush()
-    kind = await dwelling_kind_for(ctx.session, head)
+    kind = await dwelling_kind_for(ctx.session, ctx.rules, head)
     ctx.session.add(
         DwellingRow(
             household_id=household.id,

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionalEventRow, DimensionRow, GalacticEventRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
@@ -97,6 +98,7 @@ async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
     temples = await count_structures(ctx, EngineKind.TEMPLE)
     cult = await cult_effect(ctx.session, rules)
     faith = read(ctx, LedgerKey.TOTAL_FAITH)
+    worlds = max(1, len(await WorldRepository(ctx.session).reachable_worlds()))
     return {
         DoomItem.GODLESS: godless * doom.godless,
         DoomItem.CURSED: cursed * doom.cursed,
@@ -104,10 +106,10 @@ async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
         DoomItem.WARS: wars / doom.hostility_divisor,
         DoomItem.REBEL_SONS: rebels * doom.rebel_son,
         DoomItem.MIRACLES: -miracles * doom.miracle,
-        DoomItem.FAITH: -min(doom.faith_cap, faith // doom.faith_divisor),
+        DoomItem.FAITH: -min(doom.faith_cap * worlds, faith // doom.faith_divisor),
         DoomItem.PEACE: -doom.peace if wars == 0 else 0,
-        DoomItem.WONDERS: -min(doom.wonder_cap, wonders),
-        DoomItem.TEMPLES: -min(doom.temple_cap, temples // rules.world_epoch_transition.temples_per_apocalypse_push),
+        DoomItem.WONDERS: -min(doom.wonder_cap * worlds, wonders),
+        DoomItem.TEMPLES: -min(doom.temple_cap * worlds, temples // rules.world_epoch_transition.temples_per_apocalypse_push),
         DoomItem.GOLDEN_AGE: -doom.golden_age * age.golden_worlds,
         DoomItem.WORLD_AGE: -age.relief,
         DoomItem.CREATOR_CULT: -cult.doom_pushback,

@@ -25,7 +25,7 @@ from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.language_profile import has_script, language_profile
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, canon, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
@@ -48,6 +48,8 @@ class ContactTally:
     loans_left: int = 0
     borrowed: int = 0
     creoles: int = 0
+    event_cap: int = 0
+    creole_cap: int = 0
     words: dict[int, set[str]] = field(default_factory=dict)
 
 
@@ -136,8 +138,8 @@ async def communities_pair(session: AsyncSession, bond: BondRow) -> tuple[Entity
 
 async def conquest_contact(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
-    for bond in sorted(await active_bonds(ctx.session, [BondKind.RULES]), key=lambda item: item.id):
-        if tally.events >= table.event_cap:
+    for bond in ctx.rng("conquest.order").shuffled(sorted(await active_bonds(ctx.session, [BondKind.RULES]), key=lambda item: item.id)):
+        if tally.events >= tally.event_cap:
             return
         pair = await communities_pair(ctx.session, bond)
         if pair is None:
@@ -163,8 +165,8 @@ async def migration_contact(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
     statement = select(BondRow).where(BondRow.kind == BondKind.MIGRATED_TO, BondRow.epoch >= ctx.epoch - table.migration_window).order_by(BondRow.id)
     communities = await canon(ctx.session, COMMUNITY_TYPES)
-    for bond in await ctx.session.scalars(statement):
-        if tally.events >= table.event_cap:
+    for bond in ctx.rng("migration.order").shuffled(await ctx.session.scalars(statement)):
+        if tally.events >= tally.event_cap:
             return
         migrants = await living_entity(ctx.session, bond.target_node_id)
         if migrants is None or migrants.entity_type not in COMMUNITY_TYPES or migrants.location_id is None:
@@ -214,7 +216,7 @@ async def trade_contact(ctx: TickContext, tally: ContactTally) -> None:
             continue
         await borrow(ctx, tally, lender_tongue, borrower_tongue, borrower.id, count=table.contact_words)
         tongues.update(dict.fromkeys((lender_tongue.id, borrower_tongue.id)))
-        if tally.events >= table.event_cap or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
+        if tally.events >= tally.event_cap or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
             continue
         if not rng.chance(table.trade_bilingual_chance):
             continue
@@ -239,7 +241,7 @@ async def plague_contact(ctx: TickContext, tally: ContactTally) -> None:
         if len(tongues) >= MINIMUM_BILINGUAL:
             minority = min(tongues, key=lambda item: (stat_or(item, "spread", 0), item.id))
             if (
-                tally.events < table.event_cap
+                tally.events < tally.event_cap
                 and ctx.rng(f"plague.{community.id}").chance(table.plague_shift_chance)
                 and await drop(ctx, community, minority, "plague")
             ):
@@ -284,8 +286,8 @@ async def birth_creole(ctx: TickContext, community: EntityRow, first: EntityRow,
 
 async def creole_round(ctx: TickContext, tally: ContactTally) -> None:
     table = ctx.rules.language_contact
-    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
-        if tally.creoles >= table.creole_cap or tally.events >= table.event_cap:
+    for community in ctx.rng("creole.order").shuffled(unheld(await canon(ctx.session, COMMUNITY_TYPES))):
+        if tally.creoles >= tally.creole_cap or tally.events >= tally.event_cap:
             return
         bonds = sorted(await active_bonds(ctx.session, [BondKind.SPEAKS], sources=[community.id]), key=lambda item: item.id)
         if len(bonds) < MINIMUM_BILINGUAL or ctx.epoch - max(bond.epoch for bond in bonds) < table.creole_epochs:
@@ -382,7 +384,13 @@ async def language_stats(ctx: TickContext) -> int:
     "table.name_registry",
 )
 async def language_contact(ctx: TickContext) -> None:
-    tally = ContactTally(loans_left=ctx.rules.language_contact.loan_cap)
+    table = ctx.rules.language_contact
+    communities = len(await canon(ctx.session, COMMUNITY_TYPES))
+    tally = ContactTally(
+        loans_left=table.loan_cap + table.loan_words_per_community * communities,
+        event_cap=scaled_cap(table.event_cap, table.event_communities_per_extra, communities),
+        creole_cap=scaled_cap(table.creole_cap, table.creole_communities_per_extra, communities),
+    )
     await conquest_contact(ctx, tally)
     await migration_contact(ctx, tally)
     await trade_contact(ctx, tally)

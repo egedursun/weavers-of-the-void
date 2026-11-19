@@ -6,7 +6,10 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class ReligionRules:
-    conversion_cap: int = rule(1, 0, 10, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum communities changing religion per epoch")
+    conversion_cap: int = rule(1, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum communities changing religion per epoch (base)")
+    conversion_cap_community_divisor: int = rule(
+        10, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "Religious conversion and syncretism caps grow by 1 for every this many communities (0: fixed)"
+    )
     seeker_pull_chance: int = rule(12, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "A god-seeking community converts to its neighbour's god (%)")
     conversion_chance_cap: int = rule(30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Cap of a religious conversion chance (%)")
     dominant_god_threshold_pct: int = rule(
@@ -24,7 +27,8 @@ class ReligionRules:
     preach_population_mult: int = rule(4, 1, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Preaching chance: followers / (population \u00d7 this number)")
     conversion_renown_divisor: int = rule(1500, 1, 1000000, RuleGroup.RELIGION_AND_LANGUAGE, "Conversion: renown difference between gods / this number")
     conversion_seeker_bonus_pct: int = rule(10, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Contribution of a god-seeking community to conversion (%)")
-    schism_cap: int = rule(1, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum cult schisms per epoch")
+    schism_cap: int = rule(1, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum cult schisms per epoch (base)")
+    schism_cap_cult_divisor: int = rule(10, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "Cult schism cap grows by 1 for every this many cults (0: fixed)")
     schism_top_pct: int = rule(50, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Cults that can split: the world's top X% most populous")
     schism_always_followers: int = rule(3000, 0, 10000000, RuleGroup.RELIGION_AND_LANGUAGE, "A cult with this many followers can always split")
     schism_min_age: int = rule(2, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Minimum age of a cult that can split (epochs)")
@@ -40,7 +44,7 @@ class ReligionRules:
     schism_split_pct: int = rule(30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Share of followers leaving in a split (%)")
     godlessness_piety: int = rule(35, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "A community below this piety may become godless")
     godlessness_chance: int = rule(15, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "A community with weak faith becomes godless (%)")
-    syncretism_cap: int = rule(1, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum communities adding a syncretic secondary god per epoch")
+    syncretism_cap: int = rule(1, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum communities adding a syncretic secondary god per epoch (base)")
     reverence_weight_pct: int = rule(
         50, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Weight of a syncretic secondary reverence compared with worship when counting a god's share (%)"
     )

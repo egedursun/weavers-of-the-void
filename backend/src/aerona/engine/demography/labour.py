@@ -43,13 +43,15 @@ from aerona.engine.polity.law_effects import feudal_levy
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 
 C = SocialClass
 J = Job
 LEVY_BASE = 10
 SEASON_SICK_PCT = 50
+PEOPLE_PER_THOUSAND = 1000
+MIDDLING_RICHNESS = 50
 AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBand.ADULT: 1.0, AgeBand.ELDER: 0.5})
 CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
     {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
@@ -165,8 +167,9 @@ class Plan:
 @dataclass(frozen=True)
 class Grounds:
     workshops: dict[WorkshopKind, int]
-    resources: list[tuple[Job, CommodityKind]]
+    resources: list[tuple[Job, CommodityKind, int]]
     coastal: bool
+    people: int = 0
 
 
 @memoized(WorkshopRow)
@@ -187,9 +190,9 @@ async def worked_resources(session: AsyncSession) -> dict[int, frozenset[int]]:
 
 
 @memoized(ResourceProfileRow)
-async def open_reserves(session: AsyncSession) -> dict[int, tuple[Job, CommodityKind]]:
+async def open_reserves(session: AsyncSession) -> dict[int, tuple[Job, CommodityKind, int]]:
     return {
-        profile.resource_entity_id: (KIND_JOBS[extraction_kind(profile)], profile.commodity)
+        profile.resource_entity_id: (KIND_JOBS[extraction_kind(profile)], profile.commodity, profile.richness)
         for profile in await session.scalars(select(ResourceProfileRow))
         if profile.revealed and profile.reserve > 0
     }
@@ -201,14 +204,14 @@ async def grounds_of(session: AsyncSession, community: EntityRow, region: Region
     worked = (await worked_resources(session)).get(community.id, frozenset())
     reserves = await open_reserves(session)
     resources = [reserves[resource_id] for resource_id in sorted(owned | worked) if resource_id in reserves]
-    return Grounds(workshops, resources, region is not None and region.coast_kind is not CoastKind.NONE)
+    return Grounds(workshops, resources, region is not None and region.coast_kind is not CoastKind.NONE, stat_or(community, "population", 0))
 
 
 def gate(plan: Plan, grounds: Grounds) -> None:
     for job, (fallback, structures) in GATED_JOBS.items():
         if plan.workers[job] <= 0:
             continue
-        resourced = any(target is job for target, _ in grounds.resources)
+        resourced = any(target is job for target, _, _ in grounds.resources)
         built = any(kind in grounds.workshops for kind in structures)
         if resourced or built or (job is J.FISHING and grounds.coastal):
             continue
@@ -217,10 +220,13 @@ def gate(plan: Plan, grounds: Grounds) -> None:
 
 def draw(rules: Rules, plan: Plan, grounds: Grounds) -> None:
     table = rules.labour
+    thousands = grounds.people / PEOPLE_PER_THOUSAND
+    per_level = table.workshop_workers_per_level + round_half_up(thousands * table.workshop_workers_per_thousand)
     for kind, level in sorted(grounds.workshops.items(), key=lambda item: item[0].value):
-        plan.move(J.FARMING, WORKSHOP_JOBS[kind], level * table.workshop_workers_per_level, LabourReason.STRUCTURE, workshop=kind)
-    for job, commodity in grounds.resources:
-        plan.move(J.FARMING, job, table.resource_workers, LabourReason.RESOURCE, commodity=commodity)
+        plan.move(J.FARMING, WORKSHOP_JOBS[kind], level * per_level, LabourReason.STRUCTURE, workshop=kind)
+    for job, commodity, richness in grounds.resources:
+        workers = round_half_up(table.resource_workers * richness / MIDDLING_RICHNESS + thousands * table.resource_workers_per_thousand)
+        plan.move(J.FARMING, job, workers, LabourReason.RESOURCE, commodity=commodity)
 
 
 def job_pull(prices: Mapping[CommodityKind, int], job: Job) -> int:

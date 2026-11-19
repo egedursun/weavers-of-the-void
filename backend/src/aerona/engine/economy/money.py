@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.materials import COIN_MATERIALS
 from aerona.catalog.money import MONEY_FORMS, REFORMS, issuer_kind_of
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.stored import stored_id
@@ -13,7 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.material import MaterialKind
@@ -34,7 +34,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
@@ -155,7 +155,8 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
         currency = await found_currency(ctx, issuer, lot.material)
     if not MONEY_FORMS[currency.form].uses_metal:
         return
-    units = min(lot.quantity, table.mint_ore_units)
+    mint_works = book.workshop(issuer.id, WorkshopKind.MINT)
+    units = min(lot.quantity, table.mint_ore_units * (mint_works.level if mint_works is not None else 1))
     taken = await goods_of(ctx.session, ctx.epoch).take(issuer.id, CommodityKind.ORE, units, GoodsFlow.INPUT, material=lot.material)
     struck = sum(item.quantity for item in taken) * table.coins_per_unit * PERCENT // max(1, currency.purity)
     if not currency.held:
@@ -232,7 +233,7 @@ async def reform(ctx: TickContext, book: EconomyBook, currency: CurrencyRow, iss
     return True
 
 
-async def strain(ctx: TickContext, currency: CurrencyRow) -> None:
+async def strain(ctx: TickContext, currency: CurrencyRow, issuer: EntityRow) -> None:
     table = ctx.rules.money
     spec = MONEY_FORMS[currency.form]
     rng = ctx.rng(f"money.strain.{await stored_id(ctx.session, currency)}.{ctx.epoch}")
@@ -242,7 +243,7 @@ async def strain(ctx: TickContext, currency: CurrencyRow) -> None:
     if spec.intrusion and rng.chance(table.intrusion_chance):
         currency.supply = max(0, currency.supply - currency.supply * table.intrusion_supply_pct // PERCENT)
     if not spec.uses_metal:
-        currency.supply += table.issue_units
+        currency.supply += table.issue_units * max(1, stat_or(issuer, "population", 0) // PER_MILLE)
 
 
 async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
@@ -256,7 +257,7 @@ async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally
             continue
         if await reform(ctx, book, currency, issuer):
             tally.reformed += 1
-        await strain(ctx, currency)
+        await strain(ctx, currency, issuer)
         standing = currency.purity if MONEY_FORMS[currency.form].uses_metal else riches(issuer)
         anchor = await lagged(ctx, BalanceLoop.DEBASEMENT, issuer.id, standing, subject=currency.id)
         currency.trust = clamp_int(currency.trust + (anchor - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)

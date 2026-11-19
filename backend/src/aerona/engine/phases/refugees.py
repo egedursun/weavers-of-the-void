@@ -188,10 +188,7 @@ async def refugees(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     defeated = await defeated_this_epoch(ctx)
     sites = await disaster_sites(ctx)
-    fled = 0
     for community in await canon(ctx.session, SHELTER_TYPES):
-        if fled >= life.refugee_cap:
-            return
         population = stat(community, "population") or 0
         if community.status is not EntityStatus.CANON or population < life.refugee_min_population:
             continue
@@ -202,8 +199,7 @@ async def refugees(ctx: TickContext) -> None:
         count = round_half_up(population * rules.deep_world.refugee_share_pct / PERCENT)
         if count < life.refugee_min_people:
             continue
-        if await flee(ctx, atlas, community, count, cause=cause, destination=None, excluded=defeated) is not None:
-            fled += 1
+        await flee(ctx, atlas, community, count, cause=cause, destination=None, excluded=defeated)
 
 
 async def order_exodus(ctx: TickContext, origin_id: int, share_pct: int, destination_id: int | None = None) -> Exodus:

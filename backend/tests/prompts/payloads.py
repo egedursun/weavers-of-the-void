@@ -4,7 +4,7 @@ from aerona.prompts.ids import PromptId
 
 IMAGE = "A white salt cave lit by blue lamps, wide lens."
 POWER = {"name": "Salt Memory", "description": "Remembers every tide.", "effect": "essence_spring", "param": ""}
-EXISTENCE = {"nature": "brine", "state": "concrete", "manifestation": "a wet shadow", "true_name": "Oz"}
+EXISTENCE = {"nature": "brine", "state": "concrete", "manifestation": "a wet shadow"}
 NAMING_RULE = {"vowels": "aeo", "consonants": "kshrv", "syllable_patterns": ["CV"], "sample_names": ["Vesh", "Karo"]}
 SON = {
     "name": "Ozzeh",

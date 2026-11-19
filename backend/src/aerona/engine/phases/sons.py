@@ -11,6 +11,7 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -169,6 +170,9 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
 async def sons_renewal(ctx: TickContext) -> None:
     total = 0
     for son in await living_sons(ctx.session):
+        if held(son.id):
+            total += son.faith
+            continue
         son.chained = await council_chained(ctx, son.id)
         await wake_or_heal(ctx, son)
         faith = await son_faith(ctx.session, ctx.rules, son)

@@ -18,6 +18,12 @@ export const RING_GAP = 2.2
 export const RING_WIDTH = 2.6
 export const PORTRAIT_GAIN = 1.45
 const HALO_WIDTH = 3.2
+const MAJOR_TIERS: ReadonlySet<SettlementTier> = new Set<SettlementTier>([
+  'great_city',
+  'megacity',
+  'conurbation',
+  'capital',
+])
 const BADGE_HEIGHT = 13
 const BADGE_PAD = 4
 const BADGE_FONT = 9
@@ -87,7 +93,7 @@ export function settlementGlyph(
   const alpha = context.globalAlpha
   context.globalAlpha = alpha * (dead ? DEAD_ALPHA : 1)
   disc(context, radius, gold, halo, dead)
-  const major = tier === 'great_city' || tier === 'capital'
+  const major = MAJOR_TIERS.has(tier)
   if (major) {
     context.beginPath()
     context.arc(0, 0, radius + 2.2, 0, TAU)

@@ -17,6 +17,7 @@ from aerona.engine.communication.opinion import approval_of
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.mortal.justice import community_ruler
+from aerona.engine.operations.limits import realm_people
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.society import class_shares
@@ -172,7 +173,7 @@ async def elect(ctx: TickContext, book: RealmBook, laws: LawBook, realm: Realm, 
     if not force and last is not None and ctx.epoch - last < ctx.rules.affairs.election_epochs:
         return
     votes, turnout = await count_votes(ctx, book, realm, voters_of(laws, realm))
-    given = apportion(votes, ctx.rules.affairs.seats)
+    given = apportion(votes, max(ctx.rules.affairs.seats, round(await realm_people(ctx, realm.entity.id) ** (1 / 3))))
     winner = max(votes, key=lambda holder: (votes[holder], -holder)) if votes else None
     seats = await seat(ctx, realm, given, votes)
     total = sum(votes.values()) or 1.0

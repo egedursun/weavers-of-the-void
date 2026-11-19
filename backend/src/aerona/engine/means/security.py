@@ -23,7 +23,9 @@ from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import stat_or
 
+TEN_THOUSAND = 10000
 STORES = frozenset(
     {StructureKind.TEMPLE, StructureKind.LIBRARY, StructureKind.WAREHOUSE, StructureKind.GRANARY, StructureKind.BANK, StructureKind.MINT, StructureKind.ARCHIVE}
 )
@@ -74,7 +76,7 @@ async def secure_stores(ctx: TickContext, tally: SecurityTally) -> None:
                 lock=lock,
                 lock_quality=min(LOCKS[lock].quality, table.seed_quality) if lock is not None else 0,
                 sealed=sealed,
-                guards=table.seed_guards,
+                guards=table.seed_guards + table.guards_per_ten_thousand * stat_or(town, "population", 0) // TEN_THOUSAND,
                 since_epoch=ctx.epoch,
                 locked=[],
             )

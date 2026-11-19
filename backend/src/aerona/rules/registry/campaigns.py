@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 
 @dataclass(frozen=True)
-class CampaignsRules:
+class CampaignsRules(Spanned):
     cult_soldier_pct: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of followers joining a cult army (%)")
     faction_soldiers_per_strength: int = rule(60, 0, 10000, RuleGroup.WAR_AND_DIPLOMACY, "Faction army: soldiers per military-strength point")
     faction_soldiers_per_wealth: int = rule(20, 0, 10000, RuleGroup.WAR_AND_DIPLOMACY, "Faction army: soldiers per wealth point")
@@ -121,9 +121,7 @@ class CampaignsRules:
     battle_record_min_diff: int = rule(
         30, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Strength difference required for a separate battle record (sieges are always recorded)"
     )
-    battle_cap: int = rule(
-        6, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Maximum battles per epoch (in ongoing wars; a new war's first clash counts against new_war_cap)"
-    )
+    battle_cap: int = rule(12, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Most battles one war fights in an epoch")
     mobilization: int = rule(
         1,
         0,
@@ -131,7 +129,6 @@ class CampaignsRules:
         RuleGroup.WAR_AND_DIPLOMACY,
         "A new war's first epoch is mobilization: armies gather, first clash the next epoch (1: on, 0: clash in the epoch of declaration)",
     )
-    new_war_cap: int = rule(3, 0, 50, RuleGroup.WAR_AND_DIPLOMACY, "Maximum new wars per epoch (from enemy pairs; only below the war caps)")
     battle_chance: int = rule(70, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Enemies clash this epoch (%)")
     battle_chance_war_ban: int = rule(35, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Clash while a war ban is in effect (%)")
     omen_battle_pct: int = rule(
@@ -163,7 +160,7 @@ class CampaignsRules:
     ransom_chance: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A wealthy homeland pays ransom (%)")
     execution_chance: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A blood enemy executes the captive (%)")
     captive_defection_chance: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Switching sides after long captivity (%)")
-    seasons_per_war_epoch: int = rule(6, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Campaign seasons each active war lives through in one epoch")
+    seasons_per_war_epoch: int = rule(1, 0, 12, RuleGroup.WAR_AND_DIPLOMACY, "Campaign seasons an active war fights each year")
     season_engagement_pct: int = rule(35, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance that the armies meet in a fully fit campaign season (%)")
     footing_attack_pct: int = rule(30, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Attack power lost per point of bad footing (%)")
     visibility_attack_pct: int = rule(20, 0, 200, RuleGroup.WAR_AND_DIPLOMACY, "Attack power lost per point of poor visibility (%)")
@@ -179,3 +176,6 @@ class CampaignsRules:
     camp_disease_pct: int = rule(
         6, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Soldiers lost to camp fever per point of wet weather and disease load (hundredths of a percent)"
     )
+
+    def war_seasons(self) -> int:
+        return self.per_epoch(self.seasons_per_war_epoch)

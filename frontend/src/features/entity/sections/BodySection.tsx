@@ -109,7 +109,7 @@ type TreatmentStep = components['schemas']['TreatmentStep']
 
 const PERCENT = 100
 const FACTOR_MAX = 200
-const TEETH_MAX = 32
+const TEETH = 'teeth'
 const CONSCIOUSNESS_HOLD = 'consciousness'
 const SEVERITIES = ['1', '2', '3', '4', '5']
 const BY_BLOW = 'auto'
@@ -441,6 +441,7 @@ function DigitButton({
 
 function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
   const parts = new Set(body.parts.map((part) => part.key))
+  const teeth = body.parts.find((part) => part.key === TEETH)
   const limbs = LIMBS.filter((limb) => parts.has(limb.part))
   if (limbs.length === 0) return null
   const lost = body.digits.filter((digit) => digit.lost).length
@@ -457,9 +458,11 @@ function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
             ? `${plural(lost, 'digit', 'digits')} lost`
             : 'Every digit whole'}
         </Badge>
-        <Badge size='sm' variant='secondary'>
-          {`${body.teeth} of 32 teeth`}
-        </Badge>
+        {teeth && (
+          <Badge size='sm' variant='secondary'>
+            {`${body.teeth} of ${teeth.counted} teeth`}
+          </Badge>
+        )}
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-2'>
         {limbs.map((limb) => {
@@ -1135,6 +1138,7 @@ function Wounds({ body, blocked }: { body: Body; blocked: string | null }) {
 }
 
 function bodyGroups(body: Body): AdjustGroup[] {
+  const teeth = body.parts.find((part) => part.key === TEETH)
   return [
     {
       title: 'Capacities (% of a whole body)',
@@ -1201,13 +1205,17 @@ function bodyGroups(body: Body): AdjustGroup[] {
     {
       title: 'The body',
       fields: [
-        {
-          key: 'teeth',
-          label: bodyValueLabel('teeth'),
-          value: body.teeth,
-          min: 0,
-          max: TEETH_MAX,
-        },
+        ...(teeth
+          ? [
+              {
+                key: TEETH,
+                label: bodyValueLabel(TEETH),
+                value: body.teeth,
+                min: 0,
+                max: teeth.counted,
+              },
+            ]
+          : []),
         ...(body.hp_max !== null
           ? [
               {
@@ -1220,7 +1228,7 @@ function bodyGroups(body: Body): AdjustGroup[] {
           : []),
       ],
     },
-  ]
+  ].filter((group) => group.fields.length > 0)
 }
 
 function StrikeForm({ body, blocked }: { body: Body; blocked: string | null }) {

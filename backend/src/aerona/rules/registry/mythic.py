@@ -11,7 +11,7 @@ P = RuleGroup.THE_GODS_POWER
 @dataclass(frozen=True)
 class HeroquestRules:
     chance_pct: int = rule(3, 0, 100, H, "Chance a mortal of high renown and faith with a fitting legend undertakes a heroquest each epoch (%)")
-    per_epoch: int = rule(4, 0, 1000, H, "Heroquests begun each epoch at most")
+    per_epoch: int = rule(4, 0, 1000, H, "Heroquests begun on one world each epoch at most")
     renown_min: int = rule(40, 0, 100, H, "Renown a mortal needs before it may undertake a heroquest")
     piety_min: int = rule(40, 0, 100, H, "Piety of its community a quester needs")
     steps_min: int = rule(3, 1, 20, H, "Fewest steps of a heroquest")
@@ -49,7 +49,6 @@ class MantlingRules:
     weak_standing_max: int = rule(20, 0, 100, H, "Mean awe below which a god may be replaced")
     power_margin_pct: int = rule(10, 0, 200, H, "How much a mortal's might must exceed the weak god's for a replacement (%)")
     inherit_worship_pct: int = rule(50, 0, 100, H, "Share of the slain god's worshippers that follow the mortal who replaced it (%)")
-    candidates_max: int = rule(400, 0, 100000, H, "Mortals the mantling step weighs each epoch at most")
     deed_value: int = rule(10, 1, 100, H, "Reputation in a skill of a god's domains that counts as one deed on its path")
     oppose_pct: int = rule(20, 0, 100, H, "Chance a god set on preventing a mantling blocks the mortal each epoch (%)")
     cult_pct: int = rule(25, 0, 100, H, "Chance a community that holds a mortal on a god's path in high regard begins to worship it each epoch (%)")

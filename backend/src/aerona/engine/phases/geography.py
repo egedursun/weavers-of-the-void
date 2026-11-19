@@ -21,7 +21,7 @@ from aerona.engine.environment.places import write_kind
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
@@ -221,12 +221,14 @@ async def geography(ctx: TickContext) -> None:
         await ctx.session.scalars(select(EntityRow.location_id).where(EntityRow.entity_type == EntityType.PLACE, EntityRow.status == EntityStatus.CANON))
     )
     inhabited = {community.location_id for community in await canon(ctx.session, COMMUNITY_TYPES)}
-    empty = [region for region in await canon(ctx.session, [EntityType.REGION]) if region.id not in places]
-    empty.sort(key=lambda region: (region.id not in inhabited, region.id))
+    regions = await canon(ctx.session, [EntityType.REGION])
     rng = ctx.rng("seed")
+    empty = rng.shuffled(region for region in regions if region.id not in places)
+    empty.sort(key=lambda region: region.id not in inhabited)
+    cap = scaled_cap(settings.seed_cap, settings.seed_regions_per_extra, len(regions))
     seeded = 0
     for region in unheld(empty):
-        if seeded >= settings.seed_cap:
+        if seeded >= cap:
             break
         if not rng.chance(min(100, settings.seed_chance * (2 if region.id in inhabited else 1))):
             continue

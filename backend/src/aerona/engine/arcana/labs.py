@@ -101,7 +101,7 @@ async def study(ctx: TickContext, tally: StudyTally) -> None:
     studied = 0
     for text in list(await ctx.session.scalars(select(LabTextRow).order_by(LabTextRow.book_entity_id))):
         for reader in await readers_of(ctx, text.book_entity_id):
-            if studied >= ctx.rules.spell_grammar.learners_max:
+            if ctx.rules.spell_grammar.learners_max and studied >= ctx.rules.spell_grammar.learners_max:
                 return
             studied += 1
             tally.learned += int(await learn(ctx, reader, text))

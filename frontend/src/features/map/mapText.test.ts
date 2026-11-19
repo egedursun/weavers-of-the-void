@@ -4,7 +4,13 @@ import { type PositionedPoint } from './mapModel'
 import { type HitTarget } from './mapScene'
 import { hoverText } from './mapText'
 
-const THRESHOLDS = { town: 500, city: 2000, greatCity: 8000 }
+const THRESHOLDS = {
+  town: 500,
+  city: 2000,
+  greatCity: 8000,
+  megacity: 100000,
+  conurbation: 1000000,
+}
 const LABELS = new Map([['ruin', 'Ruin']])
 
 const POINTS = new Map<number, PositionedPoint>([

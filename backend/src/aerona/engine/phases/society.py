@@ -66,8 +66,6 @@ async def language_and_faith(ctx: TickContext) -> None:
     bound = 0
     atlas = await RegionAtlas.load(session)
     for community in await canon(session, COMMUNITY_TYPES):
-        if bound >= ctx.rules.society.language_faith_adopt_cap:
-            break
         if community.id in excluded:
             continue
         speaks = bool(await bonds.outgoing(community.id, BondKind.SPEAKS))
@@ -235,8 +233,6 @@ async def uprisings(ctx: TickContext) -> None:
     rng = ctx.rng("uprising")
     raised = 0
     for settlement in settlements:
-        if raised >= settings.poverty_revolt_cap:
-            break
         pressed = await pressures_of(session, settlement.id)
         town = await session.get(SettlementProfileRow, settlement.id)
         if town is not None:
@@ -304,7 +300,7 @@ async def love_and_rivalry(ctx: TickContext) -> None:
             for second in group[index + 1 :]:
                 if await bonds.exists_between(first.id, second.id, BondKind.LOVES) or await bonds.exists_between(first.id, second.id, BondKind.ENEMY):
                     continue
-                if not rng.chance(settings.love_rivalry_chance):
+                if not rng.chance(settings.over_epoch(settings.love_rivalry_chance)):
                     continue
                 love = rng.chance(settings.love_share_pct)
                 if love and not await may_wed(session, ctx.rules, first, second):

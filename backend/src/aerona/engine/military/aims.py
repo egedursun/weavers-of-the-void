@@ -20,6 +20,7 @@ from aerona.engine.agrarian.book import keystone_source
 from aerona.engine.collective.accounts import remember_loss
 from aerona.engine.context import TickContext
 from aerona.engine.economy.chokepoints import contested_route, route_term
+from aerona.engine.economy.purse import coin_of, give_coin, take_coin, wealth_points
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_terms, record
 from aerona.engine.military.war_costs import peace_budget, term_cost
@@ -29,10 +30,9 @@ from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.regard import on_conquest
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import change_religion
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import move_stat
 from aerona.engine.services.war import held_captive, take_captive
 
 A = WarAimKind
@@ -132,7 +132,7 @@ async def aim_params(ctx: TickContext, kind: WarAimKind, side: EntityRow, enemy:
             god = await patron_node(ctx.session, side.id)
             params = {"god": god} if god is not None else {}
         case A.TRIBUTE:
-            params = {"amount": peace.reparations, "epochs": peace.treaty_epochs}
+            params = {"epochs": peace.treaty_epochs}
         case A.LOOT:
             params = {"amount": ctx.rules.siegecraft.sack_loot}
         case A.REVENGE:
@@ -239,10 +239,14 @@ async def reparation_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     peace = ctx.rules.peace
     if aim.achieved < peace.tribute_score:
         return None
-    amount = int(aim.params.get("amount", peace.reparations))
+    coin = await coin_of(ctx.session, ctx.rules, loser)
+    amount = min(coin, int(aim.params.get("amount", round_half_up(coin * peace.reparations / PERCENT))))
+    if amount <= 0 or not await take_coin(ctx.session, ctx.rules, loser, amount):
+        return None
+    await give_coin(ctx.session, ctx.rules, victor, amount)
     epochs = int(aim.params.get("epochs", 0))
-    move_stat(loser, victor, "wealth", amount)
-    params: dict[str, int | str | bool] = {"amount": amount, "epochs": epochs} if epochs else {"amount": amount}
+    flow = wealth_points(ctx.rules, amount)
+    params: dict[str, int | str | bool] = {"amount": flow, "epochs": epochs} if epochs else {"amount": flow}
     return f"{loser.name} paid {amount} in reparations", Clause(ClauseKind.TRIBUTE, loser.id, victor.id, params)
 
 

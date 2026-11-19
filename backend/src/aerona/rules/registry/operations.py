@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 X = RuleGroup.EXPLORATION
@@ -30,8 +30,8 @@ class OrderOfBattleRules:
 
 @dataclass(frozen=True)
 class SupplyNetworkRules:
-    depot_capacity: int = rule(600, 0, 1000000, W, "Supplies a depot at home holds")
-    field_capacity: int = rule(200, 0, 1000000, W, "Supplies a field depot holds")
+    depot_capacity: int = rule(600, 0, 1000000, W, "Supplies a depot at home holds for every thousand people of its realm (at least this much)")
+    field_capacity: int = rule(200, 0, 1000000, W, "Supplies a field depot holds for every thousand soldiers of the army that founds it (at least this much)")
     field_hops: int = rule(3, 1, 50, W, "Regions an army may march from its nearest depot before it founds a field depot")
     draw_pct: int = rule(25, 0, 100, W, "Share of a realm's food stocks its depots draw in a campaign season (%)")
     need_per_hundred: int = rule(2, 0, 1000, W, "Supply points a hundred soldiers need each campaign season")
@@ -105,16 +105,18 @@ class AgeOfSailRules:
 
 
 @dataclass(frozen=True)
-class AdmiraltyRules:
+class AdmiraltyRules(Spanned):
     base_share: int = rule(25, 0, 100, P, "Share of a realm's war budget its admiralty asks for at first (%)")
     request_step: int = rule(5, 0, 50, P, "Share the admiralty asks for above or below its grant each epoch (%)")
     influence_skill_pct: int = rule(50, 0, 100, P, "Weight of the admiral's skill in the admiralty's sway in council (%)")
-    commission_share: int = rule(20, 1, 100, P, "Budget share that pays for one new ship each epoch (%)")
-    max_commissions: int = rule(2, 0, 20, P, "Most ships an admiralty orders in one epoch")
+    commission_share: int = rule(20, 1, 100, P, "Budget share that pays for one new ship each year (%)")
+    max_commissions: int = rule(2, 0, 1000, P, "Most ships an admiralty orders in one year")
     ship_cost: int = rule(400, 0, 1000000, P, "Coin a new ship costs its realm")
     ships_per_ten_thousand: int = rule(3, 0, 1000, P, "Ships an admiralty keeps afloat for every ten thousand of its realm's people")
     treaty_chance: int = rule(10, 0, 100, P, "Chance in an epoch that two great naval powers at peace bind their fleets by treaty (%)")
-    fleet_limit: int = rule(300, 0, 1000000, P, "Tonnage a fleet limit clause caps a realm at when it names none")
+    fleet_limit: int = rule(
+        300, 0, 1000000, P, "Tonnage a fleet limit clause caps a realm at for every ten thousand of its people when it names none (at least this much)"
+    )
     cheat_share: int = rule(50, 0, 100, P, "Disregard for law in its admiral at which an admiralty over its limit hides ships")
     discovery_chance: int = rule(15, 0, 100, P, "Chance in an epoch that a hidden fleet is found out by the treaty's other side (%)")
 
@@ -122,9 +124,10 @@ class AdmiraltyRules:
 @dataclass(frozen=True)
 class ExpeditionRules:
     launch_chance: int = rule(8, 0, 100, X, "Chance a free hero sets out on an expedition in an epoch (%)")
-    launches: int = rule(3, 0, 100, X, "Most expeditions that set out in one epoch")
+    launches: int = rule(3, 0, 10000, X, "Base of the most expeditions that set out in one epoch, grown by the number of leaders with companions")
+    launches_leader_divisor: int = rule(5, 0, 10000, X, "Leaders with companions per extra expedition setting out in one epoch (0: the cap stays at its base)")
     legs_per_epoch: int = rule(3, 1, 50, X, "Legs an expedition travels in one epoch")
-    party_size: int = rule(4, 1, 20, X, "Most companions a leader takes on an expedition")
+    party_size: int = rule(12, 1, 500, X, "Most companions a leader takes on an expedition")
     site_legs: int = rule(3, 1, 50, X, "Legs into a site")
     wilds_legs: int = rule(4, 1, 50, X, "Legs into the wilds")
     underworld_legs: int = rule(5, 1, 50, X, "Legs into an underworld stratum")

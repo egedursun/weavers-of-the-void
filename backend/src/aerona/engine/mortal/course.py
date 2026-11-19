@@ -406,7 +406,7 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
             partner is not None
             and partner_profile is not None
             and adult(partner_profile.life_stage)
-            and rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal))
+            and rng.chance(table.over_epoch(table.marriage_chance * await marriage_wish(ctx, mortal)))
         ):
             await marry(ctx.session, mortal, partner, ctx.epoch, purpose=UnionPurpose.ALLIANCE, description="as they were promised")
             await record(
@@ -427,7 +427,7 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         if await marriage_between(ctx.session, mortal.id, lover.id) is not None:
             continue
         plural = await plural_custom(ctx, mortal)
-        if (married and not plural) or not rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal)):
+        if (married and not plural) or not rng.chance(table.over_epoch(table.marriage_chance * await marriage_wish(ctx, mortal))):
             continue
         await marry(
             ctx.session, mortal, lover, ctx.epoch, form=UnionForm.PLURAL if married else UnionForm.PAIR, purpose=UnionPurpose.LOVE, description="for love"
@@ -457,7 +457,9 @@ async def plural_custom(ctx: TickContext, mortal: EntityRow) -> bool:
 
 
 async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:
-    if mortal.social_class is not SocialClass.NOBLE or not ctx.rng(seed_of("betroth", mortal.id, ctx.epoch)).chance(ctx.rules.kinship.betrothal_chance):
+    if mortal.social_class is not SocialClass.NOBLE or not ctx.rng(seed_of("betroth", mortal.id, ctx.epoch)).chance(
+        ctx.rules.kinship.over_epoch(ctx.rules.kinship.betrothal_chance)
+    ):
         return False
     for child_id in await children_of(ctx.session, mortal.id):
         child = await living_entity(ctx.session, child_id)

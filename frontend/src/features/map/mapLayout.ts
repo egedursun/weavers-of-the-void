@@ -60,7 +60,13 @@ export type HitTarget = {
   draggable: boolean
 }
 
-export type Thresholds = { town: number; city: number; greatCity: number }
+export type Thresholds = {
+  town: number
+  city: number
+  greatCity: number
+  megacity: number
+  conurbation: number
+}
 
 export type MarkerFilter = {
   hiddenTypes: ReadonlySet<string>
@@ -166,6 +172,8 @@ const TIER_LABEL_SIZE: Record<SettlementTier, number> = {
   town: 11,
   city: 12.5,
   great_city: 14,
+  megacity: 14.2,
+  conurbation: 14.4,
   capital: 14.5,
 }
 const TYPE_RANK: Record<string, number> = {

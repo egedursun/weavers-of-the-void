@@ -81,7 +81,7 @@ async def keep_taverns(ctx: TickContext, tally: TownLifeTally) -> None:
         if "patrons" not in row.locked:
             row.patrons = round_half_up(stat_or(town, "population", 0) * table.patrons_pct / PERCENT)
         if profile.kind is StructureKind.INN and "lodging" not in row.locked:
-            row.lodging = table.lodging_per_inn
+            row.lodging = table.per_epoch(table.lodging_per_inn)
             shift_stat(town, "prosperity", row.lodging / THOUSAND, low=0, high=PERCENT)
         rng = ctx.rng(seed_of("tavern", profile.structure_entity_id, ctx.epoch))
         if folk and rng.chance(table.brawl_chance):
@@ -110,7 +110,7 @@ async def keep_welfare(ctx: TickContext, tally: TownLifeTally) -> None:
             ctx.session.add(row)
         poverty = (await pressures_of(ctx.session, town.id)).get(PressureKind.POVERTY, 0)
         if "inmates" not in row.locked:
-            row.inmates = round_half_up(table.inmates_per_house * poverty / PERCENT)
+            row.inmates = round_half_up(table.inmates_per_house * stat_or(town, "population", 0) / THOUSAND * poverty / PERCENT)
         if "upkeep" not in row.locked:
             row.upkeep = round_half_up(row.inmates * table.upkeep_per_inmate / PERCENT)
         patron = await ctx.session.get(EntityRow, row.patron_node_id) if row.patron_node_id is not None else None

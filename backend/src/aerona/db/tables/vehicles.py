@@ -22,7 +22,7 @@ class DesignSectionRow(Base):
         between("share", 0, PERCENT_MAX),
         between("exposure", 0, PERCENT_MAX),
         between("armour", PERCENT_MIN, PERCENT_MAX),
-        between("size", 0, 10),
+        at_least("size", 0),
         between("quality", PERCENT_MIN, PERCENT_MAX),
     )
 

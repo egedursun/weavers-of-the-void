@@ -231,7 +231,7 @@ async def test_debts_are_counted_in_the_creditors_coin(session: AsyncSession, wo
 
 
 async def test_every_debt_law_settles_debts_its_own_way(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(market={"debt_forgive_relation": 100, "debt_ending_cap": 10})
+    rules = tuned_rules(market={"debt_forgive_relation": 100})
     ctx = await manual_context(session, "law", rules)
     outcomes: dict[DebtRemedy, BondRow] = {}
     for index, remedy in enumerate(DebtRemedy):

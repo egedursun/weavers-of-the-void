@@ -138,9 +138,8 @@ async def state_triggers(ctx: TickContext, town: EntityRow, profile: SettlementP
     table = ctx.rules.collective_behaviour
     found: set[CollectiveTrigger] = set()
     society = await ctx.session.get(CommunitySocietyRow, town.id)
-    people = max(1, population_of(town))
     if society is not None:
-        if await stock(ctx.session, ctx.rules, town.id, Commodity.FOOD) * PERCENT / people < table.famine_food:
+        if await stock(ctx.session, ctx.rules, town.id, Commodity.FOOD) < table.famine_food:
             found.add(T.FAMINE)
         if society.price_food >= table.price_spike:
             found.add(T.PRICE_SPIKE)
@@ -178,14 +177,12 @@ async def state_triggers(ctx: TickContext, town: EntityRow, profile: SettlementP
 
 
 async def conformity_of(ctx: TickContext, town: EntityRow) -> float:
-    mortals = list(
-        await ctx.session.scalars(
-            select(EntityRow.id)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [town.id]))
-            .order_by(EntityRow.id)
-            .limit(MOOD_SAMPLE)
-        )
+    everyone = await ctx.session.scalars(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [town.id]))
+        .order_by(EntityRow.id)
     )
+    mortals = ctx.rng(f"crowd.mood.{town.id}.{ctx.epoch}").sample(list(everyone), MOOD_SAMPLE)
     if not mortals:
         return 0.0
     summed = 0.0

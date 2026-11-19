@@ -48,7 +48,7 @@ from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex, change_religion, faith_dominance, faith_shares
-from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, round_half_up
+from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -57,6 +57,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import lend_settlement_values
 from aerona.engine.services.war import declare_war
 from aerona.rules.registry import Rules
+from aerona.rules.registry.religion import ReligionRules
 
 SCHISM_SUFFIX = "Schismatics"
 SCHISM_SUBTYPE = "separatist sect"
@@ -194,8 +195,9 @@ async def schisms(ctx: TickContext) -> None:
     sons = list(faith.sons.values())
     rng = ctx.rng("schism")
     split = 0
-    for cult in unheld(cults):
-        if split >= settings.schism_cap:
+    cap = scaled_cap(settings.schism_cap, settings.schism_cap_cult_divisor, len(cults))
+    for cult in rng.shuffled(unheld(cults)):
+        if split >= cap:
             break
         heretical = await drifted(ctx, cult.id)
         if not heretical and not schism_eligible(ctx, cult, threshold(cult)):
@@ -537,6 +539,11 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.memories",
     "table.reverences",
 )
+def spread_caps(settings: ReligionRules, communities: int) -> tuple[int, int]:
+    divisor = settings.conversion_cap_community_divisor
+    return scaled_cap(settings.conversion_cap, divisor, communities), scaled_cap(settings.syncretism_cap, divisor, communities)
+
+
 def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, community: EntityRow, god_id: int) -> float:
     return 1 + dominion.share(atlas.top_region(community.id), god_id) * ctx.rules.dominion.conversion_pct / PERCENT / PERCENT
 
@@ -608,12 +615,11 @@ async def religion_spread(ctx: TickContext) -> None:
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
     creator_id, dominion = await NodeRepository(session).creator_id(), await DominionBook.load(session)
-    rng = ctx.rng("spread")
-    laws = await LawBook.load(session)
-    free_pairs = await clause_pairs(session, ClauseKind.RELIGIOUS_FREEDOM)
+    rng, laws, free_pairs = ctx.rng("spread"), await LawBook.load(session), await clause_pairs(session, ClauseKind.RELIGIOUS_FREEDOM)
     conversions = syncretisms = 0
-    for community in world.communities:
-        if conversions >= settings.conversion_cap and syncretisms >= settings.syncretism_cap:
+    conversion_cap, syncretism_cap = spread_caps(settings, len(world.communities))
+    for community in ctx.rng("order").shuffled(world.communities):
+        if conversions >= conversion_cap and syncretisms >= syncretism_cap:
             break
         if community.status is not EntityStatus.CANON or held(community.id):
             continue
@@ -632,7 +638,7 @@ async def religion_spread(ctx: TickContext) -> None:
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)
-        if (syncretisms if syncretic else conversions) >= (settings.syncretism_cap if syncretic else settings.conversion_cap):
+        if (syncretisms if syncretic else conversions) >= (syncretism_cap if syncretic else conversion_cap):
             continue
         if not await change_religion(ctx.session, community, chosen.god_id, ctx.epoch, chosen.reason, syncretic=syncretic, faith=faith):
             continue

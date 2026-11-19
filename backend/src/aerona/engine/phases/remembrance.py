@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from sys import maxsize
 
 from sqlalchemy import select
 
@@ -27,7 +28,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, living_patron
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import at_cap, clamp_int
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
@@ -216,7 +217,7 @@ async def war_monument(ctx: TickContext, scene: WarScene) -> EntityRow | None:
     )
     if builder is not None:
         await connect(ctx.session, builder.id, monument.id, BondKind.BUILT, ctx.epoch, description=f"in memory of {scene.name}")
-    await _tell(ctx, monument, [scene.event.id, *scene.fallen], "remembers")
+    await _tell(ctx, monument, [scene.event.id, *scene.fallen], "marks")
     return monument
 
 
@@ -265,14 +266,14 @@ async def peace_oath(ctx: TickContext, scene: WarScene) -> EntityRow:
         MemorialForm.TRADITION,
         f"{scene.name} Peace Oath",
         "peace oath",
-        f"When {scene.name} ended with no victor, {names} swore to keep the peace and remember their dead together.",
+        f"When {scene.name} ended with no victor, {names} swore to keep the peace.",
         location_id=None,
         world_id=scene.event.world_id,
     )
     living = [side for side in scene.sides if side.status is EntityStatus.CANON]
     for side in living:
         await connect(ctx.session, side.id, oath.id, BondKind.CELEBRATES, ctx.epoch)
-    await _tell(ctx, oath, [scene.event.id, *scene.fallen], "remembers the peace of")
+    await _tell(ctx, oath, [scene.event.id, *scene.fallen], "marks the peace of")
     if len(living) == len(scene.sides) == 2:
         await change_relation(
             ctx, scene.sides[0].id, scene.sides[1].id, ctx.rules.remembrance.peace_oath_warmth, MemoryKind.KEPT_OATH, note=f"{scene.name} peace oath"
@@ -336,7 +337,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
             world_id=event.world_id,
         )
         await connect(ctx.session, keeper.id, monument.id, BondKind.BUILT, ctx.epoch, description=f"in memory of {name}")
-        await _tell(ctx, monument, [event.id], "remembers")
+        await _tell(ctx, monument, [event.id], "marks")
         return [monument.id]
     if choice is MemorialForm.TRADITION and keeper is not None:
         day = await memorial(
@@ -344,13 +345,13 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
             MemorialForm.TRADITION,
             f"{name} Remembrance",
             "day of remembrance",
-            f"Each year on the day of {name}, {keeper.name} remembers its dead.",
+            f"Each year on the day of {name}, {keeper.name} marks what befell it.",
             location_id=None,
             world_id=event.world_id,
         )
         for community in struck[: settings.fallen_named]:
             await connect(ctx.session, community.id, day.id, BondKind.CELEBRATES, ctx.epoch)
-        await _tell(ctx, day, [event.id], "remembers")
+        await _tell(ctx, day, [event.id], "marks")
         return [day.id]
     tale = await memorial(
         ctx,
@@ -432,7 +433,7 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
         )
         if home is not None:
             await connect(ctx.session, home.id, entry.id, BondKind.TELLS_OF, ctx.epoch, description="tells the saga")
-    await _tell(ctx, entry, [mortal.id], "remembers")
+    await _tell(ctx, entry, [mortal.id], "marks")
     return [entry.id]
 
 
@@ -440,7 +441,7 @@ async def wars_remembered(ctx: TickContext, budget: int) -> int:
     settings = ctx.rules.remembrance
     rng = ctx.rng("wars")
     made = 0
-    for war in await ctx.session.scalars(select(WarRow).where(WarRow.ended_epoch == ctx.epoch - 1).order_by(WarRow.id)):
+    for war in ctx.rng("wars.order").shuffled(await ctx.session.scalars(select(WarRow).where(WarRow.ended_epoch == ctx.epoch - 1).order_by(WarRow.id))):
         if made >= budget:
             break
         if await is_remembered(ctx, war.event_entity_id):
@@ -488,12 +489,14 @@ async def disasters_remembered(ctx: TickContext, budget: int) -> int:
         .where(EntityRow.entity_type == EntityType.EVENT, EntityRow.birth_epoch == ctx.epoch - 1, EntityRow.engine_kind.in_(list(DISASTER_KINDS)))
         .order_by(EntityRow.id)
     )
-    for event in list(events):
+    for event in ctx.rng("disasters.order").shuffled(events):
         if made >= budget:
             break
         if await is_remembered(ctx, event.id):
             continue
-        toll, _ = await disaster_toll(ctx, event)
+        toll, struck = await disaster_toll(ctx, event)
+        if held(event.id, *(community.id for community in struck)):
+            continue
         if (stat(event, "severity") or 0) < settings.disaster_severity and toll < settings.disaster_losses:
             continue
         if not rng.chance(settings.disaster_chance):
@@ -520,7 +523,7 @@ async def heroes_remembered(ctx: TickContext, budget: int) -> int:
         .order_by(EntityRow.id)
     )
     flagged = {flag: await flags_by_entity(ctx.session, flag) for flag in sorted(HERO_FLAGS)}
-    for mortal in unheld(list(dead)):
+    for mortal in ctx.rng("heroes.order").shuffled(unheld(list(dead))):
         if made >= budget:
             break
         flags = {flag for flag, holders in flagged.items() if mortal.id in holders}
@@ -569,7 +572,7 @@ async def plague_faith(ctx: TickContext) -> int:
         _, struck = await disaster_toll(ctx, plague)
         name = plain_name(plague.name)
         for community in struck:
-            if shaken >= settings.plague_cap:
+            if at_cap(shaken, settings.plague_cap):
                 return shaken
             if community.id in seen or community.entity_type is EntityType.FACTION:
                 continue
@@ -694,7 +697,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.structure_profiles",
 )
 async def remembrance(ctx: TickContext) -> None:
-    cap = ctx.rules.remembrance.epoch_cap
+    cap = ctx.rules.remembrance.epoch_cap or maxsize
     made = await wars_remembered(ctx, cap)
     made += await disasters_remembered(ctx, cap - made)
     made += await heroes_remembered(ctx, cap - made)
@@ -724,7 +727,7 @@ async def commemorate(ctx: TickContext, target_id: int, form: MemorialForm) -> l
         memory = await remember_war(ctx, war, MemorialForm.EPIC if form is MemorialForm.TALE else form)
         if war_event_id != target.id:
             for record_id in memory.ids:
-                await BondRepository(ctx.session).connect(BondDraft(record_id, target.id, BondKind.TELLS_OF, ctx.epoch, "remembers"))
+                await BondRepository(ctx.session).connect(BondDraft(record_id, target.id, BondKind.TELLS_OF, ctx.epoch, "marks"))
         if not memory.ids:
             raise ValidationFailedError(f"No place was found to raise a memorial for {target.name}.")
         return memory.ids

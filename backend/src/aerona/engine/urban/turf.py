@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from math import ceil
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,14 +75,15 @@ async def tend(ctx: TickContext, row: TurfRow, tally: TurfTally) -> None:
         tally.lost += 1
 
 
-async def casualties(ctx: TickContext, faction_id: int, count: int) -> int:
+async def casualties(ctx: TickContext, faction_id: int, share_pct: int) -> int:
     dead = 0
     members = list(
         await ctx.session.scalars(
             select(FactionMembershipRow).where(FactionMembershipRow.faction_entity_id == faction_id).order_by(FactionMembershipRow.mortal_entity_id)
         )
     )
-    for member in members[:count]:
+    count = max(1, ceil(len(members) * share_pct / PERCENT)) if share_pct > 0 else 0
+    for member in ctx.rng(f"turf_dead.{faction_id}").shuffled(members)[:count]:
         mortal = await ctx.session.get(EntityRow, member.mortal_entity_id)
         if mortal is not None and not held(mortal.id) and await slay(ctx, mortal, Harm(ctx.rules.casualties.wound_hp, HarmCause.DUEL, TURF_DEATH)):
             dead += 1

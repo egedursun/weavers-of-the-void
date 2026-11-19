@@ -40,7 +40,7 @@ from aerona.domain.enums.urban import (
 from aerona.domain.models.entity_stats import FactionStats, StructureStats, TradeRouteStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.cargo import carriage_factor, spoilage
-from aerona.engine.economy.convoys import ConvoyTally, dispatch, fate_of, fleet_capacity, wear_fleets
+from aerona.engine.economy.convoys import ConvoyTally, convoys_wanted, dispatch, fate_of, fleet_capacity, split_cargo, split_evenly, wear_fleets
 from aerona.engine.economy.manipulation import swing
 from aerona.engine.factions.crime import CrimeTally, bear_stances, keep_rackets
 from aerona.engine.factions.mage_orders import OrderTally, try_member
@@ -54,6 +54,7 @@ from aerona.engine.urban.desirability import DesirabilityTally, assess_town, lan
 from aerona.engine.urban.housing import HousingTally, clear_slums, house_town, step_home
 from aerona.engine.urban.morphology import grow_rings, replan, siege_of, spread_of
 from aerona.engine.urban.turf import TurfTally, hold_turf
+from aerona.rules.registry import Rules
 from aerona.services.integrity.urban_links import mend_urban_links
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
@@ -218,6 +219,18 @@ async def test_convoys_carry_their_route_and_fleets_wear(session: AsyncSession, 
     before = fleet_capacity(ctx.rules, fleet)
     await wear_fleets(ctx, tally)
     assert fleet.condition < 100 and fleet_capacity(ctx.rules, fleet) <= before
+
+
+def test_a_busy_route_splits_its_goods_over_convoys_without_making_or_losing_any() -> None:
+    rules = Rules()
+    cargo = {"grain": 2501, "timber": 7, "ore": 0}
+    loads = split_cargo(cargo, 3)
+    assert len(loads) == 3
+    assert {kind: sum(load.get(kind, 0) for load in loads) for kind in cargo} == cargo
+    assert sum(split_evenly(10, 4)) == 10 and max(split_evenly(10, 4)) - min(split_evenly(10, 4)) <= 1
+    assert convoys_wanted(rules, {}) == 1
+    assert convoys_wanted(rules, {"grain": rules.convoys.traffic_per_convoy * 3}) == 3
+    assert convoys_wanted(rules, {"grain": 10**9}) == rules.convoys.per_epoch(rules.convoys.per_route)
 
 
 async def test_repairs_drop_the_turf_of_vanished_organisations(session: AsyncSession, world: CoreWorld) -> None:

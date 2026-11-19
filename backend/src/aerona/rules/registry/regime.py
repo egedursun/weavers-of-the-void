@@ -105,7 +105,7 @@ class ClientelismRules:
 @dataclass(frozen=True)
 class VenalityRules:
     sell_pct: int = rule(10, 0, 100, P, "Chance each epoch an indebted or short-sighted realm sells an office (%)")
-    base_price: int = rule(300, 0, 1000000, P, "Price of an office sold by a realm")
+    base_price: int = rule(300, 0, 1000000, P, "Price of an office sold by a realm for every ten thousand of its people (at least this much)")
     recoup_pct: int = rule(20, 0, 100, P, "Share of its price a bought office yields its buyer each epoch (%)")
     recoup_cap_pct: int = rule(200, 0, 1000, P, "Share of its price a bought office yields before its buyer is content (%)")
     corruption: int = rule(3, 0, 100, P, "Corruption each bought office still recouping adds")
@@ -123,7 +123,9 @@ class PowerBaseRules:
     defy_at: int = rule(40, 0, 100, P, "Threat at which a character defies the ruler")
     extort_at: int = rule(60, 0, 100, P, "Threat at which a character extorts the ruler")
     plot_at: int = rule(80, 0, 100, P, "Threat at which a character plots to take the throne")
-    extortion: int = rule(100, 0, 1000000, P, "Coin an extorting character wrings from the treasury each epoch")
+    extortion: int = rule(
+        100, 0, 1000000, P, "Coin an extorting character wrings from the treasury each epoch for every ten thousand people of the realm (at least this much)"
+    )
     defiance_stability: int = rule(3, 0, 100, P, "Stability a realm loses for each defiant character")
     counter_pct: int = rule(50, 0, 100, P, "Chance each epoch a ruler answers a plotting subject by marriage, split command or purge (%)")
     marriage_cut: int = rule(30, 0, 100, P, "Threat a marriage between the ruler's kin and a plotting subject's kin takes away")
@@ -136,7 +138,7 @@ class CoupProofingRules:
     adopt_pct: int = rule(40, 0, 100, P, "Chance each epoch an insecure ruler takes up one more measure (%)")
     coup_cut: int = rule(20, 0, 100, P, "Share of the chance of a coup each measure takes away (%)")
     morale_cut: int = rule(10, 0, 100, P, "Share of its morale an army loses while its commanders are rotated (%)")
-    guard_upkeep: int = rule(80, 0, 1000000, P, "Coin a parallel guard costs each epoch")
+    guard_upkeep: int = rule(80, 0, 1000000, P, "Coin a parallel guard costs each epoch for every ten thousand people of the realm (at least this much)")
     hostage_cap: int = rule(60, 0, 100, P, "Threat to which hostages hold a powerful character's ambitions")
 
 

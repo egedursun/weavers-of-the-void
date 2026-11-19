@@ -4,7 +4,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 
 from aerona.catalog.vehicles import FRAMES
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.economy import TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +14,7 @@ from aerona.db.tables.vehicles import DesignTechniqueRow, VehicleGroupRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.domain.enums.vehicles import VehicleStatus
@@ -26,6 +26,7 @@ from aerona.engine.lore.research import techniques_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import headcount, stat_or
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.vehicles.caravans import carrier_design, carries, ground_of
 from aerona.engine.vehicles.fleet import land_cargo, role_design
@@ -72,7 +73,8 @@ async def buildable(ctx: TickContext, owner: EntityRow, design: DesignRow) -> bo
 async def build(ctx: TickContext, town: EntityRow, owner: EntityRow, design: DesignRow, *, points: int, tally: WorksTally) -> int:
     table = ctx.rules.vehicles
     each = max(1, design.cost // max(1, table.cost_per_point))
-    room = max(0, table.park_cap - await stocked(ctx, owner, design))
+    folk = stat_or(owner, "subjects", 0) if owner.entity_type is EntityType.POLITY else headcount(owner)
+    room = max(0, table.park_cap + table.park_per_thousand * folk // PER_MILLE - await stocked(ctx, owner, design))
     count = min(room, points // each)
     if count <= 0 or not await buildable(ctx, owner, design):
         return points

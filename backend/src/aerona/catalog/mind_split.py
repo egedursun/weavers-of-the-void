@@ -179,7 +179,7 @@ FACETS: MappingProxyType[Facet, FacetSpec] = MappingProxyType(
         F.CURIOSITY: FacetSpec("Curiosity", G.MIND, lean(knowledge=25, xenophilia=10), T.CURIOUS, T.INCURIOUS),
         F.ABSTRACTION: FacetSpec("Abstraction", G.MIND, lean(knowledge=20, tradition=-10), T.SCHOLARLY, T.ILLITERATE_PROUD),
         F.ARTISTIC_INCLINATION: FacetSpec("Artistic inclination", G.MIND, lean(artwork=25, craftsmanship=10)),
-        F.TOLERANCE_OF_DIFFERENCE: FacetSpec("Tolerance of strangeness", G.MIND, lean(xenophilia=20, purity=-15)),
+        F.TOLERANCE_OF_DIFFERENCE: FacetSpec("Tolerance of difference", G.MIND, lean(xenophilia=20, purity=-15)),
         F.HUMOUR: FacetSpec("Humour", G.MIND, lean(leisure=15, piety=-10)),
         F.SENSE_OF_DUTY: FacetSpec("Sense of duty", G.MIND, lean(loyalty=15, law=15, honour=10), T.JUST, T.ARBITRARY),
         F.GREED: FacetSpec("Greed", G.MIND, lean(wealth=25, mercy=-10), T.GREEDY, T.GENEROUS),

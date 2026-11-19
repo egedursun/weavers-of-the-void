@@ -429,10 +429,16 @@ async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount:
     due = ctx.epoch + civ.loan_term
     transfer(ctx.rules, lender, -lent)
     transfer(ctx.rules, borrower, lent)
-    await BondRepository(ctx.session).connect(
-        BondDraft(borrower.id, lender.id, BondKind.OWES, ctx.epoch, f"loan of {lent} {what}", debt_amount=lent, debt_what=what, debt_due_epoch=due)
-    )
     owes = next(iter(await active_bonds(ctx.session, [BondKind.OWES], sources=[borrower.id], targets=[lender.id])), None)
+    if owes is None:
+        await BondRepository(ctx.session).connect(
+            BondDraft(borrower.id, lender.id, BondKind.OWES, ctx.epoch, f"loan of {lent} {what}", debt_amount=lent, debt_what=what, debt_due_epoch=due)
+        )
+        owes = next(iter(await active_bonds(ctx.session, [BondKind.OWES], sources=[borrower.id], targets=[lender.id])), None)
+    else:
+        owes.debt_amount = (owes.debt_amount or 0) + lent
+        owes.debt_due_epoch = max(owes.debt_due_epoch or due, due)
+        owes.description = f"loan of {owes.debt_amount} {owes.debt_what or what}"
     if owes is not None and owes.debt_status is None:
         owes.debt_status = DebtStatus.OPEN
     await change_relation(ctx, lender.id, borrower.id, civ.loan_relation, MemoryKind.GIFTED_ME, note="loan")
@@ -446,33 +452,49 @@ async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount:
     return written.text
 
 
-async def _loan_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] | None:
+def may_lend(rules: Rules, lender: EntityRow) -> bool:
+    return (wealth_of(lender) or 0) >= rules.civilization.loan_lender_min and may(rules, lender, TierCapability.LOAN)
+
+
+def may_borrow(rules: Rules, borrower: EntityRow) -> bool:
+    return (wealth_of(borrower) or 0) <= rules.civilization.loan_borrower_max
+
+
+async def _loan_candidates(ctx: TickContext) -> list[tuple[EntityRow, EntityRow]]:
     civ = ctx.rules.civilization
     communities = [item for item in unheld(await canon(ctx.session, COMMUNITY_TYPES)) if wealth_key(item) is not None]
-    lenders = sorted(
-        (item for item in communities if (wealth_of(item) or 0) >= civ.loan_lender_min and may(ctx.rules, item, TierCapability.LOAN)),
-        key=lambda item: (-(wealth_of(item) or 0), item.id),
-    )
+    lenders = [item for item in communities if may_lend(ctx.rules, item)]
+    borrowers = [item for item in communities if may_borrow(ctx.rules, item)]
+    if not lenders or not borrowers:
+        return []
     atlas = await RegionAtlas.load(ctx.session)
-    bonds = BondRepository(ctx.session)
-    for lender in lenders:
-        for borrower in communities:
-            if borrower.id == lender.id or borrower.world_id != lender.world_id or (wealth_of(borrower) or 0) > civ.loan_borrower_max:
-                continue
-            if atlas.distance(lender.id, borrower.id) > civ.loan_distance or await bonds.exists_between(lender.id, borrower.id, BondKind.ENEMY):
-                continue
-            if await active_bonds(ctx.session, [BondKind.OWES], sources=[borrower.id], targets=[lender.id]):
-                continue
-            return lender, borrower
-    return None
+    enemies = {frozenset((bond.source_node_id, bond.target_node_id)) for bond in await active_bonds(ctx.session, [BondKind.ENEMY])}
+    owing = {(bond.source_node_id, bond.target_node_id) for bond in await active_bonds(ctx.session, [BondKind.OWES])}
+    return [
+        (lender, borrower)
+        for lender in lenders
+        for borrower in borrowers
+        if borrower.id != lender.id
+        and borrower.world_id == lender.world_id
+        and frozenset((lender.id, borrower.id)) not in enemies
+        and (borrower.id, lender.id) not in owing
+        and atlas.distance(lender.id, borrower.id) <= civ.loan_distance
+    ]
 
 
-async def spontaneous_loans(ctx: TickContext) -> None:
+async def spontaneous_loans(ctx: TickContext) -> int:
     await repayments(ctx)
     await late_debts(ctx)
-    candidate = await _loan_candidate(ctx)
-    if candidate is not None and ctx.rng("loan").chance(ctx.rules.civilization.loan_chance):
-        await lend(ctx, *candidate, ctx.rules.civilization.loan_amount)
+    civ = ctx.rules.civilization
+    helped: set[int] = set()
+    for lender, borrower in ctx.rng("loan.order").shuffled(await _loan_candidates(ctx)):
+        if borrower.id in helped or not may_lend(ctx.rules, lender) or not may_borrow(ctx.rules, borrower):
+            continue
+        if not ctx.rng(f"loan.{lender.id}.{borrower.id}").chance(civ.loan_chance):
+            continue
+        await lend(ctx, lender, borrower, civ.loan_amount)
+        helped.add(borrower.id)
+    return len(helped)
 
 
 def good_value(entity: EntityRow) -> int:
@@ -507,26 +529,35 @@ async def swap_goods(ctx: TickContext, first: EntityRow, second: EntityRow, firs
     return written.text
 
 
-async def _barter_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow, EntityRow, EntityRow] | None:
+async def _barter_goods(ctx: TickContext, first: EntityRow, second: EntityRow, moved: set[int]) -> tuple[EntityRow, EntityRow] | None:
     gap = ctx.rules.civilization.barter_max_value_diff
-    bonds = BondRepository(ctx.session)
-    for bond in await active_bonds(ctx.session, [BondKind.TRADES_WITH]):
-        first, second = await ctx.session.get(EntityRow, bond.source_node_id), await ctx.session.get(EntityRow, bond.target_node_id)
-        if first is None or second is None or first.id == second.id or first.status is not EntityStatus.CANON or second.status is not EntityStatus.CANON:
+    theirs_all = [item for item in await owned_goods(ctx, second.id) if item.id not in moved]
+    for mine in await owned_goods(ctx, first.id):
+        if mine.id in moved:
             continue
-        if await bonds.exists_between(first.id, second.id, BondKind.ENEMY):
-            continue
-        for mine in await owned_goods(ctx, first.id):
-            theirs = next((item for item in await owned_goods(ctx, second.id) if abs(good_value(item) - good_value(mine)) <= gap), None)
-            if theirs is not None:
-                return first, second, mine, theirs
+        theirs = next((item for item in theirs_all if abs(good_value(item) - good_value(mine)) <= gap), None)
+        if theirs is not None:
+            return mine, theirs
     return None
 
 
-async def spontaneous_barter(ctx: TickContext) -> None:
-    candidate = await _barter_candidate(ctx)
-    if candidate is not None and ctx.rng("barter").chance(ctx.rules.civilization.barter_chance):
-        await swap_goods(ctx, *candidate)
+async def spontaneous_barter(ctx: TickContext) -> int:
+    enemies = {frozenset((bond.source_node_id, bond.target_node_id)) for bond in await active_bonds(ctx.session, [BondKind.ENEMY])}
+    moved: set[int] = set()
+    bartered = 0
+    for bond in ctx.rng("barter.order").shuffled(await active_bonds(ctx.session, [BondKind.TRADES_WITH])):
+        first, second = await ctx.session.get(EntityRow, bond.source_node_id), await ctx.session.get(EntityRow, bond.target_node_id)
+        if first is None or second is None or first.id == second.id or first.status is not EntityStatus.CANON or second.status is not EntityStatus.CANON:
+            continue
+        if held(first.id, second.id) or frozenset((first.id, second.id)) in enemies:
+            continue
+        goods = await _barter_goods(ctx, first, second, moved)
+        if goods is None or not ctx.rng(f"barter.{first.id}.{second.id}").chance(ctx.rules.civilization.barter_chance):
+            continue
+        await swap_goods(ctx, first, second, *goods)
+        moved.update(item.id for item in goods)
+        bartered += 1
+    return bartered
 
 
 async def adoption_custom(ctx: TickContext, adopter: EntityRow) -> AdoptionKind:
@@ -559,7 +590,26 @@ async def _orphan(ctx: TickContext, child: EntityRow) -> bool:
     return True
 
 
-async def _adoption_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] | None:
+async def _adopter_for(ctx: TickContext, child: EntityRow, mortals: list[EntityRow], atlas: RegionAtlas) -> EntityRow | None:
+    civ = ctx.rules.civilization
+    bonds = BondRepository(ctx.session)
+    for adopter in mortals:
+        if adopter.id == child.id or adopter.world_id != child.world_id or stat_or(adopter, AGE_KEY, 0) - stat_or(child, AGE_KEY, 0) < civ.adoption_min_age_gap:
+            continue
+        near = adopter.location_id == child.location_id and adopter.location_id is not None
+        if not near and atlas.distance(adopter.id, child.id) > civ.adoption_distance:
+            continue
+        if (
+            await bonds.exists_between(adopter.id, child.id, BondKind.PARENT_OF)
+            or await bonds.exists_between(adopter.id, child.id, BondKind.FOSTERED_BY)
+            or await bonds.exists_between(adopter.id, child.id, BondKind.ENEMY)
+        ):
+            continue
+        return adopter
+    return None
+
+
+async def spontaneous_adoption(ctx: TickContext) -> int:
     civ = ctx.rules.civilization
     captives = set(await ctx.session.scalars(select(CaptiveRow.captive_entity_id).where(CaptiveRow.status == CaptiveStatus.HELD)))
     mortals = [item for item in await canon(ctx.session, [EntityType.MORTAL]) if stat(item, AGE_KEY) is not None and item.id not in captives]
@@ -567,34 +617,16 @@ async def _adoption_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] |
         (item for item in mortals if stat_or(item, AGE_KEY, 0) <= civ.adoption_max_child_age), key=lambda item: (stat_or(item, AGE_KEY, 0), item.id)
     )
     atlas = await RegionAtlas.load(ctx.session)
-    bonds = BondRepository(ctx.session)
-    for child in children:
-        if not await _orphan(ctx, child):
+    adopted = 0
+    for child in ctx.rng("adoption.order").shuffled(children):
+        if held(child.id) or not ctx.rng(f"adoption.{child.id}").chance(civ.adoption_chance) or not await _orphan(ctx, child):
             continue
-        for adopter in mortals:
-            if (
-                adopter.id == child.id
-                or adopter.world_id != child.world_id
-                or stat_or(adopter, AGE_KEY, 0) - stat_or(child, AGE_KEY, 0) < civ.adoption_min_age_gap
-            ):
-                continue
-            near = adopter.location_id == child.location_id and adopter.location_id is not None
-            if not near and atlas.distance(adopter.id, child.id) > civ.adoption_distance:
-                continue
-            if (
-                await bonds.exists_between(adopter.id, child.id, BondKind.PARENT_OF)
-                or await bonds.exists_between(adopter.id, child.id, BondKind.FOSTERED_BY)
-                or await bonds.exists_between(adopter.id, child.id, BondKind.ENEMY)
-            ):
-                continue
-            return adopter, child
-    return None
-
-
-async def spontaneous_adoption(ctx: TickContext) -> None:
-    candidate = await _adoption_candidate(ctx)
-    if candidate is not None and ctx.rng("adoption").chance(ctx.rules.civilization.adoption_chance):
-        await adopt(ctx, *candidate)
+        adopter = await _adopter_for(ctx, child, mortals, atlas)
+        if adopter is None or held(adopter.id):
+            continue
+        await adopt(ctx, adopter, child)
+        adopted += 1
+    return adopted
 
 
 @dataclass(frozen=True)
@@ -655,21 +687,27 @@ async def _top_communities(ctx: TickContext, world_id: int) -> list[EntityRow]:
     return sorted(communities, key=lambda item: (-headcount(item), item.id))[: ctx.rules.civilization.treaty_candidates]
 
 
-async def spontaneous_treaty(ctx: TickContext) -> None:
+async def spontaneous_treaty(ctx: TickContext) -> int:
     book = await RouteBook.load(ctx.session, ctx.rules, ctx.epoch)
-    best: TreatyOffer | None = None
+    offers: dict[frozenset[int], TreatyOffer] = {}
     for route in book.open_known():
         if route.world_a_id == route.world_b_id:
             continue
         for first in await _top_communities(ctx, route.world_a_id):
             for second in await _top_communities(ctx, route.world_b_id):
-                if held(first.id, second.id):
+                pair = frozenset((first.id, second.id))
+                if pair in offers or held(first.id, second.id):
                     continue
                 offer = await _offer_for(ctx, first, second, method_label(route.method))
-                if offer is not None and (best is None or offer.relation > best.relation):
-                    best = offer
-    if best is not None and ctx.rng("treaty").chance(ctx.rules.civilization.treaty_chance):
-        await sign_treaty(ctx, best)
+                if offer is not None:
+                    offers[pair] = offer
+    signed = 0
+    for offer in ctx.rng("treaty.order").shuffled([offers[pair] for pair in sorted(offers, key=sorted)]):
+        if not ctx.rng(f"treaty.{offer.first.id}.{offer.second.id}").chance(ctx.rules.civilization.treaty_chance):
+            continue
+        await sign_treaty(ctx, offer)
+        signed += 1
+    return signed
 
 
 @reads(
@@ -770,10 +808,10 @@ async def civilization_phase(ctx: TickContext) -> None:
     await colony_independence(ctx)
     await federations(ctx)
     await previous_creations(ctx)
-    await spontaneous_loans(ctx)
-    await spontaneous_barter(ctx)
-    await spontaneous_adoption(ctx)
-    await spontaneous_treaty(ctx)
+    ctx.count("spontaneous_loans", await spontaneous_loans(ctx))
+    ctx.count("spontaneous_barters", await spontaneous_barter(ctx))
+    ctx.count("spontaneous_adoptions", await spontaneous_adoption(ctx))
+    ctx.count("spontaneous_treaties", await spontaneous_treaty(ctx))
     await ctx.session.flush()
 
 

@@ -31,11 +31,22 @@ def epochs_in(years: int, years_per_epoch: int) -> int:
     return ceil(years / max(1, years_per_epoch)) if years > 0 else 0
 
 
+def epoch_chance(yearly_pct: Number, years: int) -> float:
+    share = min(1.0, max(0.0, float(yearly_pct) / FULL_PROGRESS))
+    return FULL_PROGRESS * (1 - (1 - share) ** max(1, years))
+
+
 class Spanned:
     years_per_epoch: ClassVar[int] = EPOCH_YEARS
 
     def epochs(self, years: int) -> int:
         return epochs_in(years, self.years_per_epoch)
+
+    def over_epoch(self, yearly_pct: Number) -> float:
+        return epoch_chance(yearly_pct, self.years_per_epoch)
+
+    def per_epoch(self, yearly: Number) -> int:
+        return round(float(yearly) * self.years_per_epoch)
 
 
 def rule_meta(definition: Field[Any]) -> RuleMeta:

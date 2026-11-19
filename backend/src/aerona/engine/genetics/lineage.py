@@ -20,7 +20,7 @@ from aerona.domain.enums.polity import HouseTrait
 from aerona.engine.context import TickContext
 from aerona.engine.genetics.genome import genome_of, gifted_schools, phenotype
 from aerona.engine.genetics.life import TRAIT_ALLELES
-from aerona.engine.mind.preferences import rows_of, write_pref
+from aerona.engine.mind.preferences import rows_of, set_pref
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
@@ -79,20 +79,23 @@ async def tend_resemblance(ctx: TickContext, house: EntityRow, alive: list[Entit
 
 
 async def seed_looks(ctx: TickContext, people: EntityRow, pool: AllelePoolRow) -> int:
-    if any(row.kind is PreferenceKind.LOOKS for row in await rows_of(ctx.session, people.id)):
+    held_rows = await rows_of(ctx.session, people.id)
+    if any(row.kind is PreferenceKind.LOOKS for row in held_rows):
         return 0
     table = ctx.rules.preferences
+    rows = {(row.kind, row.target): row for row in held_rows}
     made = 0
     for locus in LOOKS_LOCI:
         found = pool.frequencies.get(locus.value) or {}
         if not found:
             continue
         ranked = sorted(found.items(), key=lambda item: (-item[1], item[0]))
-        await write_pref(ctx.session, people.id, PreferenceKind.LOOKS, f"{locus.value}:{ranked[0][0]}", table.seed_strength)
+        set_pref(ctx.session, rows, people.id, PreferenceKind.LOOKS, f"{locus.value}:{ranked[0][0]}", strength=table.seed_strength)
         made += 1
         if len(ranked) > 1:
-            await write_pref(ctx.session, people.id, PreferenceKind.LOOKS, f"{locus.value}:{ranked[-1][0]}", -table.seed_strength // 2)
+            set_pref(ctx.session, rows, people.id, PreferenceKind.LOOKS, f"{locus.value}:{ranked[-1][0]}", strength=-table.seed_strength // 2)
             made += 1
+    await ctx.session.flush()
     return made
 
 

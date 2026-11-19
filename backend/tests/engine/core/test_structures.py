@@ -38,10 +38,11 @@ from tests.engine.core.factories import CoreWorld, bond, entity, knowledge, sett
 
 CLASS_COUNT = 400
 BUILDERS = 100
+FEW_BUILDERS = 20
 DOTLESS = chr(0x131)
 
 
-async def staffed_town(session: AsyncSession, world: CoreWorld, *classes: SocialClass, population: int = 6000) -> EntityRow:
+async def staffed_town(session: AsyncSession, world: CoreWorld, *classes: SocialClass, population: int = 6000, builders: int = BUILDERS) -> EntityRow:
     town = await settlement(session, "Brookhold", world, world.regions[0], population=population, prosperity=80, piety=70)
     for social_class in classes:
         session.add(
@@ -55,7 +56,7 @@ async def staffed_town(session: AsyncSession, world: CoreWorld, *classes: Social
                 generation_epoch=0,
             )
         )
-    session.add(LabourRow(community_entity_id=town.id, job=Job.BUILDING, workers=BUILDERS, output_pct=100, epoch=1))
+    session.add(LabourRow(community_entity_id=town.id, job=Job.BUILDING, workers=builders, output_pct=100, epoch=1))
     await session.flush()
     return town
 
@@ -79,7 +80,7 @@ async def construction_of(session: AsyncSession, structure_id: int) -> Construct
 
 
 async def test_construction_takes_ages_and_progress_follows_workers_engineering_and_materials(ctx: TickContext, world: CoreWorld) -> None:
-    town = await staffed_town(ctx.session, world, SocialClass.PRIEST)
+    town = await staffed_town(ctx.session, world, SocialClass.PRIEST, builders=FEW_BUILDERS)
     await surveyed(ctx, town)
     await stocked(ctx, town, CommodityKind.STONE, CommodityKind.INCENSE)
     work, row = await begin(ctx, Commission(site=town, kind=StructureKind.TEMPLE, material=MaterialKind.STONE))
@@ -89,7 +90,7 @@ async def test_construction_takes_ages_and_progress_follows_workers_engineering_
     knowledge_map = await KnowledgeMap.load(ctx.session)
     added = await advance(ctx, row, active=1, knowledge=knowledge_map)
     table = ctx.rules.construction
-    workers = max(table.builder_floor, round(BUILDERS * table.worker_share_pct / 100))
+    workers = max(table.builder_floor, round(FEW_BUILDERS * table.worker_share_pct / 100))
     assert added == workers * table.worker_output
     assert row.materials_pct == 100 and 0 < profile.progress < 100
     while row.status is ConstructionStatus.ACTIVE:

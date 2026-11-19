@@ -171,6 +171,8 @@ export const SETTLEMENT_TIERS = [
   'town',
   'city',
   'great_city',
+  'megacity',
+  'conurbation',
   'capital',
 ] as const
 export type SettlementTier = (typeof SETTLEMENT_TIERS)[number]
@@ -180,6 +182,8 @@ export const TIER_LABEL: Record<SettlementTier, string> = {
   town: 'Town',
   city: 'City',
   great_city: 'Great city',
+  megacity: 'City of millions',
+  conurbation: 'Conurbation',
   capital: 'Capital',
 }
 
@@ -188,6 +192,8 @@ export const TIER_RADIUS: Record<SettlementTier, number> = {
   town: 8.5,
   city: 10,
   great_city: 12,
+  megacity: 12.5,
+  conurbation: 12.8,
   capital: 13,
 }
 
@@ -363,12 +369,20 @@ export function percentChange(population: number, previous: number): number {
 export function tierOf(
   view: MapView,
   entityId: number,
-  thresholds: { town: number; city: number; greatCity: number }
+  thresholds: {
+    town: number
+    city: number
+    greatCity: number
+    megacity: number
+    conurbation: number
+  }
 ): SettlementTier {
   const info = view.settlements[String(entityId)]
   if (info && (SETTLEMENT_TIERS as readonly string[]).includes(info.tier))
     return info.tier as SettlementTier
   const population = view.population[String(entityId)] ?? 0
+  if (population >= thresholds.conurbation) return 'conurbation'
+  if (population >= thresholds.megacity) return 'megacity'
   if (population >= thresholds.greatCity) return 'great_city'
   if (population >= thresholds.city) return 'city'
   if (population >= thresholds.town) return 'town'

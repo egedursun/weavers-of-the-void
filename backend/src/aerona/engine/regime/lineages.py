@@ -1,5 +1,6 @@
 from collections import Counter
 from dataclasses import dataclass
+from math import ceil
 
 from sqlalchemy import select
 
@@ -39,7 +40,6 @@ from aerona.engine.services.community_relations import change_relation
 
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
 DEPTH = 12
-MATCHES_PER_EPOCH = 2
 WEDDING_AGE = 16
 
 
@@ -211,9 +211,11 @@ async def steer(ctx: TickContext, plan: BreedingPlanRow, design: LongPlanRow, ta
     table = ctx.rules.breeding_plans
     members = await house_members(ctx, plan.house_entity_id)
     ids = {member.id for member in members}
+    unwed = [member for member in members if not held(member.id) and stat_or(member, "age", 0) >= WEDDING_AGE and not await spouses_of(ctx.session, member.id)]
+    most = ceil(len(unwed) * ctx.rules.scale.over_epoch(ctx.rules.scale.breeding_match_pct) / PERCENT)
     made = 0
-    for member in members:
-        if made >= MATCHES_PER_EPOCH or held(member.id) or stat_or(member, "age", 0) < WEDDING_AGE or await spouses_of(ctx.session, member.id):
+    for member in ctx.rng(f"breeding.order.{plan.plan_id}.{ctx.epoch}").shuffled(unwed):
+        if made >= most or await spouses_of(ctx.session, member.id):
             continue
         if await in_love(ctx, member.id) or ctx.rng(f"breeding.love.{plan.plan_id}.{member.id}.{ctx.epoch}").chance(table.love_pct):
             shift(plan, "love_matches", 1, high=10**6)

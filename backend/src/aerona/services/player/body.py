@@ -1,7 +1,7 @@
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, digit_keys, digit_label
+from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, digit_keys, digit_label, digit_part
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
@@ -47,7 +47,7 @@ from aerona.domain.enums.mind import KindFamily
 from aerona.engine.body.book import BODIED, Bearer, anatomy_for, ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
-from aerona.engine.body.digits import restore, sync
+from aerona.engine.body.digits import full_counts, replan, restore, sync
 from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, material_workability, mend
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS, Harm
 from aerona.engine.body.state import PAIN, refresh
@@ -56,7 +56,7 @@ from aerona.engine.lifecycle.wounds import apply_hits, wound_sentence
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 PART_PATTERN = r"^[a-z][a-z_]*$"
-COUNTS = tuple(part for part in FULL_COUNTS if part not in DIGIT_LIMBS)
+COUNTS = tuple(part for part in COUNTED_PARTS if part not in DIGIT_LIMBS)
 DIGITS = frozenset(key for part in DIGIT_LIMBS for key in digit_keys(part))
 VITALS = ("blood", "exertion")
 EDITABLE = (*CAPACITY_COLUMNS, *ARMOUR_COLUMNS, PAIN, *VITALS, *COUNTS, "hp_max")
@@ -325,6 +325,9 @@ async def set_digit(scope: PlayerScope, command: SetDigit) -> Effect:
     bearer = await bearer_of(scope, command.bearer_id)
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
+    limb = digit_part(command.digit)
+    if limb is None or full_counts(body)[limb] == 0:
+        raise ValidationFailedError(f"{bearer.name}'s body has no {_label(limb or command.digit)}.")
     lost = command.digit in body.lost_digits
     if lost == command.lost:
         raise ValidationFailedError(f"{bearer.name}'s {digit_label(command.digit)} is already {'lost' if lost else 'whole'}.")
@@ -491,8 +494,7 @@ async def set_plan(scope: PlayerScope, command: SetBodyPlan) -> Effect:
     bearer = await bearer_of(scope, command.bearer_id)
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
-    body.plan = command.plan
-    body.traits = sorted({trait.value for trait in command.traits})
+    replan(body, command.plan, sorted({trait.value for trait in command.traits}))
     if not isinstance(bearer, EntityRow) or bearer.entity_type is EntityType.MORTAL:
         await refresh(scope.session, scope.rules, bearer, epoch)
     return Effect(f"{bearer.name} now has {an(_label(command.plan.value))} body.", target_node_id=bearer.id)
@@ -513,7 +515,7 @@ async def set_body_value(scope: PlayerScope, command: SetBodyValue) -> Effect:
     bearer = await bearer_of(scope, command.bearer_id)
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
-    ceiling = FULL_COUNTS[command.field] if command.field in COUNTS else (PERCENT if command.field in (*ARMOUR_COLUMNS, PAIN, *VITALS) else None)
+    ceiling = full_counts(body)[command.field] if command.field in COUNTS else (PERCENT if command.field in (*ARMOUR_COLUMNS, PAIN, *VITALS) else None)
     value = min(command.value, ceiling) if ceiling is not None else command.value
     setattr(body, command.field, value)
     locked = set(body.locked)

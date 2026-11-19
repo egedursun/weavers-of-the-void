@@ -62,7 +62,7 @@ async def season_lines(scope: Scope, me: EntityRow) -> list[str]:
         )
         if forecast is not None:
             heeded = "your people heeded it and stored food" if forecast.heeded else "your people paid it little mind"
-            found.append(f"your people's scholars say it turns by epoch {forecast.predicted_end_epoch}; {heeded}")
+            found.append(f"your people expect it to turn by epoch {forecast.predicted_end_epoch}; {heeded}")
     return found
 
 

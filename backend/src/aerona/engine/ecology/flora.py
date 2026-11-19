@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -32,7 +32,7 @@ from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, Specie
 from aerona.engine.environment.weather import Weather
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
@@ -284,10 +284,11 @@ async def sow(ctx: TickContext, book: CropBook, atlas: RegionAtlas) -> dict[str,
                 counts["crops_dropped"] += 1
         counts["crop_shares_moved"] += rebalance(ctx.rules, book, region_id)
     spread = 0
-    for region_id in sorted(book.crops):
+    spread_of: Counter[int] = Counter()
+    for region_id in ctx.rng("flora.spread.order").shuffled(sorted(book.crops)):
         for row in list(book.crops[region_id]):
-            if spread >= table.spread_cap:
-                break
+            if spread_of[row.plant_entity_id] >= table.spread_cap:
+                continue
             for neighbour in atlas.neighbour_regions(region_id):
                 sown = book.crops.get(neighbour, [])
                 if held(neighbour) or len(sown) >= table.crop_cap or any(item.plant_entity_id == row.plant_entity_id for item in sown):
@@ -298,6 +299,7 @@ async def sow(ctx: TickContext, book: CropBook, atlas: RegionAtlas) -> dict[str,
                     add_crop(ctx, book, neighbour, row.plant_entity_id)
                     rebalance(ctx.rules, book, neighbour)
                     spread += 1
+                    spread_of[row.plant_entity_id] += 1
                     break
     counts["crops_spread"] = spread
     return counts
@@ -372,17 +374,13 @@ async def breed_cultivar(ctx: TickContext, book: CropBook, row: RegionCropRow, k
 async def breed_cultivars(ctx: TickContext, book: CropBook, atlas: RegionAtlas) -> int:
     table = ctx.rules.flora
     bred = 0
-    for region_id in sorted(book.crops):
+    most = scaled_cap(table.cultivar_cap, table.cultivar_lands_per_extra, len(book.crops))
+    for region_id in ctx.rng("flora.cultivar.order").shuffled(sorted(book.crops)):
         if held(region_id):
             continue
         for row in list(book.crops[region_id]):
             plant = book.plants.get(row.plant_entity_id)
-            if (
-                bred >= table.cultivar_cap
-                or plant is None
-                or plant.cultivation is not Cultivation.CULTIVATED
-                or ctx.epoch - row.since_epoch < table.cultivar_epochs
-            ):
+            if bred >= most or plant is None or plant.cultivation is not Cultivation.CULTIVATED or ctx.epoch - row.since_epoch < table.cultivar_epochs:
                 continue
             farmers = await farmers_in(ctx.session, atlas, region_id)
             if not farmers or await master_farmer(ctx.session, [item.id for item in farmers]) < table.cultivar_skill:

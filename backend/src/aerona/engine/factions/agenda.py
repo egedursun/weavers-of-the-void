@@ -42,7 +42,7 @@ from aerona.engine.polity.governance import consider
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import seize_throne
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -258,8 +258,9 @@ async def dues(ctx: TickContext, factions: FactionBook) -> None:
 async def pursue(ctx: TickContext, factions: FactionBook, realms: RealmBook, laws: LawBook) -> int:
     table = ctx.rules.factions
     acts = 0
-    for faction_id, profile in sorted(factions.profiles.items()):
-        if acts >= table.act_cap:
+    limit = scaled_cap(table.act_cap, table.act_cap_faction_divisor, len(factions.profiles))
+    for faction_id, profile in ctx.rng("faction_act.order").shuffled(sorted(factions.profiles.items())):
+        if acts >= limit:
             break
         if frozen(faction_id):
             continue

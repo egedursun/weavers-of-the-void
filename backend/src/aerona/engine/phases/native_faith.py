@@ -24,7 +24,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.faith import change_religion, patron_son
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import add_flag, canon, flags_by_entity, living_son, remove_flag
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
@@ -97,8 +97,10 @@ async def turn_natives(ctx: TickContext, god: ForeignGodRow, struck: set[int]) -
     turned = 0
     if held(god.id):
         return 0
-    for native in await canon(ctx.session, NATIVE_TYPES, god.world_id):
-        if turned >= table.turn_cap:
+    natives = ctx.rng(f"turn.order.{god.id}").shuffled(await canon(ctx.session, NATIVE_TYPES, god.world_id))
+    limit = scaled_cap(table.turn_cap, table.cap_community_divisor, len(natives))
+    for native in natives:
+        if turned >= limit:
             break
         if held(native.id) or native.id in colonies or await holds_god(ctx.session, native.id, god.id):
             continue
@@ -163,26 +165,26 @@ async def return_one(ctx: TickContext, believer: EntityRow, god: ForeignGodRow) 
 async def return_to_pantheon(ctx: TickContext, gods: list[ForeignGodRow]) -> int:
     table = ctx.rules.native_faith
     returned = 0
-    for god in unheld(gods):
-        believers = [*await worshippers(ctx.session, god.id), *await reverers(ctx.session, god.id)]
-        for believer in unheld(believers):
-            if returned >= table.return_cap:
-                return returned
-            multiplier = 1 if awake(god) else table.return_defeated_mult_pct / PERCENT
-            if not ctx.rng(f"return.{god.id}.{believer.id}").chance(table.return_chance * multiplier):
-                continue
-            how = await return_one(ctx, believer, god)
-            if how is None:
-                continue
-            god.stance = clamp_int(god.stance - table.stance_loss, RELATION_MIN, RELATION_MAX)
-            returned += 1
-            await record(
-                ctx,
-                "native_faith.returned",
-                roles={IncidentRole.SUBJECT: believer.id, IncidentRole.PREDECESSOR: god.id},
-                facts={"how": how},
-                kind=ChronicleKind.FOREIGN_GOD,
-            )
+    pairs = [(god, believer) for god in unheld(gods) for believer in unheld([*await worshippers(ctx.session, god.id), *await reverers(ctx.session, god.id)])]
+    limit = scaled_cap(table.return_cap, table.cap_community_divisor, len(pairs))
+    for god, believer in ctx.rng("return.order").shuffled(pairs):
+        if returned >= limit:
+            return returned
+        multiplier = 1 if awake(god) else table.return_defeated_mult_pct / PERCENT
+        if not ctx.rng(f"return.{god.id}.{believer.id}").chance(table.return_chance * multiplier):
+            continue
+        how = await return_one(ctx, believer, god)
+        if how is None:
+            continue
+        god.stance = clamp_int(god.stance - table.stance_loss, RELATION_MIN, RELATION_MAX)
+        returned += 1
+        await record(
+            ctx,
+            "native_faith.returned",
+            roles={IncidentRole.SUBJECT: believer.id, IncidentRole.PREDECESSOR: god.id},
+            facts={"how": how},
+            kind=ChronicleKind.FOREIGN_GOD,
+        )
     return returned
 
 

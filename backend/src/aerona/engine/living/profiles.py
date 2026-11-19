@@ -52,7 +52,7 @@ async def fed(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> bool
     town = await town_of(ctx, thing)
     if town is None or held(town):
         return False
-    wanted = row.feed_per_season * ctx.rules.living.seasons_per_epoch
+    wanted = row.feed_per_season * ctx.rules.living.seasons_in_epoch
     eaten = await goods_of(ctx.session, ctx.epoch).take_units(town, row.feed_commodity, wanted, GoodsFlow.INPUT)
     return eaten >= wanted
 
@@ -98,7 +98,11 @@ async def breed(ctx: TickContext, row: LivingProfileRow) -> None:
     if row.line_id is None or row.growth_stage is not GrowthStage.PRIME or row.fertility in {Fertility.STERILE, Fertility.NEEDS_MAKER}:
         return
     line = await ctx.session.get(LivingLineRow, row.line_id)
-    if line is None or held(row.thing_node_id) or not ctx.rng(f"living.breed.{row.thing_node_id}.{ctx.epoch}").chance(ctx.rules.living.breed_chance):
+    if (
+        line is None
+        or held(row.thing_node_id)
+        or not ctx.rng(f"living.breed.{row.thing_node_id}.{ctx.epoch}").chance(ctx.rules.living.over_epoch(ctx.rules.living.breed_chance))
+    ):
         return
     if "generation" not in line.locked:
         line.generation += 1
@@ -154,7 +158,7 @@ async def live(ctx: TickContext, row: LivingProfileRow, thing: EntityRow) -> Non
     eating = await fed(ctx, row, thing)
     healed = row.regeneration * table.regeneration_pct // PERCENT
     if row.metabolism is not Metabolism.DORMANT and "age_seasons" not in row.locked:
-        row.age_seasons += table.seasons_per_epoch
+        row.age_seasons += table.seasons_in_epoch
     traits = await traits_of(ctx.session, row.line_id)
     if "health" not in row.locked:
         hunger = eased(table.hunger_harm, traits.get(LineTrait.HARDINESS, 0))

@@ -9,9 +9,9 @@ G = RuleGroup.MIND
 @dataclass(frozen=True)
 class SocialRules:
     interactions_per_epoch: int = rule(6, 0, 30, G, "Interactions sampled each epoch for every pair of mortals who share a place and know each other")
-    partners_per_mortal: int = rule(4, 0, 20, G, "Known mortals each mortal spends time with in an epoch")
-    new_acquaintances: int = rule(1, 0, 10, G, "Strangers in the same place each mortal meets in an epoch")
-    pairs_per_place: int = rule(60, 0, 1000, G, "Most pairs of mortals in one place that interact in an epoch")
+    partners_per_mortal: int = rule(12, 0, 200, G, "Known mortals each mortal spends time with in an epoch")
+    new_acquaintances: int = rule(10, 0, 200, G, "Strangers in the same place each mortal meets in an epoch")
+    pairs_per_place: int = rule(10, 0, 1000, G, "Most pairs that interact in an epoch for each mortal of a place")
     facet_weight_pct: int = rule(100, 0, 400, G, "How strongly facets choose an interaction (%)")
     mood_weight_pct: int = rule(100, 0, 400, G, "How strongly mood steers interaction choices (%)")
     warmth_weight_pct: int = rule(100, 0, 400, G, "How strongly friendship or hostility steers interaction choices (%)")
@@ -62,7 +62,8 @@ class CircleRules:
     spread: int = rule(3, 0, 30, G, "Adherence a circle adds each epoch to the creed its members share")
     belief_pull: int = rule(2, 0, 20, G, "How far a circle pulls each member's belief toward its own each epoch")
     recruit_pct: int = rule(100, 0, 400, G, "How much more readily factions recruit circle members whose belief they share (%)")
-    per_place: int = rule(4, 0, 20, G, "Most circles one place holds")
+    per_place: int = rule(4, 0, 1000, G, "Circles any place may hold, before its mortals add more")
+    place_mortals: int = rule(10, 0, 100000, G, "Mortals of a place for each further circle it may hold (0: no more for its mortals)")
 
 
 @dataclass(frozen=True)

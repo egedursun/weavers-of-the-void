@@ -12,6 +12,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session, UOWTransaction, configure_mappers, object_mapper
 from sqlalchemy.orm.base import NO_VALUE, instance_state
+from sqlalchemy.orm.util import identity_key
 from sqlalchemy.sql.elements import ClauseElement
 
 from aerona.constants.control import BOOKKEEPING_TABLES
@@ -19,7 +20,10 @@ from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.record_context import COLUMN_STAMPS, ROW_STAMP, SCOPE, TERMS, UNCAPTURED, RecordScope, Stamp, Term, change_terms, current_scope, stamp, stamp_row
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, TurnCounterRow
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
+from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.node import ActorKind
@@ -652,6 +656,9 @@ def row_world(session: Session, connection: Connection, node_id: int | None) -> 
     if node_id is None:
         return None
     known: dict[int, int | None] = session.info.setdefault(NODE_WORLDS, {})
+    loaded = session.identity_map.get(identity_key(NodeRow, node_id))
+    if isinstance(loaded, EntityRow | WorldRow):
+        known[node_id] = loaded.world_id if isinstance(loaded, EntityRow) else loaded.id
     if node_id not in known:
         found = connection.execute(
             text("SELECT coalesce((SELECT world_id FROM entities WHERE id = :node), (SELECT id FROM worlds WHERE id = :node))"), {"node": node_id}

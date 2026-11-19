@@ -71,7 +71,13 @@ async def medicine_regions(session: AsyncSession, atlas: RegionAtlas) -> set[int
 
 
 async def effective_lifespan(
-    session: AsyncSession, rules: Rules, entity: EntityRow, atlas: RegionAtlas | None = None, medicine: set[int] | None = None
+    session: AsyncSession,
+    rules: Rules,
+    entity: EntityRow,
+    atlas: RegionAtlas | None = None,
+    medicine: set[int] | None = None,
+    *,
+    healing: dict[int, int] | None = None,
 ) -> LifespanInfo:
     region_atlas = atlas or await RegionAtlas.load(session)
     healed = medicine if medicine is not None else await medicine_regions(session, region_atlas)
@@ -81,7 +87,11 @@ async def effective_lifespan(
     medicine_bonus = rules.world_engine.medicine_lifespan_bonus if region is not None and region in healed else 0
     home = await community_of(session, entity) if entity.entity_type is EntityType.MORTAL else None
     if home is not None:
-        level = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
+        level = healing.get(home.id) if healing is not None else None
+        if level is None:
+            level = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
+            if healing is not None:
+                healing[home.id] = level
         medicine_bonus += round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
     flags = await EntityRepository(session).flags(entity.id)
     notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0

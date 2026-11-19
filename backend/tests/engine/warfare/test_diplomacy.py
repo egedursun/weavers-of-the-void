@@ -154,8 +154,10 @@ async def test_grudge_pool_widens_fading_when_hostility_overflows() -> None:
     rules = tune(
         Rules(), diplomacy={"world_war_cap": 2, "grudge_pool_pct": 100, "grudge_fade_cap": 1, "grudge_overflow_share_pct": 50, "grudge_forget_epochs": 12}
     )
-    fade_cap, forget_age = grudge_limits(rules, 10)
+    fade_cap, forget_age = grudge_limits(rules, 10, 0)
     assert fade_cap == 1 + 4
+    wider_cap, _ = grudge_limits(rules, 10, 10)
+    assert wider_cap > fade_cap
     assert forget_age == max(rules.diplomacy.grudge_fade_min_age, round(12 * 2 / 10))
 
 

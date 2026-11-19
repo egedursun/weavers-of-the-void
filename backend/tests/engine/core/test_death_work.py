@@ -24,12 +24,13 @@ from aerona.engine.death_work.handling import DeathTally, death_match, keep_deat
 from aerona.engine.death_work.seed import seed_death_work
 from aerona.engine.faith.works import keeps_remains
 from aerona.engine.mortal.learning import refresh_profession
+from aerona.engine.primitives.stats import set_stats
 from aerona.services.integrity.life_links import fit_remains_to_rite, misfit_remains
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
-def tuned(ctx: TickContext, **values: int) -> TickContext:
-    return replace(ctx, environment=replace(ctx.environment, rules=tuned_rules(death_work=values)))
+def tuned(ctx: TickContext, scale: dict[str, int] | None = None, **values: int) -> TickContext:
+    return replace(ctx, environment=replace(ctx.environment, rules=tuned_rules(death_work=values, scale=scale or {})))
 
 
 async def folk_town(session: AsyncSession, world: CoreWorld, treatment: RemainsTreatment, rite: FuneralCustom) -> tuple[EntityRow, PeopleCultureRow]:
@@ -102,7 +103,7 @@ async def test_without_tenders_a_plague_worsens_and_honoured_work_calls_a_skille
     session.add(SkillRow(holder_node_id=healer.id, skill=SkillKind.RITUAL, level=apt, peak=apt, last_used_epoch=ctx.epoch, source=SkillSource.PRACTICE))
     await session.flush()
     tally = DeathTally()
-    await keep_death_work(tuned(ctx, untended_disease_pct=100, role_standing=50, recruit_step=0, called_per_epoch=1), tally)
+    await keep_death_work(tuned(ctx, {"death_recruit_gap_pct": 0}, untended_disease_pct=100, role_standing=50, recruit_step=0, called_per_epoch=1), tally)
     called = await session.get(MortalProfileRow, healer.id)
     assert tally.untended == 1 and outbreak.severity == 55
     assert tally.called == 1 and called is not None and called.profession is Profession.DEATH_WORKER
@@ -146,3 +147,22 @@ async def test_remains_decide_relics_grounds_and_the_rite_holds_the_treatment(se
     culture.remains_treatment = RemainsTreatment.WATER
     await session.flush()
     assert await misfit_remains(session) == []
+
+
+async def test_death_workers_follow_the_numbers_of_the_people(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    await folk_town(session, world, RemainsTreatment.BURIAL, FuneralCustom.BURIAL)
+    set_stats(world.people, population=40000)
+    await session.flush()
+    assert await seed_death_work(ctx) == 1
+    seeded = list(await session.scalars(select(DeathWorkRow).where(DeathWorkRow.people_entity_id == world.people.id)))
+    need = 40000 * ctx.rules.scale.death_workers_per_mille // 1000
+    assert seeded and all(row.workers == need for row in seeded)
+    for row in seeded:
+        await session.delete(row)
+    await session.flush()
+    honoured, avoided = role(world.people.id, DeathRole.CARRIER, 90, 0), role(world.people.id, DeathRole.WASHER, 10, need)
+    session.add_all([honoured, avoided])
+    await session.flush()
+    await keep_death_work(tuned(ctx, role_standing=50, recruit_step=1), DeathTally())
+    assert 0 < honoured.workers <= need and honoured.workers > 1
+    assert avoided.workers < need - 1

@@ -1,3 +1,4 @@
+import math
 from contextvars import ContextVar
 
 from sqlalchemy import select
@@ -27,7 +28,7 @@ from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 STRIKING: ContextVar[DiseaseProfileRow | None] = ContextVar("striking_disease", default=None)
@@ -182,7 +183,7 @@ def spread_factor(
     factor *= 1 - immune * table.immunity_strength_pct / PERCENT
     load = ground.disease_load if ground is not None else 0
     factor *= 1 + load / PERCENT * table.load_spread_pct / PERCENT
-    crowd = min(1.0, (stat(target, "population") or 0) / max(1, table.crowd_population))
+    crowd = min(1.0, math.log1p(max(0, stat_or(target, "population", 0))) / math.log1p(max(1, table.crowd_population)))
     factor *= 1 + crowd * crowd_weight(book, profile)
     factor *= max(0.0, 1 - book.sanitation.get(region or -1, 0) / PERCENT * sanitation_weight(book, profile))
     factor *= vector_factor(book, profile, Spot(target, ground, region, path))

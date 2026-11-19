@@ -57,7 +57,7 @@ async def omen_lines(scope: Scope, world_id: int) -> list[str]:
 
 async def heaven_lines(scope: Scope, ladder: Cosmography) -> list[str]:
     lines = [
-        f"dimension#{row.id} {row.name} ({DIMENSION_KINDS[row.dimension_kind].label}; veil {row.veil}/100, stability {row.stability}/100"
+        f"dimension#{row.id} {row.name} ({DIMENSION_KINDS[row.dimension_kind].label}; barrier (veil) {row.veil}/100, stability {row.stability}/100"
         + (f"; ruled by #{row.ruler_node_id}" if row.ruler_node_id is not None else "")
         + ")"
         for row in ladder.dimensions.values()

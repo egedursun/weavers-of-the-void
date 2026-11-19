@@ -43,7 +43,7 @@ async def mortal_customs_lines(scope: Scope, me: EntityRow) -> list[str]:
         if revival is not None:
             found.append(f"a movement among your people seeks to {words(revival.goal.value)}, now in {words(revival.stage.value)}")
     if me.location_id is not None and await tavern_of(session, me.location_id) is not None:
-        found.append("your town keeps a tavern where news and recruits pass")
+        found.append("your town has a meeting place where news and recruits pass")
     return found
 
 

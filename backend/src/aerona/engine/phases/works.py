@@ -1,9 +1,11 @@
 from sqlalchemy import select
 
+from aerona.catalog.eras import ERA_FLOORS
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
@@ -14,21 +16,24 @@ from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, ConstructionStatus, StructureKind
 from aerona.engine.context import TickContext
+from aerona.engine.eras.effects import world_start
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import judged
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
-from aerona.engine.primitives.queries import active_bonds, canon, count_communities, living_entity
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, canon, living_entity
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import set_stats, stat
-from aerona.engine.structures.construction import Commission, active_at, advance, begin
-from aerona.engine.structures.needs import facts_for, wanted
-from aerona.engine.structures.spec import resolve, slots_for, tier_allows
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.structures.construction import Commission, active_at, advance, begin, finish
+from aerona.engine.structures.needs import facts_for, founding_order, wanted
+from aerona.engine.structures.spec import resolve, slots_for, tier_allows, works_at_once
 from aerona.rules.registry import Rules
 
 BUILDER_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
+FOUNDED_FIXUP = "works.founded_in_age"
 OWNER_BOND_KINDS = (BondKind.BUILT, BondKind.OWNS, BondKind.RULES)
 
 
@@ -71,13 +76,11 @@ async def used_slots(ctx: TickContext, host_id: int) -> int:
 
 async def free_slots(ctx: TickContext, site: EntityRow) -> int:
     town = await ctx.session.get(SettlementProfileRow, site.id)
-    if town is None:
-        return ctx.rules.construction.slots_base - await used_slots(ctx, site.id)
-    return slots_for(ctx.rules, town.size_tier) - await used_slots(ctx, site.id)
+    return slots_for(ctx.rules, town.size_tier if town is not None else None, stat_or(site, "population", 0)) - await used_slots(ctx, site.id)
 
 
 async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> EntityRow | None:
-    if await free_slots(ctx, site) <= 0 or len(await active_at(ctx, site.id)) >= ctx.rules.construction.active_per_site:
+    if await free_slots(ctx, site) <= 0 or len(await active_at(ctx, site.id)) >= works_at_once(ctx.rules, stat_or(site, "population", 0)):
         return None
     facts = await facts_for(ctx, site, knowledge, atlas)
     tier = facts.town.size_tier if facts.town is not None else None
@@ -89,6 +92,51 @@ async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
             await judged(ctx, site.id, site.id, ActKind.BUILDING_TEMPLES, note=work.name)
         return work
     return None
+
+
+async def site_of(ctx: TickContext, builder: EntityRow) -> EntityRow | None:
+    if builder.entity_type is EntityType.SETTLEMENT:
+        return builder
+    home = await living_entity(ctx.session, builder.location_id)
+    if home is not None and home.entity_type is EntityType.SETTLEMENT:
+        return home
+    towns = await towns_of_people(ctx.session, builder.id)
+    return await living_entity(ctx.session, towns[0]) if towns else None
+
+
+async def stand_in_age(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> int:
+    raised: list[StructureKind] = []
+    for _slot in range(max(0, await free_slots(ctx, site) - works_at_once(ctx.rules, stat_or(site, "population", 0)))):
+        facts = await facts_for(ctx, site, knowledge, atlas)
+        tier = facts.town.size_tier if facts.town is not None else None
+        kinds = [kind for kind in founding_order(wanted(ctx.rules, facts)) if kind not in raised and (tier is None or tier_allows(tier, resolve(kind)))]
+        if not kinds:
+            break
+        _work, construction = await begin(ctx, Commission(site=site, kind=kinds[0], standing=True))
+        await finish(ctx, construction)
+        raised.append(kinds[0])
+    return len(raised)
+
+
+async def found_in_age(ctx: TickContext, knowledge: KnowledgeMap, atlas: RegionAtlas) -> int:
+    floors = ERA_FLOORS[await world_start(ctx.session)]
+    if not floors:
+        return 0
+    row = await ctx.session.get(AppliedFixupRow, FOUNDED_FIXUP)
+    founded = {int(item) for item in (row.result or {}).get("founded", [])} if row is not None else set()
+    raised = 0
+    for builder in await canon(ctx.session, BUILDER_TYPES):
+        site = await site_of(ctx, builder)
+        if site is None or site.id in founded or held(builder.id, site.id) or not set(floors) <= knowledge.branches(site.id):
+            continue
+        founded.add(site.id)
+        raised += await stand_in_age(ctx, site, knowledge, atlas)
+    result = {"founded": sorted(founded)}
+    if row is None:
+        ctx.session.add(AppliedFixupRow(key=FOUNDED_FIXUP, result=result))
+    else:
+        row.result = result
+    return raised
 
 
 async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
@@ -116,6 +164,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "structure.function",
     "structure.splendor",
     "table.blueprints",
+    "table.applied_fixups",
     "table.bonds",
     "table.camps",
     "table.community_cohorts",
@@ -196,6 +245,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "settlement.prosperity",
     "structure.durability",
     "structure.splendor",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -229,21 +279,15 @@ async def engine_works(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
     ctx.count("advanced", await advance_all(ctx, knowledge))
     atlas = await RegionAtlas.load(ctx.session)
+    ctx.count("founded", await found_in_age(ctx, knowledge, atlas))
     rng = ctx.rng()
-    begun = 0
-    cap = scaled_cap(rules.deep_world.structure_cap, rules.deep_world.structure_cap_community_divisor, await count_communities(ctx.session))
     for builder in await canon(ctx.session, BUILDER_TYPES):
-        if begun >= cap:
-            break
         if not can_build(rules, builder) or not await craft_ready(ctx, builder, knowledge) or not rng.chance(rules.deep_world.structure_chance):
             continue
-        site = builder if builder.entity_type is EntityType.SETTLEMENT else await living_entity(ctx.session, builder.location_id)
-        if site is None or site.entity_type not in COMMUNITY_TYPES:
-            site = builder
-        if held(builder.id, site.id):
+        site = await site_of(ctx, builder)
+        if site is None or held(builder.id, site.id):
             continue
         if await plan_work(ctx, site, knowledge, atlas) is not None:
-            begun += 1
             ctx.count("built")
 
 

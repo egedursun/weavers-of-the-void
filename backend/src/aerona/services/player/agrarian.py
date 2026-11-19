@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.db.tables.agrarian import PREPAREDNESS_LEVEL_MAX
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agrarian import (
     AidKind,
@@ -145,7 +146,7 @@ class FamineDraft(Command):
 class WorkDraft(Command):
     settlement_id: int
     kind: PreparednessKind = PreparednessKind.LEVEE
-    level: int = Field(default=1, ge=1, le=5)
+    level: int = Field(default=1, ge=1, le=PREPAREDNESS_LEVEL_MAX)
 
 
 class WorkTarget(Command):

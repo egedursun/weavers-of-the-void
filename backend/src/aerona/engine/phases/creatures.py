@@ -46,7 +46,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.numbers import clamp_percent, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, put_stat, scale_stat, shift_bounded, stat, stat_or
@@ -172,12 +172,13 @@ async def mutate_species(ctx: TickContext, species: EntityRow, leak: int, chance
 
 
 async def species_mutations(ctx: TickContext) -> int:
-    cap = ctx.rules.creatures.mutation_cap
+    every = await _species(ctx)
+    cap = scaled_cap(ctx.rules.creatures.mutation_cap, ctx.rules.creatures.cap_species_divisor, len(every))
     leaks = {world.id: world.leakage for world in await ctx.session.scalars(select(WorldRow))}
     repository = EntityRepository(ctx.session)
     mutated = 0
     rng = ctx.rng("mutation_roll")
-    for species in await _species(ctx):
+    for species in ctx.rng("mutation_order").shuffled(every):
         if mutated >= cap:
             break
         flags = await repository.flags(species.id)
@@ -553,8 +554,10 @@ async def creature_migration(ctx: TickContext) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     rng = ctx.rng("creature_migration")
     moved = 0
-    for species in unheld(await _species(ctx)):
-        if moved >= creatures.creature_migration_cap or species_danger(ctx.rules, species) < creatures.creature_migration_min_danger:
+    every = await _species(ctx)
+    limit = scaled_cap(creatures.creature_migration_cap, creatures.cap_species_divisor, len(every))
+    for species in ctx.rng("creature_migration_order").shuffled(unheld(every)):
+        if moved >= limit or species_danger(ctx.rules, species) < creatures.creature_migration_min_danger:
             continue
         chance = creatures.creature_migration_chance * (2 if CreatureTrait.FISSIPAROUS in await traits_of(ctx.session, species.id) else 1)
         if not rng.chance(chance):
@@ -668,8 +671,10 @@ async def speciation(ctx: TickContext) -> int:
     rng = ctx.rng("speciation")
     atlas = await RegionAtlas.load(ctx.session)
     born = 0
-    for species in unheld(await _species(ctx)):
-        if born >= creatures.speciation_cap:
+    every = await _species(ctx)
+    limit = scaled_cap(creatures.speciation_cap, creatures.cap_species_divisor, len(every))
+    for species in ctx.rng("speciation_order").shuffled(unheld(every)):
+        if born >= limit:
             break
         row = await drifting_range(ctx, atlas, species)
         if row is None or not rng.chance(creatures.speciation_chance):

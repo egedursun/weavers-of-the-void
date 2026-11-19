@@ -71,6 +71,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.settlement.circuit import tower_defence
 from aerona.engine.settlement.districts import damage_districts
 from aerona.engine.structures.damage import mend_defences, strike_defences
 from aerona.engine.vehicles.fleet import siege_power
@@ -421,10 +422,10 @@ async def tell_season(ctx: TickContext, found: SiegeSeason, besieged: EntityRow,
     return written.incident_id
 
 
-def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None, rings: int = 0) -> float:
+def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None, rings: int = 0, *, people: int = 0) -> float:
     table = ctx.rules.districts
     material = (table.stone_wall_pct if walls.walls_material is BuildMaterial.STONE else table.timber_wall_pct) / PERCENT if walls is not None else 1.0
-    towers = walls.towers * table.tower_defence_pct / PERCENT if walls is not None else 0.0
+    towers = tower_defence(ctx.rules, walls.towers, people) if walls is not None else 0.0
     return 1 + (siege.walls_level * ctx.rules.siegecraft.wall_defence_pct / PERCENT * material + towers + rings / PERCENT) / max(1, siege.breaches + 1)
 
 

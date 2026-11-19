@@ -28,7 +28,14 @@ class CreaturesRules:
     mind_reader_victims: int = rule(3, 0, 100, RuleGroup.CREATURES, "Maximum neighbours whose sanity a mind-reading or soul-eating species gnaws")
     mind_reader_sanity_loss: int = rule(3, 0, 100, RuleGroup.CREATURES, "Sanity loss to neighbours from a mind-reading or soul-eating species")
     fission_danger_gain: int = rule(5, 0, 100, RuleGroup.CREATURES, "Danger gain of a species multiplying by splitting")
-    mutation_cap: int = rule(1, 0, 100, RuleGroup.CREATURES, "Maximum species mutations per epoch")
+    mutation_cap: int = rule(1, 0, 1000, RuleGroup.CREATURES, "Base of the most species mutations per epoch, grown by the number of species")
+    cap_species_divisor: int = rule(
+        10,
+        0,
+        10000,
+        RuleGroup.CREATURES,
+        "Species per extra mutation, creature migration and species evolution allowed in an epoch (0: the caps stay at their base)",
+    )
     mutation_leak_divisor: int = rule(400, 1, 100000, RuleGroup.CREATURES, "Mutation chance: world leak / this number")
     mutation_tagged_bonus_pct: int = rule(25, 0, 100, RuleGroup.CREATURES, "Extra mutation chance of a species tagged as mutated (%)")
     mutation_cursed_bonus_pct: int = rule(8, 0, 100, RuleGroup.CREATURES, "Extra mutation chance of a cursed species (%)")
@@ -75,7 +82,7 @@ class CreaturesRules:
     creature_revolt_chance: int = rule(8, 0, 100, RuleGroup.CREATURES, "An intelligent creature rebels against its creator (%)")
     speciation_chance: int = rule(18, 0, 100, RuleGroup.CREATURES, "A migrated species splits into a subspecies (%)")
     creature_migration_min_danger: int = rule(45, 0, 100, RuleGroup.CREATURES, "Minimum danger of a species able to migrate to a neighbouring region")
-    creature_migration_cap: int = rule(1, 0, 20, RuleGroup.CREATURES, "Maximum creature migrations per epoch")
+    creature_migration_cap: int = rule(1, 0, 1000, RuleGroup.CREATURES, "Base of the most creature migrations per epoch, grown by the number of species")
     creature_revolt_min_intelligence: int = rule(50, 0, 100, RuleGroup.CREATURES, "Minimum intelligence of a creature able to rebel against its creator")
     creature_revolt_min_danger: int = rule(55, 0, 100, RuleGroup.CREATURES, "Minimum danger of a creature able to rebel against its creator")
     creature_revolt_population_kept_pct: int = rule(
@@ -83,5 +90,5 @@ class CreaturesRules:
     )
     creature_revolt_son_existence_loss: int = rule(4, 0, 100, RuleGroup.CREATURES, "Existence loss of the son whose creature rebelled")
     speciation_min_epochs: int = rule(2, 0, 100, RuleGroup.CREATURES, "Minimum time for a migrated species to split into a subspecies (epochs)")
-    speciation_cap: int = rule(1, 0, 20, RuleGroup.CREATURES, "Maximum species evolutions per epoch")
+    speciation_cap: int = rule(1, 0, 1000, RuleGroup.CREATURES, "Base of the most species evolutions per epoch, grown by the number of species")
     speciation_stat_deviation: int = rule(15, 0, 100, RuleGroup.CREATURES, "Deviation (\u00b1) of a subspecies' stats from its ancestor")

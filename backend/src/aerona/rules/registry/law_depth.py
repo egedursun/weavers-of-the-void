@@ -96,7 +96,7 @@ class OutlawRules:
 @dataclass(frozen=True)
 class PrisonRules(Spanned):
     term_years: int = span(5, 1, 2500, P, "Years of a prison sentence")
-    capacity: int = rule(10, 1, 10000, P, "Prisoners each level of a prison holds before it is crowded")
+    capacity: int = rule(100, 1, 100000, P, "Prisoners each level of a prison holds before it is crowded")
     hunger_hp: int = rule(4, 0, 100, P, "Hit points a prisoner loses each epoch when food runs short")
     food_at: int = rule(30, 0, 100, P, "Food below which prisoners go hungry")
     sickness_pct: int = rule(20, 0, 100, P, "Chance each epoch a prisoner in a full prison falls sick (%)")

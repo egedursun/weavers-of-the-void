@@ -6,6 +6,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.relations import PersuasionAim
 from aerona.domain.models.entity_stats import PolityStats, TreatyStats
+from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.relations.persuasion import COUNCIL_VOICES, Argument, council_lift, envoy_sways, lift
 from tests.engine.society.factories import Realm, context, make, mortal, tuned
 
@@ -33,7 +34,8 @@ async def test_the_council_lift_is_the_mean_of_its_voices_and_never_counts_the_s
     councillors = [await seat(realm, polity.id, OfficeKind.CHANCELLOR, f"Councillor {index}") for index in range(COUNCIL_VOICES + 1)]
     swayed = await council_lift(ctx, ruler, polity.id)
     rows = list(await realm.session.scalars(select(PersuasionRow).where(PersuasionRow.speaker_node_id == ruler).order_by(PersuasionRow.id)))
-    assert len(rows) == COUNCIL_VOICES
+    heard = scaled_cap(COUNCIL_VOICES, ctx.rules.scale.council_offices_per_voice, len(councillors) + 1)
+    assert len(rows) == min(len(councillors), heard)
     assert all(row.aim is PersuasionAim.VOTE and row.subject_node_id == polity.id and row.target_node_id in councillors for row in rows)
     assert ruler not in {row.target_node_id for row in rows}
     expected = sum(1 + ctx.rules.persuasion.council_pct / 100 * (row.score - 50) / 100 for row in rows) / len(rows)

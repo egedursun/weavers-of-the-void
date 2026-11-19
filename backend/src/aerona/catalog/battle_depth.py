@@ -4,7 +4,6 @@ from aerona.core.total import total
 from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.military import Formation, UnitFamily, UnitKind
 
-VOLLEYS_CARRIED = 9
 K = UnitKind
 T = TerrainKind
 F = UnitFamily

@@ -26,7 +26,6 @@ from aerona.engine.recording.terms import explaining, term
 
 PULLS = frozenset({PopulationInstrument.SETTLEMENT_GRANT, PopulationInstrument.MIGRATION_PERMIT, PopulationInstrument.RECRUITMENT_ABROAD})
 HARSH = frozenset({PopulationInstrument.EXPULSION, PopulationInstrument.CHILD_LIMIT})
-SPARSE_TOWN = 500
 PRESSED = 50
 TEN = 10
 QUARTER = 4
@@ -245,7 +244,7 @@ async def adopt(ctx: TickContext, realm: EntityRow, tally: NumbersTally) -> None
     total = await numbers_of(ctx, towns)
     if hunger >= PRESSED:
         aim, instrument = PopulationAim.SHRINK, PopulationInstrument.BIRTH_TAX
-    elif total < SPARSE_TOWN * len(towns):
+    elif total < ctx.rules.scale.sparse_town_people * len(towns):
         aim, instrument = PopulationAim.GROW, PopulationInstrument.BIRTH_REWARD
     else:
         return

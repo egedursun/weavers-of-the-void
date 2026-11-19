@@ -24,6 +24,7 @@ from aerona.engine.phases.espionage import network_for
 from aerona.engine.phases.warfare import disband_army
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import headcount
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -148,7 +149,8 @@ async def wage_war(call: SonCall, args: WageWarInput) -> str:
 async def raise_host(call: SonCall, args: RaiseHostInput) -> str:
     raiser = await community(call, args.community_id)
     require_essence(call, call.rules.son_military.raise_host_cost)
-    soldiers = min(args.soldiers, call.rules.son_military.raise_host_max)
+    table = call.rules.son_military
+    soldiers = min(args.soldiers, max(table.raise_host_max, headcount(raiser) * table.raise_host_share_pct // PERCENT))
     army = await raise_standing_army(call.tick, raiser.id, soldiers, commander_id=args.commander_id, war_id=args.war_id)
     pay(call, call.rules.son_military.raise_host_cost, army.id)
     await call.record(

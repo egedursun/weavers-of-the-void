@@ -12,12 +12,12 @@ STRENGTHS_PER_SON = 2
 MOTIFS_MIN = 1
 MOTIFS_MAX = 5
 
-IMAGE_PROMPT = "An English image-generation prompt: subject, material, light, setting, composition. {{ image_prompt_rules }}"
+IMAGE_PROMPT = "An English image-generation prompt of the subject as its account gives it. {{ image_prompt_rules }}"
 MOTIFS = "2 to 5 motif keys for the core images of this record: short lowercase English keys, each naming one concrete image taken from this record itself (an object, material, creature, colour, sound or phenomenon; one word, or two joined by an underscore), reused whenever the same image returns, whatever the lore language."
 
 
 class PowerOutput(OutputModel):
-    name: str = Field(description="The power's own name, drawn from what it does and from this god's own domains and idiom")
+    name: str = Field(description="The power's own name, drawn from what it does")
     description: str = Field(description="Mythic description of the power, 1 to 2 sentences")
     effect: PowerEffect = Field(description="{{ power_effects }}")
     param: str = Field(
@@ -30,7 +30,6 @@ class ExistenceOutput(OutputModel):
     nature: str = Field(description="What it is made of, its essential nature (1 sentence)")
     state: ExistenceMode
     manifestation: str = Field(description="How it appears to mortals, by which sign it shows itself")
-    true_name: str = Field(description="Its true name, which nobody knows; fits the naming language")
 
 
 class PassionsOutput(OutputModel):
@@ -61,15 +60,15 @@ class DesignOutput(OutputModel):
 class SonProfileOutput(OutputModel):
     name: str = Field(description="Proper name, fitting the naming language")
     title: str = Field(
-        description="Epithet or title in this world's idiom, drawn from this god's own domains, deeds or nature; vary its grammatical shape from god to god (a noun phrase, a deed, a place, a bond) and never reuse the shape of a sibling's title"
+        description="Epithet or title drawn from this god's own domains, deeds or nature; vary its grammatical shape from god to god (a noun phrase, a deed, a place, a bond) and never reuse the shape of a sibling's title"
     )
     domain_1: Domain
     domain_2: Domain
-    appearance: str = Field(description="Detailed appearance: form, material, surface and marks, whatever this god has (3 to 4 sentences)")
+    appearance: str = Field(description="Detailed appearance of this god, 3 to 4 sentences")
     temperament: str
     obsession: str
-    fear: str
-    speech_style: str = Field(description="How they speak: word choice, rhythm, tics")
+    fear: str = Field(description="What this god fears, if anything")
+    speech_style: str = Field(description="How they speak")
     secret: str = Field(description="What this god keeps to itself, if anything, from its own nature and history")
     strengths: list[Stat] = Field(min_length=STRENGTHS_PER_SON, max_length=STRENGTHS_PER_SON)
     weakness: Stat
@@ -81,16 +80,14 @@ class SonProfileOutput(OutputModel):
     )
     existence: ExistenceOutput
     design: DesignOutput = Field(default_factory=DesignOutput, description="How this god spends its design budget across its dominion, magic, body and scales")
-    image_prompt: str = Field(
-        description="English, detailed full-length portrait prompt: form, material, surface, marks, lighting, background, composition. {{ image_prompt_rules }}"
-    )
+    image_prompt: str = Field(description="English, detailed full-length portrait prompt of this god as its appearance gives it. {{ image_prompt_rules }}")
 
 
 class CreatorGodOutput(OutputModel):
     title: str
     appearance: str = Field(description="The god's appearance or manifestation, 3 to 4 sentences")
     temperament: str = Field(description="The god's attitude towards their children and their creation, 2 sentences")
-    image_prompt: str = Field(description="English, epic-scale god portrait prompt: scale, material, light, atmosphere, composition. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English, epic-scale portrait prompt of this god as its appearance gives it. {{ image_prompt_rules }}")
 
 
 class NamingRuleOutput(OutputModel):

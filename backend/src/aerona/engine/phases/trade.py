@@ -287,8 +287,6 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     opened = 0
     for index, first in enumerate(traders):
         for second in traders[index + 1 :]:
-            if opened >= ctx.rules.trade.barter_cap:
-                break
             first_goods, second_goods = holdings[first.id], holdings[second.id]
             if not first_goods or not second_goods or not atlas.same_region(first.id, second.id):
                 continue

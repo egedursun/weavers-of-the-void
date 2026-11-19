@@ -14,10 +14,25 @@ class NativeFaithRules:
     )
     sleeping_pull_pct: int = rule(50, 0, 100, RuleGroup.FOREIGN_GODS, "Pull of a sleeping or defeated old god compared with an awake one (%)")
     syncretic_share: int = rule(65, 0, 100, RuleGroup.FOREIGN_GODS, "Chance a turning native keeps its patron and worships both gods (%)")
-    turn_cap: int = rule(1, 0, 100, RuleGroup.FOREIGN_GODS, "Most communities turning to one old god per epoch")
+    turn_cap: int = rule(
+        1, 0, 10000, RuleGroup.FOREIGN_GODS, "Base of the most communities turning to one old god per epoch, grown by the communities of its world"
+    )
+    cap_community_divisor: int = rule(
+        5,
+        0,
+        10000,
+        RuleGroup.FOREIGN_GODS,
+        "Communities per extra community turning to or returning from the old gods in an epoch (0: the caps stay at their base)",
+    )
     return_chance: int = rule(4, 0, 100, RuleGroup.FOREIGN_GODS, "Chance per epoch a worshipper of an old god returns to the pantheon (%)")
     return_defeated_mult_pct: int = rule(300, 0, 10000, RuleGroup.FOREIGN_GODS, "Return chance multiplier when the old god sleeps or is defeated (%)")
-    return_cap: int = rule(2, 0, 100, RuleGroup.FOREIGN_GODS, "Most communities returning from old gods to the pantheon per epoch")
+    return_cap: int = rule(
+        2,
+        0,
+        10000,
+        RuleGroup.FOREIGN_GODS,
+        "Base of the most communities returning from old gods to the pantheon per epoch, grown by the number of their believers",
+    )
     power_floor: int = rule(20, 0, 100, RuleGroup.FOREIGN_GODS, "Power an old god without worshippers sinks to")
     power_faith_divisor: int = rule(2, 1, 1000, RuleGroup.FOREIGN_GODS, "Target power of an old god: floor + faith divided by this")
     power_step: int = rule(2, 0, 100, RuleGroup.FOREIGN_GODS, "Most an old god's power changes per epoch")

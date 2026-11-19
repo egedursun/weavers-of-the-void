@@ -78,7 +78,7 @@ class BeliefRules:
 
 @dataclass(frozen=True)
 class TraditionsRules:
-    festival_food: int = rule(2, 0, 100, C, "Food a festival eats")
+    festival_food: int = rule(2, 0, 1000, C, "Food a festival eats for every thousand people of the community that keeps it")
     festival_cohesion: int = rule(4, 0, 100, C, "Cohesion a festival brings")
     festival_satisfaction: int = rule(3, 0, 100, C, "Satisfaction a festival brings")
     skipped_cohesion: int = rule(4, 0, 100, C, "Cohesion lost when a festival is skipped in hunger")
@@ -95,7 +95,7 @@ class TraditionsRules:
     ancestral_rite_placation: int = rule(10, 0, 100, C, "Unrest an ancestral rite takes from the spirits")
     offering_cost: int = rule(1, 0, 100, C, "Goods an offering burns")
     piety: int = rule(2, 0, 100, C, "Piety a holy rite pushes")
-    cap: int = rule(40, 0, 1000, C, "Most traditions celebrated in an epoch")
+    cap: int = rule(40, 0, 1000, C, "Most traditions one community celebrates in full in an epoch")
     harvest_blessing: int = rule(2, 0, 100, C, "Harvest a harvest rite blesses the land with (%)")
     value_push: int = rule(1, 0, 100, C, "Values a tradition of a new kind pushes each epoch")
     rest_pct: int = rule(100, 0, 300, C, "Strength of a midday rest kept as a tradition (%)")
@@ -108,7 +108,7 @@ class TraditionsRules:
     calendar_misfit_pct: int = rule(50, 0, 100, C, "Strength left to a feast whose season never comes (%)")
     sync_cohesion: int = rule(1, 0, 100, C, "Cohesion each other keeper of the same calendar feast adds")
     sync_max: int = rule(5, 0, 100, C, "Most fellow keepers counted for a synchronised feast")
-    commemoration_keepers: int = rule(3, 0, 50, C, "Most communities of a land that keep the memory of a notable year")
+    commemoration_keepers: int = rule(50, 0, 100, C, "Share of the communities of a land that keep the memory of a notable year (%)")
     taboo_importance: int = rule(5, 0, 100, C, "Renown a mortal loses for breaking a taboo")
     guest_killing_infamy: int = rule(40, 0, 100, C, "Ill will the keepers of hospitality hold for a guest-killer")
     ritual_presence_pct: int = rule(5, 0, 100, C, "Presence each ritual scar lends among those who keep the rite (%)")
@@ -144,7 +144,7 @@ class TechGraphRules:
     adopt_chance: int = rule(30, 0, 100, C, "A holder adopts a technique whose gate it meets (%)")
     secret_pct: int = rule(30, 0, 100, C, "Techniques a guild or cult keeps secret (%)")
     steal_chance: int = rule(20, 0, 100, C, "Spies steal a secret technique (%)")
-    cap: int = rule(40, 0, 1000, C, "Most techniques adopted in an epoch")
+    cap: int = rule(40, 0, 1000, C, "Most techniques one holder adopts in an epoch")
     patent_block_pct: int = rule(2, 0, 100, C, "Chance per epoch of patent term that a protected technique does not pass to a neighbour (%)")
 
 
@@ -154,7 +154,7 @@ class IdeologiesRules:
     founding_tenets: int = rule(3, 1, 13, C, "Most tenets a creed founded from a mortal's convictions carries")
     school_pct: int = rule(50, 0, 300, C, "Weight a school, academy or library lends a creed spreading into its town (%)")
     text_chance: int = rule(10, 0, 100, C, "A learned founder sets down the teachings of their creed in a book in an epoch (%)")
-    texts_max: int = rule(3, 0, 100, C, "Most books of teachings a creed is written into")
+    texts_max: int = rule(12, 0, 1000, C, "Most books of teachings a creed is written into")
     persecuting_mercy: int = rule(40, 0, 100, C, "Mercy below which a god answers a godless creed by striking its followers")
     persecution_blow: int = rule(15, 0, 100, C, "Adherence a god's persecution strikes from a godless creed's followers")
     miracle_essence: int = rule(5, 0, 1000, C, "Essence a god spends on a sign to win back the godless")
@@ -171,7 +171,8 @@ class IdeologiesRules:
     anti_god_faith_pct: int = rule(10, 0, 100, C, "Faith a godless creed draws away from the gods (%)")
     persecution_chance: int = rule(15, 0, 100, C, "A faith persecutes the creed that defies its tenets (%)")
     value_pressure: int = rule(2, 0, 100, C, "Values a creed pushes on its adherents each epoch")
-    cap: int = rule(4, 0, 100, C, "Most creed events in an epoch")
+    cap: int = rule(4, 0, 10000, C, "Base of the most creed events in an epoch, grown by the number of living creeds")
+    cap_creed_divisor: int = rule(1, 0, 1000, C, "Living creeds per extra creed event in an epoch (0: the cap stays at its base)")
     media_pct: int = rule(15, 0, 300, C, "Chance a learned mortal founds a creed gains for each level of the communication their people commands (%)")
     split_distance: int = rule(60, 0, 400, C, "How far two followers of a creed must stand apart on the values its tenets touch before it may split")
     split_chance: int = rule(10, 0, 100, C, "A creed whose followers stand that far apart splits in an epoch (%)")
@@ -210,7 +211,8 @@ class RitesRules:
     magic_strength_pct: int = rule(
         50, 0, 300, H, "How much the magic density of a region above or below the middle strengthens or weakens rites worked there (%)"
     )
-    cap: int = rule(12, 0, 1000, H, "Most castings in an epoch")
+    cap: int = rule(12, 0, 100000, H, "Base of the most castings of each kind (cult, war mage, sorcerer) in an epoch, grown by the number of communities")
+    cap_community_divisor: int = rule(2, 0, 10000, H, "Communities per extra casting of each kind in an epoch (0: the cap stays at its base)")
 
 
 @dataclass(frozen=True)
@@ -273,14 +275,14 @@ class TechniqueEffectsRules:
     plough_pct: int = rule(20, 0, 200, C, "Harvest gained from the plough (%)")
     breeding_pct: int = rule(20, 0, 200, C, "Yield herds and crops gain from selective breeding (%)")
     paper_pct: int = rule(50, 0, 200, C, "Weight books gain in carrying knowledge once paper is known (%)")
-    printing_copies: int = rule(3, 0, 100, C, "Copies a loved verbal work gains each epoch once printing is known")
+    printing_copies: int = rule(3, 0, 10000, C, "Copies a loved verbal work gains every ten years once printing is known")
     calendar_pct: int = rule(20, 0, 200, C, "Strength festivals gain when the calendar counts them (%)")
     navigation_pct: int = rule(25, 0, 200, C, "Sea route capacity gained by steering by the stars (%)")
     instruments_pct: int = rule(10, 0, 200, C, "Sea route capacity gained by astrolabes (%)")
     eclipse_calm_pct: int = rule(50, 0, 100, C, "Dread of an eclipse spared a people who foretold it (%)")
     oral_law_evidence: int = rule(10, 0, 100, C, "Evidence an investigation gains where elders recite and judge by oral law")
     corruption_cut_pct: int = rule(30, 0, 100, C, "Corruption a realm with a bureaucracy is spared (%)")
-    postal_hops: int = rule(2, 0, 50, C, "Regions more a letter crosses in an epoch along a postal service")
+    postal_hops: int = rule(2, 0, 1000, C, "Regions more a letter crosses in a season along a postal service")
     joint_stock_pct: int = rule(15, 0, 200, C, "Trade route capacity gained when its merchants pool their ventures (%)")
     insurance_pct: int = rule(40, 0, 100, C, "Goods lost on a dangerous road that insurance makes good (%)")
     hospitals_pct: int = rule(20, 0, 100, C, "Deaths from sickness spared a people with hospitals (%)")
@@ -336,12 +338,12 @@ class RelicsRules:
 
 
 @dataclass(frozen=True)
-class ArtRules:
+class ArtRules(Spanned):
     pressure_pct: int = rule(5, 0, 100, C, "Value pressure of an influential artwork on those who hold it (%)")
     commemoration_memory: int = rule(10, 0, 100, C, "Memory a portrayed mortal's spirit keeps each epoch")
     god_fame: int = rule(2, 0, 100, C, "Fame a portrayed god gains each epoch")
     translation_chance: int = rule(10, 0, 100, C, "A scribe of both tongues translates a work (%)")
-    copies_gain: int = rule(1, 0, 100, C, "Copies a verbal work gains each epoch where it is loved")
+    copies_gain: int = rule(1, 0, 10000, C, "Copies a verbal work gains every ten years where it is loved")
     humiliation: int = rule(5, 0, 100, C, "Ill will a conquered people hold for a statue of their conqueror")
     iconoclasm_chance: int = rule(20, 0, 100, C, "An iconoclast faith smashes an image in its lands (%)")
     sack_chance: int = rule(30, 0, 100, C, "A sacking army breaks an image of the vanquished (%)")

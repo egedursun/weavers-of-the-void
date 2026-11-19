@@ -13,7 +13,7 @@ from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
@@ -27,7 +27,7 @@ from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_p
 from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
 from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_customs, maimed_for_rule, people_of
-from aerona.engine.body.digits import backfill_digits
+from aerona.engine.body.digits import backfill_digits, backfill_plan_counts, replan
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm, weighted
 from aerona.engine.body.state import has_reader, refresh
@@ -115,11 +115,12 @@ async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
 async def body_survey(ctx: TickContext) -> None:
     rules = ctx.rules
     ctx.count("digits_named", await backfill_digits(ctx.session, rules))
+    ctx.count("plan_counts_refitted", await backfill_plan_counts(ctx.session))
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
     for species in await canon(ctx.session, [EntityType.SPECIES]):
         if species.id not in known and not held(species.id):
             await ensure_species_body(ctx.session, species)
-    for people in await canon(ctx.session, [EntityType.PEOPLE]):
+    for people in unheld(await canon(ctx.session, [EntityType.PEOPLE])):
         await ensure_customs(ctx.session, rules, people)
     created = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
@@ -187,12 +188,13 @@ async def reread_species_plans(ctx: TickContext) -> int:
         plan = await recorded_plan(ctx.session, species, await species_traits(ctx.session, species.id))
         if plan is body.plan:
             continue
-        body.plan, body.height_class, body.build = plan, PLANS[plan].height, PLANS[plan].build
+        replan(body, plan)
+        body.height_class, body.build = PLANS[plan].height, PLANS[plan].build
         changed += 1
         for mortal in await members_of(ctx, species):
             kin = await ctx.session.get(BodyRow, mortal.id)
             if kin is not None and mortal.id not in wounded and "plan" not in kin.locked:
-                kin.plan = plan
+                replan(kin, plan)
     ctx.session.add(AppliedFixupRow(key=PLAN_FIXUP, result={"species": changed}))
     await ctx.session.flush()
     return changed
@@ -400,7 +402,7 @@ async def _madness(ctx: TickContext, mortal: EntityRow) -> None:
     if sanity >= table.madness_recover_sanity:
         rng = ctx.rng(seed_of("sane", mortal.id))
         for kind in madness:
-            if rng.chance(table.madness_recover_chance):
+            if rng.chance(table.over_epoch(table.madness_recover_chance)):
                 await end_condition(ctx, mortal, kind)
         return
     if sanity >= table.madness_sanity or madness:
@@ -421,9 +423,9 @@ async def _addiction(ctx: TickContext, mortal: EntityRow, addicted: dict[int, Ad
     addiction = await condition_of(ctx, mortal.id, ConditionKind.ADDICTION)
     dependence = next((item for item in await active(ctx.session, mortal.id) if item.package is PackageKind.DRUG_DEPENDENCE), None)
     if row is None or row.addicted_since_epoch is None:
-        if dependence is not None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
+        if dependence is not None and ctx.rng(seed_of("clean", mortal.id)).chance(table.over_epoch(table.addiction_recover_chance)):
             await cure(ctx, mortal, dependence, CureKind.TIME)
-        elif addiction is not None and dependence is None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
+        elif addiction is not None and dependence is None and ctx.rng(seed_of("clean", mortal.id)).chance(table.over_epoch(table.addiction_recover_chance)):
             await end_condition(ctx, mortal, ConditionKind.ADDICTION)
         return
     if dependence is not None or addiction is not None:
@@ -457,7 +459,11 @@ async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) ->
             ctx, mortal, ConditionKind.DIVINE_BRAND, HarmCause.GOD, severity=max(row.severity for row in brands), source_node_id=brands[-1].cause_node_id
         )
     illness = await condition_of(ctx, mortal.id, ConditionKind.CHRONIC_ILLNESS)
-    if illness is not None and illness.source is HarmCause.DISASTER and ctx.rng(seed_of("illness", mortal.id)).chance(table.illness_recover_chance):
+    if (
+        illness is not None
+        and illness.source is HarmCause.DISASTER
+        and ctx.rng(seed_of("illness", mortal.id)).chance(table.over_epoch(table.illness_recover_chance))
+    ):
         await end_condition(ctx, mortal, ConditionKind.CHRONIC_ILLNESS)
 
 

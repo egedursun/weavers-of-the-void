@@ -24,7 +24,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.lore.research import lacks
+from aerona.engine.lore.research import lacks, techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -53,6 +53,7 @@ class SiteFacts:
     present: Counter[StructureKind]
     workshops: set[StructureKind]
     barred: set[StructureKind]
+    techniques: frozenset[Technique] = frozenset()
     harvest: int = PERCENT
 
     def tier(self) -> int:
@@ -88,12 +89,14 @@ def homeless_share(facts: SiteFacts) -> float:
 
 
 def share(facts: SiteFacts, social_class: SocialClass, rules: Rules) -> bool:
-    return facts.shares.get(social_class, 0) >= rules.construction.need_class_pct
+    return facts.shares.get(social_class, 0) * facts.value("population") / PERCENT >= rules.construction.need_class_people
 
 
 NEEDS: tuple[Need, ...] = (
     (K.WALL, lambda rules, f: f.at_war),
     (K.HOSPITAL, lambda rules, f: f.outbreak and f.knows(B.MEDICINE)),
+    (K.POWER_PLANT, lambda rules, f: f.reaches(K.POWER_PLANT)),
+    (K.REFINERY, lambda rules, f: f.reaches(K.REFINERY) and f.at_least(SizeTier.TOWN)),
     (K.GRANARY, lambda rules, f: f.knows(B.AGRICULTURE)),
     (K.MARKET, lambda rules, f: share(f, SocialClass.MERCHANT, rules) or f.knows(B.TRADE)),
     (
@@ -181,6 +184,24 @@ NEEDS: tuple[Need, ...] = (
     (K.TELEPORTER, lambda rules, f: f.reaches(K.TELEPORTER) and f.at_least(SizeTier.CITY)),
     *((kind, lambda rules, f, kind=kind: kind in f.workshops) for kind in sorted(set(WORKSHOP_STRUCTURES.values()), key=lambda item: item.value)),
 )
+KIND_TECHNIQUES = {
+    K.POWER_PLANT: Technique.ELECTRICITY,
+    K.REFINERY: Technique.COMBUSTION_ENGINE,
+    K.FACTORY: Technique.FACTORY_PRODUCTION,
+    K.DATA_CENTRE: Technique.COMPUTATION,
+    K.OFFICE_TOWER: Technique.COMPUTATION,
+    K.MALL: Technique.MASS_MEDIA,
+    K.BROADCAST_TOWER: Technique.RADIO,
+    K.SATELLITE_ARRAY: Technique.ROCKETRY,
+    K.MILITARY_BASE: Technique.FIREARMS,
+    K.MISSILE_SILO: Technique.ROCKETRY,
+    K.VERTICAL_FARM: Technique.GREEN_REVOLUTION,
+    K.RECYCLING_PLANT: Technique.INDUSTRIAL_CHEMISTRY,
+    K.WATER_PURIFICATION: Technique.INDUSTRIAL_CHEMISTRY,
+    K.CLONING_FACILITY: Technique.GENETIC_ENGINEERING,
+    K.ROBOTICS_WORKS: Technique.ARTIFICIAL_MINDS,
+    K.AI_CORE: Technique.ARTIFICIAL_MINDS,
+}
 TECHNIQUE_GATES = {K.AQUEDUCT: Technique.AQUEDUCT, K.SEWER: Technique.ARCH, K.CITADEL: Technique.FORTIFICATION, K.WONDER: Technique.DOME}
 COUNTED_STATES = frozenset({ConstructionState.PLANNED, ConstructionState.BUILDING, ConstructionState.COMPLETE, ConstructionState.DAMAGED})
 
@@ -226,14 +247,19 @@ async def facts_for(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, 
         present=await present_at(ctx, site.id),
         workshops=workshops,
         barred=barred,
+        techniques=frozenset(await techniques_of(session, site.id)),
         harvest=ground.harvest_pct if ground is not None else PERCENT,
     )
+
+
+def founding_order(kinds: list[StructureKind]) -> list[StructureKind]:
+    return sorted((kind for kind in kinds if kind in KIND_TECHNIQUES), key=lambda kind: -BRANCH_LEVELS.get(kind, 0))
 
 
 def wanted(rules: Rules, facts: SiteFacts) -> list[StructureKind]:
     found: list[StructureKind] = []
     for kind, test in NEEDS:
-        if kind in found or facts.has(kind) or kind in facts.barred:
+        if kind in found or facts.has(kind) or kind in facts.barred or (kind in KIND_TECHNIQUES and KIND_TECHNIQUES[kind] not in facts.techniques):
             continue
         if test(rules, facts):
             found.append(kind)

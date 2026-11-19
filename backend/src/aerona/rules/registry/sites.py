@@ -30,7 +30,8 @@ class SiteRules:
 class ExcavationRules(Spanned):
     start_pct: int = rule(12, 0, 100, H, "Chance each epoch scholars nearby begin to dig an old site (%)")
     start_lore: int = rule(30, 0, 100, H, "Lore a scholar needs to lead a dig")
-    open_max: int = rule(6, 0, 1000, H, "Digs open on one world at once")
+    open_max: int = rule(6, 0, 100000, H, "Base of the digs open on one world at once, grown by the number of old sites on that world")
+    open_site_divisor: int = rule(3, 0, 100000, H, "Old sites on a world per extra dig open there at once (0: the cap stays at its base)")
     dig_years: int = span(5, 1, 2000, H, "Years a dig takes with a leader of full skill")
     stalled_pct: int = rule(25, 0, 100, H, "Share of progress a dig still makes while it lacks the technique a stage needs (%)")
     difficulty_base: int = rule(20, 0, 100, H, "Difficulty of the first stage of a dig")

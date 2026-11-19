@@ -55,7 +55,7 @@ from aerona.engine.phases.made_things import artwork_cycles, item_cycles
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon, spoken_language
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
@@ -533,20 +533,20 @@ async def tradition_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     laws = await LawBook.load(ctx.session)
     rite_rows = await RiteCalendar.load(ctx.session)
-    held = 0
-    for tradition in unheld(await canon(ctx.session, [EntityType.TRADITION])):
+    celebrated: dict[int, int] = {}
+    for tradition in ctx.rng("tradition_order").shuffled(unheld(await canon(ctx.session, [EntityType.TRADITION]))):
         profile = await traditions.profile_of(ctx, tradition)
         kind = profile.kind
         for community in unheld(await traditions.celebrants(ctx, tradition.id)):
             rite_rows.bind(profile, tradition, community)
-            if held >= table.cap:
+            if celebrated.get(community.id, 0) >= table.cap:
                 await traditions.participate(ctx, tradition, community)
                 continue
             keeping = rite_rows.keeping(ctx, profile, tradition, community)
             done = await traditions.celebrate(ctx, tradition, community, atlas, keeping)
             if keeping.in_season is not None:
                 ctx.count("traditions_in_season" if keeping.in_season else "traditions_off_season")
-            held += 1
+            celebrated[community.id] = celebrated.get(community.id, 0) + 1
             ctx.count(f"tradition_{done or 'none'}")
             if await defied(ctx, laws, tradition, kind, community):
                 ctx.count("tradition_defiance")
@@ -807,14 +807,16 @@ async def ideology_cycles(ctx: TickContext) -> None:
         ctx.count("creeds_founded")
         await record(ctx, "lore.creed_founded", roles={IncidentRole.SUBJECT: founded.id}, facts={"founded": str(founded.name)})
     events = 0
-    for creed, profile in await ideology.living_creeds(ctx):
+    creeds = ctx.rng("creed_order").shuffled(await ideology.living_creeds(ctx))
+    limit = scaled_cap(table.cap, table.cap_creed_divisor, len(creeds))
+    for creed, profile in creeds:
         if await ideology.write_text(ctx, creed, profile) is not None:
             ctx.count("creed_texts")
         ctx.count("creed_spread", await ideology.spread(ctx, creed, profile))
         ctx.count("creed_pressed", await ideology.press(ctx, creed, profile))
         ctx.count("creed_adopted", await ideology.adopt(ctx, creed))
         ctx.count("creed_splits", await schisms(ctx, creed))
-        if events >= table.cap:
+        if events >= limit:
             continue
         persecuted = await ideology.clash_with_faith(ctx, creed)
         drained = await ideology.godless(ctx, creed)

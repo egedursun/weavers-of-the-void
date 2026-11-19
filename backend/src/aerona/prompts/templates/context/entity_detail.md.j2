@@ -36,7 +36,7 @@ Lexicon: {% if lexicon %}{% for word in lexicon %}{{ word.word }} = {{ word.mean
 {{ economy_block(economy) | trim }}
 {% endif %}
 {% if body %}
-Body and wounds:
+Body:
 {% for line in body %}
 - {{ line }}
 {% endfor %}

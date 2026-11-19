@@ -6,7 +6,7 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class CouncilRules:
-    max_members: int = rule(9, 2, 30, RuleGroup.COUNCIL, "Maximum sons joining the council")
+    max_members: int = rule(9, 2, 200, RuleGroup.COUNCIL, "Maximum sons joining the council, the greatest in level and fame first")
     min_members: int = rule(2, 2, 30, RuleGroup.COUNCIL, "Minimum sons required for the council to convene")
     same_vote_closeness: int = rule(3, 0, 50, RuleGroup.COUNCIL, "Rapprochement between those casting the same vote")
     covenant_relation: int = rule(12, 0, 100, RuleGroup.COUNCIL, "Relation contribution of a council covenant")

@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.queries import count_communities
 from aerona.engine.recording.record import record
 
 
@@ -52,6 +53,7 @@ async def fashion_holders(ctx: TickContext) -> list[int]:
 async def novelty(ctx: TickContext) -> None:
     table = ctx.rules.fashion
     counts = await ubiquity(ctx)
+    everywhere = max(1, await count_communities(ctx.session) * table.saturation // PERCENT)
     rows = {row.holder_entity_id: row for row in await ctx.session.scalars(select(NoveltyStockRow))}
     for holder_id in await fashion_holders(ctx):
         entity = await ctx.session.get(EntityRow, holder_id)
@@ -61,7 +63,7 @@ async def novelty(ctx: TickContext) -> None:
         if row is None:
             row = NoveltyStockRow(holder_entity_id=holder_id, novelty=table.start, adoption=0, revivals=0, updated_epoch=ctx.epoch, locked=[])
             ctx.session.add(row)
-        adoption = await lagged(ctx, BalanceLoop.NOVELTY_DRAIN, holder_id, clamp_percent(counts[holder_id] * PERCENT // max(1, table.saturation)))
+        adoption = await lagged(ctx, BalanceLoop.NOVELTY_DRAIN, holder_id, clamp_percent(counts[holder_id] * PERCENT // everywhere))
         if "adoption" not in row.locked:
             if adoption > row.adoption:
                 row.peak_epoch = ctx.epoch

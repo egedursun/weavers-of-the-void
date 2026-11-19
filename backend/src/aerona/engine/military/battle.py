@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, TERRAIN_WIDTH, VOLLEYS_CARRIED, FormationSpec, WeaponProfile, formation_for
+from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, TERRAIN_WIDTH, FormationSpec, WeaponProfile, formation_for
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.units import (
     AMBUSH_TERRAIN,
@@ -44,6 +44,7 @@ from aerona.engine.military.tables import counters, defender_cell, matchup, terr
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.recording.record import StepDraft
 from aerona.rules.registry import Rules
+from aerona.rules.registry.scale import ScaleRules
 
 F = UnitFamily
 MISSILE_FAMILIES = frozenset({F.MISSILE, F.MAGIC, F.ENGINEER, F.VEHICLE, F.AIR, F.ELECTRONIC, F.SPACE})
@@ -1403,13 +1404,13 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
     )
 
 
-def ready(row: ArmyUnitRow, spec: UnitSpec) -> None:
+def ready(row: ArmyUnitRow, spec: UnitSpec, rounds: int) -> None:
     if row.organisation is None:
         row.organisation = PERCENT
     if row.discipline is None:
         row.discipline = BASE_DISCIPLINE[spec.kind]
     if row.ammunition is None:
-        row.ammunition = VOLLEYS_CARRIED if spec.missile > 0 else 0
+        row.ammunition = max(1, weapon_of(spec).volleys) * rounds if spec.missile > 0 else 0
     if row.formation is None:
         row.formation = formation_for(spec.kind, spec.family)
     if row.morale_state is None:
@@ -1419,13 +1420,18 @@ def ready(row: ArmyUnitRow, spec: UnitSpec) -> None:
 
 
 def make_stacks(
-    rows: list[ArmyUnitRow], specs: dict[int, UnitSpec] | None = None, hardness: dict[str, int] | None = None, fielded: dict[int, UnitSpec] | None = None
+    rows: list[ArmyUnitRow],
+    specs: dict[int, UnitSpec] | None = None,
+    hardness: dict[str, int] | None = None,
+    fielded: dict[int, UnitSpec] | None = None,
+    *,
+    rounds: int = ScaleRules.missile_rounds_carried,
 ) -> list[Stack]:
     found = []
     for row in rows:
         if row.count <= 0:
             continue
         spec = (fielded or {}).get(row.id) or (specs or {}).get(row.design_id or 0) or UNITS[row.kind]
-        ready(row, spec)
+        ready(row, spec, rounds)
         found.append(Stack(row, spec, row.count, hardness=(hardness or {}).get(row.material or "", NORMAL)))
     return found

@@ -27,8 +27,8 @@ CREATION_DESCRIPTION = (
 
 CREATION_FIELDS: dict[str, str] = {
     "name": "A proper name in the world's naming language.",
-    "subtype": "What it is, in this world's own terms",
-    "description": "3 to 7 sentences. Concrete details of its own; how it was born, what it is connected with, how mortals know it.",
+    "subtype": "What it is",
+    "description": "3 to 7 sentences describing it concretely.",
     "domain": "If empty, your first domain. The domain used in this creation; one of: {{ domains | join(', ') }}. Your own domains are cheap.",
     "power_level": "From 1 up to your power ceiling{% if context.power_ceiling %}, which is {{ context.power_ceiling }}{% endif %}. Increases the cost.",
     "stats": "Optional stats; leave out any you do not want to set",
@@ -140,7 +140,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.ARTWORK: {
         "medium": "What kind of work it is; performed works live only while someone can perform them: " + ART_MEDIA,
-        "subject_id": "Whom or what it portrays, if anyone (an entity id); a portrayed mortal is remembered, a portrayed god gains fame",
+        "subject_id": "Whom or what it portrays, if anyone (an entity id); a portrayed mortal gains renown, a portrayed god gains fame",
     },
     EntityType.PROPHECY: {
         "predicate": "What exactly must happen for it to come true, checked by the world itself: " + PREDICATES,
@@ -149,7 +149,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
         "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
         "event_kind": "For within_epochs: the kind of happening foretold",
-        "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
+        "within_epochs": "In how many ages it must come true; if it does not, the seer loses standing",
         "consequence": "What it means when it comes true: " + CONSEQUENCES,
         "consequence_id": "Whom the consequence touches",
     },
@@ -200,7 +200,7 @@ ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.COMMISSION_ARTWORK: ToolText(
-        "You commission a work of art. It presses its message on those who keep it, remembers whom it portrays,"
+        "You commission a work of art. It moves the views of those who hold it, raises the standing of whom it portrays,"
         " and a realm or town pays for it from its treasury. 1 action.",
         {
             "name": "A proper name for it, in the world's naming language",
@@ -356,7 +356,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"wound_id": "The id of your wound", "essence": "How much essence you pour into it"},
     ),
     T.OPEN_RIFT: ToolText(
-        "You tear a rift in a region of a world into another dimension. The region gains leak, magic and danger, the dimension's veil thins, "
+        "You tear a rift in a region of a world into another dimension. The region gains leak, magic and danger, the dimension's veil (its barrier to other dimensions) weakens, "
         "and beings of that dimension may cross. If you name a world of that dimension, a passage opens between the two worlds. "
         "{{ rules.rifts.open_essence }} essence, 1 action.",
         {
@@ -607,7 +607,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.REVEAL_TRUE_NAME: ToolText(
-        "You reveal the true name of a being to one within your reach. Whoever knows a true name holds a strong hook on its bearer, "
+        "You reveal the true name of a being to one within your reach. Whoever knows a true name holds strong leverage over its bearer, "
         "strengthens rites worked against it and is shielded from its own. Costs {{ rules.costs.influence }} essence and one action.",
         {
             "bearer_id": "The being whose true name you reveal",
@@ -648,7 +648,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.COIN_WORDS: ToolText(
-        "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
+        "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it derives). Languages grow this way and new names "
         "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch | several('time', 'times') }} per age, at most {{ rules.son_tools.coin_word_max_words | several('word', 'words') }} each time.",
         {"language_id": "The language entity's id", **WORD_FIELDS},
     ),
@@ -665,7 +665,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.GIVE_GIFT: ToolText(
         "You give a gift to a sibling: a share of your essence and/or you try to transfer a community that worships you to them (the community may not accept). A gift "
-        "strengthens the relationship and is written in the gift ledger: the sibling owes you a gift in return in time, and a gift you give a sibling answers what they gave you. "
+        "strengthens the relationship and the sibling owes you a gift in return in time, and a gift you give a sibling answers what they gave you. "
         "An essence gift does not spend an action; a worshipper transfer costs 1 action. {{ rules.son_tools.gift_per_epoch }} per age.",
         {
             "son_id": "The sibling's id",
@@ -720,7 +720,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.DECLARE_CHOSEN: ToolText(
         "You declare a mortal your chosen one: their strength and charisma rise, they worship you, and you favour them in their deeds. "
         "{{ rules.costs.declare_chosen }} essence, 1 action.",
-        {"mortal_id": "The living mortal's id", "boon": "The grace, sign or burden you give them"},
+        {"mortal_id": "The living mortal's id", "boon": "What you give them"},
     ),
     T.CURSE: ToolText(
         "You curse an entity: its stats fall and it weakens further every age until the curse is lifted. Its creator is angered. "
@@ -738,7 +738,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "a sibling patron, worshipping the creator, being protected or chosen, and importance protect them. If it fails the essence is lost, the victim becomes a legend who "
         "returned from death, and their protector is angered with you. The dead one's creator and patron are also angered; what they ruled passes to their heir. "
         "1 action, {{ rules.death.take_life_per_epoch }} per age.",
-        {"entity_id": "The named mortal whose life is taken", "how": "How you send death"},
+        {"entity_id": "The named mortal whose life is taken", "how": "How you take their life"},
     ),
     T.RESURRECT_SIBLING: ToolText(
         "You plot the return of a dead sibling: a rite ({{ rules.death.sibling_rite_cost }} essence, +{{ rules.death.sibling_rite_devotion }} devotion), a descent into the "
@@ -766,7 +766,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"target_id": "The target's id", "dream": "The dream's content"},
     ),
     T.SEND_DISASTER: ToolText(
-        "You send a disaster upon a region, place or settlement: {{ disasters }}. Those inside are affected too; it is recorded in the world as a lasting event. Cost: "
+        "You send a disaster upon a region, place or settlement: {{ disasters }}. Those inside are affected too; it stays in the world as a lasting event. Cost: "
         "{{ rules.intervention_costs.disaster | share_of(rules.son_tools.intervention_cost_pct) }} + {{ rules.son_tools.disaster_cost_per_power }} x power essence; 1 action.",
         {
             "target_id": "The region, place or settlement",
@@ -903,9 +903,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.MAKE_SERVITOR: ToolText(
         "You make a servitor, a spirit in your service, for the work you choose. Messengers carry your dreams further, guards turn back those who "
-        "would raze your holy places and thrones, judges win you veneration among the dead, the host fights for you in divine battles, spies watch "
-        "a place, agents work your will in their post, avengers bring fear to those who scorn you, guides of souls lead your dead to their place, "
-        "worshippers deepen the awe of your faithful, wardens keep order at their post and scribes keep your accounts alive among your peoples. "
+        "would raze your holy places and thrones, judges raise your standing in the afterlife, the host fights for you in divine battles, spies watch "
+        "a place, agents work your will in their post, avengers bring fear to those who scorn you, guides of souls take your faithful's souls to your afterlife, "
+        "worshippers deepen the awe of your faithful, wardens keep order at their post and scribes spread your teachings among your peoples. "
         "Its loyalty follows how your peoples regard you and how you treat it: each new command and each defeat of its host wears on it, and a disloyal "
         "servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
         {
@@ -924,7 +924,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.LAY_GEAS: ToolText(
         "You lay a geas on a mortal in your reach: a taboo it must never break or a duty it must keep doing ({{ geas_acts }}). "
-        "While it is kept you gain favour and dominion where the mortal lives; broken, its doom falls on the mortal. 1 action.",
+        "While it is kept you gain favour and dominion where the mortal lives; broken, its penalty falls on the mortal. 1 action.",
         {"bearer_id": "The mortal", "mode": "taboo or duty: {{ geas_modes }}", "act": "The act it forbids or asks", "reason": "Why you lay it"},
     ),
     T.LIFT_GEAS: ToolText("You lift a geas you laid. 1 action.", {"geas_id": "The geas", "reason": "Why"}),
@@ -1001,7 +1001,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"community_id": "The community", "disease_id": "The sickness", "response": "The answer", "reason": "Why you move them"},
     ),
     T.REVEAL_TONGUE: ToolText(
-        "You teach a mortal in your reach words of your sacred tongue, the language of your true name; rites it casts in your name grow stronger. 1 action.",
+        "You teach a mortal in your reach words of your sacred tongue; rites it casts in your name grow stronger. 1 action.",
         {"mortal_id": "The mortal", "reason": "Why you teach it"},
     ),
     T.DECREE_SOUND: ToolText(
@@ -1028,19 +1028,19 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.CONVENE_GATHERING: ToolText(
         "You call a gathering at a people, settlement, cult or place in your reach: a festival, procession, pilgrimage, feast, games or performance. "
-        "It is held this epoch; those who come grow closer to one another and to the host, and it is set down in history. 1 action.",
+        "It is held this epoch; those who come grow closer to one another and to the host. 1 action.",
         {"host_id": "Who hosts it", "kind": "The kind of gathering", "reason": "Why you call it"},
     ),
     T.LOOSE_DISEASE: ToolText(
         "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (vector), the body functions "
-        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate it loves. "
+        "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate where it spreads fastest. "
         "It spreads along roads, armies and journeys by its vector, survivors grow immune, and you gain essence from every outbreak of it. "
         "{{ rules.son_tools.loose_disease_essence }} essence, 1 action.",
         {
             "target_id": "The region or community it first strikes",
             "name": "The sickness's name in the world's language",
             "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (traders, armies and travellers), "
-            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (void-scarred lands), curse (bound to you while you live)",
+            "bite (needs its host beast), spirit (magic, ley lines, the impious), void (lands touched by void leakage), curse (bound to you while you live)",
             "target_functions": "The body functions it strikes; survivors may keep a lasting weakness there",
             "virulence": "How readily it spreads, 1 to 100",
             "lethality": "How many of the sick die, 1 to 100",
@@ -1131,7 +1131,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.DECLARE_HOLY_WORLD: ToolText(
-        "You declare a world your holy world: in that world your name is invoked first. If it is another sibling's world, your relationship sours. Free, "
+        "You declare a world your holy world: in that world you are worshipped first. If it is another sibling's world, your relationship sours. Free, "
         "{{ rules.son_tools.holy_world_per_epoch }} per age.",
         {"world_id": "The world's id"},
     ),
@@ -1162,7 +1162,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.EXTINGUISH_STAR: ToolText(
-        "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and doom advances; the whole cosmos remembers it. "
+        "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and doom advances. "
         "{{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_extinguish_pct) }} essence, {{ rules.son_tools.extinguish_star_ap | several('action', 'actions') }}.",
         {"star_id": "The star's id", "reason": "Why you put it out"},
     ),
@@ -1193,7 +1193,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"house_id": "The house", "trait": "The bloodline trait", "revoke": "True to lift it instead"},
     ),
     T.VOID_TREATY: ToolText(
-        "You make one party break a treaty in force: the breach is recorded, its oath is broken, guarantors may march and the breaker loses honour. Costs essence.",
+        "You make one party break a treaty in force: the treaty ends, guarantors may march and the breaker loses honour. Costs essence.",
         {"treaty_id": "The treaty", "breaker_id": "The party that breaks it"},
     ),
     T.MAKE_INTERWORLD_TREATY: ToolText(
@@ -1350,7 +1350,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "{{ rules.son_military.raise_host_cost }} essence, 1 action.",
         {
             "community_id": "The community that raises the army",
-            "soldiers": "How many it calls to arms (at most {{ rules.son_military.raise_host_max }})",
+            "soldiers": (
+                "How many it calls to arms (at most {{ rules.son_military.raise_host_max }}, "
+                "or {{ rules.son_military.raise_host_share_pct }}% of its people when that is more)"
+            ),
             "commander_id": "A living mortal to lead it, if any",
             "war_id": "The war it marches to, if any",
         },
@@ -1413,7 +1416,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"owner_id": "The community the spies serve", "target_id": "The community they watch", "cover": "merchant, priest, envoy or beggar"},
     ),
     T.ANSWER_OFFERINGS: ToolText(
-        "A community that worships you keeps a ledger of what it has offered you and what you have given back; you answer its offerings "
+        "A community that worships you tracks what it has offered you and what you have given back; you answer its offerings "
         "now. Gods who leave offerings unanswered lose love and gain neglect; gods who give back more than they were given gain love. 1 action.",
         {"community_id": "The community whose offerings you answer", "generous": "True to give back more than they offered", "reason": "Why you answer"},
     ),
@@ -1483,7 +1486,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SET_CIRCUIT: ToolText(
         "You set a ceremonial circuit turning among communities in your reach: a treasure passes from each stop to the next every epoch, "
-        "lending standing to whoever holds it and binding the stops in regard. 1 action.",
+        "lending standing to whoever holds it and raising regard between the stops. 1 action.",
         {"name": "What the circuit is called", "stop_ids": "The communities it passes through, in order, at least two", "reason": "Why you set it"},
     ),
     T.SHAPE_RULE: ToolText(
@@ -1513,7 +1516,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.DESIGNATE_KEYSTONE: ToolText(
         "You make the yield of one species in one land the keystone of its world, needed by an institution ({{ keystone_uses }}) and held "
-        "sacred by a cult; harvesting it thins its producers, whoever holds its source grows rich, and realms that want it go to war. 1 action.",
+        "sacred by a cult; harvesting it thins its producers, whoever holds its source grows rich, and realms that want it may go to war. 1 action.",
         {
             "species_id": "The species whose yield it is",
             "region_id": "The land it comes from",
@@ -1588,7 +1591,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SEND_EXPEDITION: ToolText(
         "You move a mortal in your reach to lead an expedition, with its companions, into a site, a land, an underworld or another realm; "
-        "each leg uses provisions and light, low light raises danger and stress, members may break or rise to the test and come home with "
+        "each leg uses provisions, and light on dark ground; running short raises danger and stress, members may break or rise to the test and come home with "
         "quirks, and those who return bring finds and renown. 1 action.",
         {"leader_id": "The mortal who leads it", "target_id": "Where it goes", "reason": "Why you send it"},
     ),
@@ -1644,7 +1647,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TEACH_SACRAMENT: ToolText(
         "You teach a church in your reach a sacrament ({{ sacrament_kinds }}) and what it protects against ({{ sacrament_protections }}); "
-        "mortals who receive it are protected, and those who miss it feel uneasy and go unprotected. 1 action.",
+        "mortals who receive it are protected, and those who miss it go unprotected. 1 action.",
         {
             "cult_id": "The church",
             "kind": "The sacrament",
@@ -1753,8 +1756,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"region_id": "The land whose remains you lay bare", "reason": "Why you lay them bare"},
     ),
     T.WAKE_LORE: ToolText(
-        "You wake a dormant ideology or rite, or a forgotten theory, in your reach from what survives of it: its texts, "
-        "or a people that studies its field. A rite taken up from a faded text may come back corrupted. 1 action.",
+        "You wake a dormant ideology or rite, or a lost theory, in your reach from what remains of it: its texts, "
+        "or a people that studies its field. A rite taken up from an incomplete text may come back corrupted. 1 action.",
         {"lore_id": "The ideology, theory or rite you wake", "reason": "Why you wake it"},
     ),
     T.PLAN_PREHISTORY: ToolText(
@@ -1807,12 +1810,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.FORESHADOW: ToolText(
         "You set a portent about a subject in your reach: while it waits, the tales of that subject are pressed toward their next turn, and it "
-        "is paid off when one of them turns or the subject's life ends; the chroniclers tell its payoff as such. Unpaid, it lapses. 1 action.",
+        "is paid off when one of them turns or the subject's life ends; its payoff counts as the fulfilment of the portent. Unpaid, it lapses. 1 action.",
         {"subject_id": "Whom or what it is about", "reason": "What you set up"},
     ),
     T.ECHO_LIFE: ToolText(
-        "In a cosmos that turns in ages, you mark the life of a mortal whose tale was told to carry into the next age: a newborn of that "
-        "age may take up the same tale. 1 action.",
+        "In a cosmos that turns in ages, you mark the life of a mortal to carry into the next age: a newborn of that "
+        "age may take up the same life course. 1 action.",
         {"mortal_id": "The mortal", "reason": "Why that life should carry on"},
     ),
     T.NUDGE_BIAS: ToolText(
@@ -1823,8 +1826,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"mortal_id": "The mortal", "bias": "The leaning", "weight": "Its weight, 0 to 100; 50 leaves it level", "reason": "Why you sway them"},
     ),
     T.DECLARE_IMPURITY: ToolText(
-        "You make a people within your reach count something impure (the dead, birth, bodily fluids, a food, a species, a profession, outsiders, "
-        "a place, an object, an act, a made thing, a taboo or a wound); their folk who touch it are shut out of gatherings and unions until they "
+        "You make a people within your reach count something impure ({{ impurity_sources }}); their folk who touch it are shut out of gatherings and unions until they "
         "purify. 1 action.",
         {"people_id": "The people", "source": "What they count impure", "reason": "Why"},
     ),
@@ -1834,8 +1836,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"item_id": "The item", "power": "The charm's power", "reason": "Why you bless it"},
     ),
     T.SEND_MISFORTUNE: ToolText(
-        "You send a misfortune on a town within your reach (an illness, a failed harvest, the death of a child, a loss of herds, an accident or "
-        "bad luck), on one of its folk if you name them; its folk read it by their own beliefs and answer it their own way. 1 action.",
+        "You send a misfortune on a town within your reach ({{ mishap_kinds }}), on one of its folk if you name them; its folk read it by their own beliefs and answer it their own way. 1 action.",
         {"town_id": "The town", "kind": "The misfortune", "victim_id": "Whom it falls on, if anyone", "reason": "Why you send it"},
     ),
     T.STIR_WITCH_HUNT: ToolText(

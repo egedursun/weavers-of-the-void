@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
@@ -28,7 +28,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import round_half_up, scaled_cap
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
@@ -43,6 +43,7 @@ class HazardTally:
     dead: int = 0
     injured: int = 0
     soldiers: int = 0
+    by_world: dict[int, int] = field(default_factory=dict)
 
 
 CHANCES: dict[TerrainHazard, Callable[[Rules], int]] = {
@@ -198,6 +199,7 @@ async def strike(
         )
     )
     tally.strikes += 1
+    tally.by_world[ground.world_id] = tally.by_world.get(ground.world_id, 0) + 1
     tally.dead += dead
     tally.injured += injured
     tally.soldiers += soldiers
@@ -208,10 +210,14 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
     tally = HazardTally()
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
     atlas = book.atlas
-    for region_id in sorted(book.regions):
+    regions_of_world: dict[int, int] = {}
+    for ground in book.regions.values():
+        regions_of_world[ground.world_id] = regions_of_world.get(ground.world_id, 0) + 1
+    for region_id in ctx.rng("hazard.order").shuffled(sorted(book.regions)):
         if held(region_id):
             continue
         ground = book.regions[region_id]
+        world_cap = scaled_cap(rules.hazards.per_epoch_cap, rules.hazards.regions_per_extra_strike, regions_of_world.get(ground.world_id, 0))
         hazards = [hazard for hazard, spec in HAZARDS.items() if exposed(rules, hazard, spec, ground)]
         if not hazards or (not atlas.communities_in(region_id) and not await _armies_in(ctx, region_id)):
             continue
@@ -222,8 +228,8 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
             spec = HAZARDS[hazard]
             season = season_for(seasons, spec.season)
             for year in years:
-                if tally.strikes >= rules.hazards.per_epoch_cap:
-                    return tally
+                if tally.by_world.get(ground.world_id, 0) >= world_cap:
+                    break
                 weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"hazard.{hazard.value}.{year.year}")
                 power = strength_of(rules, hazard, spec, dict(weather.effects))
                 fanned = await fire_wind(ctx.session, rules, region_id) if hazard is TerrainHazard.WILDFIRE else 1.0

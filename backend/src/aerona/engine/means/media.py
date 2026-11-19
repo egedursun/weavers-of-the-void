@@ -123,10 +123,10 @@ async def wear_works(ctx: TickContext, tally: MediaTally) -> None:
         spec = MEDIA[row.medium]
         if spec.copies and "copies" not in row.locked:
             scale = table.printing_pct / PERCENT if await printed(ctx.session, work.location_id or work.id) else 1
-            row.copies += round_half_up(table.copy_gain * spec.copies * scale)
+            row.copies += round_half_up(table.per_epoch(table.copy_gain) * spec.copies * scale)
             tally.copied += 1
         if "condition" not in row.locked:
-            shield = max(0.0, 1 - (row.copies - 1) * table.copy_shield_pct / PERCENT)
+            shield = 1 / (1 + max(0, row.copies - 1) * table.copy_shield_pct / PERCENT)
             rot = round_half_up(spec.rot * await damp_of(ctx, atlas, work) / PERCENT * table.rot_pct / PERCENT * shield)
             row.condition = clamp_int(row.condition - rot, 0, PERCENT)
             tally.worn += rot > 0

@@ -58,7 +58,7 @@ async def attack_network(ctx: TickContext, _spymaster: EntityRow, target: Entity
 async def break_bridges(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
     profile = await ctx.session.get(SettlementProfileRow, target.id)
     if profile is not None and "hauling_capacity" not in profile.locked:
-        profile.hauling_capacity = max(0, profile.hauling_capacity - ctx.rules.espionage.haul_damage)
+        profile.hauling_capacity = max(0, profile.hauling_capacity - round_half_up(profile.hauling_capacity * ctx.rules.espionage.haul_damage / PERCENT))
 
 
 async def release_blight(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
@@ -78,7 +78,7 @@ async def incite_mutiny(ctx: TickContext, _spymaster: EntityRow, target: EntityR
     profile = await ctx.session.get(SettlementProfileRow, target.id)
     if profile is not None:
         if "militia" not in profile.locked:
-            profile.militia = max(0, profile.militia - ctx.rules.espionage.mutiny_militia)
+            profile.militia = max(0, profile.militia - round_half_up(profile.militia * ctx.rules.espionage.mutiny_militia / PERCENT))
         if "unrest" not in profile.locked:
             profile.unrest = clamp_int(profile.unrest + ctx.rules.espionage.mutiny_unrest, 0, PERCENT)
 

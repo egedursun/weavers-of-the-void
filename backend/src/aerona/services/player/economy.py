@@ -56,7 +56,7 @@ class Reveal(Command):
 class SetWorkshop(Command):
     community_id: int
     kind: WorkshopKind
-    level: int = Field(ge=0, le=20)
+    level: int = Field(ge=0, le=1000)
 
 
 class OpenRoute(Command):

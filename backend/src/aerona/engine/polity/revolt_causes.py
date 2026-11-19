@@ -18,9 +18,11 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat_or
 
+TEN_THOUSAND = 10000
 MADE_ORIGINS = frozenset({MindOrigin.MADE, MindOrigin.GROWN, MindOrigin.TRAINED, MindOrigin.COPIED})
 
 
@@ -108,12 +110,16 @@ async def faithful(ctx: TickContext, case: Unrest) -> bool:
     return patron is not None and faith is not None and faith.id != patron.id
 
 
+def per_ten_thousand(rate: int, people: int) -> int:
+    return max(1, round_half_up(rate * people / TEN_THOUSAND))
+
+
 async def made_minds(ctx: TickContext, case: Unrest) -> bool:
     here = select(EntityRow.id).where(EntityRow.location_id == case.town.id, EntityRow.status == EntityStatus.CANON)
     count = await ctx.session.scalar(
         select(func.count()).select_from(MindProfileRow).where(MindProfileRow.node_id.in_(here), MindProfileRow.origin.in_(list(MADE_ORIGINS)))
     )
-    return int(count or 0) >= ctx.rules.revolts.made_minds_at
+    return int(count or 0) >= per_ten_thousand(ctx.rules.revolts.made_minds_at, stat_or(case.town, "population", 0))
 
 
 async def gifted(ctx: TickContext, case: Unrest) -> bool:
@@ -126,7 +132,9 @@ async def gifted(ctx: TickContext, case: Unrest) -> bool:
             PowerRegistryRow.polity_entity_id == case.member.polity_entity_id, (PowerRegistryRow.conscripted.is_(True)) | (PowerRegistryRow.licensed.is_(False))
         )
     )
-    return int(bound or 0) >= ctx.rules.revolts.gifted_at
+    realm = await ctx.session.get(EntityRow, case.member.polity_entity_id)
+    subjects = stat_or(realm, "subjects", 0) if realm is not None else 0
+    return int(bound or 0) >= per_ten_thousand(ctx.rules.revolts.gifted_at, subjects)
 
 
 async def workers(ctx: TickContext, case: Unrest) -> bool:

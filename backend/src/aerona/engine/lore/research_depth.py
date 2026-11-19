@@ -613,13 +613,14 @@ async def adopt_techniques(ctx: TickContext) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     adopted = 0
     for holder_id in sorted(levels):
-        if adopted >= table.cap:
-            break
+        taken = 0
         known = await techniques_of(ctx.session, holder_id)
         holder = await ctx.session.get(EntityRow, holder_id)
         if holder is None or holder.status is not EntityStatus.CANON or held(holder_id):
             continue
         for technique, spec in TECHNIQUES.items():
+            if taken >= table.cap:
+                break
             if technique in known or levels[holder_id].get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels[holder_id]):
                 continue
             if not gate_open(BRANCH_GRAPH[spec.branch], levels[holder_id]) and spec.level > 1:
@@ -633,4 +634,5 @@ async def adopt_techniques(ctx: TickContext) -> int:
             ctx.session.add(HolderTechniqueRow(holder_entity_id=holder_id, technique=technique, since_epoch=ctx.epoch, secret=secret))
             known.add(technique)
             adopted += 1
+            taken += 1
     return adopted

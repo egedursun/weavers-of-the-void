@@ -85,7 +85,7 @@ from aerona.engine.agrarian.book import (
 )
 from aerona.engine.agrarian.control import designate_keystone, edit_record
 from aerona.engine.agrarian.lands import Holdings, LandsTally, enclose, grow, holdings, keep_commons, keep_lands, keep_reserves, realm_dispossessed
-from aerona.engine.agrarian.resilience import ResilienceTally, aid_from, prepare, rebuild, relieve
+from aerona.engine.agrarian.resilience import ResilienceTally, aid_from, per_thousand, prepare, rebuild, relieve
 from aerona.engine.agrarian.rings import SpatialTally, keep_spatial
 from aerona.engine.agrarian.ruin import mark_ruin
 from aerona.engine.agrarian.soil import (
@@ -620,12 +620,14 @@ async def test_goods_sent_as_aid_carry_grain_from_the_capital(session: AsyncSess
     stricken = await town(session, world, "Brack", 1, BIG)
     capital = await town(session, world, "Hollin", 3, BIG)
     giver = await realm(session, world, [capital], None)
-    await goods_of(session, ctx.epoch).add(capital.id, CommodityKind.GRAIN, 100, GoodsFlow.HARVEST)
+    await goods_of(session, ctx.epoch).add(capital.id, CommodityKind.GRAIN, 1000, GoodsFlow.HARVEST)
     await session.flush()
     book = await RealmBook.load(session)
     await aid_from(ctx, giver, book.realms[giver.id], event=None, town=stricken, receiver=None, tally=ResilienceTally(), kind=AidKind.GOODS, amount=100)
-    assert await units_of(ctx, stricken.id, CommodityKind.GRAIN) == ctx.rules.relief.grain
-    assert await units_of(ctx, capital.id, CommodityKind.GRAIN) == 100 - ctx.rules.relief.grain
+    sent = per_thousand(ctx.rules.relief.grain, stricken)
+    assert sent == round(ctx.rules.relief.grain * BIG / 1000) and sent > ctx.rules.relief.grain
+    assert await units_of(ctx, stricken.id, CommodityKind.GRAIN) == sent
+    assert await units_of(ctx, capital.id, CommodityKind.GRAIN) == 1000 - sent
 
 
 async def test_fodder_crops_return_the_fixed_element_and_root_crops_draw_minerals(session: AsyncSession, world: CoreWorld) -> None:

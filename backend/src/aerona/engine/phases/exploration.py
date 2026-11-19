@@ -50,7 +50,7 @@ from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.numbers import clamp_percent, scaled_cap
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import stock
@@ -419,7 +419,9 @@ async def worlds_born_this_epoch(ctx: TickContext) -> int:
 
 
 async def can_birth_world(ctx: TickContext) -> bool:
-    return await worlds_born_this_epoch(ctx) < ctx.rules.mortal_tools.unknown_world_per_epoch
+    table = ctx.rules.mortal_tools
+    worlds = int(await ctx.session.scalar(select(func.count()).select_from(WorldRow)) or 0)
+    return await worlds_born_this_epoch(ctx) < scaled_cap(table.unknown_world_per_epoch, table.unknown_world_world_divisor, worlds)
 
 
 async def _unconnected(ctx: TickContext, home: WorldRow) -> list[WorldRow]:
@@ -607,8 +609,9 @@ async def _explore_world(ctx: TickContext, scene: ExplorationScene, world: World
     pressures = [(await exploration_pressure(ctx, scene, entity, communities), entity) for entity in candidates]
     pressures.sort(key=lambda item: (-item[0].pct, item[1].id))
     found: list[LandResult] = []
+    cap = scaled_cap(settings.per_epoch_cap, settings.per_epoch_cap_community_divisor, len(communities))
     for measured, entity in pressures:
-        if len(found) >= settings.per_epoch_cap:
+        if len(found) >= cap:
             break
         if (entity.entity_type is EntityType.MORTAL and entity.id in scene.away) or held(entity.id):
             continue
@@ -648,8 +651,9 @@ async def cosmic_exploration(ctx: TickContext) -> int:
         and await route_method(ctx, entity, knowledge) is not None
     ]
     searched = 0
+    cap = scaled_cap(settings.route_search_cap, settings.route_search_cap_seeker_divisor, len(seekers))
     for seeker in unheld(rng.shuffled(seekers)):
-        if searched >= settings.route_search_cap:
+        if searched >= cap:
             break
         if not rng.chance(settings.route_search_chance * (1 - await hidden_sky(ctx.session, ctx.rules, seeker.world_id))):
             continue

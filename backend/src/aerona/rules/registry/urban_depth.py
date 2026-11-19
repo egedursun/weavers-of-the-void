@@ -131,7 +131,7 @@ class TurfRules:
     war_pct: int = rule(30, 0, 100, S, "Chance each epoch two organisations on one district fight (%)")
     war_loss: int = rule(10, 0, 100, S, "Strength the loser of a turf war loses")
     war_order: int = rule(5, 0, 100, S, "Public order a turf war costs the town")
-    war_deaths: int = rule(2, 0, 100, S, "Mortals a turf war kills at most")
+    war_deaths: int = rule(10, 0, 100, S, "Share of the losing organisation's members a turf war kills (%, at least one when above 0)")
     crime_per_turf: int = rule(10, 0, 100, S, "Crime full turf adds to its town")
 
 
@@ -154,10 +154,10 @@ class CrimeOrgRules:
 class TradingPostRules:
     open_pct: int = rule(10, 0, 100, M, "Chance each epoch a merchant house opens a trading post in a foreign trading partner (%)")
     informant_gain: int = rule(1, 0, 100, M, "Informants a trading post gains each epoch")
-    informant_cap: int = rule(5, 0, 100, M, "Informants a trading post holds at most")
-    diaspora: int = rule(20, 0, 10000, M, "Folk of the owner's people a trading post settles in its host each epoch")
-    goods_cap: int = rule(200, 0, 100000, M, "Goods a trading post's warehouse holds at most")
-    stock_gain: int = rule(20, 0, 10000, M, "Goods a trading post stores each epoch")
+    informant_cap: int = rule(20, 0, 1000, M, "Informants a trading post holds at most")
+    diaspora: int = rule(250, 0, 100000, M, "Folk of the owner's people a trading post settles in its host each epoch")
+    goods_cap: int = rule(5000, 0, 10000000, M, "Goods a trading post's warehouse holds at most")
+    stock_gain: int = rule(500, 0, 1000000, M, "Goods a trading post stores each epoch")
     secret_pct: int = rule(20, 0, 100, M, "Chance each epoch each informant brings its owner a secret of the host (%)")
 
 
@@ -178,15 +178,18 @@ class MagicalOrderRules:
 
 
 @dataclass(frozen=True)
-class ConvoyRules:
+class ConvoyRules(Spanned):
     per_vehicle: int = rule(10, 0, 10000, M, "Goods a wagon or boat carries")
     per_animal: int = rule(3, 0, 10000, M, "Goods a pack animal carries")
-    per_route: int = rule(2, 0, 100, M, "Convoys each trading route sends each epoch at most")
+    per_route: int = rule(1, 0, 1000, M, "Most convoys a trading route sends each year")
+    traffic_per_convoy: int = rule(
+        1000, 1, 100000000, M, "Goods a route carried in the last epoch that fill one convoy; busier routes split their goods over more convoys"
+    )
     raid_pct: int = rule(10, 0, 100, M, "Chance a convoy on a dangerous route is raided (%)")
     guard_relief: int = rule(2, 0, 100, M, "Raid chance each guard takes away")
     storm_pct: int = rule(5, 0, 100, M, "Chance a convoy at sea is lost in a storm (%)")
     delay_pct: int = rule(10, 0, 100, M, "Chance a convoy is delayed by weather (%)")
-    pilgrims: int = rule(10, 0, 10000, M, "Pilgrims, migrants and missionaries a convoy carries at most")
+    pilgrims: int = rule(100, 0, 100000, M, "Pilgrims, migrants and missionaries a convoy carries at most")
     conversion: int = rule(2, 0, 100, M, "Followers its missionaries win in the town it reaches")
     war_raid_pct: int = rule(20, 0, 100, M, "Extra raid chance on a convoy travelling between realms at war (%)")
     escort_relief: int = rule(10, 0, 100, M, "Raid chance a trade treaty's escort takes away (%)")

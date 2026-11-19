@@ -159,7 +159,7 @@ async def bear_stars(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyR
         ),
         key=lambda row: row.id,
     )
-    for structure in nurseries:
+    for structure in rng.shuffled(nurseries):
         if born >= table.birth_cap:
             break
         chance = STRUCTURE_MECHANICS[structure.kind].birth(ctx.rules) * structure.intensity / PERCENT * galaxy.star_formation / PERCENT

@@ -26,7 +26,10 @@ class KindsRules:
     fusion_strength: int = rule(40, 0, 100, G, "Strength at which two kinds of one category held by one people may fuse into a new one")
     fusion_pct: int = rule(8, 0, 100, G, "Chance each epoch two strongly held kinds of one category from different makers fuse into a new kind (%)")
     prestige_gain: int = rule(4, 0, 50, G, "Prestige a kind gains each epoch as its holders grow toward the saturation count")
-    prestige_saturation: int = rule(6, 1, 1000, G, "Holders at which a kind is everywhere and its prestige begins to wear thin")
+    prestige_saturation: int = rule(6, 1, 100000, G, "Holders at which a kind is everywhere and its prestige begins to wear thin (base)")
+    prestige_saturation_community_divisor: int = rule(
+        10, 0, 100000, G, "Holders a kind needs to be everywhere grow by 1 for every this many communities in the cosmos (0: fixed)"
+    )
     prestige_fade: int = rule(3, 0, 50, G, "Prestige a kind loses each epoch once it is held everywhere")
     context_lines: int = rule(6, 0, 40, G, "Kinds of things a mortal or a son is told about in one turn")
     tenet_pull_pct: int = rule(10, 0, 100, G, "Share of a held tenet's pull that moves its holders' values each epoch, at full strength (%)")

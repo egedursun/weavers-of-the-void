@@ -11,8 +11,11 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.stress import aspirant_leader
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.memories import remember
+from aerona.engine.operations.limits import realm_people
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
+
+HUNDRED_THOUSAND = 100_000
 
 
 async def sinecures(ctx: TickContext, polity_id: int) -> list[OfficeRow]:
@@ -94,7 +97,11 @@ async def office_creation(ctx: TickContext) -> None:
         if stress.fiscal_distress >= table.fiscal_distress and made:
             await abolish_sinecure(ctx, made[0], polity)
             ctx.count("offices_abolished")
-        elif stress.elite_overproduction >= table.elite_pressure and profile.treasury >= table.cost and len(made) < table.most:
+        elif (
+            stress.elite_overproduction >= table.elite_pressure
+            and profile.treasury >= table.cost
+            and len(made) < max(table.most, table.most * await realm_people(ctx, polity.id) // HUNDRED_THOUSAND)
+        ):
             if await found_sinecure(ctx, profile, polity) is not None:
                 ctx.count("offices_created")
     await ctx.session.flush()

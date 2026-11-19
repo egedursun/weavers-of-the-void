@@ -23,11 +23,13 @@ class ExchangeRules:
     balance_pct: int = rule(20, 0, 100, E, "Share of the goods its users sell beyond what they buy that lifts the worth of a coin (%)")
     supply_pct: int = rule(1, 0, 100, E, "Share by which each coin issued lowers a coin's worth, in hundredths (%)")
     shock_pct: int = rule(20, 0, 100, E, "Rise of a rate in one epoch from which it is a shock to debtors in that coin (%)")
-    shock_cap: int = rule(50, 0, 100, E, "Most a debt in foreign coin grows in one shock (%)")
+    shock_cap: int = rule(500, 0, 10000, E, "Most a debt in foreign coin grows in one shock (%)")
     unconvertible_pct: int = rule(25, 0, 100, E, "Cost of trading across a coin that cannot be changed (%)")
     changer_skill: int = rule(3, 0, 10, E, "Accounting a merchant needs to change money at a market")
     changer_share: int = rule(50, 0, 100, E, "Share of the spread on a market's exchanges the changer keeps as coin (%)")
-    bill_amount: int = rule(20, 0, 100000, E, "Coin a bill of exchange between two markets that know banking is drawn for")
+    bill_amount: int = rule(
+        20, 0, 100000, E, "Coin a bill of exchange between two markets that know banking is drawn for, for each thousand people of the smaller market"
+    )
     bill_loss_pct: int = rule(30, 0, 100, E, "Share of a road's losses a bill of exchange between its markets spares, since no coin travels (%)")
     bills_per_route: int = rule(1, 0, 20, E, "Unsettled bills of exchange a road between markets that know banking holds at once")
 
@@ -44,8 +46,8 @@ class EconomicOrderRules(Spanned):
     centre_collapse_spread_pct: int = rule(60, 0, 100, E, "Share of a redistributing realm's prosperity its towns lose when the centre falls (%)")
     planning_per_record: int = rule(5, 0, 20, E, "Planning capacity each level of writing at a realm's capital adds")
     holding_price: int = rule(20, 0, 100000, P, "Coin a realm pays the loser of a holding under full compensation")
-    transfers_per_stage: int = rule(5, 0, 1000, P, "Holdings a change of economic order moves each epoch")
-    transfers_to_finish: int = rule(10, 1, 100000, P, "Holdings a change of economic order moves before it is done")
+    transfers_per_stage: int = rule(50, 0, 100, P, "Share of the realm's holdings a change of economic order moves at each stage (%)")
+    transfers_to_finish: int = rule(90, 1, 100, P, "Share of the realm's holdings a change of economic order moves before it is done (%)")
     resistance_pct: int = rule(25, 0, 100, P, "Share of each loser's grievance that adds to the resistance to a change of order (%)")
     fail_from: int = rule(80, 0, 100, P, "Resistance from which a change of economic order breaks")
     failure_stability: int = rule(15, 0, 100, P, "Stability a realm loses when its change of economic order breaks")
@@ -61,7 +63,7 @@ class EconomicOrderRules(Spanned):
 @dataclass(frozen=True)
 class PuttingOutRules:
     found_chance: int = rule(10, 0, 100, E, "Chance each epoch that a merchant body puts work out to a village near its town (%)")
-    volume: int = rule(10, 0, 1000, E, "Raw goods a putting-out arrangement hands to its village each epoch")
+    volume: int = rule(100, 0, 100000, E, "Raw goods a putting-out arrangement hands to its village each epoch for every thousand villagers")
     merchant_margin: int = rule(20, 0, 100, E, "Share of the worth of the work put out the merchant keeps as coin (%)")
     village_pay: int = rule(2, 0, 100, E, "Prosperity a village gains each epoch from the work put out to it, in tenths")
     chain_chance: int = rule(5, 0, 100, E, "Chance each epoch that a merchant body buys into a step of a chain in a town it trades with (%)")
@@ -72,7 +74,7 @@ class PuttingOutRules:
 @dataclass(frozen=True)
 class TourismRules:
     wealthy_from: int = rule(70, 0, 100, E, "Prosperity of a town from which its wealthy travel for pleasure")
-    visitors: int = rule(20, 0, 10000, E, "Visitors a wealthy town sends to a sight each epoch")
+    visitors: int = rule(50, 0, 100000, E, "Visitors a wealthy town sends to a sight each epoch for every thousand of its people")
     spend: int = rule(2, 0, 1000, E, "Coin each visitor spends at the town of a sight")
     renown: int = rule(1, 0, 100, E, "Renown a sight's keeper gains for each hundred visitors")
     word_chance: int = rule(20, 0, 100, E, "Chance the travellers of a flow carry the ways of the land they saw home (%)")

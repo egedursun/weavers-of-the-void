@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.collective import DiasporaRow
 from aerona.db.tables.cycles import IndentureRow, ManumissionRow, SlaveMarketRow
@@ -384,7 +384,8 @@ async def price_market(ctx: TickContext, town: EntityRow, row: SlaveMarketRow) -
     if "price" in row.locked:
         return
     origin, looks = await origin_factors(ctx, town)
-    scarcity = 1 + table.scarcity_weight / PERCENT * (1 - row.stock / max(1, row.stock + table.demand))
+    demand = round_half_up(table.demand * stat_or(town, "population", 0) / PER_MILLE)
+    scarcity = 1 + table.scarcity_weight / PERCENT * (1 - row.stock / max(1, row.stock + demand))
     row.price = clamp_int(table.base_price * await skill_factor(ctx, town.id) * age_factor(ctx, rows) * origin * looks * scarcity, 0, 10**6)
 
 

@@ -166,7 +166,9 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = total(
             spec((K.DAIRY, G.PRODUCTION, "Dairy"), (S.FARMER, W.FEW), U.HANDS, (B.MINOR, C.FODDER, T.HAMLET)),
             spec((K.DISTILLERY, G.PRODUCTION, "Distillery"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
             spec((K.REFINERY, G.PRODUCTION, "Refinery"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.TOOLS, T.TOWN), branch=KnowledgeBranch.METALLURGY),
-            spec((K.POWER_PLANT, G.INFRASTRUCTURE, "Power plant"), (S.ARTISAN, W.SOME), U.HANDS, (B.GRAND, C.COAL, T.TOWN), branch=KnowledgeBranch.METALLURGY),
+            spec(
+                (K.POWER_PLANT, G.INFRASTRUCTURE, "Power plant"), (S.ARTISAN, W.SOME), U.HANDS, (B.GRAND, C.COAL, T.HAMLET), branch=KnowledgeBranch.METALLURGY
+            ),
             spec((K.SILO, G.COMMERCE, "Silo"), (S.FARMER, W.FEW), U.TONS, (B.MINOR, C.TIMBER, T.HAMLET)),
             spec((K.CISTERN, G.INFRASTRUCTURE, "Cistern"), (S.ARTISAN, W.FEW), U.TONS, (B.MINOR, C.STONE, T.HAMLET)),
             spec((K.RESERVOIR, G.INFRASTRUCTURE, "Reservoir"), (S.ARTISAN, W.SOME), U.TONS, (B.MAJOR, C.STONE, T.VILLAGE)),
@@ -374,6 +376,8 @@ ACTS_AS: MappingProxyType[StructureKind, StructureKind] = MappingProxyType(
 )
 BRANCH_LEVELS: MappingProxyType[StructureKind, int] = MappingProxyType(
     {
+        K.POWER_PLANT: 6,
+        K.REFINERY: 5,
         K.FACTORY: 5,
         K.DATA_CENTRE: 7,
         K.OFFICE_TOWER: 6,

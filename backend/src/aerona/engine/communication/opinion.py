@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.read_memo import memoized
 from aerona.db.tables.communication import APPROVAL_MAX, APPROVAL_MIN, PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, IdeologyAdherentRow, RumourRow
@@ -179,12 +180,15 @@ async def subjects_of(ctx: TickContext, community: EntityRow, realm_id: int | No
 async def tend_community(ctx: TickContext, community: EntityRow, laws: LawBook, tally: OpinionTally) -> None:
     table = ctx.rules.communication
     realm_id = await realm_of_member(ctx, community.id)
-    for subject_id, subject, target in await subjects_of(ctx, community, realm_id, laws):
+    subjects = await subjects_of(ctx, community, realm_id, laws)
+    stored = {row.subject_node_id: row for row in await rows_by_prefix(ctx.session, PublicOpinionRow, community.id)}
+    for subject_id, subject, target in subjects:
         aim = clamp_int(target + await voice(ctx, community, subject_id, laws, realm_id), APPROVAL_MIN, APPROVAL_MAX)
-        row = await ctx.session.get(PublicOpinionRow, (community.id, subject_id))
+        row = stored.get(subject_id)
         if row is None:
             row = PublicOpinionRow(community_node_id=community.id, subject_node_id=subject_id, subject=subject, approval=0, epoch=ctx.epoch, locked=[])
             ctx.session.add(row)
+            stored[subject_id] = row
         if APPROVAL in (row.locked or []):
             continue
         row.subject, row.epoch = subject, ctx.epoch

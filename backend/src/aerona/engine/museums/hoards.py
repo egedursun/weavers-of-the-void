@@ -150,9 +150,8 @@ async def offered(ctx: TickContext, atlas: RegionAtlas, hoard: MuseumCollectionR
             select(SpeciesRangeRow.species_entity_id)
             .where(SpeciesRangeRow.region_entity_id == region, SpeciesRangeRow.abundance > 0)
             .order_by(SpeciesRangeRow.species_entity_id)
-            .limit(ctx.rules.museums.specimens_per_epoch * 4)
         )
-        found.extend((species_id, None, PieceKind.SPECIMEN) for species_id in kinds)
+        found.extend((species_id, None, PieceKind.SPECIMEN) for species_id in ctx.rng(f"specimens.{hoard.id}").shuffled(kinds))
     return found
 
 
@@ -164,7 +163,7 @@ async def gather(ctx: TickContext, atlas: RegionAtlas, hoard: MuseumCollectionRo
         if (item_id is not None and item_id in taken_items) or (bed_id is not None and bed_id in taken_beds):
             continue
         if kind is PieceKind.SPECIMEN:
-            if specimens >= ctx.rules.museums.specimens_per_epoch:
+            if specimens >= ctx.rules.museums.per_epoch(ctx.rules.museums.specimens_per_epoch):
                 continue
             specimens += 1
         ctx.session.add(MuseumPieceRow(collection_id=hoard.id, kind=kind, item_entity_id=item_id, fossil_bed_id=bed_id, acquired_epoch=ctx.epoch, locked=[]))

@@ -19,7 +19,9 @@ from aerona.domain.enums.intrigue import PlotKind, SchemePhase
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import PunishmentKind
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.stats import stat_or
 
+TEN_THOUSAND = 10000
 SCHEME_COLLECTIONS = {PlotKind.ABDUCT: CollectionKind.ABDUCTION, PlotKind.STEAL_RELIC: CollectionKind.THEFT, PlotKind.COUP: CollectionKind.COUP}
 NAMED_ROLES = (CollectionRole.LEADER, CollectionRole.HOST, CollectionRole.FOUNDER, CollectionRole.MEMBER, CollectionRole.VICTIM, CollectionRole.ACCUSED)
 
@@ -229,10 +231,12 @@ async def from_purges(ctx: TickContext, tally: CollectionTally) -> None:
         deaths[realm] += 1
         if case.accused_entity_id is not None:
             condemned[realm].append(case.accused_entity_id)
+    table = ctx.rules.collections
     for realm, count in sorted(deaths.items()):
-        if count < ctx.rules.collections.purge_at:
-            continue
         polity = await ctx.session.get(EntityRow, realm)
+        subjects = stat_or(polity, "subjects", 0) if polity is not None else 0
+        if count < max(table.purge_at, round(table.purge_per_ten_thousand * subjects / TEN_THOUSAND)):
+            continue
         members = {realm: CollectionRole.LEADER, **{victim: CollectionRole.VICTIM for victim in condemned[realm]}}
         await join_or_open(
             ctx, CollectionKind.PURGE, world_id=polity.world_id if polity else None, members=members, places=[], source_key=f"purge.{realm}", tally=tally

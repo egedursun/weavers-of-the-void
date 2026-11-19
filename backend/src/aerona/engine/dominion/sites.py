@@ -32,7 +32,7 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon
 from aerona.engine.recording.record import record
 
@@ -74,7 +74,8 @@ async def seed_sites(ctx: TickContext, tally: SiteTally) -> None:
         free = [place for place in places if place.id not in taken]
         rng = ctx.rng(f"magic_sites.{world.id}.{ctx.epoch}")
         others = [other.id for other in worlds if other.id != world.id]
-        while have < table.per_world and free:
+        room = scaled_cap(table.per_world, table.regions_per_extra, len(await canon(ctx.session, [EntityType.REGION], world_id=world.id)))
+        while have < room and free:
             place = free.pop(rng.die(len(free)) - 1)
             kind = rng.pick(list(SITE_KINDS))
             target = rng.pick(others) if kind is MagicSiteKind.GATEWAY and others else None
@@ -223,7 +224,8 @@ async def seed_thrones(ctx: TickContext, tally: SiteTally) -> None:
         places = [place for place in await places_of(ctx, world.id) if place.id not in taken]
         sacred = {profile.entity_id: profile.sacredness for profile in await ctx.session.scalars(select(PlaceProfileRow))}
         places.sort(key=lambda place: (-sacred.get(place.id, 0), place.id))
-        for place in places[: max(0, table.per_world - have)]:
+        room = scaled_cap(table.per_world, table.regions_per_extra, len(await canon(ctx.session, [EntityType.REGION], world_id=world.id)))
+        for place in places[: max(0, room - have)]:
             ctx.session.add(ThroneRow(world_id=world.id, place_entity_id=place.id, power=table.power, locked=[]))
             tally.thrones += 1
     await ctx.session.flush()

@@ -319,8 +319,9 @@ async def write_needs(session: AsyncSession, node_id: int, needs: dict[NeedKind,
 async def write_pressures(session: AsyncSession, entity_id: int, pressures: dict[PressureKind, int]) -> None:
     if write_blocked(entity_id, PRESSURES_KEY):
         return
+    stored = {row.pressure: row for row in await rows_by_prefix(session, PressureRow, entity_id)}
     for kind, value in pressures.items():
-        row = await session.get(PressureRow, (entity_id, kind))
+        row = stored.get(kind)
         if row is None:
             session.add(PressureRow(entity_id=entity_id, pressure=kind, value=clamp_int(value, 0, PERCENT)))
         else:

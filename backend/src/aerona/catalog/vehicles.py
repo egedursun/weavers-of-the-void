@@ -941,7 +941,7 @@ def frame_layout(frame: VehicleFrame) -> tuple[SectionSpec, ...]:
 
 
 SEA_LADDER = (F.SHIP_OF_THE_LINE, F.GALLEON, F.CARRACK, F.WARSHIP, F.COG, F.GALLEY, F.LONGSHIP, F.SAILBOAT, F.BOAT, F.RAFT)
-SIZE_SCALE: MappingProxyType[VehicleSize, int] = total(VehicleSize, {Z.SMALL: 1, Z.MEDIUM: 2, Z.LARGE: 3, Z.HUGE: 4, Z.COLOSSAL: 5})
+SIZE_SCALE: MappingProxyType[VehicleSize, int] = total(VehicleSize, {Z.SMALL: 1, Z.MEDIUM: 3, Z.LARGE: 9, Z.HUGE: 27, Z.COLOSSAL: 81})
 FAMILY_TECHNIQUES: MappingProxyType[VehicleFamily, Technique | None] = total(
     VehicleFamily,
     {

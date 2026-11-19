@@ -27,7 +27,7 @@ async def own_power_lines(scope: Scope, me: EntityRow) -> list[str]:
     registered = await scope.session.scalar(select(PowerRegistryRow).where(PowerRegistryRow.holder_node_id == me.id).limit(1))
     if registered is not None:
         terms = ", ".join(term for term, on in (("licensed", registered.licensed), ("called to serve in war", registered.conscripted)) if on)
-        found.append(f"your name stands on the registry of {await named(scope, registered.polity_entity_id)}{', ' + terms if terms else ''}")
+        found.append(f"registered with {await named(scope, registered.polity_entity_id)}{', ' + terms if terms else ''}")
     if me.location_id is not None:
         level = await law_param(scope.session, me.location_id, LawKind.POWER_LAW, "level")
         if level is not None:

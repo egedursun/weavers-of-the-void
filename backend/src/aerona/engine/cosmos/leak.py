@@ -24,6 +24,7 @@ from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity
 from aerona.engine.primitives.society import class_shares
 from aerona.rules.registry import Rules
@@ -155,13 +156,14 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
     scale_m = min(1.0, world.leakage / max(1, horror.repair_full_at))
     worshipping, communities = await _worship_counts(session, world.id)
     worship_repair = (
-        min(horror.worshipper_cap, worshipping * horror.worshipper_repair / PERCENT)
+        min(scaled_cap(horror.worshipper_cap, horror.repair_cap_community_divisor, communities), worshipping * horror.worshipper_repair / PERCENT)
         + (worshipping / communities if communities else 0) * horror.worshipper_ratio_repair
     ) * scale_m
     decreases = {
         "worshippers": worship_repair,
-        "temples": min(horror.temple_cap, await _temples(session, world.id)) * scale_m,
-        "priests": min(horror.priest_cap, await _priest_communities(session, rules, world.id)) * scale_m,
+        "temples": min(scaled_cap(horror.temple_cap, horror.repair_cap_community_divisor, communities), await _temples(session, world.id)) * scale_m,
+        "priests": min(scaled_cap(horror.priest_cap, horror.repair_cap_community_divisor, communities), await _priest_communities(session, rules, world.id))
+        * scale_m,
         "fabric repair": horror.fabric_self_repair + max(0.0, (world.leakage - horror.repair_threshold) / horror.repair_divisor) + view.leak_repair,
         "star's hold": star.leak_repair(rules) if star is not None else 0,
     }

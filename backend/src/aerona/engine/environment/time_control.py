@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import SEASONS_MAX, WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, StructureLeyRow, WorldSeasonRow
@@ -18,7 +18,6 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
 DERIVED_CALENDAR = frozenset({"year_length_days", "day_length_hours", "moon_count", "tidal_strength", "season_count"})
-SEASONS_MAX = 6
 NAME_MAX = 120
 LEY_FLAGS = frozenset({"attuned", "on_ley_line", "at_nexus"})
 

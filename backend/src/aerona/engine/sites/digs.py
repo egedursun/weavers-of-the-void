@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 
 from sqlalchemy import Select, and_, func, or_, select
@@ -48,7 +49,7 @@ from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.memories import remember
 from aerona.engine.orders.savings import unearth_hoards
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import FactInput
 from aerona.engine.recording.record import record as record_incident
@@ -208,10 +209,13 @@ async def dig_sites(session: AsyncSession) -> list[EntityRow]:
 
 async def start_digs(ctx: TickContext, atlas: RegionAtlas, tally: DigTally) -> None:
     table = ctx.rules.excavations
-    for site in await dig_sites(ctx.session):
+    sites = ctx.rng("dig.order").shuffled(await dig_sites(ctx.session))
+    per_world = Counter(site.world_id for site in sites)
+    for site in sites:
         if held(site.id) or await ctx.session.scalar(select(ExcavationRow.id).where(ExcavationRow.site_entity_id == site.id).limit(1)) is not None:
             continue
-        if await open_digs(ctx, site.world_id) >= table.open_max or not ctx.rng(f"dig.start.{site.id}.{ctx.epoch}").chance(table.start_pct):
+        room = scaled_cap(table.open_max, table.open_site_divisor, per_world[site.world_id])
+        if await open_digs(ctx, site.world_id) >= room or not ctx.rng(f"dig.start.{site.id}.{ctx.epoch}").chance(table.start_pct):
             continue
         leader = await scholar_near(ctx, atlas, site)
         if leader is None:

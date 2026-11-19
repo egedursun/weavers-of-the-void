@@ -15,6 +15,7 @@ from aerona.engine.phase import Phase
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.holder_levels",
     "table.mind_profiles",
     "table.mortal_profiles",
     "table.node_births",

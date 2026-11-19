@@ -13,6 +13,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow
 from aerona.db.tables.council_order import DivineSeatRow
 from aerona.db.tables.creator_bonds import CovenantRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.node import NodeRow
@@ -291,6 +292,16 @@ async def dead_captors(session: AsyncSession) -> list[int]:
     return list(await session.scalars(query.order_by(CaptiveRow.id)))
 
 
+async def dead_ranges(session: AsyncSession) -> list[int]:
+    living = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
+    query = select(SpeciesRangeRow.species_entity_id).where(SpeciesRangeRow.abundance > 0, SpeciesRangeRow.species_entity_id.not_in(living)).distinct()
+    return list(await session.scalars(query.order_by(SpeciesRangeRow.species_entity_id)))
+
+
+async def empty_ranges(session: AsyncSession, species_id: int) -> None:
+    await session.execute(update(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == species_id).values(abundance=0))
+
+
 async def release_captive(session: AsyncSession, captive_id: int) -> None:
     await session.execute(update(CaptiveRow).where(CaptiveRow.id == captive_id).values(status=CaptiveStatus.RELEASED))
 
@@ -381,6 +392,7 @@ async def part_gods(session: AsyncSession, syncretism_id: int) -> None:
 
 CHECKS: dict[str, tuple[Find, Fix]] = {
     "living_captor": (dead_captors, release_captive),
+    "living_range": (dead_ranges, empty_ranges),
     "order_target": (targetless_orders, lapse_order),
     "maker_not_self": (self_made, clear_self),
     "living_ruler": (dead_rulers, close_rule),

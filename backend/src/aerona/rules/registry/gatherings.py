@@ -10,13 +10,14 @@ H = RuleGroup.RECORDS
 
 @dataclass(frozen=True)
 class GatheringRules(Spanned):
-    per_world_max: int = rule(40, 0, 1000, M, "Gatherings the engine holds on one world each epoch")
+    per_world_max: int = rule(40, 0, 100000, M, "Gatherings the engine holds on one world each epoch (base)")
+    per_world_communities: int = rule(1, 0, 100000, M, "Gatherings held on one world each epoch grow by 1 for every this many communities there (0: fixed)")
     funeral_renown: int = rule(30, 0, 100, M, "Renown of the dead above which a funeral is held rather than a wake")
     anniversary_pct: int = rule(10, 0, 100, M, "Chance each epoch a married couple keeps an anniversary with their kin (%)")
     birth_pct: int = rule(25, 0, 100, M, "Chance each named birth is marked by a gathering of the family (%)")
-    festival_pct: int = rule(40, 0, 100, S, "Chance each epoch a community keeping a festival holds it as a gathering (%)")
-    fair_pct: int = rule(30, 0, 100, S, "Chance each epoch a market settlement holds a fair (%)")
-    council_pct: int = rule(35, 0, 100, M, "Chance each epoch a ruler calls a council of the realm (%)")
+    festival_pct: int = rule(10, 0, 100, S, "Chance a community keeping a festival holds it as a remembered gathering (% per year)")
+    fair_pct: int = rule(5, 0, 100, S, "Chance a market settlement holds a remembered fair (% per year)")
+    council_pct: int = rule(10, 0, 100, M, "Chance a ruler calls a council of the realm (% per year)")
     summit_pct: int = rule(15, 0, 100, M, "Chance each epoch a world holds a summit of several realms (%)")
     summit_parties: int = rule(3, 2, 20, M, "Realms a summit needs before it meets")
     summit_hops: int = rule(4, 0, 50, M, "Lands a realm may lie from the summit's host and still be called")
@@ -36,12 +37,12 @@ class GatheringRules(Spanned):
     procession_pct: int = rule(25, 0, 100, M, "Chance each epoch a zealous cult leads a procession (%)")
     feast_pct: int = rule(20, 0, 100, M, "Chance each epoch a noble or wealthy mortal holds a feast (%)")
     feast_wealth: int = rule(60, 0, 100, M, "Wealth a commoner needs before holding a feast")
-    guests_max: int = rule(12, 1, 200, M, "Guests one gathering invites at most")
+    guests_max: int = rule(60, 1, 10000, M, "Guests one gathering invites at most")
     attend_base_pct: int = rule(55, 0, 100, M, "Chance an invited guest comes before friendship and distance (%)")
     attend_friendship_pct: int = rule(40, 0, 200, M, "Attendance added at full friendship with the host (%)")
     attend_obligation_pct: int = rule(30, 0, 100, M, "Attendance added for guests who owe the host (kin, vassals, members) (%)")
     attend_hop_pct: int = rule(12, 0, 100, M, "Attendance lost for each land between guest and host (%)")
-    mingle_pairs: int = rule(8, 0, 200, M, "Pairs of attendees who spend time together at a gathering")
+    mingle_pairs: int = rule(5, 0, 1000, M, "Pairs of attendees who spend time together at a gathering, per 10 named attendees (at least one pair)")
     mingle_friendship: int = rule(4, 0, 100, M, "Friendship each pair of attendees gains from their time together")
     mingle_familiarity: int = rule(6, 0, 100, M, "Familiarity each pair of attendees gains")
     romance_pct: int = rule(8, 0, 100, M, "Chance a pair of unwed adult attendees begins a romance (%)")
@@ -79,7 +80,7 @@ class GatheringRules(Spanned):
     execution_stress: int = rule(4, 0, 100, M, "Stress a public execution lays on those who watch it")
     milestone_memory: int = rule(20, 0, 100, M, "Strength of the memory a milestone gathering leaves with those who came")
     thought_intensity: int = rule(30, 0, 100, M, "Intensity of the thought a gathering leaves with those who came")
-    election_pct: int = rule(25, 0, 100, M, "Chance each epoch a realm that rules by assembly holds an election (%)")
+    election_pct: int = rule(20, 0, 100, M, "Chance a realm that rules by assembly holds an election (% per year)")
     election_legitimacy: int = rule(6, 0, 100, M, "Legitimacy an election gives the realm that holds it")
     strike_worker_pct: int = rule(10, 0, 100, S, "Worker share a settlement needs before its workers strike (%)")
     strike_satisfaction: int = rule(35, 0, 100, S, "Worker satisfaction at or below which the workers strike")
@@ -105,7 +106,8 @@ class GatheringRules(Spanned):
 class CollectionRules(Spanned):
     join_window_years: int = span(5, 0, 2500, H, "Years within which a new incident joins an open history of its kind")
     close_after_years: int = span(10, 1, 2500, H, "Years without a new incident after which a history is closed")
-    purge_at: int = rule(4, 1, 1000, H, "Executions in one realm in one epoch that make a purge")
+    purge_at: int = rule(4, 1, 100000, H, "Executions in one realm in one epoch that make a purge (least)")
+    purge_per_ten_thousand: int = rule(2, 0, 100000, H, "Executions per 10,000 subjects of a realm in one epoch that make a purge, when more than the least")
 
     @property
     def join_window(self) -> int:

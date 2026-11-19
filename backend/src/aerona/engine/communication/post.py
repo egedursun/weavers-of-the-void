@@ -39,6 +39,7 @@ CARRIER_MEDIUM: Mapping[NetworkCarrier, Medium] = total(
 )
 MEDIUM_RANK = (Medium.MIND_LINK, Medium.BROADCAST, Medium.NETWORK)
 OVERLAND = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD})
+YEAR_SEASONS = 4
 SPEED_RULES = {
     Medium.ENVOY: "envoy_hops",
     Medium.LETTER: "letter_hops",
@@ -66,11 +67,22 @@ TEXTS = {
 LOCKED_STATE = "state"
 
 
-async def winter(ctx: TickContext, world_id: int | None) -> bool:
+async def year_seasons(ctx: TickContext, world_id: int | None) -> list[WorldSeasonRow]:
     if world_id is None:
-        return False
-    seasons = list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id).order_by(WorldSeasonRow.position)))
-    return bool(seasons) and seasons[ctx.epoch % len(seasons)].temperature_shift < 0
+        return []
+    return list(await ctx.session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id == world_id).order_by(WorldSeasonRow.position)))
+
+
+async def epoch_reach(ctx: TickContext, world_id: int | None, per_season: float, overland: bool) -> float:
+    table = ctx.rules.communication
+    seasons = await year_seasons(ctx, world_id)
+    slowed = PERCENT / (PERCENT + table.winter_delay_pct)
+    yearly = sum(per_season * slowed if overland and row.temperature_shift < 0 else per_season for row in seasons) if seasons else per_season * YEAR_SEASONS
+    return yearly * table.years_per_epoch
+
+
+async def seasons_in_epoch(ctx: TickContext, world_id: int | None) -> int:
+    return max(1, len(await year_seasons(ctx, world_id)) or YEAR_SEASONS) * ctx.rules.communication.years_per_epoch
 
 
 async def signalled(ctx: TickContext, owner_id: int) -> bool:
@@ -99,16 +111,15 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     origin = await ctx.session.get(EntityRow, origin_id)
     target = await ctx.session.get(EntityRow, recipient_id)
     if origin is None or target is None or origin.world_id != target.world_id:
-        return table.interworld_epochs
+        return table.interworld_epochs // await seasons_in_epoch(ctx, origin.world_id if origin is not None else None)
     hops = atlas.region_hops(atlas.top_region(origin.id), atlas.top_region(target.id)) or 0
     speed = int(getattr(table, SPEED_RULES[medium]))
     if medium is Medium.LETTER and await posted(ctx, owner_id):
         speed += ctx.rules.technique_effects.postal_hops
+    reach = await epoch_reach(ctx, origin.world_id, speed, medium in OVERLAND)
     if medium is Medium.LETTER:
-        speed += await tech_bonus(ctx.session, ctx.rules, owner_id, EraChannel.MESSAGES)
-    epochs = -(-hops // speed)
-    if medium in OVERLAND and await winter(ctx, origin.world_id):
-        epochs = -(-epochs * (PERCENT + table.winter_delay_pct) // PERCENT)
+        reach += await tech_bonus(ctx.session, ctx.rules, owner_id, EraChannel.MESSAGES)
+    epochs = int(hops // max(1.0, reach))
     if await signalled(ctx, owner_id):
         epochs = max(0, epochs - table.signal_cut)
     return epochs

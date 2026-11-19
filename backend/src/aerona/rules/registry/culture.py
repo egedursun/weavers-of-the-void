@@ -14,6 +14,9 @@ class CultureRules:
     trade_knowledge_pct: int = rule(10, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Knowledge transfer in trade contact (%)")
     first_god_pct: int = rule(30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "God transfer on first contact (%)")
     trade_god_pct: int = rule(6, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "God transfer in trade contact (%)")
-    exchange_cap: int = rule(2, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum cultural exchanges per epoch")
+    exchange_cap: int = rule(2, 0, 10000, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum cultural exchanges per epoch, before the communities are counted")
+    exchange_communities_per_extra: int = rule(
+        10, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "One more cultural exchange per epoch for every this many communities (0 none)"
+    )
     exchange_chance: int = rule(12, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Cultural exchange along a trade route (%)")
     exchange_direction_pct: int = rule(50, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Trade-route exchange: chance the bond source influences its partner (%)")

@@ -27,6 +27,7 @@ from aerona.engine.phases.living_stats import mock_prophecy
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, connect, flags_by_entity, living_entity, load_entities, remove_flag
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import record as record_incident
@@ -233,10 +234,10 @@ async def manifestations(ctx: TickContext) -> None:
     life = ctx.rules.deep_life
     rng = ctx.rng("manifestation")
     manifested = await flags_by_entity(ctx.session, EntityFlag.MANIFESTED)
-    made = 0
-    for legend in await canon(ctx.session, [EntityType.LEGEND]):
-        if made >= life.manifestation_cap:
-            return
+    made = WorldQuota(life.manifestation_cap)
+    for legend in rng.shuffled(await canon(ctx.session, [EntityType.LEGEND])):
+        if made.full(legend.world_id):
+            continue
         if legend.id in manifested or not await believed(ctx, legend):
             continue
         if not rng.chance(ctx.rules.deep_world.manifestation_chance):
@@ -245,7 +246,7 @@ async def manifestations(ctx: TickContext) -> None:
         if place is None or await blocked(ctx, TransformKind.MANIFESTATION, legend.id):
             continue
         await manifest(ctx, legend, place)
-        made += 1
+        made.take(legend.world_id)
 
 
 async def told_events(ctx: TickContext) -> set[int]:
@@ -290,17 +291,17 @@ async def legendification(ctx: TickContext) -> None:
         )
         .order_by(EntityRow.birth_epoch, EntityRow.id)
     )
-    made = 0
-    for event in await ctx.session.scalars(statement):
-        if made >= life.legendization_cap:
-            break
+    made = WorldQuota(life.legendization_cap)
+    for event in rng.shuffled(await ctx.session.scalars(statement)):
+        if made.full(event.world_id):
+            continue
         if event.id in told or (stat(event, "severity") or 0) < life.legend_event_min_severity:
             continue
         if not rng.chance(ctx.rules.deep_world.legendization_chance):
             continue
         await legendify(ctx, event)
-        made += 1
-    await year_legends(ctx, life.legendization_cap - made)
+        made.take(event.world_id)
+    await year_legends(ctx, made)
 
 
 async def legendify_year(ctx: TickContext, year: NotableYearRow) -> EntityRow:
@@ -335,7 +336,7 @@ async def legendify_year(ctx: TickContext, year: NotableYearRow) -> EntityRow:
     return legend
 
 
-async def year_legends(ctx: TickContext, room: int) -> int:
+async def year_legends(ctx: TickContext, made: WorldQuota) -> None:
     life = ctx.rules.deep_life
     rng = ctx.rng("year_legends")
     statement = (
@@ -347,17 +348,15 @@ async def year_legends(ctx: TickContext, room: int) -> int:
         )
         .order_by(NotableYearRow.epoch, NotableYearRow.id)
     )
-    made = 0
     famine_above = PERCENT - ctx.rules.harvest.famine_event_below
-    for year in await ctx.session.scalars(statement):
-        if made >= room:
-            break
+    for year in rng.shuffled(await ctx.session.scalars(statement)):
+        if made.full(year.world_id):
+            continue
         if year.kind is NotableYearKind.HUNGER and year.magnitude > famine_above:
             continue
         if rng.chance(ctx.rules.deep_world.legendization_chance):
             await legendify_year(ctx, year)
-            made += 1
-    return made
+            made.take(year.world_id)
 
 
 async def fairy_tales(ctx: TickContext) -> None:

@@ -41,9 +41,7 @@ TIER_CAPABILITY = total(
             "Federation", checked_by=(), used_by=("catalog.civilization.TIER_UNLOCKS", "engine.phases.civilization.federations")
         ),
         TierCapability.LOAN: Defined(
-            "Loan",
-            checked_by=(),
-            used_by=("catalog.civilization.TIER_UNLOCKS", "engine.phases.civilization._loan_candidate", "tools.mortal.registry.TIER_GATES"),
+            "Loan", checked_by=(), used_by=("catalog.civilization.TIER_UNLOCKS", "engine.phases.civilization.may_lend", "tools.mortal.registry.TIER_GATES")
         ),
         TierCapability.EXPLORATION: Defined(
             "Exploration",

@@ -39,8 +39,10 @@ async def seed_true_names(ctx: TickContext, namer: Namer) -> int:
     named = set(await ctx.session.scalars(select(TrueNameRow.bearer_node_id)))
     made = 0
     for son in await ctx.session.scalars(select(SonRow).order_by(SonRow.id)):
-        if son.id not in named and son.existence_profile is not None and son.existence_profile.true_name:
-            made += bool(await name_bearer(ctx, son.id, son.existence_profile.true_name))
+        if son.id not in named:
+            given = son.existence_profile.true_name if son.existence_profile is not None else None
+            drawn = given or await namer.person([], seed_of("true_name", son.id), son.current_world_id)
+            made += bool(drawn and await name_bearer(ctx, son.id, drawn))
     for god in await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
         if god.id not in named and god.existence_profile is not None and god.existence_profile.true_name:
             made += bool(await name_bearer(ctx, god.id, god.existence_profile.true_name))

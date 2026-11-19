@@ -38,7 +38,7 @@ class IntrigueBits:
 
 async def name_of(session: AsyncSession, node_id: int | None) -> str:
     node = await session.get(NodeRow, node_id) if node_id is not None else None
-    return f"#{node.id} {node.name}" if node is not None else "someone now gone"
+    return f"#{node.id} {node.name}" if node is not None else "someone unknown"
 
 
 async def intrigue_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> IntrigueBits:

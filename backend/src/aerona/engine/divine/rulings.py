@@ -6,7 +6,7 @@ from sqlalchemy.orm import aliased
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
-from aerona.db.repositories.sons import SonRepository
+from aerona.db.repositories.sons import COUNCIL_SEATING, SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
@@ -327,7 +327,9 @@ async def engine_motion(ctx: TickContext, members: list[SonRow]) -> Motion:
 async def engine_council(ctx: TickContext) -> CouncilRow | None:
     council = ctx.rules.council
     members = list(
-        await ctx.session.scalars(select(SonRow).where(SonRow.status.in_([SonStatus.ACTIVE, SonStatus.ASLEEP])).order_by(SonRow.id).limit(council.max_members))
+        await ctx.session.scalars(
+            select(SonRow).where(SonRow.status.in_([SonStatus.ACTIVE, SonStatus.ASLEEP])).order_by(*COUNCIL_SEATING).limit(council.max_members)
+        )
     )
     if len(members) < council.min_members:
         return None

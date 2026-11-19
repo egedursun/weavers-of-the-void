@@ -14,6 +14,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.agrarian import control
+from aerona.engine.agrarian.resilience import per_thousand
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import definite
 from aerona.prompts import SonToolId
@@ -81,7 +82,7 @@ async def inspire_relief(call: SonCall, args: InspireReliefInput) -> str:
     giver = await reached(call, args.giver_id, frozenset({EntityType.POLITY, EntityType.CULT}), SonResult.RELIEF_REFUSED, "there is no such realm or cult")
     town = await reached(call, args.settlement_id, frozenset({EntityType.SETTLEMENT}), SonResult.RELIEF_REFUSED, "there is no such town")
     try:
-        row = await control.send_aid(call.tick, giver.id, town.id, args.kind, call.tick.rules.relief.cap)
+        row = await control.send_aid(call.tick, giver.id, town.id, args.kind, per_thousand(call.tick.rules.relief.cap, town))
     except ValidationFailedError as error:
         fail(SonResult.RELIEF_REFUSED, why=str(error).rstrip("."))
     call.target(town.id)

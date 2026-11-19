@@ -58,7 +58,7 @@ async def tongue_lines(session: AsyncSession, home_id: int) -> list[str]:
             continue
         marks = [f"prestige {standing.prestige}"] if standing is not None else []
         if standing is not None and standing.lingua_franca:
-            marks.append("the tongue of the trade roads")
+            marks.append("the common trade language")
         if standing is not None and standing.liturgical:
             marks.append("a holy tongue")
         registers = await session.scalars(

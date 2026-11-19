@@ -28,10 +28,12 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import write_reserve
 from aerona.engine.economy.money import debase, forgive_loan, inject_hoard
+from aerona.engine.economy.refining import level_cap
 from aerona.engine.economy.routes import found_route, load_routes
 from aerona.engine.economy.stocks import goods_of, holding, sync_aggregates
 from aerona.engine.environment.works import works_by_region
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import headcount
 
 PROFILE_FIELDS = ("richness", "extraction_difficulty", "quality", "regeneration", "byproduct_pct", "initial_reserve")
 
@@ -204,7 +206,7 @@ async def set_workshop(ctx: TickContext, community_id: int, kind: WorkshopKind, 
     if row is None:
         row = WorkshopRow(community_entity_id=entity.id, kind=kind, level=level, built_epoch=ctx.epoch)
         ctx.session.add(row)
-    row.level = clamp_int(level, 1, ctx.rules.refining.max_level)
+    row.level = clamp_int(level, 1, level_cap(ctx.rules, headcount(entity)))
     row.idle_epochs = 0
     await ctx.session.flush()
     return row

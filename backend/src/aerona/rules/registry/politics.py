@@ -14,3 +14,5 @@ class PoliticsRules:
     town_population: int = rule(2000, 1, 100000000, RuleGroup.CIVILIZATION, "Settlement tier: town population")
     city_population: int = rule(10000, 1, 100000000, RuleGroup.CIVILIZATION, "Settlement tier: city population")
     metropolis_population: int = rule(50000, 1, 100000000, RuleGroup.CIVILIZATION, "Settlement tier: great-city population")
+    megacity_population: int = rule(1000000, 1, 1000000000, RuleGroup.CIVILIZATION, "Settlement tier: population of a city of millions")
+    conurbation_population: int = rule(10000000, 1, 10000000000, RuleGroup.CIVILIZATION, "Settlement tier: conurbation population")

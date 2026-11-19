@@ -20,6 +20,7 @@ from aerona.domain.enums.tongues import (
 
 SOUND_CHANGE_FIELDS = ("kind", "source", "target", "environment", "cause", "position", "epoch")
 GRAMMAR_FIELDS = ("word_order", "morphology", "cases", "noun_classes", "evidentiality", "honorific_levels", "number_system")
+CASES_MAX = 64
 SCRIPT_FIELDS = ("name", "system", "parent_script_id", "origin_language_id", "signs", "cause", "epoch")
 DECIPHER_FIELDS = ("progress", "corpus", "bilingual", "errors", "scholar_entity_id", "started_epoch")
 POLICY_FIELDS = ("strength",)
@@ -46,7 +47,7 @@ class SoundChangeRow(Base):
 class LanguageGrammarRow(Base):
     __tablename__ = "language_grammar"
     __table_args__ = (
-        between("cases", 0, 20),
+        between("cases", 0, CASES_MAX),
         between("noun_classes", 0, 20),
         between("honorific_levels", 0, 6),
         at_least("updated_epoch", 0),

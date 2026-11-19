@@ -138,8 +138,13 @@ async def seed_ethics(ctx: TickContext, culture: EntityRow) -> int:
     values = await stored_values(ctx.session, holder_kind(culture), culture.id)
     if not values:
         return 0
-    for act in ActKind:
-        await write_stance(ctx.session, culture.id, act, stance_for(ctx.rules, value_reading(values, act)), ctx.epoch)
+    if write_blocked(culture.id, ETHICS_KEY):
+        return 0
+    ctx.session.add_all(
+        CultureEthicRow(holder_entity_id=culture.id, act=act, stance=stance_for(ctx.rules, value_reading(values, act)), since_epoch=ctx.epoch, locked=[])
+        for act in ActKind
+    )
+    await ctx.session.flush()
     return len(ActKind)
 
 

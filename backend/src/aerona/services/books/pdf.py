@@ -1,9 +1,7 @@
-import asyncio
 import json
-import os
 import shutil
-import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,31 +10,35 @@ from typing import Any
 from anyio import to_thread
 
 from aerona.constants.books import (
+    PDF_CHUNK_BYTES,
     PDF_FILENAME,
-    PDF_LIBRARY_DIRECTORIES,
-    PDF_LIBRARY_VARIABLE,
     PDF_MANIFEST,
+    PDF_MOST_WORKERS,
     PDF_PROGRESS_IMAGES,
     PDF_PROGRESS_LAYOUT,
+    PDF_PROGRESS_MERGE,
     PDF_PROGRESS_MODEL,
+    PDF_PROGRESS_PRINT,
     PDF_STAGE_IMAGES,
-    PDF_STAGE_LAYOUT,
+    PDF_STAGE_MEASURE,
+    PDF_STAGE_MERGE,
     PDF_STAGE_MODEL,
-    PDF_WORKER_MODULE,
+    PDF_STAGE_PRINT,
 )
 from aerona.core.errors import ConflictError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
+from aerona.engine.parallel.pool import workers_for
 from aerona.jobs.context import JobContext
 from aerona.services.books.assets import write_images, write_maps
 from aerona.services.books.cache import cached_book
+from aerona.services.books.chunks import split_book
 from aerona.services.books.render import PdfState, PrintLinks, render_book
+from aerona.services.books.typeset import Typesetter, bind
 from aerona.services.container import Services
 
 NO_WORLD = "There is no world to print yet."
-LAYOUT_FAILED = "The pages could not be set: {reason}"
 DOWNLOAD_URL = "/api/book.pdf"
 MEGABYTE = 1024 * 1024
-ERROR_TAIL = 600
 
 
 @dataclass(frozen=True)
@@ -73,35 +75,20 @@ def pdf_state(services: Services, epoch: int) -> PdfState:
     )
 
 
-def _worker_environment() -> dict[str, str]:
-    environment = dict(os.environ)
-    if sys.platform == "darwin":
-        present = [directory for directory in PDF_LIBRARY_DIRECTORIES if Path(directory).is_dir()]
-        existing = environment.get(PDF_LIBRARY_VARIABLE)
-        environment[PDF_LIBRARY_VARIABLE] = os.pathsep.join([*present, *([existing] if existing else [])])
-    return environment
+def stage(context: JobContext, start: float, end: float, label: str) -> Callable[[float], None]:
+    context.report(start, label)
+    return lambda share: context.report(start + (end - start) * share, label)
 
 
-async def _layout(source: Path, target: Path) -> None:
-    process = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "-m",
-        PDF_WORKER_MODULE,
-        str(source),
-        str(target),
-        env=_worker_environment(),
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    try:
-        _out, error = await process.communicate()
-    except asyncio.CancelledError:
-        process.kill()
-        await process.wait()
-        raise
-    if process.returncode != 0 or not await to_thread.run_sync(target.is_file):
-        reason = error.decode(errors="replace").strip().splitlines()[-1:] if error else []
-        raise ConflictError(LAYOUT_FAILED.format(reason=(reason[0] if reason else f"exit {process.returncode}")[-ERROR_TAIL:]))
+async def typeset(document: str, directory: Path, target: Path, *, workers: int, title: str, context: JobContext) -> None:
+    book = await to_thread.run_sync(lambda: split_book(document, PDF_CHUNK_BYTES))
+    setter = Typesetter(book, directory, workers, stage(context, PDF_PROGRESS_LAYOUT, PDF_PROGRESS_PRINT, PDF_STAGE_MEASURE))
+    measured = await setter.measure()
+    setter.report = stage(context, PDF_PROGRESS_PRINT, PDF_PROGRESS_MERGE, PDF_STAGE_PRINT)
+    printed = await setter.print(measured)
+    context.report(PDF_PROGRESS_MERGE, PDF_STAGE_MERGE)
+    paths = [setter.pdf(number) for number in range(len(printed))]
+    await to_thread.run_sync(lambda: bind(paths, printed, target, title))
 
 
 async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
@@ -119,15 +106,12 @@ async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
         directory = Path(scratch)
         links = PrintLinks(directory)
         rendered = await to_thread.run_sync(lambda: render_book(model, rules, links=links))
-        source = directory / "book.html"
-        source.write_text(rendered.html, encoding="utf-8")
         context.report(PDF_PROGRESS_IMAGES, PDF_STAGE_IMAGES)
         span = PDF_PROGRESS_LAYOUT - PDF_PROGRESS_IMAGES
         await write_images(services, links.images, lambda share: context.report(PDF_PROGRESS_IMAGES + span * share, PDF_STAGE_IMAGES))
         await write_maps(services, links.maps)
-        context.report(PDF_PROGRESS_LAYOUT, PDF_STAGE_LAYOUT)
         target = directory / PDF_FILENAME
-        await _layout(source, target)
+        await typeset(rendered.html, directory, target, workers=min(workers_for(rules), PDF_MOST_WORKERS), title=cosmos.name or "", context=context)
         size = target.stat().st_size
         shutil.move(target, pdf_path(services))
     manifest = PdfManifest(epoch=epoch, created_at=datetime.now(UTC).isoformat(), size=size)

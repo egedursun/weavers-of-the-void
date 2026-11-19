@@ -9,7 +9,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import CivilizationTier, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.war import DebtStatus
 from aerona.domain.models.entity_stats import ItemStats, PeopleStats
-from aerona.engine.phases.civilization import federations, spontaneous_adoption, spontaneous_barter, spontaneous_loans
+from aerona.engine.phases.civilization import federations, impose_loan, spontaneous_adoption, spontaneous_barter, spontaneous_loans
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat
@@ -80,6 +80,17 @@ async def test_wealthy_community_lends_to_a_poor_neighbour_on_its_own(session: A
     assert debt is not None and debt.debt_status is DebtStatus.OPEN and debt.debt_amount == amount
     recorded = await keys(session)
     assert "civilization.loan" in recorded
+
+
+async def test_a_second_loan_to_a_debtor_adds_to_the_open_debt(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules(civilization={"loan_chance": 0})
+    lender = await folk(session, "Goldfolk", world.world.id, world.regions[0].id, wealth=90)
+    borrower = await folk(session, "Pennyfolk", world.world.id, world.regions[1].id, wealth=10)
+    await impose_loan(session, rules, lender.id, borrower.id, 10)
+    await impose_loan(session, rules, lender.id, borrower.id, 15)
+    debts = list(await session.scalars(select(BondRow).where(BondRow.kind == BondKind.OWES)))
+    assert len(debts) == 1 and debts[0].debt_amount == 25 and debts[0].debt_status is DebtStatus.OPEN
+    assert stat(lender, "wealth") == 65 and stat(borrower, "wealth") == 35
 
 
 async def test_no_spontaneous_loan_when_the_chance_is_zero(session: AsyncSession, world: CoreWorld) -> None:

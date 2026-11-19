@@ -56,7 +56,7 @@ from aerona.engine.polity.law_effects import endogamous
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import break_oath, oaths_of
 from aerona.engine.polity.offices import best_skill, whole
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import add_flag, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
@@ -220,13 +220,13 @@ async def gather_kin(ctx: TickContext, book: HouseBook) -> int:
                 child = await living_entity(ctx.session, child_id)
                 if child_id in down and await claimed_elsewhere(ctx, book, child_id, house_id):
                     continue
-                if child is not None and child.entity_type is EntityType.MORTAL and child.id not in book.house_of:
+                if child is not None and child.entity_type is EntityType.MORTAL and child.id not in book.house_of and not held(child.id, house_id):
                     await join(ctx, book, house_id, child, by_marriage=False)
                     await inherit_claims(ctx, child, member_id)
                     joined += 1
             for spouse_id in spouses:
                 spouse = await living_entity(ctx.session, spouse_id)
-                if spouse is not None and spouse.entity_type is EntityType.MORTAL and spouse.id not in book.house_of:
+                if spouse is not None and spouse.entity_type is EntityType.MORTAL and spouse.id not in book.house_of and not held(spouse.id, house_id):
                     await join(ctx, book, house_id, spouse, by_marriage=True)
                     joined += 1
     return joined
@@ -271,7 +271,7 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
     for claim in await ctx.session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == parent_id, ClaimRow.ended_epoch.is_(None))):
         rule = await law_param(ctx.session, claim.polity_entity_id, LawKind.SUCCESSION_RULE, "gender")
         strength = round_half_up(claim.strength * table.claim_inherit_pct / PERCENT * gender_share(str(rule) if rule is not None else None, child))
-        if strength <= 0:
+        if strength <= 0 or held(child.id, claim.polity_entity_id, claim.house_entity_id):
             continue
         ctx.session.add(
             ClaimRow(
@@ -703,8 +703,9 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
                 pool.append((house_id, mortal))
     made: list[tuple[EntityRow, EntityRow]] = []
     taken: set[int] = set()
-    for house_id, mortal in pool:
-        if len(made) >= table.marriage_cap or mortal.id in taken:
+    cap = scaled_cap(table.marriage_cap, table.marriage_cap_house_divisor, len(book.houses))
+    for house_id, mortal in ctx.rng(f"marriage_order.{ctx.epoch}").shuffled(pool):
+        if len(made) >= cap or mortal.id in taken:
             continue
         if not ctx.rng(f"marriage.{mortal.id}.{ctx.epoch}").chance(table.marriage_chance):
             continue

@@ -101,9 +101,11 @@ async def found_gardens(ctx: TickContext, atlas: RegionAtlas, tally: GardenTally
     for (place_region,) in groves.all():
         for town in await towns_in(ctx, atlas, place_region) if place_region is not None else []:
             wanted.append((town.id, GardenKind.SACRED_GROVE, None))
-    for reserve_region in set(await ctx.session.scalars(select(GameReserveRow.region_entity_id))):
-        for town in (await towns_in(ctx, atlas, reserve_region))[:1]:
-            wanted.append((town.id, GardenKind.HUNTING_PARK, None))
+    for reserve_region in sorted(set(await ctx.session.scalars(select(GameReserveRow.region_entity_id)))):
+        near = await towns_in(ctx, atlas, reserve_region)
+        if near:
+            seat = max(near, key=lambda town: (stat_or(town, "population", 0), -town.id))
+            wanted.append((seat.id, GardenKind.HUNTING_PARK, None))
     for town in await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     ):

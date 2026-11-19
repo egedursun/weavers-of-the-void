@@ -140,7 +140,9 @@ class CommonsRules:
     council_order: int = rule(50, 0, 100, E, "Public order a steward town needs to form a council")
     enclose_pct: int = rule(1, 0, 100, P, "Chance each epoch a ruler orders the commons of a town of its realm enclosed, for each common it holds (%)")
     horizon_mark: int = rule(40, 0, 100, P, "Time horizon under which a ruler is twice as eager to enclose")
-    labour_span: int = rule(2000, 1, 10000000, P, "Dispossessed folk already in a realm that double the profit a ruler sees in enclosure")
+    labour_span: int = rule(
+        50, 1, 1000000, P, "Dispossessed folk already in a realm, per 1000 of its subjects, that double the profit a ruler sees in enclosure"
+    )
     dispossess_pct: int = rule(8, 0, 100, P, "Share of the people of a land driven off when its common is enclosed (%)")
     sol_loss: int = rule(6, 0, 100, P, "Prosperity the settlements of a land lose when its common is enclosed")
     unrest_gain: int = rule(10, 0, 100, P, "Unrest the settlements of a land gain when its common is enclosed")
@@ -204,18 +206,18 @@ class ResilienceRules(Spanned):
 
 @dataclass(frozen=True)
 class ReliefRules:
-    givers: int = rule(2, 0, 20, P, "Most realms and cults that send aid to one stricken town")
+    givers: int = rule(10, 0, 1000, P, "Most realms and cults that send aid to one stricken town")
     regard_at: int = rule(-10, -100, 100, P, "Regard a realm needs for a stricken town before it sends aid")
     chance_pct: int = rule(50, 0, 100, P, "Chance a realm or cult that can sends aid (%)")
     share_pct: int = rule(5, 0, 100, P, "Share of its treasury a realm sends as aid (%)")
-    cap: int = rule(800, 0, 10000000, P, "Most coin one gift of aid carries")
+    cap: int = rule(200, 0, 10000000, P, "Most coin one gift of aid carries, per 1000 people of the stricken town")
     coin_per_prosperity: int = rule(100, 1, 1000000, P, "Coin of goods that restores one point of a town's prosperity")
-    grain: int = rule(40, 0, 1000000, P, "Grain a gift of goods carries from the giver's capital to the stricken town")
+    grain: int = rule(40, 0, 1000000, P, "Grain a gift of goods carries from the giver's capital, per 1000 people of the stricken town")
     prosperity_cap: int = rule(8, 0, 100, P, "Most prosperity aid restores to a town in an epoch")
     healer_disease: int = rule(10, 0, 100, P, "Sickness healers sent as aid take from a stricken land")
     labour_progress: int = rule(15, 0, 100, P, "Progress labour sent as aid adds to a town's rebuilding")
     shelter_relief: int = rule(10, 0, 100, P, "Unrest shelter sent as aid takes from a stricken town")
-    soldiers_sent: int = rule(50, 0, 100000, P, "Militia soldiers sent as aid add to a threatened town")
+    soldiers_sent: int = rule(10, 0, 100000, P, "Militia soldiers sent as aid add to a threatened town, per 1000 of its people")
     favour: int = rule(20, 0, 100, P, "Size of the favour a town's ruler owes for aid")
     love: int = rule(8, 0, 100, P, "Love a town gains for the god of those who sent it aid")
     refuse_below: int = rule(-30, -100, 100, P, "Regard under which a stricken realm refuses the aid of a rival")
@@ -234,7 +236,7 @@ class ReconstructionRules(Spanned):
     fire_cut: int = rule(15, 0, 100, C, "Fire risk a planned rebuilding takes away")
     seize_pct: int = rule(25, 0, 100, C, "Chance an elite seizes the burned land of a town it holds (%)")
     seize_share: int = rule(5, 0, 100, C, "Share of a town's people put out of their homes when an elite seizes the burned land (%)")
-    seize_coin: int = rule(200, 0, 10000000, C, "Coin the land an elite seizes is worth to it")
+    seize_coin: int = rule(100, 0, 10000000, C, "Coin the land an elite seizes is worth to it, per 100 people put out of their homes")
     seize_unrest: int = rule(8, 0, 100, C, "Unrest a town gains when an elite seizes its burned land")
 
     @property
@@ -274,5 +276,5 @@ class BrandRules:
     counterfeit_pct: int = rule(20, 0, 100, M, "Counterfeits a famous brand draws in a town of full crime (%)")
     erosion_pct: int = rule(30, 0, 100, M, "Reputation lost for full counterfeiting (%)")
     premium_pct: int = rule(30, 0, 300, M, "Price premium a fully famous brand earns on its goods (%)")
-    coin_cap: int = rule(400, 0, 10000000, M, "Most coin a brand earns its owner in an epoch")
+    coin_cap: int = rule(100, 0, 10000000, M, "Most coin a brand earns its owner in an epoch, per 1000 people of its town")
     prosperity_cap: int = rule(2, 0, 100, M, "Most prosperity a famous brand adds to its town in an epoch")

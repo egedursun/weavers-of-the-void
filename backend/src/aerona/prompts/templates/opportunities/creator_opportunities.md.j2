@@ -8,7 +8,7 @@
 Rebel sons: {{ rebel_sons | join(", ") }}. You can crush the rebellion or forgive.
 {% endif %}
 {% if (only is none or only == "fading_sons") and fading_sons %}
-Sons being forgotten: {% for son in fading_sons %}{{ son.name }} ({{ son.existence }}){% if not loop.last %}, {% endif %}{% endfor %}. Blessing strengthens their existence.
+Sons with low existence: {% for son in fading_sons %}{{ son.name }} ({{ son.existence }}){% if not loop.last %}, {% endif %}{% endfor %}. Blessing strengthens their existence.
 {% endif %}
 {% if (only is none or only == "doom") and doom > 0 and doom * 100 >= doom_threshold * rules.opportunities.apocalypse_warning_pct %}
 Doomsday clock {{ doom }}/{{ doom_threshold }}: miracles, faith and a council can push it back.
@@ -17,7 +17,7 @@ Doomsday clock {{ doom }}/{{ doom_threshold }}: miracles, faith and a council ca
 Worlds without a god: {{ godless_worlds | join(", ") }}. Send a son or summon a new one.
 {% endif %}
 {% if (only is none or only == "stale_threads") and stale_threads > 0 %}
-{{ stale_threads | several("story is", "stories are") }} about to be forgotten; a revelation could revive them.
+{{ stale_threads | several("story is", "stories are") }} about to close unfinished; a revelation could carry them on.
 {% endif %}
 {% if (only is none or only == "rich_essence") and essence >= rules.opportunities.rich_essence %}
 You have {{ essence }} essence: enough for a new world, son or star.

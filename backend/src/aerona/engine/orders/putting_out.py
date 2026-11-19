@@ -4,7 +4,7 @@ from types import MappingProxyType
 from sqlalchemy import func, select
 
 from aerona.catalog.commodities import COMMODITIES
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.economy import ProductionRunRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.orders import ChainHoldingRow, PuttingOutRow
@@ -21,7 +21,7 @@ from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.lore.research_depth import add_progress
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 
 PUT_OUT: MappingProxyType[CommodityKind, CommodityKind] = MappingProxyType(
@@ -91,9 +91,10 @@ async def put_out(ctx: TickContext, tally: PuttingOutTally) -> None:
         village = await village_near(ctx, home)
         if raw is None or village is None or held(village.id):
             continue
+        volume = max(1, round_half_up(table.volume * stat_or(village, "population", 0) / PER_MILLE))
         ctx.session.add(
             PuttingOutRow(
-                merchant_entity_id=house.id, town_entity_id=village.id, raw=raw, product=PUT_OUT[raw], volume=table.volume, since_epoch=ctx.epoch, locked=[]
+                merchant_entity_id=house.id, town_entity_id=village.id, raw=raw, product=PUT_OUT[raw], volume=volume, since_epoch=ctx.epoch, locked=[]
             )
         )
         tally.founded += 1
@@ -101,7 +102,7 @@ async def put_out(ctx: TickContext, tally: PuttingOutTally) -> None:
             ctx,
             "putting_out.founded",
             roles={IncidentRole.OWNER: house.id, IncidentRole.PLACE: village.id},
-            facts={"raw": raw, "product": PUT_OUT[raw], "volume": table.volume},
+            facts={"raw": raw, "product": PUT_OUT[raw], "volume": volume},
             place=village.id,
         )
     await ctx.session.flush()
@@ -124,7 +125,7 @@ async def work_put_out(ctx: TickContext, row: PuttingOutRow, tally: PuttingOutTa
     made = await ledger.add(home.id, row.product, handed, GoodsFlow.PRODUCTION)
     worth = made * COMMODITIES[row.product].base_price
     await give_coin(ctx.session, ctx.rules, house, round_half_up(worth * table.merchant_margin / PERCENT))
-    shift_stat(village, "prosperity", max(1, table.village_pay * made // max(1, table.volume) // 10), ctx.rules.society.default_stat)
+    shift_stat(village, "prosperity", max(1, table.village_pay * made // max(1, row.volume) // 10), ctx.rules.society.default_stat)
     await add_progress(ctx, home.id, Technique.FACTORY_PRODUCTION, table.proto_progress)
     tally.worked += 1
 

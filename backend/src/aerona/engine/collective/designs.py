@@ -21,7 +21,7 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.integrity import SectionHazard, SectionState
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection
+from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection, VehicleSize
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.context import TickContext
@@ -36,7 +36,7 @@ from aerona.rules.registry import Rules
 C = DesignComponentKind
 M = MountKind
 X = VehicleSection
-FULL_SIZE = 10
+PART_SIZE = 10
 TOUGH = 50
 HALF = PERCENT // 2
 MOUNT_SECTIONS: MappingProxyType[MountKind, VehicleSection] = total(
@@ -100,6 +100,10 @@ class DesignTally:
     mended: int = 0
 
 
+def part_ceiling(size: VehicleSize) -> int:
+    return PART_SIZE * SIZE_SCALE[size]
+
+
 def frame_sizes(frame: VehicleFrame) -> dict[DesignComponentKind, int]:
     spec = FRAMES[frame]
     found = {
@@ -121,7 +125,7 @@ def frame_sizes(frame: VehicleFrame) -> dict[DesignComponentKind, int]:
         C.COUNTERWEIGHT: 3,
     }
     present = {part.function for part in frame_layout(spec.frame)}
-    return {kind: clamp_int(size, 1, FULL_SIZE) for kind, size in found.items() if kind in present}
+    return {kind: clamp_int(size, 1, part_ceiling(spec.size)) for kind, size in found.items() if kind in present}
 
 
 async def components_of(session: AsyncSession, design_id: int) -> dict[DesignComponentKind, DesignComponentRow]:
@@ -162,7 +166,7 @@ async def sync_components(session: AsyncSession, design: DesignRow) -> dict[Desi
             component = DesignComponentRow(design_id=design.id, component=kind, size=0, quality=HALF)
             session.add(component)
             existing[kind] = component
-        component.size = clamp_int(max(row.size for row in rows), 0, FULL_SIZE)
+        component.size = clamp_int(max(row.size for row in rows), 0, part_ceiling(design.size_class))
         component.quality = clamp_int(round_half_up(fmean(row.quality for row in rows)), 0, PERCENT)
         component.material_id = next((row.material_id for row in rows if row.material_id is not None), component.material_id)
     for kind, component in list(existing.items()):
@@ -276,7 +280,7 @@ async def lay_sections(session: AsyncSession, design: DesignRow, sizes: dict[Des
                 hazard=part.hazard,
                 neighbours=[item.value for item in part.neighbours],
                 material_id=before.material_id if before is not None else None,
-                size=clamp_int(sizes.get(part.function, before.size if before is not None else 3), 0, FULL_SIZE),
+                size=clamp_int(sizes.get(part.function, before.size if before is not None else 3), 0, part_ceiling(spec.size)),
                 quality=clamp_int(quality if before is None else before.quality + REFIT_QUALITY, 0, PERCENT),
                 locked=[],
             )

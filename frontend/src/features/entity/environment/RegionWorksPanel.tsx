@@ -47,7 +47,8 @@ type LeyLine = components['schemas']['LeyLineView']
 type Forced = components['schemas']['ForcedWeatherView']
 
 const WORKING = 'Working on it.'
-const WORKS_MAX = 5
+const IRRIGATION_MAX = 5
+const BRIDGES_MAX = 100000000
 const PERCENT = 100
 const TIES: { key: 'attuned' | 'on_ley_line' | 'at_nexus'; label: string }[] = [
   { key: 'attuned', label: 'Channels the ley' },
@@ -113,8 +114,11 @@ function SettlementRow({
   const values = [whole(bridges), whole(irrigation)]
   const reason =
     busy ??
-    (values.some((value) => value === null || value < 0 || value > WORKS_MAX)
-      ? `Works run from 0 to ${WORKS_MAX}.`
+    (values.some((value) => value === null || value < 0)
+      ? 'Works cannot fall below 0.'
+      : null) ??
+    ((values[1] ?? 0) > IRRIGATION_MAX
+      ? `Irrigation works run from 0 to ${IRRIGATION_MAX}.`
       : null) ??
     (values[0] === item.bridges && values[1] === item.irrigation
       ? 'Nothing has changed.'
@@ -134,14 +138,14 @@ function SettlementRow({
           label='Bridges'
           value={bridges}
           min={0}
-          max={WORKS_MAX}
+          max={BRIDGES_MAX}
           onChange={setBridges}
         />
         <NumberField
           label='Irrigation works'
           value={irrigation}
           min={0}
-          max={WORKS_MAX}
+          max={IRRIGATION_MAX}
           onChange={setIrrigation}
         />
         <Button

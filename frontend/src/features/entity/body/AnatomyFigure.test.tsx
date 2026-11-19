@@ -14,6 +14,7 @@ function part(key: string, label: string, changes: Partial<Part> = {}): Part {
     severable: false,
     internal: false,
     vital: false,
+    counted: 0,
     loss: 0,
     state: null,
     prosthesis: null,

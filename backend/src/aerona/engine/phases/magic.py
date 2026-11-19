@@ -14,7 +14,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.rites import beyond_reach, cast, casting_steps, choose, spellcraft
+from aerona.engine.lore.rites import beyond_reach, cast, casting_limit, casting_steps, choose, spellcraft
 from aerona.engine.mind.skills import practise_any
 from aerona.engine.mortal.equipment import focus_pct
 from aerona.engine.phase import Phase
@@ -195,7 +195,8 @@ async def wizards(ctx: TickContext) -> None:
     churches = await FaithBook.load(ctx.session)
     realms = await RealmBook.load(ctx.session)
     worked = 0
-    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
+    limit = await casting_limit(ctx)
+    for mortal in ctx.rng("wizards.order").shuffled(await canon(ctx.session, [EntityType.MORTAL])):
         if mortal.status is not EntityStatus.CANON or not knowledge.knows(mortal.id, KnowledgeBranch.MAGIC):
             continue
         if (stat(mortal, "intellect") or 0) >= rules.world_effects.sorcerer_min_intellect:
@@ -215,7 +216,7 @@ async def wizards(ctx: TickContext) -> None:
         if not rng.chance(rules.world_engine.sorcerer_act_chance * ley * holy * await focus_pct(ctx.session, rules, mortal.id)):
             continue
         home = await living_entity(ctx.session, mortal.location_id)
-        if home is None or worked >= rules.rites.cap:
+        if home is None or worked >= limit:
             continue
         enemies = await enemies_of(ctx, home.id)
         hostile = bool(enemies) and rng.chance(rules.world_engine.sorcerer_curse_chance)

@@ -4,6 +4,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -12,6 +13,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.polity.accords import Clause, sign, treaty_between
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 
 HELD = (BeastTemper.BOUND, BeastTemper.TAMED)
@@ -19,9 +21,9 @@ HELD = (BeastTemper.BOUND, BeastTemper.TAMED)
 
 async def faith_pacts(ctx: TickContext, book: RealmBook, laws: LawBook, room: int) -> int:
     made = 0
-    for realm in book.realms.values():
+    for realm in ctx.rng("faith_pact_order").shuffled(book.realms.values()):
         core = realm.profile.core_entity_id
-        if core is None or made >= room or laws.param(realm.entity.id, LawKind.RELIGIOUS_TOLERANCE, "level") != "free":
+        if core is None or made >= room or held(core, realm.entity.id) or laws.param(realm.entity.id, LawKind.RELIGIOUS_TOLERANCE, "level") != "free":
             continue
         cults = await ctx.session.scalars(
             select(EntityRow).where(
@@ -32,7 +34,7 @@ async def faith_pacts(ctx: TickContext, book: RealmBook, laws: LawBook, room: in
             )
         )
         for cult in cults:
-            if made >= room or await treaty_between(ctx.session, core, cult.id, [TreatyKind.NON_AGGRESSION]) is not None:
+            if made >= room or held(cult.id) or await treaty_between(ctx.session, core, cult.id, [TreatyKind.NON_AGGRESSION]) is not None:
                 continue
             await sign(
                 ctx,
@@ -46,16 +48,22 @@ async def faith_pacts(ctx: TickContext, book: RealmBook, laws: LawBook, room: in
 
 async def beast_pacts(ctx: TickContext, room: int) -> int:
     made = 0
-    for row in await ctx.session.scalars(
+    rows = await ctx.session.scalars(
         select(BeastProfileRow)
         .where(BeastProfileRow.temper.in_(list(HELD)), BeastProfileRow.bound_to_node_id.is_not(None))
         .order_by(BeastProfileRow.beast_entity_id)
-    ):
+    )
+    for row in ctx.rng("beast_pact_order").shuffled(rows):
         if made >= room or row.bound_to_node_id is None:
             break
         beast = await living_entity(ctx.session, row.beast_entity_id)
         ward = await living_entity(ctx.session, row.bound_to_node_id)
-        if beast is None or ward is None or await treaty_between(ctx.session, beast.id, ward.id, [TreatyKind.NON_AGGRESSION]) is not None:
+        if (
+            beast is None
+            or ward is None
+            or held(beast.id, ward.id)
+            or await treaty_between(ctx.session, beast.id, ward.id, [TreatyKind.NON_AGGRESSION]) is not None
+        ):
             continue
         await sign(
             ctx,
@@ -70,9 +78,9 @@ async def beast_pacts(ctx: TickContext, room: int) -> int:
 
 async def god_pacts(ctx: TickContext, book: RealmBook, room: int) -> int:
     made = 0
-    for realm in book.realms.values():
+    for realm in ctx.rng("god_pact_order").shuffled(book.realms.values()):
         core = realm.profile.core_entity_id
-        if core is None or made >= room:
+        if core is None or made >= room or held(core, realm.entity.id):
             continue
         gods = await ctx.session.scalars(
             select(ForeignGodRow)
@@ -80,7 +88,7 @@ async def god_pacts(ctx: TickContext, book: RealmBook, room: int) -> int:
             .where(BondRow.source_node_id == core, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, ForeignGodRow.stance >= 0)
         )
         for god in gods:
-            if made >= room or await treaty_between(ctx.session, core, god.id, [TreatyKind.NON_AGGRESSION]) is not None:
+            if made >= room or held(god.id) or await treaty_between(ctx.session, core, god.id, [TreatyKind.NON_AGGRESSION]) is not None:
                 continue
             await sign(
                 ctx,
@@ -94,7 +102,7 @@ async def god_pacts(ctx: TickContext, book: RealmBook, room: int) -> int:
 
 
 async def outer_pacts(ctx: TickContext, book: RealmBook) -> dict[str, int]:
-    room = ctx.rules.treaties.outer_pact_cap
+    room = scaled_cap(ctx.rules.treaties.outer_pact_cap, ctx.rules.treaties.outer_pact_cap_realm_divisor, len(book.realms))
     laws = await LawBook.load(ctx.session)
     faiths = await faith_pacts(ctx, book, laws, room)
     beasts = await beast_pacts(ctx, room)

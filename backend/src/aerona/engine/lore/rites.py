@@ -17,7 +17,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, RiteEffectRow, RiteProfileRow
-from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
+from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, WorldSeasonRow
 from aerona.db.tables.faith import PossessionRow, SpiritProfileRow
@@ -90,7 +90,7 @@ from aerona.engine.divine.laws import binds
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.dominion.effects import divine_power
 from aerona.engine.dominion.sites import found_sites_in
-from aerona.engine.ecology.control import spawn_beast
+from aerona.engine.ecology.control import commonest_species, spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
 from aerona.engine.environment.local import weather_here
@@ -126,8 +126,8 @@ from aerona.engine.powers.sources import patron_pays, rite_draw
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import add_flag, connect, living_entity, remove_flag
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
+from aerona.engine.primitives.queries import add_flag, connect, count_communities, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
@@ -693,9 +693,7 @@ async def bind_wandering(ctx: TickContext, work: Working, spirit: SpiritProfileR
 
 async def summon_beast(ctx: TickContext, work: Working) -> str | None:
     region = (await RegionAtlas.load(ctx.session)).top_region(work.caster.id)
-    species = await ctx.session.scalar(
-        select(SpeciesRangeRow.species_entity_id).where(SpeciesRangeRow.region_entity_id == region).order_by(SpeciesRangeRow.abundance.desc()).limit(1)
-    )
+    species = await commonest_species(ctx, region)
     if species is None:
         return None
     beast = await spawn_beast(ctx, species)
@@ -1334,14 +1332,21 @@ async def choose(ctx: TickContext, caster: EntityRow, *, hostile: bool, protecti
     return None
 
 
+async def casting_limit(ctx: TickContext) -> int:
+    return scaled_cap(ctx.rules.rites.cap, ctx.rules.rites.cap_community_divisor, await count_communities(ctx.session))
+
+
 async def cult_rites(ctx: TickContext, realms: RealmBook) -> int:
     table = ctx.rules.rites
     worked = 0
-    cults = await ctx.session.scalars(
-        select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    limit = await casting_limit(ctx)
+    cults = ctx.rng("rite.cult.order").shuffled(
+        await ctx.session.scalars(
+            select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        )
     )
     for cult in cults:
-        if worked >= table.cap or not ctx.rng(f"rite.cult.{cult.id}.{ctx.epoch}").chance(table.cult_chance):
+        if worked >= limit or not ctx.rng(f"rite.cult.{cult.id}.{ctx.epoch}").chance(table.cult_chance):
             continue
         holy = [school for school in await schools_for(ctx, cult) if RITE_TEMPLATES[school].source is MagicSource.DIVINE]
         found = next(iter([await rite_of(ctx, school) for school in holy]), None)
@@ -1362,10 +1367,11 @@ async def war_mages(ctx: TickContext, realms: RealmBook) -> int:
         .order_by(ArmyProfileRow.army_entity_id)
     )
     worked = 0
-    for (profile,) in armies.unique().all():
+    limit = await casting_limit(ctx)
+    for (profile,) in ctx.rng("rite.army.order").shuffled(armies.unique().all()):
         army = await living_entity(ctx.session, profile.army_entity_id)
         target = await living_entity(ctx.session, profile.target_entity_id)
-        if army is None or target is None or worked >= table.cap:
+        if army is None or target is None or worked >= limit:
             continue
         if not ctx.rng(f"rite.army.{army.id}.{ctx.epoch}").chance(table.army_chance):
             continue

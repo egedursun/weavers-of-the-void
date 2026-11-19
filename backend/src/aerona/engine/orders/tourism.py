@@ -3,7 +3,7 @@ from types import MappingProxyType
 
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.museums import MuseumCollectionRow
@@ -24,6 +24,7 @@ from aerona.engine.economy.convoys import carry_culture
 from aerona.engine.economy.purse import receive_coin
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
 
 SIGHT_KINDS: MappingProxyType[StructureKind, TouristSight] = MappingProxyType(
@@ -128,7 +129,7 @@ async def travel(ctx: TickContext, origin: EntityRow, sight: Sight, tally: Touri
     host = await ctx.session.get(EntityRow, sight.host_id)
     if host is None or host.status is not EntityStatus.CANON or held(host.id, sight.entity.id):
         return
-    visitors = table.visitors
+    visitors = max(1, round_half_up(table.visitors * stat_or(origin, "population", 0) / PER_MILLE))
     income = visitors * table.spend
     ctx.session.add(
         TouristFlowRow(

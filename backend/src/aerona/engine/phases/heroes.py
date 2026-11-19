@@ -33,7 +33,7 @@ from aerona.engine.phases.society_support.quests import QuestOption, QuestWorld,
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction
+from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -58,6 +58,10 @@ class HeroCounters:
     resolved: int = 0
     companions: int = 0
     apprentices: int = 0
+    heroes: int = 0
+
+    def cap(self, rules: Rules, base: int) -> int:
+        return scaled_cap(base, rules.heroes.cap_hero_divisor, self.heroes)
 
 
 @dataclass(frozen=True)
@@ -237,15 +241,15 @@ def choose_quest(ctx: TickContext, options: Sequence[QuestOption], stream: str) 
 async def _quest_round(ctx: TickContext, world: HeroWorld, counters: HeroCounters) -> None:
     settings = ctx.rules.heroes
     rng = ctx.rng("quests")
-    for hero in world.heroes:
+    for hero in ctx.rng("quests.order").shuffled(world.heroes):
         if hero.status is not EntityStatus.CANON or held(hero.id):
             continue
         quest = await active_quest(ctx.session, hero.id)
-        if quest is not None and quest.started_epoch < ctx.epoch and counters.resolved < settings.quest_resolution_cap:
+        if quest is not None and quest.started_epoch < ctx.epoch and counters.resolved < counters.cap(ctx.rules, settings.quest_resolution_cap):
             counters.resolved += 1
             await resolve_quest_now(ctx, hero, quest, world)
             continue
-        if quest is not None or counters.started >= settings.quest_new_cap or not rng.chance(settings.quest_chance):
+        if quest is not None or counters.started >= counters.cap(ctx.rules, settings.quest_new_cap) or not rng.chance(settings.quest_chance):
             continue
         option = choose_quest(ctx, quest_options(ctx.rules, world.quests, hero), f"quest_choice.{hero.id}")
         if option is not None:
@@ -255,12 +259,12 @@ async def _quest_round(ctx: TickContext, world: HeroWorld, counters: HeroCounter
 
 async def _companion_round(ctx: TickContext, world: HeroWorld, counters: HeroCounters) -> None:
     settings = ctx.rules.heroes
-    living = [hero for hero in world.heroes if hero.status is EntityStatus.CANON and not held(hero.id)]
+    living = ctx.rng("companions.order").shuffled([hero for hero in world.heroes if hero.status is EntityStatus.CANON and not held(hero.id)])
     bonds = world.quests.bonds
     rng = ctx.rng("companions")
     for index, first in enumerate(living):
         for second in living[index + 1 :]:
-            if counters.companions >= settings.companion_new_cap:
+            if counters.companions >= counters.cap(ctx.rules, settings.companion_new_cap):
                 return
             if bonds.between(first.id, second.id, BondKind.COMPANION) or bonds.between(first.id, second.id, BondKind.RIVAL):
                 continue
@@ -356,8 +360,8 @@ def ready_to_teach(rules: Rules, master: EntityRow) -> bool:
 async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCounters) -> None:
     settings = ctx.rules.heroes
     rng = ctx.rng("apprentices")
-    for hero in world.heroes:
-        if counters.apprentices >= settings.apprentice_new_cap:
+    for hero in ctx.rng("apprentices.order").shuffled(world.heroes):
+        if counters.apprentices >= counters.cap(ctx.rules, settings.apprentice_new_cap):
             return
         if hero.status is not EntityStatus.CANON or held(hero.id) or not ready_to_teach(ctx.rules, hero):
             continue
@@ -518,7 +522,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
 )
 async def heroes(ctx: TickContext) -> None:
     world = await load_hero_world(ctx)
-    counters = HeroCounters()
+    counters = HeroCounters(heroes=sum(1 for hero in world.heroes if hero.status is EntityStatus.CANON))
     await _quest_round(ctx, world, counters)
     await _companion_round(ctx, world, counters)
     await _apprentice_round(ctx, world, counters)
@@ -619,8 +623,9 @@ async def hero_births(ctx: TickContext) -> None:
     at_war = {bond.source_node_id for bond in hostility} | {bond.target_node_id for bond in hostility}
     rng = ctx.rng("hero_births")
     born = 0
-    for community in unheld(communities):
-        if born >= settings.birth_cap:
+    limit = scaled_cap(settings.birth_cap, settings.birth_cap_community_divisor, len(communities))
+    for community in ctx.rng("hero_births.order").shuffled(unheld(communities)):
+        if born >= limit:
             break
         if stat_or(community, "population", 0) < threshold(community):
             continue

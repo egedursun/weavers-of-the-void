@@ -78,7 +78,7 @@ async def keep_shop(ctx: TickContext, shop: ShopRow, tally: CommerceTally) -> No
     if shop.stock <= 0:
         await close_shop(ctx, shop, "its shelves stood empty", tally)
         return
-    sold = min(shop.stock, round_half_up(table.shop_turnover * SHOP_TURNOVER_PCT[shop.form] / PERCENT))
+    sold = min(shop.stock, table.per_epoch(table.shop_turnover * SHOP_TURNOVER_PCT[shop.form] / PERCENT))
     if "stock" not in (shop.locked or []):
         shop.stock -= sold
     income = round_half_up(sold * shop.margin / TEN)

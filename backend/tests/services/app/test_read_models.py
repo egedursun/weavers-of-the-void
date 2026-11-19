@@ -200,3 +200,12 @@ async def test_metrics_summary_eta_and_health(tmp_path: Path) -> None:
     assert report.recent_errors[0].text == "database exploded"
     logger.removeHandler(ring)
     await telemetry.dispose()
+
+
+def test_settlement_tiers_reach_megacities_and_conurbations() -> None:
+    rules = Rules()
+    politics = rules.politics
+    assert wiki.settlement_tier(rules, politics.metropolis_population) is wiki.SettlementTier.GREAT_CITY
+    assert wiki.settlement_tier(rules, politics.megacity_population) is wiki.SettlementTier.MEGACITY
+    assert wiki.settlement_tier(rules, politics.conurbation_population) is wiki.SettlementTier.CONURBATION
+    assert wiki.settlement_tier(rules, politics.megacity_population - 1) is wiki.SettlementTier.GREAT_CITY

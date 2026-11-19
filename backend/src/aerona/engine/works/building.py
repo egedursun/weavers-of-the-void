@@ -26,7 +26,7 @@ LEVEL_MAX = 5
 WORKS_LEVELS: dict[WorksKind, tuple[str, int, int | None]] = {
     WorksKind.ROAD: ("roads", 1, LEVEL_MAX),
     WorksKind.RAIL_LINE: ("roads", 1, LEVEL_MAX),
-    WorksKind.BRIDGE: ("bridges", 1, LEVEL_MAX),
+    WorksKind.BRIDGE: ("bridges", 1, None),
     WorksKind.DAM: ("irrigation", 1, LEVEL_MAX),
     WorksKind.DRAINAGE: ("irrigation", 1, LEVEL_MAX),
     WorksKind.WALLS: ("walls_level", 1, LEVEL_MAX),

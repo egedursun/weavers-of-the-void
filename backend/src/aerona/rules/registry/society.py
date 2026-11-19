@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 
 @dataclass(frozen=True)
-class SocietyRules:
+class SocietyRules(Spanned):
     class_farmer_pct: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Base share of farmers in society (%)")
     class_artisan_pct: int = rule(15, 0, 100, RuleGroup.ECONOMY, "Base share of artisans in society (%)")
     class_merchant_pct: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Base share of merchants in society (%)")
@@ -37,9 +37,9 @@ class SocietyRules:
     target_unemployed_prosperity: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Prosperity below which wage workers lose their work")
     target_unemployed: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Unemployed-share bonus in hard times where wage work exists")
     class_initial_satisfaction: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Initial satisfaction of classes")
-    initial_food: int = rule(60, 0, 1000, RuleGroup.ECONOMY, "Community's initial food (supplies)")
-    initial_ore: int = rule(10, 0, 1000, RuleGroup.ECONOMY, "Community's initial ore")
-    initial_goods: int = rule(20, 0, 1000, RuleGroup.ECONOMY, "Community's initial goods")
+    initial_food: int = rule(60, 0, 1000, RuleGroup.ECONOMY, "Community's initial food stores (supply index, 100 = one epoch of its needs)")
+    initial_ore: int = rule(10, 0, 1000, RuleGroup.ECONOMY, "Community's initial ore stores (supply index, 100 = one epoch of its needs)")
+    initial_goods: int = rule(20, 0, 1000, RuleGroup.ECONOMY, "Community's initial goods stores (supply index, 100 = one epoch of its needs)")
     default_stat: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Value assumed for a community and land with unrecorded prosperity, faith or fertility")
     target_agriculture_farmer: int = rule(10, 0, 100, RuleGroup.ECONOMY, "Farmer-share bonus for those who know agriculture")
     target_trade_merchant: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Merchant-share bonus for those who trade")
@@ -64,8 +64,10 @@ class SocietyRules:
     food_harvest_weight_pct: int = rule(100, 0, 1000, RuleGroup.ECONOMY, "How strongly a good or bad harvest swings food production (%)")
     food_rate_min_pct: int = rule(20, 0, 1000, RuleGroup.ECONOMY, "Floor of the food-production rate (%)")
     food_rate_max_pct: int = rule(300, 0, 10000, RuleGroup.ECONOMY, "Cap of the food-production rate (%)")
-    ore_plenty_threshold: int = rule(20, 0, 200, RuleGroup.ECONOMY, "Above this ore, artisans find plenty of ore")
-    sat_hungry_food: int = rule(60, 0, 200, RuleGroup.ECONOMY, "Below this food, farmers are hungry")
+    ore_plenty_threshold: int = rule(
+        20, 0, 200, RuleGroup.ECONOMY, "Above these ore stores artisans find plenty of ore (supply index, 100 = one epoch of its needs)"
+    )
+    sat_hungry_food: int = rule(60, 0, 200, RuleGroup.ECONOMY, "Below these food stores farmers are hungry (supply index, 100 = one epoch of its needs)")
     sat_farmer_hungry: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Satisfaction loss of hungry farmers")
     sat_farmer_fed: int = rule(5, 0, 100, RuleGroup.ECONOMY, "Satisfaction gain of well-fed farmers")
     sat_farmer_war: int = rule(8, 0, 100, RuleGroup.ECONOMY, "Farmer satisfaction reduced by war")
@@ -100,7 +102,9 @@ class SocietyRules:
     sat_curse: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Satisfaction loss to all classes from a curse")
     sat_drift_pct: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Per-epoch drift of satisfaction toward the target (%)")
     effect_prosperity_divisor: int = rule(4, 1, 100, RuleGroup.ECONOMY, "Effect of merchant share on prosperity: (share \u2212 base) / this number")
-    effect_goods_plenty: int = rule(60, 0, 100000, RuleGroup.ECONOMY, "Above this goods, prosperity rises additionally")
+    effect_goods_plenty: int = rule(
+        60, 0, 100000, RuleGroup.ECONOMY, "Above these goods stores prosperity rises additionally (supply index, 100 = one epoch of its needs)"
+    )
     effect_goods_prosperity: int = rule(1, 0, 100, RuleGroup.ECONOMY, "Per-epoch prosperity gain from plentiful goods")
     effect_piety_divisor: int = rule(3, 1, 100, RuleGroup.ECONOMY, "Effect of priest share on piety: (share \u2212 base) / this number")
     effect_defense_divisor: int = rule(4, 1, 100, RuleGroup.ECONOMY, "Effect of warrior share on city defense: (share \u2212 base) / this number")
@@ -112,25 +116,21 @@ class SocietyRules:
         0,
         1000,
         RuleGroup.POPULATION_AND_GROWTH,
-        "Food the stockpile must drop to for famine (it rarely reaches zero since the stockpile refills itself by saving)",
+        "Food stores at or below which famine can strike (supply index, 100 = one epoch of its needs)",
     )
-    famine_cap: int = rule(1, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Maximum famines per epoch")
     famine_fed_pct: int = rule(70, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Share of its food needs a community must fail to eat for famine to strike (%)")
     famine_population_kept_pct: int = rule(92, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Population remaining after famine (%)")
     famine_prosperity_loss: int = rule(6, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Prosperity reduced by famine")
     weapon_warrior_pct: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Warrior share required to forge weapons (%)")
-    weapon_batch_cap: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Maximum weapon batches per epoch")
     weapon_power: int = rule(3, 1, 12, RuleGroup.ECONOMY, "Power level of a forged weapon")
     bankruptcy_merchant_pct: int = rule(12, 0, 100, RuleGroup.ECONOMY, "Merchant share required for bankruptcy (%)")
     bankruptcy_prosperity: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Below this prosperity a guild may go bankrupt")
-    bankruptcy_cap: int = rule(1, 0, 100, RuleGroup.ECONOMY, "Maximum guild bankruptcies per epoch")
     bankruptcy_satisfaction_loss: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Merchant satisfaction reduced by bankruptcy")
     bankruptcy_share_loss: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Merchant share reduced by bankruptcy")
     bankruptcy_prosperity_loss: int = rule(5, 0, 100, RuleGroup.ECONOMY, "Prosperity reduced by bankruptcy")
     revolt_min_class_pct: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum share of a class that can revolt (%)")
     revolt_satisfaction: int = rule(22, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A class below this satisfaction may revolt")
     revolt_min_population: int = rule(800, 0, 10000000, RuleGroup.WAR_AND_DIPLOMACY, "Population required for a class revolt")
-    revolt_cap: int = rule(1, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Maximum class revolts per epoch")
     revolt_faction_power: int = rule(3, 1, 12, RuleGroup.WAR_AND_DIPLOMACY, "Power level of the revolt faction")
     revolt_faction_strength: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base strength of the revolt faction")
     revolt_faction_strength_die: int = rule(30, 1, 100, RuleGroup.WAR_AND_DIPLOMACY, "Strength die of the revolt faction (1\u2013N)")
@@ -142,10 +142,8 @@ class SocietyRules:
     forge_weapon_chance: int = rule(20, 0, 100, RuleGroup.ECONOMY, "A forge forges a weapon (%)")
     class_revolt_chance: int = rule(22, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A discontented class revolts (%)")
     guild_bankruptcy_chance: int = rule(18, 0, 100, RuleGroup.ECONOMY, "A merchant guild goes bankrupt (%)")
-    language_faith_adopt_cap: int = rule(4, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum communities acquiring a language or faith per epoch")
     poverty_revolt_top_pct: int = rule(50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Cities that can revolt: the world's top X% most populous")
     poverty_revolt_always_population: int = rule(5000, 0, 100000000, RuleGroup.WAR_AND_DIPLOMACY, "A poor city this populous can always revolt (people)")
-    poverty_revolt_cap: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum uprisings per epoch")
     rebel_power: int = rule(3, 1, 12, RuleGroup.WAR_AND_DIPLOMACY, "Power level of the rebel faction")
     rebel_strength_base: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Rebels' strength: base")
     rebel_strength_die: int = rule(30, 1, 100, RuleGroup.WAR_AND_DIPLOMACY, "Die added to rebels' strength (1\u2013X)")
@@ -160,7 +158,7 @@ class SocietyRules:
     poverty_revolt_just_law_chance: int = rule(8, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Uprising in a city with a just law (%)")
     poverty_revolt_prosperity: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A city below this prosperity may revolt")
     poverty_revolt_min_population: int = rule(600, 0, 1000000, RuleGroup.WAR_AND_DIPLOMACY, "Minimum population of a revolting city")
-    love_rivalry_chance: int = rule(8, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Love or rivalry between mortals in the same place (%)")
+    love_rivalry_chance: float = rule(0.5, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Love or rivalry between two mortals in the same place (% per year)")
     love_share_pct: int = rule(55, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Share of these that are love (%)")
     love_min_age: int = rule(16, 0, 200, RuleGroup.HEROES_AND_MORTALS, "Minimum age of a mortal able to enter love or rivalry")
     sat_justice_midpoint: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Justice of laws that neither raises nor lowers class satisfaction")

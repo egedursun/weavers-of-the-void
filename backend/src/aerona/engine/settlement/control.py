@@ -35,13 +35,13 @@ FOREIGNERS_KEY = "foreigners"
 INFRA_NUMBERS = {
     "walls_level": (0, 5),
     "walls_condition": (0, PERCENT),
-    "gates": (0, 20),
+    "gates": (0, 100000000),
     "roads": (0, 5),
-    "towers": (0, 20),
+    "towers": (0, 100000000),
     "granary_capacity": (0, 100000000),
     "warehouse_capacity": (0, 100000000),
     "harbour_capacity": (0, 100000000),
-    "bridges": (0, 5),
+    "bridges": (0, 100000000),
     "irrigation": (0, 5),
 }
 PROFILE_KEYS = (*PROFILE_NUMBERS, *POSITIVE_NUMBERS, "admin_capacity", "size_tier", "free_city", "rationing", GARRISON_KEY, FOREIGNERS_KEY)

@@ -25,7 +25,6 @@ class TraitEvolutionRules:
     drought_pressure: int = rule(2, 0, 20, E, "How far a land drier than a species needs moves its drought tolerance each epoch")
     senses_pct: int = rule(20, 0, 100, E, "How much keen senses spare a species from its hunters at full measure (%)")
     fecundity_pct: int = rule(20, 0, 100, E, "Extra growth a species of full fecundity gains (%)")
-    per_epoch: int = rule(400, 0, 100000, E, "Species ranges whose traits move each epoch at most")
 
 
 @dataclass(frozen=True)
@@ -107,7 +106,6 @@ class CarrierRules:
     seed_pct: int = rule(25, 0, 100, D, "Chance each epoch a carrier who has travelled seeds an outbreak where it now is (%)")
     identify_skill: int = rule(50, 0, 100, D, "Medicine a physician needs to find a carrier, with the contagion theory known")
     theory_truth: int = rule(60, 0, 100, D, "Truth a community's ruling theory of medicine needs to count as knowing how contagion passes")
-    per_epoch: int = rule(40, 0, 10000, D, "Carriers who may appear each epoch at most")
     seed_severity: int = rule(30, 0, 100, D, "Severity of an outbreak a carrier seeds")
 
 
@@ -117,7 +115,6 @@ class SpilloverRules:
     cleared_pct: int = rule(4, 0, 100, D, "Extra chance at fully cleared land (%)")
     hunted_pct: int = rule(4, 0, 100, D, "Extra chance where the host is hunted hard (%)")
     herd_pct: int = rule(3, 0, 100, D, "Extra chance where herds graze among the host (%)")
-    per_epoch: int = rule(3, 0, 1000, D, "Spillovers each epoch at most")
     severity: int = rule(25, 0, 100, D, "Severity of an outbreak a spillover begins")
 
 

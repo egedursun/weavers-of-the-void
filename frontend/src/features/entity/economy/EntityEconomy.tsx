@@ -1084,7 +1084,7 @@ function WorkshopControls({
     <AdjustPanel
       label='Adjust the workshops'
       title='Build, raise or pull down a workshop'
-      note='Choose a workshop and the level it should stand at. Level 0 pulls it down; granaries and warehouses add room to the stores.'
+      note='Choose a workshop and the level it should stand at. Level 0 pulls it down; the highest level grows with the community’s people; granaries and warehouses add room to the stores.'
     >
       <div className={cn(FIELD_GRID, '@md/econ:grid-cols-3')}>
         <MindPicker
@@ -1098,10 +1098,10 @@ function WorkshopControls({
           }}
         />
         <NumberField
-          label='Level (0–20)'
+          label='Level (0–1000)'
           aria='Workshop level'
           value={level}
-          max={20}
+          max={1000}
           onChange={setLevel}
         />
         <Button

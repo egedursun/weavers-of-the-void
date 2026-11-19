@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.disease import DiseaseVector, OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -29,7 +30,7 @@ from aerona.engine.loops.delay import lagged
 from aerona.engine.military.units import resize
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.primitives.knowledge import KnowledgeMap
-from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
@@ -163,14 +164,14 @@ async def run_course(ctx: TickContext, book: DiseaseBook) -> None:
             continue
         if QUARANTINE_LOCK not in outbreak.locked:
             outbreak.quarantined = book.quarantined(outbreak.region_entity_id)
-        held = STATUS_LOCK in outbreak.locked
+        status_kept = STATUS_LOCK in outbreak.locked
         starved = host_gone(book, outbreak)
-        if not held and (outbreak.status is OutbreakStatus.WANING or immune >= book.herd_threshold(outbreak.disease_entity_id) or not communities):
+        if not status_kept and (outbreak.status is OutbreakStatus.WANING or immune >= book.herd_threshold(outbreak.disease_entity_id) or not communities):
             await finish(ctx, book, outbreak)
             ctx.count("outbreaks_ended")
             continue
         await linger(ctx, book, outbreak, knowledge)
-        if not held and (age >= table.outbreak_epochs or starved):
+        if not status_kept and (age >= table.outbreak_epochs or starved):
             outbreak.status = OutbreakStatus.WANING
             ctx.count("outbreaks_starved", int(starved))
     book.outbreaks = [item for item in book.outbreaks if item.status is not OutbreakStatus.ENDED]
@@ -202,7 +203,7 @@ async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
     renewed = {(item.region_entity_id, item.disease_entity_id) for item in book.outbreaks if not host_gone(book, item)}
     for region_id, rows in list(book.endemic.items()):
         for row in list(rows):
-            if (region_id, row.disease_entity_id) in renewed or row.locked:
+            if (region_id, row.disease_entity_id) in renewed or row.locked or held(region_id, row.disease_entity_id):
                 continue
             kept = host_keeps(book, row)
             if kept is not None:
@@ -217,7 +218,7 @@ async def settle_endemic(ctx: TickContext, book: DiseaseBook) -> None:
                 rows.remove(row)
         for row in rows:
             for community_id in book.atlas.communities_in(region_id):
-                if (community_id, row.disease_entity_id) not in book.immunity:
+                if (community_id, row.disease_entity_id) not in book.immunity and not held(community_id, row.disease_entity_id):
                     book.immunity[(community_id, row.disease_entity_id)] = {}
                     for band in AgeBand:
                         immune = ImmunityRow(
@@ -248,8 +249,9 @@ async def mutate(ctx: TickContext, book: DiseaseBook) -> int:
     struck: dict[int, list[OutbreakRow]] = defaultdict(list)
     for outbreak in book.outbreaks:
         struck[outbreak.disease_entity_id].append(outbreak)
-    for disease_id, outbreaks in sorted(struck.items()):
-        if made >= table.mutation_cap:
+    limit = scaled_cap(table.mutation_cap, table.mutation_cap_disease_divisor, len(struck))
+    for disease_id, outbreaks in ctx.rng("mutation_order").shuffled(sorted(struck.items())):
+        if made >= limit:
             break
         disease = book.diseases.get(disease_id)
         profile = book.profiles.get(disease_id)

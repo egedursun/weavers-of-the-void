@@ -110,7 +110,8 @@ class CampaignDepthRules:
 
 @dataclass(frozen=True)
 class WarFinanceRules:
-    war_loan_principal: int = rule(150, 1, 1000000, W, "Treasury a realm borrows for its war when its chest runs dry")
+    war_loan_principal: int = rule(150, 1, 100000000, W, "Treasury a realm borrows for its war when its chest runs dry, before its people are counted")
+    war_loan_per_thousand: int = rule(5, 0, 1000000, W, "More treasury a realm borrows for its war for every 1000 of its people")
     debase_purity: int = rule(5, 0, 100, W, "Purity a realm strips from its coin to pay soldiers when no one will lend")
     debase_trust: int = rule(4, 0, 100, W, "Trust a coin loses when it is debased to pay for war")
     debase_supply_pct: int = rule(10, 0, 100, W, "Coin supply added when a realm debases its coin for war (%)")
@@ -196,7 +197,8 @@ class SonMilitaryRules:
     wage_war_cost: int = rule(15, 0, 500, W, "Essence a son spends to declare a war with a cause and aims")
     max_aims: int = rule(4, 1, 8, W, "Most aims a son can name when declaring a war")
     raise_host_cost: int = rule(8, 0, 500, W, "Essence a son spends to call a community to arms")
-    raise_host_max: int = rule(2000, 1, 1000000, W, "Most soldiers a son can call to arms at once")
+    raise_host_max: int = rule(2000, 1, 100000000, W, "Most soldiers a son can call to arms at once from a small community")
+    raise_host_share_pct: int = rule(10, 0, 100, W, "Most soldiers a son can call to arms at once, as a share of the community's people (%), when that is more")
     disband_cost: int = rule(2, 0, 500, W, "Essence a son spends to send an army home")
     siege_cost: int = rule(6, 0, 500, W, "Essence a son spends to set an army against a city")
     peace_cost: int = rule(5, 0, 500, W, "Essence a son spends to set the terms of a peace")

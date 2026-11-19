@@ -108,7 +108,7 @@ def occupation_tax(ctx: TickContext, income: int, row: OccupationRow | None) -> 
 
 async def weary(ctx: TickContext, war: WarRow, side: WarSideRow, *, dead: int, maimed: int, occupied: int) -> int:
     table = ctx.rules.war_weariness
-    seasons = ctx.rules.campaigns.seasons_per_war_epoch
+    seasons = ctx.rules.campaigns.war_seasons()
     gain = dead * table.casualty_per_1000 / THOUSAND + maimed * table.maimed_per_100 / HUNDRED + occupied * table.occupation_gain + seasons * table.season_gain
     martial = (await values_for(ctx.session, side.entity_id)).get(ValueAxis.MARTIAL, 0)
     gain *= 1 - max(0, martial) / PERCENT * table.martial_resist_pct / PERCENT

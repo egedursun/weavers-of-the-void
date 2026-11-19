@@ -81,7 +81,6 @@ PART_STACKS: MappingProxyType[str, tuple[TissueKind, ...]] = MappingProxyType(
 )
 MAJOR_VESSELS = frozenset({"neck", "torso", "heart", "lungs", "groin", "left_leg", "right_leg", "left_arm", "right_arm", "left_hindleg", "right_hindleg"})
 COUNTED_PARTS: MappingProxyType[str, str] = MappingProxyType({"fingers": "fingers", "toes": "toes", "teeth": "teeth"})
-FULL_COUNTS: MappingProxyType[str, int] = MappingProxyType({"fingers": 10, "toes": 10, "teeth": 32})
 
 
 def covering_of(plan: BodyPlan) -> TissueKind:

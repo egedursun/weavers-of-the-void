@@ -92,7 +92,7 @@ async def ley_dwellers(ctx: TickContext) -> list[EntityRow]:
         return []
     atlas = await RegionAtlas.load(ctx.session)
     found = [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if atlas.top_region(mortal.id) in regions]
-    return found[: ctx.rules.warping.bearers_max]
+    return found[: ctx.rules.warping.bearers_max] if ctx.rules.warping.bearers_max else found
 
 
 async def warp_world(ctx: TickContext, tally: WarpTally) -> None:

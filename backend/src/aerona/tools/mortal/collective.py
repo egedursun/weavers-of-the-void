@@ -21,7 +21,7 @@ from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.collective.accounts import HistoryTally, record, strike
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.crowds import stir
-from aerona.engine.collective.designs import FULL_SIZE, draw_design, frame_sizes
+from aerona.engine.collective.designs import draw_design, frame_sizes, part_ceiling
 from aerona.engine.collective.storylets import StoryletTally, cast_of, names, resolve
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.queries import living_entity
@@ -168,7 +168,7 @@ async def draw_a_design(call: MortalCall, args: DesignInput) -> str:
             MortalResult.DESIGN_REFUSED,
             why=f"{owner.name} cannot yet build {an(FRAMES[args.frame].label.lower())}: it lacks the knowledge or is too small a power for a hull that size",
         )
-    sizes[args.emphasis] = min(FULL_SIZE, sizes[args.emphasis] + EMPHASIS)
+    sizes[args.emphasis] = min(part_ceiling(FRAMES[args.frame].size), sizes[args.emphasis] + EMPHASIS)
     skill = stat_or(call.me, "intellect", PERCENT // 2)
     design = await draw_design(call.tick, owner, args.frame, sizes=sizes, quality=skill, designer_id=call.me.id, knowledge=knowledge)
     await call.record(

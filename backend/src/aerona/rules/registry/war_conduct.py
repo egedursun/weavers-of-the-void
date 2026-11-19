@@ -15,7 +15,9 @@ class WarConductRules(Spanned):
     vendetta_magnitude: int = rule(20, 0, 100, W, "Weight a memory of killed kin needs to give a casus belli")
     liberation_share: int = rule(1, 0, 100, W, "Communities of one's own people ruled by another realm that give a casus belli of liberation")
     toll_dispute_pct: int = rule(40, 0, 100, W, "Tariff on a partner's goods that gives the partner a casus belli of trade dispute (%)")
-    hunger_food: int = rule(20, 0, 1000, W, "Food stock below which a community may claim a neighbour's land out of need")
+    hunger_food: int = rule(
+        20, 0, 100000, W, "Food stock per thousand people below which a community may claim the land of a neighbour holding three times as much out of need"
+    )
     unjustified_tyranny: int = rule(15, 0, 100, W, "Tyranny the ruler of an unjustified attacker gains")
     unjustified_threat: int = rule(15, 0, 100, W, "Threat every other realm sees in an unjustified attacker")
     unjustified_support: int = rule(20, 0, 100, W, "War support an unjustified attacker starts without")

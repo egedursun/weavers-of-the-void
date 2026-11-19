@@ -12,7 +12,7 @@ from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.powers import MagicSystemLinkRow, MagicSystemRow, PowerRestrictionRow, PowerRow, PowerSourceRow
 from aerona.domain.enums.arcana import SpellForm, SpellTechnique
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.made import EffectTarget
 from aerona.domain.enums.mind import Attribute
@@ -300,11 +300,15 @@ async def witnesses_of(ctx: TickContext, user: EntityRow) -> list[int]:
         return []
     rows = await ctx.session.scalars(
         select(EntityRow.id)
-        .where(await present_among(ctx.session, [user.location_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.id != user.id)
+        .where(
+            await present_among(ctx.session, [user.location_id]),
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.id != user.id,
+        )
         .order_by(EntityRow.id)
-        .limit(WITNESSES)
     )
-    return list(rows)
+    return ctx.rng(f"power.witnesses.{user.id}.{ctx.epoch}").sample(list(rows), WITNESSES)
 
 
 async def use(ctx: TickContext, power: PowerRow, user: EntityRow, target: EntityRow | None) -> Outcome:

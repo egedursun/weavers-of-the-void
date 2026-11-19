@@ -511,9 +511,9 @@ async def test_mortals_and_sons_hear_of_rule_patrons_and_learning(session: Async
     await session.flush()
     lines = await son_regime_lines(scope, world.son)
     assert any(f"(polity {realm.id}) is torn" in line for line in lines)
-    assert any(f"(mortal {me.id}) plots for the throne" in line for line in lines)
+    assert any(f"(mortal {me.id}) plots to take power in" in line for line in lines)
     throne = " ".join(await mortal_regime_lines(scope, ruler))
-    assert f"(mortal {me.id}) stands plotting toward your throne" in throne
+    assert f"(mortal {me.id}) stands plotting toward your rule" in throne
 
 
 async def test_integrity_lets_the_dead_leave_circles_and_ties(session: AsyncSession, world: CoreWorld) -> None:

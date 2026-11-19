@@ -44,6 +44,7 @@ from aerona.engine.services.war import (
     unordered,
     war_event,
     war_sides,
+    world_war_limit,
 )
 from aerona.rules.registry import Rules
 
@@ -330,7 +331,8 @@ async def close_wars_over_caps(ctx: TickContext) -> int:
             break
         both = next((entry for entry in over if all(counts[side] > diplomacy.community_war_cap for side in entry[2].sides)), None)
         await close(both if both is not None else over[0])
-    while len(open_wars) > diplomacy.world_war_cap:
+    world_limit = await world_war_limit(ctx.session, ctx.rules)
+    while len(open_wars) > world_limit:
         await close(open_wars[0])
     return closed
 

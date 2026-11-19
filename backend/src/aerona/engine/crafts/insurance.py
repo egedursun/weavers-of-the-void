@@ -58,13 +58,17 @@ async def found_insurers(ctx: TickContext, tally: InsuranceTally) -> None:
         rolled = ctx.rng(seed_of("insurer", faction.id, ctx.epoch)).chance(table.found_chance)
         if faction.id not in pooling and not (rolled and await knows_insurance(ctx, faction)):
             continue
-        ctx.session.add(InsurerRow(insurer_entity_id=faction.id, pool=table.seed_pool, locked=[]))
+        members = await ctx.session.scalar(
+            select(func.count(BondRow.id)).where(BondRow.target_node_id == faction.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
+        )
+        pool = table.seed_pool + table.seed_pool_per_member * (members or 0)
+        ctx.session.add(InsurerRow(insurer_entity_id=faction.id, pool=pool, locked=[]))
         tally.founded += 1
         await record(
             ctx,
             "insurance.founded",
             roles={IncidentRole.ACTOR: faction.id},
-            facts={"pool": table.seed_pool, "pooled": int(faction.id in pooling)},
+            facts={"pool": pool, "pooled": int(faction.id in pooling)},
             place=faction.location_id,
         )
     await ctx.session.flush()
@@ -97,7 +101,7 @@ async def write_policies(ctx: TickContext, row: InsurerRow, tally: InsuranceTall
     )
     written = 0
     for holder_id, cover in await candidates(ctx, insurer):
-        if written >= table.policies_per_epoch or (holder_id, cover) in covered or held(holder_id):
+        if written >= table.per_epoch(table.policies_per_epoch) or (holder_id, cover) in covered or held(holder_id):
             continue
         premium = max(1, round(table.sum_insured * row.premium_pct / PERCENT))
         ctx.session.add(

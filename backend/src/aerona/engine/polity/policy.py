@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.policy import LAW_POLICY, MANDATE_POLICY
 from aerona.constants.units import PERCENT
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.affairs import MandateRow, PolicyApprovalRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -57,8 +58,9 @@ async def weigh(ctx: TickContext, book: RealmBook, laws: LawBook, realm: Realm, 
     societies = [
         society for member in book.members(realm) if not held(member.id) and (society := await ctx.session.get(CommunitySocietyRow, member.id)) is not None
     ]
+    stored = {row.social_class: row for row in await rows_by_prefix(ctx.session, PolicyApprovalRow, realm.entity.id)}
     for social_class, items in parts.items():
-        row = await ctx.session.get(PolicyApprovalRow, (realm.entity.id, social_class))
+        row = stored.get(social_class)
         if row is None:
             row = PolicyApprovalRow(polity_entity_id=realm.entity.id, social_class=social_class, locked=[])
             ctx.session.add(row)

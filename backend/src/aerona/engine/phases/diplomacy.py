@@ -32,7 +32,7 @@ from aerona.engine.polity.accords import Clause, end_treaty, sign, treaty_betwee
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.treaties import breach
-from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
+from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, count_communities, living_entity
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.services.community_relations import (
@@ -45,6 +45,7 @@ from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
     current_war,
     declare_war,
+    diplomacy_cap,
     expire_truces,
     hostile_pair_count,
     hostile_pairs,
@@ -68,6 +69,10 @@ class DiplomacyCounters:
     alliances: int = 0
     betrayals: int = 0
     exhaustion_peaces: int = 0
+    communities: int = 0
+
+    def cap(self, rules: Rules, base: int) -> int:
+        return diplomacy_cap(rules, base, self.communities)
 
 
 @reads("table.bonds")
@@ -110,20 +115,20 @@ async def forget_mortal_grudges(ctx: TickContext) -> int:
     return forgotten
 
 
-def grudge_limits(all_rules: Rules, pairs: int) -> tuple[int, int]:
+def grudge_limits(all_rules: Rules, pairs: int, communities: int) -> tuple[int, int]:
     rules = all_rules.diplomacy
-    pool = max(1, round(rules.world_war_cap * rules.grudge_pool_pct / PERCENT))
+    pool = max(1, round(diplomacy_cap(all_rules, rules.world_war_cap, communities) * rules.grudge_pool_pct / PERCENT))
     excess = max(0, pairs - pool)
-    fade_cap = rules.grudge_fade_cap + round(excess * rules.grudge_overflow_share_pct / PERCENT)
+    fade_cap = diplomacy_cap(all_rules, rules.grudge_fade_cap, communities) + round(excess * rules.grudge_overflow_share_pct / PERCENT)
     forget_age = 0
     if rules.grudge_forget_epochs > 0:
         forget_age = max(rules.grudge_fade_min_age, round(rules.grudge_forget_epochs * min(1, pool / max(1, pairs))))
     return fade_cap, forget_age
 
 
-async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]]) -> set[frozenset[int]]:
+async def _fade_grudges(ctx: TickContext, candidates: list[tuple[int, int, int]], communities: int) -> set[frozenset[int]]:
     rules = ctx.rules.diplomacy
-    fade_cap, forget_age = grudge_limits(ctx.rules, await hostile_pair_count(ctx.session))
+    fade_cap, forget_age = grudge_limits(ctx.rules, await hostile_pair_count(ctx.session), communities)
     faded: set[frozenset[int]] = set()
     for first_id, second_id, since in candidates:
         if len(faded) >= fade_cap:
@@ -152,7 +157,7 @@ async def _exhaustion_peaces(ctx: TickContext, candidates: list[tuple[int, int, 
     rules = ctx.rules.diplomacy
     rng = ctx.rng("exhaustion")
     for first_id, second_id, _ in candidates:
-        if counters.exhaustion_peaces >= rules.exhaustion_peace_cap:
+        if counters.exhaustion_peaces >= counters.cap(ctx.rules, rules.exhaustion_peace_cap):
             break
         if frozenset((first_id, second_id)) in faded:
             continue
@@ -344,7 +349,7 @@ async def _neighbour_pair(
         not enemy
         and value <= rules.grudge_threshold
         and not (feud and await settled_by_wergild(ctx, first, second))
-        and counters.declared < rules.declarations_cap
+        and counters.declared < counters.cap(ctx.rules, rules.declarations_cap)
         and await ongoing_war_count(ctx.session, first.id) < cap
         and await ongoing_war_count(ctx.session, second.id) < cap
         and rng.chance(
@@ -371,7 +376,7 @@ async def _neighbour_pair(
             )
             or tired
         )
-        and counters.peaces < rules.peace_cap
+        and counters.peaces < counters.cap(ctx.rules, rules.peace_cap)
     ):
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace")
         counters.peaces += 1
@@ -383,7 +388,7 @@ async def _neighbour_pair(
         not enemy
         and not ally
         and value >= rules.alliance_threshold
-        and counters.alliances < rules.alliance_cap
+        and counters.alliances < counters.cap(ctx.rules, rules.alliance_cap)
         and rng.chance(
             min(PERCENT, rules.alliance_chance * pair.alliance_weight(first.id, second.id) * await lean_community(ctx, first.id, BiasedDecision.ALLIANCE))
         )
@@ -408,7 +413,7 @@ async def _neighbour_pair(
     elif (
         ally
         and value < 0
-        and counters.betrayals < rules.betrayal_cap
+        and counters.betrayals < counters.cap(ctx.rules, rules.betrayal_cap)
         and rng.chance(
             rules.betrayal_chance * max(await betrayal_drive(ctx.session, ctx.rules, first.id), await betrayal_drive(ctx.session, ctx.rules, second.id))
         )
@@ -425,14 +430,15 @@ async def enemies_of(ctx: TickContext, entity_id: int) -> set[int]:
     }
 
 
-async def alliance_lifetimes(ctx: TickContext) -> int:
+async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     settings = ctx.rules.diplomacy
     if settings.alliance_lifetime <= 0 or settings.alliance_end_chance <= 0:
         return 0
     ended = 0
+    limit = diplomacy_cap(ctx.rules, settings.alliance_end_cap, communities)
     statement = select(BondRow).where(BondRow.kind == BondKind.ALLY, BondRow.state == BondState.ACTIVE, BondRow.epoch <= ctx.epoch - settings.alliance_lifetime)
-    for bond in list(await ctx.session.scalars(statement.order_by(BondRow.epoch, BondRow.id))):
-        if ended >= settings.alliance_end_cap:
+    for bond in ctx.rng("alliance_end").shuffled(list(await ctx.session.scalars(statement.order_by(BondRow.epoch, BondRow.id)))):
+        if ended >= limit:
             break
         if held(bond.source_node_id, bond.target_node_id):
             continue
@@ -563,10 +569,10 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.wars",
 )
 async def diplomacy(ctx: TickContext) -> None:
-    ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
-    counters = DiplomacyCounters()
+    counters = DiplomacyCounters(communities=await count_communities(ctx.session))
+    ctx.count("alliances_lapsed", await alliance_lifetimes(ctx, counters.communities))
     candidates = [pair for pair in ctx.rng("candidates").shuffled(await hostile_pairs(ctx.session)) if not held(pair[0], pair[1])]
-    faded = await _fade_grudges(ctx, candidates)
+    faded = await _fade_grudges(ctx, candidates, counters.communities)
     ctx.count("mortal_grudges_forgotten", await forget_mortal_grudges(ctx))
     await _exhaustion_peaces(ctx, candidates, faded, counters)
     communities = unheld(await canon(ctx.session, COMMUNITY_TYPES))
@@ -575,6 +581,7 @@ async def diplomacy(ctx: TickContext) -> None:
     book = await RealmBook.load(ctx.session)
     pair = await _pair_context(ctx, book)
     actors, lands = realm_actors(communities, book)
+    actors = ctx.rng("actors").shuffled(actors)
     for index, first in enumerate(actors):
         for second in actors[index + 1 :]:
             if any(neighbourhood.are_neighbours(one, two) for one in lands[first.id] for two in lands[second.id]):

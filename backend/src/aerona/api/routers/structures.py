@@ -240,7 +240,7 @@ async def host_structures(services: ServicesDep, entity_id: int = Path(ge=1)) ->
             host_id=host.id,
             world_id=host.world_id,
             size_tier=tier,
-            slots_total=slots_for(rules, tier) if tier is not None else rules.construction.slots_base,
+            slots_total=slots_for(rules, tier, stat_or(host, "population", 0)),
             slots_used=sum(present.values()),
             structures=structures,
             kinds=kinds,

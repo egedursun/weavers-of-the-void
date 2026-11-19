@@ -79,19 +79,13 @@ JUDGEMENT_DOCTRINE = total(
             ),
         ),
         JudgementDoctrine.FAITH: Defined(
-            "Faith",
-            checked_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.judgement.score_of"),
-            used_by=("catalog.tenets.DOMAIN_JUDGEMENT", "engine.faith.doctrine.judgement_of"),
+            "Faith", checked_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.judgement.score_of"), used_by=("engine.faith.doctrine.judgement_of",)
         ),
-        JudgementDoctrine.RITE: Defined(
-            "Rite", checked_by=("engine.faith.judgement.judge", "engine.faith.judgement.score_of"), used_by=("catalog.tenets.DOMAIN_JUDGEMENT",)
-        ),
-        JudgementDoctrine.FAVOUR: Defined(
-            "Favour", checked_by=("engine.faith.judgement.score_of",), used_by=("catalog.tenets.DOMAIN_JUDGEMENT", "engine.faith.control.judge_soul")
-        ),
+        JudgementDoctrine.RITE: Defined("Rite", checked_by=("engine.faith.judgement.judge", "engine.faith.judgement.score_of"), used_by=()),
+        JudgementDoctrine.FAVOUR: Defined("Favour", checked_by=("engine.faith.judgement.score_of",), used_by=("engine.faith.control.judge_soul",)),
         JudgementDoctrine.NONE: Defined(
             "None",
-            checked_by=("engine.sacred.rites.taught_model",),
+            checked_by=("agents.context.son_faith.church_line", "engine.sacred.rites.taught_model"),
             used_by=("catalog.tenets.DOMAIN_JUDGEMENT", "engine.faith.doctrine.judgement_of", "engine.faith.judgement.judgement_for"),
         ),
     },

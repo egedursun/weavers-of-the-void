@@ -194,18 +194,15 @@ async def soul_descent(ctx: TickContext) -> int:
     )
     dead = [item for item in await ctx.session.scalars(statement.order_by(EntityRow.end_epoch, EntityRow.id)) if item.id not in descended]
     rng = ctx.rng("souls")
-    per_realm: dict[int, int] = {}
     count = 0
     for mortal in dead:
         world = await ctx.session.get(WorldRow, mortal.world_id)
         regions = await realm_regions(ctx.session, world) if world is not None else []
         if not regions:
             continue
-        realm_world = regions[0].world_id
-        if per_realm.get(realm_world, 0) >= beyond.soul_descent_cap or not rng.chance(beyond.soul_descent_chance):
+        if not rng.chance(beyond.soul_descent_chance):
             continue
         await descend_soul(ctx, mortal, rng.pick(regions))
-        per_realm[realm_world] = per_realm.get(realm_world, 0) + 1
         count += 1
     return count
 
@@ -335,7 +332,7 @@ async def planet_worship(ctx: TickContext, world: WorldRow) -> int:
         item for item in await canon(ctx.session, COMMUNITY_TYPES, world.id) if not index.outgoing(item.id, BondKind.WORSHIPS) and item.id not in devoted
     ]
     turned = 0
-    for community in godless[: beyond.planet_worship_candidates]:
+    for community in godless:
         if rng.chance(beyond.planet_worship_chance):
             await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_PLANET, ctx.epoch)
             await record(
@@ -441,7 +438,8 @@ async def cosmic_archive(ctx: TickContext) -> None:
     if archive is not None:
         knowledge = await KnowledgeMap.load(ctx.session)
         readers = [item for item in unheld(await canon(ctx.session, COMMUNITY_TYPES, archive.world_id)) if knowledge.knows(item.id, KnowledgeBranch.WRITING)]
-        for community in readers[: beyond.archive_seekers_cap]:
+        cap = scaled_cap(beyond.archive_seekers_cap, beyond.archive_seekers_reader_divisor, len(readers))
+        for community in rng.shuffled(readers)[:cap]:
             if rng.chance(beyond.archive_knowledge_chance):
                 await read_archive(ctx, archive, community)
     await archive_burned(ctx)
@@ -635,8 +633,7 @@ async def cosmic_court(ctx: TickContext, traitor_id: int, victim_id: int) -> str
         for item in await canon(ctx.session, COMMUNITY_TYPES, traitor.world_id)
         if item.id not in (traitor.id, victim_id) and atlas.distance(traitor.id, item.id) <= beyond.oathbreaker_neighbor_distance
     ]
-    judged = neighbours[: beyond.oathbreaker_neighbors]
-    for neighbour in judged:
+    for neighbour in neighbours:
         await change_relation(ctx, traitor.id, neighbour.id, -beyond.oathbreaker_relation_loss, MemoryKind.BROKE_OATH, note="broke an oath")
     written = await record(
         ctx,
@@ -644,9 +641,9 @@ async def cosmic_court(ctx: TickContext, traitor_id: int, victim_id: int) -> str
         roles={
             IncidentRole.ACCUSED: traitor.id,
             IncidentRole.VICTIM: victim.id if victim is not None else None,
-            IncidentRole.WITNESS: [item.id for item in judged],
+            IncidentRole.WITNESS: [item.id for item in neighbours],
         },
-        facts={"neighbours": len(judged), "relation_loss": beyond.oathbreaker_relation_loss},
+        facts={"neighbours": len(neighbours), "relation_loss": beyond.oathbreaker_relation_loss},
         steps=(StepDraft(StepAction.JUDGE, target=traitor.id, outcome=StepOutcome.SUCCESS), StepDraft(StepAction.CURSE, target=traitor.id)),
         world_id=traitor.world_id,
     )

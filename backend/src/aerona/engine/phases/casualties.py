@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from math import ceil
 
 from sqlalchemy import select
 
@@ -77,6 +78,14 @@ class Marks:
 class CasualtyCount:
     dead: int = 0
     wounded: int = 0
+
+
+def share_cap(pct: int, present: int) -> int:
+    return max(1, ceil(present * pct / 100))
+
+
+def reached(value: int, cap: int) -> bool:
+    return cap > 0 and value >= cap
 
 
 async def clashes_of(ctx: TickContext) -> list[Clash]:
@@ -176,8 +185,10 @@ async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id
     rng = ctx.rng(seed_of("clash", clash.event.id, side_id))
     hunted = await decapitation(ctx, clash.war_id, enemy_id)
     fallen = 0
-    for mortal in sides.heroes_of(side_id):
-        if fallen >= losses.clash_cap or count.dead >= losses.epoch_cap:
+    present = sides.heroes_of(side_id)
+    most = share_cap(losses.clash_cap, len(present))
+    for mortal in present:
+        if fallen >= most or reached(count.dead, losses.epoch_cap):
             break
         if mortal.status is not EntityStatus.CANON:
             continue
@@ -233,7 +244,7 @@ async def _captive_chaos(ctx: TickContext, clash: Clash, count: CasualtyCount) -
     rows = await ctx.session.scalars(select(CaptiveRow).where(CaptiveRow.captor_entity_id == clash.loser_id, CaptiveRow.status == CaptiveStatus.HELD))
     rng = ctx.rng(seed_of("captive_chaos", clash.event.id))
     for row in list(rows):
-        if count.dead >= losses.epoch_cap:
+        if reached(count.dead, losses.epoch_cap):
             return
         captive = await living_entity(ctx.session, row.captive_entity_id)
         if captive is None or not await fated(ctx, captive, rng.chance(losses.captive_chaos_death)):
@@ -255,7 +266,7 @@ async def war_dead(ctx: TickContext, clashes: list[Clash]) -> CasualtyCount:
     }
     marks = Marks(await flags_by_entity(ctx.session, EntityFlag.CHOSEN), commanders)
     for clash in clashes:
-        if count.dead >= ctx.rules.casualties.epoch_cap:
+        if reached(count.dead, ctx.rules.casualties.epoch_cap):
             break
         for side_id in (clash.loser_id, clash.winner_id):
             await _side_losses(ctx, clash, sides, side_id, count=count, marks=marks)
@@ -633,7 +644,7 @@ async def disaster_casualties(ctx: TickContext) -> None:
         flag = EntityFlag.DIED_OF_PLAGUE if plague else EntityFlag.DIED_IN_DISASTER
         phrase = DISASTERS[disaster].death_phrase
         ctx.count("marked", await mark_disaster_dead(ctx, event, flag, phrase))
-        if dead >= losses.disaster_epoch_cap:
+        if reached(dead, losses.disaster_epoch_cap):
             continue
         struck = [
             entity
@@ -645,6 +656,7 @@ async def disaster_casualties(ctx: TickContext) -> None:
         rng = ctx.rng(seed_of("disaster_dead", event.id))
         this_event = 0
         fallen: list[int] = []
+        most = share_cap(losses.disaster_event_cap, sum(len(sides.heroes_of(community.id)) for community in struck))
         for community in struck:
             base = (
                 losses.plague_death * (losses.medicine_kept_pct / 100 if knowledge.knows(community.id, KnowledgeBranch.MEDICINE) else 1)
@@ -652,7 +664,7 @@ async def disaster_casualties(ctx: TickContext) -> None:
                 else losses.disaster_death
             )
             for mortal in sides.heroes_of(community.id):
-                if this_event >= losses.disaster_event_cap or dead >= losses.disaster_epoch_cap:
+                if this_event >= most or reached(dead, losses.disaster_epoch_cap):
                     break
                 if mortal.status is not EntityStatus.CANON or mortal.location_id in struck_ids:
                     continue

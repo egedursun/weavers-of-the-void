@@ -120,8 +120,6 @@ async def adopt_pets(ctx: TickContext) -> int:
     taken = 0
     kinds_of: dict[int, list[EntityRow]] = {}
     for mortal in list(mortals):
-        if taken >= table.pet_cap:
-            break
         if mortal.id in owners or held(mortal.id) or mortal.location_id is None:
             continue
         if mortal.location_id not in kinds_of:

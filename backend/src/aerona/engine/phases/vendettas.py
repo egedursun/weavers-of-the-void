@@ -32,6 +32,7 @@ from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import Theatre, duel
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
@@ -225,8 +226,10 @@ async def act(ctx: TickContext, action: FeudAction | None, avenger: EntityRow, e
 async def feuds(ctx: TickContext) -> int:
     table = ctx.rules.vendetta
     acted = 0
-    for row in await active_feuds(ctx.session):
-        if acted >= table.cap:
+    live = ctx.rng("feud_order").shuffled(await active_feuds(ctx.session))
+    limit = scaled_cap(table.cap, table.cap_feud_divisor, len(live))
+    for row in live:
+        if acted >= limit:
             break
         pair = await sides_of(ctx, row)
         if pair is None:
@@ -280,8 +283,10 @@ async def honour_duels(ctx: TickContext) -> int:
     theatre: Theatre | None = None
     fought = 0
     seen: set[int] = set()
-    for holder_id, subject_id, grievance in (await ctx.session.execute(statement)).all():
-        if fought >= table.honour_cap:
+    grievances = (await ctx.session.execute(statement)).all()
+    limit = scaled_cap(table.honour_cap, table.honour_cap_grievance_divisor, len(grievances))
+    for holder_id, subject_id, grievance in grievances:
+        if fought >= limit:
             break
         if holder_id in seen or subject_id in seen:
             continue

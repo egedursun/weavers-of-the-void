@@ -169,6 +169,17 @@ async def prime_rows(session: AsyncSession, model: type[Any], ids: Iterable[Any]
         list(await session.scalars(select(model).where(mapper.primary_key[0].in_(wanted[start : start + PRIME_CHUNK]))))
 
 
+async def rows_by_id[O](session: AsyncSession, model: type[O], ids: Iterable[int]) -> dict[int, O]:
+    wanted = sorted(set(ids))
+    await prime_rows(session, model, wanted)
+    found: dict[int, O] = {}
+    for value in wanted:
+        row = await session.get(model, value)
+        if isinstance(row, model):
+            found[value] = row
+    return found
+
+
 async def prime_prefixes(session: AsyncSession, model: type[Any], values: Iterable[Any]) -> None:
     mapper = class_mapper(model)
     if not isinstance(session, FastSession) or len(mapper.primary_key) < PREFIX_KEYS:

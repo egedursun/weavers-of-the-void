@@ -22,7 +22,10 @@ class CohortsRules:
     promotion_maimed_min: int = rule(100, 1, 1000000, G, "Maimed in one epoch that count as a mass maiming")
     promotion_famine_dead_min: int = rule(200, 1, 1000000, G, "Famine dead in one epoch that leave orphans worth a name")
     named_famine_pct: int = rule(20, 0, 100, G, "Chance that a famine heavy enough to leave orphans also takes the frailest named mortal of the town (%)")
-    promotion_cap: int = rule(4, 0, 100, G, "Most named mortals raised from cohorts in an epoch")
+    promotion_cap: int = rule(4, 0, 10000, G, "Most named mortals raised from cohorts in one world in an epoch, before its people add more")
+    promotion_people_per_extra: int = rule(
+        50000, 0, 100000000, G, "People of a world that let one more named mortal rise from its cohorts in an epoch (0 for none)"
+    )
     promotion_injury_severity: int = rule(4, 1, 5, G, "Severity of the matching wound a mortal raised from a mass maiming bears")
     promotion_orphan_intensity: int = rule(70, 0, 100, G, "Weight of the famine memory a mortal raised as a famine orphan carries")
 
@@ -50,8 +53,12 @@ class LabourRules:
     price_pull_pct: int = rule(30, 0, 100, S, "How strongly dear goods pull workers into the trades that make them (%)")
     idle_outcast_pct: int = rule(70, 0, 100, S, "Share of outcasts who find no work (%)")
     slave_output_pct: int = rule(130, 0, 500, S, "Output of serfs and slaves in mines and fields compared with free workers (%)")
-    workshop_workers_per_level: int = rule(40, 0, 100000, S, "Workers each level of a workshop draws into its trade")
-    resource_workers: int = rule(60, 0, 100000, S, "Workers each worked mine, quarry, fishery or forest draws into its trade")
+    workshop_workers_per_level: int = rule(40, 0, 100000, S, "Workers each level of a workshop draws into its trade in a small community")
+    workshop_workers_per_thousand: int = rule(8, 0, 1000, S, "Further workers each level of a workshop draws per thousand people of its community")
+    resource_workers: int = rule(
+        60, 0, 100000, S, "Workers a worked mine, quarry, fishery or forest of middling richness (50) draws into its trade; richer ones draw more"
+    )
+    resource_workers_per_thousand: int = rule(15, 0, 1000, S, "Further workers each worked deposit draws per thousand people of its community")
     corvee_unrest: int = rule(8, 0, 100, S, "Unrest a corvee of the whole people raises in a settlement each epoch")
     corvee_satisfaction: int = rule(15, 0, 100, S, "Contentment farmers and serfs lose under a corvee of the whole people")
 
@@ -64,7 +71,7 @@ class PeopleRules:
     cohesion_base: int = rule(55, 0, 100, G, "Cohesion of a people with a single tongue and faith")
     cohesion_per_tongue: int = rule(10, 0, 100, G, "Cohesion lost per extra tongue spoken among the people")
     literacy_per_writing_level: int = rule(12, 0, 100, G, "Literacy gained per level of writing knowledge")
-    urban_per_settlement: int = rule(8, 0, 100, G, "Urbanisation gained per settlement of the people")
+    urban_per_settlement: int = rule(100, 0, 100, G, "Share of the people's folk living in its settlements that counts as its urbanisation (% of that share)")
     assimilation_distance: int = rule(20, 0, 300, G, "Value distance below which a people of low cohesion assimilates into a neighbour sharing its tongue")
     assimilation_cohesion: int = rule(40, 0, 100, G, "Cohesion below which a people may assimilate")
     ethnogenesis_distance: int = rule(35, 0, 300, G, "Value distance from its parent people at which a settlement becomes a people of its own")

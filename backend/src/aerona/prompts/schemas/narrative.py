@@ -9,9 +9,7 @@ from aerona.prompts.schemas.shared import ExistenceOutput
 
 class HistorianViewOutput(OutputModel):
     people_id: int
-    text: str = Field(
-        description="1 to 2 paragraphs; from this people's own side and interests: partial where its standing is at stake, silent on what it would rather forget"
-    )
+    text: str = Field(description="1 to 2 paragraphs; from this people's own side and interests")
 
 
 class FolkBeliefOutput(OutputModel):
@@ -80,13 +78,13 @@ class CreatorDepthOutput(OutputModel):
     history: str = Field(description="How the god changed through the ages, 2 to 3 paragraphs")
     names: list[GodNameOutput]
     secrets: list[str] = Field(default_factory=list, description="Secrets even the god's own children do not know, if it keeps any")
-    fears: list[str] = Field(default_factory=list)
-    prohibitions: list[str] = Field(description="Prohibitions the god set on creation, if any, and what happens when they are broken")
+    fears: list[str] = Field(default_factory=list, description="What the god fears, if anything")
+    prohibitions: list[str] = Field(default_factory=list, description="Prohibitions the god set on creation, if any")
     gifts: list[str] = Field(default_factory=list, description="Gifts the god gave to mortals and to the god's children")
-    desire: str = Field(description="What the god really wants from all of creation")
+    desire: str = Field(description="What the god wants from creation")
     sayings: list[SayingOutput] = Field(default_factory=list)
     rumours: list[str] = Field(default_factory=list)
-    hidden_truth: str = Field(default="", description="The truth about the god that lies at the foundation of the cosmos, if there is one")
+    hidden_truth: str = Field(default="", description="A truth about the god that nobody knows, if there is one")
 
 
 class ForeignPersonalityOutput(OutputModel):
@@ -113,9 +111,9 @@ class ForeignGodDepthOutput(OutputModel):
     secrets: list[str] = Field(default_factory=list)
     sayings: list[SayingOutput] = Field(default_factory=list)
     rumours: list[str] = Field(default_factory=list)
-    desire: str = Field(description="What it really wants")
+    desire: str = Field(description="What it wants")
     view_of_pantheon: str = Field(default="", description="How it looks on the newly arrived pantheon and its sons; consistent with its attitude")
-    worship: str = Field(default="", description="How its worshippers worship it: rites, offerings, prohibitions")
+    worship: str = Field(default="", description="How its worshippers worship it")
     hidden_truth: str = Field(default="", description="The truth about it that nobody knows, if there is one")
     image_prompt: str = Field(description="English portrait image prompt of this god. {{ image_prompt_rules }}")
 

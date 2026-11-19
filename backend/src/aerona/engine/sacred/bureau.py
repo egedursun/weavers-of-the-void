@@ -28,7 +28,6 @@ from aerona.engine.sacred.spirits import rank_above, rank_below
 OPEN = (PetitionStatus.FILED, PetitionStatus.DELAYED, PetitionStatus.APPEALED)
 COMMON_NEEDS = (PetitionKind.HEALING, PetitionKind.FERTILITY, PetitionKind.SAFE_PASSAGE, PetitionKind.PROSPERITY)
 TEN = 10
-HUNGRY_PER_HEAD = 1
 
 
 @dataclass
@@ -82,7 +81,7 @@ async def need_of(ctx: TickContext, community: EntityRow, office: SpiritOfficeRo
     if offended is not None and offended.spirit_entity_id != office.spirit_entity_id:
         return PetitionKind.SUIT, offended.spirit_entity_id
     food = await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD)
-    if food < stat_or(community, "population", 0) * HUNGRY_PER_HEAD:
+    if food < ctx.rules.needs.hunger_food:
         return PetitionKind.HARVEST, None
     return ctx.rng(f"petition.need.{community.id}").pick(COMMON_NEEDS), None
 
@@ -103,7 +102,7 @@ async def file_petitions(ctx: TickContext, tally: BureauTally) -> None:
     table = ctx.rules.celestial_bureaucracy
     offices = await ctx.session.scalars(select(SpiritOfficeRow).where(SpiritOfficeRow.dismissed.is_(False)).order_by(SpiritOfficeRow.spirit_entity_id))
     for office in list(offices):
-        if tally.filed >= table.petitions_per_epoch:
+        if table.petitions_per_epoch and tally.filed >= table.petitions_per_epoch:
             return
         community = await living_entity(ctx.session, office.jurisdiction_entity_id)
         if community is None or community.entity_type is not EntityType.SETTLEMENT or held(community.id) or held(office.spirit_entity_id):

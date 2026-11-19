@@ -57,10 +57,12 @@ SETTLEMENT_LABEL_OFFSET = 1.6
 SETTLEMENT_STYLE: MappingProxyType[str, tuple[float, float, int]] = MappingProxyType(
     {
         "capital": (3.6, 8.5, 0),
-        "great_city": (3.0, 8.0, 1),
-        "city": (2.5, 7.2, 2),
-        "town": (1.9, 6.4, 3),
-        "village": (1.3, 0.0, 4),
+        "conurbation": (3.5, 8.4, 1),
+        "megacity": (3.25, 8.2, 2),
+        "great_city": (3.0, 8.0, 3),
+        "city": (2.5, 7.2, 4),
+        "town": (1.9, 6.4, 5),
+        "village": (1.3, 0.0, 6),
     }
 )
 COMPASS_SIZE = 26.0
@@ -71,10 +73,19 @@ PDF_MANIFEST = "book.json"
 PDF_MEDIA_TYPE = "application/pdf"
 PDF_STAGE_MODEL = "Gathering the world"
 PDF_STAGE_IMAGES = "Preparing pictures"
-PDF_STAGE_LAYOUT = "Setting the pages"
 PDF_PROGRESS_MODEL = 0.05
 PDF_PROGRESS_IMAGES = 0.15
 PDF_PROGRESS_LAYOUT = 0.4
+PDF_PROGRESS_PRINT = 0.6
+PDF_PROGRESS_MERGE = 0.92
+PDF_STAGE_MEASURE = "Measuring the pages"
+PDF_STAGE_PRINT = "Setting the pages"
+PDF_STAGE_MERGE = "Binding the book"
+PDF_CHUNK_BYTES = 1_000_000
+PDF_MOST_WORKERS = 8
+PDF_SETTLE_PASSES = 3
+PDF_LINK_PREFIX = "https://book.invalid/#"
+PDF_POINTS_PER_PIXEL = 0.75
 PDF_IMAGE_CONCURRENCY = 8
 PDF_LIBRARY_DIRECTORIES = ("/opt/homebrew/lib", "/usr/local/lib")
 PDF_LIBRARY_VARIABLE = "DYLD_FALLBACK_LIBRARY_PATH"

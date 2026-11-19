@@ -25,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import close, connect, living_entity
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_of_town, region_of, town_of
 
@@ -79,12 +80,14 @@ async def gather_collectors(ctx: TickContext, tally: MarketTally) -> None:
         )
         .order_by(EntityRow.id)
     )
-    for holder in list(candidates):
-        if tally.collectors >= table.collectors_per_epoch:
-            return
+    quota = WorldQuota(table.collectors_per_epoch)
+    for holder in ctx.rng("collector.order").shuffled(candidates):
+        if quota.full(holder.world_id):
+            continue
         if held(holder.id) or not ctx.rng(f"collector.{holder.id}").chance(table.collector_chance):
             continue
         await start_collection(ctx, holder, None)
+        quota.take(holder.world_id)
         tally.collectors += 1
 
 
@@ -237,12 +240,13 @@ async def trade_works(ctx: TickContext, tally: MarketTally) -> None:
         .where(EntityRow.status == EntityStatus.CANON, ArtworkProfileRow.performed.is_(False))
         .order_by(EntityRow.id)
     )
-    for artwork, profile in list(works):
+    quota = WorldQuota(table.sales_per_epoch)
+    for artwork, profile in ctx.rng("sale.order").shuffled(works):
         if held(artwork.id):
             continue
         row = await appraise(ctx, artwork, profile)
         tally.priced += 1
-        if tally.sales >= table.sales_per_epoch or row.price <= 0:
+        if quota.full(artwork.world_id) or row.price <= 0:
             continue
         region = await region_of(ctx.session, artwork)
         chance = table.sale_chance * (table.gathering_pct / PERCENT if region is not None and region.id in fairs else 1)
@@ -254,6 +258,7 @@ async def trade_works(ctx: TickContext, tally: MarketTally) -> None:
             continue
         sale = await sell(ctx, artwork, row, buyer, seller_id=seller, fair_place_id=fairs.get(region.id) if region is not None else None)
         if sale is not None:
+            quota.take(artwork.world_id)
             tally.sales += 1
             tally.coin += sale.price
 

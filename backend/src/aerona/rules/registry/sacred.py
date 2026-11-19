@@ -10,13 +10,18 @@ D = RuleGroup.THE_DIVINE
 @dataclass(frozen=True)
 class GeniusLociRules(Spanned):
     bind_chance: int = rule(20, 0, 100, R, "Chance each epoch that a notable place, town or house without a spirit of its own gains one (%)")
-    binds_per_epoch: int = rule(12, 0, 1000, R, "Place spirits that may arise across the cosmos in one epoch")
+    binds_per_epoch: int = rule(12, 0, 100000, R, "Base of the place spirits that may arise in one epoch, grown by the number of places without a spirit")
+    binds_place_divisor: int = rule(
+        10, 0, 100000, R, "Places without a spirit per extra place spirit that may arise in one epoch (0: the cap stays at its base)"
+    )
     city_population: int = rule(800, 0, 1000000, R, "People a town needs before a spirit of the town arises in it")
     hunger: int = rule(2, 0, 100, R, "Offerings a place spirit expects from its community each epoch")
     touchy_hunger_pct: int = rule(150, 0, 500, R, "What a touchy place spirit expects against an even-tempered one (%)")
     offering_piety: int = rule(30, 0, 100, R, "Piety a community needs before it brings offerings to its place spirits")
     offering_per_thousand: int = rule(5, 0, 100, R, "Offerings a pious community brings each epoch for every thousand of its people")
-    offering_food: int = rule(2, 0, 1000, R, "Food a community gives up for each offering it brings")
+    offering_food: int = rule(
+        2, 0, 1000, R, "Food stores a community gives up for each offering every thousand of its people bring (supply index, 100 = one epoch of its needs)"
+    )
     unpaid_years: int = span(5, 1, 1250, R, "Years a place spirit goes short before it takes offence")
     pollution_offence: int = rule(45, 0, 100, R, "Pollution of a land that offends the spirits of its places")
     clearing_offence: int = rule(30, 0, 100, R, "Forest cover below which the spirits of groves and forests take offence at the clearing")
@@ -36,7 +41,7 @@ class GeniusLociRules(Spanned):
 @dataclass(frozen=True)
 class CelestialBureaucracyRules(Spanned):
     petition_chance: int = rule(30, 0, 100, R, "Chance each epoch that a community petitions the spirit office over it (%)")
-    petitions_per_epoch: int = rule(40, 0, 10000, R, "Petitions that may be filed across the cosmos in one epoch")
+    petitions_per_epoch: int = rule(0, 0, 100000, R, "Most petitions that may be filed across the cosmos in one epoch (0: no limit)")
     delay_years: int = span(1, 0, 500, R, "Years an office takes to read a petition")
     bribe_per_epoch: int = rule(3, 1, 100, R, "Offerings slipped with a petition that save an epoch of waiting")
     bribe_share: int = rule(2, 0, 100, R, "Offerings a petitioner slips to the office for every ten points of its corruption")
@@ -55,7 +60,7 @@ class CelestialBureaucracyRules(Spanned):
     rogue_neglect: int = rule(5, 0, 100, R, "Neglect a rogue office breeds each epoch in its community toward the god meant to oversee it")
     grant_love: int = rule(2, 0, 100, R, "Love a granted petition earns the overseeing god in the petitioner's community")
     healing: int = rule(15, 0, 100, R, "Health a granted petition for healing restores")
-    harvest_food: int = rule(40, 0, 100000, R, "Food a granted petition for the harvest brings its community")
+    harvest_food: int = rule(4, 0, 1000, R, "Food stores a granted petition for the harvest brings its community (supply index, 100 = one epoch of its needs)")
     fertility: int = rule(10, 0, 100, R, "Fertility a granted petition for children grants")
     passage_safety: int = rule(5, 0, 100, R, "Stress a granted petition for safe passage lifts from the petitioner")
     prosperity: int = rule(3, 0, 100, R, "Prosperity a granted petition for prosperity grants its community")
@@ -75,7 +80,8 @@ class CelestialBureaucracyRules(Spanned):
 class MysticismRules(Spanned):
     vision_chance: int = rule(4, 0, 100, R, "Chance each epoch that a mortal open to the divine has a first direct experience (%)")
     contemplative_pct: int = rule(100, 0, 500, R, "More often a mortal of a contemplative tradition has a first direct experience (%)")
-    mystics_per_epoch: int = rule(6, 0, 1000, R, "New mystics that may arise across the cosmos in one epoch")
+    mystics_per_epoch: int = rule(6, 0, 100000, R, "Base of the new mystics that may arise in one epoch, grown by the number of living mortals")
+    mystics_mortal_divisor: int = rule(20, 0, 100000, R, "Living mortals per extra new mystic in one epoch (0: the cap stays at its base)")
     wisdom_floor: int = rule(60, 0, 100, R, "Wisdom a mortal needs before visions come to it")
     piety_floor: int = rule(65, 0, 100, R, "Piety a mortal holds dear before visions come to it")
     again_chance: int = rule(35, 0, 100, R, "Chance each epoch that a mystic has another vision (%)")
@@ -101,7 +107,8 @@ class MillenarianRules(Spanned):
     stir_chance: int = rule(10, 0, 100, R, "Chance each epoch that a town under an end-time sign stirs into a millenarian movement (%)")
     doom_at: int = rule(50, 0, 100000, R, "Doom on the clock from which the end feels near and stirs the faithful to await it")
     tension_at: int = rule(70, 0, 100, R, "Tension of a world from which its faithful are stirred to await the end")
-    movements_per_epoch: int = rule(3, 0, 1000, R, "Millenarian movements that may begin across the cosmos in one epoch")
+    movements_per_epoch: int = rule(3, 0, 100000, R, "Base of the millenarian movements that may begin in one epoch, grown by the number of towns")
+    movements_town_divisor: int = rule(10, 0, 100000, R, "Towns per extra millenarian movement in one epoch (0: the cap stays at its base)")
     psi_floor: int = rule(55, 0, 100, R, "Political stress of a realm from which immiseration alone stirs its towns")
     horizon_years: int = span(10, 1, 1250, R, "Years from a movement's start to the end it awaits")
     gather_pct: int = rule(8, 0, 100, R, "Share of a town that first joins a millenarian movement (%)")
@@ -159,7 +166,7 @@ class SacramentRules:
     coverage: int = rule(70, 0, 100, R, "Chance a priest is at hand for a sacrament in a town of the church at peace and in health (%)")
     hardship_pct: int = rule(50, 0, 100, R, "Chance of a priest lost in a town at war, in plague or far from the church (%)")
     initiation_age: int = rule(14, 1, 200, R, "Age at which a mortal is initiated")
-    rites_per_epoch: int = rule(300, 0, 100000, R, "Sacraments that may be given across the cosmos in one epoch, births and weddings first")
+    rites_per_epoch: int = rule(0, 0, 10000000, R, "Most sacraments that may be given across the cosmos in one epoch, births and weddings first (0: no limit)")
     missed_anxiety: int = rule(35, 0, 100, R, "Unease a mortal feels for a sacrament it missed")
     routing_pct: int = rule(60, 0, 100, R, "Share of a routing sacrament's strength that keeps a soul from dying without rites (%)")
     unrest_relief: int = rule(25, 0, 100, R, "Unrest at death a sacrament against unrest lifts at full strength")
@@ -207,13 +214,16 @@ class DivinationRules:
     battle_edge_pct: int = rule(6, 0, 100, R, "Edge a heeded omen gives or takes from an army in battle (%)")
     legitimacy: int = rule(5, 0, 100, R, "Legitimacy a heeded coronation omen gives or takes")
     wedding_stress: int = rule(8, 0, 200, R, "Stress a heeded wedding omen lifts or lays on a ruler")
-    harvest_food: int = rule(30, 0, 100000, R, "Food a realm's towns lose when sowing waits on an ill harvest omen")
+    harvest_food: int = rule(
+        2, 0, 1000, R, "Food stores each of a realm's towns loses when sowing waits on an ill harvest omen (supply index, 100 = one epoch of its needs)"
+    )
 
 
 @dataclass(frozen=True)
 class PrescienceRules:
     foresee_chance: int = rule(30, 0, 100, R, "Chance each epoch that a seer foresees a likely future (%)")
-    foresights_per_epoch: int = rule(20, 0, 10000, R, "Foresights that may be made across the cosmos in one epoch")
+    foresights_per_epoch: int = rule(20, 0, 100000, R, "Base of the foresights that may be made in one epoch, grown by the number of seers")
+    foresights_seer_divisor: int = rule(2, 0, 100000, R, "Seers per extra foresight in one epoch (0: the cap stays at its base)")
     horizon_years: int = rule(10, 1, 1000, R, "Years ahead a seer looks")
     god_sight: int = rule(25, 0, 100, D, "Certainty a god with the seer's power adds to what it foresees")
     divination_skill: int = rule(40, 0, 100, D, "Skill in reading the sky a priest needs to foretell by divination")

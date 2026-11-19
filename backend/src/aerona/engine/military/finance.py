@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.economy import CurrencyRow, LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import MercenaryContractRow
@@ -17,7 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin, take_coin, wealth_points
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import headcount, shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
@@ -34,7 +34,13 @@ async def current_war_of(ctx: TickContext, owner_id: int) -> WarRow | None:
     return found
 
 
-async def lender_for(ctx: TickContext, owner: EntityRow) -> EntityRow | None:
+def war_principal(ctx: TickContext, owner: EntityRow) -> int:
+    table = ctx.rules.war_finance
+    folk = stat_or(owner, "subjects", 0) if owner.entity_type is EntityType.POLITY else headcount(owner)
+    return table.war_loan_principal + table.war_loan_per_thousand * folk // PER_MILLE
+
+
+async def lender_for(ctx: TickContext, owner: EntityRow, principal: int) -> EntityRow | None:
     statement = (
         select(EntityRow)
         .where(
@@ -46,15 +52,15 @@ async def lender_for(ctx: TickContext, owner: EntityRow) -> EntityRow | None:
         )
         .order_by(EntityRow.id)
     )
-    lent = wealth_points(ctx.rules, ctx.rules.war_finance.war_loan_principal // 2)
+    lent = wealth_points(ctx.rules, principal // 2)
     guilds = [guild for guild in await ctx.session.scalars(statement) if (stat(guild, "wealth") or 0) >= lent]
     return max(guilds, key=lambda guild: (stat(guild, "wealth") or 0, -guild.id), default=None)
 
 
 async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow, polity_id: int) -> bool:
-    table = ctx.rules.war_finance
+    principal = war_principal(ctx, owner)
     war = await current_war_of(ctx, owner.id)
-    lender = await lender_for(ctx, owner)
+    lender = await lender_for(ctx, owner, principal)
     if lender is not None:
         open_loan = await ctx.session.scalar(
             select(LoanRow.id).where(LoanRow.borrower_entity_id == polity_id, LoanRow.status == LoanStatus.OPEN, LoanRow.purpose == "war").limit(1)
@@ -64,7 +70,7 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
                 LoanRow(
                     lender_entity_id=lender.id,
                     borrower_entity_id=polity_id,
-                    principal=table.war_loan_principal,
+                    principal=principal,
                     interest_pct=ctx.rules.banking.interest_pct,
                     issued_epoch=ctx.epoch,
                     due_epoch=ctx.epoch + ctx.rules.banking.term_epochs,
@@ -73,13 +79,13 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
                     war_id=war.id if war is not None else None,
                 )
             )
-            shift_stat(lender, "wealth", -wealth_points(ctx.rules, table.war_loan_principal // 2))
-            realm.war_chest += table.war_loan_principal
+            shift_stat(lender, "wealth", -wealth_points(ctx.rules, principal // 2))
+            realm.war_chest += principal
             await record(
                 ctx,
                 "war.loan",
                 roles={IncidentRole.BORROWER: owner.id, IncidentRole.LENDER: lender.id},
-                facts={"principal": table.war_loan_principal, "lent_wealth": wealth_points(ctx.rules, table.war_loan_principal // 2)},
+                facts={"principal": principal, "lent_wealth": wealth_points(ctx.rules, principal // 2)},
             )
             ctx.count("war_loans")
             return True
@@ -96,7 +102,8 @@ async def debase(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow) ->
     currency.trust = clamp_int(currency.trust - table.debase_trust, 0, PERCENT)
     currency.supply += round_half_up(currency.supply * table.debase_supply_pct / PERCENT)
     currency.debased_epoch = ctx.epoch
-    realm.war_chest += table.war_loan_principal // 2
+    raised = war_principal(ctx, owner) // 2
+    realm.war_chest += raised
     await record(
         ctx,
         "war.debasement",
@@ -106,7 +113,7 @@ async def debase(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow) ->
             "purity_lost": table.debase_purity,
             "trust_lost": table.debase_trust,
             "added": round_half_up(currency.supply * table.debase_supply_pct / (PERCENT + table.debase_supply_pct)),
-            "raised": table.war_loan_principal // 2,
+            "raised": raised,
         },
     )
     ctx.count("war_debasements")
@@ -125,8 +132,8 @@ async def pay_contracts(ctx: TickContext) -> dict[str, int]:
             found["ended"] += 1
             continue
         if "seasons_left" not in row.locked:
-            row.seasons_left = max(0, row.seasons_left - ctx.rules.campaigns.seasons_per_war_epoch)
-        pay = row.pay_per_season * max(1, ctx.rules.campaigns.seasons_per_war_epoch)
+            row.seasons_left = max(0, row.seasons_left - ctx.rules.campaigns.war_seasons())
+        pay = row.pay_per_season * max(1, ctx.rules.campaigns.war_seasons())
         if await take_coin(ctx.session, ctx.rules, employer, pay):
             company = await living_entity(ctx.session, row.company_entity_id)
             if company is not None:

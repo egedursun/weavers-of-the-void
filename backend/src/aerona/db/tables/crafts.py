@@ -32,6 +32,7 @@ RIGHT_FIELDS = ("holder_node_id", "kind", "subject_node_id", "name", "acquired",
 AID_FIELDS = ("quality",)
 CLOCK_FIELDS = ("kind", "precision", "built_epoch")
 NUMBER_FIELDS = ("base", "notation", "zero", "numeracy")
+UNTAUGHT_NUMERACY = 20
 AFFINITY_FIELDS = ("mode", "power")
 LINK_FIELDS = ("token", "strength", "obtained_epoch")
 SPIRIT_FIELDS = ("emotion", "strength", "lifetime", "bound_by_node_id")
@@ -179,7 +180,7 @@ class NumberSystemRow(Base):
     base: Mapped[int] = mapped_column(default=10)
     notation: Mapped[Notation] = mapped_column(enum_type(Notation, "notation"), default=Notation.ADDITIVE)
     zero: Mapped[bool] = mapped_column(default=False)
-    numeracy: Mapped[int] = mapped_column(default=20)
+    numeracy: Mapped[int] = mapped_column(default=UNTAUGHT_NUMERACY)
     numerology: Mapped[dict[str, str]] = mapped_column(JSON, default=dict, server_default="{}")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

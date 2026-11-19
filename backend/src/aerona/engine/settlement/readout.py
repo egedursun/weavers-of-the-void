@@ -13,7 +13,9 @@ from aerona.domain.enums.settlement import BuildMaterial
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.settlement.book import Town
+from aerona.engine.settlement.circuit import tower_defence
 from aerona.engine.settlement.districts import AdminParts, DistrictEffects, admin_parts, parameters_of
 from aerona.engine.settlement.storage import StorageParts, design_for, settlement_store, store_kind
 from aerona.rules.registry import Rules
@@ -47,7 +49,7 @@ def defences_of(rules: Rules, town: Town) -> Defences:
     material = table.stone_wall_pct if stone else table.timber_wall_pct
     return Defences(
         wall_pct=round(walls.walls_level * rules.siegecraft.wall_defence_pct * material / PERCENT),
-        tower_pct=walls.towers * table.tower_defence_pct,
+        tower_pct=round(tower_defence(rules, walls.towers, stat_or(town.entity, "population", 0)) * PERCENT),
         batter_pct=rules.siege_depth.stone_bombard_pct if stone else rules.siege_depth.timber_bombard_pct,
         gate_weakness_pct=max(0, walls.gates - 1) * table.gate_breach_pct,
     )

@@ -6,7 +6,16 @@ from aerona.rules.model import Spanned, rule, span
 
 @dataclass(frozen=True)
 class LanguageContactRules(Spanned):
-    event_cap: int = rule(6, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Most language contact events (bilingualism, shift, creole) per epoch")
+    event_cap: int = rule(
+        6,
+        0,
+        100000,
+        RuleGroup.RELIGION_AND_LANGUAGE,
+        "Most language contact events (bilingualism, shift, creole) per epoch, before the communities are counted",
+    )
+    event_communities_per_extra: int = rule(
+        5, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "One more language contact event per epoch for every this many communities (0 none)"
+    )
     conquest_bilingual_chance: int = rule(
         20, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance per epoch a ruled community also starts speaking its ruler's language (%)"
     )
@@ -23,8 +32,13 @@ class LanguageContactRules(Spanned):
     trade_bilingual_chance: int = rule(
         3, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance per epoch the smaller trading partner also starts speaking the larger's language (%)"
     )
-    contact_words: int = rule(2, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Most words borrowed in one contact per epoch")
-    loan_cap: int = rule(40, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "Most words borrowed per epoch across all contacts")
+    contact_words: int = rule(30, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Most words borrowed in one contact per epoch")
+    loan_cap: int = rule(
+        400, 0, 1000000, RuleGroup.RELIGION_AND_LANGUAGE, "Most words borrowed per epoch across all contacts, before the communities are counted"
+    )
+    loan_words_per_community: int = rule(
+        10, 0, 10000, RuleGroup.RELIGION_AND_LANGUAGE, "More words that may be borrowed per epoch across all contacts for each community"
+    )
     plague_shift_chance: int = rule(
         35, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Chance a bilingual community struck by plague drops its minority language (%)"
     )
@@ -37,7 +51,10 @@ class LanguageContactRules(Spanned):
     )
     creole_words: int = rule(12, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Most words a creole takes from each parent language")
     creole_power: int = rule(2, 1, 12, RuleGroup.RELIGION_AND_LANGUAGE, "Power level of a creole language")
-    creole_cap: int = rule(1, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Most creoles born per epoch")
+    creole_cap: int = rule(1, 0, 10000, RuleGroup.RELIGION_AND_LANGUAGE, "Most creoles born per epoch, before the communities are counted")
+    creole_communities_per_extra: int = rule(
+        50, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "One more creole may be born per epoch for every this many communities (0 none)"
+    )
     stat_step: int = rule(2, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Most a language stat drifts per epoch")
     spread_mult_pct: int = rule(150, 0, 10000, RuleGroup.RELIGION_AND_LANGUAGE, "Spread target: the speakers' share of the world's population times this (%)")
     complexity_base: int = rule(20, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Base of the complexity target")

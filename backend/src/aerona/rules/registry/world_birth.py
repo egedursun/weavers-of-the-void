@@ -7,11 +7,11 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class WorldBirthRules:
     regions_min: int = rule(2, 1, 50, RuleGroup.COSMOS_AND_TRAVEL, "Minimum regions in a new world")
-    regions_max: int = rule(4, 1, 50, RuleGroup.COSMOS_AND_TRAVEL, "Maximum regions in a new world")
+    regions_max: int = rule(12, 1, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Maximum regions in a new world")
     words_min: int = rule(8, 0, 200, RuleGroup.COSMOS_AND_TRAVEL, "Minimum words in the new world's language")
     words_max: int = rule(14, 1, 200, RuleGroup.COSMOS_AND_TRAVEL, "Maximum words in the new world's language")
     resource_mechanics_max: int = rule(2, 0, 10, RuleGroup.COSMOS_AND_TRAVEL, "Maximum rules (mechanics) of the native unique resource")
-    natives_max: int = rule(2, 0, 20, RuleGroup.COSMOS_AND_TRAVEL, "Maximum natives (species or people) in a new world")
+    natives_max: int = rule(6, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Maximum natives (species or people) in a new world")
     banned_names: int = rule(
         60,
         0,

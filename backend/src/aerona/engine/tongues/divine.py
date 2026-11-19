@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
-from aerona.db.tables.sons import SonRow
+from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.tables.tongues import DivineTongueRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import PartOfSpeech
@@ -21,10 +21,8 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.tongues import LanguageStage, WordRegister
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
-from aerona.engine.gods.queries import worshippers_of
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import record as record_incident
 from aerona.language.generator import NameKind
@@ -59,15 +57,9 @@ async def rite_factor(session: AsyncSession, percent: int, caster_id: int, god_i
 
 
 async def meanings_for(ctx: TickContext, son: SonRow) -> list[str]:
-    for folk in await worshippers_of(ctx.session, son.id):
-        tongue = await spoken_language(ctx.session, folk.id)
-        if tongue is None:
-            continue
-        rows = await ctx.session.scalars(select(LexemeRow.meaning).where(LexemeRow.language_entity_id == tongue.id).order_by(LexemeRow.id))
-        found = list(dict.fromkeys(rows))
-        if found:
-            return found[: ctx.rules.divine_tongues.words]
-    return [domain.value for domain in (son.domain_primary, son.domain_secondary) if domain is not None]
+    powers = await ctx.session.scalars(select(SonPowerRow.name).where(SonPowerRow.son_id == son.id).order_by(SonPowerRow.slot))
+    domains = [domain.value for domain in (son.domain_primary, son.domain_secondary) if domain is not None]
+    return list(dict.fromkeys([*domains, *(name.strip() for name in powers if name.strip())]))[: ctx.rules.divine_tongues.words]
 
 
 async def give_tongue(ctx: TickContext, son: SonRow) -> DivineTongueRow | None:

@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.db.tables.warfare import WarRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.lifecycle_end import DisbandReason, ForgettingCause, RepealReason
@@ -37,7 +38,7 @@ from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.phases.warfare import is_uprising
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import is_living_god
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import at_cap, clamp_int, round_half_up
 from aerona.engine.primitives.population_history import median_of
 from aerona.engine.primitives.queries import add_flag, canon, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import retire_in
@@ -123,13 +124,13 @@ async def laws(ctx: TickContext) -> int:
     rebels = {faction.location_id for faction in await canon(ctx.session, [EntityType.FACTION]) if is_uprising(faction) and faction.location_id is not None}
     rng = ctx.rng("repeal")
     repealed = 0
-    for law in await canon(ctx.session, [EntityType.LAW]):
+    for law in ctx.rng("repeal.order").shuffled(unheld(await canon(ctx.session, [EntityType.LAW]))):
         place = await ctx.session.get(EntityRow, law.location_id) if law.location_id is not None else None
         unjust = (stat(law, "justice") or 0) < cycles.unjust_justice
         oppressive = unjust and (stat(law, "rigidity") or 0) >= cycles.oppression_rigidity
         if oppressive and place is not None and place.status is EntityStatus.CANON and place.entity_type is EntityType.SETTLEMENT:
             shift_stat(place, "prosperity", -cycles.oppression_prosperity)
-        if repealed >= cycles.repeal_cap or ctx.epoch - law.birth_epoch < cycles.law_grace_epochs:
+        if at_cap(repealed, cycles.repeal_cap) or ctx.epoch - law.birth_epoch < cycles.law_grace_epochs:
             continue
         orphaned = place is not None and place.status is not EntityStatus.CANON
         profile = await ctx.session.get(LawProfileRow, law.id)
@@ -201,7 +202,13 @@ async def _merge_target(ctx: TickContext, cult: EntityRow, board: CultBoard, end
     if cult.subtype == SCHISM_SUBTYPE:
         parent = await schism_parent(ctx, cult)
         at_peace = parent is not None and not await BondRepository(ctx.session).active_between(cult.id, parent.id, [BondKind.ENEMY])
-        if parent is not None and at_peace and (stat(parent, "zeal") or 0) < cycles.cult_zeal_block and rng.chance(cycles.cult_reconcile_chance):
+        if (
+            parent is not None
+            and at_peace
+            and not held(parent.id)
+            and (stat(parent, "zeal") or 0) < cycles.cult_zeal_block
+            and rng.chance(cycles.cult_reconcile_chance)
+        ):
             return parent, True
     god = board.gods.get(cult.id)
     if god is None:
@@ -212,6 +219,7 @@ async def _merge_target(ctx: TickContext, cult: EntityRow, board: CultBoard, end
         for other in board.cults
         if other.id != cult.id
         and other.id not in ended
+        and not held(other.id)
         and other.world_id == cult.world_id
         and (stat(other, "followers") or 0) * cycles.cult_merge_ratio_pct / 100 > followers
         and (stat(other, "zeal") or 0) < cycles.cult_zeal_block
@@ -227,14 +235,16 @@ async def cults(ctx: TickContext) -> int:
     by_world: dict[int, list[int]] = defaultdict(list)
     for cult in living:
         by_world[cult.world_id].append(stat(cult, "followers") or 0)
-    eligible = [cult for cult in living if ctx.epoch - cult.birth_epoch >= cycles.cult_grace_epochs and cult.engine_kind is not EngineKind.RESURRECTION_ORDER]
+    eligible = ctx.rng("cults.order").shuffled(
+        [cult for cult in unheld(living) if ctx.epoch - cult.birth_epoch >= cycles.cult_grace_epochs and cult.engine_kind is not EngineKind.RESURRECTION_ORDER]
+    )
     board = CultBoard(
         eligible, {world: median_of(values) for world, values in by_world.items()}, {cult.id: await worshipped(ctx, cult.id) for cult in eligible}
     )
     ended: set[int] = set()
     merged = disbanded = 0
     for cult in eligible:
-        if merged >= cycles.cult_cap:
+        if at_cap(merged, cycles.cult_cap):
             break
         if cult.id in ended or (stat(cult, "zeal") or 0) >= cycles.cult_zeal_block:
             continue
@@ -245,7 +255,7 @@ async def cults(ctx: TickContext) -> int:
         ended.add(cult.id)
         merged += 1
     for cult in eligible:
-        if disbanded >= cycles.cult_cap:
+        if at_cap(disbanded, cycles.cult_cap):
             break
         if cult.id in ended:
             continue
@@ -344,15 +354,17 @@ async def peoples(ctx: TickContext) -> int:
             by_region[region].append(people)
     ended: set[int] = set()
     done = 0
-    for people in living:
-        if done >= cycles.people_cap:
+    for people in ctx.rng("peoples.order").shuffled(unheld(living)):
+        if at_cap(done, cycles.people_cap):
             break
         if people.id in ended or ctx.epoch - people.birth_epoch < cycles.people_grace_epochs:
             continue
         size = stat(people, "population") or 0
         region = atlas.top_region(people.id)
         bigger = [
-            other for other in by_region.get(region or 0, []) if other.id != people.id and other.id not in ended and (stat(other, "population") or 0) > size
+            other
+            for other in by_region.get(region or 0, [])
+            if other.id != people.id and other.id not in ended and not held(other.id) and (stat(other, "population") or 0) > size
         ]
         largest = max(bigger, key=lambda other: (stat(other, "population") or 0, -other.id), default=None)
         if largest is None:
@@ -432,14 +444,19 @@ async def carriers(ctx: TickContext, work: EntityRow) -> int:
     return len(sources) + gods + (1 if home is not None and home.entity_type in COMMUNITY_TYPES else 0)
 
 
+def carried_renown(full: int, count: int, gain: int) -> int:
+    beyond = max(0, count - full)
+    return round_half_up((min(full, count) + math.log2(1 + beyond)) * gain)
+
+
 async def works(ctx: TickContext) -> int:
     cycles = ctx.rules.life_cycles
     forgotten = 0
     lasting = {row.artwork_entity_id: not row.performed for row in await ctx.session.scalars(select(ArtworkProfileRow))}
-    for work in await canon(ctx.session, [EntityType.ARTWORK]):
+    for work in unheld(await canon(ctx.session, [EntityType.ARTWORK])):
         count = await carriers(ctx, work)
         written = lasting.get(work.id, False)
-        gain = min(cycles.work_carrier_cap, count) * cycles.work_renown_gain
+        gain = carried_renown(cycles.work_carrier_cap, count, cycles.work_renown_gain)
         fading = (cycles.work_fade + (0 if count else cycles.work_orphan_fade)) * (1 - cycles.written_resistance_pct / 100 if written else 1)
         fade = chance_round(ctx, fading, f"work_fade.{work.id}")
         before = stat(work, "renown") or 0
@@ -479,12 +496,12 @@ async def owned_items(ctx: TickContext) -> set[int]:
 
 async def items(ctx: TickContext) -> int:
     cycles = ctx.rules.life_cycles
-    held = await owned_items(ctx)
+    owned = await owned_items(ctx)
     lost = 0
-    for item in await canon(ctx.session, [EntityType.ITEM]):
-        if lost >= cycles.item_cap:
+    for item in ctx.rng("item_loss.order").shuffled(unheld(await canon(ctx.session, [EntityType.ITEM]))):
+        if at_cap(lost, cycles.item_cap):
             break
-        if item.id in held or ctx.epoch - item.birth_epoch < cycles.item_grace_epochs:
+        if item.id in owned or ctx.epoch - item.birth_epoch < cycles.item_grace_epochs:
             continue
         place = await living_entity(ctx.session, item.location_id)
         if place is not None and place.entity_type in COMMUNITY_TYPES:
@@ -527,12 +544,14 @@ async def swallowed_places(ctx: TickContext) -> int:
         .order_by(EntityRow.id)
     )
     swallowed = 0
-    for event in list(events):
-        if swallowed >= cycles.swallow_cap:
+    for event in ctx.rng("swallow.order").shuffled(list(events)):
+        if at_cap(swallowed, cycles.swallow_cap):
             break
         if (stat(event, "severity") or 0) < cycles.swallow_severity:
             continue
-        places = [item for item in await EntityRepository(ctx.session).contents(event.location_id or 0) if item.entity_type is EntityType.PLACE]
+        places = [
+            item for item in await EntityRepository(ctx.session).contents(event.location_id or 0) if item.entity_type is EntityType.PLACE and not held(item.id)
+        ]
         rng = ctx.rng(f"swallow.{event.id}")
         if not places or not rng.chance(cycles.swallow_chance):
             continue

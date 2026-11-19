@@ -118,7 +118,7 @@ async def free_slots(ctx: TickContext, site: EntityRow) -> int:
             StructureProfileRow.host_entity_id == site.id, StructureProfileRow.construction_state != ConstructionState.RUINED
         )
     )
-    total = slots_for(ctx.rules, town.size_tier) if town is not None else ctx.rules.construction.slots_base
+    total = slots_for(ctx.rules, town.size_tier if town is not None else None, stat_or(site, "population", 0))
     return total - len(list(rows))
 
 

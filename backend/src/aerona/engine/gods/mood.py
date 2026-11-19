@@ -19,7 +19,7 @@ from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.gods.worship import creator_node_id, creator_worshippers
 from aerona.engine.lore.research import mean_spread
-from aerona.engine.primitives.numbers import clamp_percent, decay_weight, saturating
+from aerona.engine.primitives.numbers import clamp_percent, decay_weight, saturating, scaled_cap
 from aerona.engine.services.war import ongoing_war_count
 from aerona.rules.registry import Rules
 
@@ -140,7 +140,7 @@ def passion_matches(rules: Rules, inputs: MoodInputs) -> float:
 
 def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> MoodUpdate:
     creator = rules.creator
-    war_cap = max(1, rules.diplomacy.world_war_cap)
+    war_cap = max(1, scaled_cap(rules.diplomacy.world_war_cap, rules.diplomacy.cap_community_divisor, inputs.communities))
     threshold = max(1, rules.balance.apocalypse_threshold)
     godless_share = inputs.godless / inputs.communities * PERCENT if inputs.communities else 0.0
     temperament = round(state.temperament * creator.temperament_keep_pct / PERCENT + swing(inputs.temperament_roll, creator.temperament_wave))

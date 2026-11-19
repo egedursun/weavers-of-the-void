@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import HolyOrderProfileRow
@@ -28,7 +28,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import war_event
 
@@ -188,7 +188,7 @@ async def faithful_side(ctx: TickContext, sides: list[WarSideRow], faith: int) -
 async def serve_holy_wars(ctx: TickContext, order: EntityRow, row: HolyOrderProfileRow, cult: EntityRow, tally: OrderTally) -> None:
     fortress = await living_entity(ctx.session, row.fortress_entity_id) if row.fortress_entity_id is not None else None
     faith = await patron_node(ctx.session, cult)
-    size = (stat(order, STRENGTH) or 0) * ctx.rules.holy_orders.host_per_strength
+    size = (stat(order, STRENGTH) or 0) * ctx.rules.holy_orders.host_per_strength * max(PER_MILLE, stat_or(cult, "followers", 0)) // PER_MILLE
     if fortress is None or faith is None or held(fortress.id) or size <= 0:
         return
     wars = await ctx.session.scalars(select(WarRow).where(WarRow.status == WarStatus.ONGOING, WarRow.cause.in_(tuple(HOLY_CAUSES))).order_by(WarRow.id))

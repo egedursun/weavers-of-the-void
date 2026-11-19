@@ -17,7 +17,7 @@ from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import agree, several, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.repositories.sons import SonRepository
+from aerona.db.repositories.sons import COUNCIL_SEATING, SonRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import CouncilRulingRow
@@ -345,7 +345,9 @@ async def convene_council(runtime: AgentRuntime, topic: str | None = None, calle
     async with runtime.database.read() as session:
         rules = await runtime.rules(session)
         scope = await load_scope(session, rules)
-        members = list(await session.scalars(select(SonRow).where(SonRow.status.in_(MEMBER_STATUSES)).order_by(SonRow.id).limit(rules.council.max_members)))
+        members = list(
+            await session.scalars(select(SonRow).where(SonRow.status.in_(MEMBER_STATUSES)).order_by(*COUNCIL_SEATING).limit(rules.council.max_members))
+        )
         if len(members) < rules.council.min_members:
             raise ValidationFailedError(
                 f"At least {several(rules.council.min_members, 'son', 'sons')} {agree(rules.council.min_members, 'is', 'are')} needed for a council."

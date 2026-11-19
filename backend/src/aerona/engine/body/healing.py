@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import SIGHT_PARTS, Part
 from aerona.catalog.medicine import MEDICINE, infection_cut, tier_of
 from aerona.catalog.mind import HEALING_SKILLS
-from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
+from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
@@ -50,7 +50,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_body, injuries_of, prostheses_of
 from aerona.engine.body.conditions import end_condition, gain_condition
-from aerona.engine.body.digits import lose_all, restore
+from aerona.engine.body.digits import full_counts, lose_all, restore
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.body.treatment import TREATMENT_ACTIONS, Treatment, bleed, regain_blood, treat
@@ -583,7 +583,7 @@ async def _restore(ctx: TickContext, bearer: EntityRow, body: BodyRow, care: Car
             if row.part in DIGIT_LIMBS:
                 restore(body, row.part, row.digits)
             elif counted is not None:
-                setattr(body, counted, FULL_COUNTS[row.part])
+                setattr(body, counted, full_counts(body)[row.part])
             await _treated(ctx, bearer, row, care.healer)
             roles = {IncidentRole.PATIENT: bearer.id, IncidentRole.HEALER: care.healer.mortal.id}
             steps = (
@@ -801,7 +801,7 @@ async def mend(ctx: TickContext, bearer: Bearer, *, lasting: bool = False, heale
             if row.part in DIGIT_LIMBS:
                 restore(body, row.part, row.digits)
             else:
-                setattr(body, COUNTED_PARTS[row.part], FULL_COUNTS[row.part])
+                setattr(body, COUNTED_PARTS[row.part], full_counts(body)[row.part])
         if restorable and row.kind in TOTAL_LOSS_KINDS:
             row.kind = InjuryKind.DEEP_CUT
         row.state = InjuryState.HEALED_SCAR

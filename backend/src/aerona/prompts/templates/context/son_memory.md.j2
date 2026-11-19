@@ -34,7 +34,7 @@ YOU ARE REPEATING YOURSELF: {% for bucket in repeats %}{{ bucket.label }} ×{{ b
 YOUR WORSHIPPERS ({{ worshippers | length + extra_worshippers }}): {% if worshippers %}{% for item in worshippers %}#{{ item.id }} {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if extra_worshippers > 0 %} and {{ extra_worshippers }} more communities{% endif %}{% else %}nobody{% endif %}
 
 
-YOUR MEMORIES:
+WHAT YOU HAVE SEEN AND DONE:
 {{ budget(chronicle_rows(recollections), c.memory_recollections_chars, "see the chronicle", trim) if recollections else "(none)" }}
 {% if about %}
 

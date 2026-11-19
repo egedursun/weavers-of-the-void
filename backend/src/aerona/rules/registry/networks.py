@@ -8,7 +8,7 @@ C = RuleGroup.INTERCONNECTION
 
 @dataclass(frozen=True)
 class NetworkRules(Spanned):
-    days_per_epoch: int = rule(360, 1, 10000, C, "Days in an epoch, against which a network's delay is counted")
+    days_per_epoch: int = rule(360, 1, 10000, C, "Days in a year; a network's delay is counted against the days of a whole epoch")
     relay_days: int = rule(20, 0, 1000, C, "Days a message takes across a relay network")
     wired_days: int = rule(1, 0, 1000, C, "Days a message takes across a wired network")
     broadcast_days: int = rule(0, 0, 1000, C, "Days a message takes across a broadcast network")

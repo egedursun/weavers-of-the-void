@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.affairs import MandateRow
@@ -431,7 +431,7 @@ async def maybe_enclose(ctx: TickContext, row: CommonsRow, *, rows: list[Commons
         return
     regime = await ctx.session.get(RegimeRow, realm.entity.id)
     eager = 2 if regime is not None and regime.horizon < table.horizon_mark else 1
-    profit = 1 + realm_dispossessed(rows, book, realm.entity.id) / table.labour_span
+    profit = 1 + realm_dispossessed(rows, book, realm.entity.id) / max(1.0, table.labour_span * stat_or(realm.entity, "subjects", 0) / PER_MILLE)
     tenure = await law_param(ctx.session, row.steward_entity_id, LawKind.LAND_TENURE, "tenure")
     law = {FREEHOLD: table.freehold_pct, COMMUNAL: table.communal_pct}.get(str(tenure), PERCENT) / PERCENT
     if ctx.rng(f"commons.enclose.{row.id}.{ctx.epoch}").chance(table.enclose_pct * eager * profit * law):

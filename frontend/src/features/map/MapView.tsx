@@ -105,6 +105,8 @@ const FALLBACK = {
   town: 2000,
   city: 10000,
   greatCity: 50000,
+  megacity: 1000000,
+  conurbation: 10000000,
   trend: 5,
   leakFirst: 30,
   leakSecond: 60,
@@ -137,6 +139,18 @@ function useMapSettings() {
         'politics',
         'metropolis_population',
         FALLBACK.greatCity
+      ),
+      megacity: ruleValue(
+        data,
+        'politics',
+        'megacity_population',
+        FALLBACK.megacity
+      ),
+      conurbation: ruleValue(
+        data,
+        'politics',
+        'conurbation_population',
+        FALLBACK.conurbation
       ),
     }
     return {

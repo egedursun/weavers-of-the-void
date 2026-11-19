@@ -106,7 +106,7 @@ async def keep_sacraments(ctx: TickContext, tally: RiteTally) -> None:
     await ctx.session.flush()
     plagued = await plagued_regions(ctx.session)
     for mortal, kind in await due_rites(ctx):
-        if tally.performed + tally.missed >= ctx.rules.sacraments.rites_per_epoch:
+        if ctx.rules.sacraments.rites_per_epoch and tally.performed + tally.missed >= ctx.rules.sacraments.rites_per_epoch:
             return
         if held(mortal.id):
             continue

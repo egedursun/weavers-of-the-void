@@ -3,7 +3,7 @@ YOUR CURRENT WORLD: world#{{ id }} {{ name }} — {{ type_label }}{% if star_nam
 {% endif %}
 {% if star_age or world_age or biosphere < 100 or radiation > 0 %}LIFE OF THE WORLD:{% if star_age %} its star is {{ star_age }};{% endif %}{% if world_age %} the world is {{ world_age }};{% endif %} biosphere {{ biosphere }}/100{% if radiation > 0 %}, radiation {{ radiation }}/100{% endif %}.
 {% endif %}
-{% if body %}THE WORLD AS A BODY:
+{% if body %}THE WORLD'S PHYSICAL STATE:
 {% for line in body %}- {{ line }}
 {% endfor %}{% endif %}
 {% if open_rifts > 0 %}RIFTS: {{ open_rifts }} open into other dimensions.

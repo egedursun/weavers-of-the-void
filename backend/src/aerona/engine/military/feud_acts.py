@@ -62,7 +62,8 @@ async def people_of_side(ctx: TickContext, side: EntityRow) -> list[EntityRow]:
 
 
 async def ambush(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Deed | None:
-    caught = (await people_of_side(ctx, enemy))[:2]
+    folk = await people_of_side(ctx, enemy)
+    caught = ctx.rng(f"feud.ambush.{avenger.id}.{enemy.id}.{ctx.epoch}").sample(folk, 1 + len(folk) // ctx.rules.scale.ambush_people_per_victim)
     for victim in caught:
         await apply_hits(
             ctx, victim, Harm(ctx.rules.vendetta.ambush_hp, HarmCause.BATTLE, f"caught in an ambush by {avenger.name}", killer_id=avenger.id), lethal=False

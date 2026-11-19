@@ -1,13 +1,14 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.customs import CommuteRow, CooperativeRow, PoorReliefRow, TavernRow, WelfareRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.customs import CoopPurpose
+from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
 
 TEN = 10
@@ -27,10 +28,22 @@ async def first_realm(session: AsyncSession, town_id: int) -> int | None:
     return found
 
 
+async def realm_people(session: AsyncSession, realm_id: int) -> int:
+    members = await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == realm_id))
+    people = 0
+    for member_id in members:
+        member = await session.get(EntityRow, member_id)
+        people += stat_or(member, "population", 0) if member is not None else 0
+    return people
+
+
 async def realm_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:
     realm = await first_realm(session, town_id)
     row = await session.get(PoorReliefRow, realm) if realm is not None else None
-    return row.budget * rules.poor_relief.relief_per_coin * row.reach // TEN // PERCENT if row is not None else 0
+    if row is None or realm is None:
+        return 0
+    per_thousand = row.budget * PER_MILLE // max(PER_MILLE, await realm_people(session, realm))
+    return per_thousand * rules.poor_relief.relief_per_coin * row.reach // TEN // PERCENT
 
 
 async def poverty_relief(session: AsyncSession, rules: Rules, town_id: int) -> int:

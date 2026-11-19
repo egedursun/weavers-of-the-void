@@ -64,12 +64,20 @@ describe('settlements', () => {
       settlements: {
         '1': { tier: 'capital', population: 10, previous_population: null },
       },
-      population: { '2': 12000, '3': 10 },
+      population: { '2': 12000, '3': 10, '4': 2000000, '5': 20000000 },
     } as unknown as MapView
-    const thresholds = { town: 2000, city: 10000, greatCity: 50000 }
+    const thresholds = {
+      town: 2000,
+      city: 10000,
+      greatCity: 50000,
+      megacity: 1000000,
+      conurbation: 10000000,
+    }
     expect(tierOf(view, 1, thresholds)).toBe('capital')
     expect(tierOf(view, 2, thresholds)).toBe('city')
     expect(tierOf(view, 3, thresholds)).toBe('village')
+    expect(tierOf(view, 4, thresholds)).toBe('megacity')
+    expect(tierOf(view, 5, thresholds)).toBe('conurbation')
   })
 })
 

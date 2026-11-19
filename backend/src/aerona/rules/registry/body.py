@@ -374,9 +374,9 @@ class BodyCustomsRules:
 
 
 @dataclass(frozen=True)
-class ConditionRules:
+class ConditionRules(Spanned):
     plague_chronic_chance: int = rule(25, 0, 100, G, "Chance a plague survivor keeps a lingering illness (%)")
-    illness_recover_chance: int = rule(8, 0, 100, G, "Chance a lingering illness passes each epoch (%)")
+    illness_recover_chance: int = rule(8, 0, 100, G, "Chance a lingering illness passes (% per year)")
     age_blind_onset_pct: int = rule(80, 0, 100, G, "Share of a lifespan after which eyes can fail (%)")
     age_blind_chance: int = rule(12, 0, 100, G, "Chance an old mortal goes blind each epoch (%)")
     age_deaf_onset_pct: int = rule(75, 0, 100, G, "Share of a lifespan after which ears can fail (%)")
@@ -385,13 +385,13 @@ class ConditionRules:
     madness_chance: int = rule(30, 0, 100, G, "Chance a mortal below that sanity takes a form of madness each epoch (%)")
     madness_severity_step: int = rule(8, 1, 100, G, "Sanity below the madness line per step of madness severity")
     madness_recover_sanity: int = rule(50, 0, 100, G, "Sanity above which madness can lift")
-    madness_recover_chance: int = rule(20, 0, 100, G, "Chance madness lifts each epoch once sanity recovers (%)")
+    madness_recover_chance: int = rule(20, 0, 100, G, "Chance madness lifts once sanity recovers (% per year)")
     paranoia_weight: int = rule(30, 0, 100, G, "Madness: weight of paranoia")
     visions_weight: int = rule(25, 0, 100, G, "Madness: weight of visions")
     rage_weight: int = rule(20, 0, 100, G, "Madness: weight of rage")
     melancholy_weight: int = rule(25, 0, 100, G, "Madness: weight of melancholy")
     addiction_chance: int = rule(15, 0, 100, G, "Chance a notable of an addicted people becomes an addict each epoch (%)")
-    addiction_recover_chance: int = rule(25, 0, 100, G, "Chance an addict breaks free once their people is free (%)")
+    addiction_recover_chance: int = rule(25, 0, 100, G, "Chance an addict breaks free once their people is free (% per year)")
     withdrawal_severity: int = rule(1, 0, 5, G, "Severity an addict gains while their people is in withdrawal")
     hunger_curse_chance: int = rule(20, 0, 100, G, "Chance a bloodline curse brings an endless hunger (%)")
     wither_condition_severity: int = rule(3, 1, 5, G, "Severity of a withering at which the limb stays withered")

@@ -62,5 +62,5 @@ async def test_old_alliances_without_a_common_enemy_lapse(session: AsyncSession,
     second = await settlement(session, "Reedmouth", world, world.regions[1])
     alliance = await BondRepository(session).connect(BondDraft(first.id, second.id, BondKind.ALLY, 0))
     ctx = await manual_context(session, "test", rules)
-    assert await alliance_lifetimes(ctx) == 1
+    assert await alliance_lifetimes(ctx, 2) == 1
     assert alliance.state is BondState.PAST

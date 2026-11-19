@@ -1,3 +1,5 @@
+from collections import Counter
+
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
@@ -158,9 +160,10 @@ async def profile_beast(ctx: TickContext, beast: EntityRow, species: EntityRow |
 async def champions(ctx: TickContext) -> int:
     table = ctx.rules.beasts
     risen = 0
+    by_world: Counter[int | None] = Counter()
     profiled = set(await ctx.session.scalars(select(BeastProfileRow.species_entity_id).where(BeastProfileRow.species_entity_id.is_not(None))))
-    for species in unheld(await canon(ctx.session, [EntityType.SPECIES])):
-        if risen >= table.promotion_cap or species.id in profiled:
+    for species in ctx.rng("champion.order").shuffled(unheld(await canon(ctx.session, [EntityType.SPECIES]))):
+        if by_world[species.world_id] >= table.promotion_cap or species.id in profiled:
             continue
         kind = await ctx.session.get(SpeciesProfileRow, species.id)
         huge = kind is not None and SIZE_ORDER.index(kind.size_class) >= GREAT
@@ -201,6 +204,7 @@ async def champions(ctx: TickContext) -> int:
         facts: dict[str, FactInput] = {"species": species.id, "hp": stat_or(beast, "hp", 0), "danger": stat_or(beast, "danger", 0)}
         await record_happening(ctx, "beasts.risen", roles={IncidentRole.SUBJECT: beast.id}, facts=facts, place=region.id if region is not None else None)
         risen += 1
+        by_world[species.world_id] += 1
     return risen
 
 

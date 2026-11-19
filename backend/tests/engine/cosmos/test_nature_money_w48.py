@@ -9,6 +9,7 @@ from aerona.catalog.travel import TRAVEL_MODEL, medium_of
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmography import PhenomenonProfileRow
 from aerona.db.tables.economy import CurrencyRow
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.cosmography import BeingKind, PhenomenonCause, PhenomenonKind, PhenomenonPersistence, PhenomenonScope
 from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, MoneyForm, TradeMode
 from aerona.domain.enums.entity import EntityType
@@ -29,6 +30,7 @@ from aerona.engine.economy.money import strain
 from aerona.engine.environment.profile import SOIL_FERTILITY, WORLD_SOIL
 from aerona.engine.phases.travel import MEDIUM_EVENTS
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, tick, tuned
 
@@ -137,20 +139,25 @@ async def test_only_coin_and_commodity_money_are_made_of_metal(ctx: TickContext,
 async def test_money_not_made_of_metal_is_issued_counterfeited_and_broken_into(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
     ctx = tick(session, tuned(rules, "money", counterfeit_chance=100, intrusion_chance=100))
     issuer = await coin_issuer(ctx, cosmos)
+    town = await session.get(EntityRow, issuer)
+    assert town is not None
     paper = await create_currency(ctx, NewCoin(issuer_id=issuer, name="Notes", metal=None, purity=100, trust=0, supply=1000, form=MoneyForm.PAPER))
-    await strain(ctx, paper)
+    await strain(ctx, paper, town)
     assert paper.supply == 1000 + ctx.rules.money.issue_units
     network = CurrencyRow(issuer_entity_id=issuer, name="Bits", metal=None, purity=100, supply=1000, trust=50, minted_epoch=0, form=MoneyForm.NETWORK)
     session.add(network)
-    await strain(ctx, network)
+    await strain(ctx, network, town)
     assert network.supply < 1000 + ctx.rules.money.issue_units
     notes = [
         CurrencyRow(id=900 + index, issuer_entity_id=issuer, name="Notes", metal=None, purity=100, supply=0, trust=10, minted_epoch=0, form=MoneyForm.PAPER)
         for index in range(10)
     ]
     for row in notes:
-        await strain(ctx, row)
+        await strain(ctx, row, town)
     assert any(row.trust < 10 for row in notes)
+    set_stats(town, population=5000)
+    await strain(ctx, paper, town)
+    assert paper.supply == 1000 + 6 * ctx.rules.money.issue_units
 
 
 def test_every_soil_has_a_fertility_and_the_new_soils_are_reached(rules: Rules) -> None:

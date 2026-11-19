@@ -61,7 +61,7 @@ async def message_epochs(session: AsyncSession, rules: Rules, first: int, second
         return None
     worlds = {await session.scalar(select(EntityRow.world_id).where(EntityRow.id == node)) for node in (first, second)}
     crossing = rules.networks.interworld_days if len(worlds) > 1 else 0
-    return -(-(min(days) + crossing) // max(1, rules.networks.days_per_epoch))
+    return -(-(min(days) + crossing) // max(1, rules.networks.per_epoch(rules.networks.days_per_epoch)))
 
 
 async def shake_ledger(session: AsyncSession, rules: Rules, network_id: int) -> None:

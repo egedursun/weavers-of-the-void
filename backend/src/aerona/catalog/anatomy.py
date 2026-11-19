@@ -12,7 +12,11 @@ FINGERS = BodyPart.FINGERS
 TOE_COUNT = 10
 TOES = BodyPart.TOES
 TOOTH_COUNT = 32
+MAMMAL_TOOTH_COUNT = 42
+SERPENT_TOOTH_COUNT = 100
+FISH_TOOTH_COUNT = 60
 TEETH = BodyPart.TEETH
+COUNTED_KEYS = (FINGERS, TOES, TEETH)
 
 
 @dataclass(frozen=True)
@@ -54,6 +58,14 @@ class Anatomy:
     @property
     def functions(self) -> frozenset[BodyFunction]:
         return frozenset(function for part in self.parts for function in part.functions)
+
+    def full_count(self, key: str) -> int:
+        part = self.part(key)
+        return part.counted if part is not None else 0
+
+    @property
+    def full_counts(self) -> dict[str, int]:
+        return {key.value: self.full_count(key) for key in COUNTED_KEYS}
 
 
 def _pair(left: BodyPart, right: BodyPart, label: str, region: BodyRegion, functions: tuple[BodyFunction, ...], *, severable: bool = True) -> tuple[Part, Part]:
@@ -99,6 +111,7 @@ QUADRUPED_PARTS: tuple[Part, ...] = (
     *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
     *_pair(P.LEFT_EAR, P.RIGHT_EAR, "ear", R.HEAD, (F.HEARING,)),
     Part(P.JAW, "Jaws", R.HEAD, (F.SPEECH, F.GRASP)),
+    Part(TEETH, "Teeth", R.HEAD, (F.GRASP, F.PRESENCE), severable=True, counted=MAMMAL_TOOTH_COUNT),
     Part(P.NECK, "Neck", R.TORSO, (F.BREATH,), vital=True),
     Part(P.TORSO, "Flank", R.TORSO, (F.VITAL,)),
     *_organs(),
@@ -123,6 +136,7 @@ SERPENTINE_PARTS: tuple[Part, ...] = (
     Part(P.HEAD, "Head", R.HEAD, (F.COGNITION, F.PRESENCE), vital=True),
     *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
     Part(P.JAW, "Jaws", R.HEAD, (F.SPEECH, F.GRASP)),
+    Part(TEETH, "Teeth", R.HEAD, (F.GRASP, F.PRESENCE), severable=True, counted=SERPENT_TOOTH_COUNT),
     Part(P.TONGUE, "Forked tongue", R.HEAD, (F.HEARING,), severable=True, internal=True),
     Part(P.TORSO, "Coils", R.TORSO, (F.LOCOMOTION, F.VITAL)),
     *_organs(),
@@ -145,6 +159,7 @@ AQUATIC_PARTS: tuple[Part, ...] = (
     Part(P.HEAD, "Head", R.HEAD, (F.COGNITION, F.PRESENCE), vital=True),
     *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
     Part(P.JAW, "Jaws", R.HEAD, (F.SPEECH, F.GRASP)),
+    Part(TEETH, "Teeth", R.HEAD, (F.GRASP, F.PRESENCE), severable=True, counted=FISH_TOOTH_COUNT),
     Part(P.GILLS, "Gills", R.TORSO, (F.BREATH,), vital=True),
     Part(P.TORSO, "Body", R.TORSO, (F.VITAL,)),
     *_organs(breath=False),

@@ -191,13 +191,9 @@ async def gather_cult(ctx: TickContext, mortal: EntityRow) -> int | None:
 
 async def mantle_world(ctx: TickContext, tally: MantleTally) -> None:
     table = ctx.rules.mantling
-    weighed = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if weighed >= table.candidates_max:
-            break
         if held(mortal.id) or await renown_of(ctx, mortal.id) < table.renown_min // 2:
             continue
-        weighed += 1
         await weigh(ctx, mortal, tally)
     await ctx.session.flush()
 

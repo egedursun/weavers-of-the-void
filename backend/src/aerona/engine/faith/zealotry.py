@@ -169,7 +169,8 @@ async def followers(ctx: TickContext, church: Church) -> list[EntityRow]:
 
 
 def reach(ctx: TickContext, people: list[EntityRow]) -> list[EntityRow]:
-    return unheld(people)[: ctx.rules.zeal.fanatic_reach]
+    free = ctx.rng(f"fanatic_reach.{ctx.epoch}").shuffled(unheld(people))
+    return free[: max(1, -(-len(free) * ctx.rules.zeal.fanatic_reach // PERCENT))] if free else []
 
 
 async def purge(ctx: TickContext, church: Church) -> FaithLine | None:

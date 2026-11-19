@@ -24,6 +24,8 @@ from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.quota import WorldQuota
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import town_of
 from aerona.engine.structures.readers import strength_at
@@ -92,15 +94,22 @@ async def found_movements(ctx: TickContext, tally: MovementTally) -> None:
             select(FactionProfileRow.home_entity_id).where(FactionProfileRow.kind == FactionKind.ART_MOVEMENT, FactionProfileRow.home_entity_id.is_not(None))
         )
     )
-    for town_id, makers in sorted((await makers_by_town(ctx)).items()):
-        if tally.founded >= table.movements_per_epoch:
-            return
+    quota = WorldQuota(table.movements_per_epoch)
+    for town_id, makers in ctx.rng("movement.order").shuffled(sorted((await makers_by_town(ctx)).items())):
         town = await living_entity(ctx.session, town_id)
-        if town is None or held(town.id) or town_id in homed or len(makers) < table.found_artists:
+        if town is None or quota.full(town.world_id) or held(town.id) or town_id in homed or len(makers) < table.found_artists:
             continue
         if ctx.rng(f"movement.{town_id}").chance(table.found_chance):
             await found_movement(ctx, town, makers)
+            quota.take(town.world_id)
             tally.founded += 1
+
+
+async def canon_room(ctx: TickContext, people_id: int) -> int:
+    table = ctx.rules.canon
+    people = await ctx.session.get(EntityRow, people_id)
+    population = stat_or(people, "population", 0) if people is not None else 0
+    return table.canon_size + (population // table.canon_people_per_work if table.canon_people_per_work > 0 else 0)
 
 
 async def people_of_faction(ctx: TickContext, faction_id: int) -> int | None:
@@ -178,7 +187,6 @@ async def people_of_work(ctx: TickContext, artwork: EntityRow, profile: ArtworkP
 
 
 async def form_canon(ctx: TickContext, tally: MovementTally) -> None:
-    table = ctx.rules.canon
     orthodox = await orthodox_makers(ctx)
     works = await ctx.session.execute(
         select(EntityRow, ArtworkProfileRow)
@@ -196,7 +204,7 @@ async def form_canon(ctx: TickContext, tally: MovementTally) -> None:
         if path is None:
             continue
         size = len(list(await ctx.session.scalars(select(CanonWorkRow.artwork_entity_id).where(CanonWorkRow.people_entity_id == people))))
-        if size >= table.canon_size:
+        if size >= await canon_room(ctx, people):
             continue
         ctx.session.add(
             CanonWorkRow(people_entity_id=people, artwork_entity_id=artwork.id, path=path, weight=PATH_WEIGHT[path], since_epoch=ctx.epoch, locked=[])

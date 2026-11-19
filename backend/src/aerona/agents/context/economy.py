@@ -82,7 +82,7 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
         short=short,
         routes=routes,
         prices=[f"{line.label.lower()} {line.price} (supply {line.supply}, need {line.demand})" for line in goods if line.price is not None],
-        currency=f"{coin.name} of {coin.metal or 'no metal, a ledger'}, purity {coin.purity}, trust {coin.trust}" if coin is not None else "",
+        currency=f"{coin.name} of {coin.metal or 'no metal backing'}, purity {coin.purity}, trust {coin.trust}" if coin is not None else "",
         debts=debts,
         loans=loans,
         works=await works_lines(session, rules, home, me),

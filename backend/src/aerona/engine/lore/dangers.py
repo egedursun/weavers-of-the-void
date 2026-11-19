@@ -6,7 +6,6 @@ from aerona.constants.units import PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, ResearchProgressRow
 from aerona.db.tables.discovery import ResearchIncidentRow
-from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
@@ -20,7 +19,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import loose
-from aerona.engine.ecology.control import spawn_beast
+from aerona.engine.ecology.control import commonest_species, spawn_beast
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.learning import realm_of
@@ -103,12 +102,7 @@ async def strike(
             if not held(other) and not await has_technique(ctx.session, other, technique):
                 await add_progress(ctx, other, technique, table.leak_progress)
     if kind in {ResearchIncident.RELEASED_BEAST, ResearchIncident.SUMMONING_GONE_WRONG} and region is not None:
-        species = await ctx.session.scalar(
-            select(SpeciesRangeRow.species_entity_id)
-            .where(SpeciesRangeRow.region_entity_id == region.id, SpeciesRangeRow.abundance > 0)
-            .order_by(SpeciesRangeRow.abundance.desc(), SpeciesRangeRow.species_entity_id)
-            .limit(1)
-        )
+        species = await commonest_species(ctx, region.id)
         if species is not None and kind is ResearchIncident.RELEASED_BEAST:
             await spawn_beast(ctx, species)
         shift_stat(region, "danger", round_half_up(table.incident_danger * severity / PERCENT))

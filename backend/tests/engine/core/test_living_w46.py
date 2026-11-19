@@ -72,14 +72,14 @@ def line_of(name: str, owner_id: int | None, species_id: int | None) -> LivingLi
     )
 
 
-async def test_a_seed_grows_young_as_its_seasons_pass(session: AsyncSession, world: CoreWorld) -> None:
+async def test_a_seed_ages_every_season_of_an_epoch(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Greenmere", world, world.regions[0])
     hall = await works(session, world, town.id)
-    session.add(alive(hall.id))
+    session.add(alive(hall.id, lifespan_years=400))
     await session.flush()
     assert await keep_profiles(await at(session, 2)) == 1
     row = await session.get(LivingProfileRow, hall.id)
-    assert row is not None and row.age_seasons == 4 and row.growth_stage is GrowthStage.YOUNG and row.size_pct == 30
+    assert row is not None and row.age_seasons == 4 * 50 and row.growth_stage is GrowthStage.PRIME and row.size_pct == 30
 
 
 async def test_an_unfed_living_thing_dies_and_its_record_ends(session: AsyncSession, world: CoreWorld) -> None:

@@ -326,7 +326,7 @@ class SlaveMarketRules:
     appearance_sample: int = rule(20, 1, 1000, E, "Mortals of a people read to judge its looks")
     sale_pct: int = rule(10, 0, 100, E, "Share of a market town's bound adults offered each epoch (%)")
     scarcity_weight: int = rule(50, 0, 400, E, "How much scarcity raises the price (%)")
-    demand: int = rule(100, 1, 1000000, E, "Bound folk the markets of a world want each epoch")
+    demand: int = rule(20, 1, 1000000, E, "Bound folk a market town wants each epoch, per 1000 of its people")
     raid_lift: int = rule(100, 0, 400, W, "How much a price above the base raises the chance of raiding for captives (%)")
 
 

@@ -13,6 +13,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.language_profile import language_profile
+from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, close, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.recording.record import record as record_incident
@@ -82,8 +83,10 @@ async def dialect_divergence(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     contacts = await BondIndex.load(ctx.session, CONTACT_KINDS)
     founded = 0
-    for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
-        if founded >= rules.world_effects.dialect_cap:
+    settlements = unheld(await canon(ctx.session, [EntityType.SETTLEMENT]))
+    cap = scaled_cap(rules.world_effects.dialect_cap, rules.world_effects.dialect_cap_settlement_divisor, len(settlements))
+    for settlement in ctx.rng("order").shuffled(settlements):
+        if founded >= cap:
             return
         if settlement.status is not EntityStatus.CANON:
             continue

@@ -37,7 +37,7 @@ class EconomyRules(Spanned):
     market_strength: int = rule(20, 0, 100, RuleGroup.ECONOMY, "Strength of a wandering market")
     market_wealth: int = rule(70, 0, 100, RuleGroup.ECONOMY, "Wealth of a wandering market")
     market_sway: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Sway of a wandering market")
-    market_reach: int = rule(6, 0, 1000, RuleGroup.ECONOMY, "Maximum communities a wandering market enlivens")
+    market_reach: int = rule(25, 0, 100, RuleGroup.ECONOMY, "Share of the communities on its world a wandering market enlivens each epoch, at least one (%)")
     market_prosperity: int = rule(2, 0, 100, RuleGroup.ECONOMY, "Prosperity contribution of a wandering market to communities on its world")
     pirate_min_traffic: int = rule(2, 0, 1000, RuleGroup.ECONOMY, "Minimum journeys in recent epochs for pirates to spawn")
     pirate_power: int = rule(4, 1, 12, RuleGroup.ECONOMY, "Power level of route raiders")
@@ -47,8 +47,12 @@ class EconomyRules(Spanned):
     pirate_sway: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Sway of route raiders")
     pirate_route_danger: int = rule(2, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Danger pirates add to routes per epoch")
     pirate_route_danger_cap: int = rule(95, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Highest route danger pirates can cause")
-    market_max: int = rule(1, 0, 20, RuleGroup.ECONOMY, "Maximum simultaneous wandering markets in the cosmos (0 disables)")
-    pirate_max: int = rule(1, 0, 20, RuleGroup.ECONOMY, "Maximum simultaneous route-raider communities in the cosmos (0 disables)")
+    market_max: int = rule(1, 0, 10000, RuleGroup.ECONOMY, "Maximum simultaneous wandering markets in the cosmos (base; 0 disables)")
+    market_route_divisor: int = rule(
+        5, 0, 100000, RuleGroup.ECONOMY, "Wandering market cap grows by 1 for every this many passable routes between worlds (0: fixed)"
+    )
+    pirate_max: int = rule(1, 0, 10000, RuleGroup.ECONOMY, "Maximum simultaneous route-raider communities in the cosmos (base; 0 disables)")
+    pirate_route_divisor: int = rule(5, 0, 100000, RuleGroup.ECONOMY, "Route-raider cap grows by 1 for every this many routes raiders can prey on (0: fixed)")
     pirate_danger_decay: int = rule(
         1,
         0,

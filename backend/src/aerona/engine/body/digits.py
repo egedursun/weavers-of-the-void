@@ -1,20 +1,45 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.anatomy import anatomy_of
-from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, SIDES, digit_keys, digit_part, intact_share
+from aerona.catalog.anatomy import TEETH, TOOTH_COUNT, Anatomy, anatomy_of
+from aerona.catalog.tissues import DIGIT_LIMBS, SIDES, digit_keys, digit_part, intact_share
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.domain.enums.body import BodyFunction, Handedness
+from aerona.db.write_guard import held
+from aerona.domain.enums.body import BodyFunction, BodyPlan, Handedness
 from aerona.rules.registry import Rules
 
 FUNCTIONS = frozenset(item.value for item in BodyFunction)
 
 
+def plan_anatomy(body: BodyRow) -> Anatomy:
+    return anatomy_of(body.plan, frozenset(BodyFunction(trait) for trait in body.traits if trait in FUNCTIONS))
+
+
+def full_counts(body: BodyRow) -> dict[str, int]:
+    return plan_anatomy(body).full_counts
+
+
 def sync(body: BodyRow) -> None:
+    full = full_counts(body)
     for part in DIGIT_LIMBS:
-        setattr(body, part, FULL_COUNTS[part] - sum(1 for key in body.lost_digits if digit_part(key) == part))
+        setattr(body, part, max(0, full[part] - sum(1 for key in body.lost_digits if digit_part(key) == part)))
+
+
+def fill_counts(body: BodyRow) -> BodyRow:
+    sync(body)
+    body.teeth = full_counts(body)[TEETH]
+    return body
+
+
+def replan(body: BodyRow, plan: BodyPlan, traits: list[str] | None = None) -> None:
+    missing_teeth = max(0, full_counts(body)[TEETH] - body.teeth)
+    body.plan = plan
+    if traits is not None:
+        body.traits = traits
+    sync(body)
+    body.teeth = max(0, full_counts(body)[TEETH] - missing_teeth)
 
 
 def lose(body: BodyRow, part: str, count: int, rng: SeededRandom) -> list[str]:
@@ -46,7 +71,8 @@ def restore(body: BodyRow, part: str, keys: list[str] | None = None) -> list[str
 
 
 def effective_counts(body: BodyRow) -> dict[str, int]:
-    counts = {part: round(FULL_COUNTS[part] * intact_share(part, body.lost_digits)) for part in DIGIT_LIMBS}
+    full = full_counts(body)
+    counts = {part: round(full[part] * intact_share(part, body.lost_digits)) for part in DIGIT_LIMBS}
     counts["teeth"] = body.teeth
     return counts
 
@@ -72,9 +98,9 @@ async def backfill_digits(session: AsyncSession, rules: Rules) -> int:
     bodies = list(await session.scalars(select(BodyRow)))
     for body in bodies:
         body.handedness = handedness_for(rules, body.node_id)
-        anatomy = anatomy_of(body.plan, frozenset(BodyFunction(trait) for trait in body.traits if trait in FUNCTIONS))
+        anatomy = plan_anatomy(body)
         owed = {
-            part: FULL_COUNTS[part] - int(getattr(body, part) or 0) - sum(1 for key in body.lost_digits if digit_part(key) == part)
+            part: anatomy.full_count(part) - int(getattr(body, part) or 0) - sum(1 for key in body.lost_digits if digit_part(key) == part)
             for part in DIGIT_LIMBS
             if anatomy.part(part) is not None
         }
@@ -84,3 +110,22 @@ async def backfill_digits(session: AsyncSession, rules: Rules) -> int:
     session.add(AppliedFixupRow(key=DIGITS_FIXUP, result={"bodies": len(bodies)}))
     await session.flush()
     return len(bodies)
+
+
+PLAN_COUNTS_FIXUP = "body.plan_counts"
+
+
+async def backfill_plan_counts(session: AsyncSession) -> int:
+    if await session.get(AppliedFixupRow, PLAN_COUNTS_FIXUP) is not None:
+        return 0
+    refitted = 0
+    for body in await session.scalars(select(BodyRow)):
+        if held(body.node_id):
+            continue
+        before = (body.fingers, body.toes, body.teeth)
+        sync(body)
+        body.teeth = max(0, full_counts(body)[TEETH] - max(0, TOOTH_COUNT - body.teeth))
+        refitted += before != (body.fingers, body.toes, body.teeth)
+    session.add(AppliedFixupRow(key=PLAN_COUNTS_FIXUP, result={"bodies": refitted}))
+    await session.flush()
+    return refitted

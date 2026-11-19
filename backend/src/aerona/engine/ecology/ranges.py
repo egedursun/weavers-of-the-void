@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -302,7 +303,7 @@ def human_hunting(rules: Rules, wilds: Wilds, species: EntityRow, region: int, *
     spared = protected or (species.id, region) in wilds.spared or region in wilds.sacred.get(species.id, set())
     if spared or megafauna or traits & UNHUNTED or (stat(species, "danger") or 0) >= ecology.hunting_danger:
         return 0.0
-    pressure: float = min(ecology.hunting_cap, people // max(1, ecology.hunting_population)) * wilds.tracking.get(region, 1.0)
+    pressure: float = min(ecology.hunting_cap, math.log2(1 + people / max(1, ecology.hunting_population))) * wilds.tracking.get(region, 1.0)
     pressure *= reserve_factor(rules, wilds.reserves, species.id, region)
     if T.REGENERATING in traits:
         pressure *= 1 - rules.habitat.regeneration_pct / PERCENT
@@ -475,8 +476,9 @@ async def spread(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> in
     opened = 0
     for item in species:
         traits = wilds.traits.get(item.id, set())
-        for region, row in sorted(wilds.ranges[item.id].items()):
-            if opened >= table.spread_cap or row.abundance < table.spread_threshold:
+        kind_opened = 0
+        for region, row in ctx.rng(f"habitat.spread.{item.id}").shuffled(sorted(wilds.ranges[item.id].items())):
+            if kind_opened >= table.spread_cap or row.abundance < table.spread_threshold:
                 continue
             for neighbour in wilds.atlas.neighbour_regions(region):
                 if neighbour in wilds.ranges[item.id] or neighbour not in wilds.regions:
@@ -502,6 +504,7 @@ async def spread(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> in
                 ctx.session.add(fresh)
                 wilds.ranges[item.id][neighbour] = fresh
                 opened += 1
+                kind_opened += 1
                 break
     return opened
 

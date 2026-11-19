@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.agrarian import BrandRow, KeystoneResourceRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -30,7 +30,7 @@ from aerona.engine.polity.governance import spend
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import sentence_case
-from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import relation
 from aerona.engine.services.war import declare_war
@@ -322,7 +322,9 @@ async def keep_brands(ctx: TickContext, tally: StaplesTally) -> None:
         owner = await ctx.session.get(EntityRow, brand.owner_node_id) if brand.owner_node_id is not None else None
         if run is not None and owner is not None and not held(owner.id):
             premium = run.quantity * await price_of(ctx, community.id, run.commodity) * brand.reputation / PERCENT * table.premium_pct / PERCENT
-            await give_coin(ctx.session, ctx.rules, owner, min(table.coin_cap, round_half_up(premium)))
+            await give_coin(
+                ctx.session, ctx.rules, owner, min(round_half_up(table.coin_cap * stat_or(community, "population", 0) / PER_MILLE), round_half_up(premium))
+            )
         if run is not None:
             await lift_market(ctx, community.id, run.commodity, brand.reputation * table.premium_pct / PERCENT / PERCENT)
         shift_stat(community, "prosperity", min(table.prosperity_cap, brand.reputation // HALF))

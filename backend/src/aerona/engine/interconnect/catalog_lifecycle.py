@@ -192,7 +192,7 @@ LIFECYCLE_MECHANICS = (
         targets=("settlement", "polity", "people"),
         couplings=(
             Coupling(S.POLITY, "a ruler owning this many prized things keeps a royal collection", E.RULE_SWITCH, "museums.royal_from"),
-            Coupling(S.ECOLOGY, "living kinds taken in as specimens", E.FLOW, "museums.specimens_per_epoch"),
+            Coupling(S.ECOLOGY, "living kinds taken in as specimens each year", E.FLOW, "museums.specimens_per_epoch"),
             Coupling(S.POLITY, "each piece adds grandeur", E.MODIFIER, "museums.prestige_per_piece"),
             Coupling(S.KNOWLEDGE, "pieces help the research of their field", E.MODIFIER, "museums.research_pct"),
             Coupling(S.KNOWLEDGE, "most pieces that help one field", E.MODIFIER, "museums.research_cap"),

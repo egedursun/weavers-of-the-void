@@ -1,6 +1,6 @@
 from collections import Counter
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import agree, several
@@ -27,7 +27,7 @@ from aerona.engine.happenings.effects import onset
 from aerona.engine.happenings.profile import Happening, happen, record_casualties, region_of
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.stats import stat_or
 
 REALM_TYPES = (EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE)
@@ -98,7 +98,7 @@ async def record_sack(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
     return event
 
 
-async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
+async def festivals(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     table = ctx.rules.events
     rows = await ctx.session.scalars(
         select(SettlementTreasuryRow.settlement_entity_id)
@@ -108,12 +108,12 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
     )
     known = await born_names(ctx, EngineKind.FESTIVAL_OF_NOTE)
     made = 0
-    for town_id in list(rows):
+    for town_id in ctx.rng("emerge.festivals").shuffled(rows):
         town = await ctx.session.get(EntityRow, town_id)
         if town is None or town.status is not EntityStatus.CANON or stat_or(town, "population", 0) < table.festival_population or held(town.id):
             continue
         name = tag(ctx, f"the Great Festival of {town.name}")
-        if name.casefold() in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= cap:
             continue
         event, _ = await happen(
             ctx,
@@ -132,14 +132,14 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
+async def coronations(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     table = ctx.rules.events
     bonds = await ctx.session.scalars(
         select(BondRow).where(BondRow.kind == BondKind.RULES, BondRow.epoch == ctx.epoch, BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
     )
     known = await born_names(ctx, EngineKind.CORONATION)
     made = 0
-    for bond in list(bonds):
+    for bond in ctx.rng("emerge.coronations").shuffled(bonds):
         ruler = await ctx.session.get(EntityRow, bond.source_node_id)
         realm = await ctx.session.get(EntityRow, bond.target_node_id)
         if ruler is None or realm is None or ruler.entity_type not in RULER_TYPES or realm.entity_type not in REALM_TYPES:
@@ -147,7 +147,7 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
         if ruler.status is not EntityStatus.CANON or realm.power_level < table.coronation_realm_power or held(ruler.id, realm.id):
             continue
         name = tag(ctx, f"the Coronation of {ruler.name}")
-        if name.casefold() in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= cap:
             continue
         event, _ = await happen(
             ctx,
@@ -166,15 +166,14 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
-    table = ctx.rules.events
+async def weddings(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     memories = await ctx.session.scalars(
         select(MemoryRow).where(MemoryRow.kind == MemoryKind.MARRIED_INTO, MemoryRow.epoch == ctx.epoch).order_by(MemoryRow.id)
     )
     pairs = sorted({(min(row.holder_node_id, row.subject_node_id), max(row.holder_node_id, row.subject_node_id)) for row in memories})
     known = await born_names(ctx, EngineKind.WEDDING)
     made = 0
-    for first_id, second_id in pairs:
+    for first_id, second_id in ctx.rng("emerge.weddings").shuffled(pairs):
         first = await ctx.session.get(EntityRow, first_id)
         second = await ctx.session.get(EntityRow, second_id)
         if (
@@ -186,7 +185,7 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
         ):
             continue
         name = tag(ctx, f"the Wedding of {first.name} and {second.name}")
-        if name.casefold() in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= cap:
             continue
         event, _ = await happen(
             ctx,
@@ -206,14 +205,13 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
-    table = ctx.rules.events
+async def massacres(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     battles = await ctx.session.scalars(
         select(BattleRow).where(BattleRow.epoch == ctx.epoch, BattleRow.outcome_class == OutcomeClass.MASSACRE).order_by(BattleRow.id)
     )
     known = await born_names(ctx, EngineKind.MASSACRE)
     made = 0
-    for battle in list(battles):
+    for battle in ctx.rng("emerge.massacres").shuffled(battles):
         loser = await ctx.session.get(EntityRow, battle.loser_entity_id)
         winner = await ctx.session.get(EntityRow, battle.winner_entity_id)
         place = await ctx.session.get(EntityRow, battle.place_entity_id) if battle.place_entity_id is not None else None
@@ -221,7 +219,7 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
         if loser is None or where is None or held(loser.id, where.id, battle.winner_entity_id):
             continue
         name = tag(ctx, f"the Massacre at {where.name}")
-        if name.casefold() in known or made >= table.emergent_cap:
+        if name.casefold() in known or made >= cap:
             continue
         victor = winner.name if winner is not None else "the victors"
         event, _ = await happen(
@@ -246,15 +244,15 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def riots(ctx: TickContext, atlas: RegionAtlas) -> int:
+async def riots(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     table = ctx.rules.events
     towns = await ctx.session.scalars(
         select(SettlementProfileRow).where(SettlementProfileRow.unrest >= table.riot_unrest).order_by(SettlementProfileRow.settlement_entity_id)
     )
     made = 0
-    for profile in list(towns):
+    for profile in ctx.rng("emerge.riots").shuffled(towns):
         town = await ctx.session.get(EntityRow, profile.settlement_entity_id)
-        if town is None or town.status is not EntityStatus.CANON or made >= table.emergent_cap or held(town.id):
+        if town is None or town.status is not EntityStatus.CANON or made >= cap or held(town.id):
             continue
         if await recent_at(ctx, EngineKind.RIOT, town.id, max(1, table.riot_cooldown_epochs)):
             continue
@@ -276,15 +274,14 @@ async def riots(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def schism_councils(ctx: TickContext, atlas: RegionAtlas) -> int:
-    table = ctx.rules.events
+async def schism_councils(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     heresies = await ctx.session.scalars(select(HeresyRow).where(HeresyRow.declared_epoch == ctx.epoch).order_by(HeresyRow.heresy_entity_id))
     known = await born_names(ctx, EngineKind.SCHISM_COUNCIL)
     made = 0
-    for heresy in list(heresies):
+    for heresy in ctx.rng("emerge.schisms").shuffled(heresies):
         sect = await ctx.session.get(EntityRow, heresy.heresy_entity_id)
         parent = await ctx.session.get(EntityRow, heresy.parent_entity_id)
-        if sect is None or parent is None or made >= table.emergent_cap or held(sect.id, parent.id, parent.location_id):
+        if sect is None or parent is None or made >= cap or held(sect.id, parent.id, parent.location_id):
             continue
         where = await ctx.session.get(EntityRow, parent.location_id) if parent.location_id is not None else None
         name = tag(ctx, f"the Council of {sect.name}")
@@ -308,8 +305,7 @@ async def schism_councils(ctx: TickContext, atlas: RegionAtlas) -> int:
     return made
 
 
-async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
-    table = ctx.rules.events
+async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     eclipses = await ctx.session.scalars(
         select(SkyEventRow)
         .where(SkyEventRow.kind == SkyEventKind.ECLIPSE, SkyEventRow.epoch == ctx.epoch, SkyEventRow.world_id.is_not(None))
@@ -317,10 +313,10 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
     )
     known = await born_names(ctx, EngineKind.ECLIPSE_WATCH)
     made = 0
-    for world_id in sorted({row.world_id for row in eclipses if row.world_id is not None}):
+    for world_id in ctx.rng("emerge.eclipses").shuffled(sorted({row.world_id for row in eclipses if row.world_id is not None})):
         towns = [town for town in await _communities(ctx, world_id) if town.entity_type is EntityType.SETTLEMENT and not held(town.id)]
         host = max(towns, key=lambda town: (stat_or(town, "population", 0), -town.id), default=None)
-        if host is None or made >= table.emergent_cap:
+        if host is None or made >= cap:
             continue
         name = tag(ctx, f"the Eclipse Watch over {host.name}")
         if name.casefold() in known:
@@ -347,13 +343,20 @@ async def _communities(ctx: TickContext, world_id: int) -> list[EntityRow]:
     return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
 
 
+async def emergent_room(ctx: TickContext) -> int:
+    table = ctx.rules.events
+    statement = select(func.count(EntityRow.id)).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(SOCIETY_TYPES)))
+    return scaled_cap(table.emergent_cap, table.emergent_communities_per_extra, await ctx.session.scalar(statement) or 0)
+
+
 async def emerge(ctx: TickContext, atlas: RegionAtlas) -> Counter[str]:
     counts: Counter[str] = Counter()
-    counts["festivals"] = await festivals(ctx, atlas)
-    counts["coronations"] = await coronations(ctx, atlas)
-    counts["weddings"] = await weddings(ctx, atlas)
-    counts["massacres"] = await massacres(ctx, atlas)
-    counts["riots"] = await riots(ctx, atlas)
-    counts["schism_councils"] = await schism_councils(ctx, atlas)
-    counts["eclipse_watches"] = await eclipse_watches(ctx, atlas)
+    cap = await emergent_room(ctx)
+    counts["festivals"] = await festivals(ctx, atlas, cap)
+    counts["coronations"] = await coronations(ctx, atlas, cap)
+    counts["weddings"] = await weddings(ctx, atlas, cap)
+    counts["massacres"] = await massacres(ctx, atlas, cap)
+    counts["riots"] = await riots(ctx, atlas, cap)
+    counts["schism_councils"] = await schism_councils(ctx, atlas, cap)
+    counts["eclipse_watches"] = await eclipse_watches(ctx, atlas, cap)
     return counts

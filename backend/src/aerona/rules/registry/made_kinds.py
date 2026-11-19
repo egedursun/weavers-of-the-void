@@ -42,7 +42,10 @@ class VehicleRules:
     prize_pct: int = rule(50, 0, 100, W, "Share of a beaten group's disabled vehicles the victor takes as prizes (%)")
     yard_points: int = rule(6, 0, 1000, W, "Building points a yard of level one gives each epoch")
     cost_per_point: int = rule(30, 1, 10000, W, "Vehicle cost one building point covers")
-    park_cap: int = rule(20, 0, 10000, W, "Most vehicles of one type a realm keeps in its park before its yards stop building it")
+    park_cap: int = rule(
+        20, 0, 100000, W, "Most vehicles of one type a realm keeps in its park before its yards stop building it, before its people are counted"
+    )
+    park_per_thousand: int = rule(1, 0, 10000, W, "More vehicles of one type a realm keeps in its park for every 1000 of its people")
     cart_points: int = rule(4, 0, 1000, W, "Building points a market, stable or lumber camp of level one gives each epoch to carts, wagons and pack trains")
     cargo_per_baggage: int = rule(
         10, 1, 1000, W, "Cargo of an army's land vehicles that bears one point of its baggage, so that point no longer slows its march"
@@ -104,9 +107,16 @@ class UnitTypeRules:
 
 @dataclass(frozen=True)
 class CuisineRules(Spanned):
-    invent_pct: int = rule(8, 0, 100, S, "Chance each epoch a people comes to cook a new dish from its stores (%)")
+    invent_pct: int = rule(50, 0, 100, S, "Chance each epoch a people comes to cook a new dish from its stores (%)")
     starting_dishes: int = rule(
-        3, 0, 8, S, "Dishes of its own a people cooks from its stores before new ones come only by chance: a staple, a drink, a feast dish and on"
+        3,
+        0,
+        100,
+        S,
+        (
+            "Dishes of its own a people cooks from its stores before new ones come only by chance: "
+            "a staple, a drink, a feast dish and on through the eight courses, then one more each epoch"
+        ),
     )
     ration_keeping_years: int = span(1, 0, 500, S, "Years a dish must keep for a people to take it as a ration")
     portion: int = rule(10, 0, 10000, S, "Ingredients a community spends to cook one of its dishes at full popularity")

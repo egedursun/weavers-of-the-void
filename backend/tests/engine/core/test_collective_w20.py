@@ -90,7 +90,7 @@ from aerona.engine.collective.accounts import (
     write_accounts,
 )
 from aerona.engine.collective.control import edit_arms, set_norm
-from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark
+from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark, state_triggers
 from aerona.engine.collective.dating import render_date
 from aerona.engine.collective.demography import DemographyTally, fertility_factor, measure
 from aerona.engine.collective.designs import DesignTally, design_power, draw_design, frame_sizes, mend, wear_leg
@@ -99,7 +99,7 @@ from aerona.engine.collective.heraldry import HeraldryTally, grant_arms, invent,
 from aerona.engine.collective.learning import LearningTally, learn_socially
 from aerona.engine.collective.norms import NormTally, keep_norms, stance_in, volition
 from aerona.engine.collective.roles import allowed_heirs, combat_sexes
-from aerona.engine.collective.storylets import StoryletTally, begin, settle_due
+from aerona.engine.collective.storylets import StoryletTally, begin, cast_hoarded_store, settle_due
 from aerona.engine.context import TickContext
 from aerona.engine.phases.collective import ArmedTally, arm_movements
 from aerona.engine.primitives.manual import manual_context
@@ -227,6 +227,31 @@ def society_defaults(town_id: int) -> dict[str, object]:
         "price_ore": 100,
         "price_goods": 100,
     }
+
+
+async def test_a_large_town_with_full_stores_feels_no_famine_and_an_empty_one_does(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    full = await town_of(session, world, "Greatfold", population=5000)
+    session.add(CommunitySocietyRow(**{**society_defaults(full.id), "stock_food": ctx.rules.economy.supply_index_epoch, "price_food": 100}))
+    empty = await town_of(session, world, "Barrenfold", population=5000)
+    session.add(CommunitySocietyRow(**{**society_defaults(empty.id), "price_food": 100}))
+    await session.flush()
+    full_profile = await session.get(SettlementProfileRow, full.id)
+    empty_profile = await session.get(SettlementProfileRow, empty.id)
+    assert full_profile is not None and empty_profile is not None
+    assert CollectiveTrigger.FAMINE not in await state_triggers(ctx, full, full_profile)
+    assert CollectiveTrigger.FAMINE in await state_triggers(ctx, empty, empty_profile)
+    refilled = await session.get(CommunitySocietyRow, empty.id)
+    assert refilled is not None
+    refilled.stock_food = ctx.rules.economy.supply_index_epoch
+    await realm_of(session, world, full, await mortal(session, "Ostra", world, full.id))
+    assert await cast_hoarded_store(ctx, world.world.id) is None
+    stores = await session.get(CommunitySocietyRow, full.id)
+    assert stores is not None
+    stores.stock_food = 0
+    await session.flush()
+    cast = await cast_hoarded_store(ctx, world.world.id)
+    assert cast is not None and cast[StoryletRole.TOWN] == full.id
 
 
 async def test_a_panic_sends_folk_fleeing_and_tramples_the_crowded(session: AsyncSession, world: CoreWorld) -> None:

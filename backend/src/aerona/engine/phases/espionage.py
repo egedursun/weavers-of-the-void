@@ -61,7 +61,7 @@ from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.trials import report_crime
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
@@ -113,8 +113,10 @@ async def found_networks(ctx: TickContext) -> int:
     rng = ctx.rng("networks")
     founded = 0
     owned = set(await ctx.session.scalars(select(SpyNetworkRow.owner_entity_id)))
-    for owner in await canon(ctx.session, [EntityType.FACTION, EntityType.POLITY, EntityType.CULT]):
-        if founded >= rules.spy_net_cap:
+    owners = await canon(ctx.session, [EntityType.FACTION, EntityType.POLITY, EntityType.CULT])
+    cap = scaled_cap(rules.spy_net_cap, rules.spy_net_cap_owner_divisor, len(owners))
+    for owner in rng.shuffled(owners):
+        if founded >= cap:
             break
         chance = await would_spy(ctx, owner)
         if chance is None or owner.id in owned or held(owner.id):

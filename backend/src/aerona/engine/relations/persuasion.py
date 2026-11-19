@@ -22,7 +22,7 @@ from aerona.engine.mind.book import is_locked, mind_of, skill_level, stored_valu
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mind.thoughts import think
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 
 FACET_SPAN = 50
 VALUE_SPAN = 100
@@ -160,11 +160,12 @@ async def council_lift(ctx: TickContext, speaker_id: int, polity_id: int) -> flo
     standing = (
         select(GroupRankRow.rank).where(GroupRankRow.group_node_id == polity_id, GroupRankRow.member_node_id == OfficeRow.holder_entity_id).scalar_subquery()
     )
+    offices = await ctx.session.scalar(select(func.count(OfficeRow.id)).where(OfficeRow.polity_entity_id == polity_id)) or 0
     query = (
         select(OfficeRow.holder_entity_id)
         .where(OfficeRow.polity_entity_id == polity_id, OfficeRow.holder_entity_id.is_not(None), OfficeRow.holder_entity_id != speaker_id)
         .order_by(func.coalesce(standing, COURT_FLOOR), OfficeRow.id)
-        .limit(COUNCIL_VOICES)
+        .limit(scaled_cap(COUNCIL_VOICES, ctx.rules.scale.council_offices_per_voice, offices))
     )
     councillors = [holder for holder in await ctx.session.scalars(query) if holder is not None]
     if not councillors:

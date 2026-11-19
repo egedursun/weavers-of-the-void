@@ -80,12 +80,12 @@ NOTATION = total(
         Notation.ADDITIVE: Defined(
             "Added up",
             checked_by=("engine.crafts.numbers.keep_numbers",),
-            used_by=("db.tables.crafts.NumberSystemRow", "services.player.crafts.NumberSystemDraft"),
+            used_by=("db.tables.crafts.NumberSystemRow", "engine.crafts.numbers.seed_system", "services.player.crafts.NumberSystemDraft"),
         ),
         Notation.POSITIONAL: Defined(
             "By place",
             checked_by=("agents.context.crafts_lines.people_lines", "engine.crafts.reckoning.notation_boost"),
-            used_by=("engine.crafts.numbers.keep_numbers",),
+            used_by=("engine.crafts.numbers.keep_numbers", "engine.crafts.numbers.seed_system"),
         ),
     },
 )

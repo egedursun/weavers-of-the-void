@@ -1970,14 +1970,14 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | ruler_charisma_bias | hukumdar_karizma | 20 | 0 | 100 | Heroes and mortals | Charisma tendency of a ruler taking the throne |
 | ruler_intellect_bias | hukumdar_akil | 10 | 0 | 100 | Heroes and mortals | Intellect tendency of a ruler taking the throne |
 | ruler_lifespan_bonus | hukumdar_omur | 10 | 0 | 500 | Heroes and mortals | Extra lifespan of a ruler taking the throne (years) |
-| village_cap | koy_tavan | 2 | 0 | 50 | Population and growth | Maximum new villages per epoch |
+| village_cap | koy_tavan | — | — | — | Population and growth | Removed in the realism pass: no cosmos-wide limit; each people founds a village only by its own chance and population gates |
 | first_village_chance | koy_ilk_sans | 60 | 0 | 100 | Population and growth | A people without a homeland founds its first homeland (%) |
 | extra_village_chance | koy_ek_sans | 30 | 0 | 100 | Population and growth | A populous people founds an additional village (%) |
 | village_migration_pct | koy_goc_pay | 8 | 0 | 100 | Population and growth | Share of population migrating to the new village (%) |
 | village_prosperity | koy_refah | 40 | 0 | 100 | Population and growth | Prosperity of a new village |
 | village_defense | koy_savunma | 20 | 0 | 100 | Population and growth | Defense of a new village |
 | derived_min_power | turev_guc_alt | 2 | 1 | 12 | Population and growth | Minimum power level of a derived settlement, people, structure and faction |
-| new_people_cap | yeni_halk_tavan | 1 | 0 | 20 | Population and growth | Maximum new peoples per epoch (ethnogenesis or sapience) |
+| new_people_cap | yeni_halk_tavan | 1 | 0 | 100 | Population and growth | Maximum new peoples per world per epoch (ethnogenesis or sapience) |
 | ethnogenesis_population_pct | etnogenez_nufus_pay | 50 | 0 | 100 | Population and growth | Population passing to the splitting people: share of the settlement's population (%; subtracted from the settlement) |
 | ethno_stat_base | etno_stat_taban | 30 | 0 | 100 | Population and growth | Martiality and craft base of a splitting people |
 | ethno_stat_die | etno_stat_zar | 40 | 1 | 100 | Population and growth | Die added to the martiality and craft of a splitting people |
@@ -2040,14 +2040,14 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | tradition_forget_spread | gelenek_unutma | 5 | 0 | 100 | Religion and language | A celebrant-less tradition falling to this spread is forgotten |
 | tale_forget_spread | masal_unutma_yayginlik | 3 | 0 | 100 | Religion and language | An old fairy tale falling to this spread is forgotten |
 | tale_forget_min_age | masal_unutma_cag | 15 | 0 | 1000 | Religion and language | Age of a fairy tale before it can be forgotten (epochs) |
-| manifestation_cap | tezahur_tavan | 1 | 0 | 20 | Religion and language | Maximum legends becoming real per epoch |
+| manifestation_cap | tezahur_tavan | 1 | 0 | 100 | Religion and language | Maximum legends becoming real per world per epoch |
 | ~~manifestation_min_spread~~ | tezahur_yayginlik | 70 | 0 | 100 | Religion and language | Removed by spec 13 8.2: a legend takes shape by credence, not spread |
 | manifestation_max_power | tezahur_guc_ust | 8 | 1 | 12 | Religion and language | Maximum power level of something born from a legend |
 | manifestation_power_bonus | tezahur_guc_ek | 1 | 0 | 12 | Religion and language | Power level of something born from a legend is this much above the legend's |
 | legend_power_gap | efsane_guc_fark | 1 | 0 | 12 | Religion and language | Power level of a legend born from an event is this much lower than the event's |
 | legend_event_min_age | efsane_olay_yas | 5 | 0 | 1000 | Religion and language | Minimum age of an event that can turn into a legend (epochs) |
 | legend_event_min_severity | efsane_siddet | 60 | 0 | 100 | Religion and language | Minimum severity of an event that can turn into a legend |
-| legendization_cap | efsanelesme_tavan | 1 | 0 | 20 | Religion and language | Maximum events turning into legends per epoch |
+| legendization_cap | efsanelesme_tavan | 3 | 0 | 1000 | Religion and language | Maximum events turning into legends per world per epoch |
 | legend_spread_base | efsane_yayginlik | 45 | 0 | 100 | Religion and language | Base spread of a legend born from an event |
 | legend_spread_die | efsane_yayginlik_zar | 25 | 1 | 100 | Religion and language | Die added to the spread of a legend born from an event |
 | tale_min_age | masal_cag | 10 | 0 | 1000 | Religion and language | Age of a legend before it can turn into a fairy tale (epochs) |
@@ -2087,7 +2087,7 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | ruin_default_defense | harabe_savunma_yedek | 20 | 0 | 100 | Population and growth | Defense assumed for a ruin with no defense record |
 | ruin_defense_divisor | harabe_savunma_bolen | 2 | 1 | 100 | Population and growth | A resettled ruin takes 1/this of its former defense |
 | refugee_min_population | multeci_nufus | 600 | 0 | 10,000,000 | Population and growth | Minimum population of a community able to send refugees |
-| refugee_cap | multeci_tavan | 1 | 0 | 20 | Population and growth | Maximum refugee migrations per epoch |
+| refugee_cap | multeci_tavan | — | — | — | Population and growth | Removed in the realism pass: no cosmos-wide limit; each struck community rolls its own refugee chance |
 | refugee_disaster_min_severity | multeci_afet_siddet | 60 | 0 | 100 | Population and growth | Minimum severity of a disaster that produces refugees |
 | refugee_min_people | multeci_en_az | 50 | 1 | 1,000,000 | Population and growth | Minimum people in a refugee migration |
 | refugee_weight_ally | multeci_muttefik_agirlik | 3 | 0 | 100 | Population and growth | Refugee destination: ally weight |
@@ -2108,10 +2108,10 @@ Old namespace `DERIN_YASAM` · 348 rows · defined in `src/derin.js` · also rea
 | library_min_scribe_pct | kutuphane_katip | 7 | 0 | 100 | Civilization | Minimum scribe share of a community that builds a library (%) |
 | structure_people_prosperity_base | yapit_halk_refah | 40 | 0 | 100 | Civilization | A people's assumed prosperity: base |
 | structure_people_craft_divisor | yapit_halk_zanaat_bolen | 4 | 1 | 1000 | Civilization | A people's assumed prosperity: craft / this number |
-| structure_settlement_min_population | yapit_kent_nufus | 800 | 0 | 10,000,000 | Civilization | Minimum population of a settlement able to build a structure |
-| structure_people_min_population | yapit_halk_nufus | 2000 | 0 | 100,000,000 | Civilization | Minimum population of a people able to build a structure |
-| structure_min_artisan_pct | yapit_zanaatkar | 13 | 0 | 100 | Civilization | Minimum artisan share to build a structure (%) |
-| structure_min_craft | yapit_zanaat | 50 | 0 | 100 | Civilization | Minimum craft to build a structure |
+| structure_settlement_min_population | yapit_kent_nufus | 50 | 0 | 10,000,000 | Civilization | Minimum population of a settlement able to build a structure |
+| structure_people_min_population | yapit_halk_nufus | 200 | 0 | 100,000,000 | Civilization | Minimum population of a people able to build a structure |
+| structure_min_artisan_pct | yapit_zanaatkar | 3 | 0 | 100 | Civilization | Minimum artisan share to build a structure (%) |
+| structure_min_craft | yapit_zanaat | 10 | 0 | 100 | Civilization | Minimum craft to build a structure |
 | structure_power_share_pct | yapit_guc_pay | 80 | 0 | 200 | Civilization | Structure power level: share of the builder's (%) |
 | structure_max_power | yapit_guc_ust | 7 | 1 | 12 | Civilization | Maximum power level of an engine-built structure |
 | structure_splendor_base | yapit_ihtisam | 25 | 0 | 100 | Civilization | Base splendor of a new structure |
@@ -2223,9 +2223,9 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | class_warrior_pct | sinif_savasci | 10 | 0 | 100 | Economy | Base share of warriors in society (%) |
 | class_scribe_pct | sinif_katip | 5 | 0 | 100 | Economy | Base share of scribes in society (%) |
 | class_initial_satisfaction | memnuniyet_ilk | 55 | 0 | 100 | Economy | Initial satisfaction of classes |
-| initial_food | erzak_ilk | 60 | 0 | 1000 | Economy | Community's initial food (supplies) |
-| initial_ore | maden_ilk | 10 | 0 | 1000 | Economy | Community's initial ore |
-| initial_goods | mal_ilk | 20 | 0 | 1000 | Economy | Community's initial goods |
+| initial_food | erzak_ilk | 60 | 0 | 1000 | Economy | Community's initial food stores (supply index, 100 = one epoch of its needs) |
+| initial_ore | maden_ilk | 10 | 0 | 1000 | Economy | Community's initial ore stores (supply index, 100 = one epoch of its needs) |
+| initial_goods | mal_ilk | 20 | 0 | 1000 | Economy | Community's initial goods stores (supply index, 100 = one epoch of its needs) |
 | ~~stockpile_cap~~ | ambar_tavan | 200 | 10 | 100,000 | Economy | Removed by spec 13 F3.2: storage is the capacity of granaries and warehouses |
 | default_stat | stat_varsayilan | 50 | 0 | 100 | Economy | Value assumed for a community and land with unrecorded prosperity, faith or fertility |
 | target_agriculture_farmer | hedef_tarim_ciftci | 10 | 0 | 100 | Economy | Farmer-share bonus for those who know agriculture |
@@ -2259,7 +2259,7 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | ~~ore_abundance_divisor~~ | maden_bolluk_bolen | 10 | 1 | 1000 | Economy | Removed by spec 13 §6.3: ore comes from extraction by workers |
 | ~~ore_consumption~~ | maden_tuketim | 1 | 0 | 200 | Economy | Removed by spec 13 F3.2: consumption is per head per commodity (economy.consumption_*) |
 | ~~goods_artisan_divisor~~ | zanaat_bolen | 15 | 1 | 1000 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
-| ore_plenty_threshold | maden_bol | 20 | 0 | 200 | Economy | Above this ore, artisans find plenty of ore |
+| ore_plenty_threshold | maden_bol | 20 | 0 | 200 | Economy | Above these ore stores artisans find plenty of ore (supply index, 100 = one epoch of its needs) |
 | ~~goods_ore_plenty_pct~~ | zanaat_maden_carpan | 140 | 0 | 1000 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
 | ~~goods_metallurgy_pct~~ | zanaat_metalurji | 130 | 0 | 1000 | Economy | Removed by spec 13 §6.3: metallurgy gates which metals a forge can work |
 | ~~goods_production_mult~~ | mal_uretim | 6 | 0 | 100 | Economy | Removed by spec 13 §6.3: goods are made in refining chains |
@@ -2278,7 +2278,7 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | ~~price_equilibrium_stock~~ | fiyat_denge | 40 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
 | ~~price_equilibrium_ore~~ | fiyat_denge_maden | 10 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
 | ~~price_stock_floor~~ | fiyat_stok_alt | 10 | 1 | 10,000 | Economy | Removed by spec 13 §6.4: prices are set per commodity in each market (markets.*) |
-| sat_hungry_food | m_ac_erzak | 60 | 0 | 200 | Economy | Below this food, farmers are hungry |
+| sat_hungry_food | m_ac_erzak | 60 | 0 | 200 | Economy | Below these food stores farmers are hungry (supply index, 100 = one epoch of its needs) |
 | sat_farmer_hungry | m_ciftci_ac | 25 | 0 | 100 | Economy | Satisfaction loss of hungry farmers |
 | sat_farmer_fed | m_ciftci_tok | 5 | 0 | 100 | Economy | Satisfaction gain of well-fed farmers |
 | sat_farmer_war | m_ciftci_savas | 8 | 0 | 100 | Economy | Farmer satisfaction reduced by war |
@@ -2301,20 +2301,20 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | sat_curse | m_lanet | 6 | 0 | 100 | Economy | Satisfaction loss to all classes from a curse |
 | sat_drift_pct | m_kayma | 30 | 0 | 100 | Economy | Per-epoch drift of satisfaction toward the target (%) |
 | effect_prosperity_divisor | etki_refah_bolen | 4 | 1 | 100 | Economy | Effect of merchant share on prosperity: (share − base) / this number |
-| effect_goods_plenty | etki_mal_bol | 60 | 0 | 100,000 | Economy | Above this goods, prosperity rises additionally |
+| effect_goods_plenty | etki_mal_bol | 60 | 0 | 100,000 | Economy | Above these goods stores prosperity rises additionally (supply index, 100 = one epoch of its needs) |
 | effect_goods_prosperity | etki_mal_refah | 1 | 0 | 100 | Economy | Per-epoch prosperity gain from plentiful goods |
 | effect_piety_divisor | etki_inanc_bolen | 3 | 1 | 100 | Economy | Effect of priest share on piety: (share − base) / this number |
 | effect_defense_divisor | etki_savunma_bolen | 4 | 1 | 100 | Economy | Effect of warrior share on city defense: (share − base) / this number |
 | effect_default_defense | etki_savunma_varsayilan | 30 | 0 | 100 | Economy | Defense assumed for a city with unknown defense |
 | effect_martiality_divisor | etki_savascilik_bolen | 5 | 1 | 100 | Economy | Effect of warrior share on a people's martiality: (share − base) / this number |
 | famine_rate_pct | kitlik_oran | 90 | 0 | 1000 | Population and growth | Value the production rate must stay below for famine (%) |
-| famine_food | kitlik_erzak | 60 | 0 | 1000 | Population and growth | Food the stockpile must drop to for famine (it rarely reaches zero since the stockpile refills itself by saving) |
-| famine_cap | kitlik_tavan | 1 | 0 | 100 | Population and growth | Maximum famines per epoch |
+| famine_food | kitlik_erzak | 60 | 0 | 1000 | Population and growth | Food stores at or below which famine can strike (supply index, 100 = one epoch of its needs) |
+| famine_cap | kitlik_tavan | — | — | — | Population and growth | Removed in the realism pass: no cosmos-wide limit; every hungry community with a failing harvest suffers famine |
 | famine_population_kept_pct | kitlik_nufus_kalan | 92 | 0 | 100 | Population and growth | Population remaining after famine (%) |
 | famine_prosperity_loss | kitlik_refah | 6 | 0 | 100 | Population and growth | Prosperity reduced by famine |
 | ~~weapon_ore_required~~ | silah_maden | 12 | 0 | 10,000 | Economy | Removed by spec 13 §6.3: a named batch is forged from weapons in store (refining.weapon_batch_threshold) |
 | weapon_warrior_pct | silah_savasci | 12 | 0 | 100 | Economy | Warrior share required to forge weapons (%) |
-| weapon_batch_cap | silah_tavan | 2 | 0 | 100 | Economy | Maximum weapon batches per epoch |
+| weapon_batch_cap | silah_tavan | — | — | — | Economy | Removed in the realism pass: no cosmos-wide limit; each forge rolls its own chance |
 | ~~weapon_ore_cost~~ | silah_maden_bedel | 8 | 0 | 10,000 | Economy | Removed by spec 13 §6.3: a named batch is forged from weapons in store (refining.weapon_batch_threshold) |
 | weapon_power | silah_guc | 3 | 1 | 12 | Economy | Power level of a forged weapon |
 | ~~weapon_damage_base~~ | silah_hasar | 30 | 0 | 100 | Economy | Removed by spec 13 F3.1: damage follows the weapon's material (materials.damage_*) |
@@ -2325,14 +2325,14 @@ Old namespace `DERIN_TOPLUM` · 128 rows · defined in `src/derin.js`. Social cl
 | ~~weapon_might_die~~ | silah_kudret_zar | 10 | 1 | 100 | Economy | Removed by spec 13 F3.1: might is capped by the material's conductivity |
 | bankruptcy_merchant_pct | iflas_tuccar | 12 | 0 | 100 | Economy | Merchant share required for bankruptcy (%) |
 | bankruptcy_prosperity | iflas_refah | 35 | 0 | 100 | Economy | Below this prosperity a guild may go bankrupt |
-| bankruptcy_cap | iflas_tavan | 1 | 0 | 100 | Economy | Maximum guild bankruptcies per epoch |
+| bankruptcy_cap | iflas_tavan | — | — | — | Economy | Removed in the realism pass: no cosmos-wide limit; each struggling guild rolls its own chance |
 | bankruptcy_satisfaction_loss | iflas_memnuniyet | 20 | 0 | 100 | Economy | Merchant satisfaction reduced by bankruptcy |
 | bankruptcy_share_loss | iflas_pay | 4 | 0 | 100 | Economy | Merchant share reduced by bankruptcy |
 | bankruptcy_prosperity_loss | iflas_refah_kayip | 5 | 0 | 100 | Economy | Prosperity reduced by bankruptcy |
 | revolt_min_class_pct | ayaklanma_sinif_pay | 5 | 0 | 100 | War and diplomacy | Minimum share of a class that can revolt (%) |
 | revolt_satisfaction | ayaklanma_memnuniyet | 22 | 0 | 100 | War and diplomacy | A class below this satisfaction may revolt |
 | revolt_min_population | ayaklanma_nufus | 800 | 0 | 10,000,000 | War and diplomacy | Population required for a class revolt |
-| revolt_cap | ayaklanma_tavan | 1 | 0 | 100 | War and diplomacy | Maximum class revolts per epoch |
+| revolt_cap | ayaklanma_tavan | — | — | — | War and diplomacy | Removed in the realism pass: no cosmos-wide limit; each discontented class rolls its own chance |
 | revolt_faction_power | ayaklanma_guc | 3 | 1 | 12 | War and diplomacy | Power level of the revolt faction |
 | revolt_faction_strength | ayaklanma_hizip_guc | 25 | 0 | 100 | War and diplomacy | Base strength of the revolt faction |
 | revolt_faction_strength_die | ayaklanma_hizip_guc_zar | 30 | 1 | 100 | War and diplomacy | Strength die of the revolt faction (1–N) |
@@ -2476,9 +2476,9 @@ Old namespace `DERIN` · 125 rows · defined in `src/derin.js` · also read by `
 | mortal_grudge_forget_epochs | olumlu_kin_unutma_cag | 8 | 0 | 1000 | War and diplomacy | A mortal's hostility (with a mortal or a community): hostility lasting this many epochs without any new encounter is forgotten (0: off) |
 | alliance_cap | ittifak_tavan | 2 | 0 | 20 | War and diplomacy | Maximum alliances per epoch |
 | community_war_cap | topluluk_savas_tavan | 2 | 0 | 10 | War and diplomacy | Maximum simultaneous ongoing wars of one community (war event) |
-| battle_cap | muharebe_tavan | 6 | 0 | 50 | War and diplomacy | Maximum battles per epoch (in ongoing wars; a new war's first clash counts against new_war_cap) |
+| battle_cap | muharebe_tavan | 12 | 0 | 1000 | War and diplomacy | Most battles one war fights in an epoch |
 | mobilization | seferberlik | 1 | 0 | 1 | War and diplomacy | A new war's first epoch is mobilization: armies gather, first clash the next epoch (1: on, 0: clash in the epoch of declaration) |
-| new_war_cap | yeni_savas_tavan | 3 | 0 | 50 | War and diplomacy | Maximum new wars per epoch (from enemy pairs; only below the war caps) |
+| new_war_cap | yeni_savas_tavan | — | — | — | War and diplomacy | Removed in the realism pass: new wars are limited by the per-pair clash chance, the world war limit that grows with communities, and the per-community war cap |
 | battle_chance | muharebe_sans | 70 | 0 | 100 | War and diplomacy | Enemies clash this epoch (%) |
 | battle_chance_war_ban | muharebe_yasak_sans | 35 | 0 | 100 | War and diplomacy | Clash while a war ban is in effect (%) |
 | notable_min_population | unlu_nufus | 800 | 0 | 1,000,000 | Heroes and mortals | Minimum population of a community producing a notable mortal |
@@ -4349,11 +4349,11 @@ Old namespace `DUNYA_DOGUS` · 62 rows · defined in `src/kozmos.js`. Generation
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | regions_min | bolge_en_az | 2 | 1 | 50 | Cosmos and travel | Minimum regions in a new world |
-| regions_max | bolge_en_cok | 4 | 1 | 50 | Cosmos and travel | Maximum regions in a new world |
+| regions_max | bolge_en_cok | 12 | 1 | 1000 | Cosmos and travel | Maximum regions in a new world |
 | words_min | kelime_en_az | 8 | 0 | 200 | Cosmos and travel | Minimum words in the new world's language |
 | words_max | kelime_en_cok | 14 | 1 | 200 | Cosmos and travel | Maximum words in the new world's language |
 | resource_mechanics_max | mekanik_en_cok | 2 | 0 | 10 | Cosmos and travel | Maximum rules (mechanics) of the native unique resource |
-| natives_max | yerli_en_cok | 2 | 0 | 20 | Cosmos and travel | Maximum natives (species or people) in a new world |
+| natives_max | yerli_en_cok | 6 | 0 | 100 | Cosmos and travel | Maximum natives (species or people) in a new world |
 | banned_names | yasak_ad | 60 | 0 | 2000 | Cosmos and travel | Number of region, people, language, place and sky names not to be repeated in the new-world prompt (newest first) |
 | banned_cosmic_names | yasak_kozmik_ad | 200 | 0 | 2000 | Cosmos and travel | Number of world, star and foreign-god names not to be repeated in the new-world prompt (newest first) |
 | phoneme_set_min | ses_kumesi | 8 | 1 | 100 | Cosmos and travel | Minimum distinct letters for a dialect to count as a sound set |
@@ -4418,7 +4418,7 @@ Old namespace `DUNYA_ETKI` · 166 rows · defined in `src/sim.js`. World-engine 
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | afterdeath_cap | olum_sonrasi_tavan | 2 | 0 | 50 | The Beyond | Maximum mourning traditions or spirits born from deaths per epoch (each) |
-| language_faith_adopt_cap | dil_inanc_tavan | 4 | 0 | 100 | Religion and language | Maximum communities acquiring a language or faith per epoch |
+| language_faith_adopt_cap | dil_inanc_tavan | — | — | — | Religion and language | Removed in the realism pass: every community without a tongue or faith takes one up in the same epoch |
 | god_grudge_cap | kin_tavan | 1 | 0 | 20 | War and diplomacy | Maximum new hostilities born from god grudges per epoch |
 | god_grudge_distance | kin_mesafe | 3 | 0 | 20 | War and diplomacy | Maximum map distance of communities a grudge can seep between (steps) |
 | god_grudge_relation | kin_iliski | 40 | 0 | 100 | War and diplomacy | For a grudge, the patron gods' relation must be at most minus this |
@@ -4511,7 +4511,7 @@ Old namespace `DUNYA_ETKI` · 166 rows · defined in `src/sim.js`. World-engine 
 | revolt_top_pct | isyan_yuzde | 50 | 0 | 100 | War and diplomacy | Cities that can revolt: the world's top X% most populous |
 | revolt_always_population | isyan_ust | 5000 | 0 | 100,000,000 | War and diplomacy | A poor city this populous can always revolt (people) |
 | just_law_threshold | adil_kanun | 60 | 0 | 100 | War and diplomacy | Minimum justice of a law counted as just |
-| revolt_cap | isyan_tavan | 1 | 0 | 20 | War and diplomacy | Maximum uprisings per epoch |
+| revolt_cap | isyan_tavan | — | — | — | War and diplomacy | Removed in the realism pass: (poverty_revolt_cap) no cosmos-wide limit; each restless city rolls its own chance |
 | rebel_power | isyanci_guc_seviye | 3 | 1 | 12 | War and diplomacy | Power level of the rebel faction |
 | rebel_strength_base | isyanci_guc_taban | 30 | 0 | 100 | War and diplomacy | Rebels' strength: base |
 | rebel_strength_die | isyanci_guc_zar | 30 | 1 | 100 | War and diplomacy | Die added to rebels' strength (1–X) |
@@ -4665,7 +4665,7 @@ Old namespace `DUNYA_MOTORU` · 81 rows · defined in `src/sim.js`. World-engine
 | godlessness_chance | tanrisizlik_sans | 15 | 0 | 100 | Religion and language | A community with weak faith becomes godless (%) |
 | speciation_chance | evrim_sans | 18 | 0 | 100 | Creatures | A migrated species splits into a subspecies (%) |
 | birth_chance | dogum_sans | 30 | 0 | 100 | Heroes and mortals | A child from lover or married mortals (%) |
-| love_rivalry_chance | ask_rekabet_sans | 8 | 0 | 100 | Heroes and mortals | Love or rivalry between mortals in the same place (%) |
+| love_rivalry_chance | ask_rekabet_sans | 0.5 | 0 | 100 | Heroes and mortals | Love or rivalry between two mortals in the same place (% per year) |
 | love_share_pct | ask_orani | 55 | 0 | 100 | Heroes and mortals | Share of these that are love (%) |
 | dialect_split_chance | lehce_sans | 15 | 0 | 100 | Religion and language | Dialect divergence in an isolated settlement (%) |
 | ghost_chance | hayalet_sans | 50 | 0 | 100 | The Beyond | If the dead return, the deceased becomes a ghost (%) |

@@ -19,4 +19,4 @@ WORD_FIELDS: dict[str, str] = {
     "words.example": "Short usage example and its translation",
 }
 
-IMAGE_PROMPT_FIELD = 'An English image-generation prompt: subject, material, light, setting, composition. {% include "shared/image_prompt_rules.md.j2" %}'
+IMAGE_PROMPT_FIELD = 'An English image-generation prompt of the subject as its account gives it. {% include "shared/image_prompt_rules.md.j2" %}'

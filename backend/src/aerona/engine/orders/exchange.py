@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.record_context import Term
 from aerona.db.tables.economy import CurrencyRow, GoodsFlowRow, LoanRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -20,6 +20,7 @@ from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 
 
@@ -179,13 +180,15 @@ async def draw_bills(ctx: TickContext, tally: ExchangeTally) -> None:
         )
         if int(drawn or 0) >= table.bills_per_route:
             continue
+        markets = [await ctx.session.get(EntityRow, first), await ctx.session.get(EntityRow, second)]
+        smaller = min(stat_or(market, "population", 0) if market is not None else 0 for market in markets)
         ctx.session.add(
             BillOfExchangeRow(
                 drawer_node_id=second,
                 payee_node_id=first,
                 from_entity_id=first,
                 to_entity_id=second,
-                amount=table.bill_amount,
+                amount=max(table.bill_amount, round_half_up(table.bill_amount * smaller / PER_MILLE)),
                 issued_epoch=ctx.epoch,
                 locked=[],
             )

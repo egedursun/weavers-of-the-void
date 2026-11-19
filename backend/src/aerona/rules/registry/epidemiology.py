@@ -18,7 +18,9 @@ class EpidemiologyRules(Spanned):
     outbreak_years: int = span(2, 1, 1250, G, "Years an outbreak lingers before it wanes")
     waning_death_pct: int = rule(30, 0, 100, G, "Deaths of a lingering outbreak compared with its first epoch (%)")
     infected_pct: int = rule(25, 0, 100, G, "Share of a struck community infected at the outbreak's start, at neutral virulence (%)")
-    crowd_population: int = rule(30000, 1, 100000000, G, "Community size at which a disease spreads as in the most crowded land")
+    crowd_population: int = rule(
+        1000000, 1, 1000000000, G, "Community size at which a disease spreads as in the most crowded land (crowding grows with the logarithm of size)"
+    )
     crowd_spread_pct: int = rule(60, 0, 300, G, "Extra spread at the most crowded land (%)")
     load_spread_pct: int = rule(50, 0, 300, G, "Extra spread at the heaviest disease load of the land (%)")
     sanitation_spread_pct: int = rule(50, 0, 100, G, "Spread removed by full sanitation (%)")
@@ -33,7 +35,8 @@ class EpidemiologyRules(Spanned):
     endemic_decay: int = rule(2, 0, 100, G, "Endemic load lost each epoch where no outbreak renews it")
     virgin_soil_pct: int = rule(250, 100, 1000, G, "Lethality against a people that has never met the disease (%)")
     mutation_immune_pct: int = rule(150, 0, 500, G, "Weight of an immune population in pushing a disease to a new strain (%)")
-    mutation_cap: int = rule(2, 0, 50, G, "Most new strains in an epoch")
+    mutation_cap: int = rule(2, 0, 1000, G, "Base of the most new strains in an epoch, grown by the number of diseases with an outbreak")
+    mutation_cap_disease_divisor: int = rule(3, 0, 10000, G, "Diseases with an outbreak per extra new strain in an epoch (0: the cap stays at its base)")
     stigma_purity: int = rule(40, -100, 100, G, "Purity value at which a people expels its sick")
     expel_pct: int = rule(5, 0, 100, G, "Share of the infected a purity-minded community drives out (%)")
     colony_min: int = rule(150, 1, 1000000, G, "Expelled sick needed to found a colony of the sick")

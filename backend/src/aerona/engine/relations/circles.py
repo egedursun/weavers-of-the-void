@@ -21,7 +21,7 @@ from aerona.domain.enums.relations import CircleKind
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import is_locked, mind_of, stored_values, write_values
 from aerona.engine.phases.factions import found_faction
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.recording.record import StepDraft, record
@@ -134,7 +134,7 @@ async def gather(ctx: TickContext, place: EntityRow, mortals: list[EntityRow], t
     for interest, people in sorted(found.items(), key=lambda item: (-len(item[1]), str(item[0]))):
         circle = next((row for row in circles if matches(row, interest)), None)
         if circle is None:
-            if len(people) < table.min_members or len(circles) >= table.per_place or held(place.id):
+            if len(people) < table.min_members or len(circles) >= scaled_cap(table.per_place, table.place_mortals, len(mortals)) or held(place.id):
                 continue
             made = await found_circle(ctx, place, interest, people)
             if made is not None:

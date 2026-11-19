@@ -66854,6 +66854,7 @@ export interface components {
       | 'milking_machines'
       | 'power_shears'
       | 'incubators'
+      | 'oil_refining'
     MethodRemoveInput: {
       community_id: number
       process: components['schemas']['ProcessKind']
@@ -70320,6 +70321,7 @@ export interface components {
       severable: boolean
       internal: boolean
       vital: boolean
+      counted: number
       loss: number
       state: components['schemas']['InjuryState'] | null
       prosthesis: components['schemas']['MaterialKind'] | null
@@ -77127,7 +77129,14 @@ export interface components {
       settlement_id: number
       rate: number
     }
-    SettlementTier: 'capital' | 'village' | 'town' | 'city' | 'great_city'
+    SettlementTier:
+      | 'capital'
+      | 'village'
+      | 'town'
+      | 'city'
+      | 'great_city'
+      | 'megacity'
+      | 'conurbation'
     SettlementWorks: {
       settlement_id: number
       name: string
@@ -180820,6 +180829,7 @@ export const methodKindValues: ReadonlyArray<
   'milking_machines',
   'power_shears',
   'incubators',
+  'oil_refining',
 ]
 export const milestoneValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Milestone']
@@ -183704,7 +183714,15 @@ export const settlementStatsKindValues: ReadonlyArray<
 > = ['settlement']
 export const settlementTierValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementTier']
-> = ['capital', 'village', 'town', 'city', 'great_city']
+> = [
+  'capital',
+  'village',
+  'town',
+  'city',
+  'great_city',
+  'megacity',
+  'conurbation',
+]
 export const setupKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SetupKind']
 > = ['prophecy', 'omen', 'dream', 'foresight', 'incident_arc', 'portent']

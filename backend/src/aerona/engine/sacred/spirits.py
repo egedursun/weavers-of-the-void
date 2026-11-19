@@ -19,7 +19,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
@@ -174,8 +174,10 @@ async def unspirited(ctx: TickContext) -> list[tuple[EntityRow, GeniusLocusKind,
 
 async def raise_spirits(ctx: TickContext, tally: SpiritTally) -> None:
     table = ctx.rules.genius_loci
-    for place, kind, community in await unspirited(ctx):
-        if tally.bound >= table.binds_per_epoch:
+    places = ctx.rng("genius.order").shuffled(await unspirited(ctx))
+    limit = scaled_cap(table.binds_per_epoch, table.binds_place_divisor, len(places))
+    for place, kind, community in places:
+        if tally.bound >= limit:
             return
         if held(place.id) or not ctx.rng(f"genius.bind.{place.id}").chance(table.bind_chance):
             continue
@@ -200,13 +202,16 @@ async def bring_offerings(ctx: TickContext, row: GeniusLocusRow, community: Enti
         return 0
     people = stat_or(community, "population", 0)
     kept = await spirits_kept(ctx, community.id)
-    given = max(1, round_half_up(people * table.offering_per_thousand / THOUSAND * stat_or(community, "piety", 0) / PERCENT / kept))
+    rate = table.offering_per_thousand * stat_or(community, "piety", 0) / PERCENT / kept
+    given = max(1, round_half_up(people * rate / THOUSAND))
     food = await stock(ctx.session, ctx.rules, community.id, Commodity.FOOD)
-    given = min(given, food // max(1, table.offering_food)) if table.offering_food else given
+    cost = round_half_up(rate * table.offering_food)
+    if cost > food:
+        given, cost = given * food // max(1, cost), food
     if given <= 0:
         return 0
-    if table.offering_food:
-        await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, -given * table.offering_food, epoch=ctx.epoch, flow=GoodsFlow.OFFERING)
+    if cost:
+        await shift_stock(ctx.session, ctx.rules, community.id, Commodity.FOOD, -cost, epoch=ctx.epoch, flow=GoodsFlow.OFFERING)
     return given
 
 

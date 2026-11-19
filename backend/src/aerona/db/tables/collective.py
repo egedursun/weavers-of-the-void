@@ -564,7 +564,7 @@ class DesignRow(Base):
 
 class DesignComponentRow(Base):
     __tablename__ = "design_components"
-    __table_args__ = (between("size", 0, 10), between("quality", PERCENT_MIN, PERCENT_MAX))
+    __table_args__ = (at_least("size", 0), between("quality", PERCENT_MIN, PERCENT_MAX))
 
     design_id: Mapped[int] = mapped_column(ForeignKey("designs.id", ondelete="CASCADE"), primary_key=True)
     component: Mapped[DesignComponentKind] = mapped_column(enum_type(DesignComponentKind, "component"), primary_key=True)

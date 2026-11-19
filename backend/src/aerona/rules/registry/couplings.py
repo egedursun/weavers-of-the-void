@@ -23,7 +23,8 @@ class CouplingRules:
     sign_hunting_grounds: int = rule(
         2, 1, 100, L, "Hunting grounds a community keeps at which its hunters share a silent signed language; sea grounds as many give sailors their speech"
     )
-    sign_per_epoch: int = rule(3, 0, 100, L, "Most signed languages born in one epoch")
+    sign_per_epoch: int = rule(3, 0, 10000, L, "Base of the most signed languages born in one epoch, grown by the number of peoples, towns and cults")
+    sign_community_divisor: int = rule(10, 0, 100000, L, "Peoples, towns and cults per extra signed language born in one epoch (0: the cap stays at its base)")
     sociolect_salience: int = rule(60, 0, 100, L, "Salience of class identity at which a community's classes speak in their own ways")
     sociolect_start: int = rule(20, 0, 100, L, "Salience a new way of speaking starts with")
     sociolect_growth: int = rule(5, 0, 100, L, "Salience a way of speaking gains each epoch its group lasts")
@@ -34,18 +35,20 @@ class CouplingRules:
 
 @dataclass(frozen=True)
 class CarrionRules:
-    mass_dead: int = rule(200, 1, 10000000, E, "Dead in one region and one epoch that leave a carrion pulse")
+    mass_dead: int = rule(20, 1, 1000, E, "Dead in one region and one epoch, per thousand of its living people, that leave a carrion pulse (at least one)")
     scavenge_pct: int = rule(40, 0, 100, E, "Share of the carrion scavengers clear each epoch")
     scavenger_boom: int = rule(8, 0, 100, E, "Abundance scavengers gain in a region with carrion")
     vermin_disease: int = rule(6, 0, 100, E, "Disease load vermin feeding on carrion add to a region")
     predators_drawn: int = rule(4, 0, 100, E, "Danger predators drawn to carrion add to a region")
     haunting: int = rule(3, 0, 100, E, "Haunting the unburied dead add to a region each epoch")
-    restless_dead: int = rule(500, 1, 10000000, E, "Unburied dead in a region from which a restless spirit may rise")
+    restless_dead: int = rule(
+        50, 1, 1000, E, "Unburied dead in a region, per thousand of its living people, from which a restless spirit may rise (at least one)"
+    )
     restless_chance: int = rule(20, 0, 100, E, "Chance a restless spirit rises from that many unburied dead")
     unburied_unrest_base: int = rule(40, 0, 100, E, "Unrest of the restless dead before their numbers count")
     unburied_unrest_per: int = rule(5, 0, 100, E, "Unrest the restless dead gain for each further mass of unburied dead in their region")
     unburied_calm: int = rule(15, 0, 100, E, "Unrest the restless dead lose each epoch once the dead of their region are buried or gone")
-    burial: int = rule(150, 0, 10000000, E, "Dead the living bury or burn in a region each epoch")
+    burial: int = rule(150, 0, 100000, E, "Dead the living bury or burn in a region each epoch for every thousand of its living people")
     dry_moisture: int = rule(15, 0, 100, E, "Moisture of a region at or below which its unburied dead dry out instead of rotting")
     frozen_latitude: int = rule(70, 0, 90, E, "Latitude at or beyond which the unburied dead of a region freeze instead of rotting")
     floating_hazard: int = rule(5, 0, 100, E, "Danger the dead floating in a void or among broken rock add to a region each epoch")
@@ -71,7 +74,7 @@ class OfficeMakingRules:
     grievance: int = rule(30, 0, 100, P, "Memory of slight a holder keeps when the office made for them is abolished")
     fiscal_distress: int = rule(70, 0, 100, P, "Fiscal distress at which a realm abolishes the offices it made to save money")
     elite_pressure: int = rule(60, 0, 100, P, "Elite overproduction at which a realm makes offices to hold its aspirants")
-    most: int = rule(6, 0, 100, P, "Most offices a realm makes for its aspirants")
+    most: int = rule(6, 0, 10000, P, "Most offices a realm makes for its aspirants for every hundred thousand of its people (at least this many)")
 
 
 @dataclass(frozen=True)
@@ -117,7 +120,7 @@ class ClosureRules:
 @dataclass(frozen=True)
 class FashionRules:
     start: int = rule(80, 0, 100, S, "Novelty a new art form or dish starts with")
-    saturation: int = rule(20, 1, 10000, S, "Communities taking up a form at which it counts as everywhere")
+    saturation: int = rule(60, 1, 100, S, "Share of the communities that take up a form at which it counts as everywhere (%)")
     recovery: int = rule(10, 0, 100, S, "Novelty a rare form regains each epoch")
     drain: int = rule(15, 0, 100, S, "Novelty a form everyone has loses each epoch")
     revival_floor: int = rule(50, 0, 100, S, "Novelty a form must climb back past to come back into fashion")

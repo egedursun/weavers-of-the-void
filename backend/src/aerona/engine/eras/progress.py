@@ -23,14 +23,17 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import TechnologyEra
+from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import RouteSpec, can_reach, open_route
 from aerona.engine.economy.purse import coin_of, take_coin
 from aerona.engine.eras.effects import channel_value, era_order, era_techniques, held_by, world_start
 from aerona.engine.lore.research import gate_open
 from aerona.engine.primitives.folk import folk_among
+from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record as record_incident
 
 COMMUNITIES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
@@ -107,7 +110,24 @@ async def keep_floors(ctx: TickContext, tally: EraTally) -> None:
                 ctx.session.add(HolderTechniqueRow(holder_entity_id=holder, technique=technique, since_epoch=0, secret=False))
                 raised = True
         tally.floored += 1 if raised else 0
+    tally.floored += await lift_knowledge(ctx, floors)
     await ctx.session.flush()
+
+
+async def lift_knowledge(ctx: TickContext, floors: Mapping[KnowledgeBranch, int]) -> int:
+    lifted = 0
+    rows = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.knowledge_branch.in_(list(floors)))
+        .order_by(EntityRow.id)
+    )
+    for knowledge in list(rows):
+        floor = floors[knowledge.knowledge_branch] if knowledge.knowledge_branch is not None else 0
+        if held(knowledge.id) or knowledge_level(ctx.rules, knowledge) >= floor:
+            continue
+        knowledge.stats = KnowledgeStats(level=floor, spread=stat_or(knowledge, "spread", 0))
+        lifted += 1
+    return lifted
 
 
 async def era_doom(ctx: TickContext) -> float:

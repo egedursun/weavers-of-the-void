@@ -593,6 +593,7 @@ from aerona.rules.registry.sacred import (
     SecularisationRules,
     TheodicyRules,
 )
+from aerona.rules.registry.scale import ScaleRules
 from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
@@ -884,6 +885,7 @@ class Rules:
     land_shaping: LandShapingRules = field(default_factory=LandShapingRules)
     desirability: DesirabilityRules = field(default_factory=DesirabilityRules)
     city_plan: CityPlanRules = field(default_factory=CityPlanRules)
+    scale: ScaleRules = field(default_factory=ScaleRules)
     coverage: CoverageRules = field(default_factory=CoverageRules)
     housing_evolution: HousingEvolutionRules = field(default_factory=HousingEvolutionRules)
     homelessness: HomelessRules = field(default_factory=HomelessRules)

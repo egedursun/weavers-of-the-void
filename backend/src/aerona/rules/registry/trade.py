@@ -11,7 +11,6 @@ class TradeRules:
     knowledge_mult: int = rule(2, 1, 20, RuleGroup.ECONOMY, "Trade prosperity multiplier for those knowing trade (times)")
     prosperity_cap: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Maximum prosperity trade routes give one community in one epoch (all routes together)")
     wealth_cap: int = rule(6, 0, 100, RuleGroup.ECONOMY, "Maximum wealth trade routes give one community in one epoch (all routes together)")
-    barter_cap: int = rule(2, 0, 50, RuleGroup.ECONOMY, "Maximum resource barters established spontaneously per epoch")
     rivalry_war_chance: int = rule(
         15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "A people short of a strategic good goes to war to seize a weaker neighbour's source of it (%)"
     )

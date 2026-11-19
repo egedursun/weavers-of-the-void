@@ -3,11 +3,12 @@ from collections import defaultdict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.crimes import CRIMES, PUNISHMENTS
 from aerona.catalog.ethics import ACT_CRIMES, HONOUR_MODELS
 from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
@@ -34,6 +35,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import PunishmentKind
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -43,6 +45,7 @@ from aerona.engine.body.customs import culture_of
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import INHERITANCE_RULES
+from aerona.engine.eras.effects import era_techniques
 from aerona.engine.factions.balance import faction_pull
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.industry.pollution import worst
@@ -61,7 +64,7 @@ from aerona.engine.polity.standing import war_record
 from aerona.engine.primitives.knowledge import KnowledgeMap, known_levels
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.relations.persuasion import council_lift, counsel_lift
 from aerona.engine.renown.currencies import spend_prestige
@@ -212,6 +215,11 @@ async def wants_censorship(ctx: TickContext, realm: Realm, laws: LawBook, values
     return await mean_approval(ctx, list(realm.members), realm.ruler_id) <= ctx.rules.communication.censor_wish_at
 
 
+def humane_code() -> dict[str, int | str | bool]:
+    gaol = PUNISHMENTS[PunishmentKind.IMPRISONMENT]
+    return {crime.value: PUNISHMENTS[spec.punishment].word if PUNISHMENTS[spec.punishment].harm <= gaol.harm else gaol.word for crime, spec in CRIMES.items()}
+
+
 async def wanted_laws(
     ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int], *, lost: bool, fighting: bool
 ) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
@@ -236,7 +244,8 @@ async def wanted_laws(
         wants.append((LawKind.LEVY_LAW, {"share": clamp_int(10 + values.get(ValueAxis.MARTIAL, 0) // 5, 0, 50)}))
     if laws.in_force(polity.id, LawKind.PENAL_CODE) is None and realm.profile.tier >= 1:
         harsh = values.get(ValueAxis.MERCY, 0) <= -LEAN
-        wants.append((LawKind.PENAL_CODE, {"theft": "hand" if harsh else "fine", "murder": "death" if harsh else "wergild"}))
+        humane = not harsh and Technique.HUMANIST_IDEALS in await era_techniques(ctx.session, polity.id)
+        wants.append((LawKind.PENAL_CODE, humane_code() if humane else {"theft": "hand" if harsh else "fine", "murder": "death" if harsh else "wergild"}))
     wants.extend(await outraged_laws(ctx, realm, laws, values))
     if laws.in_force(polity.id, LawKind.SLAVERY) is None:
         lawful = values.get(ValueAxis.HIERARCHY, 0) >= LEAN and values.get(ValueAxis.MERCY, 0) <= -LEAN
@@ -306,7 +315,9 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
             break
         swayed = await council_lift(ctx, realm.ruler_id, polity.id) if realm.ruler_id and realm.profile.decision_rule is not DecisionRule.AUTOCRATIC else 1.0
         swayed *= await spend_prestige(ctx, realm.ruler_id) if kind not in BASELINE_LAWS else 1.0
-        if kind not in {LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE} and not rng.chance(table.enact_chance * 3 * swayed):
+        if kind not in {LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE} and not rng.chance(
+            table.over_epoch(table.enact_chance * 3 * swayed)
+        ):
             continue
         basis = (
             LegitimacyBasis.DIVINE
@@ -423,7 +434,7 @@ async def crises(ctx: TickContext, realm: Realm, laws: LawBook) -> list[tuple[La
             crime.append(town.crime)
     if crime and sum(crime) / len(crime) >= table.crisis_crime:
         found.append((LawKind.PENAL_CODE, {"theft": "hand", "murder": "death", "desertion": "death"}))
-    if realm.profile.debt >= table.crisis_debt and laws.in_force(polity, LawKind.DEBT_LAW) is None:
+    if realm.profile.debt >= table.crisis_debt * max(1, stat_or(realm.entity, "subjects", 0)) / PER_MILLE and laws.in_force(polity, LawKind.DEBT_LAW) is None:
         found.append((LawKind.DEBT_LAW, {"remedy": "jubilee"}))
     if await plagued(ctx, realm) and laws.in_force(polity, LawKind.BURIAL_LAW) is None:
         found.append((LawKind.BURIAL_LAW, {"rite": "burning"}))

@@ -26,7 +26,7 @@ from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import at_cap, clamp_int, round_half_up
 from aerona.engine.primitives.population_history import loss_pct, median_of, population_at
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire, retire_in
@@ -92,8 +92,8 @@ async def abandon_declining(ctx: TickContext, history: PopulationHistory, atlas:
         by_world[settlement.world_id].append(stat(settlement, "population") or 0)
     rng = ctx.rng("abandon")
     abandoned = 0
-    for settlement in settlements:
-        if abandoned >= cycles.abandon_cap:
+    for settlement in ctx.rng("abandon.order").shuffled(settlements):
+        if at_cap(abandoned, cycles.abandon_cap):
             break
         now = stat(settlement, "population") or 0
         before, last = history.before.get(settlement.id), history.last.get(settlement.id)
@@ -176,8 +176,8 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
         return 0
     rng = ctx.rng("collapse")
     collapsed = 0
-    for community in await canon(ctx.session, COLLAPSE_TYPES):
-        if collapsed >= cycles.collapse_cap:
+    for community in ctx.rng("collapse.order").shuffled(await canon(ctx.session, COLLAPSE_TYPES)):
+        if at_cap(collapsed, cycles.collapse_cap):
             break
         now, before = stat(community, "population") or 0, history.before.get(community.id)
         if before is None or loss_pct(now, before) < cycles.collapse_loss_pct:

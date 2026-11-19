@@ -18,6 +18,7 @@ from aerona.db.tables.creator_bonds import CovenantRow
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.cycles import PeopleReproductionRow
 from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, WorldMaterialRow
 from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.facets import FacetPracticeRow
@@ -62,7 +63,7 @@ from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.speech import SpeechVenue
 from aerona.domain.enums.war import CaptiveStatus
-from aerona.domain.models.entity_stats import PeopleStats, PolityStats
+from aerona.domain.models.entity_stats import PeopleStats, PolityStats, SpeciesStats
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from aerona.services.integrity.record_links import absent_witnesses
@@ -97,6 +98,12 @@ async def captor_dies(session: AsyncSession, world: CoreWorld) -> None:
     held = await mortal(session, "Held", world, world.regions[0].id)
     session.add(CaptiveRow(captive_entity_id=held.id, captor_entity_id=captor.id, status=CaptiveStatus.HELD, taken_epoch=1))
     captor.status, captor.end_epoch = EntityStatus.DEAD, 1
+
+
+async def species_dies_in_its_lands(session: AsyncSession, world: CoreWorld) -> None:
+    kind = await entity(session, "Last Herd", EntityType.SPECIES, SpeciesStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(SpeciesRangeRow(species_entity_id=kind.id, region_entity_id=world.regions[0].id, abundance=40, locked=[]))
+    kind.status, kind.end_epoch = EntityStatus.DEAD, 1
 
 
 async def order_loses_target(session: AsyncSession, world: CoreWorld) -> None:
@@ -463,6 +470,7 @@ BREAKERS: dict[str, Breaker] = {
     "money_metal": paper_made_of_metal,
     "material_source": star_stuff_from_a_town,
     "living_captor": captor_dies,
+    "living_range": species_dies_in_its_lands,
     "order_target": order_loses_target,
     "maker_not_self": construct_makes_itself,
     "living_ruler": ruler_dies,

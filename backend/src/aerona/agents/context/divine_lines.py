@@ -134,7 +134,7 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
         lines.append(f"Your mortal form #{several(avatar.avatar_entity_id, 'walk', 'walks')} the world")
     attention = await session.get(WorldAttentionRow, son.current_world_id) if son.current_world_id is not None else None
     if attention is not None and attention.attention < scope.rules.creator.far_eye_below:
-        lines.append("Your world is far from the Creator's eye")
+        lines.append("The Creator pays your world little attention")
     for ruling in await session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)).order_by(CouncilRulingRow.id)):
         target = await name_of(scope, ruling.target_node_id)
         lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}")

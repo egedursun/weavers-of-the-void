@@ -8,9 +8,12 @@ from aerona.rules.model import rule
 class WorldEffectsRules:
     afterdeath_cap: int = rule(2, 0, 50, RuleGroup.THE_BEYOND, "Maximum mourning traditions or spirits born from deaths per epoch (each)")
     afterdeath_cap_community_divisor: int = rule(
-        100, 0, 100000, RuleGroup.THE_BEYOND, "Mourning tradition and spirit cap grows by 1 for every this many communities (0: fixed)"
+        10, 0, 100000, RuleGroup.THE_BEYOND, "Mourning tradition and spirit cap grows by 1 for every this many communities (0: fixed)"
     )
-    god_grudge_cap: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum new hostilities born from god grudges per epoch")
+    god_grudge_cap: int = rule(1, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Maximum new hostilities born from god grudges per epoch (base)")
+    god_grudge_cap_community_divisor: int = rule(
+        20, 0, 100000, RuleGroup.WAR_AND_DIPLOMACY, "God grudge hostility cap grows by 1 for every this many communities (0: fixed)"
+    )
     god_grudge_distance: int = rule(3, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Maximum map distance of communities a grudge can seep between (steps)")
     god_grudge_relation: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "For a grudge, the patron gods' relation must be at most minus this")
     raid_distance: int = rule(2, 0, 20, RuleGroup.CREATURES, "Maximum distance a monster can raid (steps)")
@@ -48,7 +51,10 @@ class WorldEffectsRules:
     famine_migration_min_population: int = rule(
         1500, 0, 10000000, RuleGroup.POPULATION_AND_GROWTH, "Minimum population of a community able to make a famine migration"
     )
-    famine_migration_cap: int = rule(1, 0, 20, RuleGroup.POPULATION_AND_GROWTH, "Maximum famine migrations per epoch")
+    famine_migration_cap: int = rule(1, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Maximum famine migrations per epoch (base)")
+    famine_migration_cap_community_divisor: int = rule(
+        10, 0, 100000, RuleGroup.POPULATION_AND_GROWTH, "Famine migration cap grows by 1 for every this many communities (0: fixed)"
+    )
     famine_prosperity: int = rule(20, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "A community below this prosperity counts as in famine")
     famine_fertility_margin: int = rule(
         5, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "The destination region must be at least this much more fertile than the source"
@@ -66,14 +72,16 @@ class WorldEffectsRules:
     sorcerer_protect_chance: int = rule(
         50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A sorcerer casts a protection (otherwise bounty) spell over their homeland (%)"
     )
-    birth_cap: int = rule(2, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Maximum births from lovers and spouses per epoch")
     inheritance_default_stat: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Default of an unrecorded mortal stat (inheritance and spirits)")
     inheritance_deviation: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Deviation (\u00b1) of children's and heirs' stats from the parent")
     child_hp: int = rule(80, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "HP of a newborn child")
     default_lifespan: int = rule(70, 1, 50000, RuleGroup.HEROES_AND_MORTALS, "Lifespan of a mortal with no recorded lifespan (years)")
     child_min_lifespan: int = rule(20, 1, 50000, RuleGroup.HEROES_AND_MORTALS, "Shortest lifespan of a newborn child (years)")
     dialect_min_settlement_age: int = rule(4, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Minimum settlement age for a dialect split (epochs)")
-    dialect_cap: int = rule(1, 0, 20, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum dialect splits per epoch")
+    dialect_cap: int = rule(1, 0, 1000, RuleGroup.RELIGION_AND_LANGUAGE, "Maximum dialect splits per epoch (base)")
+    dialect_cap_settlement_divisor: int = rule(
+        15, 0, 100000, RuleGroup.RELIGION_AND_LANGUAGE, "Dialect split cap grows by 1 for every this many settlements (0: fixed)"
+    )
     dialect_power: int = rule(2, 1, 12, RuleGroup.RELIGION_AND_LANGUAGE, "Power level of a new dialect")
     dialect_spread: int = rule(15, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Spread of a new dialect")
     dialect_complexity: int = rule(40, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Complexity of a new dialect")

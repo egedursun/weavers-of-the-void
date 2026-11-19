@@ -37,7 +37,7 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.factions import found_faction
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
@@ -158,8 +158,10 @@ async def seize_new(ctx: TickContext, tally: MysteryTally) -> None:
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(known))
         .order_by(EntityRow.id)
     )
-    for mortal in list(mortals):
-        if tally.mystics >= table.mystics_per_epoch:
+    candidates = ctx.rng("mystic.order").shuffled(list(mortals))
+    limit = scaled_cap(table.mystics_per_epoch, table.mystics_mortal_divisor, len(candidates))
+    for mortal in candidates:
+        if tally.mystics >= limit:
             return
         if held(mortal.id) or stat_or(mortal, "wisdom", 0) < table.wisdom_floor:
             continue
@@ -305,8 +307,10 @@ async def stir_towns(ctx: TickContext, tally: MysteryTally) -> None:
         .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(busy))
         .order_by(EntityRow.id)
     )
-    for town in list(towns):
-        if tally.movements >= table.movements_per_epoch:
+    candidates = ctx.rng("millenarian.order").shuffled(list(towns))
+    limit = scaled_cap(table.movements_per_epoch, table.movements_town_divisor, len(candidates))
+    for town in candidates:
+        if tally.movements >= limit:
             return
         if held(town.id):
             continue

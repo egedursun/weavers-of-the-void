@@ -247,7 +247,7 @@ async def test_hunger_turns_accusations_into_a_witch_hunt_and_the_wrongly_condem
     session.add(PressureRow(entity_id=town.id, pressure=PressureKind.HUNGER, value=90))
     await session.flush()
     tally = WitchTally()
-    await keep_witchcraft(await at(session, 3, witchcraft={"hunt_from": 3, "hunt_stress": 40, "hunt_accusations": 2}), tally)
+    await keep_witchcraft(await at(session, 3, witchcraft={"hunt_from": 3, "hunt_stress": 40, "hunt_accusations": 50}), tally)
     hunt = await session.scalar(select(WitchHuntRow).where(WitchHuntRow.settlement_entity_id == town.id))
     assert hunt is not None and tally.hunts == 1 and hunt.accused >= 1
     innocent = folk[3]

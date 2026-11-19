@@ -39,7 +39,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.folk import folk_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import headcount
@@ -586,7 +586,8 @@ async def _markets(ctx: TickContext, routes: list[RouteRow]) -> None:
     economy = ctx.rules.economy
     rng = ctx.rng("markets")
     markets = await faction_kind(ctx.session, EngineKind.WANDERING_MARKET)
-    if len(markets) < economy.market_max and routes and rng.chance(economy.market_found_chance):
+    cap = scaled_cap(economy.market_max, economy.market_route_divisor, len(routes)) if economy.market_max > 0 else 0
+    if len(markets) < cap and routes and rng.chance(economy.market_found_chance):
         regions = unheld(await open_regions(ctx.session))
         if regions:
             markets.append(await found_faction(ctx, EngineKind.WANDERING_MARKET, rng.pick(regions)))
@@ -601,7 +602,9 @@ async def _markets(ctx: TickContext, routes: list[RouteRow]) -> None:
         statement = select(EntityRow).where(
             EntityRow.world_id == market.world_id, EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(MARKET_TARGET_TYPES))
         )
-        for community in list(await ctx.session.scalars(statement.order_by(EntityRow.id)))[: economy.market_reach]:
+        communities = list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+        reached = max(1, round_half_up(len(communities) * economy.market_reach / PERCENT)) if economy.market_reach > 0 else 0
+        for community in rng.sample(communities, reached):
             add_prosperity(ctx.rules, community, economy.market_prosperity)
             if not await bonds.exists_between(market.id, community.id, BondKind.TRADES_WITH) and rng.chance(economy.market_trade_chance):
                 await bonds.connect(BondDraft(market.id, community.id, BondKind.TRADES_WITH, ctx.epoch, god_lines.MARKET_TRADE_BOND))
@@ -612,12 +615,13 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     travel = ctx.rules.travel
     rng = ctx.rng("pirates")
     pirates = await faction_kind(ctx.session, EngineKind.ROUTE_RAIDERS)
-    if len(pirates) < economy.pirate_max and traffic >= economy.pirate_min_traffic and rng.chance(economy.pirate_chance):
+    routes = [route for route in await passable_routes(ctx.session) if route.method in PIRATE_METHODS]
+    cap = scaled_cap(economy.pirate_max, economy.pirate_route_divisor, len(routes)) if economy.pirate_max > 0 else 0
+    if len(pirates) < cap and traffic >= economy.pirate_min_traffic and rng.chance(economy.pirate_chance):
         regions = await open_regions(ctx.session)
         if regions:
             region = max(regions, key=lambda entity: (trait_or(entity, Trait.DANGER, 0), -entity.id))
             pirates.append(await found_faction(ctx, EngineKind.ROUTE_RAIDERS, region))
-    routes = [route for route in await passable_routes(ctx.session) if route.method in PIRATE_METHODS]
     for route in routes:
         if pirates:
             route.danger = min(economy.pirate_route_danger_cap, route.danger + economy.pirate_route_danger)

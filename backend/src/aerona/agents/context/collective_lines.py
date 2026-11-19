@@ -51,7 +51,7 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
         return found
     mood = await session.get(CrowdMoodRow, me.location_id)
     if mood is not None and max(mood.anger, mood.anxiety, mood.fervour) >= MOOD_AT:
-        found.append(f"your town's mood: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, held back by the watch at {mood.deterrence}")
+        found.append(f"your town's mood: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, deterrence {mood.deterrence}")
     for mob in await session.scalars(select(MobRow).where(MobRow.settlement_entity_id == me.location_id, MobRow.status != MobStatus.DISPERSED)):
         found.append(f"a crowd of {mob.size} has {ACT_TEXT[mob.act]} and goes for the {spoken(mob.target)}, anger {mob.anger}")
     for movement in await session.scalars(select(MovementRow).where(MovementRow.settlement_entity_id == me.location_id, MovementRow.ended_epoch.is_(None))):
@@ -196,7 +196,7 @@ async def son_collective_lines(scope: Scope, son: SonRow) -> list[str]:
         .limit(SON_LINES)
     )
     for town, mood in stirred.all():
-        found.append(f"{town.name} (town {town.id}) is stirred: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, watch {mood.deterrence}")
+        found.append(f"{town.name} (town {town.id}) is stirred: anger {mood.anger}, fear {mood.anxiety}, fervour {mood.fervour}, deterrence {mood.deterrence}")
     crowds = await session.execute(
         select(EntityRow, MobRow)
         .join(MobRow, MobRow.settlement_entity_id == EntityRow.id)

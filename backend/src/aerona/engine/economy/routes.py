@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
@@ -76,13 +76,14 @@ from aerona.engine.nature.senses import NAVIGATION
 from aerona.engine.orders.exchange import billed_between, exchange_cost
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import credit
+from aerona.rules.registry.markets import TradeRoutesRules
 
 THOUSAND = 1000
 LIVE_STATUSES = frozenset({TradeRouteStatus.FORMING, TradeRouteStatus.OPEN, TradeRouteStatus.BLOCKADED})
@@ -225,6 +226,8 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
         if book.blockaded & {book.affiliated.get(first, first), book.affiliated.get(second, second), first, second}:
             capacity = round_half_up(capacity * ctx.rules.naval.blockade_trade_pct / PERCENT)
     capacity += sum(region_works(works, region).waystations for region in set(route.path[1:-1]))
+    people = sum(stat_or(end, "population", 0) for end in (book.entities.get(first), book.entities.get(second)) if end is not None)
+    capacity += people * table.capacity_per_thousand_people // PER_MILLE
     return clamp_int(capacity, 0, table.capacity_cap)
 
 
@@ -483,6 +486,7 @@ def lane_for(
     covered: frozenset[int] = frozenset(),
     gaps: Mapping[int, float] | None = None,
     known_goods: GoodBook | None = None,
+    populations: Mapping[int, int] | None = None,
 ) -> Lane | None:
     goods = known_goods or GoodBook()
     table = ctx.rules.markets
@@ -509,11 +513,14 @@ def lane_for(
         landed = min(landed, cheap.price * (PERCENT + terms.price_cap_pct) / PERCENT)
     if dear.price * PERCENT < landed * flow.flow_price_gap_pct * (gaps or {}).get(seller_id, 1.0):
         return None
-    surplus = max(0, cheap.supply - max(cheap.demand, flow.flow_reserve))
+    kept = round_half_up(flow.flow_reserve * (populations or {}).get(seller_id, PER_MILLE) / PER_MILLE)
+    surplus = max(0, cheap.supply - max(cheap.demand, kept))
     shortfall = max(0, dear.demand - dear.supply)
     trusted = 1.0 if trust is None else (ctx.rules.money.trust_trade_pct + (PERCENT - ctx.rules.money.trust_trade_pct) * trust / PERCENT) / PERCENT
     reach = terms.access * terms.informed
-    volume = round_half_up(min(room, flow.flow_cap, round_half_up(surplus * flow.flow_share_pct / PERCENT * reach), shortfall) * season * trusted)
+    volume = round_half_up(
+        min(room, flow.per_epoch(flow.flow_cap), round_half_up(surplus * flow.flow_share_pct / PERCENT * reach), shortfall) * season * trusted
+    )
     if terms.quota_pct:
         volume = round_half_up(volume * terms.quota_pct / PERCENT)
     famine = dear.price * PERCENT >= cheap.price * flow.famine_gap_pct
@@ -661,6 +668,10 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
     return max(shares, key=lambda cause: (shares[cause], cause.value)) if shares else None
 
 
+def end_populations(book: EconomyBook, route: Route) -> dict[int, int]:
+    return {end: stat_or(book.entities[end], "population", 0) for end in route.ends if end in book.entities}
+
+
 async def coin_trust(ctx: TickContext, book: EconomyBook, ends: tuple[int, int]) -> int | None:
     trusts: list[int] = []
     for end in ends:
@@ -693,11 +704,22 @@ async def carry(
     trust = await coin_trust(ctx, book, route.ends)
     covered = await cargo_holders(ctx.session)
     gaps = await price_gaps(ctx.session, ctx.rules, route.ends)
+    populations = end_populations(book, route)
     moved = 0
     for commodity in COMMODITIES:
         pair = (left_quotes[commodity], right_quotes[commodity])
         lane = lane_for(
-            ctx, route, pair, capacity - moved, season, trust=trust, policies=policies, covered=covered, gaps=gaps, known_goods=await good_book(ctx.session)
+            ctx,
+            route,
+            pair,
+            capacity - moved,
+            season,
+            trust=trust,
+            policies=policies,
+            covered=covered,
+            gaps=gaps,
+            known_goods=await good_book(ctx.session),
+            populations=populations,
         )
         if policies is not None:
             moved += await run_banned_lots(ctx, book, route, pair, policies, tally=tally)
@@ -753,7 +775,7 @@ async def run_contraband(
     cheap, dear = (left, right) if left.price <= right.price else (right, left)
     if not policies.terms(seller, buyer, left.commodity).blocked or dear.price * PERCENT < cheap.price * ctx.rules.trade_policy.smuggle_gap_pct:
         return 0
-    raw = lane_for(ctx, route, pair, room, season, known_goods=await good_book(ctx.session))
+    raw = lane_for(ctx, route, pair, room, season, known_goods=await good_book(ctx.session), populations=end_populations(book, route))
     if raw is None:
         return 0
     return await smuggle(ctx, book, policies, seller=seller, buyer=buyer, commodity=left.commodity, volume=raw.volume, landed=raw.landed, tally=tally.policy)
@@ -1007,15 +1029,20 @@ async def contacts(
                 continue
             candidates.append((0 if pair in trading else 1, hops, first.id, first, second, path))
     found: list[tuple[EntityRow, EntityRow, list[int]]] = []
+    most = scaled_cap(lanes.found_cap, lanes.found_markets_per_extra, len(markets))
     for _, _, _, first, second, path in sorted(candidates, key=lambda item: item[:3]):
-        if len(found) >= lanes.found_cap:
+        if len(found) >= most:
             break
-        if meeting[first.id] >= lanes.market_route_cap or meeting[second.id] >= lanes.market_route_cap:
+        if meeting[first.id] >= market_routes(lanes, first) or meeting[second.id] >= market_routes(lanes, second):
             continue
         meeting[first.id] += 1
         meeting[second.id] += 1
         found.append((first, second, path))
     return found
+
+
+def market_routes(lanes: TradeRoutesRules, market: EntityRow) -> int:
+    return scaled_cap(lanes.market_route_cap, lanes.market_route_people_per_extra, stat_or(market, "population", 0))
 
 
 def contact_reach(ctx: TickContext, book: EconomyBook, navigators: set[int], *ends: tuple[int, int | None]) -> int:

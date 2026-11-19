@@ -47,8 +47,8 @@ from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
+from aerona.engine.primitives.queries import count_communities, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
@@ -327,10 +327,18 @@ async def _bond_block(session: AsyncSession, rules: Rules, first_id: int, second
     return None
 
 
+def diplomacy_cap(rules: Rules, base: int, communities: int) -> int:
+    return scaled_cap(base, rules.diplomacy.cap_community_divisor, communities)
+
+
+async def world_war_limit(session: AsyncSession, rules: Rules) -> int:
+    return diplomacy_cap(rules, rules.diplomacy.world_war_cap, await count_communities(session))
+
+
 async def _cap_block(session: AsyncSession, rules: Rules, first_id: int, second_id: int, *, world_cap: bool, community_cap: bool) -> WarBlock | None:
     if not is_community(await living_entity(session, first_id)) or not is_community(await living_entity(session, second_id)):
         return None
-    if world_cap and await ongoing_war_count(session) >= rules.diplomacy.world_war_cap:
+    if world_cap and await ongoing_war_count(session) >= await world_war_limit(session, rules):
         return WarBlock.WORLD_CAP
     cap = rules.diplomacy.community_war_cap
     if community_cap and (await ongoing_war_count(session, first_id) >= cap or await ongoing_war_count(session, second_id) >= cap):
@@ -370,7 +378,7 @@ async def declare_war(
     brokered: bool = False,
 ) -> bool:
     counters = ctx.environment.stats.counters
-    if world_cap and counters[DECLARATIONS_COUNTER] >= ctx.rules.diplomacy.declarations_cap:
+    if world_cap and counters[DECLARATIONS_COUNTER] >= diplomacy_cap(ctx.rules, ctx.rules.diplomacy.declarations_cap, await count_communities(ctx.session)):
         return False
     if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap, cause=cause) is not None:
         return False

@@ -41,6 +41,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.sacred.places import realm_of_town, region_of
 from aerona.engine.services.war import ongoing_war_count
@@ -246,6 +247,12 @@ async def answer_mishaps(ctx: TickContext, tally: WitchTally) -> None:
         await accuse(ctx, town, await accuser_for(ctx, mishap), tally, mishap=mishap)
 
 
+def hunt_threshold(ctx: TickContext, town: EntityRow) -> int:
+    table = ctx.rules.witchcraft
+    people = stat_or(town, "population", 0)
+    return table.hunt_from + (people // table.hunt_people_per_accusation if table.hunt_people_per_accusation > 0 else 0)
+
+
 async def stir_hunts(ctx: TickContext, tally: WitchTally) -> None:
     table = ctx.rules.witchcraft
     since = ctx.epoch - table.hunt_memory
@@ -256,10 +263,10 @@ async def stir_hunts(ctx: TickContext, tally: WitchTally) -> None:
     )
     burning = set(await ctx.session.scalars(select(WitchHuntRow.settlement_entity_id).where(WitchHuntRow.ended_epoch.is_(None))))
     for town_id, count in counts.all():
-        if town_id is None or town_id in burning or held(town_id) or count < table.hunt_from:
+        if town_id is None or town_id in burning or held(town_id):
             continue
         town = await ctx.session.get(EntityRow, town_id)
-        if town is None or await hunt_stress_of(ctx, town) < table.hunt_stress:
+        if town is None or count < hunt_threshold(ctx, town) or await hunt_stress_of(ctx, town) < table.hunt_stress:
             continue
         fervour = clamp_int(table.hunt_fervour + (table.zealous_fervour if await zealous(ctx, town) else 0), 0, PERCENT)
         ctx.session.add(WitchHuntRow(settlement_entity_id=town_id, fervour=fervour, started_epoch=ctx.epoch, locked=[]))
@@ -323,7 +330,8 @@ async def run_hunts(ctx: TickContext, tally: WitchTally) -> None:
         town = await ctx.session.get(EntityRow, hunt.settlement_entity_id)
         if town is None or held(town.id):
             continue
-        for _ in range(round_half_up(table.hunt_accusations * hunt.fervour / PERCENT)):
+        named = len(await townsfolk(ctx, town, set()))
+        for _ in range(round_half_up(named * table.hunt_accusations / PERCENT * hunt.fervour / PERCENT)):
             await accuse(ctx, town, None, tally, hunt=hunt)
         if "fervour" not in hunt.locked:
             hunt.fervour = clamp_int(hunt.fervour - table.hunt_fade, 0, PERCENT)

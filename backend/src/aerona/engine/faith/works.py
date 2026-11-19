@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.disease import OutbreakRow
@@ -42,7 +42,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import headcount, set_stats, stat
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import add_district
@@ -229,13 +229,18 @@ async def alms(ctx: TickContext, church: Church) -> int:
     return eased
 
 
+def alms_price(ctx: TickContext, church: Church) -> int:
+    return round_half_up(ctx.rules.tithes.alms_cost * sum(headcount(member) for member in church.members) / PER_MILLE)
+
+
 async def spend(ctx: TickContext, church: Church, knowledge: KnowledgeMap) -> str | None:
     doctrine = church.doctrine
     table = ctx.rules.tithes
     if doctrine is None:
         return None
-    if church.holds(TenetKind.ASCETICISM) and affordable(doctrine, table.alms_cost):
-        credit(doctrine, -table.alms_cost)
+    alms_cost = alms_price(ctx, church)
+    if church.holds(TenetKind.ASCETICISM) and affordable(doctrine, alms_cost):
+        credit(doctrine, -alms_cost)
         return "alms" if await alms(ctx, church) else None
     if church.holds(TenetKind.MONASTIC_LEARNING) and affordable(doctrine, table.monastery_cost) and await build(ctx, church, HoldingKind.MONASTERY, knowledge):
         credit(doctrine, -table.monastery_cost)
@@ -243,8 +248,8 @@ async def spend(ctx: TickContext, church: Church, knowledge: KnowledgeMap) -> st
     if affordable(doctrine, table.temple_cost) and await build(ctx, church, HoldingKind.TEMPLE, knowledge):
         credit(doctrine, -table.temple_cost)
         return "temple"
-    if affordable(doctrine, table.alms_cost):
-        credit(doctrine, -table.alms_cost)
+    if affordable(doctrine, alms_cost):
+        credit(doctrine, -alms_cost)
         return "alms" if await alms(ctx, church) else None
     return None
 

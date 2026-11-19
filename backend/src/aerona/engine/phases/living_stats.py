@@ -48,8 +48,6 @@ async def solve_mysteries(ctx: TickContext) -> int:
     communities = unheld(await canon(ctx.session, COMMUNITY_TYPES))
     solved = 0
     for place in unheld(await canon(ctx.session, [EntityType.PLACE])):
-        if solved >= table.mystery_cap:
-            break
         mystery = stat_or(place, "mystery", 0)
         if mystery < table.mystery_threshold or not ctx.rng(f"mystery.{place.id}").chance(mystery / table.mystery_divisor):
             continue

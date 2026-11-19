@@ -31,6 +31,7 @@ from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import church_of, realm_of_town, ruler_of
@@ -133,9 +134,10 @@ async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
     towns = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
-    for town in list(towns):
-        if tally.clubs >= table.clubs_per_epoch:
-            return
+    quota = WorldQuota(table.clubs_per_epoch)
+    for town in ctx.rng("club.order").shuffled(towns):
+        if quota.full(town.world_id):
+            continue
         if held(town.id) or town.id in homed or stat_or(town, "population", 0) < table.club_population:
             continue
         arena = bool(await working(ctx.session, ARENAS, host_id=town.id))
@@ -143,6 +145,7 @@ async def found_clubs(ctx: TickContext, tally: SportTally) -> None:
         if (not arena and kind is None) or not ctx.rng(f"club.{town.id}").chance(table.club_chance):
             continue
         club = await found_club(ctx, town, kind)
+        quota.take(town.world_id)
         tally.clubs += 1
         await record(
             ctx,

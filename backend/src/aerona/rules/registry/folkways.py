@@ -137,7 +137,10 @@ class WitchcraftRules(Spanned):
     repeat_weight: int = rule(30, 0, 100, J, "Weight an earlier accusation adds to suspicion")
     caster_weight: int = rule(40, 0, 100, J, "Weight the true casting of a curse on the victim adds to suspicion")
     rumour_weight: int = rule(30, 0, 100, J, "Weight a rumour about a mortal that the town carries adds to suspicion")
-    hunt_from: int = rule(3, 1, 100, J, "Accusations in one town within the memory of a hunt that start a witch hunt")
+    hunt_from: int = rule(3, 1, 100000, J, "Accusations in one small town within the memory of a hunt that start a witch hunt (base)")
+    hunt_people_per_accusation: int = rule(
+        20000, 0, 100000000, J, "A town needs one more accusation to start a witch hunt for every this many of its people (0: fixed)"
+    )
     hunt_memory_years: int = span(5, 1, 1250, J, "Years back a town counts its accusations toward a witch hunt")
     hunt_stress: int = rule(40, 0, 100, J, "Hunger, insecurity, plague, war or political stress in a town from which its accusations become a witch hunt")
     plague_stress: int = rule(50, 0, 100, J, "Stress an epidemic in a town's region lays on it toward a witch hunt")
@@ -145,7 +148,7 @@ class WitchcraftRules(Spanned):
     zealous_fervour: int = rule(30, 0, 100, J, "Fervour a witch hunt gains where the town's church has turned to inquisition")
     hunt_fervour: int = rule(60, 0, 100, J, "Fervour a witch hunt starts with")
     hunt_fade: int = rule(15, 0, 100, J, "Fervour a witch hunt loses each epoch")
-    hunt_accusations: int = rule(2, 0, 50, J, "Accusations a witch hunt brings each epoch at full fervour")
+    hunt_accusations: int = rule(30, 0, 100, J, "Share of a town's named folk a witch hunt accuses each epoch at full fervour (%)")
     wrongful_unrest: int = rule(30, 0, 100, J, "Unrest the spirit of one killed for a witchcraft they did not do carries")
 
     @property
@@ -154,8 +157,8 @@ class WitchcraftRules(Spanned):
 
 
 @dataclass(frozen=True)
-class EverydayMishapRules:
-    small_per_epoch: int = rule(40, 0, 100, R, "Chance each epoch an adult of ordinary exposure suffers a small mishap (%)")
+class EverydayMishapRules(Spanned):
+    small_per_epoch: int = rule(5, 0, 100, R, "Chance an adult of ordinary exposure suffers a small mishap (% per year)")
     grave_per_mil: int = rule(50, 0, 1000, R, "Chance each epoch, per thousand, an adult of ordinary exposure suffers a grave mishap")
     deadly_per_mil: int = rule(10, 0, 1000, R, "Chance each epoch, per thousand, an adult of ordinary exposure suffers a deadly mishap")
     young_old_pct: int = rule(200, 0, 1000, R, "Rate of mishaps for children and the old against an adult (%)")
@@ -166,4 +169,4 @@ class EverydayMishapRules:
     deadly_damage: int = rule(80, 0, 200, R, "Harm a deadly mishap does before armour and toughness")
     small_stress: int = rule(3, 0, 100, R, "Stress a small mishap or a near miss lays on its victim")
     loss_wealth: int = rule(2, 0, 100, R, "Wealth a mishap of loss takes from its victim")
-    cohort_rate_per_mil: int = rule(5, 0, 1000, R, "Accidental deaths each epoch per thousand of a town's people of ordinary exposure")
+    cohort_rate_per_mil: int = rule(1, 0, 1000, R, "Accidental deaths per year per thousand of a town's people of ordinary exposure")

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.total import total
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import BorderControlRow, EvidenceRow, MeasureStandardRow, MembershipCategoryRow, MembershipRow, PoorReliefRow
@@ -21,6 +21,7 @@ from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.customs.relief import realm_people
 from aerona.engine.faith.book import patron_node
 from aerona.engine.media.press import recorded_evidence
 from aerona.engine.mind.book import pressures_of
@@ -259,9 +260,10 @@ async def adopt_relief(ctx: TickContext) -> None:
         members = await members_of(ctx.session, realm.id)
         poverty = [(await pressures_of(ctx.session, member)).get(PressureKind.POVERTY, 0) for member in members]
         profile = await ctx.session.get(PolityProfileRow, realm.id)
-        if poverty and sum(poverty) / len(poverty) >= table.adopt_from and profile is not None and profile.treasury >= table.adopt_budget:
+        budget = max(1, round_half_up(table.adopt_budget * await realm_people(ctx.session, realm.id) / PER_MILLE))
+        if poverty and sum(poverty) / len(poverty) >= table.adopt_from and profile is not None and profile.treasury >= budget:
             kind = ctx.rng(seed_of("relief", realm.id)).pick(list(ReliefKind))
-            ctx.session.add(PoorReliefRow(polity_entity_id=realm.id, kind=kind, budget=table.adopt_budget, reach=table.adopt_reach, locked=[]))
+            ctx.session.add(PoorReliefRow(polity_entity_id=realm.id, kind=kind, budget=budget, reach=table.adopt_reach, locked=[]))
 
 
 async def keep_measures(ctx: TickContext, tally: CivicsTally) -> None:
@@ -276,7 +278,7 @@ async def keep_measures(ctx: TickContext, tally: CivicsTally) -> None:
         row = await ctx.session.get(MeasureStandardRow, realm.id)
         if row is None:
             members = await members_of(ctx.session, realm.id)
-            if len(members) < table.adopt_members:
+            if len(members) < table.adopt_members and await realm_people(ctx.session, realm.id) < table.adopt_population:
                 continue
             row = MeasureStandardRow(polity_entity_id=realm.id, standard=True, adopted_epoch=ctx.epoch, fraud=table.adopt_fraud, locked=[])
             ctx.session.add(row)

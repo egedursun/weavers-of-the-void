@@ -6,7 +6,7 @@ from PIL import Image
 
 from aerona.core.errors import ConflictError
 from aerona.services.books.assets import print_jpeg
-from aerona.services.books.pdf import _layout, _worker_environment
+from aerona.services.books.typeset import run_worker, worker_environment
 
 
 def png(mode: str, size: tuple[int, int]) -> bytes:
@@ -25,10 +25,10 @@ def test_a_printed_image_is_flattened_to_a_jpeg_and_never_grown() -> None:
 
 
 def test_the_print_worker_runs_with_the_platform_libraries() -> None:
-    environment = _worker_environment()
+    environment = worker_environment()
     assert environment and all(isinstance(value, str) for value in environment.values())
 
 
 async def test_a_layout_that_cannot_be_set_is_refused_with_its_reason(tmp_path: Path) -> None:
     with pytest.raises(ConflictError):
-        await _layout(tmp_path / "missing.html", tmp_path / "out.pdf")
+        await run_worker(["measure", str(tmp_path / "missing.html"), str(tmp_path / "out.json")], tmp_path / "out.json")

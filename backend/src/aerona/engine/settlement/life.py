@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.urban import QUARTER_WORKS
 from aerona.catalog.zones import CIVIC_QUARTERED, CIVIC_SERVICE_OF
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.read_memo import memoized
@@ -82,10 +82,11 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
-from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
+from aerona.engine.settlement.circuit import circuit_gates, circuit_towers
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.engine.urban.morphology import hauling_of, replan, spread_of
@@ -97,6 +98,7 @@ SIEGE_DISEASE = 50
 DRY_OFF_PCT = 30
 HALF = 2
 WORK_LOCKS = {"cistern": "water", "aqueduct": "water", "walls": "walls_level"}
+IRRIGATION_MOST = 5
 
 
 def granary_of(rules: Rules, town: Town) -> int:
@@ -109,7 +111,7 @@ def housing_of(rules: Rules, town: Town) -> int:
 
 
 def slots_of(rules: Rules, town: Town) -> int:
-    return 1 + town.tier_index() * rules.urban.district_slots_per_tier
+    return 1 + town.tier_index() * rules.urban.district_slots_per_tier + max(0, stat_or(town.entity, "population", 0)) // rules.urban.district_people
 
 
 async def weapons_crime(ctx: TickContext, town_id: int) -> int:
@@ -263,10 +265,11 @@ def water_works(ctx: TickContext, town: Town, architecture: int, waterside: Wate
     wants: list[str] = []
     if waterside.river is RiverClass.NONE:
         return wants
-    if people >= table.bridge_population and architecture >= table.bridge_level and infrastructure.bridges < table.works_cap:
+    room = table.works_cap + (people // table.people_per_work if table.people_per_work > 0 else 0)
+    if people >= table.bridge_population and architecture >= table.bridge_level and infrastructure.bridges < room:
         wants.append("bridges")
     farming = any(district.kind is DistrictKind.FARMLAND for district in town.districts)
-    if waterside.irrigators and farming and people >= table.irrigation_population and infrastructure.irrigation < table.works_cap:
+    if waterside.irrigators and farming and people >= table.irrigation_population and infrastructure.irrigation < min(room, IRRIGATION_MOST):
         wants.append("irrigation")
     return wants
 
@@ -293,18 +296,23 @@ def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_wa
     if at_war and infrastructure.walls_level < min(5, town.tier_index() + 1):
         wants.append("walls")
     kinds = {district.kind for district in town.districts}
+    quarters = 1 + people // ctx.rules.scale.quarter_people
+
+    def short(kind: DistrictKind) -> bool:
+        return town.levels(kind) < quarters
+
     needs: list[DistrictKind] = []
-    if granary_of(ctx.rules, town) <= 0 or (people >= table.city_population and DistrictKind.MARKET not in kinds):
+    if granary_of(ctx.rules, town) <= 0 or (people >= table.city_population and short(DistrictKind.MARKET)):
         needs.append(DistrictKind.MARKET if DistrictKind.FARMLAND in kinds else DistrictKind.FARMLAND)
     if foreign >= table.foreign_quarter_pct and DistrictKind.FOREIGN_QUARTER not in kinds:
         needs.append(DistrictKind.FOREIGN_QUARTER)
     if at_war and DistrictKind.CITADEL not in kinds:
         needs.append(DistrictKind.CITADEL)
-    if (stat(town.entity, "piety") or 0) >= PERCENT // HALF and DistrictKind.TEMPLE_QUARTER not in kinds:
+    if (stat(town.entity, "piety") or 0) >= PERCENT // HALF and short(DistrictKind.TEMPLE_QUARTER):
         needs.append(DistrictKind.TEMPLE_QUARTER)
-    if DistrictKind.CRAFT_QUARTER not in kinds and town.tier_index() >= 1:
+    if short(DistrictKind.CRAFT_QUARTER) and town.tier_index() >= 1:
         needs.append(DistrictKind.CRAFT_QUARTER)
-    if town.tier_index() >= TIER_ORDER.index(SizeTier.CITY) and DistrictKind.NECROPOLIS not in kinds:
+    if town.tier_index() >= TIER_ORDER.index(SizeTier.CITY) and short(DistrictKind.NECROPOLIS):
         needs.append(DistrictKind.NECROPOLIS)
     wants.extend(f"district:{kind.value}" for kind in needs)
     if people > housing_of(ctx.rules, town):
@@ -323,21 +331,22 @@ async def quarter_wants(ctx: TickContext, town: Town) -> list[str]:
         )
     )
     wants: list[str] = []
+    quarters = 1 + stat_or(town.entity, "population", 0) // ctx.rules.scale.quarter_people
     civic = sum(1 for kind in built if kind in CIVIC_SERVICE_OF and CIVIC_QUARTERED[CIVIC_SERVICE_OF[kind]])
-    if DistrictKind.CIVIC_QUARTER not in kinds and civic >= table.civic_quarter_at:
+    if town.levels(DistrictKind.CIVIC_QUARTER) < civic // table.civic_quarter_at:
         wants.append("district:civic_quarter")
     greens = {StructureKind.PARK, StructureKind.FOUNTAIN}
     if DistrictKind.GARDENS not in kinds and greens & set(built) and (stat(town.entity, "prosperity") or 0) >= table.gardens_prosperity:
         wants.append("district:gardens")
     for quarter, works in QUARTER_WORKS.items():
-        if quarter not in kinds and sum(1 for kind in built if kind in works) >= table.modern_quarter_at:
+        if town.levels(quarter) < sum(1 for kind in built if kind in works) // table.modern_quarter_at:
             wants.append(f"district:{quarter.value}")
     society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
-    if society is not None and DistrictKind.INDUSTRIAL not in kinds and society.share(SocialClass.WORKER) >= table.industrial_worker_pct:
+    if society is not None and town.levels(DistrictKind.INDUSTRIAL) < quarters and society.share(SocialClass.WORKER) >= table.industrial_worker_pct:
         wants.append("district:industrial")
     city = town.tier_index() >= TIER_ORDER.index(SizeTier.CITY)
     traders = society.share(SocialClass.PROFESSIONAL) + society.share(SocialClass.MERCHANT) if society is not None else 0.0
-    if DistrictKind.BUSINESS not in kinds and city and traders >= table.business_share_pct:
+    if town.levels(DistrictKind.BUSINESS) < quarters and city and traders >= table.business_share_pct:
         wants.append("district:business")
     if town.profile.morphology is Morphology.SPRAWL and DistrictKind.SUBURB not in kinds:
         wants.append("district:suburb")
@@ -418,9 +427,9 @@ def improve(rules: Rules, town: Town, kind: str, material: BuildMaterial) -> Non
     if kind == "roads":
         infrastructure.roads = min(5, infrastructure.roads + 1)
     elif kind == "bridges":
-        infrastructure.bridges = min(5, infrastructure.bridges + 1)
+        infrastructure.bridges += 1
     elif kind == "irrigation":
-        infrastructure.irrigation = min(5, infrastructure.irrigation + 1)
+        infrastructure.irrigation = min(IRRIGATION_MOST, infrastructure.irrigation + 1)
     elif kind == "cistern":
         infrastructure.water = WaterSupply.CISTERN
     elif kind == "aqueduct":
@@ -431,8 +440,9 @@ def improve(rules: Rules, town: Town, kind: str, material: BuildMaterial) -> Non
         infrastructure.walls_level = min(5, infrastructure.walls_level + 1)
         keep(infrastructure, "walls_material", material)
         keep(infrastructure, "walls_condition", PERCENT)
-        keep(infrastructure, "gates", max(1, infrastructure.gates))
-        keep(infrastructure, "towers", min(20, infrastructure.towers + 2))
+        people = stat_or(town.entity, "population", 0)
+        keep(infrastructure, "gates", max(infrastructure.gates, circuit_gates(rules, people)))
+        keep(infrastructure, "towers", max(infrastructure.towers, circuit_towers(rules, people)))
         shift_stat(town.entity, "defense", rules.urban.walls_per_level, 0)
 
 
@@ -698,15 +708,12 @@ async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: b
 def festivals_and_alms(ctx: TickContext, town: Town, society: CommunitySocietyRow | None) -> bool:
     taxation = ctx.rules.taxation
     festival = False
-    if (
-        town.profile.unrest >= taxation.festival_unrest
-        and -ledger(ctx, town, TreasuryEntry.FESTIVAL, -taxation.festival_cost, "festival") >= taxation.festival_cost
-    ):
+    people = stat_or(town.entity, "population", 0)
+    festival_cost = round_half_up(taxation.festival_cost * people / PER_MILLE)
+    alms_cost = round_half_up(taxation.alms_cost * people / PER_MILLE)
+    if town.profile.unrest >= taxation.festival_unrest and -ledger(ctx, town, TreasuryEntry.FESTIVAL, -festival_cost, "festival") >= festival_cost:
         festival = True
-    if (
-        outcast_share(society) * PERCENT >= taxation.alms_outcast_pct
-        and -ledger(ctx, town, TreasuryEntry.ALMS, -taxation.alms_cost, "alms") >= taxation.alms_cost
-    ):
+    if outcast_share(society) * PERCENT >= taxation.alms_outcast_pct and -ledger(ctx, town, TreasuryEntry.ALMS, -alms_cost, "alms") >= alms_cost:
         town.profile.crime = max(0, town.profile.crime - taxation.alms_crime)
     return festival
 
@@ -802,7 +809,8 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT * nature.factor("fire_harm_pct")))
         with flowing(FlowCategory.DISASTER):
             set_stats(town.entity, population=before - dead)
-        ledger(ctx, town, TreasuryEntry.FIRE, -table.treasury_loss, "great fire")
+        treasury_loss = round_half_up(table.treasury_loss * before / PER_MILLE)
+        ledger(ctx, town, TreasuryEntry.FIRE, -treasury_loss, "great fire")
         burned += 1
         driven = year.wind >= PERCENT // HALF
         district_key = district.kind.value
@@ -810,7 +818,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
             ctx,
             "settlement.fire",
             roles={IncidentRole.PLACE: town.entity.id},
-            facts={"district": district.kind, "dead": dead, "treasury_loss": table.treasury_loss, "wind": year.wind},
+            facts={"district": district.kind, "dead": dead, "treasury_loss": treasury_loss, "wind": year.wind},
             steps=(
                 StepDraft(
                     StepAction.BURN_LAND,

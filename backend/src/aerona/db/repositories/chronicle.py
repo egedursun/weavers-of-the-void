@@ -12,6 +12,7 @@ from aerona.catalog.incident_roles import positional_role
 from aerona.constants.engine import FOLDED_TEMPLATE_SUFFIX
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.fast_session import rows_by_id
 from aerona.db.repositories.base import Repository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -158,7 +159,9 @@ class ChronicleRepository(Repository):
         if not text:
             raise ValidationFailedError("A chronicle line cannot be empty.")
         entity_ids = list(dict.fromkeys(entity_id for entity_id in draft.entity_ids if entity_id > 0))
-        world_id = draft.world_id if draft.world_id is not None else await self._derive_world(entity_ids, draft.son_id)
+        await self.flush()
+        entities = await rows_by_id(self.session, EntityRow, entity_ids)
+        world_id = draft.world_id if draft.world_id is not None else await self._derive_world(list(entities.values()), draft.son_id)
         involved = [*entity_ids, *([draft.son_id] if draft.son_id is not None else [])]
         scoped = CAUSE_SCOPE.get()
         cause = draft.cause_incident_id if draft.cause_incident_id is not None else scoped
@@ -175,7 +178,7 @@ class ChronicleRepository(Repository):
             text=text,
         )
         await self.insert(row)
-        existing = set(await self.session.scalars(select(EntityRow.id).where(EntityRow.id.in_(entity_ids)))) if entity_ids else set()
+        existing = set(entities)
         linked = [entity_id for entity_id in entity_ids if entity_id in existing]
         self.session.add_all(ChronicleEntityRow(chronicle_id=row.id, entity_id=entity_id, position=position) for position, entity_id in enumerate(linked))
         involved = [*linked, *([draft.son_id] if draft.son_id is not None else [])]
@@ -283,9 +286,9 @@ class ChronicleRepository(Repository):
         )
         return list(await self.session.scalars(statement))
 
-    async def _derive_world(self, entity_ids: list[int], son_id: int | None) -> int | None:
-        if entity_ids:
-            worlds = set(await self.session.scalars(select(EntityRow.world_id).where(EntityRow.id.in_(entity_ids))))
+    async def _derive_world(self, entities: list[EntityRow], son_id: int | None) -> int | None:
+        if entities:
+            worlds = {entity.world_id for entity in entities}
             if len(worlds) == 1:
                 return worlds.pop()
             if worlds:

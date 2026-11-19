@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.prehistory import WORLD_PREHISTORY
 from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
-from aerona.constants.units import PERCENT
+from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -34,7 +34,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
@@ -274,7 +274,8 @@ async def suffer(ctx: TickContext, town: EntityRow, profile: SettlementProfileRo
 async def upkept(ctx: TickContext, town: EntityRow, view: WorldView, tally: ViewTally) -> bool | None:
     if view.settle not in UPKEPT:
         return None
-    if await take_coin(ctx.session, ctx.rules, town, ctx.rules.world_views.float_upkeep):
+    upkeep = max(ctx.rules.world_views.float_upkeep, ctx.rules.world_views.float_upkeep * stat_or(town, "population", 0) // PER_MILLE)
+    if await take_coin(ctx.session, ctx.rules, town, upkeep):
         tally.upkept += 1
         return True
     tally.unpaid += 1

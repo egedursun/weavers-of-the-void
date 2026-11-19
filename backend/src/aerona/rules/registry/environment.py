@@ -92,7 +92,7 @@ class EnvironmentRules:
     river_irrigation_pct: int = rule(8, 0, 100, RuleGroup.ENVIRONMENT, "Fertility a river adds by watering the fields (%)")
     great_river_irrigation_pct: int = rule(14, 0, 100, RuleGroup.ENVIRONMENT, "Fertility a great river adds by watering the fields (%)")
     irrigation_works_pct: int = rule(5, 0, 100, RuleGroup.ENVIRONMENT, "Fertility each level of irrigation works adds by carrying water to the fields (%)")
-    irrigation_works_cap_pct: int = rule(20, 0, 100, RuleGroup.ENVIRONMENT, "Most fertility irrigation works add to a region (%)")
+    irrigation_works_cap_pct: int = rule(100, 0, 100, RuleGroup.ENVIRONMENT, "Most fertility irrigation works add to a region (%)")
     irrigation_agriculture_level: int = rule(
         2, 0, 10, RuleGroup.ENVIRONMENT, "Agriculture level that lets a settlement dig irrigation works without the irrigation technique"
     )
@@ -124,7 +124,7 @@ class EnvironmentRules:
     place_height_high: int = rule(40, 0, 100, RuleGroup.ENVIRONMENT, "Height advantage of hills, uplands, passes and chasms")
     sanitation_medicine_step: int = rule(12, 0, 100, RuleGroup.ENVIRONMENT, "Sanitation per level of medicine (%)")
     sanitation_architecture: int = rule(15, 0, 100, RuleGroup.ENVIRONMENT, "Sanitation of a settlement that knows architecture (%)")
-    sanitation_cap_pct: int = rule(60, 0, 100, RuleGroup.ENVIRONMENT, "Highest sanitation a community can reach (%)")
+    sanitation_cap_pct: int = rule(100, 0, 100, RuleGroup.ENVIRONMENT, "Highest sanitation a community can reach (%)")
     dry_place_capacity_pct: int = rule(85, 0, 200, RuleGroup.ENVIRONMENT, "Carrying capacity of a settlement whose place has no water source (%)")
     fresh_water_capacity_pct: int = rule(110, 0, 200, RuleGroup.ENVIRONMENT, "Carrying capacity of a settlement by a river, lake or spring (%)")
     ley_threshold: int = rule(70, 0, 100, RuleGroup.ENVIRONMENT, "Magic both neighbouring regions need for a ley line to join them")
@@ -231,7 +231,7 @@ class PassabilityRules:
     urban_base: int = rule(100, 0, 100, RuleGroup.ENVIRONMENT, "Ground passability base of a city before features (%)")
     sea_base: int = rule(100, 0, 100, RuleGroup.ENVIRONMENT, "Ground passability base of the sea before features (%)")
     road_step_pct: int = rule(8, 0, 100, RuleGroup.ENVIRONMENT, "Ground passability each road-building settlement adds to its region (%)")
-    road_cap_pct: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Most ground passability roads add to a region (%)")
+    road_cap_pct: int = rule(60, 0, 100, RuleGroup.ENVIRONMENT, "Most ground passability roads add to a region (%)")
     bridge_crossing_pct: int = rule(50, 0, 100, RuleGroup.ENVIRONMENT, "Share of the river's hindrance each bridge removes (%)")
     harbour_works_pct: int = rule(20, 0, 100, RuleGroup.ENVIRONMENT, "Boat passability each built harbour adds (%)")
 
@@ -273,7 +273,9 @@ class LandUseRules:
     drift_divisor: int = rule(3, 1, 100, RuleGroup.ENVIRONMENT, "Epochs over which land use closes on its target (divisor)")
     farm_target_pct: int = rule(90, 0, 300, RuleGroup.ENVIRONMENT, "Farmland per point of occupancy among farming peoples (%)")
     graze_target_pct: int = rule(70, 0, 300, RuleGroup.ENVIRONMENT, "Pasture per point of occupancy among herding peoples (%)")
-    built_population_per_pct: int = rule(15000, 1, 1000000, RuleGroup.ENVIRONMENT, "Settled inhabitants per point of built-up land")
+    built_population_per_pct: int = rule(
+        15000, 1, 1000000, RuleGroup.ENVIRONMENT, "Settled inhabitants per point of built-up land in a land of average size; larger lands need more"
+    )
     cleared_built_pct: int = rule(100, 0, 300, RuleGroup.ENVIRONMENT, "Cleared land per point of built-up land (%)")
     cleared_grazed_pct: int = rule(40, 0, 300, RuleGroup.ENVIRONMENT, "Cleared land per point of pasture (%)")
     erosion_roughness: int = rule(40, 0, 100, RuleGroup.ENVIRONMENT, "Roughness above which cleared land erodes")
@@ -305,8 +307,8 @@ class HarvestRules:
 class CalendarsRules:
     min_astronomy_level: int = rule(1, 1, 100, RuleGroup.ENVIRONMENT, "Astronomy level a people needs to keep a calendar")
     adoption_chance: int = rule(25, 0, 100, RuleGroup.ENVIRONMENT, "Chance each epoch that astronomy becomes a calendar (%)")
-    holy_day_cap: int = rule(4, 0, 100, RuleGroup.ENVIRONMENT, "Holy days any calendar can keep")
-    days_per_extra_holy_day: int = rule(120, 1, 100000, RuleGroup.ENVIRONMENT, "Days of the year for each further holy day a calendar can keep")
+    holy_day_cap: int = rule(10, 0, 1000, RuleGroup.ENVIRONMENT, "Holy days any calendar can keep")
+    days_per_extra_holy_day: int = rule(30, 1, 100000, RuleGroup.ENVIRONMENT, "Days of the year for each further holy day a calendar can keep")
 
 
 @dataclass(frozen=True)

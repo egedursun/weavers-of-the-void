@@ -122,6 +122,11 @@ async def extinction(ctx: TickContext, species: EntityRow, hunters: list[EntityR
         key = "ecology.extinct_starved"
     last = abundance(species)
     set_stats(species, abundance=0)
+    for row in await ctx.session.scalars(
+        select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == species.id).order_by(SpeciesRangeRow.region_entity_id)
+    ):
+        if "abundance" not in row.locked:
+            row.abundance = 0
     await remove_flag(ctx.session, species.id, EntityFlag.ENDANGERED)
     await add_flag(ctx.session, species.id, EntityFlag.EXTINCT, ctx.epoch)
     await retire_in(ctx, species, f"went extinct; {reason}")
@@ -330,14 +335,10 @@ async def ecology(ctx: TickContext) -> None:
                 await add_flag(ctx.session, item.id, EntityFlag.TIME_RETURNED, ctx.epoch)
                 await record(ctx, "ecology.rewound", roles={IncidentRole.SUBJECT: item.id}, facts={"abundance": settings.rewind_abundance})
                 continue
-            if extinct < settings.extinction_cap:
-                await extinction(ctx, item, web.hunters_of[item.id], habitat)
-                ctx.count("cascade", await cascade(ctx, item))
-                extinct += 1
-                continue
-            value = settings.last_herd
-            for row in rows:
-                row.abundance = max(row.abundance, settings.last_herd)
+            await extinction(ctx, item, web.hunters_of[item.id], habitat)
+            ctx.count("cascade", await cascade(ctx, item))
+            extinct += 1
+            continue
         set_stats(item, abundance=clamp_int(value, 0, 100))
         warnings = await track_endangered(ctx, item, marks, warnings)
     ctx.count("extinct", extinct)

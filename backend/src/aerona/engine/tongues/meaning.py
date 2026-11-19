@@ -61,9 +61,9 @@ def record(ctx: TickContext, lexeme: LexemeRow, shift: SenseShift, old: str, cau
     return row
 
 
-async def shift_word(ctx: TickContext, language: EntityRow, tally: DriftTally) -> MeaningShiftRow | None:
+async def shift_word(ctx: TickContext, language: EntityRow, tally: DriftTally, attempt: int = 0) -> MeaningShiftRow | None:
     words = await common_words(ctx, language.id)
-    rng = ctx.rng(f"drift.{language.id}.{ctx.epoch}")
+    rng = ctx.rng(f"drift.{language.id}.{ctx.epoch}" + (f".{attempt}" if attempt else ""))
     if not words or not rng.chance(ctx.rules.semantic_drift.drift_pct):
         return None
     word = rng.pick(words)
@@ -184,8 +184,6 @@ async def lift_names(ctx: TickContext, tally: DriftTally) -> None:
     table = ctx.rules.semantic_drift
     for node_id, name, communities in [*await dreaded(ctx), *await holy(ctx)]:
         for community in communities:
-            if tally.veiled + tally.shifted >= table.per_epoch:
-                return
             language = await spoken_language(ctx.session, community)
             if language is None or held(community) or await veiled(ctx, language.id, node_id):
                 continue
@@ -196,9 +194,10 @@ async def lift_names(ctx: TickContext, tally: DriftTally) -> None:
 
 async def drift_meanings(ctx: TickContext, tally: DriftTally) -> None:
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
-        if tally.shifted >= ctx.rules.semantic_drift.per_epoch:
-            break
-        if not held(language.id):
-            await shift_word(ctx, language, tally)
+        if held(language.id):
+            continue
+        for attempt in range(ctx.rules.semantic_drift.per_epoch):
+            if await shift_word(ctx, language, tally, attempt) is None:
+                break
     await lift_names(ctx, tally)
     await ctx.session.flush()

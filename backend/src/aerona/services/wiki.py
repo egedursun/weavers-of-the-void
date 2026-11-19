@@ -56,6 +56,8 @@ class SettlementTier(StrEnum):
     TOWN = "town"
     CITY = "city"
     GREAT_CITY = "great_city"
+    MEGACITY = "megacity"
+    CONURBATION = "conurbation"
 
 
 class MarkerKind(StrEnum):
@@ -409,6 +411,10 @@ async def set_favorite(session: AsyncSession, entity_id: int, favorite: bool) ->
 
 def settlement_tier(rules: Rules, population: int) -> SettlementTier:
     politics = rules.politics
+    if population >= politics.conurbation_population:
+        return SettlementTier.CONURBATION
+    if population >= politics.megacity_population:
+        return SettlementTier.MEGACITY
     if population >= politics.metropolis_population:
         return SettlementTier.GREAT_CITY
     if population >= politics.city_population:

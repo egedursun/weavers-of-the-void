@@ -28,7 +28,7 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.operations.expedition_record import log_entry
 from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.recording.record import record
 from aerona.engine.sites.rooms import Walk, delve, layout_of, rooms_of
 from aerona.rules.registry.operations import ExpeditionRules
@@ -523,8 +523,10 @@ async def keep_expeditions(ctx: TickContext, tally: ExpeditionTally) -> None:
         select(BondRow.source_node_id).where(BondRow.kind == BondKind.COMPANION, BondRow.state == BondState.ACTIVE).distinct().order_by(BondRow.source_node_id)
     )
     launched = 0
-    for leader_id in list(leaders):
-        if launched >= table.launches or leader_id in away or held(leader_id):
+    candidates = ctx.rng("expedition.order").shuffled(list(leaders))
+    limit = scaled_cap(table.launches, table.launches_leader_divisor, len(candidates))
+    for leader_id in candidates:
+        if launched >= limit or leader_id in away or held(leader_id):
             continue
         leader = await ctx.session.get(EntityRow, leader_id)
         if leader is None or leader.entity_type is not EntityType.MORTAL or leader.status is not EntityStatus.CANON:

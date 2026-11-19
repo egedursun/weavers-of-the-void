@@ -1018,7 +1018,7 @@ Items of the apocalypse clock (threshold and speed live in `DENGE.kiyamet_esik` 
 | godlessness_chance | tanrisizlik_sans | 15 | 0 | 100 | Religion and language | A community of weak faith becomes godless (%) |
 | evolution_chance | evrim_sans | 18 | 0 | 100 | Creatures | A migrated species diverges into a subspecies (%) |
 | birth_chance | dogum_sans | 30 | 0 | 100 | Heroes and mortals | A child from lover or married mortals (%) |
-| love_rivalry_chance | ask_rekabet_sans | 8 | 0 | 100 | Heroes and mortals | Love or rivalry between mortals in the same place (%) |
+| love_rivalry_chance | ask_rekabet_sans | 0.5 | 0 | 100 | Heroes and mortals | Love or rivalry between two mortals in the same place (% per year) |
 | love_ratio | ask_orani | 55 | 0 | 100 | Heroes and mortals | Share of these that are love (%) |
 | dialect_chance | lehce_sans | 15 | 0 | 100 | Religion and language | Dialect divergence in an isolated settlement (%) |
 | ghost_chance | hayalet_sans | 50 | 0 | 100 | Beyond (afterlife) | If the dead return, the deceased becomes a ghost (%) |
@@ -1149,7 +1149,7 @@ Effects of world-engine events: caps, stat changes, dice, thresholds.
 | revolt_percentile | isyan_yuzde | 50 | 0 | 100 | War and diplomacy | Cities that can rise up: those above the world's X-th percentile of population |
 | revolt_max_pop | isyan_ust | 5000 | 0 | 100000000 | War and diplomacy | A poor city this populous can always rise up (people) |
 | just_law | adil_kanun | 60 | 0 | 100 | War and diplomacy | Minimum justice for a law to count as just |
-| revolt_cap | isyan_tavan | 1 | 0 | 20 | War and diplomacy | Most uprisings per age |
+| revolt_cap | isyan_tavan | — | — | — | War and diplomacy | Removed in the realism pass: (poverty_revolt_cap) no cosmos-wide limit; each restless city rolls its own chance |
 | rebel_power_level | isyanci_guc_seviye | 3 | 1 | 12 | War and diplomacy | Power level of the rebel faction |
 | rebel_strength_base | isyanci_guc_taban | 30 | 0 | 100 | War and diplomacy | Rebels' strength: base |
 | rebel_strength_die | isyanci_guc_zar | 30 | 1 | 100 | War and diplomacy | Die added to the rebels' strength (1–X) |

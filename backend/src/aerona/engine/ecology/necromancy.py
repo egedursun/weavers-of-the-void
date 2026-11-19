@@ -153,9 +153,10 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
     table = ctx.rules.monsters
     tally = NecromancyTally()
     atlas = await RegionAtlas.load(ctx.session)
-    acted = 0
-    for necromancer, power in await necromancers(ctx):
-        if acted >= table.necro_cap or power <= 0:
+    acted: dict[int, int] = {}
+    for necromancer, power in ctx.rng("necromancy.order").shuffled(await necromancers(ctx)):
+        world = necromancer.world_id or 0
+        if acted.get(world, 0) >= table.necro_cap or power <= 0:
             continue
         rng = ctx.rng(f"necromancy.{necromancer.id}.{ctx.epoch}")
         tower = await tower_of(ctx, necromancer.id)
@@ -163,7 +164,7 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
             if rng.chance(table.necro_tower_pct):
                 tower = await raise_tower(ctx, necromancer)
                 tally.towers += 1
-                acted += 1
+                acted[world] = acted.get(world, 0) + 1
                 await record(ctx, "necromancy.tower", roles={IncidentRole.ACTOR: necromancer.id, IncidentRole.PRODUCT: tower.id}, facts={"power": power})
             continue
         host = await host_of(ctx, necromancer.id)
@@ -171,7 +172,7 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
             if rng.chance(table.necro_raise_pct):
                 host = await raise_host(ctx, necromancer, power)
                 tally.hosts += 1
-                acted += 1
+                acted[world] = acted.get(world, 0) + 1
                 await record(
                     ctx,
                     "necromancy.host",
@@ -183,7 +184,7 @@ async def necromancy(ctx: TickContext) -> NecromancyTally:
             siege = await besiege(ctx, atlas, necromancer, host)
             if siege is not None:
                 tally.sieges += 1
-                acted += 1
+                acted[world] = acted.get(world, 0) + 1
                 town = await ctx.session.get(EntityRow, siege.besieged_entity_id)
                 roles: dict[IncidentRole, RoleValue] = {
                     IncidentRole.ACTOR: host.id,
