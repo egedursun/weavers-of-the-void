@@ -124,6 +124,29 @@ function CardBack({
   )
 }
 
+function TakingShape({ rarity, kind }: { rarity: Rarity; kind: RevealKind }) {
+  return (
+    <div
+      role='status'
+      aria-label='The son is taking shape'
+      className='flex flex-col items-center gap-4 py-10'
+    >
+      <span className='relative flex h-40 w-40 items-center justify-center'>
+        <span
+          aria-hidden='true'
+          className={cn('reveal-glow rounded-full', RARITY_TEXT_CLASS[rarity])}
+        />
+        <span className='reveal-float relative flex h-32 w-32 items-center justify-center'>
+          <Logo size='md' className='size-full drop-shadow-xl' />
+        </span>
+      </span>
+      <Muted as='span' variant='caption'>
+        {`${SEALED_TEXT[kind]} · their card is taking shape`}
+      </Muted>
+    </div>
+  )
+}
+
 function Effects({ rarity, open }: { rarity: Rarity; open: boolean }) {
   return (
     <div
@@ -228,31 +251,38 @@ function RevealSequence({
               : 'A son is being revealed'}
           </StageDialogDescription>
         </div>
-        <div className='reveal-flip w-full min-w-0'>
-          <div
-            className={cn('reveal-flip-inner', !open && 'reveal-float')}
-            data-flipped={open || undefined}
-          >
-            <CardBack
-              rarity={rarity}
-              kind={item.kind}
-              charging={ready && !open}
-              onReveal={() => ready && setOpen(true)}
-            />
-            <div className='reveal-face reveal-face-front min-w-0 text-left'>
-              {view && (
-                <SonCard
-                  view={view}
-                  ready={
-                    state.data?.pending_son_ids.includes(view.son.id) ?? false
-                  }
-                  worldName={worldName}
-                  interactive={false}
-                />
-              )}
+        {view ? (
+          <div className='reveal-rise w-full min-w-0'>
+            <div className={cn('w-full min-w-0', !open && 'reveal-float')}>
+              <div className='reveal-flip w-full min-w-0'>
+                <div
+                  className='reveal-flip-inner'
+                  data-flipped={open || undefined}
+                >
+                  <CardBack
+                    rarity={rarity}
+                    kind={item.kind}
+                    charging={!open}
+                    onReveal={() => setOpen(true)}
+                  />
+                  <div className='reveal-face reveal-face-front min-w-0 text-left'>
+                    <SonCard
+                      view={view}
+                      ready={
+                        state.data?.pending_son_ids.includes(view.son.id) ??
+                        false
+                      }
+                      worldName={worldName}
+                      interactive={false}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <TakingShape rarity={rarity} kind={item.kind} />
+        )}
         {open && (
           <div className='reveal-rise-late flex w-full min-w-0 flex-wrap items-center justify-center gap-2'>
             {onOpenPage && (

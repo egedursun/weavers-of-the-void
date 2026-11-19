@@ -162,6 +162,50 @@ describe('son reveal overlay', () => {
       .toContain('son')
   })
 
+  it('holds the card until the son arrives, then shows it whole and turns it over', async () => {
+    let arrived = false
+    const { screen, emit } = await renderScreen(
+      <SonRevealOverlay />,
+      godRoutes({
+        'GET /api/sons': () =>
+          arrived ? SONS : SONS.filter((view) => view.son.id !== 7),
+      })
+    )
+    emit('son.new', { son_id: 7, rarity: 'common' })
+    const dialog = screen.getByRole('dialog')
+    await expect
+      .element(dialog.getByRole('status', { name: 'The son is taking shape' }))
+      .toBeVisible()
+    expect(document.querySelector('[aria-label="Reveal the son"]')).toBeNull()
+    arrived = true
+    emit('son.new', { son_id: 7, rarity: 'common' })
+    await expect
+      .poll(() => document.querySelector('[data-son-card="7"]'))
+      .not.toBeNull()
+    const back = document.querySelector(
+      '[aria-label="Reveal the son"]'
+    ) as HTMLElement
+    const card = document.querySelector('[data-son-card="7"]') as HTMLElement
+    expect(back.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      card.getBoundingClientRect().height
+    )
+    const inner = document.querySelector('.reveal-flip-inner') as HTMLElement
+    await expect
+      .poll(() => inner.hasAttribute('data-flipped'), { timeout: 4000 })
+      .toBe(true)
+    expect(
+      inner
+        .getAnimations()
+        .some(
+          (motion) =>
+            motion instanceof CSSTransition &&
+            motion.transitionProperty === 'transform'
+        )
+    ).toBe(true)
+    await userEvent.keyboard('{Escape}')
+    await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('announces an ascension and closes with Escape', async () => {
     const { screen, emit } = await renderScreen(
       <SonRevealOverlay />,
