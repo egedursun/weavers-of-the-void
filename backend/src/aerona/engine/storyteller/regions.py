@@ -6,8 +6,10 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.tables.storyteller_depth import RegionalTensionRow, SubsystemTensionRow
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.storyteller import StorytellerProfile
@@ -17,6 +19,20 @@ from aerona.engine.recording.record import record as record_incident
 from aerona.rules.registry import Rules
 
 HOPS = 4
+TENSE_KINDS = frozenset(
+    {
+        ChronicleKind.WAR,
+        ChronicleKind.WAR_OF_GODS,
+        ChronicleKind.ARMY,
+        ChronicleKind.DEATH,
+        ChronicleKind.DISASTER,
+        ChronicleKind.REBELLION,
+        ChronicleKind.HORROR,
+        ChronicleKind.OUTER_BEING,
+        ChronicleKind.APOCALYPSE,
+        ChronicleKind.INTRIGUE,
+    }
+)
 
 
 def along_curve(points: list[list[int]], epoch: int) -> int | None:
@@ -60,11 +76,13 @@ async def measure_parts(ctx: TickContext, world_id: int) -> int:
     carry = ctx.rules.storyteller.tension_carry_pct
     by_region: Counter[int] = Counter()
     by_subsystem: Counter[str] = Counter()
-    for kind, place, magnitude in await ctx.session.execute(
-        select(IncidentRow.kind, IncidentRow.place_entity_id, IncidentRow.magnitude).where(IncidentRow.epoch == ctx.epoch, IncidentRow.world_id == world_id)
+    for kind, place, magnitude, told in await ctx.session.execute(
+        select(IncidentRow.kind, IncidentRow.place_entity_id, IncidentRow.magnitude, ChronicleRow.kind)
+        .outerjoin(ChronicleRow, ChronicleRow.id == IncidentRow.chronicle_id)
+        .where(IncidentRow.epoch == ctx.epoch, IncidentRow.world_id == world_id)
     ):
         by_subsystem[str(kind).split(".", 1)[0]] += int(magnitude)
-        found = await region_of(ctx, place)
+        found = await region_of(ctx, place) if told in TENSE_KINDS else None
         if found is not None:
             by_region[found] += int(magnitude)
     crises = 0

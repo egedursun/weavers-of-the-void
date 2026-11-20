@@ -27,6 +27,14 @@ async def test_append_keeps_entity_order_and_derives_world(session: AsyncSession
     assert [row.id for row in await repository.mentioning(region.id, 5)] == [written.row.id]
 
 
+async def test_a_speaker_never_reads_its_own_sayings_back_as_records(session: AsyncSession, world_id: int) -> None:
+    town = await make_entity(session, "Vurdeth", EntityType.SETTLEMENT, world_id=world_id)
+    repository = ChronicleRepository(session)
+    await repository.append(ChronicleDraft(2, ChronicleKind.SPEECH, 'Vurdeth: "The ridge gives its iron."', (town.id,)))
+    deed = await repository.append(ChronicleDraft(2, ChronicleKind.CONSTRUCTION, "Vurdeth raised a furnace.", (town.id,)))
+    assert [row.id for row in await repository.mentioning(town.id, 5)] == [deed.row.id]
+
+
 async def test_engine_raw_lines_are_hidden(session: AsyncSession, world_id: int) -> None:
     repository = ChronicleRepository(session)
     raw = await repository.append(ChronicleDraft(1, ChronicleKind.ENGINE_RAW, "raw note"))

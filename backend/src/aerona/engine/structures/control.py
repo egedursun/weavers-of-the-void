@@ -52,6 +52,7 @@ from aerona.engine.structures.construction import Commission, abandon, begin, co
 from aerona.engine.structures.damage import consequences, harm
 from aerona.engine.structures.integrity import StructureStrike, ensure_sections, match_condition, overall, sections_of, state_for, wound
 from aerona.engine.structures.megastructures import state_of
+from aerona.engine.structures.needs import GROWING
 from aerona.engine.structures.profiles import fire_resistance_from, lock, material_props, refresh, staff_rows
 from aerona.engine.structures.spec import resolve, slots_for, tier_allows
 
@@ -115,7 +116,9 @@ async def free_slots(ctx: TickContext, site: EntityRow) -> int:
     town = await ctx.session.get(SettlementProfileRow, site.id)
     rows = await ctx.session.scalars(
         select(StructureProfileRow.structure_entity_id).where(
-            StructureProfileRow.host_entity_id == site.id, StructureProfileRow.construction_state != ConstructionState.RUINED
+            StructureProfileRow.host_entity_id == site.id,
+            StructureProfileRow.construction_state != ConstructionState.RUINED,
+            StructureProfileRow.kind.not_in(sorted(GROWING)),
         )
     )
     total = slots_for(ctx.rules, town.size_tier if town is not None else None, stat_or(site, "population", 0))

@@ -60,8 +60,7 @@ async def test_a_struck_rival_dies_vanishes_or_falls_in_love(realm: Realm) -> No
 async def test_thrones_are_claimed_and_seized(realm: Realm) -> None:
     ctx, _, plotter, rival = await pair(realm)
     assert (
-        await STRIKES[PlotKind.FABRICATE_CLAIM](ctx, await plot(ctx, plotter, PlotKind.FABRICATE_CLAIM, rival), plotter, rival)
-        == "there was no rule to claim"
+        await STRIKES[PlotKind.FABRICATE_CLAIM](ctx, await plot(ctx, plotter, PlotKind.FABRICATE_CLAIM, rival), plotter, rival) == "there was no rule to claim"
     )
     assert await STRIKES[PlotKind.COUP](ctx, await plot(ctx, plotter, PlotKind.COUP, rival), plotter, rival) == "rule could not be seized"
     polity = await throne(realm, rival)

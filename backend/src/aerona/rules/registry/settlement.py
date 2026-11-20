@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule
 
 G = RuleGroup.SETTLEMENTS
 
@@ -62,9 +62,9 @@ class UrbanRules:
 
 
 @dataclass(frozen=True)
-class TaxationRules:
+class TaxationRules(Spanned):
     default_tax: int = rule(10, 0, 100, G, "Tax rate of a settlement with no policy (%)")
-    per_capita_output: int = rule(5, 0, 100000, G, "Taxable output per hundred people at full wealth")
+    per_capita_output: int = rule(5, 0, 100000, G, "Taxable output per hundred people at full wealth in a year")
     admin_base_pct: int = rule(50, 0, 100, G, "Administrative reach of an illiterate settlement (%)")
     admin_per_literacy_pct: int = rule(50, 0, 100, G, "Administrative reach gained at full literacy (%)")
     unrest_per_tax: int = rule(30, 0, 300, G, "Unrest from taxes per hundred points of tax rate (%)")

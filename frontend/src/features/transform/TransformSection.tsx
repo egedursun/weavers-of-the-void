@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -763,7 +764,7 @@ function Body({
       <Section
         id='section-transformations-ahead'
         title='Changes under way'
-        description={`Conditions the engine watches each epoch; a fall or a corruption is announced ${view.warn_epochs} epoch(s) before it comes.`}
+        description={`Conditions the engine watches each epoch; a fall or a corruption is announced ${plural(view.warn_epochs, 'epoch')} before it comes.`}
         icon={Zap}
         tone='warning'
       >

@@ -10,6 +10,7 @@ from aerona.domain.enums.military import SpyCover
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.tools.toolkit import TurnToolkit
+from tests.tools.every_setup import second_settlement
 from tests.tools.factories import seed_realm, son_toolkit
 
 
@@ -21,6 +22,8 @@ async def ok(toolkit: TurnToolkit, name: str, arguments: dict[str, Any]) -> str:
 
 async def test_a_son_wages_a_whole_war(database: Database) -> None:
     realm = await seed_realm(database)
+    async with database.write() as session:
+        rival = (await second_settlement(session, realm))["settlement"]
     toolkit = await son_toolkit(database, realm.son_id, action_points=12)
     designed = await ok(
         toolkit,
@@ -33,7 +36,7 @@ async def test_a_son_wages_a_whole_war(database: Database) -> None:
         "wage_war",
         {
             "attacker_id": realm.people_id,
-            "defender_id": realm.settlement_id,
+            "defender_id": rival,
             "cause": "claim",
             "aims": ["tribute", "seize_settlement"],
             "reason": "the salt is ours",
@@ -55,10 +58,10 @@ async def test_a_son_wages_a_whole_war(database: Database) -> None:
         design = await session.scalar(select(UnitDesignRow).where(UnitDesignRow.name == "Tide Spears"))
         assert design is not None
     assert design.id in designs
-    await ok(toolkit, "lay_siege", {"war_id": war_id, "army_id": army_id, "settlement_id": realm.settlement_id})
+    await ok(toolkit, "lay_siege", {"war_id": war_id, "army_id": army_id, "settlement_id": rival})
     async with database.read() as session:
         assert await session.scalar(select(SiegeRow).where(SiegeRow.war_id == war_id)) is not None
-    await ok(toolkit, "plant_spies", {"owner_id": realm.people_id, "target_id": realm.settlement_id, "cover": "priest"})
+    await ok(toolkit, "plant_spies", {"owner_id": realm.people_id, "target_id": rival, "cover": "priest"})
     await ok(toolkit, "commission_vessel", {"owner_id": realm.settlement_id, "name": "Saltwind", "frame": "longship"})
     peace = await ok(toolkit, "offer_peace", {"war_id": war_id, "victor_id": realm.people_id, "terms": ["tribute"]})
     assert "The war ended" in peace

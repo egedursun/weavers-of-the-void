@@ -89,7 +89,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "banking.realm_bondage",
         G.EXCHANGE,
-        "The realm of {borrower} could not repay {left} to {lender}; the debt was paid in bound labour.",
+        "{borrower} could not repay {left} to {lender}; the debt was paid in bound labour.",
         roles=(
             RoleSpec(R.BORROWER),
             RoleSpec(R.LENDER),
@@ -103,7 +103,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "banking.realm_default",
         G.EXCHANGE,
-        "The realm of {borrower} could not repay {left} to {lender}; it became the realm's standing debt.",
+        "{borrower} could not repay {left} to {lender}; it became the realm's standing debt.",
         roles=(
             RoleSpec(R.BORROWER),
             RoleSpec(R.LENDER),
@@ -130,7 +130,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "banking.realm_loan",
         G.EXCHANGE,
-        "{lender} lent the realm of {borrower} {principal} to carry its debts, at {interest} in a hundred, due in epoch {due_epoch}.",
+        "{lender} lent {borrower} {principal} to carry its debts, at {interest} in a hundred, due in epoch {due_epoch}.",
         roles=(
             RoleSpec(R.BORROWER),
             RoleSpec(R.LENDER),
@@ -148,7 +148,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "banking.realm_prison",
         G.EXCHANGE,
-        "The realm of {borrower} could not repay {left} to {lender}; its debtors went to prison.",
+        "{borrower} could not repay {left} to {lender}; its debtors went to prison.",
         roles=(
             RoleSpec(R.BORROWER),
             RoleSpec(R.LENDER),
@@ -252,7 +252,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "companies.dominion",
         G.EXCHANGE,
-        "{predecessor} put away its ledgers and ruled the land it held as {successor}.",
+        "{predecessor} became {successor} and ruled the land it held.",
         roles=(
             RoleSpec(R.PREDECESSOR),
             RoleSpec(R.SUCCESSOR),
@@ -1672,7 +1672,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.worship",
         G.EXCHANGE,
-        "{actor} turned to the worship of {patron}, with an offering of {offering}.",
+        "{actor} turned to the worship of {patron} and brought an offering: {offering}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.PATRON),
@@ -1686,7 +1686,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.worship_creator",
         G.EXCHANGE,
-        "{actor} turned to the worship of {patron}, with an offering of {offering}.",
+        "{actor} turned to the worship of {patron} and brought an offering: {offering}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.PATRON),
@@ -1943,7 +1943,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         steps=frozenset({A.FREEZE}),
         place=PlaceRule.NONE,
         clock=ProcessClock.VOYAGE,
-        chronicle_kind=K.DISASTER,
+        chronicle_kind=K.TRADE,
     ),
     IncidentKindSpec(
         "money.debased_by_creator",
@@ -1966,7 +1966,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "banking.realm_war_loan",
         G.EXCHANGE,
-        "{lender} lent the realm of {borrower} {principal} to keep its armies in the field, at {interest} in a hundred, due in epoch {due_epoch}.",
+        "{lender} lent {borrower} {principal} to keep its armies in the field, at {interest} in a hundred, due in epoch {due_epoch}.",
         roles=(
             RoleSpec(R.BORROWER),
             RoleSpec(R.LENDER),

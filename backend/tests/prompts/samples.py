@@ -934,6 +934,7 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         magic=60,
         danger=85,
         technology_label="iron age",
+        technology_meaning="when iron is smelted and forged",
         language_label="guttural, deep (h, gh, q, kh)",
         cosmos_label="a small cosmos (3 worlds)",
         shape_line="the further worlds lie in a second layer of the cosmos",

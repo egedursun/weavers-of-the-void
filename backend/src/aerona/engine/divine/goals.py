@@ -2,8 +2,10 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import GodGoalRow
@@ -12,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mythic import MantlingRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
@@ -219,23 +222,44 @@ async def active_goals(ctx: TickContext, god_id: int) -> list[GodGoalRow]:
     return list(await ctx.session.scalars(statement))
 
 
-def goal_text(god: God, goal: GodGoalRow, target: str | None) -> str:
-    tail = f" ({target})" if target else ""
-    return f"{god.name}: {GOAL_LABELS[goal.kind].lower()}{tail}"
+AIM_PHRASES: Mapping[GodGoalKind, tuple[str, str]] = total(
+    GodGoalKind,
+    {
+        K.BE_WORSHIPPED: ("be worshipped", "be worshipped on {target}"),
+        K.FOUND_REALM: ("found a holy world", "make {target} a holy world"),
+        K.DESTROY_RIVAL: ("destroy a rival", "destroy {target}"),
+        K.SPREAD_DOMAIN: ("spread its domain", "spread its domain across {target}"),
+        K.WIN_WAR: ("win a war", "win the war against {target}"),
+        K.ACQUIRE_RELIC: ("acquire a relic", "acquire {target}"),
+        K.RAISE_HERO: ("raise a hero", "raise a hero from {target}"),
+        K.AWAKEN_GOD: ("awaken a god", "awaken {target}"),
+        K.DEFEAT_FOREIGN_GOD: ("defeat a foreign god", "defeat {target}"),
+        K.RECONCILE: ("reconcile with the Creator", "reconcile with the Creator"),
+        K.REBEL: ("rebel against the Creator", "rebel against the Creator"),
+        K.HOLD_THRONES: ("hold thrones of power and ascend", "hold thrones of power on {target} and ascend"),
+        K.PREVENT_MANTLING: ("keep a mortal from taking a god's place", "keep {target} from taking a god's place"),
+        K.SPONSOR_MANTLING: ("raise a chosen mortal to godhood", "raise {target} to godhood"),
+    },
+)
 
 
-async def target_name(ctx: TickContext, goal: GodGoalRow) -> str | None:
+async def target_name(session: AsyncSession, goal: GodGoalRow) -> str | None:
     if goal.target_node_id is not None:
-        god = await god_of(ctx.session, goal.target_node_id)
-        if god is not None:
-            return god.name
-        thing = await ctx.session.get(EntityRow, goal.target_node_id)
-        if thing is not None:
-            return thing.name
+        node = await session.get(NodeRow, goal.target_node_id)
+        if node is not None:
+            return node.name
     if goal.world_id is not None:
-        world = await ctx.session.get(WorldRow, goal.world_id)
+        world = await session.get(WorldRow, goal.world_id)
         return world.name if world is not None else None
-    return goal.domain.value if goal.domain is not None else None
+    return None
+
+
+async def aim_text(session: AsyncSession, goal: GodGoalRow) -> str:
+    target = await target_name(session, goal)
+    if goal.kind is K.SPREAD_DOMAIN and goal.domain is not None:
+        return f"spread the domain of {spoken(goal.domain)}" + (f" across {target}" if target else "")
+    plain, aimed = AIM_PHRASES[goal.kind]
+    return aimed.format(target=target) if target else plain
 
 
 CLOSED_AS: Mapping[GoalState, str] = total(
@@ -259,12 +283,11 @@ async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) 
                 god.rebel = False
         else:
             god.power = min(PERCENT, god.power + table.foreign_power)
-    target = await target_name(ctx, goal)
     await record(
         ctx,
         f"divine.goal_{state.value}",
         roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: goal.target_node_id},
-        facts={"aim": goal.kind, "aim_label": GOAL_LABELS[goal.kind].lower(), "tail": f" ({target})" if target else "", "closed_as": CLOSED_AS[state]},
+        facts={"aim": goal.kind, "aim_text": await aim_text(ctx.session, goal), "closed_as": CLOSED_AS[state]},
         son_id=god.id if isinstance(god, SonRow) else None,
         kind=ChronicleKind.ASCENSION,
     )
@@ -390,7 +413,7 @@ async def pursue_goals(ctx: TickContext) -> int:
                     ctx,
                     "divine.goal_set",
                     roles={IncidentRole.ACTOR: god.id, IncidentRole.TARGET: chosen.target_node_id},
-                    facts={"aim": chosen.kind, "goal_text": goal_text(god, chosen, await target_name(ctx, chosen))},
+                    facts={"aim": chosen.kind, "aim_text": await aim_text(ctx.session, chosen)},
                     kind=ChronicleKind.ASCENSION,
                     son_id=god.id if isinstance(god, SonRow) else None,
                 )

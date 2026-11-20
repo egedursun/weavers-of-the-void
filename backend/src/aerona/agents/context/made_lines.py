@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.equipment import FAMILIES
 from aerona.catalog.units import UNITS
 from aerona.catalog.vehicles import FRAMES
+from aerona.core.grammar import several
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cuisine import CommunityDishRow, DishRow
 from aerona.db.tables.entities import EntityRow
@@ -43,7 +44,8 @@ async def vehicle_lines(session: AsyncSession, holder_id: int) -> list[str]:
         hits = list(await session.scalars(select(VehicleGroupSectionRow).where(VehicleGroupSectionRow.group_id == group.id)))
         broken = [f"{words(row.section.value)} {row.disabled + row.destroyed} out" for row in hits if row.disabled + row.destroyed > 0]
         damage = f"; {', '.join(broken)}" if broken else ""
-        parts.append(f"{group.count} {design.name} ({frame}, {words(group.status.value)}, condition {group.condition}{damage})")
+        count = several(group.count, "vehicle", "vehicles")
+        parts.append(f"{design.name} ({count}, {frame}, {words(group.status.value)}, condition {group.condition}{damage})")
     return [f"Vehicles: {listed(parts)}"] if parts else []
 
 
@@ -52,7 +54,7 @@ async def store_lines(session: AsyncSession, holder_id: int) -> list[str]:
     for row in await stores_of(session, holder_id):
         model = await session.get(EquipmentModelRow, row.model_id)
         if model is not None:
-            parts.append(f"{row.count} {model.name} ({FAMILIES[model.family].label.lower()})")
+            parts.append(f"{model.name} ({several(row.count, 'piece', 'pieces')}, {FAMILIES[model.family].label.lower()})")
     return [f"Equipment in store: {listed(parts)}"] if parts else []
 
 
@@ -143,7 +145,7 @@ async def made_facts(session: AsyncSession, entity: EntityRow, *, private: bool)
 
 
 async def kit_line(session: AsyncSession, army_id: int) -> str:
-    carried = [f"{count} {model.name}" for model, count in await inventory(session, army_id)]
+    carried = [f"{model.name} ({several(count, 'piece', 'pieces')})" for model, count in await inventory(session, army_id)]
     vehicles = await vehicle_lines(session, army_id)
     parts = ([f"carries {listed(carried)}"] if carried else []) + [line.lower() for line in vehicles]
     return f"; {'; '.join(parts)}" if parts else ""

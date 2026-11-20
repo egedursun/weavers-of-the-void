@@ -146,7 +146,7 @@ class ChronicleCoverageOutput(OutputModel):
 
 class ChronicleOutput(OutputModel):
     age_name: str = Field(
-        description="The mythic name to give this age, drawn from what most defined this age in this world; do NOT REPEAT the names or the shape of the names of previous ages"
+        description="The name to give this age, drawn from what most defined this age in this world; do NOT REPEAT the names or the shape of the names of previous ages"
     )
     narrative: str = Field(
         description="This age's narrative of 3 to 5 paragraphs in this world's own tone; in the voice of the chronicler named in the prompt, binding events together by cause and effect"

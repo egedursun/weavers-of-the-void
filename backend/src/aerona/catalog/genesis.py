@@ -24,6 +24,38 @@ TECHNOLOGY_LABELS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
         TechnologyEra.BEYOND: "Beyond",
     }
 )
+TECHNOLOGY_PHRASES: MappingProxyType[TechnologyEra, str] = MappingProxyType(
+    {
+        TechnologyEra.STONE: "the stone age",
+        TechnologyEra.BRONZE: "the bronze age",
+        TechnologyEra.IRON: "the iron age",
+        TechnologyEra.MEDIEVAL: "the medieval age",
+        TechnologyEra.GUNPOWDER: "the gunpowder age",
+        TechnologyEra.RENAISSANCE: "the renaissance",
+        TechnologyEra.STEAM: "the steam age",
+        TechnologyEra.ELECTRICAL: "the electric age",
+        TechnologyEra.INFORMATION: "the information age",
+        TechnologyEra.ADVANCED: "the advanced age",
+        TechnologyEra.INTERSTELLAR: "the interstellar age",
+        TechnologyEra.BEYOND: "an age beyond the interstellar",
+    }
+)
+TECHNOLOGY_MEANINGS: MappingProxyType[TechnologyEra, str] = MappingProxyType(
+    {
+        TechnologyEra.STONE: "when tools are shaped by hand and nothing is yet smelted",
+        TechnologyEra.BRONZE: "when copper and tin are smelted into bronze",
+        TechnologyEra.IRON: "when iron is smelted and forged",
+        TechnologyEra.MEDIEVAL: "when iron tools, mills and written law are common",
+        TechnologyEra.GUNPOWDER: "when powder weapons change war and rule",
+        TechnologyEra.RENAISSANCE: "when printing and ocean voyages spread learning and trade",
+        TechnologyEra.STEAM: "when engines driven by steam run works and transport",
+        TechnologyEra.ELECTRICAL: "when electric power and wires carry energy and messages",
+        TechnologyEra.INFORMATION: "when machines compute and messages cross the world at once",
+        TechnologyEra.ADVANCED: "when peoples split matter and build minds that think",
+        TechnologyEra.INTERSTELLAR: "when peoples hold all the means of the advanced age and build ships that cross between the stars",
+        TechnologyEra.BEYOND: "when peoples hold all the means of the interstellar age and change how matter and the world itself work",
+    }
+)
 TEXTURE_LABELS: MappingProxyType[LanguageTexture, str] = MappingProxyType(
     {
         LanguageTexture.FLOWING: "Flowing, vowel-rich, soft (l, m, n, y)",

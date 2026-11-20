@@ -48,7 +48,7 @@ async def forbidden(ctx: TickContext, actor_id: int | None, act: ActKind) -> boo
     home = await home_of(ctx.session, actor_id)
     for tradition_id in await kept(ctx.session, home, TraditionFunction.TABOO, act):
         held = await strength_of(ctx.session, tradition_id, home or 0)
-        if ctx.rng(f"taboo.{tradition_id}.{actor_id}.{act.value}.{ctx.epoch}").chance(held):
+        if ctx.rng(f"taboo.{tradition_id}.{'nobody' if actor_id is None else actor_id}.{act.value}.{ctx.epoch}").chance(held):
             ctx.count(f"taboo_obeyed_{act.value}")
             return True
     return False

@@ -4,13 +4,24 @@ from aerona.core.errors import ConflictError
 from aerona.db.repositories.cosmos import CosmosRepository, CreatorDraft
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
-from aerona.db.tables.divine import BreachPointRow, CouncilRulingRow, CreatorTabooRow, NaturalLawProfileRow, OuterBeingProfileRow, WorldAttentionRow
+from aerona.db.tables.divine import BreachPointRow, CouncilRulingRow, CreatorTabooRow, GodGoalRow, NaturalLawProfileRow, OuterBeingProfileRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.relations import RelationshipRow
+from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.culture import MagicSchool
-from aerona.domain.enums.divine import BargainGain, BargainPrice, CouncilMotion, DivineWoundKind, LawException, LawScope, OuterHunger, SonPunishment
+from aerona.domain.enums.divine import (
+    BargainGain,
+    BargainPrice,
+    CouncilMotion,
+    DivineWoundKind,
+    GodGoalKind,
+    LawException,
+    LawScope,
+    OuterHunger,
+    SonPunishment,
+)
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
@@ -23,9 +34,10 @@ from aerona.domain.models.profiles import GodDepth
 from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer
 from aerona.engine.cosmos.duels import son_duel
 from aerona.engine.divine import control
-from aerona.engine.divine.creator import autonomy, tend_attention, type_taboos
+from aerona.engine.divine.creator import autonomy, target_for, tend_attention, type_taboos
 from aerona.engine.divine.decrees import outlawed_schools, truce_in_force
 from aerona.engine.divine.foreign import old_god_doctrine, pact_between, pantheon_leagues, seal_pact
+from aerona.engine.divine.goals import aim_text
 from aerona.engine.divine.laws import binds, tend_laws
 from aerona.engine.divine.outer import outer_feeding, seed_void_tenets, void_rites
 from aerona.engine.divine.rulings import Motion, enforce_rulings, engine_council, engine_votes
@@ -204,3 +216,25 @@ async def test_an_outer_bargain_pays_its_typed_price_at_once(realm: Realm) -> No
     assert [row.domain for row in wounds] == [Domain.STORM]
     world = await realm.session.get(WorldRow, realm.world.id)
     assert world is not None
+
+
+async def test_the_creator_s_love_of_knowledge_falls_on_more_than_one_scholar(realm: Realm) -> None:
+    town = await settlement(realm, "Ardun")
+    for index in range(6):
+        await mortal(realm, f"Sage {index}", location_id=town.id, role=MortalRole.SAGE)
+    chosen = set()
+    for epoch in range(1, 13):
+        found = await target_for(context(realm.session, epoch=epoch), CreatorPassion.KNOWLEDGE)
+        assert found is not None
+        chosen.add(found.id)
+    assert len(chosen) > 1
+
+
+async def test_every_aim_reads_as_a_plain_purpose(realm: Realm) -> None:
+    town = await settlement(realm, "Ardun")
+    for kind in GodGoalKind:
+        bare = await aim_text(realm.session, GodGoalRow(kind=kind))
+        aimed = await aim_text(realm.session, GodGoalRow(kind=kind, target_node_id=town.id))
+        assert "(" not in bare + aimed and bare[0].islower() and aimed[0].islower()
+    spread = await aim_text(realm.session, GodGoalRow(kind=GodGoalKind.SPREAD_DOMAIN, domain=Domain.TRADE, world_id=realm.world.id))
+    assert spread == f"spread the domain of trade across {realm.world.name}"

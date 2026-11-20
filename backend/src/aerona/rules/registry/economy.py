@@ -82,6 +82,9 @@ class EconomyRules(Spanned):
     commons_stone_per_1000_farmers: int = rule(
         120, 0, 100000, RuleGroup.ECONOMY, "Stone a thousand farmers gather from their own land in an epoch on the roughest ground"
     )
+    commons_herbs_per_1000_farmers: int = rule(
+        20, 0, 100000, RuleGroup.ECONOMY, "Healing herbs a thousand farmers gather from their own land in an epoch where the land is greenest"
+    )
 
     @property
     def addiction_epochs(self) -> int:

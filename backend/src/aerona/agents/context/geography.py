@@ -134,7 +134,15 @@ async def place_lines(scope: Scope, region_ids: set[int]) -> dict[int, list[str]
 def works_words(works: Works | None) -> str | None:
     if works is None:
         return None
-    parts = [f"{count} {label}" for count, label in ((works.bridges, "bridges"), (works.irrigation, "irrigation works"), (works.harbours, "harbours")) if count]
+    parts = [
+        several(count, one, many)
+        for count, one, many in (
+            (works.bridges, "bridge", "bridges"),
+            (works.irrigation, "irrigation work", "irrigation works"),
+            (works.harbours, "harbour", "harbours"),
+        )
+        if count
+    ]
     return ", ".join(parts) or None
 
 

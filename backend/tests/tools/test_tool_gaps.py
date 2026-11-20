@@ -2,6 +2,7 @@ from aerona.db.session import Database
 from aerona.db.tables import EntityRow
 from aerona.domain.enums.bond import BondKind
 from tests.engine.core.factories import tuned_rules
+from tests.tools.every_setup import second_settlement
 from tests.tools.factories import mortal_toolkit, seed_realm, son_toolkit
 from tests.tools.test_mortal_tools import bonds_between
 from tests.tools.test_son_tools import ok, rejected
@@ -18,12 +19,13 @@ async def test_a_son_speaks_with_a_foreign_god_once_per_age(database: Database) 
 async def test_a_watchful_target_catches_the_spies(database: Database) -> None:
     realm = await seed_realm(database)
     async with database.write() as session:
-        target = await session.get(EntityRow, realm.settlement_id)
+        rival = (await second_settlement(session, realm))["settlement"]
+        target = await session.get(EntityRow, rival)
         assert target is not None
         target.stats = target.stats.model_copy(update={"defense": 100})
     rules = tuned_rules(mortal_tools={"spy_war_threshold": 0, "spy_die": 1, "spy_caught_margin": 0})
     toolkit = await mortal_toolkit(database, realm.people_id, action_points=3, rules=rules)
-    text = await ok(toolkit, "build_spy_network", {"target_id": realm.settlement_id, "cover": "pilgrims bearing salt"})
+    text = await ok(toolkit, "build_spy_network", {"target_id": rival, "cover": "pilgrims bearing salt"})
     assert "caught" in text and "enemy" in text
-    assert await bonds_between(database, realm.people_id, realm.settlement_id, BondKind.SPY_NETWORK) == 0
-    assert await bonds_between(database, realm.settlement_id, realm.people_id, BondKind.ENEMY) == 1
+    assert await bonds_between(database, realm.people_id, rival, BondKind.SPY_NETWORK) == 0
+    assert await bonds_between(database, rival, realm.people_id, BondKind.ENEMY) == 1

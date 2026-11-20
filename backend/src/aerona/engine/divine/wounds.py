@@ -122,7 +122,7 @@ async def inflict(
 
 async def strike(ctx: TickContext, loser: God, winner_id: int | None, cause: WoundCause, margin: int) -> DivineWoundRow | None:
     table = ctx.rules.divine_wounds
-    rng = ctx.rng(f"divine_wound.{loser.id}.{winner_id}")
+    rng = ctx.rng(f"divine_wound.{loser.id}.{'unknown' if winner_id is None else winner_id}")
     if not rng.chance(table.wound_chance + margin * table.chance_per_margin):
         return None
     weights = [table.severed_weight, table.shattered_weight, table.name_weight, *[table.wider_weight] * (len(STRUCK_KINDS) - 3)]

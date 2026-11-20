@@ -34,7 +34,7 @@ class MonsoonRules:
     swing: int = rule(60, 0, 200, W, "How far the strength of a year's monsoon swings around the usual (% of the usual)")
     fail_below: int = rule(50, 0, 200, W, "Strength of a year's monsoon below which it fails (% of the usual)")
     rain_pct: int = rule(100, 0, 400, W, "Share of a coast's monsoon strength its rainfall follows (%)")
-    famine_prosperity: int = rule(8, 0, 100, W, "Prosperity a town of a monsoon coast loses in a year the monsoon fails")
+    famine_prosperity: int = rule(8, 0, 100, W, "Prosperity a town of a monsoon coast loses each time the monsoon fails")
     sea_danger_pct: int = rule(20, 0, 100, W, "Sea danger a failed monsoon adds to the sea roads of its coasts, and a strong one takes off (%)")
 
 

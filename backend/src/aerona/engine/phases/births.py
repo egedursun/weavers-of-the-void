@@ -23,6 +23,7 @@ from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.transform import TransformKind
+from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
@@ -35,6 +36,7 @@ from aerona.engine.customs.time_budgets import rested_fertility
 from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of, union_of
 from aerona.engine.demography.urban import founding_factor
+from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order
 from aerona.engine.folkways.fed import fed_fertility
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
@@ -271,11 +273,21 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
     ),
 }
 
-RULER_TITLES: dict[EntityType, tuple[str, str]] = {
-    EntityType.CULT: ("High Priest", "high priest"),
-    EntityType.FACTION: ("Leader", "leader"),
-    EntityType.PEOPLE: ("Chieftain", "chieftain"),
-    EntityType.SETTLEMENT: ("Sovereign", "sovereign"),
+
+@dataclass(frozen=True)
+class RulerTitle:
+    early: str
+    modern: str
+
+    def noun(self, era: TechnologyEra) -> str:
+        return self.modern if era_order(era) >= era_order(MODERN_FROM) else self.early
+
+
+RULER_TITLES: dict[EntityType, RulerTitle] = {
+    EntityType.CULT: RulerTitle("High Priest", "High Priest"),
+    EntityType.FACTION: RulerTitle("Leader", "Leader"),
+    EntityType.PEOPLE: RulerTitle("Chieftain", "Leader"),
+    EntityType.SETTLEMENT: RulerTitle("Sovereign", "Sovereign"),
 }
 
 
@@ -441,7 +453,7 @@ async def notables(ctx: TickContext, namer: Namer) -> None:
 
 async def crown(ctx: TickContext, community: EntityRow, namer: Namer | None = None) -> EntityRow:
     life = ctx.rules.deep_life
-    suffix, _ = RULER_TITLES[community.entity_type]
+    suffix = RULER_TITLES[community.entity_type].noun(await era_at(ctx.session, community.id))
     subtype = ruler_role(ctx.rules, community, await class_shares(ctx.session, ctx.rules, community.id), ctx.rng(seed_of("ruler_role", community.id)))
     plan = BirthPlan(
         name=f"{community.name} {suffix}",

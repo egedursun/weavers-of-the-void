@@ -29,6 +29,7 @@ from aerona.engine.crafts.numbers import SCHOOLING
 from aerona.engine.folk_knowledge.truth import KIND_DOMAINS, ROAMING, blames, hurts, misjudged, mistaken, truth_of
 from aerona.engine.forecasting.reading import sky_marks
 from aerona.engine.lore.research import has_technique
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_among, towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
@@ -100,16 +101,21 @@ async def entity_candidates(ctx: TickContext, people: EntityRow, domain: FolkDom
             .join(RegionEnvironmentRow, RegionEnvironmentRow.entity_id == EntityRow.id)
             .where(or_(RegionEnvironmentRow.coast_kind != CoastKind.NONE, RegionEnvironmentRow.river_class != RiverClass.NONE))
         )
-    return [Candidate(row.name, node_id=row.id) for row in await ctx.session.scalars(statement.order_by(EntityRow.id).limit(1))]
+    atlas = await RegionAtlas.load(ctx.session)
+    found = list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+    nearest = min(found, key=lambda row: (atlas.distance(people.id, row.id), row.id), default=None)
+    return [Candidate(nearest.name, node_id=nearest.id)] if nearest is not None else []
 
 
 async def sky_candidates(ctx: TickContext, people: EntityRow, taken: set[int]) -> list[Candidate]:
     world = await ctx.session.get(WorldRow, people.world_id) if people.world_id is not None else None
     if world is None:
         return []
+    planet = await ctx.session.get(WorldRow, world.parent_world_id) if world.parent_world_id is not None else None
     moons = list(await ctx.session.scalars(select(WorldRow).where(WorldRow.parent_world_id == world.id).order_by(WorldRow.id)))
-    star = await ctx.session.get(StarRow, world.star_id) if world.star_id is not None else None
-    bodies: list[NodeRow] = [world, *moons, *([star] if star is not None else [])]
+    star_id = world.star_id if world.star_id is not None else (planet.star_id if planet is not None else None)
+    star = await ctx.session.get(StarRow, star_id) if star_id is not None else None
+    bodies: list[NodeRow] = [*([star] if star is not None else []), *([planet] if planet is not None else []), *moons]
     return [Candidate(body.name, node_id=body.id) for body in bodies if body.id not in taken][:1]
 
 

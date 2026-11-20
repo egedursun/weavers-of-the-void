@@ -40,7 +40,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.divine import GoalState
-from aerona.engine.divine.goals import GOAL_LABELS
+from aerona.engine.divine.goals import aim_text
 from aerona.engine.divine.rulings import MOTION_LABELS
 from aerona.engine.divine.wounds import WOUND_LABELS
 
@@ -54,9 +54,7 @@ async def goal_lines(scope: Scope, son: SonRow) -> list[str]:
     rows = await scope.session.scalars(select(GodGoalRow).where(GodGoalRow.god_node_id == son.id, GodGoalRow.state == GoalState.ACTIVE).order_by(GodGoalRow.id))
     found = []
     for row in rows:
-        target = await name_of(scope, row.target_node_id) or scope.world_name(row.world_id) or (DOMAIN_LABELS[row.domain] if row.domain else "")
-        tail = f" ({target})" if target else ""
-        found.append(f"Your aim: {GOAL_LABELS[row.kind].lower()}{tail}, {row.progress}% reached")
+        found.append(f"Your aim: to {await aim_text(scope.session, row)}, {row.progress}% reached")
     found.append("Your plan is written about one of your aims" if found else "You hold no aim yet; take one, then write your plan about it")
     return found
 

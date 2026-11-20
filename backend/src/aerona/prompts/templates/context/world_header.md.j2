@@ -1,5 +1,8 @@
 {% from "shared/macros.md.j2" import dialect_block, naming_rule as naming_rule_text %}
 WORLD: {{ world_name }} — Age {{ age }} (world year {{ world_year }}). Creator god: {{ god_name }}{% if god_title %}, {{ god_title }}{% endif %}.
+{% if technology %}
+TECHNOLOGY: the peoples of this world live in {{ technology }}. Their own tools, work, homes and travel belong to that age.
+{% endif %}
 {% if not short and god_temperament %}
 GOD'S TEMPERAMENT: {{ god_temperament }}
 {% endif %}

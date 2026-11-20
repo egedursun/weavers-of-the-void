@@ -56,6 +56,24 @@ def singular(plural: str) -> str:
     return lead + last.removesuffix("s")
 
 
+def plural(noun: str) -> str:
+    if " of " in noun:
+        head, rest = noun.split(" of ", 1)
+        return f"{plural(head)} of {rest}"
+    head, _, last = noun.rpartition(" ")
+    lead = f"{head} " if head else ""
+    for many, one in IRREGULAR_ENDINGS:
+        if last.endswith(one):
+            return lead + last.removesuffix(one) + many
+    if last in UNCHANGED_PLURALS or (last.endswith("s") and not last.endswith(("ss", "us", "is"))):
+        return noun
+    if last.endswith("y") and last[-2:-1] not in VOWELS:
+        return lead + last.removesuffix("y") + "ies"
+    if last.endswith(("ss", "sh", "ch", "x", "z")):
+        return lead + last + "es"
+    return lead + last + "s"
+
+
 def agree(count: int | None, one: str, many: str) -> str:
     return one if count == 1 else many
 
@@ -69,6 +87,11 @@ def several(count: int | None, one: str, many: str) -> str:
 NUMBER_TEXT = re.compile(r"-?\d+(\.\d+)?")
 
 
+COUNTED_FORMS = 3
+SPANS = frozenset({"epoch", "age", "year", "season", "month", "round", "day", "hour", "generation"})
+COUNT_MARK = "#"
+
+
 class ArticleFormatter(Formatter):
     def format_field(self, value: Any, format_spec: str) -> str:
         if format_spec in ARTICLE_SPECS:
@@ -76,8 +99,16 @@ class ArticleFormatter(Formatter):
         if "|" in format_spec and isinstance(value, str) and NUMBER_TEXT.fullmatch(value.strip()):
             value = float(value)
         if "|" in format_spec and isinstance(value, (int, float)) and not isinstance(value, bool):
-            one, many = format_spec.split("|", 1)
             count = int(value) if float(value).is_integer() else value
+            forms = format_spec.split("|")
+            if len(forms) == COUNTED_FORMS:
+                none, one, many = forms
+                return (none if count == 0 else one if count == 1 else many).replace(COUNT_MARK, str(count))
+            one, many = format_spec.split("|", 1)
+            if count == 0 and one in SPANS:
+                return f"less than one {one}"
+            if count == 0:
+                return f"no {many}"
             return f"{count} {agree(1 if count == 1 else 0, one, many)}"
         formatted: str = super().format_field(value, format_spec)
         return formatted

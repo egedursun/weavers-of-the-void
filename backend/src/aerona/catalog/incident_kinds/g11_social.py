@@ -774,7 +774,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "need.despair",
         G.SOCIAL,
-        "{subject} has lost all {needs}.",
+        "{subject} fell into despair for want of {needs}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})),),
         facts=(FactSpec("needs", FactValue.ENUM, enum=NeedKind, many=True), FactSpec("levels", FactValue.NUMBER, FactUnit.PERCENT, many=True)),
         steps=frozenset({A.WORSEN}),

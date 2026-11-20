@@ -587,4 +587,4 @@ async def set_cohort(scope: PlayerScope, command: SetCohort) -> Effect:
     row.count = command.count
     row.veterans = min(command.count, command.veterans if command.veterans is not None else row.veterans)
     row.updated_epoch = epoch
-    return Effect(f"{community.name} now counts {command.count} {_label(command.kind.value)}.", target_node_id=community.id)
+    return Effect(f"The {_label(command.kind.value)} of {community.name} now number {command.count}.", target_node_id=community.id)

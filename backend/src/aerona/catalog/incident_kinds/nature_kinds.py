@@ -107,7 +107,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "commons.enclosed",
         N,
-        "{actor} enclosed the common {common} of {place}; {driven:cottager|cottagers} lost their living and went to {destination} for work.",
+        "{actor} enclosed the common {common} of {place}; {driven:person|people} lost their living and went to {destination} for work.",
         roles=(one(R.ACTOR), one(R.PLACE), one(R.DESTINATION), some(R.VICTIM, required=False)),
         facts=(chosen("common", CommonsKind), amount("driven", U.PEOPLE)),
         place=P.REQUIRED,
@@ -116,7 +116,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "commons.enclosed_homeless",
         N,
-        "{actor} enclosed the common {common} of {place}; {driven:cottager|cottagers} lost their living and were left without homes.",
+        "{actor} enclosed the common {common} of {place}; {driven:person|people} lost their living and were left without homes.",
         roles=(one(R.ACTOR), one(R.PLACE), some(R.VICTIM, required=False)),
         facts=(chosen("common", CommonsKind), amount("driven", U.PEOPLE)),
         place=P.REQUIRED,
@@ -1225,7 +1225,7 @@ TOOLS: tuple[IncidentKindSpec, ...] = (
     happening(
         "tools.mortal.enclose_commons",
         N,
-        "{actor} enclosed the common {commons} of {place}; {driven:one was|many were} driven off it.",
+        "{actor} enclosed the common {commons} of {place}; {driven:no one was|one was|# were} driven off it.",
         roles=(one(R.ACTOR), one(R.PLACE)),
         facts=(chosen("commons", CommonsKind), amount("driven", U.PEOPLE)),
         steps=(A.SEIZE_GOODS,),

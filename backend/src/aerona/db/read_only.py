@@ -13,14 +13,18 @@ class ReadSessionWriteError(RuntimeError):
 def refuse_flush(session: Session, *_: object) -> None:
     if not session.info.get(READ_ONLY_KEY):
         return
-    changed = session.new or session.deleted or any(session.is_modified(row) for row in session.dirty)
+    changed = [*session.new, *session.deleted, *(row for row in session.dirty if session.is_modified(row))]
     if changed:
-        raise ReadSessionWriteError("A read session tried to write; writes must go through Database.write so they hold the write lock.")
+        tables = sorted({getattr(row, "__tablename__", type(row).__name__) for row in changed})
+        raise ReadSessionWriteError(f"A read session tried to write {', '.join(tables)}; writes must go through Database.write so they hold the write lock.")
 
 
 def refuse_statement(state: ORMExecuteState) -> None:
     if state.session.info.get(READ_ONLY_KEY) and (state.is_insert or state.is_update or state.is_delete):
-        raise ReadSessionWriteError("A read session tried to write; writes must go through Database.write so they hold the write lock.")
+        target = getattr(state.statement, "table", None)
+        raise ReadSessionWriteError(
+            f"A read session tried to write {getattr(target, 'name', 'a table')}; writes must go through Database.write so they hold the write lock."
+        )
 
 
 def mark_read_only(session: Any) -> None:

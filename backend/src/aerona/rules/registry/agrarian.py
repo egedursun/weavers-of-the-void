@@ -181,7 +181,7 @@ class FamineFoodRules(Spanned):
     floor: int = rule(60, 0, 100, E, "Harvest below which famine foods and stores are drawn on")
     foods_fill: int = rule(40, 0, 100, E, "Share of a failed harvest famine foods make good (%)")
     storage_fill: int = rule(40, 0, 100, E, "Share of a failed harvest a full storage tradition makes good (%)")
-    health_cost: int = rule(6, 0, 100, E, "Sickness a land gains in a year its people live on famine foods")
+    health_cost: int = rule(6, 0, 100, E, "Sickness a land gains in an epoch its people live on famine foods")
 
     @property
     def memory_epochs(self) -> int:

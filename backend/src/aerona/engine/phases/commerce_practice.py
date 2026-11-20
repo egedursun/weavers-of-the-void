@@ -7,6 +7,7 @@ from aerona.engine.phase import Phase
 
 @reads(
     "settlement.wealth",
+    "table.applied_fixups",
     "table.brands",
     "table.creator",
     "table.dimensions",
@@ -36,6 +37,7 @@ from aerona.engine.phase import Phase
 @writes(
     "settlement.prosperity",
     "settlement.wealth",
+    "table.applied_fixups",
     "table.brands",
     "table.chronicle",
     "table.chronicle_entities",
@@ -58,6 +60,7 @@ async def commerce_practice(ctx: TickContext) -> None:
     seeded = await seed_commerce(ctx)
     ctx.count("commerce_seeded_tiers", seeded.tiers)
     ctx.count("commerce_seeded_shops", seeded.shops)
+    ctx.count("commerce_freed_common_tiers", seeded.freed)
     tally = await keep_commerce(ctx)
     ctx.count("commerce_sold", tally.sold)
     ctx.count("commerce_closed", tally.closed)

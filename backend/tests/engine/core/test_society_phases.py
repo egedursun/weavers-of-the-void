@@ -6,7 +6,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import ChronicleRow, LexemeRow
-from aerona.db.tables.structures import ConstructionRow
+from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory
@@ -222,12 +222,16 @@ async def test_works_rise_and_grow_in_splendor(session: AsyncSession, world: Cor
     ctx = await manual_context(session, "works", tuned_rules(deep_world={"structure_chance": 100}))
     await engine_works(ctx)
     built = list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.STRUCTURE)))
-    assert built
+    hosted = [(await session.get(StructureProfileRow, work.id), work) for work in built]
+    kinds_by_host = [(profile.host_entity_id, profile.kind) for profile, _work in hosted if profile is not None]
+    assert len(kinds_by_host) == len(set(kinds_by_host)) and all(host is not None for host, _kind in kinds_by_host)
+    own = [work for work in built if work.location_id == town.id]
+    assert own
     for row in list(await session.scalars(select(ConstructionRow))):
         await finish(ctx, row)
-    before = stat(built[0], "splendor") or 0
+    before = stat(own[0], "splendor") or 0
     await splendor_growth(ctx)
-    assert (stat(built[0], "splendor") or 0) > before
+    assert (stat(own[0], "splendor") or 0) > before
     assert (await commission_work(ctx, town.id, EngineKind.LIBRARY)).engine_kind is EngineKind.LIBRARY
 
 

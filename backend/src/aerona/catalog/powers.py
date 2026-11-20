@@ -2,6 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
+from aerona.core.grammar import several
 from aerona.domain.enums.son import PowerEffect
 from aerona.rules.registry import Rules
 
@@ -95,7 +96,7 @@ POWERS: dict[PowerEffect, PowerSpec] = {
             PowerEffect.REVIVING,
             "Reviving",
             None,
-            lambda rules: f"When their HP runs out they sleep only {rules.son_tools.reviving_sleep_epochs} epoch(s).",
+            lambda rules: f"When their HP runs out they sleep only {several(rules.son_tools.reviving_sleep_epochs, 'epoch', 'epochs')}.",
         ),
         PowerSpec(
             PowerEffect.BOUNTY_GIVER,

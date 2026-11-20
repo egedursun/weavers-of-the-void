@@ -59,8 +59,8 @@ async def open_trade_route(call: SonCall, args: OpenTradeRouteInput) -> str:
     else:
         try:
             route = await found_by_hand(call.tick, first.id, second.id, mode=args.mode, controller_id=None, toll_pct=None)
-        except ValidationFailedError:
-            fail(SonResult.NO_TRADE_WAY, first=first.name, second=second.name)
+        except ValidationFailedError as error:
+            fail(SonResult.NO_TRADE_WAY, first=first.name, second=second.name, reason=error.message)
         entity, template, mode = route.entity, SonResult.TRADE_ROUTE_OPENED, route.profile.mode
         entity.creator_son_id = call.son.id
     call.spend_essence(table.open_cost)

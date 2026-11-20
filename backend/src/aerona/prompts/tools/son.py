@@ -708,7 +708,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.AFFECT_ENTITY: ToolText(
         "You change the stats of an existing entity. Touching someone else's creation is "
         "{{ rules.son_tools.influence_foreign_cost_mult | several('time', 'times') }} as expensive and angers its creator. Lifespan, age and knowledge level do not change this way; each stat once per call; "
-        "the same entity at most {{ rules.son_tools.affect_per_target }} time(s) per age. Cost {{ rules.costs.influence }} + power level essence. 1 action.",
+        "the same entity at most {{ rules.son_tools.affect_per_target | several('time', 'times') }} per age. Cost {{ rules.costs.influence }} + power level essence. 1 action.",
         {
             "entity_id": "The entity's id",
             "changes": "The stats to change (at most {{ rules.son_tools.influence_max_stats }})",
@@ -1168,7 +1168,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TALK_TO_FOREIGN_GOD: ToolText(
         "You speak with the old or foreign god of another world: alliance, threat or bargain. The outcome depends on your charisma, their attitude and their power. "
-        "At most {{ rules.son_tools.foreign_talk_per_god }} talk(s) with the same god per age. 1 action.",
+        "At most {{ rules.son_tools.foreign_talk_per_god | several('talk', 'talks') }} with the same god per age. 1 action.",
         {"god_id": "The foreign god's id", "intent": "alliance, threat or bargain", "words": "What you say"},
     ),
     T.SEAL_TREATY: ToolText(

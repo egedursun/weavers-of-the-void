@@ -102,7 +102,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "awakening.people",
         G.PEOPLES,
-        "A new people awoke in the lands of {place}: {product}, with {member}.",
+        "A new people appeared in the lands of {place}: {product}, with {member}.",
         roles=(RoleSpec(R.PRODUCT), RoleSpec(R.PLACE), RoleSpec(R.MEMBER, many=True), RoleSpec(R.PATRON, required=False)),
         facts=(),
         place=PlaceRule.REQUIRED,
@@ -248,7 +248,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "excavation.clearing",
         G.PEOPLES,
-        "The dig of {actor} at {place} passed its {stage}.",
+        "The dig of {actor} at {place} moved on to the {stage}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("stage", FactValue.ENUM, enum=ExcavationStage),
@@ -269,7 +269,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "excavation.deep_layers",
         G.PEOPLES,
-        "The dig of {actor} at {place} passed its {stage}.",
+        "The dig of {actor} at {place} moved on to the {stage}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("stage", FactValue.ENUM, enum=ExcavationStage),
@@ -290,7 +290,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "excavation.digging",
         G.PEOPLES,
-        "The dig of {actor} at {place} passed its {stage}.",
+        "The dig of {actor} at {place} moved on to the {stage}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("stage", FactValue.ENUM, enum=ExcavationStage),
@@ -311,7 +311,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "excavation.inner_sanctum",
         G.PEOPLES,
-        "The dig of {actor} at {place} passed its {stage}.",
+        "The dig of {actor} at {place} moved on to the {stage}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("stage", FactValue.ENUM, enum=ExcavationStage),
@@ -332,7 +332,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "excavation.survey",
         G.PEOPLES,
-        "The dig of {actor} at {place} passed its {stage}.",
+        "The dig of {actor} at {place} moved on to the {stage}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("stage", FactValue.ENUM, enum=ExcavationStage),
@@ -941,7 +941,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "society.poverty_uprising",
         G.PEOPLES,
-        "Poverty in {place} turned into an uprising; {actor} defied {target}.",
+        "Poverty in {place} turned into an uprising led by {actor}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("defense_lost", FactValue.NUMBER, FactUnit.PERCENT), FactSpec("prosperity_lost", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.REQUIRED,

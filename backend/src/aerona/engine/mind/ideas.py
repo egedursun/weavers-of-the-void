@@ -29,6 +29,7 @@ from aerona.engine.mind.split import (
     FACET_LOCK,
     attributes_of,
     clamp_facet,
+    estimate,
     facets_of,
     has_attributes,
     incubating,
@@ -241,12 +242,13 @@ async def internalise(session: AsyncSession, rules: Rules, node: Holder, row: Id
             values[axis] = clamp_value(values.get(axis, 0) + shift * scale)
         await write_values(session, ValueHolder.PERSONAL, node.id, values)
     if has_attributes(node) and not is_locked(mind, ATTRIBUTE_LOCK):
-        attributes = await attributes_of(session, node.id)
-        if attributes:
+        stored = await attributes_of(session, node.id)
+        if stored:
+            attributes = {**estimate(node), **stored}
             for member, gain in spec.gains.items():
-                attributes[member] = attributes.get(member, 0) + gain
+                attributes[member] += gain
             for member, cost in spec.costs.items():
-                attributes[member] = attributes.get(member, 0) - cost
+                attributes[member] -= cost
             await store_attributes(session, node, attributes)
     if not is_locked(mind, FACET_LOCK):
         facets = await facets_of(session, node.id)

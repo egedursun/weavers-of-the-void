@@ -8,7 +8,7 @@ F = RuleGroup.FATE_AND_CHRONICLE
 
 @dataclass(frozen=True)
 class StorytellerRules:
-    tension_scale: int = rule(400, 1, 100000, F, "Summed incident weight of one epoch that fills the tension meter")
+    tension_scale: int = rule(400, 1, 100000, F, "Summed weight of one epoch's strife and harm that fills the tension meter")
     tension_carry_pct: int = rule(40, 0, 100, F, "Share of last epoch's tension that carries into the next (%)")
     steady_target: int = rule(45, 0, 100, F, "Tension a steady storyteller aims for")
     rising_start: int = rule(25, 0, 100, F, "Tension a rising storyteller aims for at the dawn of the world")

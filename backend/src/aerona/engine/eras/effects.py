@@ -35,6 +35,7 @@ async def held_by(session: AsyncSession, holder_id: int) -> frozenset[Technique]
     return (await techniques_by_holder(session)).get(holder_id, frozenset())
 
 
+MODERN_FROM = TechnologyEra.STEAM
 COMMUNITIES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 CHAIN_DEPTH = 8
 

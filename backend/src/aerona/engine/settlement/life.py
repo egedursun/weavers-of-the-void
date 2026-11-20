@@ -66,6 +66,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import robber_ids
 from aerona.engine.factions.estates import armed_share, exempt_share
 from aerona.engine.happenings.emergence import record_fire
+from aerona.engine.industry.energy import drawing_folk
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.kinds.nature import burn_factors
 from aerona.engine.lore.research import lacks
@@ -192,9 +193,9 @@ async def administer(ctx: TickContext, town: Town, knowledge: KnowledgeMap, lite
 
 async def collect_taxes(ctx: TickContext, town: Town) -> int:
     table = ctx.rules.taxation
-    people = stat(town.entity, "population") or 0
+    people = sum((await drawing_folk(ctx.session, town.entity.id)).values())
     wealth = stat(town.entity, "prosperity") or 0
-    taxable = people / PERCENT * table.per_capita_output * max(0.1, wealth / PERCENT) * (1 - logistics_waste(ctx.rules, town))
+    taxable = people / PERCENT * table.per_epoch(table.per_capita_output) * max(0.1, wealth / PERCENT) * (1 - logistics_waste(ctx.rules, town))
     taxable *= 1 - await exempt_share(ctx, town.entity.id)
     admin = town.profile.admin_capacity / PERCENT
     rate = town.profile.tax_rate / PERCENT * (ctx.rules.urban.free_city_tax_pct / PERCENT if town.profile.free_city else 1.0)

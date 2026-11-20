@@ -119,7 +119,7 @@ async def set_sail(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, r
     if held(vessel.id):
         return state
     table = ctx.rules.age_of_sail
-    rng = ctx.rng(f"sail.{vessel.id}.{region_id}.{ctx.epoch}")
+    rng = ctx.rng(f"sail.{vessel.id}.{'adrift' if region_id is None else region_id}.{ctx.epoch}")
     steady = await prevailing(ctx.session, region_id)
     keep(state, "wind_from", steady if steady is not None and rng.chance(ctx.rules.winds.sail_steady_pct) else rng.below(OCTANTS))
     keep(state, "heading", rng.below(OCTANTS))

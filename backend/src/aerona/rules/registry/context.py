@@ -6,6 +6,10 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class ContextRules:
+    recent_per_kind: int = rule(3, 1, 100, RuleGroup.CONTEXT_BUDGETS, "Most lines of one kind of happening an agent reads among recent events")
+    recent_scan_factor: int = rule(
+        5, 1, 50, RuleGroup.CONTEXT_BUDGETS, "How many times more recent lines are scanned than shown, so that varied happenings fill the recent events"
+    )
     mind_values_shown: int = rule(3, 0, 24, RuleGroup.CONTEXT_BUDGETS, "Strongest values shown in an agent's mind block")
     mind_attributes_shown: int = rule(3, 0, 19, RuleGroup.CONTEXT_BUDGETS, "Strongest and weakest attributes shown in an agent's mind block")
     mind_facets_shown: int = rule(4, 0, 34, RuleGroup.CONTEXT_BUDGETS, "Most marked facets of temperament shown in an agent's mind block")

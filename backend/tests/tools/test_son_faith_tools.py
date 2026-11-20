@@ -78,7 +78,7 @@ async def test_a_new_cult_is_founded_with_the_gods_tenets(database: Database) ->
         "rebirth_path": "house",
     }
     text = await ok(toolkit, "found_cult", arguments)
-    assert "doctrine is written" in text
+    assert "doctrine is set" in text
     cult_id = toolkit.created_entity_ids[-1]
     async with database.read() as session:
         held = set(await session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == cult_id)))

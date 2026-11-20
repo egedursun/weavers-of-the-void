@@ -23,7 +23,7 @@ from aerona.engine.dominion.book import DominionBook
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.storyteller.palette import BY_KEY, keep_palette, weight_of
-from aerona.engine.storyteller.regions import deeper_aim, measure_parts
+from aerona.engine.storyteller.regions import TENSE_KINDS, deeper_aim, measure_parts
 from aerona.rules.registry import Rules
 
 STRUCK_KEYS: dict[SpontaneousKind, tuple[str, ...]] = {kind: BY_KEY[kind.value].struck for kind in SpontaneousKind}
@@ -84,7 +84,9 @@ def boost_of(rules: Rules, tension: int, target: int, band: TensionBand) -> int:
 
 async def drama(ctx: TickContext, world_id: int) -> int:
     weight = await ctx.session.scalar(
-        select(func.coalesce(func.sum(IncidentRow.magnitude), 0)).where(IncidentRow.epoch == ctx.epoch, IncidentRow.world_id == world_id)
+        select(func.coalesce(func.sum(IncidentRow.magnitude), 0))
+        .join(ChronicleRow, ChronicleRow.id == IncidentRow.chronicle_id)
+        .where(IncidentRow.epoch == ctx.epoch, IncidentRow.world_id == world_id, ChronicleRow.kind.in_(sorted(TENSE_KINDS)))
     )
     return int(weight or 0) + await turmoil(ctx, world_id)
 

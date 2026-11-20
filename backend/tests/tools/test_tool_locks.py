@@ -14,7 +14,7 @@ async def test_a_tool_cannot_change_a_value_the_god_holds_and_nothing_it_did_is_
         session.add(DoctrineAfterlifeRow(cult_entity_id=realm.cult_id, model=next(iter(AfterlifeModel)), aligned=False, locked=["aligned"]))
     toolkit = await son_toolkit(database, realm.son_id, action_points=6)
     text = await rejected(toolkit, "align_afterlife", {"cult_id": realm.cult_id, "reason": REASON})
-    assert "A stronger hand holds what you would change: the aligned of doctrine afterlives" in text
+    assert "These fields are held and cannot change: the aligned of doctrine afterlives" in text
     async with database.read() as session:
         row = await session.get(DoctrineAfterlifeRow, realm.cult_id)
         son = await session.get(SonRow, realm.son_id)

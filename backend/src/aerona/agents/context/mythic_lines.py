@@ -5,7 +5,7 @@ from sqlalchemy import select
 from aerona.agents.context.dominion_lines import god_called, place_name
 from aerona.agents.context.scope import Scope
 from aerona.catalog.mythic import REALM_PHRASES, trial_at
-from aerona.core.grammar import agree, several, spoken
+from aerona.core.grammar import agree, plural, several, spoken
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -31,9 +31,10 @@ async def servant_lines(scope: Scope, son: SonRow) -> list[str]:
     rows = list(await scope.session.scalars(select(ServitorRow).where(ServitorRow.god_node_id == son.id)))
     if not rows:
         return []
-    roles = Counter(row.role.value for row in rows)
+    roles = Counter(row.role for row in rows)
     loyal = round(sum(row.loyalty for row in rows) / len(rows))
-    return [f"Your servitors: {', '.join(f'{count} {role}' for role, count in sorted(roles.items()))}; their loyalty averages {loyal}"]
+    kinds = ", ".join(several(count, spoken(role), plural(spoken(role))) for role, count in sorted(roles.items()))
+    return [f"Your servitors: {kinds}; their loyalty averages {loyal}"]
 
 
 async def kept_lines(scope: Scope, son: SonRow) -> list[str]:

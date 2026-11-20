@@ -115,7 +115,7 @@ async def test_a_world_that_begins_in_the_information_age_lives_like_one(databas
         for incident_id, _ in await facts_of(session, "consumption.cold_deaths"):
             victim = await subject_of(session, incident_id, IncidentRole.VICTIM)
             industry = await session.get(CommunityIndustryRow, victim) if victim is not None else None
-            if industry is not None and industry.electric > 0:
+            if industry is not None and industry.electric - industry.spent.get(EnergyKind.ELECTRIC.value, 0) > 0:
                 cold.append(victim or 0)
         dark = [
             facts

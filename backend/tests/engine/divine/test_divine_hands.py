@@ -148,7 +148,7 @@ async def test_a_son_s_plan_is_written_about_its_aim(realm: Realm) -> None:
     assert (await goal_lines(scope, sea))[-1] == "You hold no aim yet; take one, then write your plan about it"
     await control.set_goal(context(realm.session), sea.id, GodGoalKind.BE_WORSHIPPED, amount=2)
     lines = await goal_lines(scope, sea)
-    assert lines[0].startswith("Your aim: be worshipped") and lines[-1] == "Your plan is written about one of your aims"
+    assert lines[0].startswith("Your aim: to be worshipped") and lines[-1] == "Your plan is written about one of your aims"
 
 
 async def test_where_the_dead_speak_spirits_take_turns_with_a_spirit_s_tools(realm: Realm) -> None:

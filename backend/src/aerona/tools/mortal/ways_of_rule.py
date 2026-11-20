@@ -78,6 +78,7 @@ from aerona.engine.lore.culture_control import set_register
 from aerona.engine.lore.discovery_control import set_era
 from aerona.engine.lore.kinds import create_kind
 from aerona.engine.military.control import set_trait
+from aerona.engine.mind.book import pressures_of
 from aerona.engine.operations.control import set_crew, set_ship
 from aerona.engine.polity.control import create_vassalage
 from aerona.engine.primitives.numbers import clamp_int
@@ -582,7 +583,12 @@ async def take_up_want(call: MortalCall, args: WantInput) -> str:
 async def ease_pressure(call: MortalCall, args: PressureInput) -> str:
     row = await call.session.get(PressureRow, (call.me.id, args.pressure))
     if row is None or row.value <= 0:
-        fail(MortalResult.WAY_REFUSED, why="that does not weigh on you")
+        weighing = sorted(((value, pressure) for pressure, value in (await pressures_of(call.session, call.me.id)).items() if value > 0), reverse=True)
+        felt = ", ".join(f"{spoken(pressure)} {value}" for value, pressure in weighing)
+        fail(
+            MortalResult.WAY_REFUSED,
+            why=f"that does not weigh on you; what weighs on you: {felt}" if felt else "that does not weigh on you; nothing weighs on you now",
+        )
     row.value = max(0, row.value - PRESSURE_EASE)
     await call.session.flush()
     return await recorded(call, "tools.mortal.ease_pressure", f"{spoken(args.pressure)} eased", roles={}, facts={"pressure": args.pressure, "left": row.value})

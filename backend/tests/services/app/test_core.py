@@ -46,7 +46,7 @@ async def test_single_throne_and_companions(session: AsyncSession, rules: Rules,
     assert [bond.source_node_id for bond in rulers] == [new.id]
     line = await session.scalar(select(ChronicleRow).order_by(ChronicleRow.id.desc()))
     assert line is not None
-    assert line.text == "The shared throne over Saltkeep has ended: Old King withdrew from rule, New Queen reigns alone."
+    assert line.text == "The shared rule over Saltkeep has ended: Old King withdrew from power, New Queen rules alone."
     companion = await service.connect(session, rules, BondDraft(world.region.id, new.id, BondKind.COMPANION, 1, description="walked"))
     assert companion.kind is BondKind.RELATED
     assert companion.description == "companion of: walked"

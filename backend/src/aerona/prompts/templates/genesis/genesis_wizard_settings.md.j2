@@ -3,7 +3,7 @@ CREATION SETTINGS{% if template_name %} (template: {{ template_name }}){% endif 
 
 - Danger {{ danger }}/100: the world is {{ danger | degree("dangerous") }}.{% if for_genesis %} The regions' danger values should be close to this.{% endif %}
 
-- Technology age: {{ technology_label }}. The peoples' tools, weapons and buildings are at this level.
+- Technology age: {{ technology_label }}, {{ technology_meaning }}. The peoples' tools, weapons, buildings and travel are at this level.
 - Language structure: {{ language_label }}. The naming rule and all names have this sound texture.
 - Cosmos: {{ cosmos_label }}{% if shape_line %}; {{ shape_line }}{% endif %}.
 {% if world_type_label %}

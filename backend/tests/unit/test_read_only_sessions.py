@@ -20,10 +20,10 @@ async def test_a_read_session_refuses_every_write_so_no_reader_can_hold_the_writ
     try:
         async with database.read() as session:
             session.add(ChronicleRow(epoch=1, kind=ChronicleKind.WORLD_AGE, text="Stray"))
-            with pytest.raises(ReadSessionWriteError):
+            with pytest.raises(ReadSessionWriteError, match="chronicle"):
                 await session.flush()
         async with database.read() as session:
-            with pytest.raises(ReadSessionWriteError):
+            with pytest.raises(ReadSessionWriteError, match="entity_flags"):
                 await session.execute(delete(EntityFlagRow))
         async with database.write() as session:
             session.add(ChronicleRow(epoch=1, kind=ChronicleKind.WORLD_AGE, text="Kept"))

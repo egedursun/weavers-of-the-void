@@ -49,6 +49,7 @@ class EnergyRules:
         G,
         "Electric energy a thousand people of a place with power are expected to draw each epoch for work and warmth, to which it sizes its plants",
     )
+    power_reserve_pct: int = rule(30, 0, 300, G, "Margin above the power its folk draw that a place plans its power plants for (%)")
     power_heat_pct: int = rule(100, 0, 400, G, "Heat each unit of electric or stored power gives when fuel runs short (%)")
     heat_per_cloth: int = rule(4, 0, 40, G, "Heat a home warmed by power needs to stand in for one unit of warm cloth it lacks")
     stored_pct: int = rule(30, 0, 100, G, "Share of a place's electric energy it can keep in stores (%)")

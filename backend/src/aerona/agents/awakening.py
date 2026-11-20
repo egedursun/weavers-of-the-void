@@ -21,7 +21,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.kinds import KindSpread
@@ -187,13 +187,13 @@ async def awaken_one(
     for source, target, kind in (
         (people, language, BondKind.SPEAKS),
         (settlement, language, BondKind.SPEAKS),
-        (people, settlement, BondKind.RULES),
         (settlement, resource, BondKind.OWNS),
         (people, knowledge, BondKind.KNOWS),
         (settlement, knowledge, BondKind.KNOWS),
         (people, tradition, BondKind.CELEBRATES),
     ):
         await bonds.connect(BondDraft(source.id, target.id, kind, epoch))
+    await bonds.connect(BondDraft(people.id, settlement.id, BondKind.RULES, epoch, role=BondRole.HOMELAND))
     son = await session.get(SonRow, item.worshipped_son_id) if item.worshipped_son_id else None
     if son is not None:
         await bonds.connect(BondDraft(people.id, son.id, BondKind.WORSHIPS, epoch))

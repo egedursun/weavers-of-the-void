@@ -163,9 +163,7 @@ async def run_turn(model: LanguageModel, plan: TurnPlan, toolkit: TurnToolkit, r
     outcome = TurnOutcome(result.text, result.status, done, sessions)
     if result.status is not SessionStatus.SUCCESS:
         detail = f": {result.error}" if result.error else ""
-        LOGGER.warning(
-            "Turn of %s ended half-done (%s%s) after %s session(s); step limit %s", plan.actor, result.status.value, detail, sessions, plan.max_turns
-        )
+        LOGGER.warning("Turn of %s ended half-done (%s%s); sessions run: %s; step limit %s", plan.actor, result.status.value, detail, sessions, plan.max_turns)
     if result.status is not SessionStatus.SUCCESS and not outcome.world_changed:
         raise TurnFailedError(result.error or f"The turn ended without leaving a trace ({result.status}).")
     return outcome

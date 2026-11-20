@@ -16,6 +16,7 @@ from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import STANDING_STATES, ConstructionState, ConstructionStatus, StructureKind
 from aerona.engine.context import TickContext
+from aerona.engine.environment.years import world_years
 from aerona.engine.eras.effects import world_start
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import judged
@@ -69,6 +70,7 @@ async def used_slots(ctx: TickContext, host_id: int) -> int:
         select(StructureProfileRow.structure_entity_id).where(
             StructureProfileRow.host_entity_id == host_id,
             StructureProfileRow.construction_state != ConstructionState.RUINED,
+            StructureProfileRow.kind.not_in(sorted(GROWING)),
         )
     )
     return len(list(rows))
@@ -80,12 +82,13 @@ async def free_slots(ctx: TickContext, site: EntityRow) -> int:
 
 
 async def plan_work(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> EntityRow | None:
-    if await free_slots(ctx, site) <= 0 or len(await active_at(ctx, site.id)) >= works_at_once(ctx.rules, stat_or(site, "population", 0)):
+    if len(await active_at(ctx, site.id)) >= works_at_once(ctx.rules, stat_or(site, "population", 0)):
         return None
+    full = await free_slots(ctx, site) <= 0
     facts = await facts_for(ctx, site, knowledge, atlas)
     tier = facts.town.size_tier if facts.town is not None else None
     for kind in wanted(ctx.rules, facts):
-        if tier is not None and not tier_allows(tier, resolve(kind)):
+        if (full and kind not in GROWING) or (tier is not None and not tier_allows(tier, resolve(kind))):
             continue
         work, _ = await begin(ctx, Commission(site=site, kind=kind, level=commission_level(ctx.rules, facts, kind)))
         if kind is StructureKind.TEMPLE:
@@ -101,7 +104,9 @@ async def site_of(ctx: TickContext, builder: EntityRow) -> EntityRow | None:
     if home is not None and home.entity_type is EntityType.SETTLEMENT:
         return home
     towns = await towns_of_people(ctx.session, builder.id)
-    return await living_entity(ctx.session, towns[0]) if towns else None
+    if towns:
+        return await living_entity(ctx.session, towns[0])
+    return builder if builder.entity_type is EntityType.PEOPLE else None
 
 
 async def stand_in_age(ctx: TickContext, site: EntityRow, knowledge: KnowledgeMap, atlas: RegionAtlas) -> int:
@@ -317,15 +322,17 @@ async def engine_works(ctx: TickContext) -> None:
     ctx.count("advanced", await advance_all(ctx, knowledge))
     atlas = await RegionAtlas.load(ctx.session)
     ctx.count("founded", await found_in_age(ctx, knowledge, atlas))
-    rng = ctx.rng()
     for builder in await canon(ctx.session, BUILDER_TYPES):
-        if not can_build(rules, builder) or not await craft_ready(ctx, builder, knowledge) or not rng.chance(rules.deep_world.structure_chance):
+        if not can_build(rules, builder) or not await craft_ready(ctx, builder, knowledge):
             continue
         site = await site_of(ctx, builder)
         if site is None or held(builder.id, site.id):
             continue
-        if await plan_work(ctx, site, knowledge, atlas) is not None:
-            ctx.count("built")
+        for year in world_years(ctx.environment, site.world_id or 0, "works"):
+            if not ctx.rng(f"works.{builder.id}.{year.year}").chance(rules.deep_world.structure_chance):
+                continue
+            if await plan_work(ctx, site, knowledge, atlas) is not None:
+                ctx.count("built")
 
 
 async def owner_of(ctx: TickContext, work: EntityRow) -> EntityRow | None:

@@ -47,11 +47,6 @@ def test_subtype_normalization_snaps_to_existing_spelling() -> None:
     assert normalize_subtype("river spirit", ["River Spirit", "River Spirit", "river spirit"]) == "River Spirit"
 
 
-def test_ruler_titles_and_community_phrases() -> None:
-    assert narrative.ruler_title(EntityType.LAW) == "Keeper"
-    assert narrative.ruler_title(EntityType.SETTLEMENT) == "Lord"
-
-
 def test_mortals_are_not_called_sons() -> None:
     assert narrative.mortal_description("Ora is a quiet son who hunts. He was a son of the river.") == (
         "Ora is a quiet mortal who hunts. He was a son of the river."

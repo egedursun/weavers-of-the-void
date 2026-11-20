@@ -27,7 +27,7 @@ from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.demography.recruitment import founding_factor, recruit
-from aerona.engine.eras.effects import era_at, era_order, era_techniques
+from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order, era_techniques
 from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
 from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
 from aerona.engine.factions.outlaws import hire, pay_companies, privateers, suppress
@@ -61,7 +61,6 @@ class FactionBlueprint:
         return self.modern if self.modern is not None and era_order(era) >= era_order(MODERN_FROM) else self.suffix
 
 
-MODERN_FROM = TechnologyEra.STEAM
 ENGINEERING = frozenset({Technique.STEAM_POWER, Technique.MACHINE_TOOLS, Technique.RAILWAYS})
 FINANCE = frozenset({Technique.BANKING, Technique.JOINT_STOCK})
 

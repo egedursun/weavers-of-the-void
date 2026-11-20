@@ -59,10 +59,11 @@ ERA_MARKERS: tuple[tuple[TechnologyEra, Technique], ...] = (
 ERA_FLOORS: MappingProxyType[TechnologyEra, dict[KnowledgeBranch, int]] = MappingProxyType(
     {
         E.STONE: {},
-        E.BRONZE: {B.AGRICULTURE: 1, B.METALLURGY: 1, B.SHIPBUILDING: 1, B.SEAFARING: 1, B.PATHFINDING: 1, B.CIVICS: 1},
+        E.BRONZE: {B.AGRICULTURE: 1, B.METALLURGY: 2, B.ARCHITECTURE: 1, B.SHIPBUILDING: 1, B.SEAFARING: 1, B.PATHFINDING: 1, B.CIVICS: 1},
         E.IRON: {
             B.AGRICULTURE: 2,
-            B.METALLURGY: 2,
+            B.METALLURGY: 3,
+            B.ARCHITECTURE: 2,
             B.WRITING: 1,
             B.WARFARE: 1,
             B.SHIPBUILDING: 2,

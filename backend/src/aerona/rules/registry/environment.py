@@ -296,7 +296,7 @@ class HarvestRules:
     normal_soil: int = rule(50, 1, 100, RuleGroup.POPULATION_AND_GROWTH, "Soil fertility of a normal harvest")
     soil_weight_pct: int = rule(60, 0, 200, RuleGroup.POPULATION_AND_GROWTH, "How much richer or poorer soil moves the harvest (%)")
     harvest_max_pct: int = rule(200, 100, 1000, RuleGroup.POPULATION_AND_GROWTH, "Best harvest of a year against a normal one (%)")
-    notable_threshold: int = rule(55, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Harvest below which a year is remembered as hungry (%)")
+    notable_threshold: int = rule(55, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Harvest below which the year is remembered as hungry (%)")
     famine_event_below: int = rule(35, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Harvest below which a hungry year becomes a famine record (%)")
     plenty_threshold: int = rule(150, 100, 1000, RuleGroup.POPULATION_AND_GROWTH, "Harvest above which the best year of a world is remembered as plentiful (%)")
     famine_event_power: int = rule(2, 1, 10, RuleGroup.POPULATION_AND_GROWTH, "Power of a famine record")

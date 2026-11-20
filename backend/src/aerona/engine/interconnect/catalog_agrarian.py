@@ -132,14 +132,14 @@ AGRARIAN_MECHANICS = (
         tools=("enclose_commons", "rule_commons"),
         targets=("region", "settlement", "mortal"),
         couplings=(
-            Coupling(S.HOUSEHOLD, "enclosure takes the living of cottagers", E.FLOW, "commons.sol_loss"),
+            Coupling(S.HOUSEHOLD, "enclosure takes the living of those who used the common", E.FLOW, "commons.sol_loss"),
             Coupling(S.DEMOGRAPHY, "the dispossessed drift to the cities", E.FLOW, "commons.dispossess_pct"),
             Coupling(S.POLITY, "cheap labour in the cities makes enclosure pay", E.MODIFIER, "commons.labour_span"),
             Coupling(S.SOCIAL, "enclosure stirs unrest and movements", E.FLOW, "commons.unrest_gain"),
             Coupling(S.POLITY, "short-sighted rulers enclose more", E.MODIFIER, "commons.horizon_mark"),
             Coupling(S.LAW, "a law of freehold tenure hastens enclosure and communal tenure holds it back", E.MODIFIER, "commons.freehold_pct"),
             Coupling(S.POLITY, "a ruler orders enclosure by mandate", E.TRIGGER, "commons.enclose_pct"),
-            Coupling(S.HOUSEHOLD, "cottager households lose their wealth to enclosure", E.FLOW, "commons.household_loss"),
+            Coupling(S.HOUSEHOLD, "households that used the common lose their wealth to enclosure", E.FLOW, "commons.household_loss"),
         ),
     ),
     Mechanic(
@@ -175,7 +175,7 @@ AGRARIAN_MECHANICS = (
         targets=("people",),
         couplings=(
             Coupling(S.ENVIRONMENT, "famine foods make good part of a failed harvest", E.MODIFIER, "famine_foods.foods_fill"),
-            Coupling(S.BODY, "living on famine foods sickens the land", E.FLOW, "famine_foods.health_cost"),
+            Coupling(S.BODY, "living on famine foods costs the people their health", E.FLOW, "famine_foods.health_cost"),
             Coupling(S.CULTURE, "memory of hunger grows a tradition of storing food", E.FLOW, "famine_foods.storage_pct"),
             Coupling(S.DEMOGRAPHY, "living generations formed by famine keep its memory", E.FLOW, "famine_foods.per_generation"),
         ),

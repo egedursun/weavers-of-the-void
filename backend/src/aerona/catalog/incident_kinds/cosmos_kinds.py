@@ -498,7 +498,7 @@ SKY: tuple[IncidentKindSpec, ...] = (
     happening(
         "sky.world_drift",
         S,
-        "{subject} sailed on between the stars and now orbits {destination}.",
+        "{subject} drifted on between the stars and now orbits {destination}.",
         roles=(one(R.SUBJECT), maybe(R.ORIGIN), one(R.DESTINATION)),
         facts=(amount("period", U.COUNT),),
         steps=(A.DEPART, A.ARRIVE),
@@ -909,7 +909,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "world_views.short",
         S,
-        "{subject} ran short of the {need} its world binds it to.",
+        "{subject} ran short of the {need} its world requires.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("need", BindingNeed),),
         place=P.REQUIRED,
@@ -1203,7 +1203,7 @@ REALMS: tuple[IncidentKindSpec, ...] = (
     happening(
         "realm.withdrawal",
         S,
-        "{actor} withdrew into {destination}: {moved:one went in|many went in}.",
+        "{actor} withdrew into {destination}: {moved:no one went in|one went in|# went in}.",
         roles=(one(R.ACTOR), one(R.DESTINATION)),
         facts=(amount("moved", U.PEOPLE), chosen("purpose", RealmPurpose)),
         steps=(A.ENTER,),

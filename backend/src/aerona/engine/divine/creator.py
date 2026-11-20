@@ -131,9 +131,12 @@ async def far_from_eye(ctx: TickContext, world_id: int | None) -> bool:
 async def target_for(ctx: TickContext, passion: CreatorPassion) -> EntityRow | None:
     born = select(EntityRow).where(EntityRow.birth_epoch == ctx.epoch, EntityRow.status == EntityStatus.CANON)
     if passion is P.KNOWLEDGE:
-        return await ctx.session.scalar(
-            select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(list(SCHOLARS))).order_by(EntityRow.id).limit(1)
+        scholars = list(
+            await ctx.session.scalars(
+                select(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(list(SCHOLARS))).order_by(EntityRow.id)
+            )
         )
+        return ctx.rng("creator.passion.scholar").pick(scholars) if scholars else None
     if passion is P.BEAUTY:
         work = await ctx.session.scalar(born.where(EntityRow.entity_type.in_([EntityType.ARTWORK, EntityType.STRUCTURE])).order_by(EntityRow.id).limit(1))
         return await place_of(ctx, work.id) if work is not None else None

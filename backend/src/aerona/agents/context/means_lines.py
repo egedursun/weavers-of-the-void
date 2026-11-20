@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.catalog.means import AIDS, CONTAINERS, LIFTS, MEDIA
-from aerona.core.grammar import several
+from aerona.core.grammar import plural, several
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.honours import NamedUnitRow, VeteranGrantRow
 from aerona.db.tables.households import HouseholdMemberRow
@@ -37,13 +37,19 @@ async def town_means(scope: Scope, town: EntityRow) -> list[str]:
     found = []
     lifts = list(await session.scalars(select(WaterLiftRow).where(WaterLiftRow.settlement_entity_id == town.id, WaterLiftRow.count > 0)))
     if lifts:
-        found.append("water is lifted here by " + ", ".join(f"{row.count} {LIFTS[row.device].label.lower()}" for row in lifts))
+        found.append(
+            "water is lifted here by "
+            + ", ".join(several(row.count, LIFTS[row.device].label.lower(), plural(LIFTS[row.device].label.lower())) for row in lifts)
+        )
     kits = list(await session.scalars(select(NavigationKitRow).where(NavigationKitRow.holder_entity_id == town.id)))
     if kits:
         found.append("the pilots here use " + ", ".join(f"{AIDS[row.aid].label.lower()} of quality {row.quality}" for row in kits))
     stocks = list(await session.scalars(select(ContainerStockRow).where(ContainerStockRow.community_entity_id == town.id, ContainerStockRow.count > 0)))
     if stocks:
-        found.append("goods here are kept in " + ", ".join(f"{row.count} {CONTAINERS[row.kind].label.lower()}" for row in stocks[:LIST_LINES]))
+        found.append(
+            "goods here are kept in "
+            + ", ".join(several(row.count, CONTAINERS[row.kind].label.lower(), plural(CONTAINERS[row.kind].label.lower())) for row in stocks[:LIST_LINES])
+        )
     folk = await people_id_of(session, town)
     custom = await session.get(WritingCustomRow, folk) if folk is not None else None
     if custom is not None:

@@ -178,7 +178,7 @@ def route(realm: Realm, _ids: Ids) -> int:
 
 
 WAR = (
-    Step("wage_war", plain(attacker_id=people, defender_id=settlement, cause="claim", aims=["tribute"], reason=REASON)),
+    Step("wage_war", plain(attacker_id=people, defender_id=created("settlement"), cause="claim", aims=["tribute"], reason=REASON)),
     Step("raise_host", plain(community_id=people, soldiers=60, war_id=created("war"))),
 )
 
@@ -307,11 +307,12 @@ SON_CASES: dict[str, Case] = {
         plain(army_id=created("army"), reason=REASON), prelude=(Step("raise_host", plain(community_id=people, soldiers=40)),), lookup=last_war
     ),
     "lay_siege": Case(
-        plain(war_id=created("war"), army_id=created("army"), settlement_id=settlement),
+        plain(war_id=created("war"), army_id=created("army"), settlement_id=created("settlement")),
+        second_settlement,
         prelude=WAR,
         lookup=last_war,
     ),
-    "offer_peace": Case(plain(war_id=created("war"), victor_id=people, terms=["tribute"]), prelude=WAR, lookup=last_war),
+    "offer_peace": Case(plain(war_id=created("war"), victor_id=people, terms=["tribute"]), second_settlement, prelude=WAR, lookup=last_war),
     "commission_vessel": Case(plain(owner_id=people, name="Lamp Runner")),
     "design_unit": Case(plain(owner_id=people, name="Road Guard", base_kind="line_infantry", doctrine="shock", formation="line")),
     "shape_vehicle_type": Case(plain(owner_id=people, frame="wagon", emphasis="hold", mounts=["deck"], description=TEXT[:200])),

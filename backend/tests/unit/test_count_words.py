@@ -14,7 +14,9 @@ def told(tally, rows, count):
     fifth = f"The age {count} of its line."
     sixth = f"{several(count, 'town', 'towns')} of the land were read."
     seventh = f"{several(count, 'town', 'towns')} {agree(count, 'was', 'were')} read."
-    return first, second, third, fourth, fifth, sixth, seventh
+    eighth = f"kept in {row.count} {label}"
+    ninth = f"kept in {several(row.count, label, plural(label))}"
+    return first, second, third, fourth, fifth, sixth, seventh, eighth, ninth
 
 
 LINE = "{count} people set out"
@@ -39,7 +41,8 @@ def test_a_count_written_before_a_plural_word_is_flagged() -> None:
         (5, "{count} were"),
         (6, "{several(count, 'town', 'towns')} were"),
         (8, "{several(count, 'town', 'towns')} of the land were"),
-        (13, "{count} people"),
+        (10, "{row.count} {label}"),
+        (15, "{count} people"),
     ]
 
 

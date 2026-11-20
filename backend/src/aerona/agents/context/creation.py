@@ -1,6 +1,6 @@
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.cosmography import DIMENSION_KINDS, WORLD_AGE_LABELS
-from aerona.catalog.genesis import COSMOS_LABELS, SHAPE_LINES, TECHNOLOGY_LABELS, TEMPLATES, TEXTURE_LABELS
+from aerona.catalog.genesis import COSMOS_LABELS, SHAPE_LINES, TECHNOLOGY_LABELS, TECHNOLOGY_MEANINGS, TEMPLATES, TEXTURE_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.grammar import an, several
 from aerona.domain.enums.world import CosmosSize
@@ -31,6 +31,7 @@ def creation_text(rules: Rules, settings: GenesisSettings, *, for_genesis: bool)
         magic=settings.magic,
         danger=settings.danger,
         technology_label=TECHNOLOGY_LABELS[settings.technology].lower(),
+        technology_meaning=TECHNOLOGY_MEANINGS[settings.technology],
         language_label=TEXTURE_LABELS[settings.language_texture].lower(),
         cosmos_label=cosmos_label(rules, settings.cosmos_size),
         shape_line=shape_line(settings),

@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
@@ -129,6 +130,8 @@ async def upkeep_all(ctx: TickContext) -> int:
     )
     kept = 0
     for work, profile in rows.all():
+        if held(work.id):
+            continue
         await keep(ctx, work, profile)
         kept += 1
     return kept

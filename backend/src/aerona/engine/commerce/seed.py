@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteProfileRow, WorkshopRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.commerce import ShopForm, SupplyTier
@@ -25,11 +26,32 @@ WORKSHOP_GOODS: dict[WorkshopKind, CommodityKind] = {
     WorkshopKind.SIEGE_YARD: CommodityKind.SIEGE_MATERIEL,
 }
 
+COMMON_TIERS_FIXUP = "commerce.common_tiers"
+
 
 @dataclass
 class CommerceSeedTally:
     tiers: int = 0
     shops: int = 0
+    freed: int = 0
+
+
+async def free_common_tiers(ctx: TickContext, tally: CommerceSeedTally) -> None:
+    if await ctx.session.get(AppliedFixupRow, COMMON_TIERS_FIXUP) is not None:
+        return
+    table = ctx.rules.commerce
+    margins = {SupplyTier.RETAIL: table.retail_margin_pct, SupplyTier.WHOLESALE: table.wholesale_margin_pct}
+    rows = await ctx.session.scalars(
+        select(SupplyTierRow).where(SupplyTierRow.cornered.is_(True), SupplyTierRow.holder_node_id == SupplyTierRow.market_entity_id).order_by(SupplyTierRow.id)
+    )
+    for tier in list(rows):
+        if held(tier.market_entity_id) or "cornered" in (tier.locked or []):
+            continue
+        tier.cornered = False
+        if "margin" not in (tier.locked or []):
+            tier.margin = margins.get(tier.tier, tier.margin)
+        tally.freed += 1
+    ctx.session.add(AppliedFixupRow(key=COMMON_TIERS_FIXUP, result={"freed": tally.freed}))
 
 
 async def seed_tiers(ctx: TickContext, tally: CommerceSeedTally) -> None:
@@ -88,6 +110,7 @@ async def seed_shops(ctx: TickContext, tally: CommerceSeedTally) -> None:
 
 async def seed_commerce(ctx: TickContext) -> CommerceSeedTally:
     tally = CommerceSeedTally()
+    await free_common_tiers(ctx, tally)
     await seed_tiers(ctx, tally)
     await seed_shops(ctx, tally)
     await ctx.session.flush()

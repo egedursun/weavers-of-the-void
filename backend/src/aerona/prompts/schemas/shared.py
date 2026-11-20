@@ -18,7 +18,7 @@ MOTIFS = "2 to 5 motif keys for the core images of this record: short lowercase 
 
 class PowerOutput(OutputModel):
     name: str = Field(description="The power's own name, drawn from what it does")
-    description: str = Field(description="Mythic description of the power, 1 to 2 sentences")
+    description: str = Field(description="What the power is and does, 1 to 2 sentences")
     effect: PowerEffect = Field(description="{{ power_effects }}")
     param: str = Field(
         default="",

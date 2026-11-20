@@ -10,6 +10,7 @@ from pydantic import BaseModel, ValidationError
 
 from aerona.constants.agents import ERROR_REASON_CHARS
 from aerona.constants.llm import HAIKU_MODEL_ID, RETRY_KIND, TRANSIENT_HTTP_STATUSES
+from aerona.core.grammar import several
 from aerona.events.kinds import EventKind
 from aerona.llm.errors import LlmDisabledError, LlmPermanentError, LlmTimeoutError, LlmTransientError
 from aerona.llm.json_text import first_json_value
@@ -99,7 +100,7 @@ class LlmClient:
             except ValidationError as error:
                 paths = field_paths(error, self._rules.current.metrics.missing_fields_listed)
                 LOGGER.warning("Model output for %s missed or broke required fields: %s", label, paths)
-                raise LlmTransientError(f"structured output did not match schema: {error.error_count()} error(s) in {paths}") from error
+                raise LlmTransientError(f"structured output did not match schema: {several(error.error_count(), 'error', 'errors')} in {paths}") from error
 
         return await self._with_retries(label, CallKind.STRUCTURED, attempt, timeout_seconds or model_rules.structured_timeout, attempts)
 

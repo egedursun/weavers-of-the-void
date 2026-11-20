@@ -33,6 +33,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.crafts.reckoning import reckoned
 from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.industry.energy import drawers_at
 from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.lore.style import axis_of
 from aerona.engine.primitives.folk import present_in
@@ -217,9 +218,12 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
 
 async def builders_at(ctx: TickContext, site_id: int, active: int) -> int:
     table = ctx.rules.construction
-    hands = await ctx.session.scalar(
-        select(func.coalesce(func.sum(LabourRow.workers), 0)).where(LabourRow.community_entity_id == site_id, LabourRow.job == Job.BUILDING)
-    )
+    hands = 0.0
+    for drawer, weight in (await drawers_at(ctx.session, site_id)).items():
+        workers = await ctx.session.scalar(
+            select(func.coalesce(func.sum(LabourRow.workers), 0)).where(LabourRow.community_entity_id == drawer, LabourRow.job == Job.BUILDING)
+        )
+        hands += int(workers or 0) * weight
     site = await ctx.session.get(EntityRow, site_id)
     heavy = ctx.rules.natural_laws.heavy_build_pct / PERCENT if site is not None and (await ctx.laws()).has(NaturalLaw.GRAVITY_SHIFT, site.world_id) else 1.0
     share = round_half_up(int(hands or 0) * table.worker_share_pct / PERCENT / max(1, active) * await ctx.hook_factor(site_id, DomainHook.STONEWORK) * heavy)
@@ -241,6 +245,12 @@ async def spend_treasury(ctx: TickContext, site_id: int, amount: int, label: str
             SettlementTreasuryRow(settlement_entity_id=site_id, epoch=ctx.epoch, entry=TreasuryEntry.BUILDING, amount=-paid, balance=town.treasury, note=label)
         )
     return paid
+
+
+async def purse_of(ctx: TickContext, construction: ConstructionRow) -> int:
+    town = await ctx.session.get(SettlementProfileRow, construction.site_entity_id) if construction.site_entity_id is not None else None
+    held_back = town is None or held(construction.site_entity_id)
+    return construction.funds + (0 if held_back or town is None else max(0, town.treasury))
 
 
 async def pay(ctx: TickContext, construction: ConstructionRow, amount: int, label: str) -> int:
@@ -285,11 +295,13 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
     needed = round_half_up(wanted * table.materials_per_100_work / PERCENT)
     delivered = await goods_of(ctx.session, ctx.epoch).take_units(site.id, commodity, needed, GoodsFlow.CONSTRUCTION) if needed else 0
     short = needed - delivered
-    if short > 0 and table.funds_buy_materials > 0:
-        bought = await pay(ctx, construction, short * table.funds_buy_materials, f"materials for {work.name}") // table.funds_buy_materials
-        delivered += bought
     coin = round_half_up(wanted * table.funds_per_100_work / PERCENT)
-    paid = await pay(ctx, construction, coin, f"wages for {work.name}") if coin else 0
+    buying = short * table.funds_buy_materials if table.funds_buy_materials > 0 else 0
+    afford = min(1.0, await purse_of(ctx, construction) / (buying + coin)) if buying + coin > 0 else 1.0
+    if buying > 0:
+        bought = await pay(ctx, construction, int(buying * afford), f"materials for {work.name}") // table.funds_buy_materials
+        delivered += bought
+    paid = await pay(ctx, construction, int(coin * afford) if buying > 0 else coin, f"wages for {work.name}") if coin else 0
     supplied = min(delivered / needed if needed else 1.0, paid / coin if coin else 1.0)
     added = round_half_up(wanted * supplied)
     construction.workers = workers

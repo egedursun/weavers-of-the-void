@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.foe_natures import FOE_BANES
-from aerona.catalog.materials import ALLOYS, MATERIALS, METAL_FAMILIES, MaterialSpec
+from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -121,9 +121,14 @@ def forge_heat(rules: Rules, levels: Mapping[KnowledgeBranch, int]) -> int:
 
 
 def forgeable(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int]) -> bool:
-    if props.family not in METAL_FAMILIES or props.melting_point >= PERCENT:
+    if props.branch is not KnowledgeBranch.METALLURGY or props.melting_point >= PERCENT:
         return True
     return forge_heat(rules, levels) >= props.melting_point
+
+
+def forge_level(rules: Rules, props: MaterialProps) -> int:
+    short = props.melting_point - rules.materials.forge_heat_base
+    return max(1, -(-short // max(1, rules.materials.forge_heat_per_level)))
 
 
 def sharpness(props: MaterialProps) -> int:
@@ -134,16 +139,21 @@ def draw_strength(props: MaterialProps) -> float:
     return props.elasticity / PERCENT
 
 
-def workable(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int], magic_density: int = 0) -> bool:
+def unmet_need(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int], magic_density: int = 0) -> tuple[KnowledgeBranch, int] | None:
     if props.branch is not None and levels.get(props.branch, 0) < max(1, props.level):
-        return False
+        return props.branch, max(1, props.level)
     if not forgeable(rules, props, levels):
-        return False
+        return KnowledgeBranch.METALLURGY, forge_level(rules, props)
     if props.gate is KnowledgeBranch.MAGIC:
-        return magic_density >= rules.materials.skysteel_magic_density and levels.get(KnowledgeBranch.MAGIC, 0) >= 1
-    if props.gate is not None:
-        return levels.get(props.gate, 0) >= 1 or levels.get(KnowledgeBranch.FORBIDDEN, 0) >= 1
-    return True
+        enough = magic_density >= rules.materials.skysteel_magic_density and levels.get(KnowledgeBranch.MAGIC, 0) >= 1
+        return None if enough else (KnowledgeBranch.MAGIC, 1)
+    if props.gate is not None and levels.get(props.gate, 0) < 1 and levels.get(KnowledgeBranch.FORBIDDEN, 0) < 1:
+        return props.gate, 1
+    return None
+
+
+def workable(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int], magic_density: int = 0) -> bool:
+    return unmet_need(rules, props, levels, magic_density) is None
 
 
 def alloy_inputs(material: MaterialKind) -> tuple[MaterialKind, ...]:

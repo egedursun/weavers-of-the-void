@@ -13,7 +13,7 @@ class IdentityRules:
     base_salience: int = rule(30, 0, 100, M, "Salience every identity layer drifts back toward when nothing stirs it")
     decay_pct: int = rule(20, 0, 100, M, "Share of the gap to the resting salience an identity closes each epoch (%)")
     holy_war: int = rule(25, 0, 100, M, "Faith salience a community gains while its realm fights a holy war")
-    famine: int = rule(20, 0, 100, M, "Class salience a community gains in a year of hunger in its land")
+    famine: int = rule(20, 0, 100, M, "Class salience a community gains for each hungry year its land remembers")
     invasion: int = rule(25, 0, 100, M, "People and realm salience a community gains while an enemy army stands in its land")
     strike: int = rule(15, 0, 100, M, "Profession salience a community gains while its guilds strike")
     rhetoric: int = rule(10, 0, 100, M, "Salience a community gains in the layer a movement there preaches")

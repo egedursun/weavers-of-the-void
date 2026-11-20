@@ -15,7 +15,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.rarity import Rarity
@@ -242,6 +242,7 @@ async def seed_realm(database: Database, rarity: Rarity = Rarity.MYTHIC) -> Real
         await connect(session, people.id, son.id, BondKind.WORSHIPS)
         await connect(session, cult.id, son.id, BondKind.WORSHIPS)
         await connect(session, mortal.id, knowledge.id, BondKind.KNOWS)
+        await BondRepository(session).connect(BondDraft(people.id, settlement.id, BondKind.RULES, 1, role=BondRole.HOMELAND))
         await session.flush()
         return Realm(
             cosmos,

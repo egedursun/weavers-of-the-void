@@ -8,6 +8,7 @@ from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
@@ -24,7 +25,7 @@ from aerona.engine.economy.household import Wear, warmed, wear
 from aerona.engine.industry.energy import draw, gauge, industry_row, power_for_heat, survival_heat, unmet_pct
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat_or
-from aerona.engine.structures.needs import SiteFacts, commission_level, power_folk_at, power_levels_at
+from aerona.engine.structures.needs import SiteFacts, commission_level, power_drawn_at, power_folk_at, power_levels_at
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, people, settlement
 
@@ -178,3 +179,15 @@ async def test_a_town_sizes_its_plants_to_every_people_that_draws_on_them_and_sh
         need = stat_or(community, "population", 0) * RULES.energy.electric_per_1000 // THOUSAND
         assert draw(book, community.id, EnergyKind.ELECTRIC, need) == need
         assert unmet_pct(row, EnergyKind.ELECTRIC) == 0
+
+
+async def test_plants_are_planned_with_a_reserve_and_for_the_warmth_their_folk_draw(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Coldmere", population=20000)
+    await realm.session.flush()
+    drawn = 20000 * RULES.energy.electric_per_1000 // THOUSAND
+    planned = -(-drawn * (100 + RULES.energy.power_reserve_pct) // 100 // RULES.energy.electric_per_level)
+    assert site_facts(town).power_lacking(RULES) == max(1, planned)
+    realm.session.add(CommunityIndustryRow(community_node_id=town.id, spent={}, short={}, heat=0, heat_need=40000, epoch=ctx.epoch, locked=[]))
+    await realm.session.flush()
+    assert await power_drawn_at(ctx, town.id) == power_for_heat(RULES, 40000)

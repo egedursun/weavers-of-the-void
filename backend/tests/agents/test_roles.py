@@ -38,6 +38,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.stats import StatBlock
+from aerona.engine.primitives.folk import towns_of_people
 from aerona.llm.errors import LlmDisabledError
 from aerona.prompts import PromptId, output_model
 from aerona.prompts.schemas.base import OutputModel
@@ -92,8 +93,10 @@ async def test_awakening_writes_six_records(runtime: AgentRuntime, model: FakeMo
     async with database.read() as session:
         people = await session.get(EntityRow, ids[0])
         words = int(await session.scalar(select(func.count()).select_from(LexemeRow).where(LexemeRow.word == "vesh")) or 0)
+        towns = await towns_of_people(session, ids[0])
     assert people is not None and people.entity_type is EntityType.PEOPLE
     assert words == 1
+    assert len(towns) == 1
 
 
 async def test_world_birth_creates_a_world(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:

@@ -99,6 +99,17 @@ def counting(node: ast.expr) -> bool:
     return False
 
 
+def tallied(node: ast.expr) -> bool:
+    if isinstance(node, ast.Call):
+        return isinstance(node.func, ast.Name) and node.func.id == "len"
+    name = node.id if isinstance(node, ast.Name) else node.attr if isinstance(node, ast.Attribute) else ""
+    return name in COUNT_NAMES or name.endswith("_count")
+
+
+def agreed(node: ast.expr) -> bool:
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"agree", "plural", "several"}
+
+
 def named_alike(node: ast.expr, word: str) -> bool:
     if isinstance(node, ast.Name):
         return node.id == word
@@ -113,6 +124,10 @@ def in_joined(node: ast.JoinedStr) -> list[str]:
     for index, part in enumerate(parts[:-1]):
         after = parts[index + 1]
         if not isinstance(part, ast.FormattedValue) or not isinstance(after, ast.Constant) or not isinstance(after.value, str):
+            continue
+        noun = parts[index + 2] if index + 2 < len(parts) else None
+        if after.value == " " and isinstance(noun, ast.FormattedValue) and tallied(part.value) and not agreed(noun.value):
+            found.append(f"{{{ast.unparse(part.value)}}} {{{ast.unparse(noun.value)}}}")
             continue
         match = WORD.match(after.value)
         if match and plural(match.group(1)) and (counting(part.value) or named_alike(part.value, match.group(1))):
@@ -237,13 +252,26 @@ def template_counts() -> list[Count]:
     return found
 
 
+HEDGED_PLURAL = re.compile(r"[A-Za-z]\(s\)")
+
+
+def hedged_plurals(files: dict[Path, str]) -> list[Count]:
+    return [
+        Count(path, number, match.group(0))
+        for path, text in files.items()
+        for number, line in enumerate(text.splitlines(), 1)
+        for match in HEDGED_PLURAL.finditer(line)
+    ]
+
+
 def main() -> int:
     source = {path: path.read_text(encoding="utf-8") for path in sorted(SOURCE.rglob("*.py"))}
     tests = {path: path.read_text(encoding="utf-8") for path in sorted(TESTS.rglob("*.py"))}
     misfilled = formatted({**source, **tests}, spec_templates(source))
     for item in misfilled:
         print(f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} cannot read a {{count:one|many}} template; fill it with fill()")
-    found = counts(source) + on_screen(screens()) + template_counts()
+    templates = {path: path.read_text(encoding="utf-8") for path in sorted(TEMPLATES.rglob("*.j2"))}
+    found = counts(source) + on_screen(screens()) + template_counts() + hedged_plurals({**source, **screens(), **templates})
     for item in found:
         where = f"{item.path.relative_to(ROOT)}:{item.line}"
         print(f"{where}: '{item.text}' reads wrong for a count of one; count through several() and agree(), or plural() and agree() on screen")

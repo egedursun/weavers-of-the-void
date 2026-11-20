@@ -248,7 +248,7 @@ class Notifier:
             name = str(item.get("name") or "")
             if action and name and name not in grouped.setdefault(action, []):
                 grouped[action].append(name)
-        counts = WORK_SEPARATOR.join(f"{len(names)} {action}" for action, names in grouped.items())
+        counts = WORK_SEPARATOR.join(f"{action} ({len(names)})" for action, names in grouped.items())
         title = f"{label[:1].upper()}{label[1:]}: {counts}"
         body = WORK_LINE_SEPARATOR.join(f"{action[:1].upper()}{action[1:]}: {', '.join(names)}" for action, names in grouped.items())
         nodes = {item.get("node_id") for item in items}

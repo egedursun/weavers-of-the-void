@@ -1,6 +1,10 @@
+from typing import cast
+
+import pytest
 from sqlalchemy import select
 
 from aerona.catalog.anatomy import FINGERS, Part, anatomy_of
+from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import (
@@ -14,6 +18,7 @@ from aerona.domain.enums.body import (
     InjuryKind,
     InjuryState,
     MaimedKind,
+    MedicineTier,
     StrikeStyle,
 )
 from aerona.domain.enums.bond import BondKind
@@ -22,6 +27,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, Mor
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import KnowledgeStats
+from aerona.engine.body import healing
 from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, legacy_plan_from_words, size_of
 from aerona.engine.body.cohorts import return_maimed, tend_cohorts, war_appetite
 from aerona.engine.body.customs import ensure_customs
@@ -281,3 +287,34 @@ async def test_the_bedridden_cannot_fight_and_a_blinded_sage_finds_a_reader(real
     await refresh(realm.session, ctx.rules, sick, ctx.epoch)
     sick_body = await ensure_body(realm.session, ctx.rules, sick, ctx.epoch)
     assert bedridden(ctx.rules, sick) and sick_body.melee == 0 and sick_body.command == 0
+
+
+class CountingRandom:
+    def __init__(self) -> None:
+        self.rolls = 0
+
+    def chance(self, _percent: float) -> bool:
+        self.rolls += 1
+        return False
+
+
+async def test_a_wound_taken_on_campaign_faces_the_camp_for_every_season_of_its_year(realm: Realm, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(healing, "infection_chance", lambda *_args: 1.0)
+    ctx = context(realm.session)
+    care = healing.Care(tier=MedicineTier.NONE, healer=None, disease=50, metallurgy=0, artisan=None)
+    rolls = []
+    for campaign in (False, True):
+        rng = CountingRandom()
+        row = InjuryRow(state=InjuryState.FRESH)
+        assert not healing.infected(
+            ctx,
+            row,
+            BodyRow(),
+            care,
+            skill=0,
+            ward=1.0,
+            rng=cast(SeededRandom, rng),
+            campaign=campaign,
+        )
+        rolls.append(rng.rolls)
+    assert rolls == [1, 1 + ctx.rules.campaigns.seasons_per_war_epoch]

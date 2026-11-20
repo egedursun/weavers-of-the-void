@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from aerona.core.random import SeededRandom
 from aerona.db.base import Base
@@ -73,7 +74,7 @@ from aerona.db.tables.space_weather import SpaceWeatherEventRow
 from aerona.db.tables.speech import SpeechRow
 from aerona.db.tables.standing import ProfessionOfValueRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.tables.warfare import ArmyRow, HeroQuestRow, WarRow, WarSideRow
 from aerona.db.tables.water import SedimentFlowRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow, StateEnterpriseRow
 from aerona.db.tables.youth import YouthGroupRow
@@ -115,6 +116,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
+from aerona.domain.enums.war import HeroQuestStatus
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import CelestialStats, IdeologyStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
 from aerona.engine.arts.movements import found_movement, makers_by_town
@@ -678,6 +680,42 @@ async def bartering_towns(session: AsyncSession) -> None:
 async def dead_sibling(session: AsyncSession) -> None:
     sons = list(await session.scalars(select(SonRow).order_by(SonRow.id).limit(2)))
     sons[1].status, sons[1].death_epoch = SonStatus.DEAD, 1
+
+
+Town = aliased(EntityRow)
+
+
+async def peopled_town(session: AsyncSession) -> int:
+    found = await session.scalar(
+        select(EntityRow.location_id)
+        .join(Town, Town.id == EntityRow.location_id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, Town.entity_type == EntityType.SETTLEMENT)
+        .order_by(EntityRow.location_id)
+        .limit(1)
+    )
+    assert found is not None
+    return int(found)
+
+
+async def free_hero(session: AsyncSession) -> int:
+    questing = select(HeroQuestRow.hero_entity_id).where(HeroQuestRow.status == HeroQuestStatus.ACTIVE)
+    found = await session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(questing))
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    assert found is not None
+    return int(found)
+
+
+async def dead_sibling_and_rich_town(session: AsyncSession) -> None:
+    await dead_sibling(session)
+    town = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id).limit(1)
+    )
+    assert town is not None
+    set_stats(town, wealth=100, prosperity=100)
 
 
 async def dead_and_rich(session: AsyncSession) -> None:
@@ -1712,7 +1750,8 @@ LEVERS: dict[str, Lever] = {
         guild_id=Newest(EntityType.FACTION),
     ),
     "hero:hunt": given(monster_id=Pick(EntityType.SPECIES)),
-    **{name: after(("hero:quest", {"hero_id": Pick(MORTAL)})) for name in ("hero:recall", "hero:resolve")},
+    "hero:quest": given(hero_id=Computed(free_hero)),
+    **{name: after(("hero:quest", {"hero_id": Computed(free_hero)})) for name in ("hero:recall", "hero:resolve")},
     "holy_order:edit": after(*HOLY, order_id=Newest(EntityType.FACTION), tithe_share=10),
     "holy_order:remove": after(*HOLY, ("holy_order:edit", {"order_id": Newest(EntityType.FACTION), "tithe_share": 10}), order_id=Newest(EntityType.FACTION)),
     "horror:suppress_cult": after(("horror:cult", {"entity_id": Pick(TOWN)}), cult_id=Newest(EntityType.CULT)),
@@ -1807,7 +1846,7 @@ LEVERS: dict[str, Lever] = {
         kind_id=Newest("custom_kind"),
     ),
     "resurrect:son": Lever(values={"son_id": Pick("son", 1)}, setup=dead_and_rich),
-    "rite": Lever(values={"entity_id": Pick(TOWN), "son_id": Pick("son", 1), "kind": "rite"}, setup=dead_sibling),
+    "rite": Lever(values={"entity_id": Pick(TOWN), "son_id": Pick("son", 1), "kind": "rite"}, setup=dead_sibling_and_rich_town),
     **{name: Lever(values={"sibling_id": Pick("son"), "son_id": Pick("son", 1)}, setup=dead_sibling) for name in ("sibling:hinder_return", "sibling:scheme")},
     "son:star": Lever(values={"son_id": Pick("son")}, setup=seasoned_son),
     "son:ascend": Lever(values={"son_id": Pick("son")}, setup=ascended_son),
@@ -3800,7 +3839,7 @@ RANK_UP = ("purity_rank:create", {"people_id": Pick(PEOPLE), "name": "The First 
 MISHAP_UP = ("mishap:create", {"town_id": Pick(TOWN), "kind": "illness", "victim_id": Pick(MORTAL)})
 BELIEF_UP = ("luck_belief:create", {"people_id": Pick(PEOPLE), "sign": "number", "reach": "battle", "lucky": True, "name": "A lucky number of the folk"})
 CHARM_UP = ("charm:set", {"item_id": Pick(ITEM), "power": "luck", "strength": 40})
-ACCUSE_UP = ("accusation:create", {"town_id": Pick(TOWN), "accuser_id": None, "mishap_id": None})
+ACCUSE_UP: tuple[str, dict[str, Any]] = ("accusation:create", {"town_id": Computed(peopled_town), "accuser_id": None, "mishap_id": None})
 HUNT_UP = ("witch_hunt:create", {"town_id": Pick(TOWN), "fervour": 50})
 FOLKWAYS_EDITS: Mapping[str, Mapping[str, Any]] = {
     "diet:edit": {"staple": 40, "protein": 20, "fat": 10, "fresh": 15, "mineral": 5, "preserved": 5, "special": 5, "energy": 80},
@@ -3853,7 +3892,7 @@ LEVERS.update(
         **{name: after(BELIEF_UP, belief_id=Newest("luck_belief")) for name in ("luck_belief:edit", "luck_belief:delete")},
         "charm:set": given(item_id=Pick(ITEM), power="protection", strength=60),
         **{name: after(CHARM_UP, item_id=Pick(ITEM)) for name in ("charm:edit", "charm:delete")},
-        "accusation:create": given(town_id=Pick(TOWN), accuser_id=None, mishap_id=None),
+        "accusation:create": given(town_id=Computed(peopled_town), accuser_id=None, mishap_id=None),
         **{name: after(ACCUSE_UP, accusation_id=Newest("accusation")) for name in ("accusation:edit", "accusation:delete")},
         "witch_hunt:create": given(town_id=Pick(TOWN), fervour=70),
         **{name: after(HUNT_UP, hunt_id=Newest("witch_hunt")) for name in ("witch_hunt:edit", "witch_hunt:delete")},
@@ -4978,7 +5017,7 @@ LEVERS.update(
 HORROR_UP = ("horror:event", {"world_id": Pick("world"), "target": "light", "effect": "suppress", "scope": "world", "sense": "seen", "source": "unknown"})
 ATTACK_UP = ("creature_attack:create", {"node_id": Pick(EntityType.SPECIES), "delivery": "spit", "effect": "corrosion", "range": "near"})
 ASPECT_UP = ("dimension_aspect:create", {"dimension_id": Computed(prime_dimension), "form": "time", "strength": 40})
-QUEST_UP = ("hero:quest", {"hero_id": Pick(MORTAL)})
+QUEST_UP: tuple[str, dict[str, Any]] = ("hero:quest", {"hero_id": Computed(free_hero)})
 LEGEND_UP = ("cosmic:legendary_quest", {"aim": "restore", "target_kind": "star"})
 EDITS = {
     **EDITS,

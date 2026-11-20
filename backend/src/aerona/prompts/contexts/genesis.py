@@ -20,6 +20,7 @@ class GenesisWizardContext(RulesContext):
     magic: int
     danger: int
     technology_label: str
+    technology_meaning: str
     language_label: str
     cosmos_label: str
     shape_line: str | None = None

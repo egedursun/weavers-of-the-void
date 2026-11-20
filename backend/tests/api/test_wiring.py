@@ -1,5 +1,6 @@
 from dataclasses import fields
 
+from aerona.agents.grounding import GroundedModel
 from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.llm.client import LlmClient
 from aerona.settings import Settings
@@ -12,7 +13,9 @@ POLL_SECONDS = 0.02
 
 async def test_engine_only_wiring_uses_a_disabled_haiku_client(empty_api: ApiWorld) -> None:
     services = empty_api.services
-    model = services.application.model
+    grounded = services.application.model
+    assert isinstance(grounded, GroundedModel) and grounded.enabled is False
+    model = grounded.inner
     assert isinstance(model, LlmClient)
     assert model.model == HAIKU_MODEL_ID
     assert model.enabled is False

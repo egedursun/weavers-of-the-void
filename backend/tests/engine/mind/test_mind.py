@@ -3,6 +3,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import MindRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.warfare import HeroQuestRow
@@ -43,6 +44,7 @@ from aerona.engine.mind.book import (
     stored_values,
     traits_of,
     values_for,
+    write_needs,
     write_pressures,
     write_values,
 )
@@ -218,6 +220,20 @@ async def test_a_captive_feels_unsafe(realm: Realm) -> None:
     await mind_survey(context(realm.session))
     await mind_needs(context(realm.session))
     assert (await needs_of(realm.session, held.id))[NeedKind.SAFETY] < (await needs_of(realm.session, free.id))[NeedKind.SAFETY]
+
+
+async def test_a_first_reading_of_needs_is_no_fall_into_despair(realm: Realm) -> None:
+    town = await settlement(realm, "Ashpit", prosperity=0)
+    poor = await mortal(realm, "Teo", location_id=town.id, charisma=100)
+    await mind_survey(context(realm.session))
+    await mind_needs(context(realm.session))
+    told = select(ChronicleRow.text).where(ChronicleRow.template_key == "need.despair")
+    low = [need for need, value in (await needs_of(realm.session, poor.id)).items() if value < Rules().needs.despair_level]
+    assert low
+    assert list(await realm.session.scalars(told)) == []
+    await write_needs(realm.session, poor.id, dict.fromkeys(NeedKind, 100))
+    await mind_needs(context(realm.session))
+    assert [line for line in await realm.session.scalars(told) if "despair for want of" in line]
 
 
 async def test_humiliation_and_a_wrathful_ruler_raise_the_drive_to_war(realm: Realm) -> None:

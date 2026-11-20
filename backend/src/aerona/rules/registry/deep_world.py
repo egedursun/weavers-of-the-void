@@ -51,7 +51,7 @@ class DeepWorldRules(Spanned):
     refugee_chance: int = rule(40, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Refugee migration after war or disaster (%)")
     spirit_rest_chance: int = rule(30, 0, 100, RuleGroup.THE_BEYOND, "A calm spirit comes to rest (%)")
     spirit_passage_chance: int = rule(12, 0, 100, RuleGroup.THE_BEYOND, "A spirit passes to the land of the dead (%)")
-    structure_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "A prosperous city builds a structure (%)")
+    structure_chance: int = rule(25, 0, 100, RuleGroup.CIVILIZATION, "Chance a prosperous city begins a structure in each sampled year of an epoch (%)")
 
     @property
     def ruin_grace_epochs(self) -> int:

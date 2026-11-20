@@ -1,7 +1,7 @@
 from aerona.catalog.crimes import TRIALS
 from aerona.catalog.genetic_effects import HOUSE_TRAIT_LABELS, HOUSE_TRAIT_SOURCES
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
-from aerona.catalog.intrigue import PLOT_STEPS, SCHEMES, SECRETS
+from aerona.catalog.intrigue import PLOT_STEPS, SCHEME_DONE, SCHEME_PLOTTED, SECRET_TOLD
 from aerona.catalog.law_depth import CLAIM_TEXT, COURT_TEXT, REGISTRY_TEXT
 from aerona.catalog.statecraft import DEMAND_TEXT, RESOLUTION_TEXT
 from aerona.core.grammar import an
@@ -610,7 +610,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.tier_fell",
         G.LAW,
-        "{subject} fell to tier {tier} of realms.",
+        "{subject} fell to realm tier {tier}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("tier", FactValue.NUMBER, unit=FactUnit.COUNT),
@@ -624,7 +624,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.tier_rose",
         G.LAW,
-        "{subject} rose to tier {tier} of realms.",
+        "{subject} rose to realm tier {tier}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("tier", FactValue.NUMBER, unit=FactUnit.COUNT),
@@ -733,7 +733,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "regime.chiefdom",
         G.LAW,
-        "The following of {subject} became a chiefdom that passes by descent.",
+        "The following of {subject} became a rule that passes by descent.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.LEADER, required=False)),
         facts=(
             FactSpec("horizon", FactValue.NUMBER, unit=FactUnit.PERCENT),
@@ -936,7 +936,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "statecraft.summit",
         G.LAW,
-        "The great powers {member} met in a summit.",
+        "{member} met in a summit of great powers.",
         roles=(RoleSpec(R.MEMBER, many=True),),
         facts=(FactSpec("trust", FactValue.NUMBER, unit=FactUnit.STANDING),),
         steps=frozenset({StepAction.NEGOTIATE}),
@@ -1082,7 +1082,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.build_realm",
         G.LAW,
-        "{maker} made the realm {product} on {host} for {purpose}.",
+        "{maker} made {product}, a realm of their own, on {host} for {purpose}.",
         roles=(RoleSpec(R.MAKER), RoleSpec(R.HOST), RoleSpec(R.PRODUCT)),
         facts=(
             FactSpec("ratio", FactValue.NUMBER, unit=FactUnit.PERCENT),
@@ -1134,7 +1134,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.confine_in_realm",
         G.LAW,
-        "{actor} confined {victim} in the made realm {destination}.",
+        "{actor} confined {victim} in {destination}, a made realm.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM), RoleSpec(R.DESTINATION)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
@@ -1153,7 +1153,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.enter_realm",
         G.LAW,
-        "{actor} went into the made realm {destination}.",
+        "{actor} went into {destination}, a made realm.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
@@ -1545,7 +1545,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             f"law.settled_{registry.value}",
             G.LAW,
-            f"The {REGISTRY_TEXT[registry]} owed by {{borrower}} to {{lender}} was settled with a last payment of {{paid:coin|coins}}.",
+            f"{{borrower}} paid {{lender}} the last of what was owed on the record of {an(REGISTRY_TEXT[registry])}: {{paid:coin|coins}}.",
             roles=(RoleSpec(R.LENDER), RoleSpec(R.BORROWER, required=False)),
             facts=(FactSpec("paid", FactValue.NUMBER, unit=FactUnit.COIN),),
             clock=ProcessClock.INSTANT,
@@ -1639,7 +1639,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             f"intrigue.scheme_done_{plot.value}",
             G.LAW,
-            f"{an(SCHEMES[plot].label.lower(), capital=True)} by {{actor}} against {{target}} was carried out.",
+            "{actor} " + SCHEME_DONE[plot] + ".",
             roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False), RoleSpec(R.CO_ACTOR, required=False, many=True)),
             facts=(
                 FactSpec("odds", FactValue.NUMBER, unit=FactUnit.PERCENT),
@@ -1655,7 +1655,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             f"intrigue.scheme_exposed_{plot.value}",
             G.LAW,
-            f"{{target}} uncovered the {SCHEMES[plot].label.lower()} {{actor}} plotted against them.",
+            "{target} uncovered the plot of {actor} " + SCHEME_PLOTTED[plot] + ".",
             roles=(RoleSpec(R.TARGET), RoleSpec(R.ACTOR), RoleSpec(R.CO_ACTOR, required=False, many=True)),
             facts=(FactSpec("infamy", FactValue.NUMBER, unit=FactUnit.RENOWN), FactSpec("power", FactValue.NUMBER, unit=FactUnit.STRENGTH)),
             clock=ProcessClock.INSTANT,
@@ -1668,7 +1668,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             f"intrigue.exposed_{kind.value}",
             G.LAW,
-            f"It came out that {{subject}} kept {SECRETS[kind].label.lower()}.",
+            f"A secret of {{subject}} came out: {SECRET_TOLD[kind]}.",
             roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False)),
             facts=(FactSpec("severity", FactValue.NUMBER, unit=FactUnit.SEVERITY),),
             clock=ProcessClock.INSTANT,

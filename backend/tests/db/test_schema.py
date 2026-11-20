@@ -1,3 +1,4 @@
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -158,3 +159,26 @@ async def test_sons_and_entities_share_the_node_registry(session: AsyncSession, 
     region = await make_entity(session, "Teyl", EntityType.REGION, world_id=world_id)
     assert son.id != region.id
     assert isinstance(await session.get(SonRow, son.id), SonRow)
+
+
+async def test_the_homeland_migration_gives_a_first_people_its_own_first_town(session: AsyncSession, world_id: int) -> None:
+    spec = importlib.util.spec_from_file_location("genesis_homelands", SCRIPT_LOCATION / "versions" / "c4e8a2f6b913_genesis_homelands.py")
+    assert spec is not None and spec.loader is not None
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    folk = await make_entity(session, "Ruvenar", EntityType.PEOPLE, world_id=world_id)
+    town = await make_entity(session, "Halmure", EntityType.SETTLEMENT, world_id=world_id)
+    taken = await make_entity(session, "Tesuvar", EntityType.SETTLEMENT, world_id=world_id)
+    taken.birth_epoch = 3
+    housed = await make_entity(session, "Vesmari", EntityType.PEOPLE, world_id=world_id)
+    home = await make_entity(session, "Sulenure", EntityType.SETTLEMENT, world_id=world_id)
+    first = BondRow(source_node_id=folk.id, target_node_id=town.id, kind=BondKind.RULES, epoch=1)
+    conquest = BondRow(source_node_id=folk.id, target_node_id=taken.id, kind=BondKind.RULES, epoch=3)
+    kept = BondRow(source_node_id=housed.id, target_node_id=home.id, kind=BondKind.RULES, epoch=1, role=BondRole.HOMELAND)
+    other = BondRow(source_node_id=housed.id, target_node_id=town.id, kind=BondKind.RULES, epoch=1)
+    session.add_all([first, conquest, kept, other])
+    await session.flush()
+    await session.execute(migration.HOMELESS_FIRST_TOWNS)
+    for row in (first, conquest, kept, other):
+        await session.refresh(row)
+    assert (first.role, conquest.role, kept.role, other.role) == (BondRole.HOMELAND, None, BondRole.HOMELAND, None)

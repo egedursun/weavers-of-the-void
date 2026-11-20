@@ -14,7 +14,7 @@ from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.ecology import AnimalRole
@@ -29,7 +29,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import holdings
-from aerona.engine.primitives.folk import present_among, towns_of_people
+from aerona.engine.primitives.folk import HOMELAND_BONDS, present_among, towns_of_people
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import headcount
@@ -219,11 +219,27 @@ async def people_towns(session: AsyncSession, people_id: int) -> list[int]:
 
 @memoized(EntityRow, BondRow)
 async def peoples_drawing(session: AsyncSession) -> dict[int, tuple[tuple[int, int], ...]]:
+    peoples = [people.id for people in await canon(session, [EntityType.PEOPLE])]
+    homes: dict[int, set[int]] = {people: {people} for people in peoples}
+    ruled: dict[int, set[int]] = {people: set() for people in peoples}
+    for bond in await active_bonds(session, HOMELAND_BONDS, sources=peoples):
+        if bond.kind is BondKind.RULES:
+            ruled[bond.source_node_id].add(bond.target_node_id)
+        if bond.role is BondRole.HOMELAND:
+            homes[bond.source_node_id].add(bond.target_node_id)
+    for bond in await active_bonds(session, [BondKind.DESCENDS_FROM], targets=peoples):
+        homes[bond.target_node_id].add(bond.source_node_id)
+    places = sorted(set().union(*homes.values())) if homes else []
+    settled = set(
+        await session.scalars(
+            select(EntityRow.id).where(EntityRow.id.in_(places), EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        )
+    )
     drawing: dict[int, list[tuple[int, int]]] = {}
-    for people in await canon(session, [EntityType.PEOPLE]):
-        towns = await people_towns(session, people.id)
+    for people in peoples:
+        towns = sorted((homes[people] & settled) | ruled[people])
         for town in towns:
-            drawing.setdefault(town, []).append((people.id, len(towns)))
+            drawing.setdefault(town, []).append((people, len(towns)))
     return {town: tuple(found) for town, found in drawing.items()}
 
 
@@ -244,7 +260,7 @@ async def drawing_folk(session: AsyncSession, town_id: int) -> dict[int, float]:
 
 async def power_levels(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind]) -> float:
     levels = await levels_by_host(ctx.session, kinds)
-    hosts = await people_towns(ctx.session, community.id) if community.entity_type is EntityType.PEOPLE else [community.id]
+    hosts = [*await people_towns(ctx.session, community.id), community.id] if community.entity_type is EntityType.PEOPLE else [community.id]
     share = 0.0
     for host in hosts:
         if not levels.get(host):

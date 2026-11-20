@@ -85,6 +85,22 @@ async def test_a_holder_of_most_of_a_tier_corners_it(session: AsyncSession, worl
     assert "commerce.tier_cornered" in await kinds_of(session)
 
 
+async def test_a_towns_own_common_trade_is_never_a_corner_and_old_corners_are_freed(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    home = await town(session, world)
+    session.add(MarketPriceRow(market_entity_id=home.id, commodity=CommodityKind.GRAIN, epoch=ctx.epoch, price=100, supply=50, demand=50))
+    fresh = SupplyTierRow(market_entity_id=home.id, tier=SupplyTier.RETAIL, holder_node_id=home.id, share=100, margin=20, locked=[])
+    stale = SupplyTierRow(market_entity_id=home.id, tier=SupplyTier.WHOLESALE, holder_node_id=home.id, share=100, margin=99, cornered=True, locked=[])
+    session.add_all([fresh, stale])
+    await session.flush()
+    seeded = await seed_commerce(ctx)
+    await keep_commerce(ctx)
+    profile = await session.get(SettlementProfileRow, home.id)
+    assert seeded.freed == 1 and not stale.cornered and stale.margin == ctx.rules.commerce.wholesale_margin_pct
+    assert not fresh.cornered and fresh.margin == 20
+    assert profile is not None and profile.unrest == 10
+    assert "commerce.tier_cornered" not in await kinds_of(session)
+
+
 async def test_a_false_claim_is_found_out_and_costs_honour(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
     home = await town(session, world)
     holder = await trader(session, world, "Iro", home.id)

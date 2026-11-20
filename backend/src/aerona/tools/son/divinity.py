@@ -19,7 +19,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import revised
 from aerona.engine.divine import control
 from aerona.engine.divine.foreign import friendship, pact_between, seal_pact
-from aerona.engine.divine.goals import GOAL_LABELS, active_goals
+from aerona.engine.divine.goals import active_goals, aim_text
 from aerona.engine.divine.outer import oppose_cost
 from aerona.engine.divine.wounds import gather
 from aerona.engine.lifecycle.states import state_of
@@ -73,8 +73,9 @@ async def set_aim(call: SonCall, args: SetAimInput) -> str:
         )
     except AeronaError as error:
         fail(SonResult.AIM_REFUSED, reason=error.message)
-    await call.record("tools.son.set_aim", roles={IncidentRole.ACTOR: call.son.id}, facts={"aim": GOAL_LABELS[row.kind].lower()}, kind=ChronicleKind.ASCENSION)
-    return result(SonResult.AIM_SET, aim=GOAL_LABELS[row.kind].lower())
+    aim = await aim_text(call.session, row)
+    await call.record("tools.son.set_aim", roles={IncidentRole.ACTOR: call.son.id}, facts={"aim": aim}, kind=ChronicleKind.ASCENSION)
+    return result(SonResult.AIM_SET, aim=aim)
 
 
 async def take_mortal_form(call: SonCall, args: MortalFormInput) -> str:

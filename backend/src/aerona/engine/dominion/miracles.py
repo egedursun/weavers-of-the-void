@@ -80,7 +80,7 @@ async def credited(ctx: TickContext, god_id: int, kind: str, region: int | None,
         return god_id
     if not await fits(ctx, ruler, kind):
         return god_id
-    misread = ctx.rng(f"miracle.misread.{god_id}.{region}.{kind}.{ctx.epoch}").chance(ctx.rules.miracle_impression.misread_pct)
+    misread = ctx.rng(f"miracle.misread.{god_id}.{'nowhere' if region is None else region}.{kind}.{ctx.epoch}").chance(ctx.rules.miracle_impression.misread_pct)
     return ruler if misread else god_id
 
 

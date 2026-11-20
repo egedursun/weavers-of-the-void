@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
+from typing import Any
 
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityType
@@ -63,5 +65,7 @@ class IncidentKindSpec:
         return next((spec for spec in self.facts if spec.key == key), None)
 
 
-def per_value(prefix: str, values: type[StrEnum], spec: IncidentKindSpec) -> tuple[IncidentKindSpec, ...]:
-    return tuple(replace(spec, key=f"{prefix}{member.value}", enum_suffix=values) for member in values)
+def per_value(prefix: str, values: type[StrEnum], spec: IncidentKindSpec, told: Mapping[Any, str] | None = None) -> tuple[IncidentKindSpec, ...]:
+    return tuple(
+        replace(spec, key=f"{prefix}{member.value}", enum_suffix=values, template=told[member] if told is not None else spec.template) for member in values
+    )

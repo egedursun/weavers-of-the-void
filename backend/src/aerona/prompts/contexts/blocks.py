@@ -57,6 +57,7 @@ class WorldHeaderContext(RulesContext):
     world_name: str
     age: int
     world_year: int
+    technology: str | None = None
     god_name: str
     god_title: str | None = None
     short: bool = False

@@ -1,20 +1,24 @@
 from typing import Any
 
+from sqlalchemy import select
+
 from aerona.core.grammar import spoken
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CarrierRow, CureResearchRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.disease_agents import CureClass
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.disease.agents import apply_cure, works_on
 from aerona.engine.disease.research import institutions
 from aerona.engine.disease.responses import take_up
+from aerona.engine.eras.effects import home_community
 from aerona.engine.mind.book import skill_level
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import folk_among, homes_for
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -42,8 +46,18 @@ class FindCarrierInput(ToolInput):
 
 
 async def home_of(call: MortalCall) -> EntityRow | None:
-    home = await living_entity(call.session, call.me.location_id) if call.me.location_id is not None else None
-    return home if home is not None and home.entity_type in COMMUNITY_TYPES else None
+    return await home_community(call.session, call.me)
+
+
+async def healing_skill(call: MortalCall, places: set[int]) -> int:
+    if call.me.entity_type is EntityType.MORTAL:
+        return await skill_level(call.session, call.me.id, SkillKind.MEDICINE)
+    folk = await call.session.scalars(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await folk_among(call.session, places))
+        .order_by(EntityRow.id)
+    )
+    return max([await skill_level(call.session, being, SkillKind.MEDICINE) for being in folk], default=0)
 
 
 async def sickness(call: MortalCall, disease_id: int, refused: MortalResult) -> EntityRow:
@@ -59,7 +73,7 @@ async def answer_sickness(call: MortalCall, args: AnswerSicknessInput) -> str:
     community = await living_entity(call.session, realm) if realm is not None else await home_of(call)
     if community is None:
         fail(MortalResult.ANSWER_REFUSED, why="you lead no community")
-    if realm is None and await skill_level(call.session, call.me.id, SkillKind.MEDICINE) <= 0:
+    if realm is None and call.me.entity_type not in COMMUNITY_TYPES and await skill_level(call.session, call.me.id, SkillKind.MEDICINE) <= 0:
         fail(MortalResult.ANSWER_REFUSED, why="you neither rule nor heal")
     await take_up(call.tick, community, disease.id, args.response)
     worked = await apply_cure(call.tick, community, disease.id, args.cure_class) if args.cure_class is not None else None
@@ -76,10 +90,11 @@ async def answer_sickness(call: MortalCall, args: AnswerSicknessInput) -> str:
 async def seek_cure(call: MortalCall, args: SeekCureInput) -> str:
     disease = await sickness(call, args.disease_id, MortalResult.CURE_REFUSED)
     home = await home_of(call)
-    seat = next((row for row in await institutions(call.session) if home is not None and row.location_id == home.id), None)
+    places = await homes_for(call.session, [home.id]) if home is not None else set()
+    seat = next((row for row in await institutions(call.session) if row.location_id in places), None)
     if seat is None:
         fail(MortalResult.CURE_REFUSED, why="there is no hospital, academy or monastery where you live")
-    skill = await skill_level(call.session, call.me.id, SkillKind.MEDICINE)
+    skill = await healing_skill(call, places)
     if skill <= 0:
         fail(MortalResult.CURE_REFUSED, why="you know nothing of medicine")
     row = await call.session.get(CureResearchRow, (seat.id, disease.id))

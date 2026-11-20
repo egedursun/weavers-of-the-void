@@ -64,7 +64,7 @@ from aerona.engine.operations.control import set_crew
 from aerona.engine.operations.engagement import engage
 from aerona.engine.operations.expeditions import ExpeditionTally, advance, arrive, danger_of, eat, launch, party_of, strain
 from aerona.engine.operations.limits import over_limit
-from aerona.engine.operations.sail import SailTally, ship_state, take_prize
+from aerona.engine.operations.sail import SailTally, set_sail, ship_state, take_prize
 from aerona.engine.operations.supply import SupplyTally, culminate, draw, keep_network, network, supply_season, throughput
 from aerona.engine.operations.theatres import TheatreTally, keep_theatres
 from aerona.engine.polity.accords import Clause, sign
@@ -289,6 +289,15 @@ async def test_a_ship_in_irons_is_raked_and_a_broken_ship_strikes_and_is_taken_a
     assert {step.action for step in fight.steps} >= {StepAction.MANOEUVRE, StepAction.FIRE, StepAction.STRIKE_COLOURS}
     money = await take_prize(ctx, hunter[1], prey[0], prey[1], town)
     assert money > 0 and stuck.prize_of_entity_id == town.id and prey[1].crew == stuck.prize_crew > 0
+
+
+async def test_a_ship_in_no_known_waters_still_sets_sail(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "seafaring")
+    _, town = await realm_with_town(session, world)
+    vessel, row = await ship(session, world, town, "Petrel", 40)
+    tally = SailTally()
+    state = await set_sail(ctx, vessel, row, None, tally)
+    assert tally.legs == 1 and state.updated_epoch == ctx.epoch
 
 
 async def test_a_fleet_past_its_treaty_limit_breaks_it_and_a_lawless_admiral_hides_ships_in_a_scheme(session: AsyncSession, world: CoreWorld) -> None:

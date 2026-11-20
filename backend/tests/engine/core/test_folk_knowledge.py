@@ -180,3 +180,15 @@ async def test_a_people_that_watches_the_heavens_keeps_its_sky_lore_right(sessio
     await session.flush()
     await watch_the_heavens(ctx, world.people, sky)
     assert sky.accuracy == min(ctx.rules.forecasting.sky_mark_cap, 3 * ctx.rules.forecasting.sky_mark_accuracy)
+
+
+async def test_each_people_names_the_land_it_lives_on_and_its_sky_holds_no_own_world(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    far = await entity(session, "Fell Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id, location_id=world.regions[1].id)
+    for people in (world.people, far):
+        await knowing(session, people, FolkDomain.LAND, depth=100, accuracy=100)
+        await knowing(session, people, FolkDomain.SKY, depth=100, accuracy=100)
+    await keep_folk_knowledge(tuned(ctx, class_span=100), FolkTally())
+    land = {row.people_entity_id: row.grouped_node_id for row in await session.scalars(select(FolkClassRow).where(FolkClassRow.domain == FolkDomain.LAND))}
+    assert land == {world.people.id: world.people.location_id, far.id: world.regions[1].id}
+    sky = set(await session.scalars(select(FolkClassRow.grouped_node_id).where(FolkClassRow.domain == FolkDomain.SKY)))
+    assert world.world.id not in sky

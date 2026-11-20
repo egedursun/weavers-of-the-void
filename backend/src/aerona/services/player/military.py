@@ -135,7 +135,7 @@ async def edit_stack(scope: PlayerScope, command: EditStack) -> Effect:
 @player_action("army:add_stack", ActionKind.EDIT_RECORD)
 async def add_stack(scope: PlayerScope, command: AddStack) -> Effect:
     row = await control.add_stack(await scope.context("army_stack"), command.army_id, command.kind, command.count)
-    return Effect(f"{row.count} {spoken(row.kind)} join the army.", command.army_id)
+    return Effect(f"The army takes in {spoken(row.kind)}, {row.count} strong.", command.army_id)
 
 
 @player_action("army:remove_stack", ActionKind.EDIT_RECORD)

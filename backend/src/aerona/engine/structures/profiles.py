@@ -17,7 +17,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin, MaterialSlot
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.minds import MindOrigin
 from aerona.domain.enums.structure import STANDING_STATES, BuilderKind, ConstructionState, StructureKind
@@ -131,11 +131,12 @@ async def host_for(session: AsyncSession, structure: EntityRow) -> EntityRow | N
     current = await session.get(EntityRow, structure.location_id) if structure.location_id is not None else None
     for _ in range(HOST_HOPS):
         if current is None:
-            return None
+            break
         if current.entity_type in COMMUNITY_TYPES:
             return current
         current = await session.get(EntityRow, current.location_id) if current.location_id is not None else None
-    return None
+    maker = await session.get(EntityRow, structure.maker_entity_id) if structure.maker_entity_id is not None else None
+    return maker if maker is not None and maker.entity_type in COMMUNITY_TYPES and maker.status is EntityStatus.CANON else None
 
 
 async def style_for(session: AsyncSession, community: EntityRow | None) -> Style | None:

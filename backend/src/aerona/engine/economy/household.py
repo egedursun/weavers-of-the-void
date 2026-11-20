@@ -241,6 +241,9 @@ async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityR
         CommodityKind.TIMBER: round_half_up(farmers * table.commons_timber_per_1000_farmers / THOUSAND * region.forest_cover / PERCENT),
         CommodityKind.STONE: round_half_up(farmers * table.commons_stone_per_1000_farmers / THOUSAND * region.roughness / PERCENT),
         CommodityKind.PEAT: round_half_up(farmers * ctx.rules.food_chain.peat_per_1000 / THOUSAND * region.wetland / PERCENT),
+        CommodityKind.HERBS: round_half_up(
+            farmers * table.commons_herbs_per_1000_farmers / THOUSAND * max(region.forest_cover, region.wetland, region.soil_fertility) / PERCENT
+        ),
     }
     ledger = goods_of(ctx.session, ctx.epoch)
     for kind, amount in gathered.items():

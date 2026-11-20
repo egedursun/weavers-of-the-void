@@ -403,7 +403,7 @@ async def update_needs(ctx: TickContext, mortal: EntityRow, values: Values, trai
     after = await mortal_needs(ctx.session, ctx.rules, mortal, values=values, traits=traits, epoch=ctx.epoch)
     await write_needs(ctx.session, mortal.id, after)
     floor = ctx.rules.needs.despair_level
-    fallen = [need for need, value in after.items() if value < floor <= before.get(need, FULL)]
+    fallen = [need for need, value in after.items() if need in before and value < floor <= before[need]]
     if fallen and is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
         await record(
             ctx,

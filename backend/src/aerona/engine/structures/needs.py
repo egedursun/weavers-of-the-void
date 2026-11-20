@@ -25,7 +25,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import STRUCTURE_LEVEL_MAX, ConstructionState, StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
-from aerona.engine.industry.energy import POWER_HEAT, POWER_PLANTS, drawers_at, drawing_folk
+from aerona.engine.industry.energy import POWER_HEAT, POWER_PLANTS, drawers_at, drawing_folk, power_for_heat
 from aerona.engine.lore.research import lacks, techniques_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -84,7 +84,8 @@ class SiteFacts:
 
     def power_lacking(self, rules: Rules) -> int:
         table = rules.energy
-        demand = max(self.power_drawn, (self.value("population") + self.power_folk) * table.electric_per_1000 // THOUSAND)
+        drawn = max(self.power_drawn, (self.value("population") + self.power_folk) * table.electric_per_1000 // THOUSAND)
+        demand = drawn * (PERCENT + table.power_reserve_pct) // PERCENT
         wanted = max(1, -(-demand // table.electric_per_level)) if table.electric_per_level > 0 else 1
         return wanted - self.power_levels
 
@@ -243,7 +244,8 @@ async def power_drawn_at(ctx: TickContext, host_id: int) -> int:
     for drawer, weight in (await drawers_at(ctx.session, host_id)).items():
         row = await ctx.session.get(CommunityIndustryRow, drawer)
         if row is not None:
-            drawn += weight * sum(row.spent.get(kind.value, 0) + row.short.get(kind.value, 0) for kind in POWER_HEAT)
+            heating = power_for_heat(ctx.rules, row.heat_need) if row.heat <= 0 else 0
+            drawn += weight * (sum(row.spent.get(kind.value, 0) + row.short.get(kind.value, 0) for kind in POWER_HEAT) + heating)
     return round_half_up(drawn)
 
 

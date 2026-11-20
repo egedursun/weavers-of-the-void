@@ -38,7 +38,7 @@ async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     stacks = list(
         await session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id, ArmyUnitRow.count > 0).order_by(ArmyUnitRow.count.desc()))
     )
-    makeup = ", ".join(f"{row.count} {words(row.kind.value)}" for row in stacks[:TOP_STACKS])
+    makeup = ", ".join(f"{words(row.kind.value)} {row.count} strong" for row in stacks[:TOP_STACKS])
     hired = await session.scalar(
         select(MercenaryContractRow.id).where(MercenaryContractRow.army_entity_id == army_id, MercenaryContractRow.status == ContractStatus.ACTIVE).limit(1)
     )

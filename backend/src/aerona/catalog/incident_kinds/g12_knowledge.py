@@ -1,4 +1,7 @@
+from collections.abc import Mapping
+
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec, per_value
+from aerona.core.total import total
 from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.collective import CommemorationFeeling, DatingSystemKind
@@ -24,6 +27,17 @@ from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.records import StepAction as A
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.tongues import ScriptChangeCause, ScriptFate
+
+PROGRAMME_STEPS: Mapping[ProgrammeStage, str] = total(
+    ProgrammeStage,
+    {
+        ProgrammeStage.PLANNING: "{subject} began to plan its programme of {technique}.",
+        ProgrammeStage.BUILDING: "{subject} began to build for its programme of {technique}.",
+        ProgrammeStage.TESTING: "{subject} began to test its programme of {technique}.",
+        ProgrammeStage.COMPLETE: "{subject} completed its programme of {technique}.",
+        ProgrammeStage.ABANDONED: "{subject} abandoned its programme of {technique}.",
+    },
+)
 
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
@@ -779,12 +793,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "programmes.",
             G.KNOWLEDGE,
-            "{subject} reached the {stage} stage of its programme of {technique}.",
+            "{subject} reached a new stage of its programme of {technique}.",
             roles=(RoleSpec(R.SUBJECT),),
             facts=(FactSpec("technique", FactValue.ENUM, enum=Technique), FactSpec("stage", FactValue.ENUM, enum=ProgrammeStage)),
             clock=ProcessClock.YEAR,
             chronicle_kind=K.CIVILIZATION,
         ),
+        PROGRAMME_STEPS,
     ),
     IncidentKindSpec(
         "research.boosted",
@@ -839,7 +854,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "teaching.",
             G.KNOWLEDGE,
-            "{teacher} taught {learner} in {teaching}, for {price} in wealth.",
+            "{teacher} taught {learner} in {teaching} {price:for nothing|for # in wealth|for # in wealth}.",
             roles=(RoleSpec(R.TEACHER), RoleSpec(R.LEARNER)),
             facts=(FactSpec("teaching", FactValue.ENUM, enum=TeachingKind), FactSpec("price", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
         ),

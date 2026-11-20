@@ -17,9 +17,12 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import BuildMaterial, WaterSupply
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.structure import AbandonCause, ConstructionState, ConstructionStatus, StructureKind
-from aerona.domain.models.entity_stats import StructureStats
+from aerona.domain.models.entity_stats import PeopleStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.phases import works
+from aerona.engine.phases.works import free_slots, site_of
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
@@ -289,3 +292,40 @@ async def test_knowledge_of_architecture_builds_in_stone(ctx: TickContext, world
     work, _ = await begin(ctx, Commission(site=town, kind=StructureKind.MONUMENT))
     props = await material_props(ctx.session, work)
     assert props is not None and props.kind is MaterialKind.STONE
+
+
+async def test_a_poor_town_without_stone_shares_its_coin_between_materials_and_wages_and_still_builds(ctx: TickContext, world: CoreWorld) -> None:
+    town = await staffed_town(ctx.session, world, builders=FEW_BUILDERS)
+    profile = await surveyed(ctx, town)
+    table = ctx.rules.construction
+    workers = max(table.builder_floor, round(FEW_BUILDERS * table.worker_share_pct / 100))
+    full_cost = workers * table.worker_output * (table.materials_per_100_work * table.funds_buy_materials + table.funds_per_100_work) // 100
+    profile.treasury = full_cost // 2
+    _work, row = await begin(ctx, Commission(site=town, kind=StructureKind.GRANARY, material=MaterialKind.STONE))
+    added = await advance(ctx, row, active=1, knowledge=await KnowledgeMap.load(ctx.session))
+    assert added > 0 and row.stalled_epochs == 0 and 0 < row.materials_pct < 100
+    assert profile.treasury < full_cost // 4
+
+
+async def test_a_full_town_still_raises_the_power_it_lacks_and_a_people_without_a_town_builds_in_its_own_lands(
+    ctx: TickContext, world: CoreWorld, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    town = await staffed_town(ctx.session, world, population=500)
+    await surveyed(ctx, town)
+    for index in range(await free_slots(ctx, town)):
+        filler = await entity(ctx.session, f"Hall {index}", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+        ctx.session.add(StructureProfileRow(structure_entity_id=filler.id, kind=StructureKind.SHRINE, host_entity_id=town.id))
+    plant = await entity(ctx.session, "Old Plant", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    ctx.session.add(StructureProfileRow(structure_entity_id=plant.id, kind=StructureKind.POWER_PLANT, host_entity_id=town.id))
+    await ctx.session.flush()
+    assert await free_slots(ctx, town) == 0
+    monkeypatch.setattr(works, "wanted", lambda _rules, _facts: [StructureKind.SHRINE, StructureKind.POWER_PLANT])
+    knowledge_map = await KnowledgeMap.load(ctx.session)
+    raised = await works.plan_work(ctx, town, knowledge_map, await RegionAtlas.load(ctx.session))
+    assert raised is not None
+    profile = await ctx.session.get(StructureProfileRow, raised.id)
+    assert profile is not None and profile.kind is StructureKind.POWER_PLANT
+    monkeypatch.setattr(works, "wanted", lambda _rules, _facts: [StructureKind.SHRINE])
+    assert await works.plan_work(ctx, town, knowledge_map, await RegionAtlas.load(ctx.session)) is None
+    lone = await entity(ctx.session, "Wanderers", EntityType.PEOPLE, PeopleStats(population=9000), world_id=world.world.id, location_id=world.regions[1].id)
+    assert await site_of(ctx, lone) is lone

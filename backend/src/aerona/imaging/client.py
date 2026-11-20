@@ -19,6 +19,7 @@ from aerona.constants.imaging import (
     WORKER_STREAM_READ_TIMEOUT_SECONDS,
     WORKER_STREAM_RECONNECTS,
 )
+from aerona.core.grammar import several
 from aerona.imaging.contract import GeneratedImage, ImageJobAccepted, ImageJobRequest, ImageJobState, ImageProgress, ImageStage, WorkerHealth
 from aerona.imaging.errors import (
     ImageGenerationDisabledError,
@@ -96,7 +97,9 @@ class ImageWorkerClient:
                 try:
                     event = ImageProgress.model_validate_json(message.data)
                 except ValidationError as error:
-                    raise ImageWorkerProtocolError(f"image worker sent an unreadable progress event: {error.error_count()} error(s)") from error
+                    raise ImageWorkerProtocolError(
+                        f"image worker sent an unreadable progress event: {several(error.error_count(), 'error', 'errors')}"
+                    ) from error
                 yield event
                 if event.terminal:
                     return

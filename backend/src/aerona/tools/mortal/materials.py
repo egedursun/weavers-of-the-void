@@ -6,7 +6,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.material import MaterialKind
-from aerona.engine.economy.materials import MaterialBook, MaterialProps, workable
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.economy.materials import MaterialBook, MaterialProps, unmet_need
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.prompts.tools.results import MortalResult
@@ -35,9 +36,13 @@ async def chosen_material(call: MortalCall, material: MaterialKind | None, resou
     levels = (await known_levels(call.session, [community.id, call.me.id])).get(community.id, {})
     region_id = (await call.atlas()).top_region(call.me.id)
     region = await call.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
-    if not workable(call.rules, props, levels, region.magic_density if region is not None else 0):
-        branch = props.gate or props.branch
-        fail(MortalResult.MATERIAL_UNWORKABLE, material=props.label.lower(), branch=branch.value.replace("_", " ") if branch else "", level=max(1, props.level))
+    density = region.magic_density if region is not None else 0
+    need = unmet_need(call.rules, props, levels, density)
+    if need is not None:
+        branch, level = need
+        if branch is KnowledgeBranch.MAGIC and props.gate is KnowledgeBranch.MAGIC:
+            fail(MortalResult.MATERIAL_NEEDS_MAGIC, material=props.label.lower(), density=call.rules.materials.skysteel_magic_density)
+        fail(MortalResult.MATERIAL_UNWORKABLE, material=props.label.lower(), branch=spoken(branch), level=level)
     for resource in resources:
         profile = await call.session.get(ResourceProfileRow, resource.id)
         if profile is not None and profile.material is material:

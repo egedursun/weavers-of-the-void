@@ -10,6 +10,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ProphecyState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
@@ -235,7 +236,7 @@ async def manifestations(ctx: TickContext) -> None:
     rng = ctx.rng("manifestation")
     manifested = await flags_by_entity(ctx.session, EntityFlag.MANIFESTED)
     made = WorldQuota(life.manifestation_cap)
-    for legend in rng.shuffled(await canon(ctx.session, [EntityType.LEGEND])):
+    for legend in rng.shuffled(unheld(await canon(ctx.session, [EntityType.LEGEND]))):
         if made.full(legend.world_id):
             continue
         if legend.id in manifested or not await believed(ctx, legend):

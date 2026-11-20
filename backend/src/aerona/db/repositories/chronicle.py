@@ -280,7 +280,7 @@ class ChronicleRepository(Repository):
         statement = (
             select(ChronicleRow)
             .join(ChronicleEntityRow, ChronicleEntityRow.chronicle_id == ChronicleRow.id)
-            .where(ChronicleEntityRow.entity_id == entity_id)
+            .where(ChronicleEntityRow.entity_id == entity_id, ChronicleRow.kind != ChronicleKind.SPEECH)
             .order_by(ChronicleRow.id.desc())
             .limit(limit)
         )

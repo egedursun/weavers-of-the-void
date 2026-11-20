@@ -11,7 +11,7 @@ from aerona.catalog.ownership import OWNER_LABELS
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.catalog.titles import RANK_WORDS
 from aerona.core.grammar import AGE_NEUTRAL, spoken
-from aerona.domain.enums.entity import MortalRole
+from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactValue
 from aerona.domain.enums.society import SocialClass
@@ -24,7 +24,7 @@ from aerona.engine.recording.render import render_incident
 
 ERA_BOUND = re.compile(
     r"\b(scribes?|guilds?|guildhalls?|guildmaster\w*|crown(ed|s|ing)?|coronations?|smiths?|smithing|peasants?|peasantry|"
-    r"serfs?|lords?|lordship|kingdoms?|alchemists?|scriptori(um|a)|reigns?|reigned|tourney)\b|\bthrones?\b(?! of power)",
+    r"serfs?|lords?|lordship|kingdoms?|alchemists?|scriptori(um|a)|reigns?|reigned|tourney|chieftains?)\b|\bthrones?\b(?! of power)",
     re.IGNORECASE,
 )
 
@@ -70,13 +70,18 @@ def test_a_modern_faction_is_named_for_its_age() -> None:
     assert (craft.noun(TechnologyEra.MEDIEVAL), craft.noun(TechnologyEra.INFORMATION)) == ("Craft Guild", "Craft Association")
 
 
+def test_a_people_is_led_by_a_title_of_its_age() -> None:
+    people = RULER_TITLES[EntityType.PEOPLE]
+    assert (people.noun(TechnologyEra.STONE), people.noun(TechnologyEra.INFORMATION)) == ("Chieftain", "Leader")
+
+
 def test_generated_names_and_typed_labels_fit_any_age() -> None:
     words = [
         *(plan.subtype for plan in BLUEPRINTS),
         *(plan.members for plan in BLUEPRINTS),
         *(" ".join(pair) for pair in FACTION_KINDS.values()),
         *TRADITIONS.values(),
-        *(word for pair in RULER_TITLES.values() for word in pair),
+        *(title.noun(TechnologyEra.INFORMATION) for title in RULER_TITLES.values()),
         *(word for roles in BASE_ROLES.values() for word in roles),
         *CLASS_ROLES.values(),
         *(word for roles in NOTABLE_ROLES.values() for role in roles for word in (role.suffix, role.subtype)),

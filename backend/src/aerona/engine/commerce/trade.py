@@ -123,7 +123,8 @@ async def keep_tier(ctx: TickContext, tier: SupplyTierRow, tally: CommerceTally)
     if income:
         await give_coin(ctx.session, ctx.rules, holder, income)
         tally.tier_income += income
-    if not tier.cornered and tier.share >= table.corner_share and "cornered" not in (tier.locked or []):
+    common = tier.holder_node_id == tier.market_entity_id
+    if not common and not tier.cornered and tier.share >= table.corner_share and "cornered" not in (tier.locked or []):
         tier.cornered = True
         if "margin" not in (tier.locked or []):
             tier.margin = clamp_int(tier.margin + table.corner_margin, 0, 2 * PERCENT)
@@ -134,7 +135,7 @@ async def keep_tier(ctx: TickContext, tier: SupplyTierRow, tally: CommerceTally)
             facts={"tier": tier.tier, "share": tier.share},
         )
         tally.cornered += 1
-    if tier.cornered:
+    if tier.cornered and not common:
         profile = await ctx.session.get(SettlementProfileRow, tier.market_entity_id)
         if profile is not None and not held(tier.market_entity_id) and "unrest" not in (profile.locked or []):
             with explaining():

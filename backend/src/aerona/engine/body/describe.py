@@ -182,7 +182,7 @@ async def _community_lines(session: AsyncSession, rules: Rules, community: Entit
     cohorts = list(await session.scalars(select(MaimedCohortRow).where(MaimedCohortRow.community_entity_id == community.id, MaimedCohortRow.count > 0)))
     if cohorts:
         share = round(maimed_share(rules, community, cohorts) * PERCENT)
-        parts = ", ".join(f"{row.count} {MAIMED_TEXT[row.kind]}" for row in sorted(cohorts, key=lambda row: -row.count))
+        parts = ", ".join(f"{MAIMED_TEXT[row.kind]}: {row.count}" for row in sorted(cohorts, key=lambda row: -row.count))
         lines.append(f"The maimed among them ({share}%): {parts}")
     custom = await session.get(BodyCustomRow, community.id) if community.entity_type is EntityType.PEOPLE else None
     if custom is not None:

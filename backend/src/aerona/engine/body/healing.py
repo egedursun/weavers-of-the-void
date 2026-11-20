@@ -509,7 +509,8 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
 def infected(ctx: TickContext, row: InjuryRow, body: BodyRow, care: Care, *, skill: int, ward: float, rng: SeededRandom, campaign: bool) -> bool:
     if row.state is InjuryState.INFECTED:
         return False
-    checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
+    campaigns = ctx.rules.campaigns
+    checks = 1 + campaigns.war_seasons() // campaigns.years_per_epoch if campaign else 1
     chance = infection_chance(ctx, row, body, care, skill) * ward
     if not any(rng.chance(chance) for _ in range(checks)):
         return False

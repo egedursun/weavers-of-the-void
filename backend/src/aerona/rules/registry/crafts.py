@@ -55,7 +55,7 @@ class InsuranceRules(Spanned):
     cargo_payout_pct: int = rule(60, 0, 100, M, "Share of the value lost on a road an insured cargo is paid back (%)")
     life_payout: int = rule(5, 0, 100, M, "Wealth an insured life pays to its household when it ends")
     house_payout: int = rule(10, 0, 100, M, "Wealth an insured house pays its town when a disaster strikes it")
-    belief_step: int = rule(5, 0, 100, M, "Change in an insurer's belief about risk after a year of claims or none")
+    belief_step: int = rule(5, 0, 100, M, "Change in an insurer's belief about risk after an epoch of claims or none")
     moral_hazard_pct: int = rule(40, 0, 100, M, "Share of the cost of danger an insured merchant stops counting when choosing a road (%)")
     ruin_opinion: int = rule(10, 0, 100, M, "Opinion holders lose of an insurer that is ruined")
 

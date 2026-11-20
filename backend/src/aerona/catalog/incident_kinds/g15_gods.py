@@ -172,12 +172,11 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "divine.goal_",
             G.GODS,
-            "{actor}: {aim_label}{tail} — {closed_as}.",
+            "{actor}: {aim_text} — {closed_as}.",
             roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
             facts=(
                 FactSpec("aim", FactValue.ENUM, enum=GodGoalKind),
-                FactSpec("aim_label", FactValue.NAME),
-                FactSpec("tail", FactValue.NAME),
+                FactSpec("aim_text", FactValue.NAME),
                 FactSpec("closed_as", FactValue.NAME),
             ),
             place=PlaceRule.WHEN_KNOWN,
@@ -188,9 +187,9 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "divine.goal_set",
         G.GODS,
-        "{goal_text} — a new aim.",
+        "{actor} took a new aim: to {aim_text}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
-        facts=(FactSpec("aim", FactValue.ENUM, enum=GodGoalKind), FactSpec("goal_text", FactValue.NAME)),
+        facts=(FactSpec("aim", FactValue.ENUM, enum=GodGoalKind), FactSpec("aim_text", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
         chronicle_kind=K.ASCENSION,
@@ -800,7 +799,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.mood.estranged_turn",
         G.GODS,
-        "{target} turned its face from its sons and began worshipping the creator {actor} directly.",
+        "{target} turned away from its sons and began worshipping the creator {actor} directly.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.ACTOR)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
@@ -4038,7 +4037,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.set_aim",
         G.GODS,
-        "{actor} set out to {aim}",
+        "{actor} set out to {aim}.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("aim", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -4771,7 +4770,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "transform.city_state",
         G.GODS,
-        "{subject_name} ruled itself and became the realm {result_name}.",
+        "{subject_name} ruled itself and became {result_name}.",
         roles=(RoleSpec(R.SUBJECT, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("subject_name", FactValue.NAME), FactSpec("result_name", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
@@ -5041,7 +5040,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "transform.secession",
         G.GODS,
-        "{subject_name} broke away and became the realm {result_name}.",
+        "{subject_name} broke away and became {result_name}.",
         roles=(RoleSpec(R.SUBJECT, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("subject_name", FactValue.NAME), FactSpec("result_name", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
@@ -5089,7 +5088,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "transform.theocracy",
         G.GODS,
-        "The faith {subject_name} took up rule and became the realm {result_name}.",
+        "{subject_name}, a faith, took up rule and became {result_name}.",
         roles=(RoleSpec(R.SUBJECT, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("subject_name", FactValue.NAME), FactSpec("result_name", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
@@ -5109,7 +5108,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "transform.title_raised",
         G.GODS,
-        "The realm {subject_name} was raised to the title {result_name}.",
+        "{subject_name} was raised to a new title, {result_name}.",
         roles=(RoleSpec(R.SUBJECT, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("subject_name", FactValue.NAME), FactSpec("result_name", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,

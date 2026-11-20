@@ -463,7 +463,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "material.weapons_forged",
         G.MAKING,
-        "The forges of {maker} made {product} of {material}, at quality {quality}.",
+        "The works of {maker} made {product} of {material}, at quality {quality}.",
         roles=(
             RoleSpec(R.MAKER),
             RoleSpec(R.PRODUCT),
@@ -518,7 +518,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "refining.bottleneck",
         G.MAKING,
-        "Work at {subject} stood idle for want of {missing}: no {output} was made.",
+        "Work at {subject} stood idle for want of {missing} and made no {output}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("workshop", FactValue.ENUM, enum=WorkshopKind, required=False),
@@ -779,7 +779,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structures.finished",
         G.MAKING,
-        "{product} stands finished for {owner} after {years:epoch|epochs}: {structure:an}.",
+        "{product} stands finished for {owner} {years:within the epoch it was begun|after # epoch|after # epochs}: {structure:an}.",
         roles=(
             RoleSpec(R.PRODUCT),
             RoleSpec(R.OWNER, required=False),
@@ -1110,7 +1110,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structures.neglected",
         G.MAKING,
-        "{subject} is falling into disrepair after {unpaid_epochs:epoch|epochs} of unpaid upkeep.",
+        "{subject} is falling into disrepair; its upkeep went unpaid {unpaid_epochs:this epoch|for # epoch|for # epochs}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.OWNER, required=False),

@@ -865,7 +865,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.withdraw_people",
         G.MOVEMENT,
-        "{actor} moved {subject} into the made realm {destination}.",
+        "{actor} moved {subject} into {destination}, a made realm.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.DESTINATION)),
         facts=(FactSpec("moved", FactValue.NUMBER, FactUnit.PEOPLE),),
         steps=frozenset({A.ENTER}),

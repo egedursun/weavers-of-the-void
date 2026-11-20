@@ -81,24 +81,6 @@ MORTAL_AS_SON = re.compile(r"\b(is|was) (an?|the) ((?:[\w-]+ ){0,3})son\b(?! of)
 MORTAL_WORD = "mortal"
 
 
-RULER_TITLES: dict[EntityType, str] = {
-    EntityType.LAW: "Keeper",
-    EntityType.NATURAL_LAW: "Keeper",
-    EntityType.SETTLEMENT: "Sovereign",
-    EntityType.PEOPLE: "Chieftain",
-    EntityType.REGION: "Warden",
-    EntityType.PLACE: "Warden",
-    EntityType.FACTION: "Leader",
-    EntityType.CULT: "High Priest",
-    EntityType.ARMY: "Commander",
-    EntityType.TRADITION: "Guardian",
-    EntityType.KNOWLEDGE: "Custodian",
-    EntityType.LANGUAGE: "Custodian",
-    EntityType.VESSEL: "Captain",
-}
-DEFAULT_RULER_TITLE = "Sovereign"
-
-
 class EndingKind(StrEnum):
     DIED = "died"
     VANISHED = "vanished"
@@ -244,10 +226,6 @@ def append_ending(description: str, sentence: str) -> str:
 
 def mentions_epoch(description: str, epoch: int) -> bool:
     return EPOCH_MENTION.format(epoch=epoch) in description
-
-
-def ruler_title(ruled_type: EntityType) -> str:
-    return RULER_TITLES.get(ruled_type, DEFAULT_RULER_TITLE)
 
 
 def mortal_description(text: str) -> str:

@@ -4,6 +4,7 @@ from aerona.agents.context.naming import naming_item, world_naming
 from aerona.agents.context.scope import Scope
 from aerona.catalog.climate import CLIMATES
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.genesis import TECHNOLOGY_MEANINGS, TECHNOLOGY_PHRASES
 from aerona.catalog.law_grammar import LEGACY_GRAMMAR, Grammar, working_text
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import NaturalLawProfileRow
@@ -12,6 +13,7 @@ from aerona.db.tables.environment import WorldSeasonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_grammar import LawCondition
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.eras.effects import COMMUNITIES, era_of, era_order, techniques_by_holder, world_start
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import AgeStar, ClimateLine, CreatorMood, EpicSummary, LawLine, SeasonLine, WorldHeaderContext
 
@@ -87,6 +89,7 @@ async def world_header_context(scope: Scope, world_id: int | None = None, short:
         world_name=cosmos.name,
         age=cosmos.epoch,
         world_year=cosmos.epoch_start_year,
+        technology=await technology_of(scope, world),
         god_name=creator.name,
         god_title=creator.title,
         short=short,
@@ -108,6 +111,19 @@ async def world_header_context(scope: Scope, world_id: int | None = None, short:
         age_star=await age_star(scope, world, world_id),
         laws=await laws(scope, world),
     )
+
+
+async def technology_of(scope: Scope, world: WorldRow | None) -> str | None:
+    if world is None:
+        return None
+    start = await world_start(scope.session)
+    held = await techniques_by_holder(scope.session)
+    communities = await scope.session.scalars(
+        select(EntityRow.id).where(EntityRow.world_id == world.id, EntityRow.entity_type.in_(COMMUNITIES), EntityRow.status == EntityStatus.CANON)
+    )
+    eras = sorted({era_of(held.get(community, frozenset()), start) for community in communities} or {start}, key=era_order)
+    first, last = TECHNOLOGY_PHRASES[eras[0]], TECHNOLOGY_PHRASES[eras[-1]]
+    return f"{first}, {TECHNOLOGY_MEANINGS[eras[0]]}" if first == last else f"ages from {first} to {last}"
 
 
 async def world_header(scope: Scope, world_id: int | None = None, short: bool = False) -> str:

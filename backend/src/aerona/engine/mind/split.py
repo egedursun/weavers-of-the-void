@@ -187,8 +187,9 @@ def sync_summaries(node: Bodied, attributes: Attributes) -> bool:
 
 
 async def store_attributes(session: AsyncSession, node: Bodied, attributes: Attributes) -> None:
-    await write_attributes(session, node.id, attributes)
-    for name, value in derived_summaries(node, attributes).items():
+    whole = {**estimate(node), **await attributes_of(session, node.id), **attributes}
+    await write_attributes(session, node.id, whole)
+    for name, value in derived_summaries(node, whole).items():
         if read_summary(node, name) != value:
             write_summary(node, name, value)
 
@@ -226,12 +227,14 @@ def seed_facets(rules: Rules, mean: Facets, traits: set[TraitKind], rng: SeededR
 
 async def seed_split(session: AsyncSession, rules: Rules, node: Bodied, rng: SeededRandom) -> int:
     seeded = 0
-    if has_attributes(node) and not await attributes_of(session, node.id):
-        await store_attributes(session, node, seed_attributes(rules, node, rng))
+    stored = await attributes_of(session, node.id) if has_attributes(node) else None
+    if stored is not None and len(stored) < len(ATTRIBUTES):
+        await store_attributes(session, node, {**seed_attributes(rules, node, rng), **stored})
         seeded += 1
-    if has_facets(node) and not await facets_of(session, node.id):
+    felt = {row.facet: row.value for row in await rows_by_prefix(session, FacetRow, node.id)} if has_facets(node) else None
+    if felt is not None and len(felt) < len(FACETS):
         mean = await culture_mean(session, rules, node)
-        await write_facets(session, node.id, seed_facets(rules, mean, await traits_of(session, node.id), rng))
+        await write_facets(session, node.id, {**seed_facets(rules, mean, await traits_of(session, node.id), rng), **felt})
         seeded += 1
     return seeded
 
@@ -303,8 +306,8 @@ async def weather_attributes(session: AsyncSession, rules: Rules, node: Bodied, 
     if not stored:
         return False
     table = rules.mind_split
-    current = dict(stored)
-    changed = sync_summaries(node, current)
+    current = {**estimate(node), **stored}
+    changed = sync_summaries(node, current) or len(stored) < len(ATTRIBUTES)
     if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
         skills = await session.scalars(select(SkillRow).where(SkillRow.holder_node_id == node.id))
         for member in used_skills(skills, epoch):

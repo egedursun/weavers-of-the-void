@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from string import Formatter
@@ -9,6 +10,11 @@ from aerona.core.grammar import ARTICLES, spoken
 from aerona.domain.enums.modifier import IncidentRole
 
 FIELDS = Formatter()
+
+DOUBLED_ARTICLE = re.compile(r"\b(the|The|an|An|a|A) the\b")
+EMPTY_REMARK = re.compile(r"\s*\(\s*\)|:\s*(?=[.!?]?$)")
+CLOSED = re.compile(r"[.!?»”\"')\]]$")
+DOUBLED_STOP = re.compile(r"(\.\.\.|[!?])\.+|(?<!\.)(\.)\.(?!\.)")
 
 
 class Named(list[str]):
@@ -68,5 +74,9 @@ def render_incident(spec: IncidentKindSpec, names: Mapping[IncidentRole, Sequenc
     missing = sorted({name for name in placeholders(spec.template) if name not in fields})
     if missing:
         raise ValidationFailedError(f"The happening {spec.key} cannot be told without {', '.join(missing)}.")
-    text = " ".join(ARTICLES.format(spec.template, **fields).split())
+    text = DOUBLED_STOP.sub(lambda found: found.group(1) or found.group(2), " ".join(ARTICLES.format(spec.template, **fields).split()))
+    text = DOUBLED_ARTICLE.sub(lambda found: "The" if found.group(1)[:1].isupper() else "the", text)
+    text = " ".join(EMPTY_REMARK.sub("", text).split())
+    if text and not CLOSED.search(text):
+        text += "."
     return text[:1].upper() + text[1:] if text else text

@@ -1,9 +1,13 @@
+from itertools import pairwise
+
 from aerona.catalog.equipment import FAMILIES, ROLE_ARMS
 from aerona.catalog.eras import ERA_FLOORS
+from aerona.catalog.materials import MATERIALS
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import SUCCESSORS, UNITS
 from aerona.catalog.vehicles import FRAMES
 from aerona.domain.enums.equipment import ArmamentSlot, EquipmentFamily
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.vehicles import Propulsion
@@ -76,3 +80,27 @@ def test_every_soldier_with_firearms_and_no_successor_has_arms_of_the_steam_age_
         and not any(FAMILIES[family].branch is KnowledgeBranch.METALLURGY and FAMILIES[family].level >= newest for family in missile)
     ]
     assert stale == []
+
+
+AGE_MATERIALS = {
+    E.BRONZE: (MaterialKind.COPPER, MaterialKind.TIN, MaterialKind.BRONZE, MaterialKind.FIRED_BRICK),
+    E.IRON: (MaterialKind.IRON, MaterialKind.DRESSED_STONE, MaterialKind.TILE),
+    E.STEAM: (MaterialKind.STEEL,),
+}
+
+
+def test_every_age_works_the_materials_it_is_named_for_from_its_first_day() -> None:
+    unworkable = [
+        (era.value, material.value)
+        for era, materials in AGE_MATERIALS.items()
+        for material in materials
+        if MATERIALS[material].branch is not None and ERA_FLOORS[era].get(MATERIALS[material].branch, 0) < MATERIALS[material].level
+    ]
+    assert unworkable == []
+
+
+def test_no_floor_falls_from_one_age_to_the_next() -> None:
+    fallen = [
+        (era.value, branch.value) for earlier, era in pairwise(ORDER) for branch, level in ERA_FLOORS[earlier].items() if ERA_FLOORS[era].get(branch, 0) < level
+    ]
+    assert fallen == []

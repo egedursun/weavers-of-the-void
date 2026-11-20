@@ -3,7 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select
 
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.mind import CultureValueRow, IdeaRow, TraitRow
+from aerona.db.tables.mind import AttributeRow, CultureValueRow, FacetRow, IdeaRow, TraitRow
 from aerona.domain.enums.mind import Attribute, Facet, IdeaKind, IdeaSource, IdeaState, SkillKind, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.mind.book import add_trait, ensure_mind_row, stored_values, write_values
 from aerona.engine.mind.ideas import Encounter, take_up, turn_over
@@ -12,6 +12,7 @@ from aerona.engine.mind.split import (
     effective_attributes,
     facets_of,
     seed_split,
+    store_attributes,
     talent,
     temper_facets,
     weather_attributes,
@@ -102,3 +103,26 @@ async def test_old_cultures_gain_the_new_belief_axes_once(realm: Realm) -> None:
     assert values[ValueAxis.TRUTH] > 0 and values[ValueAxis.LOYALTY] > 0 and values[ValueAxis.FAMILY] > 0
     assert await realm.session.get(AppliedFixupRow, AXES_FIXUP) is not None
     assert await backfill_axes(ctx) == 0
+
+
+async def test_a_mind_touched_before_it_was_seeded_stays_whole_and_weathers(realm: Realm) -> None:
+    hunter = await mortal(realm, "Teo", strength=60)
+    ctx = context(realm.session, QUIET)
+    await ensure_mind_row(realm.session, hunter, ctx.epoch)
+    session = realm.session
+    for row in [
+        *await session.scalars(select(AttributeRow).where(AttributeRow.node_id == hunter.id)),
+        *await session.scalars(select(FacetRow).where(FacetRow.node_id == hunter.id)),
+    ]:
+        await session.delete(row)
+    await session.flush()
+    session.add(AttributeRow(node_id=hunter.id, attribute=Attribute.ENDURANCE, value=65))
+    await write_facets(session, hunter.id, {Facet.ANGER: 20})
+    await session.flush()
+    assert await seed_split(session, QUIET, hunter, ctx.rng("seed")) == 2
+    attributes = await attributes_of(session, hunter.id)
+    assert set(attributes) == set(Attribute) and attributes[Attribute.ENDURANCE] == 65
+    assert len(await facets_of(session, hunter.id)) == len(Facet) and (await facets_of(session, hunter.id))[Facet.ANGER] == 20
+    await store_attributes(session, hunter, {Attribute.EMPATHY: 70})
+    await weather_attributes(session, QUIET, hunter, ctx.epoch)
+    assert set(await attributes_of(session, hunter.id)) == set(Attribute)

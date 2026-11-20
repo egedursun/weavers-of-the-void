@@ -90,7 +90,8 @@ async def elsewhere(ctx: TickContext, culprit: EntityRow, *, far: bool) -> Entit
         query = query.where(EntityRow.world_id != (here.world_id if here is not None else culprit.world_id))
     elif here is not None and here.affiliated_entity_id is not None:
         query = query.where(EntityRow.affiliated_entity_id == here.affiliated_entity_id)
-    return await ctx.session.scalar(query.order_by(EntityRow.id).limit(1))
+    places = list(await ctx.session.scalars(query.order_by(EntityRow.id)))
+    return ctx.rng(f"exile.{culprit.id}.{far}").pick(places) if places else None
 
 
 async def banish(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:

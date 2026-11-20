@@ -87,7 +87,7 @@ async def memory_worshippers(scope: Scope, son: SonRow) -> tuple[list[NamedRecor
 async def recollections(scope: Scope, son: SonRow) -> list[ChronicleRow]:
     rows = await scope.session.scalars(
         select(ChronicleRecord)
-        .where(ChronicleRecord.son_id == son.id, ChronicleRecord.kind != ChronicleKind.CREATION, ChronicleRecord.visible.is_(True))
+        .where(ChronicleRecord.son_id == son.id, ChronicleRecord.kind.not_in([ChronicleKind.CREATION, ChronicleKind.SPEECH]), ChronicleRecord.visible.is_(True))
         .order_by(ChronicleRecord.id.desc())
         .limit(scope.rules.context.memory_recollections_count)
     )

@@ -21,8 +21,8 @@ class WorldViewRules:
     water_lift_share: int = rule(10, 0, 100, C, "Townsfolk in hundreds whose water need each unit of lifted water meets")
     rain_water_from: int = rule(60, 0, 100, C, "Rainfall of a land from which its towns need no other water")
     belief_from: int = rule(50, 0, 100, C, "Piety of a town from which belief sustains it where a world feeds on belief")
-    shortfall_unrest: int = rule(10, 0, 100, C, "Unrest a town gains in an epoch when what its world binds it to runs out")
-    shortfall_prosperity: int = rule(5, 0, 100, C, "Prosperity a town loses in an epoch when what its world binds it to runs out")
+    shortfall_unrest: int = rule(10, 0, 100, C, "Unrest a town gains in an epoch when what its world requires runs out")
+    shortfall_prosperity: int = rule(5, 0, 100, C, "Prosperity a town loses in an epoch when what its world requires runs out")
     float_upkeep: int = rule(
         20, 0, 10000, C, "Coin a floating or sealed town pays each epoch for every thousand of its people to stay aloft or sealed (at least this much)"
     )

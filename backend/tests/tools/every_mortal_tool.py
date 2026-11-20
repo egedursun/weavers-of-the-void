@@ -80,8 +80,10 @@ from tests.tools.every_setup import (
     seat_for_sale,
     second_mortal,
     second_region,
+    second_settlement,
     second_species,
     shopkeeper,
+    sickness,
     sky_reader,
     spirit,
     spirit_office,
@@ -231,7 +233,7 @@ MORTAL_CASES: dict[str, Case] = {
     "claim_resource": folk(plain(resource_id=resource)),
     "found_settlement": folk(plain(name="Lanternford", description=TEXT[:200], location_id=region)),
     "establish_trade": folk(plain(target_id=settlement, goods="lamps and grain")),
-    "declare_war": folk(plain(target_id=settlement, reason=REASON)),
+    "declare_war": folk(plain(target_id=created("settlement"), reason=REASON), second_settlement),
     "sabotage": Case(plain(target_id=people, how="loosen the mill gears"), actor=by_faction),
     "build_spy_network": folk(plain(target_id=faction, cover="as lamp sellers at the gates")),
     "diplomacy": folk(plain(target_id=settlement, terms="share the river road")),
@@ -545,4 +547,11 @@ MORTAL_CASES: dict[str, Case] = {
     "replan_land": named(plain(ring=RING), ruler_at_home),
     "tend_maimed": named(plain(kind=MAIMED), town_of_maimed),
     "devise_custom": named(plain(catalog="technique", base=TECHNIQUE_BASE, name="Slow Fire Working", description=TEXT[:120])),
+}
+
+COMMUNITY_CASES: dict[str, Case] = {
+    "answer_sickness by a people": Case(plain(disease_id=created("disease"), response="prayer"), sickness, by_people),
+    "answer_sickness by a town": Case(plain(disease_id=created("disease"), response="prayer"), sickness, by_settlement),
+    "seek_cure by a town": Case(plain(disease_id=created("disease")), hospital, by_settlement),
+    "seek_cure by a people": Case(plain(disease_id=created("disease")), hospital, by_people),
 }

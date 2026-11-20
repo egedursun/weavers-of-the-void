@@ -21,6 +21,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
 from aerona.rules.snapshot import with_value
 from aerona.tools.toolkit import TurnToolkit
+from tests.tools.every_setup import second_settlement
 from tests.tools.factories import DESCRIPTION, Realm, connect, make_entity, mortal_toolkit, seed_realm
 from tests.tools.test_son_tools import typed
 
@@ -145,7 +146,9 @@ async def test_trade_war_and_diplomacy(database: Database) -> None:
     assert "already at war" in await rejected(toolkit, "declare_war", {"target_id": realm.faction_id, "reason": REASON})
     peace = await ok(toolkit, "diplomacy", {"target_id": realm.faction_id, "kind": "peace", "terms": "let the oars rest"})
     assert peace
-    await ok(toolkit, "diplomacy", {"target_id": realm.settlement_id, "kind": "tribute", "terms": "a tenth of your catch"})
+    async with database.write() as session:
+        other = (await second_settlement(session, realm))["settlement"]
+    await ok(toolkit, "diplomacy", {"target_id": other, "kind": "tribute", "terms": "a tenth of your catch"})
     await ok(toolkit, "build_spy_network", {"target_id": realm.cult_id, "cover": "pilgrims bearing salt"})
     assert await bonds_between(database, realm.people_id, realm.cult_id, BondKind.SPY_NETWORK) == 1
 

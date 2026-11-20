@@ -25,7 +25,7 @@ from aerona.engine.polity.revolt_causes import CAUSES
 from aerona.engine.polity.revolts import REVOLTS
 from aerona.engine.unions.axes import fresh_custom
 from aerona.engine.unions.customs import DIVORCE_RULE, sides
-from tests.engine.core.factories import CoreWorld, mortal
+from tests.engine.core.factories import CoreWorld, mortal, settlement
 from tests.engine.core.test_minds_w44 import at
 
 LEGACY_PUNISHMENTS = 16
@@ -51,6 +51,19 @@ async def test_servitude_binds_the_condemned(session: AsyncSession, world: CoreW
     culprit = await mortal(session, "Oru", world, world.regions[0].id)
     assert await sentence(ctx, culprit, CrimeKind.SMUGGLING, PunishmentKind.SERVITUDE)
     assert culprit.social_class is SocialClass.SERF_OR_SLAVE
+
+
+async def test_the_banished_are_sent_to_more_than_one_town(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 3)
+    home = await settlement(session, "Ardun", world, world.regions[0])
+    for name in ("Belmar", "Corvel", "Dunhal", "Eskarn"):
+        await settlement(session, name, world, world.regions[1])
+    sent = set()
+    for index in range(12):
+        culprit = await mortal(session, f"Oru {index}", world, home.id)
+        assert await sentence(ctx, culprit, CrimeKind.SMUGGLING, PunishmentKind.BANISHMENT_FROM_PLACE)
+        sent.add(culprit.location_id)
+    assert home.id not in sent and len(sent) > 1
 
 
 def test_a_people_s_values_set_its_union_axes_without_gender() -> None:

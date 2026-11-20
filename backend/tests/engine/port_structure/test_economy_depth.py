@@ -38,6 +38,7 @@ from aerona.engine.economy.materials import (
     battle_wear,
     draw_strength,
     forge_heat,
+    forge_level,
     forgeable,
     from_spec,
     holy_edge,
@@ -48,6 +49,7 @@ from aerona.engine.economy.materials import (
     rust_wear,
     set_node_material,
     sharpness,
+    unmet_need,
     weapon_damage,
     wind_guard,
     worth_factor,
@@ -400,6 +402,10 @@ def test_material_physics_gate_forging_cap_edges_and_draw_bows() -> None:
     assert not forgeable(rules, props(M.IRON), novice)
     assert forgeable(rules, props(M.IRON), master)
     assert forgeable(rules, props(M.WOOD), {})
+    assert forgeable(rules, props(M.CRYSTAL), {}) and forgeable(rules, props(M.GEMS), {})
+    assert unmet_need(rules, props(M.CRYSTAL), {}) is None
+    assert unmet_need(rules, props(M.IRON), novice) == (KnowledgeBranch.METALLURGY, forge_level(rules, props(M.IRON)))
+    assert forgeable(rules, props(M.IRON), {KnowledgeBranch.METALLURGY: forge_level(rules, props(M.IRON))})
     blunt = replace(props(M.STEEL), max_edge=10)
     assert sharpness(blunt) == 10 < sharpness(props(M.STEEL))
     assert weapon_damage(rules, blunt, 50) < weapon_damage(rules, props(M.STEEL), 50)
