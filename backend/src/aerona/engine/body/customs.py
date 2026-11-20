@@ -9,7 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
-from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
+from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyReading, ConditionKind, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.domain import Domain
@@ -17,6 +17,7 @@ from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS
+from aerona.engine.body.marks import leaves_mark
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.faith import living_patron
@@ -160,7 +161,7 @@ def missing(row: InjuryRow) -> bool:
 
 
 def scarred(row: InjuryRow) -> bool:
-    return row.visible and row.state in LASTING_INJURY_STATES
+    return row.visible and leaves_mark(row)
 
 
 def presence_pct(

@@ -34,6 +34,7 @@ from aerona.engine.phases.dominion import count
     "table.augments",
     "table.bonds",
     "table.catch_grounds",
+    "table.charms",
     "table.chemical_works",
     "table.community_relations",
     "table.conditions",
@@ -65,8 +66,10 @@ from aerona.engine.phases.dominion import count
     "table.node_births",
     "table.nodes",
     "table.offices",
+    "table.personality_values",
     "table.prostheses",
     "table.public_clocks",
+    "table.region_pollution",
     "table.relationships",
     "table.reputations",
     "table.resource_profiles",
@@ -81,6 +84,7 @@ from aerona.engine.phases.dominion import count
     "mortal.hp",
     "table.bodies",
     "table.body_customs",
+    "table.catch_grounds",
     "table.chemical_works",
     "table.chronicle",
     "table.chronicle_entities",
@@ -175,10 +179,20 @@ async def learning_aids(ctx: TickContext) -> None:
     "table.accusations",
     "table.emotion_spirits",
     "table.material_affinities",
+    "table.node_births",
     "table.rite_effects",
     "table.sympathetic_links",
     "table.thoughts",
     "table.world_materials",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.emotion_spirits",
+    "table.entity_flags",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
 )
 async def sympathies(ctx: TickContext) -> None:
     sympathy, spirits = SympathyTally(), SpiritTally()

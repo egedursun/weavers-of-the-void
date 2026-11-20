@@ -54,7 +54,15 @@ async def trait_evolution(ctx: TickContext) -> None:
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.species_ranges")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.species_ranges",
+    "table.species_traits",
+)
 async def niches(ctx: TickContext) -> None:
     tally = NicheTally()
     await keep_niches(ctx, tally)
@@ -91,6 +99,7 @@ async def lineages(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
     "settlement.population",
     "table.community_cohorts",
     "table.disease_cures",
@@ -116,7 +125,9 @@ async def lineages(ctx: TickContext) -> None:
     "table.structure_profiles",
     "table.theory_adherents",
     "table.theory_profiles",
+    "table.trait_history",
 )
+@writes("table.disease_profiles", "table.trait_history")
 async def pathogen_evolution(ctx: TickContext) -> None:
     tally = PathogenTally()
     await evolve_pathogens(ctx, tally)
@@ -151,6 +162,7 @@ async def pathogen_evolution(ctx: TickContext) -> None:
     "table.theory_adherents",
     "table.theory_profiles",
 )
+@writes("table.disease_carriers")
 async def carriers(ctx: TickContext) -> None:
     tally = CarrierTally()
     await keep_carriers(ctx, tally)
@@ -190,7 +202,26 @@ async def spillover(ctx: TickContext) -> None:
     count(ctx, "spillover", tally)
 
 
-@reads("table.outbreaks", "table.plague_responses")
+@reads(
+    "table.bonds",
+    "table.culture_values",
+    "table.entities",
+    "table.node_births",
+    "table.nodes",
+    "table.outbreaks",
+    "table.plague_responses",
+    "table.quarantines",
+    "table.structure_profiles",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.plague_responses",
+    "table.quarantines",
+)
 async def plague_responses(ctx: TickContext) -> None:
     tally = ResponseTally()
     await respond(ctx, tally)

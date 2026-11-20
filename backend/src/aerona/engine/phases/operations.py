@@ -91,8 +91,57 @@ async def admiralty(ctx: TickContext) -> None:
     count(ctx, "admiralty", tally)
 
 
-@reads("table.bonds", "table.expedition_members", "table.expeditions", "table.quirks")
-@writes("table.expedition_logs", "table.expedition_members", "table.expeditions", "table.quirks")
+@reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "mortal.willpower",
+    "table.afterlife_strata",
+    "table.augment_effects",
+    "table.augments",
+    "table.bonds",
+    "table.charms",
+    "table.conditions",
+    "table.entities",
+    "table.entity_flags",
+    "table.expedition_members",
+    "table.expeditions",
+    "table.holder_levels",
+    "table.incident_steps",
+    "table.incidents",
+    "table.injuries",
+    "table.item_profiles",
+    "table.node_births",
+    "table.nodes",
+    "table.prostheses",
+    "table.quirks",
+    "table.room_contents",
+    "table.site_rooms",
+    "table.skills",
+)
+@writes(
+    "mortal.hp",
+    "table.bodies",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.expedition_logs",
+    "table.expedition_members",
+    "table.expeditions",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.injuries",
+    "table.mortal_profiles",
+    "table.quirks",
+    "table.site_rooms",
+)
 async def expeditions(ctx: TickContext) -> None:
     tally = ExpeditionTally()
     await keep_expeditions(ctx, tally)

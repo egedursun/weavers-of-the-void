@@ -78,6 +78,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.node_births",
     "table.nodes",
     "table.prostheses",
+    "table.traits",
 )
 @writes(
     "mortal.hp",

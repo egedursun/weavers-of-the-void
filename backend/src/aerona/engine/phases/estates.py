@@ -9,6 +9,7 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "cult.followers",
     "faction.strength",
     "faction.wealth",
     "people.piety",

@@ -73,6 +73,7 @@ async def economic_orders(ctx: TickContext) -> None:
     "table.nodes",
     "table.production_runs",
     "table.putting_out",
+    "table.settlement_profiles",
     "table.trade_route_profiles",
 )
 @writes("table.chain_holdings", "table.community_stocks", "table.putting_out")

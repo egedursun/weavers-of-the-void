@@ -594,6 +594,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.incidents",
     "table.memories",
     "table.name_registry",
+    "table.node_births",
     "table.sky_events",
     "table.sons",
 )

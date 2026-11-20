@@ -119,15 +119,26 @@ async def constructs(ctx: TickContext) -> None:
     count(ctx, "construct_seals", seals)
 
 
-@reads("table.beast_profiles", "table.entities", "table.monster_contracts", "table.nodes")
+@reads("settlement.population", "table.beast_profiles", "table.entities", "table.monster_contracts", "table.node_births", "table.nodes")
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.monster_contracts")
 async def monster_contracts(ctx: TickContext) -> None:
     tally = ContractTally()
     await keep_contracts(ctx, tally)
     count(ctx, "monster_contracts", tally)
 
 
-@reads("celestial.cycle", "celestial.influence", "celestial.visibility", "settlement.population", "table.divination_systems", "table.entities", "table.nodes")
-@writes("table.birth_signs")
+@reads(
+    "celestial.cycle",
+    "celestial.influence",
+    "celestial.visibility",
+    "mortal.perception",
+    "mortal.willpower",
+    "settlement.population",
+    "table.divination_systems",
+    "table.entities",
+    "table.nodes",
+)
+@writes("mortal.perception", "mortal.willpower", "table.birth_signs", "table.entities")
 async def birth_signs(ctx: TickContext) -> None:
     tally = SignTally()
     await sign_births(ctx, tally)

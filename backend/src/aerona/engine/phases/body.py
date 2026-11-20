@@ -210,6 +210,8 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
 
 
 @reads(
+    "beast.hp",
+    "beast.strength",
     "cult.zeal",
     "item.protection",
     "mortal.age",
@@ -363,7 +365,7 @@ def _madness_weights(ctx: TickContext) -> dict[ConditionKind, float]:
 
 
 async def _exposure(ctx: TickContext, mortal: EntityRow, atlas: RegionAtlas, grounds: dict[int, RegionEnvironmentRow]) -> bool:
-    if mortal.mortal_role not in EXPOSED_ROLES and not await at_war(ctx, mortal):
+    if held(mortal.id) or (mortal.mortal_role not in EXPOSED_ROLES and not await at_war(ctx, mortal)):
         return False
     region = atlas.top_region(mortal.id)
     ground = grounds.get(region) if region is not None else None
@@ -571,6 +573,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.entities",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.injuries",
     "table.mortal_profiles",
@@ -684,6 +687,7 @@ async def body_society(ctx: TickContext) -> None:
     "mortal.strength",
     "mortal.willpower",
     "table.afflictions",
+    "table.augments",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

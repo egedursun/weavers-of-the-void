@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.records import IncidentStepStateRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
@@ -282,16 +283,16 @@ async def armed(ctx: TickContext, harm: Harm) -> Harm:
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
             harm = replace(harm, edge=sharpness(blade), heft=blade.weight)
-        held = await wielded(ctx.session, wielder, ctx.rules.item_wear.broken)
-        if held is not None:
+        in_hand = await wielded(ctx.session, wielder, ctx.rules.item_wear.broken)
+        if in_hand is not None:
             _, riding = await mount_pct(ctx.session, ctx.rules, wielder) if wielder is not None else (1.0, 1.0)
             second = await off_hand_pct(ctx.session, ctx.rules, wielder) if wielder is not None else 1.0
-            draw = 1 + draw_strength(blade) * ctx.rules.materials.bow_draw_pct / PERCENT if blade is not None and held.item_class in DRAWN else 1.0
+            draw = 1 + draw_strength(blade) * ctx.rules.materials.bow_draw_pct / PERCENT if blade is not None and in_hand.item_class in DRAWN else 1.0
             harm = replace(
                 harm,
-                damage=harm.damage * grip(held) * riding * second * draw,
-                damage_type=DamageType(held.damage_type) if held.damage_type in DAMAGE_TYPES else None,
-                heft=(harm.heft or 0) + held.weight,
+                damage=harm.damage * grip(in_hand) * riding * second * draw,
+                damage_type=DamageType(in_hand.damage_type) if in_hand.damage_type in DAMAGE_TYPES else None,
+                heft=(harm.heft or 0) + in_hand.weight,
             )
     if harm.cause is HarmCause.MONSTER and harm.venom_pct is None and harm.damage_type is None:
         harm = replace(harm, venom_pct=await function_level(ctx.session, ctx.rules, wielder, BodyFunction.VENOM))
@@ -299,7 +300,7 @@ async def armed(ctx: TickContext, harm: Harm) -> Harm:
 
 
 async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bool = True) -> Wounding:
-    if isinstance(bearer, EntityRow) and (bearer.entity_type not in BODIED or bearer.status is not EntityStatus.CANON):
+    if held(bearer.id) or (isinstance(bearer, EntityRow) and (bearer.entity_type not in BODIED or bearer.status is not EntityStatus.CANON)):
         return Wounding(None)
     if isinstance(bearer, EntityRow) and await is_immortal(ctx.session, bearer):
         return Wounding(WoundOutcome.IMMORTAL)

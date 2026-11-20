@@ -61,7 +61,7 @@ async def worshippers_by_patron(ctx: TickContext) -> tuple[dict[int, list[Entity
     return by_patron, names
 
 
-@reads("table.bonds", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
+@reads("table.bonds", "table.entities", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def divine_grudges(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

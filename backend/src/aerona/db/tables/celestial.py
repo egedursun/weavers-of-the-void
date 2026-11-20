@@ -2,7 +2,7 @@ from types import MappingProxyType
 from typing import Any
 
 from sqlalchemy import JSON, CheckConstraint, Float, ForeignKey, Index, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base, TimestampMixin
@@ -128,6 +128,12 @@ class WorldRow(NodeRow):
     age_stage: Mapped[WorldAge] = mapped_column(enum_type(WorldAge, "age_stage"), default=WorldAge.MATURE)
     mood: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    @validates("star_id", "parent_world_id")
+    def circled(self, _key: str, value: int | None) -> int | None:
+        if value is not None:
+            self.galaxy_id, self.dimension_id = None, None
+        return value
 
 
 class WorldMapRow(TimestampMixin, Base):

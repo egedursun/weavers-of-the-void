@@ -176,6 +176,7 @@ async def relations_social(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.personality_values",
+    "table.polity_members",
     "table.preferences",
     "table.relationships",
     "table.routes",

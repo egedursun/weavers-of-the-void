@@ -22,7 +22,6 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
-from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import ItemClass
@@ -38,6 +37,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
 from aerona.engine.body.decline import decline_severity, failing_part
+from aerona.engine.body.marks import leaves_mark
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.loops.delay import lagged
@@ -162,7 +162,7 @@ async def body_and_name(ctx: TickContext, realm: Realm, ruler: EntityRow, laws: 
     core = await ctx.session.get(EntityRow, realm.profile.core_entity_id) if realm.profile.core_entity_id is not None else None
     custom = await customs_of(ctx.session, ctx.rules, core) if core is not None else None
     wholeness = bool(laws.param(realm.entity.id, LawKind.SUCCESSION_RULE, "wholeness_required"))
-    if (wholeness and any(row.state in LASTING_INJURY_STATES for row in injuries)) or maimed_for_rule(custom, injuries):
+    if (wholeness and any(leaves_mark(row) for row in injuries)) or maimed_for_rule(custom, injuries):
         parts["maimed where wholeness is law"] = -table.unwhole
     conditions = list(await ctx.session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == ruler.id)))
     genome = await ctx.session.get(GenomeRow, ruler.id)

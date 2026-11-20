@@ -19,6 +19,7 @@ NAMES OF PREVIOUS AGES (this age takes a name of its own): {{ previous_names[-f.
 {% endif %}
 {% if continuity.current %}
 CHRONICLER: this age is written by {{ continuity.current.name }}, {{ continuity.current.who }}, a mortal living in this world; write the narrative in their voice and do not name another writer.{% if continuity.chain %} Those who wrote the ages before: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}{% endif %}
+
 {% else %}
 CHRONICLER: no living mortal keeps the chronicle in this age; tell it as the plain record of the age, with no named writer.
 {% endif %}

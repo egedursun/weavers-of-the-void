@@ -6,6 +6,11 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from alembic import command
+from sqlalchemy import ColumnElement, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
+
 from aerona.db import tables
 from aerona.db.base import Base
 from aerona.db.migrations import build_config
@@ -37,15 +42,11 @@ from aerona.db.tables.warfare import WarRow
 from aerona.db.tables.water import CoastRow
 from aerona.db.tables.works import PublicWorksRow
 from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow
-from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.works import WorksStatus
+from aerona.engine.body.marks import marked
 from aerona.engine.pipeline import simulate
 from aerona.engine.primitives.stats import base_stat
-from alembic import command
-from sqlalchemy import ColumnElement, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
 from tests.engine.integration.factories import seed_rich_cosmos
 
 assert tables
@@ -156,8 +157,27 @@ async def family_measures(session: AsyncSession, epochs: int) -> dict[str, float
     }
 
 
+async def community_count(database: Database) -> int:
+    async with database.read() as session:
+        return int(
+            await session.scalar(
+                select(func.count())
+                .select_from(EntityRow)
+                .where(
+                    EntityRow.entity_type.in_(list(COMMUNITY_TYPES)),
+                    EntityRow.status == EntityStatus.CANON,
+                )
+            )
+            or 0
+        )
+
+
 async def measure(
-    database: Database, epochs: int, start_doom: int, start_communities: int
+    database: Database,
+    epochs: int,
+    start_doom: int,
+    settled_communities: int,
+    settled_epochs: int,
 ) -> dict[str, float]:
     async with database.read() as session:
         wars = int(await session.scalar(select(func.count()).select_from(WarRow)) or 0)
@@ -175,7 +195,7 @@ async def measure(
         maimed = set(
             await session.scalars(
                 select(InjuryRow.bearer_node_id).where(
-                    InjuryRow.state.in_(list(LASTING_INJURY_STATES))
+                    marked()
                 )
             )
         )
@@ -202,9 +222,9 @@ async def measure(
         * sum(1 for row in living if row.id in maimed)
         / max(1, len(living)),
         "community_growth_per_epoch_pct": 100
-        * (communities - start_communities)
-        / max(1, start_communities)
-        / max(1, epochs),
+        * (communities - settled_communities)
+        / max(1, settled_communities)
+        / max(1, settled_epochs),
         "hostile_pair_share_pct": 100
         * sum(1 for value in relations if value <= HOSTILE_BELOW)
         / max(1, len(relations)),
@@ -234,19 +254,11 @@ async def run(
                     )
                 cosmos = await session.get(CosmosRow, 1)
                 start_doom = cosmos.doom_clock if cosmos is not None else 0
-                start_communities = int(
-                    await session.scalar(
-                        select(func.count())
-                        .select_from(EntityRow)
-                        .where(
-                            EntityRow.entity_type.in_(list(COMMUNITY_TYPES)),
-                            EntityRow.status == EntityStatus.CANON,
-                        )
-                    )
-                    or 0
-                )
-            await simulate(database, epochs)
-            return await measure(database, epochs, start_doom, start_communities)
+            settled = epochs // 2
+            await simulate(database, settled)
+            settled_communities = await community_count(database)
+            await simulate(database, epochs - settled)
+            return await measure(database, epochs, start_doom, settled_communities, epochs - settled)
         finally:
             await database.dispose()
 

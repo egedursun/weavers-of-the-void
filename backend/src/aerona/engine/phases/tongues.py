@@ -25,7 +25,7 @@ from aerona.engine.tongues.sounds import SoundTally, shift_sounds
     "table.nodes",
     "table.sound_changes",
 )
-@writes("table.sound_changes")
+@writes("table.lexemes", "table.sound_changes")
 async def sound_changes(ctx: TickContext) -> None:
     tally = SoundTally()
     await shift_sounds(ctx, tally)
@@ -53,6 +53,7 @@ async def grammar(ctx: TickContext) -> None:
 
 
 @reads(
+    "beast.terror",
     "table.bonds",
     "table.creator",
     "table.dimensions",
@@ -161,10 +162,11 @@ async def language_policy(ctx: TickContext) -> None:
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.son_powers",
     "table.sons",
     "table.true_names",
 )
-@writes("table.divine_tongues", "table.entities", "table.language_profiles", "table.lexemes", "table.name_registry")
+@writes("table.divine_tongues", "table.entities", "table.language_profiles", "table.lexemes", "table.name_registry", "table.true_names")
 async def divine_tongues(ctx: TickContext) -> None:
     tally = TongueTally()
     await give_tongues(ctx, tally)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -186,6 +186,10 @@ async def keep_hoards(ctx: TickContext, tally: HoardTally) -> None:
             continue
         await gather(ctx, atlas, hoard, tally)
         await weigh(ctx, hoard)
+    looted = await ctx.session.scalar(
+        select(func.count(MuseumPieceRow.id)).where(MuseumPieceRow.looted_from_entity_id.is_not(None), MuseumPieceRow.acquired_epoch == ctx.epoch)
+    )
+    tally.looted += int(looted or 0)
     await ctx.session.flush()
 
 

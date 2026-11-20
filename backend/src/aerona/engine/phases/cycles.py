@@ -159,6 +159,7 @@ async def asabiyya(ctx: TickContext) -> None:
     "region.fertility",
     "settlement.population",
     "table.asabiyya",
+    "table.bias_weights",
     "table.bonds",
     "table.cosmos",
     "table.creator",
@@ -176,20 +177,25 @@ async def asabiyya(ctx: TickContext) -> None:
     "table.living_lines",
     "table.node_births",
     "table.nodes",
+    "table.offices",
+    "table.personality_values",
     "table.place_environment",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_stress",
     "table.power_sources",
     "table.public_knowledge",
+    "table.relationships",
     "table.research_focus",
     "table.research_progress",
+    "table.skills",
     "table.sons",
     "table.stars",
     "table.worlds",
 )
 @writes(
     "table.asabiyya",
+    "table.bias_weights",
     "table.challenges",
     "table.chronicle",
     "table.chronicle_entities",
@@ -215,10 +221,12 @@ async def long_plans(ctx: TickContext) -> None:
 
 
 @reads(
+    "faction.wealth",
     "house.wealth",
     "people.piety",
     "people.wealth",
     "settlement.piety",
+    "settlement.wealth",
     "table.action_records",
     "table.bonds",
     "table.ceremonial_circuits",
@@ -243,6 +251,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.held_identities",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_participants",
     "table.kinship_systems",
     "table.language_profiles",
     "table.marriages",
@@ -271,8 +280,10 @@ async def long_plans(ctx: TickContext) -> None:
     "table.worlds",
 )
 @writes(
+    "faction.wealth",
     "house.wealth",
     "people.wealth",
+    "settlement.wealth",
     "table.ceremonial_circuits",
     "table.chronicle",
     "table.chronicle_entities",
@@ -281,6 +292,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.divine_debts",
     "table.divine_standing",
     "table.entities",
+    "table.faction_profiles",
     "table.gifts",
     "table.house_profiles",
     "table.incident_facts",
@@ -290,6 +302,8 @@ async def long_plans(ctx: TickContext) -> None:
     "table.memories",
     "table.mortal_profiles",
     "table.polity_profiles",
+    "table.professions_of_value",
+    "table.settlement_profiles",
 )
 async def reciprocity(ctx: TickContext) -> None:
     tally = GiftTally()
@@ -377,6 +391,7 @@ async def reproduction_systems(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.professions_of_value",
     "table.region_environment",
     "table.relation_components",
     "table.relationships",

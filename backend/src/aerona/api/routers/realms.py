@@ -58,9 +58,9 @@ from aerona.db.tables.polity import (
     TreatyProfileRow,
     VassalageRow,
 )
-from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.body.marks import marked
 from aerona.engine.factions.balance import power_balance
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook
@@ -317,9 +317,7 @@ async def house(services: ServicesDep, house_id: int = Path(ge=1)) -> HouseView:
         ):
             parents.setdefault(bond.target_node_id, []).append(bond.source_node_id)
         wounds: dict[int, int] = {}
-        for bearer in await session.scalars(
-            select(InjuryRow.bearer_node_id).where(InjuryRow.bearer_node_id.in_(ids), InjuryRow.state.in_(list(LASTING_INJURY_STATES)))
-        ):
+        for bearer in await session.scalars(select(InjuryRow.bearer_node_id).where(InjuryRow.bearer_node_id.in_(ids), marked())):
             wounds[bearer] = wounds.get(bearer, 0) + 1
         offices = {row.holder_entity_id: row.kind for row in await session.scalars(select(OfficeRow).where(OfficeRow.holder_entity_id.in_(ids)))}
         claims = list(

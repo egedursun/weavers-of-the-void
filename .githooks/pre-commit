@@ -113,6 +113,15 @@ fi
 if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^frontend/src/.*\.(ts|tsx)$|^scripts/check_frontend_orphans\.py$'; then
   PROVING="$PROVING tests/api/test_frontend_reads_every_field.py tests/unit/test_frontend_orphans.py tests/unit/test_editable_fields.py tests/api/test_material_slot_fields.py"
 fi
+if echo "$STAGED" | grep -qE '^backend/(src|tests)/|^frontend/src/|^scripts/|^docs/spec/'; then
+  PROVING="$PROVING tests/api/test_static.py $(cd backend && grep -lE '\.rglob\(|os\.walk\(' tests/unit/test_*.py | tr '\n' ' ')"
+fi
+if echo "$STAGED" | grep -qE '^backend/src/aerona/(engine|rules|catalog)/|^scripts/balance_sim\.py$|^docs/spec/13-balance-bands\.json$'; then
+  PROVING="$PROVING tests/engine/integration/test_balance_bands.py tests/engine/interconnect/test_annotations.py tests/unit/test_interconnection_registry.py"
+fi
+if echo "$STAGED" | grep -qE '^backend/src/aerona/(db/tables|db/alembic|db/migrations\.py|domain/enums)'; then
+  PROVING="$PROVING tests/db/test_schema.py"
+fi
 if [ -n "$PROVING" ]; then
   run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider --basetemp='$LOGS/pytest' -n auto --dist worksteal --durations=15 $PROVING"
 fi

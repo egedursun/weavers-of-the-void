@@ -25,6 +25,7 @@ assert tables
 ROOT = Path(__file__).resolve().parent.parent
 BACKEND = ROOT / "backend"
 DECORATOR = re.compile(r"^@(reads|writes)\(")
+SHARED = re.compile(r"^@(reads|writes)\(\*(\w+)\)$")
 IMPORT_LINE = "from aerona.engine.interconnect.annotations import reads, writes"
 
 
@@ -64,18 +65,29 @@ def merge(target: dict[str, set[tuple[str, str]]], source: dict[str, set[tuple[s
         target.setdefault(phase, set()).update(items)
 
 
-def without_annotations(lines: list[str], first: int) -> tuple[list[str], int]:
+def without_annotations(lines: list[str], first: int) -> tuple[list[str], int, dict[str, str]]:
     end = first
     while not lines[end].lstrip().startswith(("def ", "async def ")):
         end += 1
     kept: list[str] = []
+    shared: dict[str, str] = {}
     dropping = False
     for item in lines[first:end]:
         if item.startswith("@"):
-            dropping = bool(DECORATOR.match(item))
+            found = SHARED.match(item)
+            if found is not None:
+                shared[found.group(1)] = found.group(2)
+            dropping = bool(DECORATOR.match(item)) and found is None
         if not dropping:
             kept.append(item)
-    return kept, end
+    return kept, end, shared
+
+
+def rewrite_shared(text: str, name: str, keys: set[str]) -> str:
+    body = "".join(f'    "{key}",\n' for key in sorted(keys))
+    pattern = re.compile(rf"^{re.escape(name)} = \(\n.*?^\)\n", re.MULTILINE | re.DOTALL)
+    assert pattern.search(text), name
+    return pattern.sub(lambda _found: f"{name} = (\n{body})\n", text, count=1)
 
 
 def annotate(recorded: dict[str, set[tuple[str, str]]], *, rebuild: bool) -> list[Path]:
@@ -97,16 +109,21 @@ def annotate(recorded: dict[str, set[tuple[str, str]]], *, rebuild: bool) -> lis
         by_file[source].append((line, reads_now, writes_now))
     for source, entries in by_file.items():
         lines = source.read_text(encoding="utf-8").splitlines()
+        constants: dict[str, set[str]] = defaultdict(set)
         for line, reads_now, writes_now in sorted(entries, reverse=True):
             first = line - 1
-            kept, end = without_annotations(lines, first)
+            kept, end, shared = without_annotations(lines, first)
             insert = []
-            if reads_now:
-                insert.append("@reads(" + ", ".join(f'"{key}"' for key in sorted(reads_now)) + ")")
-            if writes_now:
-                insert.append("@writes(" + ", ".join(f'"{key}"' for key in sorted(writes_now)) + ")")
+            for mode, keys in (("reads", reads_now), ("writes", writes_now)):
+                if mode in shared:
+                    constants[shared[mode]].update(keys)
+                elif keys:
+                    insert.append(f"@{mode}(" + ", ".join(f'"{key}"' for key in sorted(keys)) + ")")
             lines[first:end] = kept + insert
         text = "\n".join(lines) + "\n"
+        for name, keys in sorted(constants.items()):
+            text = rewrite_shared(text, name, keys)
+        lines = text.splitlines()
         if IMPORT_LINE not in text:
             first = next(number for number, item in enumerate(lines) if item.startswith("from aerona."))
             lines.insert(first, IMPORT_LINE)

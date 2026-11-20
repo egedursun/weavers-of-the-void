@@ -579,6 +579,7 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.name_registry",
     "table.node_births",
     "table.nodes",
     "table.routes",
@@ -596,6 +597,8 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",
+    "table.name_registry",
+    "table.node_births",
     "table.stars",
 )
 async def galaxy_cycles(ctx: TickContext) -> None:

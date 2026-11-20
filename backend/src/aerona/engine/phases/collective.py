@@ -48,6 +48,7 @@ class ArmedTally:
 
 
 @reads(
+    "cult.zeal",
     "mortal.charisma",
     "settlement.population",
     "table.collection_members",

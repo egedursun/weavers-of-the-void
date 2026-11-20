@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
+from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow
@@ -19,10 +20,12 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.control import set_technique
 from aerona.engine.mind.book import set_skill
 from aerona.engine.phases.births import villages
-from aerona.engine.phases.doom import doom_clock
+from aerona.engine.phases.doom import doom_clock, doom_items
 from aerona.engine.phases.factions import eligible_kinds, factions
 from aerona.engine.phases.magic import wizards
+from aerona.engine.phases.world_age import world_age
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.ledger import DoomItem
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.queries import has_flag
@@ -150,7 +153,7 @@ async def test_wizard_wards_a_home_with_protection_or_plenty(session: AsyncSessi
 
 
 async def test_doom_clock_chronicles_the_first_and_final_omens(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(apocalypse={"cursed": 50, "peace": 0, "faith_cap": 0, "warning_1_pct": 10, "warning_2_pct": 20})
+    rules = tuned_rules(apocalypse={"cursed": 50, "cursed_cap": 1000, "peace": 0, "faith_cap": 0, "warning_1_pct": 10, "warning_2_pct": 20})
     ctx = await manual_context(session, "doom", rules)
     await add_flag(session, world.people.id, EntityFlag.CURSED)
     world.cosmos.doom_clock = 0
@@ -158,6 +161,17 @@ async def test_doom_clock_chronicles_the_first_and_final_omens(session: AsyncSes
     recorded = await keys(session)
     assert world.cosmos.doom_clock > 0
     assert "doom.omen_first" in recorded and "doom.omen_final" in recorded
+
+
+async def test_a_crowd_of_cursed_things_advances_the_clock_no_further_than_the_cap_of_each_world(session: AsyncSession, world: CoreWorld) -> None:
+    rules = tuned_rules(apocalypse={"cursed": 50, "cursed_cap": 3, "peace": 0, "faith_cap": 0, "godless": 0, "restless_spirit": 0, "hostility_divisor": 100})
+    ctx = await manual_context(session, "doom", rules)
+    await add_flag(session, world.people.id, EntityFlag.CURSED)
+    for region in world.regions:
+        await add_flag(session, region.id, EntityFlag.CURSED)
+    items = await doom_items(ctx, await world_age(ctx, ctx.epoch + 1))
+    worlds = len(await WorldRepository(session).reachable_worlds())
+    assert items[DoomItem.CURSED] == 3 * max(1, worlds)
 
 
 async def test_doom_clock_omen_is_silent_below_the_warning_point(session: AsyncSession, world: CoreWorld) -> None:

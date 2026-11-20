@@ -51,7 +51,7 @@ from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_body, injuries_of, prostheses_of
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.digits import full_counts, lose_all, restore
-from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
+from aerona.engine.body.hits import CLEAN_HEALING_KINDS, MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.body.treatment import TREATMENT_ACTIONS, Treatment, bleed, regain_blood, treat
 from aerona.engine.body.variants import ORDINARY, folk_biology, shaped
@@ -389,6 +389,8 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
         row.state = InjuryState.PERMANENT
         if row.kind not in TOTAL_LOSS_KINDS:
             row.function_loss = round_half_up(row.function_loss * table.permanent_residual_pct / PERCENT)
+    elif row.kind in CLEAN_HEALING_KINDS:
+        row.state, row.function_loss, row.visible = InjuryState.HEALED_SCAR, 0, False
     else:
         row.state = InjuryState.HEALED_SCAR
         row.function_loss = round_half_up(row.function_loss * table.scar_residual_pct / PERCENT)
@@ -806,7 +808,8 @@ async def mend(ctx: TickContext, bearer: Bearer, *, lasting: bool = False, heale
         if restorable and row.kind in TOTAL_LOSS_KINDS:
             row.kind = InjuryKind.DEEP_CUT
         row.state = InjuryState.HEALED_SCAR
-        row.function_loss = round_half_up(row.function_loss * table.scar_residual_pct / PERCENT) if not lasting else 0
+        row.function_loss = round_half_up(row.function_loss * table.scar_residual_pct / PERCENT) if not lasting and row.kind not in CLEAN_HEALING_KINDS else 0
+        row.visible = row.visible and row.kind not in CLEAN_HEALING_KINDS
         row.infected_epochs = 0
         row.healed_epoch = ctx.epoch
         row.treated_by_node_id = healer_id or row.treated_by_node_id

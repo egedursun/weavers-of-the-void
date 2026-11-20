@@ -246,6 +246,7 @@ export const MORALE_PART: Record<string, Named> = {
   babel: { label: 'Many tongues', icon: Brain, tone: 'warning' },
   beast_dread: { label: 'Dread of beasts', icon: Skull, tone: 'danger' },
   luck: { label: 'Luck they believe in', icon: Clover, tone: 'gold' },
+  esprit: { label: 'The pride of a named unit', icon: Flag, tone: 'gold' },
   warned: { label: 'Warned by spies', icon: Drama, tone: 'info' },
   terror_taken: { label: 'Terror', icon: Ghost, tone: 'danger' },
   willpower: { label: 'Willpower', icon: Brain, tone: 'success' },

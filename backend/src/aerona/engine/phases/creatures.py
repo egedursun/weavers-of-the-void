@@ -858,6 +858,7 @@ async def run_creature_phase(session: AsyncSession, rules: Rules) -> None:
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.node_births",
     "table.nodes",
     "table.sons",
     "table.stars",

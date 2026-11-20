@@ -628,6 +628,7 @@ async def plague_faith(ctx: TickContext) -> int:
 
 @reads(
     "event.severity",
+    "faction.wealth",
     "people.piety",
     "people.population",
     "people.prosperity",
@@ -661,6 +662,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.node_births",
     "table.node_materials",
     "table.nodes",
+    "table.outbreaks",
     "table.people_culture",
     "table.personality_values",
     "table.polity_members",
@@ -687,6 +689,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.community_relations",
     "table.entities",
     "table.entity_flags",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
     "table.incidents",

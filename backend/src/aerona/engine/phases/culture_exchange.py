@@ -336,6 +336,7 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.galaxies",
     "table.galaxy_clusters",
     "table.lexemes",
+    "table.node_births",
     "table.nodes",
     "table.reverences",
     "table.sons",
@@ -344,6 +345,7 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
+    "table.tradition_effects",
     "table.worlds",
     "trade_route.culture",
 )
@@ -353,9 +355,12 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.lexemes",
+    "table.tradition_effects",
 )
 async def cultural_exchange(ctx: TickContext) -> None:
     culture = ctx.rules.culture

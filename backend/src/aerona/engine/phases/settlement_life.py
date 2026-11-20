@@ -59,6 +59,7 @@ JUSTICE_FULL = 100
     "faction.strength",
     "law.justice",
     "mortal.charisma",
+    "people.population",
     "people.wealth",
     "settlement.defense",
     "settlement.piety",

@@ -21,6 +21,8 @@ from aerona.engine.phases.dominion import count
     "table.age_set_members",
     "table.age_sets",
     "table.army_profiles",
+    "table.augment_effects",
+    "table.augments",
     "table.bonds",
     "table.coalition_members",
     "table.community_cohorts",
@@ -34,6 +36,7 @@ from aerona.engine.phases.dominion import count
     "table.incubating_ideas",
     "table.kind_holdings",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.marriages",
     "table.mind_facets",
     "table.mortal_profiles",
@@ -75,6 +78,7 @@ async def sanctuary(ctx: TickContext) -> None:
 
 
 @reads("table.artwork_profiles", "table.entities", "table.nodes", "table.offices", "table.satires")
+@writes("table.bias_weights", "table.mortal_profiles", "table.satires")
 async def satire(ctx: TickContext) -> None:
     tally = SatireTally()
     await keep_satire(ctx, tally)

@@ -6,6 +6,7 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "people.wealth",
     "settlement.wealth",
     "table.applied_fixups",
     "table.brands",
@@ -35,6 +36,7 @@ from aerona.engine.phase import Phase
     "table.worlds",
 )
 @writes(
+    "people.wealth",
     "settlement.prosperity",
     "settlement.wealth",
     "table.applied_fixups",

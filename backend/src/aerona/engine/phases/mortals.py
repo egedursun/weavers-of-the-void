@@ -200,6 +200,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.language_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.legitimacy_rules",
     "table.lexemes",
     "table.marriages",
     "table.memories",

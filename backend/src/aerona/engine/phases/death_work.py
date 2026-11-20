@@ -6,6 +6,7 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "people.population",
     "table.bonds",
     "table.creator",
     "table.culture_values",

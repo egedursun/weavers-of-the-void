@@ -129,6 +129,7 @@ async def markets(ctx: TickContext) -> None:
 @reads(
     "beast.danger",
     "faction.wealth",
+    "people.piety",
     "people.population",
     "people.prosperity",
     "people.wealth",
@@ -148,6 +149,7 @@ async def markets(ctx: TickContext) -> None:
     "table.bonds",
     "table.border_controls",
     "table.calendars",
+    "table.celestial_readings",
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",
@@ -183,6 +185,7 @@ async def markets(ctx: TickContext) -> None:
     "table.market_prices",
     "table.measure_standards",
     "table.name_registry",
+    "table.navigation_kits",
     "table.node_births",
     "table.nodes",
     "table.number_systems",

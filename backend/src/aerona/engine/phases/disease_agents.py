@@ -14,6 +14,7 @@ from aerona.engine.phase import Phase
     "table.endemic_diseases",
     "table.entities",
     "table.holder_levels",
+    "table.node_births",
     "table.outbreaks",
     "table.species_ranges",
 )

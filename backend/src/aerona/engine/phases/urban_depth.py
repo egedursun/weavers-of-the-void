@@ -26,7 +26,7 @@ from aerona.engine.urban.turf import TurfTally, hold_turf
     "table.settlement_profiles",
     "table.structure_profiles",
 )
-@writes("table.district_services", "table.districts", "table.settlement_profiles")
+@writes("table.district_services", "table.districts", "table.settlement_profiles", "table.structure_profiles")
 async def district_coverage(ctx: TickContext) -> None:
     tally = CoverageTally()
     await cover_towns(ctx, tally)
@@ -66,7 +66,16 @@ async def desirability(ctx: TickContext) -> None:
     "table.structure_profiles",
     "table.turf",
 )
-@writes("table.districts", "table.settlement_infrastructure", "table.settlement_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.districts",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.settlement_infrastructure",
+    "table.settlement_profiles",
+)
 async def housing_evolution(ctx: TickContext) -> None:
     tally = HousingTally()
     await house_towns(ctx, tally)
@@ -143,8 +152,8 @@ async def convoys(ctx: TickContext) -> None:
     count(ctx, "convoy", tally)
 
 
-@reads("settlement.wealth", "table.polity_members", "table.polity_profiles", "table.transport_fleets")
-@writes("settlement.wealth", "table.entities", "table.transport_fleets")
+@reads("people.wealth", "settlement.wealth", "table.polity_members", "table.polity_profiles", "table.transport_fleets")
+@writes("people.wealth", "settlement.wealth", "table.entities", "table.transport_fleets")
 async def transport_fleets(ctx: TickContext) -> None:
     tally = ConvoyTally()
     await wear_fleets(ctx, tally)

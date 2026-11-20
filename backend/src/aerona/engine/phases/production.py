@@ -407,6 +407,7 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.name_registry",
     "table.nodes",
     "table.place_environment",
     "table.plague_responses",
@@ -432,11 +433,13 @@ async def _slain_beasts(ctx: TickContext) -> int:
     "table.worlds",
 )
 @writes(
+    "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
     "table.resource_profiles",
     "table.world_materials",
 )
@@ -596,6 +599,7 @@ async def species_products(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.resource_profiles",
 )

@@ -774,6 +774,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 
 {% for language in book.languages %}
 {% for article in [language.article] | with_descendants %}{{ codex_entity(article) }}{% endfor %}
+
 *{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}*
 
 {% if language.words %}

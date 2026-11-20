@@ -914,6 +914,10 @@ Items of the apocalypse clock (threshold and speed live in `DENGE.kiyamet_esik` 
 | restless_spirit | huzursuz_ruh | 2 | 0 | 50 | Apocalypse | Each restless spirit advances the clock |
 | restless_threshold | huzursuz_esik | 60 | 0 | 100 | Apocalypse | Restlessness at which a spirit counts as restless |
 | war_divisor | savas_bolen | 2 | 1 | 100 | Apocalypse | Every this many hostility bonds advance the clock by 1 |
+| godless_cap | — | 6 | 0 | 1000 | Apocalypse | Most that godless communities can advance the clock in one age, for each living world |
+| cursed_cap | — | 4 | 0 | 1000 | Apocalypse | Most that cursed entities can advance the clock in one age, for each living world |
+| restless_cap | — | 6 | 0 | 1000 | Apocalypse | Most that restless spirits can advance the clock in one age, for each living world |
+| wars_cap | — | 4 | 0 | 1000 | Apocalypse | Most that ongoing wars can advance the clock in one age, for each living world |
 | rebel_son | asi | 4 | 0 | 50 | Apocalypse | Each rebel son advances the clock |
 | miracle | mucize | 3 | 0 | 50 | Apocalypse | Each miracle pushes the clock back |
 | faith_divisor | inanc_bolen | 40 | 1 | 10000 | Apocalypse | Every this much faith pushes the clock back by 1 |

@@ -46,6 +46,7 @@ from aerona.engine.phases.dominion import count
     "table.name_forms",
     "table.name_registry",
     "table.naming_customs",
+    "table.node_births",
     "table.nodes",
     "table.revivals",
     "table.settlement_profiles",
@@ -93,7 +94,9 @@ async def customs(ctx: TickContext) -> None:
 
 
 @reads(
+    "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.bonds",
     "table.community_stocks",
     "table.commutes",
@@ -109,14 +112,18 @@ async def customs(ctx: TickContext) -> None:
     "table.incidents",
     "table.node_births",
     "table.nodes",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.pressures",
     "table.settlement_infrastructure",
     "table.sons",
     "table.stars",
     "table.structure_profiles",
+    "table.welfare_houses",
     "table.worlds",
 )
 @writes(
+    "settlement.wealth",
     "table.chronicle",
     "table.chronicle_entities",
     "table.commutes",
@@ -127,6 +134,8 @@ async def customs(ctx: TickContext) -> None:
     "table.incident_steps",
     "table.incidents",
     "table.node_births",
+    "table.polity_profiles",
+    "table.welfare_houses",
 )
 async def town_life(ctx: TickContext) -> None:
     tally = TownLifeTally()
@@ -135,6 +144,8 @@ async def town_life(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "table.bonds",
     "table.border_controls",
     "table.case_witnesses",

@@ -7,7 +7,7 @@ from pathlib import Path
 import sqlalchemy as sa
 
 from aerona.db.base import Base
-from aerona.db.migrations import upgrade_to_head_sync
+from aerona.db.migrations import replay_migrations_sync
 
 
 def constraint_values(sql: str, column: str) -> set[str] | None:
@@ -18,7 +18,7 @@ def constraint_values(sql: str, column: str) -> set[str] | None:
 def findings() -> list[str]:
     with tempfile.TemporaryDirectory() as folder:
         path = Path(folder) / "head.db"
-        upgrade_to_head_sync(f"sqlite:///{path}")
+        replay_migrations_sync(f"sqlite:///{path}")
         schema = dict(sqlite3.connect(path).execute("select name, sql from sqlite_master where type='table'").fetchall())
     found: list[str] = []
     for table in Base.metadata.sorted_tables:

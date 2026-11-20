@@ -123,6 +123,7 @@ async def unit_types(ctx: TickContext) -> None:
 
 
 @reads(
+    "polity.subjects",
     "table.applied_fixups",
     "table.armies",
     "table.army_profiles",

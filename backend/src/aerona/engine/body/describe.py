@@ -14,7 +14,6 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.affliction import Visibility
 from aerona.domain.enums.body import (
-    LASTING_INJURY_STATES,
     OPEN_INJURY_STATES,
     BodyReading,
     Capacity,
@@ -29,6 +28,7 @@ from aerona.domain.enums.body import (
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.body.book import anatomy_for
 from aerona.engine.body.cohorts import maimed_share
+from aerona.engine.body.marks import leaves_mark
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -153,7 +153,7 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
     shown = [row for row in injuries if row.visible or private]
     groups = {
         "Missing": [f"{label(row.part)} {LOST[row.kind]}{worn(row)}" for row in shown if row.kind in LOST and row.state not in OPEN_INJURY_STATES],
-        "Scars": [f"{spoken(row.kind)} on the {label(row.part)}" for row in shown if row.state in LASTING_INJURY_STATES and row.kind not in LOST],
+        "Scars": [f"{spoken(row.kind)} on the {label(row.part)}" for row in shown if leaves_mark(row) and row.kind not in LOST],
         "Open wounds": [f"{spoken(row.kind)} on the {label(row.part)}" + wound_notes(row) for row in shown if row.state in OPEN_INJURY_STATES],
     }
     lines = [f"{title}: " + "; ".join(items) for title, items in groups.items() if items]

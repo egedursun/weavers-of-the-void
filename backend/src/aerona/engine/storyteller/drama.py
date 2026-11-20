@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.ages import ArcBeatRow, ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.entities import EntityRow
@@ -192,9 +193,10 @@ async def omen_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
 async def portent_paid(ctx: TickContext, setup: SetupRow) -> Resolution:
     if setup.subject_node_id is None:
         return None
-    subject = await ctx.session.get(EntityRow, setup.subject_node_id)
-    if subject is not None and subject.end_epoch is not None and subject.end_epoch > setup.opened_epoch:
-        return PayoffKind.FULFILLED, f"what was foretold came upon {subject.name} at the end"
+    nodes = NodeRepository(ctx.session)
+    subject = await nodes.load(setup.subject_node_id) if await nodes.kind_of(setup.subject_node_id) is not None else None
+    if isinstance(subject, EntityRow) and subject.end_epoch is not None and subject.end_epoch > setup.opened_epoch:
+        return PayoffKind.FULFILLED, f"what was foretold came upon {await nodes.name_of(subject.id)} at the end"
     beat = await ctx.session.scalar(
         select(ArcBeatRow.text)
         .join(ArcRow, ArcRow.id == ArcBeatRow.arc_id)

@@ -3,7 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from aerona.db.migrations import SCRIPT_LOCATION, autogenerate, upgrade_to_head_sync
+from aerona.db.migrations import SCRIPT_LOCATION, autogenerate, replay_migrations_sync
 
 MIGRATIONS_DIR = SCRIPT_LOCATION / "versions"
 
@@ -12,7 +12,7 @@ def main() -> int:
     message = " ".join(sys.argv[1:]) or "schema"
     with tempfile.TemporaryDirectory() as directory:
         url = f"sqlite+aiosqlite:///{Path(directory) / 'migration.db'}"
-        upgrade_to_head_sync(url)
+        replay_migrations_sync(url)
         autogenerate(url, message)
     for migration in MIGRATIONS_DIR.glob("*.py"):
         lines = migration.read_text(encoding="utf-8").splitlines()

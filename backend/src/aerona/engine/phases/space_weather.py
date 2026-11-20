@@ -22,6 +22,7 @@ from aerona.engine.space_weather.weather import SpaceWeatherTally, keep_space_we
     "settlement.prosperity",
     "table.augment_effects",
     "table.augments",
+    "table.bodies",
     "table.bonds",
     "table.conditions",
     "table.creator",

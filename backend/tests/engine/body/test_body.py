@@ -31,12 +31,15 @@ from aerona.engine.body import healing
 from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, legacy_plan_from_words, size_of
 from aerona.engine.body.cohorts import return_maimed, tend_cohorts, war_appetite
 from aerona.engine.body.customs import ensure_customs
+from aerona.engine.body.describe import body_lines
 from aerona.engine.body.healing import fit_prosthesis, heal_wounds, mend
 from aerona.engine.body.hits import Harm, harm_resisted, kind_for, loss_for
+from aerona.engine.body.marks import leaves_mark
 from aerona.engine.body.state import refresh
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.phases.body import body_conditions, body_society, body_survey, seek_reader
 from aerona.engine.phases.mortals import mortal_wounds
+from aerona.engine.polity.offices import whole
 from aerona.engine.primitives.queries import active_bonds, add_flag
 from aerona.engine.primitives.stats import stat
 from aerona.engine.records import death_path
@@ -318,3 +321,18 @@ async def test_a_wound_taken_on_campaign_faces_the_camp_for_every_season_of_its_
         )
         rolls.append(rng.rolls)
     assert rolls == [1, 1 + ctx.rules.campaigns.seasons_per_war_epoch]
+
+
+async def test_a_healed_bruise_leaves_no_mark_and_never_counts_a_ruler_as_maimed(realm: Realm) -> None:
+    ruler = await mortal(realm, "Ysolde", hp=100)
+    rules = tuned(healing={"heal_severity_3": 100, "infection_other": 0, "permanent_severity_3_pct": 0})
+    ctx = context(realm.session, rules)
+    await apply_hits(ctx, ruler, Harm(20, HarmCause.ACCIDENT, "fell", part="left_arm", kind=InjuryKind.BRUISE, severity=3), lethal=False)
+    await heal_wounds(context(realm.session, rules, epoch=4))
+    bruise = await realm.session.scalar(select(InjuryRow).where(InjuryRow.bearer_node_id == ruler.id))
+    assert bruise is not None and bruise.state is InjuryState.HEALED_SCAR and not bruise.visible and bruise.function_loss == 0
+    assert not leaves_mark(bruise) and await whole(ctx, ruler)
+    assert not any("bruise" in line for line in await body_lines(realm.session, rules, ruler, private=True))
+    bruise.kind, bruise.visible = InjuryKind.CUT, True
+    await realm.session.flush()
+    assert leaves_mark(bruise) and not await whole(ctx, ruler)

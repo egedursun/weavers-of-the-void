@@ -912,6 +912,35 @@ def land_sizes(atlas: RegionAtlas, region_ids: list[int]) -> dict[int, float]:
     return {region_id: size / mean for region_id, size in measured.items()}
 
 
+@reads(
+    "people.population",
+    "place.fertility",
+    "region.breadth",
+    "region.fertility",
+    "settlement.population",
+    "table.bonds",
+    "table.calendars",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.dimensions",
+    "table.entities",
+    "table.forced_weather",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.herds",
+    "table.holder_levels",
+    "table.land_rings",
+    "table.nodes",
+    "table.place_environment",
+    "table.polity_profiles",
+    "table.region_environment",
+    "table.sky_events",
+    "table.stars",
+    "table.world_seasons",
+    "table.worlds",
+)
+@writes("table.region_environment")
 async def land_use(ctx: TickContext) -> None:
     rules = ctx.rules
     settings = rules.land_use
@@ -1274,12 +1303,15 @@ async def harvest(ctx: TickContext) -> None:
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.notable_years",
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
     "table.stars",
+    "table.tradition_effects",
+    "table.tradition_profiles",
     "table.world_maps",
     "table.world_seasons",
     "table.worlds",
@@ -1291,11 +1323,13 @@ async def harvest(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
     "table.name_registry",
     "table.nodes",
+    "table.tradition_effects",
     "table.tradition_profiles",
 )
 async def calendars(ctx: TickContext) -> None:

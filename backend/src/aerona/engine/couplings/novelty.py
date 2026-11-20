@@ -48,7 +48,9 @@ async def fashion_holders(ctx: TickContext) -> list[int]:
     return sorted({*forms, *dishes})
 
 
-@reads("table.art_form_practitioners", "table.art_form_profiles", "table.community_dishes", "table.dishes", "table.novelty_stocks")
+@reads(
+    "table.art_form_practitioners", "table.art_form_profiles", "table.community_dishes", "table.dishes", "table.entities", "table.nodes", "table.novelty_stocks"
+)
 @writes("table.novelty_stocks")
 async def novelty(ctx: TickContext) -> None:
     table = ctx.rules.fashion

@@ -182,6 +182,8 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "settlement.prosperity",
     "spirit.unrest",
     "table.bonds",

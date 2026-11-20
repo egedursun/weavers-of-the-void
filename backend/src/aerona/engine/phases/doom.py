@@ -100,10 +100,10 @@ async def doom_items(ctx: TickContext, age: WorldAge) -> dict[DoomItem, float]:
     faith = read(ctx, LedgerKey.TOTAL_FAITH)
     worlds = max(1, len(await WorldRepository(ctx.session).reachable_worlds()))
     return {
-        DoomItem.GODLESS: godless * doom.godless,
-        DoomItem.CURSED: cursed * doom.cursed,
-        DoomItem.RESTLESS_SPIRITS: restless * doom.restless_spirit,
-        DoomItem.WARS: wars / doom.hostility_divisor,
+        DoomItem.GODLESS: min(doom.godless_cap * worlds, godless * doom.godless),
+        DoomItem.CURSED: min(doom.cursed_cap * worlds, cursed * doom.cursed),
+        DoomItem.RESTLESS_SPIRITS: min(doom.restless_cap * worlds, restless * doom.restless_spirit),
+        DoomItem.WARS: min(doom.wars_cap * worlds, wars / doom.hostility_divisor),
         DoomItem.REBEL_SONS: rebels * doom.rebel_son,
         DoomItem.MIRACLES: -miracles * doom.miracle,
         DoomItem.FAITH: -min(doom.faith_cap * worlds, faith // doom.faith_divisor),

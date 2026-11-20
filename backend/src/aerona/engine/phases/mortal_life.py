@@ -67,6 +67,7 @@ async def living_mortals(ctx: TickContext) -> list[EntityRow]:
     "table.injuries",
     "table.item_profiles",
     "table.memories",
+    "table.mind_attributes",
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.nodes",
@@ -252,6 +253,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.incidents",
     "table.marriages",
     "table.memories",
+    "table.node_births",
     "table.oaths",
 )
 async def mortal_kin(ctx: TickContext) -> None:
@@ -288,6 +290,7 @@ async def mortal_kin(ctx: TickContext) -> None:
     "table.entity_flags",
     "table.item_profiles",
     "table.memories",
+    "table.mind_attributes",
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.nodes",

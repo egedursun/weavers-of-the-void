@@ -1,4 +1,5 @@
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db import tables
 from aerona.db.base import Base
-from aerona.db.migrations import SCRIPT_LOCATION, build_config, upgrade_to_head_sync
+from aerona.db.migrations import SCRIPT_LOCATION, build_config, replay_migrations_sync, upgrade_to_head_sync
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
@@ -34,7 +35,7 @@ def test_linear_migration_history() -> None:
 
 def test_migration_matches_models(tmp_path: Path) -> None:
     path = tmp_path / "migrated.db"
-    upgrade_to_head_sync(f"sqlite+aiosqlite:///{path}")
+    replay_migrations_sync(f"sqlite+aiosqlite:///{path}")
     engine = create_engine(f"sqlite:///{path}")
     with engine.connect() as connection:
         context = MigrationContext.configure(connection, opts={"render_as_batch": True})
@@ -43,6 +44,41 @@ def test_migration_matches_models(tmp_path: Path) -> None:
     engine.dispose()
     assert differences == []
     assert set(Base.metadata.tables) <= created
+
+
+def check_text(sql: object) -> str:
+    plain = " ".join(str(sql).replace('"', "").split())
+    return re.sub(r"IN \(([^)]*)\)", lambda found: "IN (" + ", ".join(sorted(item.strip() for item in found.group(1).split(","))) + ")", plain)
+
+
+def schema_of(path: Path) -> dict[str, object]:
+    engine = create_engine(f"sqlite:///{path}")
+    with engine.connect() as connection:
+        found = inspect(connection)
+        shape: dict[str, object] = {
+            name: (
+                sorted((column["name"], str(column["type"]), column["nullable"]) for column in found.get_columns(name)),
+                sorted((index["name"], tuple(index["column_names"]), bool(index["unique"])) for index in found.get_indexes(name)),
+                sorted((tuple(key["constrained_columns"]), key["referred_table"], tuple(key["referred_columns"])) for key in found.get_foreign_keys(name)),
+                sorted(tuple(unique["column_names"]) for unique in found.get_unique_constraints(name)),
+                found.get_pk_constraint(name)["constrained_columns"],
+                sorted(check_text(check["sqltext"]) for check in found.get_check_constraints(name)),
+            )
+            for name in found.get_table_names()
+            if name != "alembic_version"
+        }
+        shape["revision"] = connection.execute(text("select version_num from alembic_version")).scalar_one()
+    engine.dispose()
+    return shape
+
+
+def test_a_new_database_built_from_the_models_is_the_schema_the_migrations_reach(tmp_path: Path) -> None:
+    replayed, created = tmp_path / "replayed.db", tmp_path / "created.db"
+    replay_migrations_sync(f"sqlite+aiosqlite:///{replayed}")
+    upgrade_to_head_sync(f"sqlite+aiosqlite:///{created}")
+    assert schema_of(created) == schema_of(replayed)
+    upgrade_to_head_sync(f"sqlite+aiosqlite:///{created}")
+    assert schema_of(created) == schema_of(replayed)
 
 
 async def test_cosmos_is_a_singleton(session: AsyncSession) -> None:

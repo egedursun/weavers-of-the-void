@@ -23,6 +23,7 @@ BODILY_DAMAGE = frozenset(
     {DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.COLD, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE, DamageType.CHEMICAL}
 )
 TOTAL_LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED})
+CLEAN_HEALING_KINDS = frozenset({InjuryKind.BRUISE, InjuryKind.SICKNESS, InjuryKind.CONCUSSION, InjuryKind.VENOM, InjuryKind.RADIATION_SICKNESS})
 
 
 @dataclass(frozen=True)

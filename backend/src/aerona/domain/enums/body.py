@@ -114,7 +114,6 @@ class InjuryState(StrEnum):
 
 
 OPEN_INJURY_STATES = frozenset({InjuryState.FRESH, InjuryState.INFECTED, InjuryState.HEALING})
-LASTING_INJURY_STATES = frozenset({InjuryState.PERMANENT, InjuryState.HEALED_SCAR})
 
 
 class HarmCause(StrEnum):

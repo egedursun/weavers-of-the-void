@@ -22,6 +22,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 
 @reads(
     "army.size",
+    "cult.followers",
     "faction.strength",
     "faction.sway",
     "faction.wealth",
@@ -124,6 +125,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.oaths",
     "table.offices",
     "table.outbreaks",
+    "table.passions",
     "table.patronage_ties",
     "table.peace_terms",
     "table.peer_members",
@@ -230,6 +232,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.offices",
     "table.peace_terms",
     "table.people_culture",
+    "table.persuasions",
     "table.polity_loyalty",
     "table.polity_members",
     "table.polity_profiles",

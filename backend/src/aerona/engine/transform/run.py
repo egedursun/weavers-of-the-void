@@ -161,6 +161,7 @@ async def fade_star_modifiers(ctx: TickContext) -> int:
     "table.theory_profiles",
     "table.title_profiles",
     "table.transform_prospects",
+    "table.transformations",
     "table.worlds",
 )
 @writes("table.transform_prospects", "table.transformations")

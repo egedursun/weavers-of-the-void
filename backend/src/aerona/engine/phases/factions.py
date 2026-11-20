@@ -301,6 +301,7 @@ async def found_factions(ctx: TickContext) -> int:
 
 
 @reads(
+    "cult.zeal",
     "faction.strength",
     "faction.sway",
     "faction.wealth",
@@ -335,6 +336,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.item_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.law_proposals",
     "table.memories",
     "table.minds",
     "table.name_registry",
@@ -342,6 +344,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.nodes",
     "table.oaths",
     "table.offices",
+    "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_stress",
@@ -386,6 +389,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.injuries",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.law_proposals",
     "table.memories",
     "table.mortal_profiles",
     "table.name_registry",

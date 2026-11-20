@@ -84,6 +84,9 @@ async def test_a_museum_gathers_works_gives_grandeur_and_research_and_its_pieces
     moved = await loot(ctx, town.id, rival.id)
     taken = await session.get(MuseumPieceRow, pieces[0].id)
     assert moved == len(pieces) and taken is not None and taken.looted_from_entity_id == town.id
+    after = HoardTally()
+    await keep_hoards(ctx, after)
+    assert after.looted == moved
     home = await restitute(ctx, taken)
     assert home is not None and home.keeper_entity_id == town.id and taken.returned_by_entity_id == rival.id
     assert await amends(ctx, rival.id, []) >= 1

@@ -9,6 +9,7 @@ from aerona.engine.phase import Phase
     "table.entities",
     "table.mind_profiles",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nodes",
     "table.polity_members",
     "table.polity_profiles",

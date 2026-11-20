@@ -16,7 +16,7 @@ async def heroquests(ctx: TickContext) -> None:
     count(ctx, "heroquest", tally)
 
 
-@reads("table.bonds", "table.entities", "table.nodes", "table.reputations")
+@reads("table.bonds", "table.entities", "table.foreign_gods", "table.nodes", "table.reputations", "table.sons")
 async def mantling(ctx: TickContext) -> None:
     tally = MantleTally()
     await mantle_world(ctx, tally)
@@ -38,6 +38,7 @@ async def geasa(ctx: TickContext) -> None:
 
 
 @reads(
+    "beast.strength",
     "settlement.piety",
     "spirit.unrest",
     "table.cosmic_offices",
@@ -47,7 +48,7 @@ async def geasa(ctx: TickContext) -> None:
     "table.settlement_profiles",
     "table.spirit_profiles",
 )
-@writes("settlement.piety", "spirit.unrest", "table.cosmic_offices", "table.entities", "table.routes", "table.settlement_profiles")
+@writes("beast.strength", "settlement.piety", "spirit.unrest", "table.cosmic_offices", "table.entities", "table.routes", "table.settlement_profiles")
 async def cosmic_offices(ctx: TickContext) -> None:
     tally = OfficeTally()
     await tend_offices(ctx, tally)

@@ -30,8 +30,17 @@ async def abandon(ctx: TickContext, settlement: EntityRow) -> EntityRow:
     return settlement
 
 
-@reads("settlement.population", "table.bonds", "table.entity_flags", "table.routes")
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.entity_flags", "table.incident_participants", "table.incidents")
+@reads("settlement.population", "table.bonds", "table.entities", "table.entity_flags", "table.node_births", "table.nodes", "table.routes")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.entity_flags",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def abandonment(ctx: TickContext) -> None:
     world_rules = ctx.rules.deep_world
     sheltered = await flags_by_entity(ctx.session, EntityFlag.PROTECTED_FROM_RUIN)

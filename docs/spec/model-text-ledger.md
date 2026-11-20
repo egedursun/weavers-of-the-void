@@ -914,7 +914,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/prompts/templates/agent/son_gate_rejection.md.j2` | 1 | 2026-11-17 | `164fe12aadb97b07` |
 | `backend/src/aerona/prompts/templates/agent/status_line.md.j2` | 1 | 2026-11-16 | `5ab1e766951353b2` |
 | `backend/src/aerona/prompts/templates/agent/tool_failure_refund.md.j2` | 1 | 2026-11-16 | `416be923128baf74` |
-| `backend/src/aerona/prompts/templates/chronicler/_body.md.j2` | 50 | 2026-11-18 | `69241175c07447fd` |
+| `backend/src/aerona/prompts/templates/chronicler/_body.md.j2` | 50 | 2026-11-20 | `69241175c07447fd` |
 | `backend/src/aerona/prompts/templates/chronicler/_facts.md.j2` | 43 | 2026-11-17 | `05f0448120bbe1bb` |
 | `backend/src/aerona/prompts/templates/chronicler/chronicler_audit_fix_user.md.j2` | 12 | 2026-11-17 | `111262e62059deb9` |
 | `backend/src/aerona/prompts/templates/chronicler/chronicler_concise_system.md.j2` | 1 | 2026-11-19 | `b753de58d2f3de46` |

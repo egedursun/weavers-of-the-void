@@ -21,7 +21,6 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.customs import MemberRight
@@ -39,6 +38,7 @@ from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.belonging.peers import companions_of
+from aerona.engine.body.marks import marked
 from aerona.engine.collective.roles import RANK_PREFERRED, freed_rank, role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.customs.rights import has_right
@@ -384,9 +384,7 @@ def gender_rank(rule: GenderRule, mortal: EntityRow) -> int | None:
 
 
 async def whole(ctx: TickContext, mortal: EntityRow) -> bool:
-    found = await ctx.session.scalar(
-        select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, InjuryRow.state.in_(list(LASTING_INJURY_STATES))).limit(1)
-    )
+    found = await ctx.session.scalar(select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, marked()).limit(1))
     return found is None
 
 

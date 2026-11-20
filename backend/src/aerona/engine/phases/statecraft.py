@@ -44,6 +44,7 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.polity_profiles",
     "table.polity_regard",
     "table.polity_territories",
+    "table.professions_of_value",
     "table.relation_components",
     "table.relationships",
     "table.reputations",

@@ -214,6 +214,7 @@ async def mishaps(ctx: TickContext) -> None:
 
 
 @reads(
+    "settlement.population",
     "table.accusations",
     "table.beliefs",
     "table.castings",

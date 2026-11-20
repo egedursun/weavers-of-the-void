@@ -12,11 +12,12 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.genetics import GenomeRow
-from aerona.domain.enums.body import LASTING_INJURY_STATES, InjuryKind, InjuryState
+from aerona.domain.enums.body import InjuryKind, InjuryState
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.genetics import GeneticEffect, Locus
 from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import Attribute, SkillKind, TraitKind
+from aerona.engine.body.marks import marked
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
@@ -166,11 +167,7 @@ def potential_of(rules: Rules, rng: SeededRandom, first: Mapping[str, int], seco
 
 
 async def body_marks(session: AsyncSession, holder_id: int) -> tuple[int, int]:
-    rows = list(
-        await session.scalars(
-            select(InjuryRow).where(InjuryRow.bearer_node_id == holder_id, InjuryRow.visible.is_(True), InjuryRow.state.in_(tuple(LASTING_INJURY_STATES)))
-        )
-    )
+    rows = list(await session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == holder_id, InjuryRow.visible.is_(True), marked())))
     missing = sum(1 for row in rows if row.kind in MISSING_KINDS)
     scars = sum(1 for row in rows if row.state is InjuryState.HEALED_SCAR and row.kind not in MISSING_KINDS)
     return scars, missing

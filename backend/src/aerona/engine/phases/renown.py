@@ -124,7 +124,7 @@ async def ruler_currencies(ctx: TickContext) -> None:
     "table.reputations",
     "table.world_maps",
 )
-@writes("table.faction_profiles", "table.holder_techniques", "table.lore_trades", "table.reputations")
+@writes("table.bonds", "table.faction_profiles", "table.holder_techniques", "table.lore_trades", "table.reputations")
 async def lore_market(ctx: TickContext) -> None:
     tally = LoreTally()
     await market(ctx, tally)
